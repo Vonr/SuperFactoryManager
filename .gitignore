@@ -9,7 +9,7 @@
 !gradlew.bat
 !build.gradle
 !build.properties
-!project.properties
+!gradle.properties
 !settings.gradle
 
 # Other Files.

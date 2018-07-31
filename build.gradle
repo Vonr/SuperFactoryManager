@@ -1,93 +1,76 @@
-
-// For those who want the bleeding edge
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
         maven {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
         }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
     }
 }
-apply plugin: 'net.minecraftforge.gradle.forge'
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
-/*
-// for people who want stable - not yet functional for MC 1.8.8 - we require the forgegradle 2.1 snapshot
 plugins {
-    id "net.minecraftforge.gradle.forge" version "2.0.2"
-}
-*/
-
-repositories {
-    maven { // The repo from which to get waila
-        name "Mobius Repo"
-        url "http://mobiusstrip.eu/maven"
-    }
-    maven {
-        name = "Modmuss50"
-        url = "http://maven.modmuss50.me/"
-    }
+    id 'java'
+    id 'idea'
 }
 
-// define the properties file
-ext.configFile = file "project.properties"
+apply plugin: 'net.minecraftforge.gradle.forge'
 
-configFile.withReader {
-    // read config.  it shall from now on be referenced as simply config or as project.config
-    def prop = new Properties()
-    prop.load(it)
-    project.ext.config = new ConfigSlurper().parse prop
-}
-
-version = "${config.mod_version}"
-if (hasProperty('appendBuildNumber')) {
-    version = version + "-" + appendBuildNumber.toString()
-}
-
-group = "${config.group_id}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "${config.mod_name}-${config.minecraft_version}"
+version = "${mod_version}"
+group= "${group_id}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "${mod_name}-${minecraft_version}"
+sourceCompatibility = targetCompatibility = '1.8'
 
 minecraft {
-    version = "${config.forge_version}"
+    version = "${forge_version}"
     runDir = "run"
-    mappings = "snapshot_20171003"
-    replace '@VERSION@', project.version
+    mappings = "${mappings_version}"
+    clientRunArgs += "--username=Steve"
+}
+
+repositories {
+    maven {url "http://tehnut.info/maven"}
+    maven {url "http://maven.modmuss50.me/"}
+//    maven {
+//        name = "CurseForge"
+//        url = "https://minecraft.curseforge.com/api/maven/"
+//    }
 }
 
 dependencies {
-    deobfCompile ('RebornCore:RebornCore-1.12:+:universal'){
-        transitive = false
+    deobfCompile "mcp.mobius.waila:Hwyla:${hwyla_version}"
+    deobfCompile ("RebornCore:RebornCore-1.12.2:3.9.2.319:universal") {
+        transitive=false
     }
 }
 
-processResources
-        {
-            // this will ensure that this task is redone when the versions change.
-            inputs.property "version", project.version
-            inputs.property "mcversion", project.minecraft.version
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
 
-            // replace stuff in mcmod.info, nothing else
-            from(sourceSets.main.resources.srcDirs) {
-                include 'mcmod.info'
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
 
-                // replace version and mcversion
-                expand 'version':project.version, 'mcversion':project.minecraft.version
-            }
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
 
-            // copy everything else, thats not the mcmod.info
-            from(sourceSets.main.resources.srcDirs) {
-                exclude 'mcmod.info'
-            }
-        }
-
-task deobfJar(type: Jar) {
-    from sourceSets.main.output
-    classifier = 'dev'
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
 }
 
-build.dependsOn deobfJar
+idea{
+    module{
+        sourceDirs += file('src/main/java')
+    }
+}
