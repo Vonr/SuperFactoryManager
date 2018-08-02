@@ -1,7 +1,6 @@
 package vswe.stevesfactory.blocks;
 
 import net.minecraft.block.BlockContainer;
-import net.minecraft.block.BlockPistonBase;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -10,6 +9,7 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
@@ -19,104 +19,87 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import vswe.stevesfactory.StevesFactoryManager;
-import vswe.stevesfactory.init.ModBlocks;
+import vswe.stevesfactory.interfaces.IItemBlockProvider;
 import vswe.stevesfactory.tiles.TileEntityBreaker;
 import vswe.stevesfactory.tiles.TileEntityCluster;
 
 //This is indeed not a subclass to the cable, you can't relay signals through this block
-public class BlockCableBreaker extends BlockContainer
-{
-    public BlockCableBreaker()
-    {
-        super(Material.IRON);
-        setCreativeTab(ModBlocks.creativeTab);
-        setSoundType(SoundType.METAL);
-        setUnlocalizedName(StevesFactoryManager.UNLOCALIZED_START + ModBlocks.CABLE_BREAKER_UNLOCALIZED_NAME);
-        setHardness(1.2F);
-    }
+public class BlockCableBreaker extends BlockContainer {
+	public static final IProperty DIRECTION = PropertyDirection.create("direction");
+	public static final IProperty FRONT     = PropertyDirection.create("front");
 
-    @Override
-    public TileEntity createNewTileEntity(World world, int meta)
-    {
-        return new TileEntityBreaker();
-    }
+	public BlockCableBreaker() {
+		super(Material.IRON);
+		setCreativeTab(StevesFactoryManager.creativeTab);
+		setSoundType(SoundType.METAL);
+		setUnlocalizedName(StevesFactoryManager.UNLOCALIZED_START + "cable_breaker");
+		setHardness(1.2F);
+	}
 
-    public static final IProperty FRONT = PropertyDirection.create("front");
-    public static final IProperty DIRECTION = PropertyDirection.create("direction");
+	@Override
+	public TileEntity createNewTileEntity(World world, int meta) {
+		return new TileEntityBreaker();
+	}
 
-    @Override
-    public BlockStateContainer createBlockState()
-    {
-        return new BlockStateContainer(this, DIRECTION, FRONT);
-    }
+	@Override
+	public IBlockState getStateFromMeta(int meta) {
+		return getDefaultState().withProperty(FRONT, getSide(meta)).withProperty(DIRECTION, getSide(meta));
+	}
 
-    public static EnumFacing getSide(int meta)
-    {
-        return EnumFacing.getFront(meta % EnumFacing.values().length);
-    }
+	public static EnumFacing getSide(int meta) {
+		return EnumFacing.getFront(meta % EnumFacing.values().length);
+	}
 
-    @Override
-    public IBlockState getStateFromMeta(int meta)
-    {
-        return getDefaultState().withProperty(FRONT, getSide(meta)).withProperty(DIRECTION, getSide(meta));
-    }
+	@Override
+	public int getMetaFromState(IBlockState state) {
+		return ((EnumFacing) state.getValue(FRONT)).getIndex();
+	}
 
-    @Override
-    public int getMetaFromState(IBlockState state)
-    {
-        return ((EnumFacing) state.getValue(FRONT)).getIndex();
-    }
+	@Override
+	public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+		TileEntityBreaker entityBreaker = (TileEntityBreaker) worldIn.getTileEntity(pos);
+		if (entityBreaker != null && entityBreaker.getPlaceDirection() != null) {
+			return state.withProperty(DIRECTION, entityBreaker.getPlaceDirection()).withProperty(FRONT, getSide(getMetaFromState(state)));
+		}
+		return state.withProperty(DIRECTION, getSide(getMetaFromState(state))).withProperty(FRONT, getSide(getMetaFromState(state)));
+	}
 
-    @Override
-    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos)
-    {
-        TileEntityBreaker entityBreaker = (TileEntityBreaker) worldIn.getTileEntity(pos);
-        if (entityBreaker != null && entityBreaker.getPlaceDirection() != null)
-        {
-            return state.withProperty(DIRECTION, entityBreaker.getPlaceDirection()).withProperty(FRONT, getSide(getMetaFromState(state)));
-        }
-        return state.withProperty(DIRECTION, getSide(getMetaFromState(state))).withProperty(FRONT, getSide(getMetaFromState(state)));
-    }
+	@Override
+	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+		if (player.isSneaking()) {
+			facing = facing.getOpposite();
+		}
 
-    @Override
-    public EnumBlockRenderType getRenderType(IBlockState state)
-    {
-        return EnumBlockRenderType.MODEL;
-    }
+		TileEntityBreaker breaker = TileEntityCluster.getTileEntity(TileEntityBreaker.class, world, pos);
+		if (breaker != null && !breaker.isBlocked()) {
+			breaker.setPlaceDirection(facing);
+			return true;
+		}
 
-    @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack item)
-    {
-        if (!world.isRemote)
-        {
-            EnumFacing facing = EnumFacing.getDirectionFromEntityLiving(pos, entity);
-            world.setBlockState(pos, state.withProperty(DIRECTION, facing), 2);
+		return false;
+	}
 
-            TileEntityBreaker breaker = TileEntityCluster.getTileEntity(TileEntityBreaker.class, world, pos);
-            if (breaker != null)
-            {
-                breaker.setPlaceDirection(facing);
-                breaker.setMetaData(getMetaFromState(state));
-            }
-        }
-    }
+	@Override
+	public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack item) {
+		if (!world.isRemote) {
+			EnumFacing facing = EnumFacing.getDirectionFromEntityLiving(pos, entity);
+			world.setBlockState(pos, state.withProperty(DIRECTION, facing), 2);
 
+			TileEntityBreaker breaker = TileEntityCluster.getTileEntity(TileEntityBreaker.class, world, pos);
+			if (breaker != null) {
+				breaker.setPlaceDirection(facing);
+				breaker.setMetaData(getMetaFromState(state));
+			}
+		}
+	}
 
-    @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
-    {
-        if (player.isSneaking())
-        {
-        facing = facing.getOpposite();
-    }
+	@Override
+	public BlockStateContainer createBlockState() {
+		return new BlockStateContainer(this, DIRECTION, FRONT);
+	}
 
-        TileEntityBreaker breaker = TileEntityCluster.getTileEntity(TileEntityBreaker.class, world, pos);
-        if (breaker != null && !breaker.isBlocked())
-        {
-            breaker.setPlaceDirection(facing);
-            return true;
-        }
-
-        return false;
-    }
+	@Override
+	public EnumBlockRenderType getRenderType(IBlockState state) {
+		return EnumBlockRenderType.MODEL;
+	}
 }

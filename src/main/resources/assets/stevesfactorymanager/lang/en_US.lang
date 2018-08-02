@@ -2,23 +2,23 @@
 #				BLOCKS
 # ======================================
 
-tile.sfm.BlockMachineManager.name=Machine Inventory Manager
-tile.sfm.BlockCable.name=Inventory Cable
-tile.sfm.BlockCableRelay.name=Inventory Relay
-tile.sfm.BlockAdvancedCableRelay.name=Advanced Inventory Relay
-tile.sfm.BlockCableOutput.name=Redstone Emitter
-tile.sfm.BlockCableInput.name=Redstone Receiver
-tile.sfm.BlockCableCreative.name=Creative Supplier
-tile.sfm.BlockCableIntake.name=Item Valve
-tile.sfm.BlockInstantCableIntake.name=Rapid Item Valve
-tile.sfm.BlockCableBUD.name=Block Detector
-tile.sfm.BlockCableBreaker.name=Block Gate
-tile.sfm.BlockCableCluster.name=Cable Cluster
-tile.sfm.BlockAdvancedCableCluster.name=Advanced Cable Cluster
-tile.sfm.BlockCableCamouflage.name=Cable Camouflage
-tile.sfm.BlockCableInsideCamouflage.name=Double Sided Cable Camouflage
-tile.sfm.BlockCableShapeCamouflage.name=Transforming Cable Camouflage
-tile.sfm.BlockCableSign.name=Sign Updater
+tile.sfm.manager.name=Machine Inventory Manager
+tile.sfm.cable.name=Inventory Cable
+tile.sfm.cable_relay.name=Inventory Relay
+tile.sfm.cable_relay_advanced.name=Advanced Inventory Relay
+tile.sfm.cable_output.name=Redstone Emitter
+tile.sfm.cable_input.name=Redstone Receiver
+tile.sfm.cable_creative.name=Creative Supplier
+tile.sfm.cable_intake.name=Item Valve
+tile.sfm.cable_intake_instant.name=Rapid Item Valve
+tile.sfm.cable_bud.name=Block Detector
+tile.sfm.cable_breaker.name=Block Gate
+tile.sfm.cable_cluster.name=Cable Cluster
+tile.sfm.cable_cluster_advanced.name=Advanced Cable Cluster
+tile.sfm.cable_camouflage.name=Cable Camouflage
+tile.sfm.cable_camouflage_inside.name=Double Sided Cable Camouflage
+tile.sfm.cable_camouflage_shape.name=Transforming Cable Camouflage
+tile.sfm.cable_sign.name=Sign Updater
 
 # ======================================
 #			COMPONENT TYPES

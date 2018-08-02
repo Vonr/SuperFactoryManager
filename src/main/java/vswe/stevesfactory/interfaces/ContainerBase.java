@@ -7,25 +7,21 @@ import vswe.stevesfactory.blocks.ITileEntityInterface;
 
 import java.util.List;
 
-public abstract class ContainerBase extends Container
-{
-    private ITileEntityInterface te;
-    private InventoryPlayer player;
+public abstract class ContainerBase extends Container {
+	private InventoryPlayer      player;
+	private ITileEntityInterface te;
 
 
-    protected ContainerBase(ITileEntityInterface te, InventoryPlayer player)
-    {
-        this.te = te;
-        this.player = player;
-    }
+	protected ContainerBase(ITileEntityInterface te, InventoryPlayer player) {
+		this.te = te;
+		this.player = player;
+	}
 
-    public ITileEntityInterface getTileEntity()
-    {
-        return te;
-    }
+	public ITileEntityInterface getTileEntity() {
+		return te;
+	}
 
-    public List<IContainerListener> getCrafters()
-    {
-        return listeners;
-    }
+	public List<IContainerListener> getCrafters() {
+		return listeners;
+	}
 }

@@ -2,23 +2,23 @@
 #				BLOCKS
 # ======================================
 
-tile.sfm.BlockMachineManager.name=工厂管理器
-tile.sfm.BlockCable.name=工厂线缆
-tile.sfm.BlockCableRelay.name=物品栏中转站
-tile.sfm.BlockAdvancedCableRelay.name=高级物品栏中转站
-tile.sfm.BlockCableOutput.name=红石信号发射器
-tile.sfm.BlockCableInput.name=红石信号接收器
-tile.sfm.BlockCableCreative.name=创造物品供应器
-tile.sfm.BlockCableIntake.name=物品阀门
-tile.sfm.BlockInstantCableIntake.name=快速物品阀门
-tile.sfm.BlockCableBUD.name=方块更新检测器（BUD）
-tile.sfm.BlockCableBreaker.name=方块交互器
-tile.sfm.BlockCableCluster.name=集线器
-tile.sfm.BlockAdvancedCableCluster.name=高级集线器
-tile.sfm.BlockCableCamouflage.name=伪装方块
-tile.sfm.BlockCableInsideCamouflage.name=伪装方块-双面
-tile.sfm.BlockCableShapeCamouflage.name=伪装方块-变换
-tile.sfm.BlockCableSign.name=告示牌更新器
+tile.sfm.manager.name=工厂管理器
+tile.sfm.cable.name=工厂线缆
+tile.sfm.cable_relay.name=物品栏中转站
+tile.sfm.cable_relay_advanced.name=高级物品栏中转站
+tile.sfm.cable_output.name=红石信号发射器
+tile.sfm.cable_input.name=红石信号接收器
+tile.sfm.cable_creative.name=创造物品供应器
+tile.sfm.cable_intake.name=物品阀门
+tile.sfm.cable_intake_instant.name=快速物品阀门
+tile.sfm.cable_bud.name=方块更新检测器（BUD）
+tile.sfm.cable_breaker.name=方块交互器
+tile.sfm.cable_cluster.name=集线器
+tile.sfm.cable_cluster_advanced.name=高级集线器
+tile.sfm.cable_camouflage.name=伪装方块
+tile.sfm.cable_camouflage_inside.name=伪装方块-双面
+tile.sfm.cable_camouflage_shape.name=伪装方块-变换
+tile.sfm.cable_sign.name=告示牌更新器
 
 # ======================================
 #			COMPONENT TYPES
@@ -405,3 +405,5 @@ gui.sfm.PermissionDenied=通道不可用
 # ======================================
 
 itemGroup.sfm=史蒂夫工厂管理
+
+item.sfm.memorydisk.name=Memory Disc

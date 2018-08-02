@@ -10,16 +10,15 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.stevesfactory.network.DataReader;
 import vswe.stevesfactory.network.DataWriter;
 
-public interface ITileEntityInterface
-{
-    public abstract Container getContainer(TileEntity te, InventoryPlayer inv);
+public interface ITileEntityInterface {
+	public abstract Container getContainer(TileEntity te, InventoryPlayer inv);
 
-    @SideOnly(Side.CLIENT)
-    public abstract GuiScreen getGui(TileEntity te, InventoryPlayer inv);
+	@SideOnly(Side.CLIENT)
+	public abstract GuiScreen getGui(TileEntity te, InventoryPlayer inv);
 
-    public abstract void readAllData(DataReader dr, EntityPlayer player);
+	public abstract void readAllData(DataReader dr, EntityPlayer player);
 
-    public abstract void readUpdatedData(DataReader dr, EntityPlayer player);
+	public abstract void readUpdatedData(DataReader dr, EntityPlayer player);
 
-    public abstract void writeAllData(DataWriter dw);
+	public abstract void writeAllData(DataWriter dw);
 }

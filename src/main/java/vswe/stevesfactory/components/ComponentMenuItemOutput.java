@@ -1,12 +1,10 @@
 package vswe.stevesfactory.components;
 
 
-public class ComponentMenuItemOutput extends ComponentMenuItem
-{
-    public ComponentMenuItemOutput(FlowComponent parent)
-    {
-        super(parent);
+public class ComponentMenuItemOutput extends ComponentMenuItem {
+	public ComponentMenuItemOutput(FlowComponent parent) {
+		super(parent);
 
-        setFirstRadioButtonSelected(false);
-    }
+		setFirstRadioButtonSelected(false);
+	}
 }

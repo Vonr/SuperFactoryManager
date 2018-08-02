@@ -17,143 +17,113 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.stevesfactory.tiles.TileEntityCamouflage;
 import vswe.stevesfactory.tiles.TileEntityCluster;
 
-import javax.annotation.Nullable;
+public abstract class BlockCamouflageBase extends BlockContainer {
+	public static final AxisAlignedBB NO_BLOCK_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D);
 
-public abstract class BlockCamouflageBase extends BlockContainer
-{
-    protected BlockCamouflageBase(Material material)
-    {
-        super(material);
-    }
+	protected BlockCamouflageBase(Material material) {
+		super(material);
+	}
 
-    public static final AxisAlignedBB NO_BLOCK_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D);
+	@Override
+	public EnumBlockRenderType getRenderType(IBlockState state) {
+		return EnumBlockRenderType.MODEL;
+	}
 
-    @Override
-    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos)
-    {
-        return getBlockBoundsBasedOnState(state, source, pos);
-    }
+	@Override
+	public boolean isFullCube(IBlockState state) {
+		return false;
+	}
 
-    @Override
-    @SideOnly(Side.CLIENT)
-    public AxisAlignedBB getSelectedBoundingBox(IBlockState state, World world, BlockPos pos)
-    {
-        if (!setBlockCollisionBoundsBasedOnState(state, world, pos))
-        {
-            return NO_BLOCK_AABB;
-        }
-        return super.getSelectedBoundingBox(state, world, pos);
-    }
+	@Override
+	public boolean isPassable(IBlockAccess world, BlockPos pos) {
+		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
 
-    @Override
-    public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos)
-    {
-        if (!setBlockCollisionBoundsBasedOnState(state, world, pos))
-        {
-            return NO_BLOCK_AABB;
-        }
-        return super.getCollisionBoundingBox(state, world, pos);
-    }
+		return camouflage == null || camouflage.isNormalBlock();
+	}
 
-    private boolean setBlockCollisionBoundsBasedOnState(IBlockState state, IBlockAccess world, BlockPos pos)
-    {
-        TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
-        if (camouflage != null && camouflage.getCamouflageType().useSpecialShape())
-        {
-            if (!camouflage.isUseCollision())
-            {
-                return false;
-            }
-        }
-        return true;
-    }
+	@Override
+	public float getBlockHardness(IBlockState state, World world, BlockPos pos) {
+		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
+		if (camouflage != null && camouflage.getCamouflageType().useSpecialShape() && !camouflage.isUseCollision()) {
+			return 600000;
+		}
+		return super.getBlockHardness(state, world, pos);
+	}
 
-    @Override
-    public boolean isPassable(IBlockAccess world, BlockPos pos)
-    {
-        TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
+	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+		return getBlockBoundsBasedOnState(state, source, pos);
+	}
 
-        return camouflage == null || camouflage.isNormalBlock();
-    }
+	@Override
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+		if (!setBlockCollisionBoundsBasedOnState(state, world, pos)) {
+			return NO_BLOCK_AABB;
+		}
+		return super.getCollisionBoundingBox(state, world, pos);
+	}
 
+	@Override
+	@SideOnly(Side.CLIENT)
+	public AxisAlignedBB getSelectedBoundingBox(IBlockState state, World world, BlockPos pos) {
+		if (!setBlockCollisionBoundsBasedOnState(state, world, pos)) {
+			return NO_BLOCK_AABB;
+		}
+		return super.getSelectedBoundingBox(state, world, pos);
+	}
 
-    @Override
-    public RayTraceResult collisionRayTrace(IBlockState state, World world, BlockPos pos, Vec3d start, Vec3d end)
-    {
-        if (!setBlockCollisionBoundsBasedOnState(state, world, pos))
-        {
-            return rayTrace(pos, start, end, NO_BLOCK_AABB);
-        }
+	private boolean setBlockCollisionBoundsBasedOnState(IBlockState state, IBlockAccess world, BlockPos pos) {
+		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
+		if (camouflage != null && camouflage.getCamouflageType().useSpecialShape()) {
+			if (!camouflage.isUseCollision()) {
+				return false;
+			}
+		}
+		return true;
+	}
 
-        return super.collisionRayTrace(state, world, pos, start, end);
-    }
+	@Override
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
+	}
 
-    @Override
-    public boolean addHitEffects(IBlockState state, World worldObj, RayTraceResult target, ParticleManager manager)
-    {
-        TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, worldObj, target.getBlockPos());
-        if (camouflage != null)
-        {
-            if (camouflage.addBlockEffect(this, state, worldObj, target.sideHit, manager))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
+	@Override
+	public RayTraceResult collisionRayTrace(IBlockState state, World world, BlockPos pos, Vec3d start, Vec3d end) {
+		if (!setBlockCollisionBoundsBasedOnState(state, world, pos)) {
+			return rayTrace(pos, start, end, NO_BLOCK_AABB);
+		}
 
-    public AxisAlignedBB getBlockBoundsBasedOnState(IBlockState state, IBlockAccess world, BlockPos pos)
-    {
-        TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
-        if (camouflage != null && camouflage.getCamouflageType().useSpecialShape())
-        {
-            return camouflage.getBlockBounds();
-        }
-        else
-        {
-            return getBlockBoundsForItemRender();
-        }
-    }
+		return super.collisionRayTrace(state, world, pos, start, end);
+	}
 
-    @Override
-    public float getBlockHardness(IBlockState state, World world, BlockPos pos)
-    {
-        TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
-        if (camouflage != null && camouflage.getCamouflageType().useSpecialShape() && !camouflage.isUseCollision())
-        {
-            return 600000;
-        }
-        return super.getBlockHardness(state, world, pos);
-    }
+	@SideOnly(Side.CLIENT)
+	@Override
+	public BlockRenderLayer getBlockLayer() {
+		return BlockRenderLayer.TRANSLUCENT;
+	}
 
-    public AxisAlignedBB getBlockBoundsForItemRender()
-    {
-        return FULL_BLOCK_AABB;
-    }
+	@Override
+	public boolean addHitEffects(IBlockState state, World worldObj, RayTraceResult target, ParticleManager manager) {
+		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, worldObj, target.getBlockPos());
+		if (camouflage != null) {
+			if (camouflage.addBlockEffect(this, state, worldObj, target.sideHit, manager)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    @Override
-    public EnumBlockRenderType getRenderType(IBlockState state)
-    {
-        return EnumBlockRenderType.MODEL;
-    }
+	public AxisAlignedBB getBlockBoundsBasedOnState(IBlockState state, IBlockAccess world, BlockPos pos) {
+		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
+		if (camouflage != null && camouflage.getCamouflageType().useSpecialShape()) {
+			return camouflage.getBlockBounds();
+		} else {
+			return getBlockBoundsForItemRender();
+		}
+	}
 
-    @Override
-    public boolean isOpaqueCube(IBlockState state)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isFullCube(IBlockState state)
-    {
-        return false;
-    }
-
-    @SideOnly(Side.CLIENT)
-    @Override
-    public BlockRenderLayer getBlockLayer()
-    {
-        return BlockRenderLayer.TRANSLUCENT;
-    }
+	public AxisAlignedBB getBlockBoundsForItemRender() {
+		return FULL_BLOCK_AABB;
+	}
 
 }

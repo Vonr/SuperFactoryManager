@@ -1,6 +1,5 @@
 package vswe.stevesfactory.api;
 
-public class SFMApi
-{
+public class SFMApi {
 
 }

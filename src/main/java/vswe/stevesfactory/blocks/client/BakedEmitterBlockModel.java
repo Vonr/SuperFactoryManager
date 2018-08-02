@@ -13,226 +13,191 @@ import vswe.stevesfactory.blocks.BlockCableOutput;
 import java.util.LinkedList;
 import java.util.List;
 
-enum SideQuad
-{
-    STRONG,
-    WEAK,
-    IDLE
+enum SideQuad {
+	STRONG,
+	WEAK,
+	IDLE
 }
+
 //Needed to render all the sides individually, if they where made with JSON it would be a huge amount of files, the new format is not good for dynamic and advanced blocks
-public class BakedEmitterBlockModel implements IBakedModel
-{
+public class BakedEmitterBlockModel implements IBakedModel {
 
-    private VertexFormat format;
-    private TextureAtlasSprite strongSprite;
-    private TextureAtlasSprite weakSprite;
-    private TextureAtlasSprite idleSprite;
+	private VertexFormat       format;
+	private BakedQuad[] idleQuads   = new BakedQuad[EnumFacing.values().length];
+	private TextureAtlasSprite idleSprite;
+	private BakedQuad[] strongQuads = new BakedQuad[EnumFacing.values().length];
+	private TextureAtlasSprite strongSprite;
+	private BakedQuad[] weakQuads   = new BakedQuad[EnumFacing.values().length];
+	private TextureAtlasSprite weakSprite;
 
-    private BakedQuad[] strongQuads = new BakedQuad[EnumFacing.values().length];
-    private BakedQuad[] weakQuads = new BakedQuad[EnumFacing.values().length];
-    private BakedQuad[] idleQuads = new BakedQuad[EnumFacing.values().length];
+	public BakedEmitterBlockModel(java.util.function.Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
+		FaceBakery  faceBakery = new FaceBakery();
+		BlockFaceUV bfUV       = new BlockFaceUV(new float[]{0, 0, 16, 16}, 0);
+		strongSprite = bakedTextureGetter.apply(EmitterBlockModel.STRONG);
+		weakSprite = bakedTextureGetter.apply(EmitterBlockModel.WEAK);
+		idleSprite = bakedTextureGetter.apply(EmitterBlockModel.IDLE);
 
-    public BakedEmitterBlockModel(java.util.function.Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter)
-    {
-        FaceBakery faceBakery = new FaceBakery();
-        BlockFaceUV bfUV = new BlockFaceUV(new float[]{0, 0, 16, 16}, 0);
-        strongSprite = bakedTextureGetter.apply(EmitterBlockModel.STRONG);
-        weakSprite = bakedTextureGetter.apply(EmitterBlockModel.WEAK);
-        idleSprite = bakedTextureGetter.apply(EmitterBlockModel.IDLE);
+		Vector3f v1 = new Vector3f(0, 0, 0);
+		Vector3f v2 = new Vector3f(16, 16, 16);
 
-        Vector3f v1 = new Vector3f(0, 0, 0);
-        Vector3f v2 = new Vector3f(16, 16, 16);
+		for (EnumFacing facing : EnumFacing.values()) {
+			strongQuads[facing.getIndex()] = faceBakery.makeBakedQuad(v1, v2, new BlockPartFace(facing, -1, "stevesfactorymanager:blocks/cable_output_strong", bfUV), strongSprite, facing, ModelRotation.X0_Y0, null, false, true);
+			weakQuads[facing.getIndex()] = faceBakery.makeBakedQuad(v1, v2, new BlockPartFace(facing, -1, "stevesfactorymanager:blocks/cable_weak_strong", bfUV), weakSprite, facing, ModelRotation.X0_Y0, null, false, true);
+			idleQuads[facing.getIndex()] = faceBakery.makeBakedQuad(v1, v2, new BlockPartFace(facing, -1, "stevesfactorymanager:blocks/cable_idle", bfUV), idleSprite, facing, ModelRotation.X0_Y0, null, false, true);
+		}
+	}
 
-        for (EnumFacing facing : EnumFacing.values())
-        {
-            strongQuads[facing.getIndex()] = faceBakery.makeBakedQuad(v1, v2, new BlockPartFace(facing, -1, "stevesfactorymanager:blocks/cable_output_strong", bfUV), strongSprite, facing, ModelRotation.X0_Y0, null, false, true);
-            weakQuads[facing.getIndex()] = faceBakery.makeBakedQuad(v1, v2, new BlockPartFace(facing, -1, "stevesfactorymanager:blocks/cable_weak_strong", bfUV), weakSprite, facing, ModelRotation.X0_Y0, null, false, true);
-            idleQuads[facing.getIndex()] = faceBakery.makeBakedQuad(v1, v2, new BlockPartFace(facing, -1, "stevesfactorymanager:blocks/cable_idle", bfUV), idleSprite, facing, ModelRotation.X0_Y0, null, false, true);
-        }
-    }
+	@Override
+	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
+		if (state instanceof IExtendedBlockState) {
+			IExtendedBlockState blockState = (IExtendedBlockState) state;
+			return new AssembledBakedModel(blockState).getQuads(state, side, rand);
+		}
 
-    @Override
-    public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand)
-    {
-        if (state instanceof IExtendedBlockState)
-        {
-            IExtendedBlockState blockState = (IExtendedBlockState) state;
-            return new AssembledBakedModel(blockState).getQuads(state, side, rand);
-        }
+		return new AssembledBakedModel().getQuads(state, side, rand);
+	}
 
-        return new AssembledBakedModel().getQuads(state, side, rand);
-    }
+	//Apparently it needs to be separate because it could be overridden my another thread as rendering is multithreaded
+	//https://github.com/TheGreyGhost/MinecraftByExample/blob/master/src/main/java/minecraftbyexample/mbe05_block_smartblockmodel2/CompositeModel.java
+	public class AssembledBakedModel implements IBakedModel {
+		private SideQuad[] sideQuads = new SideQuad[EnumFacing.values().length];
 
-    @Override
-    public boolean isAmbientOcclusion()
-    {
-        return true;
-    }
+		public AssembledBakedModel(IExtendedBlockState blockState) {
+			Object obj = blockState.getValue(BlockCableOutput.STRONG_SIDES);
 
-    @Override
-    public boolean isGui3d()
-    {
-        return false;
-    }
+			if (obj != null) {
 
-    @Override
-    public boolean isBuiltInRenderer()
-    {
-        return false;
-    }
+				int strongVals = blockState.getValue(BlockCableOutput.STRONG_SIDES);
+				int weakVals   = blockState.getValue(BlockCableOutput.WEAK_SIDES);
 
-    @Override
-    public TextureAtlasSprite getParticleTexture()
-    {
-        return idleSprite;
-    }
+				for (EnumFacing facing : EnumFacing.values()) {
+					if ((strongVals & (1 << facing.getIndex())) >> facing.getIndex() == 1) {
+						sideQuads[facing.getIndex()] = SideQuad.STRONG;
+					} else if ((weakVals & (1 << facing.getIndex())) >> facing.getIndex() == 1) {
+						sideQuads[facing.getIndex()] = SideQuad.WEAK;
+					} else {
+						sideQuads[facing.getIndex()] = SideQuad.IDLE;
+					}
+				}
+			} else {
+				for (int i = 0; i < 6; i++) {
+					sideQuads[i] = SideQuad.IDLE;
+				}
+			}
+		}
 
-    @Override
-    public ItemCameraTransforms getItemCameraTransforms()
-    {
-        return ItemCameraTransforms.DEFAULT;
-    }
+		public AssembledBakedModel() {
+			for (int i = 0; i < 6; i++) {
+				sideQuads[i] = SideQuad.IDLE;
+			}
+		}
 
-    @Override
-    public ItemOverrideList getOverrides()
-    {
-        return ItemOverrideList.NONE;
-    }
+		private BakedQuad getQuadFromSide(SideQuad sideQuad, EnumFacing facing) {
+			switch (sideQuad) {
+				case STRONG:
+					return strongQuads[facing.getIndex()];
+				case WEAK:
+					return weakQuads[facing.getIndex()];
+				case IDLE:
+				default:
+					return idleQuads[facing.getIndex()];
+			}
+		}
 
-    //Apparently it needs to be separate because it could be overridden my another thread as rendering is multithreaded
-    //https://github.com/TheGreyGhost/MinecraftByExample/blob/master/src/main/java/minecraftbyexample/mbe05_block_smartblockmodel2/CompositeModel.java
-    public class AssembledBakedModel implements IBakedModel
-    {
-        private SideQuad[] sideQuads = new SideQuad[EnumFacing.values().length];
+		/*
+				@Override
+				public List getFaceQuads(EnumFacing side) {
+					List<BakedQuad> allFaceQuads = new LinkedList<BakedQuad>();
 
-        public AssembledBakedModel(IExtendedBlockState blockState)
-        {
-            Object obj = blockState.getValue(BlockCableOutput.STRONG_SIDES);
+					allFaceQuads.add(getQuadFromSide(sideQuads[side.getIndex()], side));
 
-            if (obj != null)
-            {
+					return allFaceQuads;
+				}
 
-                int strongVals = blockState.getValue(BlockCableOutput.STRONG_SIDES);
-                int weakVals = blockState.getValue(BlockCableOutput.WEAK_SIDES);
+				@Override
+				public List getGeneralQuads() {
+					List<BakedQuad> allQuads = new LinkedList<BakedQuad>();
 
-                for (EnumFacing facing : EnumFacing.values())
-                {
-                    if ((strongVals & (1 << facing.getIndex())) >> facing.getIndex() == 1)
-                    {
-                        sideQuads[facing.getIndex()] = SideQuad.STRONG;
-                    } else if ((weakVals & (1 << facing.getIndex())) >> facing.getIndex() == 1)
-                    {
-                        sideQuads[facing.getIndex()] = SideQuad.WEAK;
-                    } else
-                    {
-                        sideQuads[facing.getIndex()] = SideQuad.IDLE;
-                    }
-                }
-            } else
-            {
-                for (int i = 0; i < 6; i++)
-                {
-                    sideQuads[i] = SideQuad.IDLE;
-                }
-            }
-        }
+					for (EnumFacing facing: EnumFacing.values()) {
+						allQuads.add(getQuadFromSide(sideQuads[facing.getIndex()], facing));
+					}
 
-        public AssembledBakedModel()
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                sideQuads[i] = SideQuad.IDLE;
-            }
-        }
+					return allQuads;
+				}
+		*/
+		@Override
+		public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
+			List<BakedQuad> allFaceQuads = new LinkedList<BakedQuad>();
 
-        private BakedQuad getQuadFromSide(SideQuad sideQuad, EnumFacing facing)
-        {
-            switch (sideQuad)
-            {
-                case STRONG:
-                    return strongQuads[facing.getIndex()];
-                case WEAK:
-                    return weakQuads[facing.getIndex()];
-                case IDLE:
-                default:
-                    return idleQuads[facing.getIndex()];
-            }
-        }
+			if (side != null) {
+				allFaceQuads.add(getQuadFromSide(sideQuads[side.getIndex()], side));
+			} else {
+				for (EnumFacing facing : EnumFacing.values()) {
+					allFaceQuads.add(getQuadFromSide(sideQuads[facing.getIndex()], facing));
+				}
+			}
 
-        /*
-                @Override
-                public List getFaceQuads(EnumFacing side) {
-                    List<BakedQuad> allFaceQuads = new LinkedList<BakedQuad>();
+			return allFaceQuads;
+		}
 
-                    allFaceQuads.add(getQuadFromSide(sideQuads[side.getIndex()], side));
+		@Override
+		public boolean isAmbientOcclusion() {
+			return true;
+		}
 
-                    return allFaceQuads;
-                }
+		@Override
+		public boolean isGui3d() {
+			return false;
+		}
 
-                @Override
-                public List getGeneralQuads() {
-                    List<BakedQuad> allQuads = new LinkedList<BakedQuad>();
+		@Override
+		public boolean isBuiltInRenderer() {
+			return false;
+		}
 
-                    for (EnumFacing facing: EnumFacing.values()) {
-                        allQuads.add(getQuadFromSide(sideQuads[facing.getIndex()], facing));
-                    }
+		@Override
+		public TextureAtlasSprite getParticleTexture() {
+			return idleSprite;
+		}
 
-                    return allQuads;
-                }
-        */
-        @Override
-        public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand)
-        {
-            List<BakedQuad> allFaceQuads = new LinkedList<BakedQuad>();
+		@Override
+		public ItemCameraTransforms getItemCameraTransforms() {
+			return ItemCameraTransforms.DEFAULT;
+		}
 
-            if (side != null)
-            {
-                allFaceQuads.add(getQuadFromSide(sideQuads[side.getIndex()], side));
-            } else
-            {
-                for (EnumFacing facing : EnumFacing.values())
-                {
-                    allFaceQuads.add(getQuadFromSide(sideQuads[facing.getIndex()], facing));
-                }
-            }
+		@Override
+		public ItemOverrideList getOverrides() {
+			return ItemOverrideList.NONE;
+		}
+	}	@Override
+	public boolean isAmbientOcclusion() {
+		return true;
+	}
 
-            return allFaceQuads;
-        }
+	@Override
+	public boolean isGui3d() {
+		return false;
+	}
 
-        @Override
-        public boolean isAmbientOcclusion()
-        {
-            return true;
-        }
+	@Override
+	public boolean isBuiltInRenderer() {
+		return false;
+	}
 
-        @Override
-        public boolean isGui3d()
-        {
-            return false;
-        }
+	@Override
+	public TextureAtlasSprite getParticleTexture() {
+		return idleSprite;
+	}
 
-        @Override
-        public boolean isBuiltInRenderer()
-        {
-            return false;
-        }
+	@Override
+	public ItemCameraTransforms getItemCameraTransforms() {
+		return ItemCameraTransforms.DEFAULT;
+	}
 
-        @Override
-        public TextureAtlasSprite getParticleTexture()
-        {
-            return idleSprite;
-        }
+	@Override
+	public ItemOverrideList getOverrides() {
+		return ItemOverrideList.NONE;
+	}
 
-        @Override
-        public ItemCameraTransforms getItemCameraTransforms()
-        {
-            return ItemCameraTransforms.DEFAULT;
-        }
 
-        @Override
-        public ItemOverrideList getOverrides()
-        {
-            return ItemOverrideList.NONE;
-        }
-    }
 }

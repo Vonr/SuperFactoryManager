@@ -1,7 +1,7 @@
 //package vswe.stevesfactory.wrappers;
 //
 //import net.minecraft.entity.passive.EntityHorse;
-//import net.minecraft.init.Items;
+//import net.minecraft.registry.Items;
 //import net.minecraft.inventory.IInventory;
 //import net.minecraft.item.ItemStack;
 //import net.minecraftforge.fml.relauncher.ReflectionHelper;z

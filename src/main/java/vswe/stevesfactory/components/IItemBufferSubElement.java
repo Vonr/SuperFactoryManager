@@ -2,15 +2,14 @@ package vswe.stevesfactory.components;
 
 import net.minecraft.item.ItemStack;
 
-public interface IItemBufferSubElement
-{
-    void remove();
+public interface IItemBufferSubElement {
+	void remove();
 
-    void onUpdate();
+	void onUpdate();
 
-    int getSizeLeft();
+	int getSizeLeft();
 
-    void reduceAmount(int amount);
+	void reduceAmount(int amount);
 
-    ItemStack getItemStack();
+	ItemStack getItemStack();
 }

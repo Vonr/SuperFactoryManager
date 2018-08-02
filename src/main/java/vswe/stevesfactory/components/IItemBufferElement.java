@@ -1,16 +1,15 @@
 package vswe.stevesfactory.components;
 
-public interface IItemBufferElement
-{
-    void prepareSubElements();
+public interface IItemBufferElement {
+	void prepareSubElements();
 
-    IItemBufferSubElement getSubElement();
+	IItemBufferSubElement getSubElement();
 
-    void removeSubElement();
+	void removeSubElement();
 
-    int retrieveItemCount(int moveCount);
+	int retrieveItemCount(int moveCount);
 
-    void decreaseStackSize(int moveCount);
+	void decreaseStackSize(int moveCount);
 
-    void releaseSubElements();
+	void releaseSubElements();
 }

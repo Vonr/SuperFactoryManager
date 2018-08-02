@@ -8,9 +8,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
-import vswe.stevesfactory.tiles.TileEntityManager;
 import vswe.stevesfactory.interfaces.ContainerBase;
 import vswe.stevesfactory.settings.Settings;
+import vswe.stevesfactory.tiles.TileEntityManager;
 import vswe.stevesfactory.util.Utils;
 
 import java.io.ByteArrayOutputStream;
@@ -20,225 +20,179 @@ import java.io.OutputStream;
 import static vswe.stevesfactory.StevesFactoryManager.CHANNEL;
 import static vswe.stevesfactory.StevesFactoryManager.packetHandler;
 
-public class DataWriter
-{
-    private int byteBuffer;
-    private int bitCountBuffer;
-    private OutputStream stream;
+public class DataWriter {
+	private int          bitCountBuffer;
+	private int          byteBuffer;
+	private int     idBits;
+	private boolean idWritten;
+	private int     invBits;
+	private boolean invWritten;
+	private OutputStream stream;
 
-    DataWriter()
-    {
-        stream = new ByteArrayOutputStream();
-    }
-
-    DataWriter(OutputStream stream)
-    {
-        this.stream = stream;
-    }
-
-    public void writeByte(int data)
-    {
-        writeData(data, 8);
-    }
-
-    public void writeBoolean(boolean data)
-    {
-        writeData(data ? 1 : 0, DataBitHelper.BOOLEAN);
-    }
-
-    public void writeData(int data, DataBitHelper bitCount)
-    {
-        writeData(data, bitCount.getBitCount());
-    }
+	DataWriter() {
+		stream = new ByteArrayOutputStream();
+	}
 
 
-    public void writeData(int data, int bitCount)
-    {
-        long mask = (long) Math.pow(2, bitCount) - 1;
+	DataWriter(OutputStream stream) {
+		this.stream = stream;
+	}
 
-        data &= mask;
+	public void writeBoolean(boolean data) {
+		writeData(data ? 1 : 0, DataBitHelper.BOOLEAN);
+	}
 
-        while (true)
-        {
-            if (bitCountBuffer + bitCount >= 8)
-            {
-                int bitsToAdd = 8 - bitCountBuffer;
-                int addMask = (int) Math.pow(2, bitsToAdd) - 1;
-                int addData = data & addMask;
-                data >>>= bitsToAdd;
-                addData <<= bitCountBuffer;
-                byteBuffer |= addData;
+	void sendPlayerPackets(double x, double y, double z, double r, int dimension) {
+		packetHandler.sendToAllAround(createPacket(), new TargetPoint(dimension, x, y, z, r));
+	}
 
-                try
-                {
-                    stream.write(byteBuffer);
-                } catch (IOException ignored)
-                {
-                }
+	private FMLProxyPacket createPacket() {
+		writeFinalBits();
+		PacketBuffer buf = new PacketBuffer(Unpooled.copiedBuffer(((ByteArrayOutputStream) stream).toByteArray()));
+		return new FMLProxyPacket(buf, CHANNEL);
+	}
 
-                byteBuffer = 0;
-                bitCount -= bitsToAdd;
-                bitCountBuffer = 0;
-            } else
-            {
-                byteBuffer |= data << bitCountBuffer;
-                bitCountBuffer += bitCount;
-                break;
-            }
-        }
-    }
+	void writeFinalBits() {
+		if (bitCountBuffer > 0) {
+			try {
+				stream.write(byteBuffer);
+				bitCountBuffer = 0;
+			} catch (IOException ignored) {
+			}
+		}
+	}
 
-    private FMLProxyPacket createPacket()
-    {
-        writeFinalBits();
-        PacketBuffer buf = new PacketBuffer(Unpooled.copiedBuffer(((ByteArrayOutputStream) stream).toByteArray()));
-        return new FMLProxyPacket(buf, CHANNEL);
-    }
+	void sendPlayerPacket(EntityPlayerMP player) {
+		packetHandler.sendTo(createPacket(), player);
+	}
 
-    void sendPlayerPackets(double x, double y, double z, double r, int dimension)
-    {
-        packetHandler.sendToAllAround(createPacket(), new TargetPoint(dimension, x, y, z, r));
-    }
+	void sendServerPacket() {
+		packetHandler.sendToServer(createPacket());
+	}
 
-    void sendPlayerPacket(EntityPlayerMP player)
-    {
-        packetHandler.sendTo(createPacket(), player);
-    }
+	void sendPlayerPackets(ContainerBase container) {
+		for (IContainerListener crafting : container.getCrafters()) {
+			if (crafting instanceof EntityPlayer) {
+				EntityPlayerMP player = (EntityPlayerMP) crafting;
+				packetHandler.sendTo(createPacket(), player);
+			}
+		}
+	}
 
-    void sendServerPacket()
-    {
-        packetHandler.sendToServer(createPacket());
-    }
+	public void writeString(String str, DataBitHelper bits) {
+		if (str != null) {
+			byte[] bytes = str.getBytes();
+			writeData(bytes.length, bits);
+			int l = str.length() & ((int) Math.pow(2, bits.getBitCount()) - 1);
 
-    void sendPlayerPackets(ContainerBase container)
-    {
-        for (IContainerListener crafting : container.getCrafters())
-        {
-            if (crafting instanceof EntityPlayer)
-            {
-                EntityPlayerMP player = (EntityPlayerMP) crafting;
-                packetHandler.sendTo(createPacket(), player);
-            }
-        }
-    }
+			for (int i = 0; i < l; i++) {
+				writeByte(bytes[i]);
+			}
+		} else {
+			writeData(0, bits);
+		}
+	}
 
-    public void writeString(String str, DataBitHelper bits)
-    {
-        if (str != null)
-        {
-            byte[] bytes = str.getBytes();
-            writeData(bytes.length, bits);
-            int l = str.length() & ((int) Math.pow(2, bits.getBitCount()) - 1);
+	public void writeByte(int data) {
+		writeData(data, 8);
+	}
 
-            for (int i = 0; i < l; i++)
-            {
-                writeByte(bytes[i]);
-            }
-        } else
-        {
-            writeData(0, bits);
-        }
-    }
+	public void writeData(int data, DataBitHelper bitCount) {
+		writeData(data, bitCount.getBitCount());
+	}
 
-    public void writeNBT(NBTTagCompound nbtTagCompound)
-    {
-        byte[] bytes = null;
+	public void writeData(int data, int bitCount) {
+		long mask = (long) Math.pow(2, bitCount) - 1;
 
-        if (nbtTagCompound != null)
-        {
-            try
-            {
-                bytes = Utils.compress(nbtTagCompound);
-            } catch (IOException ex)
-            {
-                bytes = null;
-            }
-        }
+		data &= mask;
 
-        writeBoolean(bytes != null);
-        if (bytes != null)
-        {
-            writeData(bytes.length, DataBitHelper.NBT_LENGTH);
-            for (byte b : bytes)
-            {
-                writeByte(b);
-            }
-        }
-    }
+		while (true) {
+			if (bitCountBuffer + bitCount >= 8) {
+				int bitsToAdd = 8 - bitCountBuffer;
+				int addMask   = (int) Math.pow(2, bitsToAdd) - 1;
+				int addData   = data & addMask;
+				data >>>= bitsToAdd;
+				addData <<= bitCountBuffer;
+				byteBuffer |= addData;
 
-    private boolean idWritten;
-    private int idBits;
+				try {
+					stream.write(byteBuffer);
+				} catch (IOException ignored) {
+				}
 
-    public void writeComponentId(TileEntityManager manager, int id)
-    {
-        if (!idWritten)
-        {
-            if (Settings.isLimitless(manager) && manager.getFlowItems().size() > TileEntityManager.MAX_COMPONENT_AMOUNT)
-            {
-                writeBoolean(true);
-                int count = manager.getFlowItems().size();
-                idBits = (int) (Math.log10(count + 1) / Math.log10(2)) + 1;
-                writeData(idBits, DataBitHelper.BIT_COUNT);
-            } else
-            {
-                writeBoolean(false);
-                idBits = DataBitHelper.FLOW_CONTROL_COUNT.getBitCount();
-            }
+				byteBuffer = 0;
+				bitCount -= bitsToAdd;
+				bitCountBuffer = 0;
+			} else {
+				byteBuffer |= data << bitCountBuffer;
+				bitCountBuffer += bitCount;
+				break;
+			}
+		}
+	}
 
-            idWritten = true;
-        }
+	public void writeNBT(NBTTagCompound nbtTagCompound) {
+		byte[] bytes = null;
 
-        writeData(id, idBits);
-    }
+		if (nbtTagCompound != null) {
+			try {
+				bytes = Utils.compress(nbtTagCompound);
+			} catch (IOException ex) {
+				bytes = null;
+			}
+		}
 
-    private boolean invWritten;
-    private int invBits;
+		writeBoolean(bytes != null);
+		if (bytes != null) {
+			writeData(bytes.length, DataBitHelper.NBT_LENGTH);
+			for (byte b : bytes) {
+				writeByte(b);
+			}
+		}
+	}
 
-    public void writeInventoryId(TileEntityManager manager, int id)
-    {
-        if (!invWritten)
-        {
-            manager.updateFirst();
-            if (Settings.isLimitless(manager) && manager.getConnectedInventories().size() > TileEntityManager.MAX_CONNECTED_INVENTORIES)
-            {
-                writeBoolean(true);
-                int count = manager.getConnectedInventories().size();
-                invBits = (int) (Math.log10(count + 1) / Math.log10(2)) + 1;
-                writeData(invBits, DataBitHelper.BIT_COUNT);
-            } else
-            {
-                writeBoolean(false);
-                invBits = DataBitHelper.MENU_INVENTORY_SELECTION.getBitCount();
-            }
+	public void writeComponentId(TileEntityManager manager, int id) {
+		if (!idWritten) {
+			if (Settings.isLimitless(manager) && manager.getFlowItems().size() > TileEntityManager.MAX_COMPONENT_AMOUNT) {
+				writeBoolean(true);
+				int count = manager.getFlowItems().size();
+				idBits = (int) (Math.log10(count + 1) / Math.log10(2)) + 1;
+				writeData(idBits, DataBitHelper.BIT_COUNT);
+			} else {
+				writeBoolean(false);
+				idBits = DataBitHelper.FLOW_CONTROL_COUNT.getBitCount();
+			}
 
-            invWritten = true;
-        }
+			idWritten = true;
+		}
 
-        writeData(id, invBits);
-    }
+		writeData(id, idBits);
+	}
 
-    void writeFinalBits()
-    {
-        if (bitCountBuffer > 0)
-        {
-            try
-            {
-                stream.write(byteBuffer);
-                bitCountBuffer = 0;
-            } catch (IOException ignored)
-            {
-            }
-        }
-    }
+	public void writeInventoryId(TileEntityManager manager, int id) {
+		if (!invWritten) {
+			manager.updateFirst();
+			if (Settings.isLimitless(manager) && manager.getConnectedInventories().size() > TileEntityManager.MAX_CONNECTED_INVENTORIES) {
+				writeBoolean(true);
+				int count = manager.getConnectedInventories().size();
+				invBits = (int) (Math.log10(count + 1) / Math.log10(2)) + 1;
+				writeData(invBits, DataBitHelper.BIT_COUNT);
+			} else {
+				writeBoolean(false);
+				invBits = DataBitHelper.MENU_INVENTORY_SELECTION.getBitCount();
+			}
 
-    void close()
-    {
-        try
-        {
-            stream.close();
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
+			invWritten = true;
+		}
+
+		writeData(id, invBits);
+	}
+
+	void close() {
+		try {
+			stream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
