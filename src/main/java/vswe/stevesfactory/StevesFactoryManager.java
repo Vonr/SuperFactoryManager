@@ -14,6 +14,7 @@ import vswe.stevesfactory.components.ModItemHelper;
 import vswe.stevesfactory.network.FileHelper;
 import vswe.stevesfactory.network.PacketEventHandler;
 import vswe.stevesfactory.proxy.CommonProxy;
+import vswe.stevesfactory.registry.ModBlocks;
 
 import static vswe.stevesfactory.registry.ModBlocks.MANAGER;
 
@@ -54,7 +55,6 @@ public class StevesFactoryManager {
 
 		packetHandler.register(new PacketEventHandler());
 
-		//				ModBlocks.addRecipes();
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
 
@@ -63,7 +63,8 @@ public class StevesFactoryManager {
 
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
-		//		proxy.preInit();
+		ModBlocks.addRecipes();
+
 	}
 
 	@Mod.EventHandler

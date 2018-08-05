@@ -35,15 +35,13 @@ minecraft {
 }
 
 repositories {
-    maven {url "http://tehnut.info/maven"}
-    maven {url "http://maven.modmuss50.me/"}
-//    maven {
-//        name = "CurseForge"
-//        url = "https://minecraft.curseforge.com/api/maven/"
-//    }
+    maven {url "http://tehnut.info/maven"} // hwyla
+    maven {url "http://maven.modmuss50.me/"} // reborn
+    maven {url "http://dvs1.progwml6.com/files/maven"} // jei
 }
 
 dependencies {
+    deobfCompile "mezz.jei:jei_${minecraft_version}:${jei_version}"
     deobfCompile "mcp.mobius.waila:Hwyla:${hwyla_version}"
     deobfCompile ("RebornCore:RebornCore-1.12.2:3.9.2.319:universal") {
         transitive=false

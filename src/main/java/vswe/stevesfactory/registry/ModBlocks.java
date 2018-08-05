@@ -3,15 +3,12 @@ package vswe.stevesfactory.registry;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.GameData;
-import reborncore.common.util.RebornCraftingHelper;
 import vswe.stevesfactory.StevesFactoryManager;
 import vswe.stevesfactory.blocks.*;
 import vswe.stevesfactory.tiles.*;
@@ -73,112 +70,7 @@ public final class ModBlocks {
 	}
 
 	public static void addRecipes() {
-		RebornCraftingHelper.addShapedOreRecipe(new ItemStack(MANAGER),
-				"III",
-				"IRI",
-				"SPS",
-				'R', Blocks.REDSTONE_BLOCK,
-				'P', Blocks.PISTON,
-				'I', Items.IRON_INGOT,
-				'S', Blocks.STONE
-		);
-
-		RebornCraftingHelper.addShapedOreRecipe(new ItemStack(CABLE, 8),
-				"GPG",
-				"IRI",
-				"GPG",
-				'R', Items.REDSTONE,
-				'G', Blocks.GLASS,
-				'I', Items.IRON_INGOT,
-				'P', Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_RELAY, 1),
-				CABLE,
-				Blocks.HOPPER
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_OUTPUT, 1),
-				CABLE,
-				Items.REDSTONE,
-				Items.REDSTONE,
-				Items.REDSTONE
-		);
-
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_INPUT, 1),
-				CABLE,
-				Items.REDSTONE
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_RELAY, 1, 8),
-				new ItemStack(CABLE_RELAY, 1, 0),
-				new ItemStack(Items.DYE, 1, 4)
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_INTAKE, 1, 0),
-				CABLE,
-				Blocks.HOPPER,
-				Blocks.HOPPER,
-				Blocks.DROPPER
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_BUD, 1),
-				CABLE,
-				Items.QUARTZ,
-				Items.QUARTZ,
-				Items.QUARTZ
-		);
-
-
-		//        RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_BREAKER, 1),
-		//                CABLE,
-		//                Items.IRON_PICKAXE,
-		//                Blocks.DISPENSER
-		//        );
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_INTAKE, 1, 8),
-				new ItemStack(CABLE_INTAKE, 1, 0),
-				Items.GOLD_INGOT
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_CLUSTER, 1),
-				CABLE,
-				Items.ENDER_PEARL,
-				Items.ENDER_PEARL,
-				Items.ENDER_PEARL
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_CAMOUFLAGE, 1, 0),
-				CABLE,
-				new ItemStack(Blocks.WOOL, 1, 14),
-				new ItemStack(Blocks.WOOL, 1, 13),
-				new ItemStack(Blocks.WOOL, 1, 11)
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_CAMOUFLAGE, 1, 1),
-				new ItemStack(CABLE_CAMOUFLAGE, 1, 0),
-				new ItemStack(CABLE_CAMOUFLAGE, 1, 0),
-				Blocks.IRON_BARS,
-				Blocks.IRON_BARS
-		);
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_CAMOUFLAGE, 1, 2),
-				new ItemStack(CABLE_CAMOUFLAGE, 1, 1),
-				Blocks.STICKY_PISTON
-		);
-
-
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(CABLE_SIGN, 1),
-				CABLE,
-				new ItemStack(Items.DYE, 0),
-				Items.FEATHER
-		);
-
-		RebornCraftingHelper.addShapedOreRecipe(new ItemStack(ModItems.DISK), " x ", "xyx", " x ", 'x', "ingotIron", 'y', new ItemStack(ModBlocks.MANAGER));
-		RebornCraftingHelper.addShapelessOreRecipe(new ItemStack(ModItems.DISK), new ItemStack(ModItems.DISK));
-
-		//        GameData.register_impl(new ClusterUpgradeRecipe());
+//		GameData.register_impl(new ClusterUpgradeRecipe()); // TODO: fix
 		GameData.register_impl(new ClusterRecipe(new ResourceLocation(StevesFactoryManager.UNLOCALIZED_START + "clusterrecipe")));
 	}
 
