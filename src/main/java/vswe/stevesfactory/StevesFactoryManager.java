@@ -18,7 +18,7 @@ import vswe.stevesfactory.registry.ModBlocks;
 
 import static vswe.stevesfactory.registry.ModBlocks.MANAGER;
 
-@Mod(modid = StevesFactoryManager.MODID, name = "Steve's Factory Manager", version = "@VERSION@", dependencies = "required-after:forge@[14.21.0.2359,);required-after:reborncore")
+@Mod(modid = StevesFactoryManager.MODID, name = "Steve's Factory Manager", version = "@VERSION@", dependencies = "required-after:forge@[14.21.0.2359,)")
 public class StevesFactoryManager {
 	public static final String       CHANNEL                      = "factorymanager";
 	public static final String       MODID                        = "stevesfactorymanager";

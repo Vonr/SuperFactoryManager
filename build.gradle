@@ -43,9 +43,9 @@ repositories {
 dependencies {
     deobfCompile "mezz.jei:jei_${minecraft_version}:${jei_version}"
     deobfCompile "mcp.mobius.waila:Hwyla:${hwyla_version}"
-    deobfCompile ("RebornCore:RebornCore-1.12.2:3.9.2.319:universal") {
-        transitive=false
-    }
+//    deobfCompile ("RebornCore:RebornCore-1.12.2:3.9.2.319:universal") {
+//        transitive=false
+//    }
 }
 
 processResources {
