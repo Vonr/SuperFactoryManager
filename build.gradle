@@ -23,7 +23,7 @@ plugins {
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 version = "${mod_version}"
-group= "${group_id}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group= "${group_id}"
 archivesBaseName = "${mod_name}-${minecraft_version}"
 sourceCompatibility = targetCompatibility = '1.8'
 
@@ -36,16 +36,12 @@ minecraft {
 
 repositories {
     maven {url "http://tehnut.info/maven"} // hwyla
-    maven {url "http://maven.modmuss50.me/"} // reborn
     maven {url "http://dvs1.progwml6.com/files/maven"} // jei
 }
 
 dependencies {
     deobfCompile "mezz.jei:jei_${minecraft_version}:${jei_version}"
     deobfCompile "mcp.mobius.waila:Hwyla:${hwyla_version}"
-//    deobfCompile ("RebornCore:RebornCore-1.12.2:3.9.2.319:universal") {
-//        transitive=false
-//    }
 }
 
 processResources {

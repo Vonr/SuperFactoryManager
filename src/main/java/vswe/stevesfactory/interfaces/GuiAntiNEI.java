@@ -28,7 +28,7 @@ public abstract class GuiAntiNEI extends GuiScreen {
 	 * The location of the inventory background texture
 	 */
 	public static final ResourceLocation inventoryBackground = new ResourceLocation("textures/gui/container/inventory.png");
-	protected final     Set<Slot>        dragSplittingSlots  = Sets.<Slot>newHashSet();
+	protected final     Set<Slot>        dragSplittingSlots  = Sets.newHashSet();
 	/**
 	 * A list of the players inventory slots
 	 */
@@ -120,7 +120,7 @@ public abstract class GuiAntiNEI extends GuiScreen {
 		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
 		for (int i1 = 0; i1 < this.inventorySlots.inventorySlots.size(); ++i1) {
-			Slot slot = (Slot) this.inventorySlots.inventorySlots.get(i1);
+			Slot slot = this.inventorySlots.inventorySlots.get(i1);
 			this.drawSlot(slot);
 
 			if (this.isMouseOverSlot(slot, mouseX, mouseY))// && slot.canBeHovered())
@@ -176,7 +176,7 @@ public abstract class GuiAntiNEI extends GuiScreen {
 			int i3 = this.returningStackDestSlot.yPos - this.touchUpY;
 			int l1 = this.touchUpX + (int) ((float) l2 * f);
 			int i2 = this.touchUpY + (int) ((float) i3 * f);
-			this.drawItemStack(this.returningStack, l1, i2, (String) null);
+			this.drawItemStack(this.returningStack, l1, i2, null);
 		}
 
 		GlStateManager.popMatrix();
@@ -413,7 +413,7 @@ public abstract class GuiAntiNEI extends GuiScreen {
 			}
 
 			if (this.mc.gameSettings.touchscreen && flag1 && this.mc.player.inventory.getItemStack().isEmpty()) {
-				this.mc.displayGuiScreen((GuiScreen) null);
+				this.mc.displayGuiScreen(null);
 				return;
 			}
 
@@ -472,7 +472,7 @@ public abstract class GuiAntiNEI extends GuiScreen {
 	 */
 	private Slot getSlotAtPosition(int x, int y) {
 		for (int i = 0; i < this.inventorySlots.inventorySlots.size(); ++i) {
-			Slot slot = (Slot) this.inventorySlots.inventorySlots.get(i);
+			Slot slot = this.inventorySlots.inventorySlots.get(i);
 
 			if (this.isMouseOverSlot(slot, x, y)) {
 				return slot;
@@ -569,13 +569,13 @@ public abstract class GuiAntiNEI extends GuiScreen {
 					this.clickedSlot = null;
 				}
 			} else if (this.dragSplitting && !this.dragSplittingSlots.isEmpty()) {
-				this.handleMouseClick((Slot) null, -999, Container.getQuickcraftMask(0, this.dragSplittingLimit), ClickType.QUICK_CRAFT);
+				this.handleMouseClick(null, -999, Container.getQuickcraftMask(0, this.dragSplittingLimit), ClickType.QUICK_CRAFT);
 
 				for (Slot slot1 : this.dragSplittingSlots) {
 					this.handleMouseClick(slot1, slot1.slotNumber, Container.getQuickcraftMask(1, this.dragSplittingLimit), ClickType.QUICK_CRAFT);
 				}
 
-				this.handleMouseClick((Slot) null, -999, Container.getQuickcraftMask(2, this.dragSplittingLimit), ClickType.QUICK_CRAFT);
+				this.handleMouseClick(null, -999, Container.getQuickcraftMask(2, this.dragSplittingLimit), ClickType.QUICK_CRAFT);
 			} else if (!this.mc.player.inventory.getItemStack().isEmpty()) {
 				if (this.mc.gameSettings.keyBindPickBlock.isActiveAndMatches(state - 100)) {
 					this.handleMouseClick(slot, k, state, ClickType.CLONE);

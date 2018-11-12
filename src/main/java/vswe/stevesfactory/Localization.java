@@ -364,7 +364,7 @@ public enum Localization {
 
 	private String name;
 
-	private Localization() {
+	Localization() {
 		String[] split = super.toString().split("_");
 		this.name = "";
 		for (String s : split) {

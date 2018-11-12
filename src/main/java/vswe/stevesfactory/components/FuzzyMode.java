@@ -13,7 +13,7 @@ public enum FuzzyMode {
 	private Localization text;
 	private boolean      useMeta;
 
-	private FuzzyMode(Localization text, boolean useMeta) {
+	FuzzyMode(Localization text, boolean useMeta) {
 		this.text = text;
 		this.useMeta = useMeta;
 	}

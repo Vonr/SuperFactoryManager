@@ -25,7 +25,7 @@ public enum ConnectionBlockType {
 	private boolean      group;
 	private Localization name;
 
-	private ConnectionBlockType(Localization name, @Nullable Class clazz, @Nullable Capability capability, boolean group) {
+	ConnectionBlockType(Localization name, @Nullable Class clazz, @Nullable Capability capability, boolean group) {
 		this.name = name;
 		this.clazz = clazz;
 		this.capability = capability;

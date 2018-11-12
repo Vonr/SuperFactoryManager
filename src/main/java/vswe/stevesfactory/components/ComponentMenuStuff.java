@@ -642,7 +642,7 @@ public abstract class ComponentMenuStuff extends ComponentMenu {
 
 		private int id;
 
-		private DataTypeHeader(int header) {
+		DataTypeHeader(int header) {
 			this.id = header;
 		}
 	}

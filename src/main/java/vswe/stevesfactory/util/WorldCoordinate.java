@@ -38,10 +38,7 @@ public class WorldCoordinate implements Comparable<WorldCoordinate> {
 			return false;
 		if (y != that.y)
 			return false;
-		if (z != that.z)
-			return false;
-
-		return true;
+		return z == that.z;
 	}
 
 	public int getX() {

@@ -37,7 +37,6 @@ public class StevesFactoryManager {
 			return ItemStack.EMPTY;
 		}
 	};
-	;
 	@Mod.Instance(MODID)
 	public static StevesFactoryManager instance;
 	public static FMLEventChannel      packetHandler;

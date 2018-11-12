@@ -126,7 +126,7 @@ public class ItemBufferElement implements IItemBufferElement {
 		if (setting != null) {
 			for (SlotStackInventoryHolder holder : holders) {
 				ItemStack item = holder.getItemStack();
-				if (((ItemSetting) setting).isEqualForCommandExecutor(item)) {
+				if (setting.isEqualForCommandExecutor(item)) {
 					bufferSize += item.getCount();
 				}
 			}

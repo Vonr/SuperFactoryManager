@@ -198,7 +198,7 @@ public class ComponentMenuRedstoneOutput extends ComponentMenu {
 		}
 	}
 
-	public static enum Settings {
+	public enum Settings {
 		FIXED(Localization.FIXED),
 		TOGGLE(Localization.TOGGLE),
 		MAX(Localization.MAX),
@@ -210,7 +210,7 @@ public class ComponentMenuRedstoneOutput extends ComponentMenu {
 
 		private Localization name;
 
-		private Settings(Localization name) {
+		Settings(Localization name) {
 			this.name = name;
 		}
 

@@ -35,8 +35,7 @@ public class ItemUtils {
 		if (matchDamage && a.getHasSubtypes()) {
 			if (isWildcard(a) || isWildcard(b))
 				return true;
-			if (a.getItemDamage() != b.getItemDamage())
-				return false;
+			return a.getItemDamage() == b.getItemDamage();
 		}
 		return true;
 	}

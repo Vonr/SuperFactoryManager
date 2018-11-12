@@ -305,7 +305,7 @@ public class ComponentMenuListOrder extends ComponentMenu {
 		private Localization        name;
 		private Comparator<Integer> reversedComparator;
 
-		private LoopOrder(Localization name, final Comparator<Integer> comparator) {
+		LoopOrder(Localization name, final Comparator<Integer> comparator) {
 			this.name = name;
 			this.comparator = comparator;
 			if (comparator != null) {

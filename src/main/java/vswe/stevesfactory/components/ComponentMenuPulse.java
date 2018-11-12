@@ -318,7 +318,7 @@ public class ComponentMenuPulse extends ComponentMenu {
 
 		private Localization name;
 
-		private PULSE_OPTIONS(Localization name) {
+		PULSE_OPTIONS(Localization name) {
 			this.name = name;
 		}
 

@@ -397,7 +397,7 @@ public class TileEntityCamouflage extends TileEntityClusterElement implements IP
 		private boolean useDouble;
 		private boolean useShape;
 
-		private CamouflageType(String unlocalized, String icon, boolean useDouble, boolean useShape) {
+		CamouflageType(String unlocalized, String icon, boolean useDouble, boolean useShape) {
 			this.unlocalized = unlocalized;
 			this.icon = icon;
 			this.useDouble = useDouble;

@@ -361,7 +361,7 @@ public abstract class ComponentMenuTarget extends ComponentMenu {
 		private DataBitHelper bits;
 		private int           id;
 
-		private DataTypeHeader(int header, DataBitHelper bits) {
+		DataTypeHeader(int header, DataBitHelper bits) {
 			this.id = header;
 			this.bits = bits;
 		}

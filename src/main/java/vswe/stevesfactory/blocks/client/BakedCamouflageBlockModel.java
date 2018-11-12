@@ -83,7 +83,7 @@ public class BakedCamouflageBlockModel implements IBakedModel {
 					if (camouflage == null) {
 						IModel clusterModel = null;
 						try {
-							clusterModel = ModelLoaderRegistry.getModel(blockCluster.isAdvanced(cluster.getBlockMetadata()) ? CamouflageBlockModel.MODEL_CLUSTER_ADV : CamouflageBlockModel.MODEL_CLUSTER);
+							clusterModel = ModelLoaderRegistry.getModel(BlockCableCluster.isAdvanced(cluster.getBlockMetadata()) ? CamouflageBlockModel.MODEL_CLUSTER_ADV : CamouflageBlockModel.MODEL_CLUSTER);
 						} catch (Exception ignored) {
 						}
 
@@ -138,7 +138,7 @@ public class BakedCamouflageBlockModel implements IBakedModel {
 					int               clusterMeta   = cluster.getBlockMetadata();
 					EnumFacing        clusterFacing = blockCluster.getSide(clusterMeta);
 					boolean           isFacingFront = ((camouflage != null && camouflage.getCamouflageType().useSpecialShape() && inside) || (camouflage == null && inside)) ? (facing == clusterFacing.getOpposite()) : (facing == clusterFacing);
-					boolean           isAdvanced    = blockCluster.isAdvanced(clusterMeta);
+					boolean           isAdvanced    = BlockCableCluster.isAdvanced(clusterMeta);
 
 					String             resource = (isAdvanced ? (isFacingFront ? CamouflageBlockModel.CL_ADV_FRONT : CamouflageBlockModel.CL_ADV_SIDE) : isFacingFront ? CamouflageBlockModel.CL_FRONT : CamouflageBlockModel.CL_SIDE).toString();
 					TextureAtlasSprite texture  = isAdvanced ? (isFacingFront ? clusterFrontAdv : clusterSideAdv) : isFacingFront ? clusterFront : clusterSide;

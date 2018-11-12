@@ -1572,10 +1572,7 @@ public class FlowComponent implements IComponentNetworkReader, Comparable<FlowCo
 
 		FlowComponent component = (FlowComponent) o;
 
-		if (id != component.id)
-			return false;
-
-		return true;
+		return id == component.id;
 	}
 
 	public boolean isVisible() {
@@ -1596,7 +1593,7 @@ public class FlowComponent implements IComponentNetworkReader, Comparable<FlowCo
 
 	@Override
 	public int compareTo(FlowComponent o) {
-		return ((Integer) id).compareTo((Integer) o.id);
+		return ((Integer) id).compareTo(o.id);
 	}
 
 	public void resetPosition() {

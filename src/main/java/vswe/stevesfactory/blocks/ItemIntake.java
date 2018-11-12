@@ -4,7 +4,6 @@ import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import vswe.stevesfactory.StevesFactoryManager;
-import vswe.stevesfactory.registry.ModBlocks;
 
 public class ItemIntake extends ItemBlock {
 	public ItemIntake(Block block) {

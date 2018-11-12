@@ -86,7 +86,7 @@ public class Variable implements IContainerSelection {
 	}
 
 	public void add(int id) {
-		if (!containers.contains((Integer) id)) {
+		if (!containers.contains(id)) {
 			containers.add(id);
 		}
 	}

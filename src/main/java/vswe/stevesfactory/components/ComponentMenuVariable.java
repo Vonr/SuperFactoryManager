@@ -298,7 +298,7 @@ public class ComponentMenuVariable extends ComponentMenu {
 		private boolean      declaration;
 		private Localization name;
 
-		private VariableMode(Localization name, boolean declaration) {
+		VariableMode(Localization name, boolean declaration) {
 			this.name = name;
 			this.declaration = declaration;
 		}

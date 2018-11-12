@@ -77,7 +77,7 @@ public enum DataBitHelper {
 
 	private int bitCount;
 
-	private DataBitHelper(int bitCount) {
+	DataBitHelper(int bitCount) {
 		this.bitCount = bitCount;
 	}
 

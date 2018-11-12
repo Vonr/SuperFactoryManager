@@ -830,7 +830,7 @@ public abstract class ComponentMenuContainer extends ComponentMenu {
 
 		private Page parent;
 
-		private Page(Page parent) {
+		Page(Page parent) {
 			this.parent = parent;
 		}
 	}

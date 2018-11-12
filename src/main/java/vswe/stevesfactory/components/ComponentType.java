@@ -62,7 +62,7 @@ public enum ComponentType {
 	private Localization                     name;
 	private ConnectionSet[]                  sets;
 
-	private ComponentType(int id, Localization name, Localization longName, ConnectionSet[] sets, Class<? extends ComponentMenu>... classes) {
+	ComponentType(int id, Localization name, Localization longName, ConnectionSet[] sets, Class<? extends ComponentMenu>... classes) {
 		this.classes = classes;
 		this.id = id;
 		this.sets = sets;

@@ -28,7 +28,7 @@ public enum ConnectionSet {
 	private int                sideCount;
 
 
-	private ConnectionSet(Localization name, ConnectionOption... connections) {
+	ConnectionSet(Localization name, ConnectionOption... connections) {
 		this.connections = connections;
 
 		for (ConnectionOption connection : connections) {

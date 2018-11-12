@@ -75,9 +75,7 @@ public abstract class BlockCamouflageBase extends BlockContainer {
 	private boolean setBlockCollisionBoundsBasedOnState(IBlockState state, IBlockAccess world, BlockPos pos) {
 		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);
 		if (camouflage != null && camouflage.getCamouflageType().useSpecialShape()) {
-			if (!camouflage.isUseCollision()) {
-				return false;
-			}
+			return camouflage.isUseCollision();
 		}
 		return true;
 	}
@@ -106,9 +104,7 @@ public abstract class BlockCamouflageBase extends BlockContainer {
 	public boolean addHitEffects(IBlockState state, World worldObj, RayTraceResult target, ParticleManager manager) {
 		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, worldObj, target.getBlockPos());
 		if (camouflage != null) {
-			if (camouflage.addBlockEffect(this, state, worldObj, target.sideHit, manager)) {
-				return true;
-			}
+			return camouflage.addBlockEffect(this, state, worldObj, target.sideHit, manager);
 		}
 		return false;
 	}

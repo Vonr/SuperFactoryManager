@@ -24,7 +24,7 @@ public enum ConnectionOption {
 	private ConnectionType type;
 
 
-	private ConnectionOption(Localization name, ConnectionType type) {
+	ConnectionOption(Localization name, ConnectionType type) {
 		this.name = name;
 		this.type = type;
 	}

@@ -68,10 +68,8 @@ public class ItemMemoryDisk extends Item {
 	}
 
 	public static boolean validateNBT(ItemStack stack) {
-		if (stack.hasTagCompound() && (stack.getTagCompound().getString("id").equals("TileEntityMachineManagerName") || stack.getTagCompound().getString("id").equals("TileEntityRFManager")))
-			return true;
+		return stack.hasTagCompound() && (stack.getTagCompound().getString("id").equals("TileEntityMachineManagerName") || stack.getTagCompound().getString("id").equals("TileEntityRFManager"));
 		//        stack.setTagCompound(null);
-		return false;
 	}
 
 	private static NBTTagCompound correctNBT(TileEntityManager manager, NBTTagCompound tagCompound) {

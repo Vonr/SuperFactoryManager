@@ -128,7 +128,7 @@ public class ComponentMenuCamouflageInside extends ComponentMenuCamouflageAdvanc
 
 		private Localization name;
 
-		private InsideSetType(Localization name) {
+		InsideSetType(Localization name) {
 			this.name = name;
 		}
 	}

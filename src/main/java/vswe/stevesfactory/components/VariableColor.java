@@ -30,7 +30,7 @@ public enum VariableColor {
 	private float        red;
 	private Color        textColor;
 
-	private VariableColor(Localization name, Color textColor, float red, float green, float blue) {
+	VariableColor(Localization name, Color textColor, float red, float green, float blue) {
 		this.name = name;
 		this.textColor = textColor;
 		this.red = red;
