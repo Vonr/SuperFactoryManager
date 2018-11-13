@@ -1,0 +1,7 @@
+{
+    "parent": "superfactorymanager:block/orientable_front",
+    "textures": {
+        "front": "superfactorymanager:blocks/cable_relay_advanced",
+        "side": "superfactorymanager:blocks/cable_idle"
+    }
+}

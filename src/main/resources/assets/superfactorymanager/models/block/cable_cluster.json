@@ -1,0 +1,7 @@
+{
+    "parent": "superfactorymanager:block/orientable_front",
+    "textures": {
+        "front": "superfactorymanager:blocks/cable_cluster_front",
+        "side": "superfactorymanager:blocks/cable_cluster"
+    }
+}
