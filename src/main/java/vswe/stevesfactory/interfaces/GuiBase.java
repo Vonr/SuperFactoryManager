@@ -344,10 +344,11 @@ public abstract class GuiBase extends GuiAntiNEI {
 		try {
 			//try to get it from dropped items
 			List<ItemStack> items = block.getDrops(world, pos, state, 0);
-			if (items != null && items.size() > 0 && items.get(0) != null) {
+			if (!items.isEmpty() && !items.get(0).isEmpty()) {
 				return items.get(0);
 			}
 		} catch (Throwable ignored) {
+
 		}
 
 

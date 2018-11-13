@@ -14,7 +14,6 @@ import net.minecraft.world.World;
 import vswe.stevesfactory.Localization;
 import vswe.stevesfactory.StevesFactoryManager;
 import vswe.stevesfactory.registry.ClusterRegistry;
-import vswe.stevesfactory.registry.ModBlocks;
 
 import javax.annotation.Nullable;
 import java.util.List;

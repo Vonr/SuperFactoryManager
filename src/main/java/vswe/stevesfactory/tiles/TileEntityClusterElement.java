@@ -1,6 +1,7 @@
 package vswe.stevesfactory.tiles;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -11,16 +12,16 @@ import vswe.stevesfactory.registry.ClusterRegistry;
 import java.util.EnumSet;
 
 public abstract class TileEntityClusterElement extends TileEntity implements ITickable {
-	private boolean         isPartOfCluster;
-	private int             meta;
-	private ClusterRegistry registryElement;
+	private boolean                                isPartOfCluster;
+	private int                                    meta;
+	private ClusterRegistry.ClusterRegistryElement registryElement;
 
 	protected TileEntityClusterElement() {
 		registryElement = ClusterRegistry.get(this);
 	}
 
-	public ItemStack getItemStackFromBlock() {
-		return registryElement.getItemStack(getBlockMetadata());
+	public ItemStack getItemStackFromBlock() { // todo: fix cluster registry
+		return registryElement != null ? registryElement.getItemStack(getBlockMetadata()) : new ItemStack(Blocks.BEDROCK);
 	}
 
 	public boolean isPartOfCluster() {

@@ -9,35 +9,23 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ClusterRegistry {
-	private static HashMap<Class<? extends TileEntityClusterElement>, ClusterRegistry> registry     = new HashMap<Class<? extends TileEntityClusterElement>, ClusterRegistry>();
-	private static List<ClusterRegistry>                                               registryList = new ArrayList<ClusterRegistry>();
-	protected final BlockContainer                            block;
-	protected final Class<? extends TileEntityClusterElement> clazz;
-	protected final int                                       id;
-	protected final ItemStack                                 itemStack;
-	protected       ClusterRegistry                           headSubRegistry;
-	protected       ClusterRegistry                           nextSubRegistry;
+	private static HashMap<Class<? extends TileEntityClusterElement>, ClusterRegistryElement> registry     = new HashMap<>();
+	private static List<ClusterRegistryElement>                                               registryList = new ArrayList<>();
 
-	private ClusterRegistry(Class<? extends TileEntityClusterElement> clazz, BlockContainer block, ItemStack itemStack) {
-		this.clazz = clazz;
-		this.block = block;
-		this.itemStack = itemStack;
-		this.id = registryList.size();
-	}
-
+	//todo: register cluster elements
 	public static void register(Class<? extends TileEntityClusterElement> clazz, BlockContainer block) {
-		register(new ClusterRegistry(clazz, block, new ItemStack(block)));
+		register(new ClusterRegistryElement(clazz, block, new ItemStack(block)));
 	}
 
-	public static void register(ClusterRegistry registryElement) {
+	public static void register(ClusterRegistryElement registryElement) {
 		registryList.add(registryElement);
-		ClusterRegistry parent = registry.get(registryElement.clazz);
+		ClusterRegistryElement parent = registry.get(registryElement.clazz);
 		if (parent == null) {
 			registry.put(registryElement.clazz, registryElement);
 			registryElement.headSubRegistry = registryElement;
 		} else {
 			registryElement.headSubRegistry = parent;
-			ClusterRegistry elem = parent;
+			ClusterRegistryElement elem = parent;
 			while (elem.nextSubRegistry != null) {
 				elem = elem.nextSubRegistry;
 			}
@@ -45,55 +33,15 @@ public class ClusterRegistry {
 		}
 	}
 
-	public static ClusterRegistry get(TileEntityClusterElement tileEntityClusterElement) {
+	public static ClusterRegistryElement get(TileEntityClusterElement tileEntityClusterElement) {
 		return registry.get(tileEntityClusterElement.getClass());
 	}
 
-	public static List<ClusterRegistry> getRegistryList() {
+	public static List<ClusterRegistryElement> getRegistryList() {
 		return registryList;
 	}
 
-	public int getId() {
-		return id;
-	}
-
-	public BlockContainer getBlock() {
-		return block;
-	}
-
-	public ItemStack getItemStack(int meta) {
-
-		ClusterRegistry element = this.headSubRegistry;
-		while (element != null) {
-			if (element.isValidMeta(meta)) {
-				return element.getItemStack();
-			}
-			element = element.nextSubRegistry;
-		}
-		return getItemStack();
-	}
-
-	public ItemStack getItemStack() {
-		return itemStack;
-	}
-
-	public boolean isValidMeta(int meta) {
-		return true;
-	}
-
-	public boolean isChainPresentIn(List<Integer> types) {
-		ClusterRegistry element = this.headSubRegistry;
-		while (element != null) {
-			if (types.contains(element.id)) {
-				return true;
-			}
-			element = element.nextSubRegistry;
-		}
-
-		return false;
-	}
-
-	public static class ClusterRegistryAdvancedSensitive extends ClusterRegistry {
+	public static class ClusterRegistryAdvancedSensitive extends ClusterRegistryElement {
 
 		public ClusterRegistryAdvancedSensitive(Class<? extends TileEntityClusterElement> clazz, BlockContainer block, ItemStack itemStack) {
 			super(clazz, block, itemStack);
@@ -105,7 +53,63 @@ public class ClusterRegistry {
 		}
 	}
 
-	public static class ClusterRegistryMetaSensitive extends ClusterRegistry {
+	public static class ClusterRegistryElement {
+		protected final BlockContainer                            block;
+		protected final Class<? extends TileEntityClusterElement> clazz;
+		protected final int                                       id;
+		protected final ItemStack                                 itemStack;
+		protected       ClusterRegistryElement                    headSubRegistry;
+		protected       ClusterRegistryElement                    nextSubRegistry;
+
+		private ClusterRegistryElement(Class<? extends TileEntityClusterElement> clazz, BlockContainer block, ItemStack itemStack) {
+			this.clazz = clazz;
+			this.block = block;
+			this.itemStack = itemStack;
+			this.id = registryList.size();
+		}
+
+		public int getId() {
+			return id;
+		}
+
+		public BlockContainer getBlock() {
+			return block;
+		}
+
+		public ItemStack getItemStack(int meta) {
+
+			ClusterRegistryElement element = this.headSubRegistry;
+			while (element != null) {
+				if (element.isValidMeta(meta)) {
+					return element.getItemStack();
+				}
+				element = element.nextSubRegistry;
+			}
+			return getItemStack();
+		}
+
+		public ItemStack getItemStack() {
+			return itemStack;
+		}
+
+		public boolean isValidMeta(int meta) {
+			return true;
+		}
+
+		public boolean isChainPresentIn(List<Integer> types) {
+			ClusterRegistryElement element = this.headSubRegistry;
+			while (element != null) {
+				if (types.contains(element.id)) {
+					return true;
+				}
+				element = element.nextSubRegistry;
+			}
+
+			return false;
+		}
+	}
+
+	public static class ClusterRegistryMetaSensitive extends ClusterRegistryElement {
 		public ClusterRegistryMetaSensitive(Class<? extends TileEntityClusterElement> clazz, BlockContainer block, ItemStack itemStack) {
 			super(clazz, block, itemStack);
 		}

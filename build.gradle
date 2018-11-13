@@ -37,11 +37,19 @@ minecraft {
 repositories {
     maven {url "http://tehnut.info/maven"} // hwyla
     maven {url "http://dvs1.progwml6.com/files/maven"} // jei
+    maven {url "http://maven.covers1624.net"} // te
+    maven {url "http://chickenbones.net/maven"} // chicken
 }
 
 dependencies {
     deobfCompile "mezz.jei:jei_${minecraft_version}:${jei_version}"
     deobfCompile "mcp.mobius.waila:Hwyla:${hwyla_version}"
+    deobfCompile "cofh:RedstoneFlux:1.12-2.+:deobf"
+    deobfCompile "codechicken:CodeChickenLib:1.12.2+:deobf"
+    deobfCompile "cofh:CoFHCore:1.12.2+:deobf"
+    deobfCompile "cofh:CoFHWorld:1.12.2+:deobf"
+    deobfCompile "cofh:ThermalFoundation:1.12.2+:deobf"
+    deobfCompile "cofh:ThermalExpansion:1.12.2-5.+:deobf"
 }
 
 processResources {

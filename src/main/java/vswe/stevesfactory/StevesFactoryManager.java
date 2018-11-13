@@ -47,7 +47,6 @@ public class StevesFactoryManager {
 	public void preInit(FMLPreInitializationEvent event) {
 		packetHandler = NetworkRegistry.INSTANCE.newEventDrivenChannel(CHANNEL);
 
-
 		proxy.preInit();
 
 		FileHelper.setConfigDir(event.getModConfigurationDirectory());

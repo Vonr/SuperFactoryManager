@@ -32,22 +32,19 @@ import java.util.List;
 import java.util.Map;
 
 public class TileEntityCluster extends TileEntity implements ITileEntityInterface, IPacketBlock, ITickable {
-	private static final String NBT_SUB_BLOCKS     = "SubBlocks";
-	private static final String NBT_SUB_BLOCK_ID   = "SubId";
-	private static final String NBT_SUB_BLOCK_META = "SubMeta";
-	private TileEntityCamouflage                       camouflageObject;
-	private List<TileEntityClusterElement>             elements;
-	private ITileEntityInterface                       interfaceObject;  //only the relay is currently having a interface
-	private Map<ClusterMethodRegistration, List<Pair>> methodRegistration;
-	private List<ClusterRegistry>                      registryList;
-	private boolean                                    requestedInfo;
+	private static final String                                       NBT_SUB_BLOCKS     = "SubBlocks";
+	private static final String                                       NBT_SUB_BLOCK_ID   = "SubId";
+	private static final String                                       NBT_SUB_BLOCK_META = "SubMeta";
+	private              TileEntityCamouflage                         camouflageObject;
+	private              List<TileEntityClusterElement>               elements           = new ArrayList<>();
+	private              ITileEntityInterface                         interfaceObject;  //only the relay is currently having a interface
+	private              Map<ClusterMethodRegistration, List<Pair>>   methodRegistration = new HashMap<>();
+	private              List<ClusterRegistry.ClusterRegistryElement> registryList       = new ArrayList<>();
+	private              boolean                                      requestedInfo;
 
 	public TileEntityCluster() {
-		elements = new ArrayList<TileEntityClusterElement>();
-		registryList = new ArrayList<ClusterRegistry>();
-		methodRegistration = new HashMap<ClusterMethodRegistration, List<Pair>>();
 		for (ClusterMethodRegistration clusterMethodRegistration : ClusterMethodRegistration.values()) {
-			methodRegistration.put(clusterMethodRegistration, new ArrayList<Pair>());
+			methodRegistration.put(clusterMethodRegistration, new ArrayList<>());
 		}
 	}
 
@@ -88,7 +85,7 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 		elements.clear();
 
 		for (byte type : types) {
-			ClusterRegistry block = ClusterRegistry.getRegistryList().get(type);
+			ClusterRegistry.ClusterRegistryElement block = ClusterRegistry.getRegistryList().get(type);
 			registryList.add(block);
 			TileEntityClusterElement element = (TileEntityClusterElement) block.getBlock().createNewTileEntity(getWorld(), 0);
 			elements.add(element);
@@ -268,9 +265,9 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		NBTTagList subList = new NBTTagList();
 		for (int i = 0; i < elements.size(); i++) {
-			TileEntityClusterElement element         = elements.get(i);
-			ClusterRegistry          registryElement = registryList.get(i);
-			NBTTagCompound           sub             = new NBTTagCompound();
+			TileEntityClusterElement               element         = elements.get(i);
+			ClusterRegistry.ClusterRegistryElement registryElement = registryList.get(i);
+			NBTTagCompound                         sub             = new NBTTagCompound();
 			sub.setByte(NBT_SUB_BLOCK_ID, (byte) registryElement.getId());
 			sub.setByte(NBT_SUB_BLOCK_META, (byte) element.getBlockMetadata());
 			element.writeContentToNBT(sub);
@@ -343,10 +340,10 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 	}
 
 	private class Pair {
-		private ClusterRegistry          registry;
-		private TileEntityClusterElement te;
+		private ClusterRegistry.ClusterRegistryElement registry;
+		private TileEntityClusterElement               te;
 
-		private Pair(ClusterRegistry registry, TileEntityClusterElement te) {
+		private Pair(ClusterRegistry.ClusterRegistryElement registry, TileEntityClusterElement te) {
 			this.registry = registry;
 			this.te = te;
 		}

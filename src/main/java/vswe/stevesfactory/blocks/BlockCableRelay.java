@@ -16,6 +16,7 @@ import vswe.stevesfactory.interfaces.IItemBlockProvider;
 import vswe.stevesfactory.tiles.TileEntityCluster;
 import vswe.stevesfactory.tiles.TileEntityClusterElement;
 import vswe.stevesfactory.tiles.TileEntityRelay;
+import vswe.stevesfactory.util.UserPermission;
 
 public class BlockCableRelay extends BlockCableDirectionAdvanced implements IItemBlockProvider {
 	@Override
@@ -33,8 +34,10 @@ public class BlockCableRelay extends BlockCableDirectionAdvanced implements IIte
 		super.onBlockPlacedBy(world, pos, state, entity, item);
 
 		TileEntityRelay relay = TileEntityCluster.getTileEntity(TileEntityRelay.class, world, pos);
-		if (relay != null && isAdvanced(relay.getBlockMetadata()) && !world.isRemote) {
+		if (relay != null && isAdvanced(relay.getBlockMetadata())){// && !world.isRemote) {
 			relay.setOwner(entity);
+			System.out.println(relay + " placed");
+//			relay.getPermissions().add(new UserPermission(entity.getUniqueID(),entity.getName()));
 		}
 	}
 

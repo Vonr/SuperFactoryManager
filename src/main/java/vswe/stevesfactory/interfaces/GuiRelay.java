@@ -81,7 +81,7 @@ public class GuiRelay extends GuiBase {
 		ySize = 158;
 
 		this.relay = relay;
-
+		System.out.println(relay + " opened");
 		buttons.add(new Button(Localization.GIVE_PERMISSION, BUTTON_X_LEFT, BUTTON_Y_DOWN) {
 			@Override
 			public boolean isVisible() {
