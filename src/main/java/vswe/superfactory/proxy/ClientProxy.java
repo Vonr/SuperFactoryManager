@@ -17,7 +17,7 @@ import vswe.superfactory.registry.ModBlocks;
 import vswe.superfactory.registry.ModItems;
 import vswe.superfactory.settings.Settings;
 
-@Mod.EventBusSubscriber(modid = SuperFactoryManager.MODID)
+@Mod.EventBusSubscriber(modid = SuperFactoryManager.MODID, value = Side.CLIENT)
 public class ClientProxy extends CommonProxy {
 	private static void addVariantNames(Block block, String... names) {
 		ResourceLocation[] locations = new ResourceLocation[names.length];
@@ -64,7 +64,7 @@ public class ClientProxy extends CommonProxy {
 		registerBlockModel(ModBlocks.CABLE);
 		registerBlockModel(ModBlocks.CABLE_OUTPUT);
 		registerBlockModel(ModBlocks.CABLE_INPUT);
-//		        registerBlockModel(ModBlocks.CABLE_CREATIVE);
+		//		        registerBlockModel(ModBlocks.CABLE_CREATIVE);
 		registerBlockModel(ModBlocks.CABLE_BUD);
 		registerBlockModel(ModBlocks.CABLE_BREAKER);
 		registerBlockModel(ModBlocks.CABLE_SIGN);
