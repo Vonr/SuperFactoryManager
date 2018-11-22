@@ -81,12 +81,12 @@ public class BlockCableBreaker extends BlockContainer {
 	public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack item) {
 		if (!world.isRemote) {
 			EnumFacing facing = EnumFacing.getDirectionFromEntityLiving(pos, entity);
-			world.setBlockState(pos, state.withProperty(DIRECTION, facing), 2);
+			world.setBlockState(pos, state.withProperty(DIRECTION, facing).withProperty(FRONT, facing), 2);
 
 			TileEntityBreaker breaker = TileEntityCluster.getTileEntity(TileEntityBreaker.class, world, pos);
 			if (breaker != null) {
 				breaker.setPlaceDirection(facing);
-				breaker.setMetaData(getMetaFromState(state));
+				breaker.setMetaData(facing.getIndex());
 			}
 		}
 	}
