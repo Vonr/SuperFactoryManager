@@ -15,7 +15,6 @@ public class CraftingDummy extends InventoryCrafting {
 	public CraftingDummy(ComponentMenuCrafting crafting) {
 		super(null, 3, 3);
 		inventoryWidth = 3;
-
 		this.crafting = crafting;
 	}	@Override
 	public int getSizeInventory() {
@@ -31,7 +30,7 @@ public class CraftingDummy extends InventoryCrafting {
 		}
 	}	@Override
 	public ItemStack getStackInSlot(int id) {
-		if (overrideMap != null && !overrideMap.get(id).isEmpty() && overrideMap.get(id).getCount() > 0) {
+		if (overrideMap != null && !overrideMap.getOrDefault(id, ItemStack.EMPTY).isEmpty() && overrideMap.get(id).getCount() > 0) {
 			return overrideMap.get(id);
 		} else {
 			return id < 0 || id >= this.getSizeInventory() ? ItemStack.EMPTY : ((CraftingSetting) crafting.getSettings().get(id)).getItem();

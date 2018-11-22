@@ -10,7 +10,6 @@ import vswe.superfactory.tiles.TileEntityManager;
 import java.util.*;
 
 public class CraftingBufferElement implements IItemBufferElement, IItemBufferSubElement {
-	private static final ItemStack DUMMY_ITEM = ItemStack.EMPTY;
 	private static final double SPEED_MULTIPLIER = 0.05F;
 	private static final Random rand             = new Random();
 	private List<ItemStack>             containerItems;
@@ -188,9 +187,9 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 				int                   subCount             = Math.min(count, itemBufferSubElement.getSizeLeft());
 				for (int i = 0; i < 9; i++) {
 					CraftingSetting setting = (CraftingSetting) craftingMenu.getSettings().get(i);
-					if (foundItems.get(i).isEmpty()) {
+					if (foundItems.getOrDefault(i, ItemStack.EMPTY).isEmpty()) {
 						if (!setting.isValid()) {
-							foundItems.put(i, DUMMY_ITEM);
+							foundItems.put(i, ItemStack.EMPTY);
 						} else if (subCount > 0 && setting.isEqualForCommandExecutor(itemstack)) {
 							foundItems.put(i, itemstack.copy());
 
