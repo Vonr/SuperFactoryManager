@@ -85,7 +85,8 @@ public class ItemBufferElement implements IItemBufferElement {
 			int itemsAllowedToBeMoved;
 			if (useWhiteList) {
 				int movedItems = totalStackSize - currentStackSize;
-				itemsAllowedToBeMoved = setting.getItem().getCount() - movedItems;
+//				itemsAllowedToBeMoved = setting.getItem().getCount() - movedItems;
+				itemsAllowedToBeMoved = setting.getAmount() - movedItems;
 
 				int amountLeft = itemsAllowedToBeMoved % sharedBy;
 				itemsAllowedToBeMoved /= sharedBy;

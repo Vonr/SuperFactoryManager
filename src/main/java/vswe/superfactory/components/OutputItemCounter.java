@@ -57,9 +57,11 @@ public class OutputItemCounter {
 		} else {
 			int itemsAllowedToBeMoved;
 			if (useWhiteList) {
-				itemsAllowedToBeMoved = setting.getItem().getCount() - currentInventoryStackSize;
+//				itemsAllowedToBeMoved = setting.getItem().getCount() - currentInventoryStackSize;
+				itemsAllowedToBeMoved = setting.getAmount() - currentInventoryStackSize;
 			} else {
-				itemsAllowedToBeMoved = currentBufferStackSize - setting.getItem().getCount();
+//				itemsAllowedToBeMoved = setting.getItem().getCount();
+				itemsAllowedToBeMoved = currentBufferStackSize - setting.getAmount();
 			}
 			return Math.min(itemsAllowedToBeMoved, desiredItemCount);
 		}
