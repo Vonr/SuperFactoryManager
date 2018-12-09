@@ -39,6 +39,7 @@ repositories {
     maven {url "http://dvs1.progwml6.com/files/maven"} // jei
     maven {url "http://maven.covers1624.net"} // te
     maven {url "http://chickenbones.net/maven"} // chicken
+    maven {url "https://dl.bintray.com/jaquadro/dev/"} // storage drawers
 }
 
 dependencies {
@@ -50,6 +51,9 @@ dependencies {
     deobfCompile "cofh:CoFHWorld:1.12.2+:deobf"
     deobfCompile "cofh:ThermalFoundation:1.12.2+:deobf"
     deobfCompile "cofh:ThermalExpansion:1.12.2-5.+:deobf"
+    deobfCompile "com.jaquadro.minecraft.storagedrawers:StorageDrawers:1.12.2+:api"
+    runtime "com.jaquadro.minecraft.storagedrawers:StorageDrawers:1.12.2-5.3.8"
+    runtime "com.jaquadro.minecraft.chameleon:Chameleon:1.12-4.1.3"
 }
 
 processResources {
