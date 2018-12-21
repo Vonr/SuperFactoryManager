@@ -396,11 +396,11 @@ public class CommandExecutor {
 		}
 	}
 
-	private boolean isSlotValid(IItemHandler handler, ItemStack item, int slot, boolean isInput) {
+	private boolean isSlotValid(IItemHandler handler, ItemStack item, int slot, boolean isSource) {
 		if (item.isEmpty()) {
 			return false;
 		} else {
-			if (isInput) {
+			if (isSource) {
 				return canExtractStack(handler, slot, item);
 			} else {
 				return canInsertStack(handler, slot, item);

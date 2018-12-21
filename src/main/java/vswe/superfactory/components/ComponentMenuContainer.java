@@ -236,9 +236,9 @@ public abstract class ComponentMenuContainer extends ComponentMenu {
 					int   z     = block.getTileEntity().getPos().getZ();
 
 					for (EnumFacing direction : EnumFacing.values()) {
-						int targetX = x + direction.getFrontOffsetX();
-						int targetY = y + direction.getFrontOffsetY();
-						int targetZ = z + direction.getFrontOffsetZ();
+						int targetX = x + direction.getXOffset();
+						int targetY = y + direction.getYOffset();
+						int targetZ = z + direction.getZOffset();
 
 						ItemStack item = gui.getItemStackFromBlock(world, targetX, targetY, targetZ);
 						items[direction.ordinal()] = item;

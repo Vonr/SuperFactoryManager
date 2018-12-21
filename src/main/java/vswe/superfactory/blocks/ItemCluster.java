@@ -42,7 +42,7 @@ public class ItemCluster extends ItemBlock {
 	}
 
 	@Override
-	public String getUnlocalizedName(ItemStack item) {
+	public String getTranslationKey(ItemStack item) {
 		return "tile." + SuperFactoryManager.UNLOCALIZED_START + (BlockCableCluster.isAdvanced(item.getItemDamage()) ? "cable_cluster_advanced" : "cable_cluster");
 	}
 

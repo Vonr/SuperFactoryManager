@@ -94,7 +94,7 @@ public abstract class ComponentMenuTarget extends ComponentMenu {
 			GlStateManager.pushMatrix();
 			GlStateManager.enableBlend();
 			int color = selectedDirectionId != -1 && selectedDirectionId != i ? 0x70404040 : 0x404040;
-			gui.drawString(Localization.getDirectionLocalization(EnumFacing.getFront(i)).toString(), x + DIRECTION_TEXT_X, y + DIRECTION_TEXT_Y, color);
+			gui.drawString(Localization.getDirectionLocalization(EnumFacing.byIndex(i)).toString(), x + DIRECTION_TEXT_X, y + DIRECTION_TEXT_Y, color);
 			GlStateManager.popMatrix();
 		}
 

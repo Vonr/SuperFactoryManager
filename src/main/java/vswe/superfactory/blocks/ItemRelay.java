@@ -13,7 +13,7 @@ public class ItemRelay extends ItemBlock {
 	}
 
 	@Override
-	public String getUnlocalizedName(ItemStack item) {
+	public String getTranslationKey(ItemStack item) {
 		return "tile." + SuperFactoryManager.UNLOCALIZED_START + (BlockCableDirectionAdvanced.isAdvanced(item.getItemDamage()) ? "cable_relay_advanced" : "cable_relay");
 	}
 }

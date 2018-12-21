@@ -24,7 +24,7 @@ public class BlockCable extends Block implements ICable {
 		super(Material.IRON);
 		setCreativeTab(SuperFactoryManager.creativeTab);
 		setSoundType(SoundType.METAL);
-		setUnlocalizedName(SuperFactoryManager.UNLOCALIZED_START + "cable");
+		setTranslationKey(SuperFactoryManager.UNLOCALIZED_START + "cable");
 		setHardness(0.4F);
 	}
 

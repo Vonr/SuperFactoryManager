@@ -36,8 +36,8 @@ public class TileEntityInput extends TileEntityClusterElement implements IRedsto
 	public void triggerRedstone() {
 		isPowered = new int[isPowered.length];
 		for (int i = 0; i < isPowered.length; i++) {
-			EnumFacing direction = EnumFacing.getFront(i);
-			BlockPos   pos       = new BlockPos(direction.getFrontOffsetX() + this.getPos().getX(), direction.getFrontOffsetY() + this.getPos().getY(), direction.getFrontOffsetZ() + this.getPos().getZ());
+			EnumFacing direction = EnumFacing.byIndex(i);
+			BlockPos   pos       = new BlockPos(direction.getXOffset() + this.getPos().getX(), direction.getYOffset() + this.getPos().getY(), direction.getZOffset() + this.getPos().getZ());
 			isPowered[i] = world.getRedstonePower(pos, direction);
 		}
 

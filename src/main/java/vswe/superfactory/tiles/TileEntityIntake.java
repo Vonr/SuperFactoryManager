@@ -78,21 +78,21 @@ public class TileEntityIntake extends TileEntityClusterElement implements IInven
 		id--;
 		if (id < 0 || !canPickUp(items.get(id))) {
 			if (!itemstack.isEmpty()) {
-				EnumFacing direction = EnumFacing.getFront(BlockCableIntake.getSideMeta(getBlockMetadata()) % EnumFacing.values().length);
+				EnumFacing direction = EnumFacing.byIndex(BlockCableIntake.getSideMeta(getBlockMetadata()) % EnumFacing.values().length);
 
-				double posX = getPos().getX() + 0.5 + direction.getFrontOffsetX() * 0.75;
-				double posY = getPos().getY() + 0.5 + direction.getFrontOffsetY() * 0.75;
-				double posZ = getPos().getZ() + 0.5 + direction.getFrontOffsetZ() * 0.75;
+				double posX = getPos().getX() + 0.5 + direction.getXOffset() * 0.75;
+				double posY = getPos().getY() + 0.5 + direction.getYOffset() * 0.75;
+				double posZ = getPos().getZ() + 0.5 + direction.getZOffset() * 0.75;
 
-				if (direction.getFrontOffsetY() == 0) {
+				if (direction.getYOffset() == 0) {
 					posY -= 0.1;
 				}
 
 				EntityItem item = new EntityItem(world, posX, posY, posZ, itemstack);
 
-				item.motionX = direction.getFrontOffsetX() * 0.2;
-				item.motionY = direction.getFrontOffsetY() * 0.2;
-				item.motionZ = direction.getFrontOffsetZ() * 0.2;
+				item.motionX = direction.getXOffset() * 0.2;
+				item.motionY = direction.getYOffset() * 0.2;
+				item.motionZ = direction.getZOffset() * 0.2;
 
 
 				item.setPickupDelay(40);

@@ -13,7 +13,7 @@ public class ItemIntake extends ItemBlock {
 	}
 
 	@Override
-	public String getUnlocalizedName(ItemStack item) {
+	public String getTranslationKey(ItemStack item) {
 		return "tile." + SuperFactoryManager.UNLOCALIZED_START + (BlockCableIntake.isAdvanced(item.getItemDamage()) ? "cable_intake_instant" : "cable_intake");
 	}
 }

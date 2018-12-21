@@ -96,9 +96,10 @@ public abstract class BlockCamouflageBase extends BlockContainer {
 
 	@SideOnly(Side.CLIENT)
 	@Override
-	public BlockRenderLayer getBlockLayer() {
+	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.TRANSLUCENT;
 	}
+
 
 	@Override
 	public boolean addHitEffects(IBlockState state, World worldObj, RayTraceResult target, ParticleManager manager) {

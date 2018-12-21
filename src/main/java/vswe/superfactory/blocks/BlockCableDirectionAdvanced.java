@@ -82,7 +82,7 @@ public abstract class BlockCableDirectionAdvanced extends BlockContainer {
 	}
 
 	public EnumFacing getSide(int meta) {
-		return EnumFacing.getFront(getSideMeta(meta));
+		return EnumFacing.byIndex(getSideMeta(meta));
 	}
 
 	public static int getSideMeta(int meta) {

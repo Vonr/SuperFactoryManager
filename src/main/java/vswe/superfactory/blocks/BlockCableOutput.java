@@ -32,7 +32,7 @@ public class BlockCableOutput extends BlockContainer {
 		super(Material.IRON);
 		setCreativeTab(SuperFactoryManager.creativeTab);
 		setSoundType(SoundType.METAL);
-		setUnlocalizedName(SuperFactoryManager.UNLOCALIZED_START + "cable_output");
+		setTranslationKey(SuperFactoryManager.UNLOCALIZED_START + "cable_output");
 		setHardness(1.2F);
 	}
 

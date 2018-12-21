@@ -194,7 +194,7 @@ public abstract class ComponentMenuRedstoneSides extends ComponentMenu {
 		private int id;
 
 		public CheckBoxSide(int id) {
-			super(Localization.getDirectionLocalization(EnumFacing.getFront(id)), CHECKBOX_X + CHECKBOX_SPACING_X * (id % 2), CHECKBOX_Y + CHECKBOX_SPACING_Y * (id / 2));
+			super(Localization.getDirectionLocalization(EnumFacing.byIndex(id)), CHECKBOX_X + CHECKBOX_SPACING_X * (id % 2), CHECKBOX_Y + CHECKBOX_SPACING_Y * (id / 2));
 
 			this.id = id;
 		}

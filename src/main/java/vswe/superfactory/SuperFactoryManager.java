@@ -28,13 +28,8 @@ public class SuperFactoryManager {
 	public static final String              UNLOCALIZED_START            = "sfm.";
 	public static final CreativeTabs        creativeTab                  = new CreativeTabs("sfm") {
 		@Override
-		public ItemStack getIconItemStack() {
+		public ItemStack createIcon() {
 			return new ItemStack(MANAGER);
-		}
-
-		@Override
-		public ItemStack getTabIconItem() {
-			return ItemStack.EMPTY;
 		}
 	};
 	@Mod.Instance(MODID)

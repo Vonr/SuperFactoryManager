@@ -14,7 +14,7 @@ public class ItemCamouflage extends ItemBlock {
 	}
 
 	@Override
-	public String getUnlocalizedName(ItemStack item) {
+	public String getTranslationKey(ItemStack item) {
 		return "tile." + SuperFactoryManager.UNLOCALIZED_START + TileEntityCamouflage.CamouflageType.values()[BlockCableCamouflages.getId(item.getItemDamage())].getUnlocalized();
 	}
 }

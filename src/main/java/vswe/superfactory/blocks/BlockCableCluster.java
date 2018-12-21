@@ -238,7 +238,7 @@ public class BlockCableCluster extends BlockCamouflageBase implements ICable, II
 	}
 
 	public EnumFacing getSide(int meta) {
-		return EnumFacing.getFront(getSideMeta(meta));
+		return EnumFacing.byIndex(getSideMeta(meta));
 	}
 
 	public int getSideMeta(int meta) {

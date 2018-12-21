@@ -22,7 +22,7 @@ import java.util.List;
 public class ItemMemoryDisk extends Item {
 	public ItemMemoryDisk() {
 		setCreativeTab(SuperFactoryManager.creativeTab);
-		setUnlocalizedName(SuperFactoryManager.UNLOCALIZED_START + "memorydisk");
+		setTranslationKey(SuperFactoryManager.UNLOCALIZED_START + "memorydisk");
 		setMaxStackSize(1);
 	}
 

@@ -53,7 +53,7 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 	@Override
 	public void update() {
 		if (missingPlaceDirection) {
-			setPlaceDirection(EnumFacing.getFront(getBlockMetadata()));
+			setPlaceDirection(EnumFacing.byIndex(getBlockMetadata()));
 			missingPlaceDirection = false;
 		}
 		if (world.isRemote) {
@@ -61,26 +61,26 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 		}
 
 		if (inventory != null) {
-			EnumFacing direction = EnumFacing.getFront(getBlockMetadata() % EnumFacing.values().length);
+			EnumFacing direction = EnumFacing.byIndex(getBlockMetadata() % EnumFacing.values().length);
 
 			for (ItemStack itemStack : getInventoryForDrop()) {
 				List<ItemStack> items = placeItem(itemStack);
 				if (items != null && !items.isEmpty()) {
 					for (ItemStack item : items) {
-						double x = getPos().getX() + 0.5 + direction.getFrontOffsetX() * 0.75;
-						double y = getPos().getY() + 0.5 + direction.getFrontOffsetY() * 0.75;
-						double z = getPos().getZ() + 0.5 + direction.getFrontOffsetZ() * 0.75;
+						double x = getPos().getX() + 0.5 + direction.getXOffset() * 0.75;
+						double y = getPos().getY() + 0.5 + direction.getYOffset() * 0.75;
+						double z = getPos().getZ() + 0.5 + direction.getZOffset() * 0.75;
 
 
-						if (direction.getFrontOffsetY() == 0) {
+						if (direction.getYOffset() == 0) {
 							y -= 0.1;
 						}
 
 						EntityItem entityitem = new EntityItem(world, x, y, z, item);
 
-						entityitem.motionX = direction.getFrontOffsetX() * 0.1;
-						entityitem.motionY = direction.getFrontOffsetY() * 0.1;
-						entityitem.motionZ = direction.getFrontOffsetZ() * 0.1;
+						entityitem.motionX = direction.getXOffset() * 0.1;
+						entityitem.motionY = direction.getYOffset() * 0.1;
+						entityitem.motionZ = direction.getZOffset() * 0.1;
 
 						entityitem.setPickupDelay(40);
 						world.spawnEntity(entityitem);
@@ -97,21 +97,21 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 		List<ItemStack> items = new ArrayList<ItemStack>();
 
 		if (!itemstack.isEmpty() && itemstack.getItem() != null && itemstack.getCount() > 0) {
-			EnumFacing side      = EnumFacing.getFront(getBlockMetadata() % EnumFacing.values().length);
+			EnumFacing side      = EnumFacing.byIndex(getBlockMetadata() % EnumFacing.values().length);
 			EnumFacing direction = placeDirection.getOpposite();
 
-			float hitX = 0.5F + direction.getFrontOffsetX() * 0.5F;
-			float hitY = 0.5F + direction.getFrontOffsetY() * 0.5F;
-			float hitZ = 0.5F + direction.getFrontOffsetZ() * 0.5F;
+			float hitX = 0.5F + direction.getXOffset() * 0.5F;
+			float hitY = 0.5F + direction.getYOffset() * 0.5F;
+			float hitZ = 0.5F + direction.getZOffset() * 0.5F;
 
 			EntityPlayerMP player       = FakePlayerFactory.get((WorldServer) world, new GameProfile(FAKE_PLAYER_ID, FAKE_PLAYER_NAME));
 			int            rotationSide = ROTATION_SIDE_MAPPING[direction.ordinal()];
 
 			player.prevRotationPitch = player.rotationYaw = rotationSide * 90;
 			player.prevRotationYaw = player.rotationPitch = direction == EnumFacing.UP ? 90 : direction == EnumFacing.DOWN ? -90 : 0;
-			player.prevPosX = player.posX = getPos().getX() + side.getFrontOffsetX() + 0.5 + direction.getFrontOffsetX() * 0.4;
-			player.prevPosY = player.posY = getPos().getY() + side.getFrontOffsetY() + 0.5 + direction.getFrontOffsetY() * 0.4;
-			player.prevPosZ = player.posZ = getPos().getZ() + side.getFrontOffsetZ() + 0.5 + direction.getFrontOffsetZ() * 0.4;
+			player.prevPosX = player.posX = getPos().getX() + side.getXOffset() + 0.5 + direction.getXOffset() * 0.4;
+			player.prevPosY = player.posY = getPos().getY() + side.getYOffset() + 0.5 + direction.getYOffset() * 0.4;
+			player.prevPosZ = player.posZ = getPos().getZ() + side.getZOffset() + 0.5 + direction.getZOffset() * 0.4;
 			player.eyeHeight = 0;
 			player.interactionManager.setBlockReachDistance(1);
 
@@ -122,9 +122,9 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 				player.inventory.setInventorySlotContents(0, itemstack);
 				ActionResult<ItemStack> result = itemstack.useItemRightClick(world, player, EnumHand.MAIN_HAND);
 				if (result.getType().equals(EnumActionResult.PASS) && ItemStack.areItemStacksEqual(result.getResult(), itemstack)) {
-					int x = getPos().getX() + side.getFrontOffsetX() - direction.getFrontOffsetX();
-					int y = getPos().getY() + side.getFrontOffsetY() - direction.getFrontOffsetY();
-					int z = getPos().getZ() + side.getFrontOffsetZ() - direction.getFrontOffsetZ();
+					int x = getPos().getX() + side.getXOffset() - direction.getXOffset();
+					int y = getPos().getY() + side.getYOffset() - direction.getYOffset();
+					int z = getPos().getZ() + side.getZOffset() - direction.getZOffset();
 
 					player.interactionManager.processRightClickBlock(player, world, itemstack, EnumHand.MAIN_HAND, new BlockPos(x, y, z), direction, hitX, hitY, hitZ);
 
@@ -187,10 +187,10 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 	@Override
 	protected void readContentFromNBT(NBTTagCompound tagCompound) {
 		if (tagCompound.hasKey(NBT_DIRECTION)) {
-			setPlaceDirection(EnumFacing.getFront(tagCompound.getByte(NBT_DIRECTION)));
+			setPlaceDirection(EnumFacing.byIndex(tagCompound.getByte(NBT_DIRECTION)));
 		} else {
 			if (world != null) {
-				setPlaceDirection(EnumFacing.getFront(getBlockMetadata()));
+				setPlaceDirection(EnumFacing.byIndex(getBlockMetadata()));
 			} else {
 				missingPlaceDirection = true;
 			}
@@ -230,11 +230,11 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 
 	private List<ItemStack> getInventory() {
 		if (inventory == null) {
-			EnumFacing direction = EnumFacing.getFront(getBlockMetadata() % EnumFacing.values().length);
+			EnumFacing direction = EnumFacing.byIndex(getBlockMetadata() % EnumFacing.values().length);
 
-			int         x     = getPos().getX() + direction.getFrontOffsetX();
-			int         y     = getPos().getY() + direction.getFrontOffsetY();
-			int         z     = getPos().getZ() + direction.getFrontOffsetZ();
+			int         x     = getPos().getX() + direction.getXOffset();
+			int         y     = getPos().getY() + direction.getYOffset();
+			int         z     = getPos().getZ() + direction.getZOffset();
 			BlockPos    pos   = new BlockPos(x, y, z);
 			IBlockState state = world.getBlockState(pos);
 			if (canBreakBlock(state, state.getBlock(), pos)) {
@@ -377,7 +377,7 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 			PacketHandler.sendBlockPacket(this, player, 0);
 		} else {
 			int val = dr.readData(DataBitHelper.PLACE_DIRECTION);
-			setPlaceDirection(EnumFacing.getFront(val));
+			setPlaceDirection(EnumFacing.byIndex(val));
 			world.notifyBlockUpdate(getPos(), getWorld().getBlockState(getPos()), getWorld().getBlockState(getPos()), 3);
 			markDirty();
 		}
@@ -420,11 +420,11 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 			}
 
 			if (!match) {
-				EnumFacing direction = EnumFacing.getFront(getBlockMetadata() % EnumFacing.values().length);
+				EnumFacing direction = EnumFacing.byIndex(getBlockMetadata() % EnumFacing.values().length);
 
-				int x = getPos().getX() + direction.getFrontOffsetX();
-				int y = getPos().getY() + direction.getFrontOffsetY();
-				int z = getPos().getZ() + direction.getFrontOffsetZ();
+				int x = getPos().getX() + direction.getXOffset();
+				int y = getPos().getY() + direction.getYOffset();
+				int z = getPos().getZ() + direction.getZOffset();
 
 				BlockPos    pos   = new BlockPos(x, y, z);
 				IBlockState state = world.getBlockState(pos);

@@ -18,7 +18,7 @@ public class BlockCableBUD extends BlockContainer {
 		super(Material.IRON);
 		setCreativeTab(SuperFactoryManager.creativeTab);
 		setSoundType(SoundType.METAL);
-		setUnlocalizedName(SuperFactoryManager.UNLOCALIZED_START + "cable_bud");
+		setTranslationKey(SuperFactoryManager.UNLOCALIZED_START + "cable_bud");
 		setHardness(1.2F);
 	}
 

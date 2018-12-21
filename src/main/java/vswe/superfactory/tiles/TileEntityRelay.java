@@ -185,9 +185,9 @@ public class TileEntityRelay extends TileEntityClusterElement implements IInvent
 		}
 		EnumFacing direction = ((EnumFacing) state.getValue(BlockCableRelay.FACING));
 
-		int x = getPos().getX() + direction.getFrontOffsetX();
-		int y = getPos().getY() + direction.getFrontOffsetY();
-		int z = getPos().getZ() + direction.getFrontOffsetZ();
+		int x = getPos().getX() + direction.getXOffset();
+		int y = getPos().getY() + direction.getYOffset();
+		int z = getPos().getZ() + direction.getZOffset();
 
 		World world = getWorld();
 		if (world != null) {

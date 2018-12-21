@@ -21,7 +21,7 @@ public final class ModItemHelper {
 		for (Object key : keys) {
 			Item             item             = itemRegistry.getObject((ResourceLocation) key);
 			ResourceLocation resourceLocation = item.getRegistryName();
-			String           modId            = resourceLocation == null ? null : resourceLocation.getResourceDomain();
+			String           modId            = resourceLocation == null ? null : resourceLocation.getNamespace();
 
 			items.put(resourceLocation, modId);
 		}

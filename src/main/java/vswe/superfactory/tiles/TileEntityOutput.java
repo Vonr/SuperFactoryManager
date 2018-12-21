@@ -88,7 +88,7 @@ public class TileEntityOutput extends TileEntityClusterElement implements IPacke
 				}
 
 				if (updateBlocks) {
-					addBlockScheduledForUpdate(EnumFacing.getFront(i));
+					addBlockScheduledForUpdate(EnumFacing.byIndex(i));
 				}
 
 				if (pulse.shouldEmitPulse()) {
@@ -135,9 +135,9 @@ public class TileEntityOutput extends TileEntityClusterElement implements IPacke
 
 	private void addBlockScheduledForUpdate(EnumFacing side) {
 		hasUpdatedThisTick = true;
-		int x = getPos().getX() + side.getFrontOffsetX();
-		int y = getPos().getY() + side.getFrontOffsetY();
-		int z = getPos().getZ() + side.getFrontOffsetZ();
+		int x = getPos().getX() + side.getXOffset();
+		int y = getPos().getY() + side.getYOffset();
+		int z = getPos().getZ() + side.getZOffset();
 
 		BlockPos coordinate = new BlockPos(x, y, z);
 		if (!scheduledToUpdate.contains(coordinate)) {
@@ -332,7 +332,7 @@ public class TileEntityOutput extends TileEntityClusterElement implements IPacke
 					if (updatedStrength[i] != timer.strength || updatedStrong[i] == timer.strong) {
 						updatedStrength[i] = timer.strength;
 						updatedStrong[i] = timer.strong;
-						addBlockScheduledForUpdate(EnumFacing.getFront(i));
+						addBlockScheduledForUpdate(EnumFacing.byIndex(i));
 						updateClient = true;
 					}
 					iterator.remove();

@@ -27,7 +27,7 @@ public class BlockCableSign extends BlockContainer {
 		super(Material.IRON);
 		setCreativeTab(SuperFactoryManager.creativeTab);
 		setSoundType(SoundType.METAL);
-		setUnlocalizedName(SuperFactoryManager.UNLOCALIZED_START + "cable_sign");
+		setTranslationKey(SuperFactoryManager.UNLOCALIZED_START + "cable_sign");
 		setHardness(1.2F);
 
 		this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
@@ -40,7 +40,7 @@ public class BlockCableSign extends BlockContainer {
 
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(FACING, EnumFacing.getFront(meta));
+		return getDefaultState().withProperty(FACING, EnumFacing.byIndex(meta));
 	}
 
 	@Override

@@ -130,7 +130,7 @@ public class ComponentMenuTargetInventory extends ComponentMenuTarget {
 	public void addErrors(List<String> errors) {
 		for (int i = 0; i < directions.length; i++) {
 			if (isActive(i) && getStart(i) > getEnd(i)) {
-				errors.add(Localization.getDirectionLocalization(EnumFacing.getFront(i)).toString() + " " + Localization.INVALID_RANGE.toString());
+				errors.add(Localization.getDirectionLocalization(EnumFacing.byIndex(i)).toString() + " " + Localization.INVALID_RANGE.toString());
 			}
 		}
 

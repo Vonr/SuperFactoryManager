@@ -46,10 +46,10 @@ public class TileEntityBUD extends TileEntityClusterElement implements ISystemLi
 		if (world != null) {
 			data = new int[data.length];
 			for (int i = 0; i < data.length; i++) {
-				EnumFacing direction = EnumFacing.getFront(i);
-				int        x         = direction.getFrontOffsetX() + this.getPos().getX();
-				int        y         = direction.getFrontOffsetY() + this.getPos().getY();
-				int        z         = direction.getFrontOffsetZ() + this.getPos().getZ();
+				EnumFacing direction = EnumFacing.byIndex(i);
+				int        x         = direction.getXOffset() + this.getPos().getX();
+				int        y         = direction.getYOffset() + this.getPos().getY();
+				int        z         = direction.getZOffset() + this.getPos().getZ();
 
 				IBlockState state = world.getBlockState(new BlockPos(x, y, z));
 

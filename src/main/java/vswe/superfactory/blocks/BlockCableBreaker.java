@@ -30,7 +30,7 @@ public class BlockCableBreaker extends BlockContainer {
 		super(Material.IRON);
 		setCreativeTab(SuperFactoryManager.creativeTab);
 		setSoundType(SoundType.METAL);
-		setUnlocalizedName(SuperFactoryManager.UNLOCALIZED_START + "cable_breaker");
+		setTranslationKey(SuperFactoryManager.UNLOCALIZED_START + "cable_breaker");
 		setHardness(1.2F);
 	}
 
@@ -45,7 +45,7 @@ public class BlockCableBreaker extends BlockContainer {
 	}
 
 	public static EnumFacing getSide(int meta) {
-		return EnumFacing.getFront(meta % EnumFacing.values().length);
+		return EnumFacing.byIndex(meta % EnumFacing.values().length);
 	}
 
 	@Override
