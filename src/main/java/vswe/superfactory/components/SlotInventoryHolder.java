@@ -11,6 +11,7 @@ import vswe.superfactory.util.CapabilityUtils;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SlotInventoryHolder {
@@ -65,7 +66,7 @@ public class SlotInventoryHolder {
 
 	public Map<EnumFacing, SideSlotTarget> getValidSlots() {
 		if (validSlots == null) {
-			validSlots = new HashMap<>();
+			validSlots = new LinkedHashMap<>();
 		}
 		return validSlots;
 	}

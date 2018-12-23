@@ -7,7 +7,7 @@ public interface IItemBufferSubElement {
 
 	void onUpdate();
 
-	int getSizeLeft();
+	int getSizeRemaining();
 
 	void reduceAmount(int amount);
 

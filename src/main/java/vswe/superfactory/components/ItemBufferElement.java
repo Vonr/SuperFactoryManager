@@ -38,7 +38,7 @@ public class ItemBufferElement implements IItemBufferElement {
 	private void addTarget(SlotStackInventoryHolder target) {
 		holders.add(target);
 
-		totalStackSize += target.getSizeLeft();
+		totalStackSize += target.getSizeRemaining();
 		currentStackSize = totalStackSize;
 	}
 

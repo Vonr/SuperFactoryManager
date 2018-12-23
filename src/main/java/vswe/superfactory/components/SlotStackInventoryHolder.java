@@ -6,14 +6,14 @@ import net.minecraftforge.items.IItemHandler;
 public class SlotStackInventoryHolder implements IItemBufferSubElement {
 	private IItemHandler inventory;
 	private ItemStack    itemStack;
-	private int          sizeLeft;
+	private int          sizeRemaining;
 	private int          slot;
 
 	public SlotStackInventoryHolder(ItemStack itemStack, IItemHandler inventory, int slot) {
 		this.itemStack = itemStack;
 		this.inventory = inventory;
 		this.slot = slot;
-		this.sizeLeft = itemStack.getCount();
+		this.sizeRemaining = itemStack.getCount();
 	}
 
 	@Override
@@ -36,11 +36,13 @@ public class SlotStackInventoryHolder implements IItemBufferSubElement {
 	public void onUpdate() {
 	}
 
-	public int getSizeLeft() {
-		return Math.min(itemStack.getCount(), sizeLeft);
+	public int getSizeRemaining() {
+		return Math.min(itemStack.getCount(), sizeRemaining);
 	}
 
 	public void reduceAmount(int val) {
+		if (val == 0)
+			return;
 		int stackSize = itemStack.getCount();
 
 		ItemStack extractStack = inventory.extractItem(getSlot(), val, false);
@@ -50,7 +52,7 @@ public class SlotStackInventoryHolder implements IItemBufferSubElement {
 		if (extractSize > 0 && stackSize == itemStack.getCount()) {
 			inventory.extractItem(getSlot(), extractSize, false);
 		}
-		sizeLeft -= extractSize;
+		sizeRemaining -= extractSize;
 	}
 
 	public ItemStack getItemStack() {
@@ -59,7 +61,7 @@ public class SlotStackInventoryHolder implements IItemBufferSubElement {
 
 	public SlotStackInventoryHolder getSplitElement(int elementAmount, int id, boolean fair) {
 		SlotStackInventoryHolder element   = new SlotStackInventoryHolder(this.itemStack, this.inventory, this.slot);
-		int                      oldAmount = getSizeLeft();
+		int                      oldAmount = getSizeRemaining();
 		int                      amount    = oldAmount / elementAmount;
 		if (!fair) {
 			int amountLeft = oldAmount % elementAmount;
@@ -68,7 +70,7 @@ public class SlotStackInventoryHolder implements IItemBufferSubElement {
 			}
 		}
 
-		element.sizeLeft = amount;
+		element.sizeRemaining = amount;
 		return element;
 	}
 }

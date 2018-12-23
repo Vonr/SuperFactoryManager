@@ -147,7 +147,7 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 	}
 
 	@Override
-	public int getSizeLeft() {
+	public int getSizeRemaining() {
 		if (!justRemoved) {
 			return overflowBuffer > 0 ? overflowBuffer : findItems(false) ? result.getCount() : 0;
 		} else {
@@ -184,7 +184,7 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 			for (Iterator<SlotStackInventoryHolder> iterator = itemBufferElement.getSubElements().iterator(); iterator.hasNext(); ) {
 				IItemBufferSubElement itemBufferSubElement = iterator.next();
 				ItemStack             itemstack            = itemBufferSubElement.getItemStack();
-				int                   subCount             = Math.min(count, itemBufferSubElement.getSizeLeft());
+				int                   subCount             = Math.min(count, itemBufferSubElement.getSizeRemaining());
 				for (int i = 0; i < 9; i++) {
 					CraftingSetting setting = (CraftingSetting) craftingMenu.getSettings().get(i);
 					if (foundItems.getOrDefault(i, ItemStack.EMPTY).isEmpty()) {
@@ -202,7 +202,7 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 									}
 									itemBufferElement.decreaseStackSize(1);
 									itemBufferSubElement.reduceAmount(1);
-									if (itemBufferSubElement.getSizeLeft() == 0) {
+									if (itemBufferSubElement.getSizeRemaining() == 0) {
 										itemBufferSubElement.remove();
 										iterator.remove();
 									}

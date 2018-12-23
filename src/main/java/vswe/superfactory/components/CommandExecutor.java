@@ -16,21 +16,21 @@ import java.util.*;
 
 public class CommandExecutor {
 	public static final int MAX_FLUID_TRANSFER = 10000000;
-	List<CraftingBufferElement> craftingBufferHigh;
-	List<CraftingBufferElement> craftingBufferLow;
-	List<FluidBufferElement>    fluidBuffer;
-	List<ItemBufferElement>     itemBuffer;
-	private TileEntityManager manager;
-	private List<Integer> usedCommands;
+	final List<CraftingBufferElement> craftingBufferHigh;
+	final List<CraftingBufferElement> craftingBufferLow;
+	final List<FluidBufferElement>    fluidBuffer;
+	final List<ItemBufferElement>     itemBuffer;
+	private final TileEntityManager manager;
+	private final List<Integer>     usedCommands;
 
 
 	public CommandExecutor(TileEntityManager manager) {
 		this.manager = manager;
-		itemBuffer = new ArrayList<ItemBufferElement>();
-		craftingBufferHigh = new ArrayList<CraftingBufferElement>();
-		craftingBufferLow = new ArrayList<CraftingBufferElement>();
-		fluidBuffer = new ArrayList<FluidBufferElement>();
-		usedCommands = new ArrayList<Integer>();
+		this.itemBuffer = new ArrayList<>();
+		this.craftingBufferHigh = new ArrayList<>();
+		this.craftingBufferLow = new ArrayList<>();
+		this.fluidBuffer = new ArrayList<>();
+		this.usedCommands = new ArrayList<>();
 	}
 
 	private CommandExecutor(TileEntityManager manager, List<ItemBufferElement> itemBufferSplit, List<CraftingBufferElement> craftingBufferHighSplit, List<CraftingBufferElement> craftingBufferLowSplit, List<FluidBufferElement> fluidBufferSplit, List<Integer> usedCommandCopy) {
@@ -396,14 +396,14 @@ public class CommandExecutor {
 		}
 	}
 
-	private boolean isSlotValid(IItemHandler handler, ItemStack item, int slot, boolean isSource) {
-		if (item.isEmpty()) {
+	private boolean isSlotValid(IItemHandler handler, ItemStack stack, int slot, boolean isSource) {
+		if (stack.isEmpty() || !handler.isItemValid(slot, stack)) {
 			return false;
 		} else {
 			if (isSource) {
-				return canExtractStack(handler, slot, item);
+				return canExtractStack(handler, slot, stack);
 			} else {
-				return canInsertStack(handler, slot, item);
+				return canInsertStack(handler, slot, stack);
 			}
 		}
 	}
@@ -422,7 +422,7 @@ public class CommandExecutor {
 					}
 					seenStacks.put(itemStack, null);
 
-					Setting setting = isItemValid(componentMenu, itemStack);
+					Setting setting = getStackSetting(componentMenu, itemStack);
 					addItemToBuffer(menuItem, inventoryHolder, setting, itemStack, sideSlotTarget.getSide(), slot);
 				}
 			}
@@ -480,7 +480,7 @@ public class CommandExecutor {
 							continue;
 						}
 						fluidStack = fluidStack.copy();
-						Setting setting = isFluidValid(componentMenu, fluidStack);
+						Setting setting = getFluidSetting(componentMenu, fluidStack);
 						addFluidToBuffer(menuItem, inventoryHolder, tank, setting, fluidStack, side);
 					}
 					for (IFluidTankProperties fluidTankInfo : tank.getTankProperties()) {
@@ -514,19 +514,37 @@ public class CommandExecutor {
 		}
 	}
 
-	private Setting isItemValid(ComponentMenu componentMenu, ItemStack itemStack) {
+	/**
+	 * Gets the setting that applies to the given stack.
+	 * Used to be named isItemValid.
+	 *
+	 * @param componentMenu component containing settings to pick from
+	 * @param itemStack     stack to find a matching setting for
+	 * @return setting within the component that matches the stack
+	 */
+	private ItemSetting getStackSetting(ComponentMenu componentMenu, ItemStack itemStack) {
 		ComponentMenuStuff menuItem = (ComponentMenuStuff) componentMenu;
 
 		for (Setting setting : menuItem.getSettings()) {
+			if(!(setting instanceof ItemSetting))
+				continue;
 			if (((ItemSetting) setting).isEqualForCommandExecutor(itemStack)) {
-				return setting;
+				return (ItemSetting) setting;
 			}
 		}
 
 		return null;
 	}
 
-	private Setting isFluidValid(ComponentMenu componentMenu, FluidStack fluidStack) {
+	/**
+	 * Gets the setting that applies to the given fluid.
+	 * Used to be called isFluidValid
+	 *
+	 * @param componentMenu component containing settings to pick from
+	 * @param fluidStack    fluid to find a matching setting for
+	 * @return setting within the component that matches the fluid
+	 */
+	private Setting getFluidSetting(ComponentMenu componentMenu, FluidStack fluidStack) {
 		ComponentMenuStuff menuItem = (ComponentMenuStuff) componentMenu;
 
 		if (fluidStack != null) {
@@ -566,73 +584,62 @@ public class CommandExecutor {
 		IItemBufferSubElement subElement;
 		itemBufferElement.prepareSubElements();
 		while ((subElement = itemBufferElement.getSubElement()) != null) {
-			ItemStack itemStack = subElement.getItemStack();
+			ItemStack stackInBuffer = subElement.getItemStack();
 
-			Setting setting = isItemValid(menuItem, itemStack);
+			ItemSetting setting = getStackSetting(menuItem, stackInBuffer);
 
-			if ((menuItem.useWhiteList() == (setting == null)) && (setting == null || !setting.isLimitedByAmount())) {
+			if ((menuItem.useWhiteList() == (setting == null)) && (setting == null || !setting.isLimitedByAmount()))
 				continue;
-			}
 
-			OutputItemCounter outputItemCounter = null;
-			for (OutputItemCounter e : outputCounters) {
-				if (e.areSettingsSame(setting)) {
-					outputItemCounter = e;
-					break;
-				}
-			}
 
-			if (outputItemCounter == null) {
-				outputItemCounter = new OutputItemCounter(itemBuffer, inventories, inventoryHolder, setting, menuItem.useWhiteList());
-				outputCounters.add(outputItemCounter);
-			}
+			OutputItemCounter outputItemCounter = outputCounters.stream()
+					.filter(s -> s.areSettingsSame(setting))
+					.findFirst()
+					.orElseGet(() -> {
+						OutputItemCounter c = new OutputItemCounter(itemBuffer, inventories, inventoryHolder, setting, menuItem.useWhiteList());
+						outputCounters.add(c);
+						return c;
+					});
 
 			for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
 				IItemHandler inventory = inventoryHolder.getInventory(sideSlotTarget.getSide());
+				if (inventory == null)
+					continue;
+
 				for (int slot : sideSlotTarget.getSlots()) {
-					if (!isSlotValid(inventory, itemStack, slot, false)) {
+					if (!isSlotValid(inventory, stackInBuffer, slot, false))
 						continue;
+					ItemStack stackInSlot           = inventory.getStackInSlot(slot);
+					if (!stackInSlot.isEmpty() && (!stackInSlot.isStackable() || !ItemHandlerHelper.canItemStacksStack(stackInSlot, stackInBuffer)))
+						continue;
+
+					int moveCount;
+					moveCount = Math.min(subElement.getSizeRemaining(), Math.min(inventory.getSlotLimit(slot), stackInSlot.getMaxStackSize()) - (stackInSlot.isEmpty() ? 0 : stackInSlot.getCount()));
+					moveCount = outputItemCounter.retrieveItemCount(moveCount);
+					moveCount = itemBufferElement.retrieveItemCount(moveCount);
+					moveCount = Math.min(moveCount, inventory.getSlotLimit(slot) - stackInSlot.getCount());
+					if (moveCount <= 0)
+						continue;
+
+					ItemStack stackToInsert = stackInBuffer.splitStack(moveCount); // make sure to only insert moveCount amount
+					int leftoverCount = inventory.insertItem(slot, stackToInsert, false).getCount();
+
+					moveCount -= leftoverCount; // adjust movecount to reflect items that couldn't be inserted
+					itemBufferElement.decreaseStackSize(moveCount);
+					outputItemCounter.modifyStackSize(moveCount);
+
+					stackInBuffer.grow(stackToInsert.getCount()); // undo splitStack count decrement
+					subElement.reduceAmount(moveCount);
+
+
+					if (subElement.getSizeRemaining() == 0) {
+						subElement.remove();
+						itemBufferElement.removeSubElement();
+						subElement.onUpdate();
+						break;
 					}
 
-					ItemStack itemInSlot = inventory.getStackInSlot(slot);
-					boolean   newItem    = itemInSlot.isEmpty();
-					if (newItem || (itemInSlot.isItemEqual(itemStack) && ItemStack.areItemStackTagsEqual(itemStack, itemInSlot) && itemStack.isStackable())) {
-						int itemCountInSlot = newItem ? 0 : itemInSlot.getCount();
-
-						int moveCount = Math.min(subElement.getSizeLeft(), Math.min(inventory.getSlotLimit(slot), itemStack.getMaxStackSize()) - itemCountInSlot);
-
-						moveCount = outputItemCounter.retrieveItemCount(moveCount);
-						moveCount = itemBufferElement.retrieveItemCount(moveCount);
-						if (moveCount > 0) {
-
-							if (newItem) {
-								itemInSlot = itemStack.copy();
-								itemInSlot.setCount(0);
-							}
-
-							itemBufferElement.decreaseStackSize(moveCount);
-							outputItemCounter.modifyStackSize(moveCount);
-							itemInSlot.grow(moveCount);
-							subElement.reduceAmount(moveCount);
-
-							if (newItem) {
-								ItemHandlerHelper.insertItem(inventory, itemInSlot, false);
-							}
-
-							boolean done = false;
-							if (subElement.getSizeLeft() == 0) {
-								subElement.remove();
-								itemBufferElement.removeSubElement();
-								done = true;
-							}
-
-							subElement.onUpdate();
-
-							if (done) {
-								break;
-							}
-						}
-					}
+					subElement.onUpdate();
 				}
 			}
 		}
@@ -653,7 +660,7 @@ public class CommandExecutor {
 					StackTankHolder holder     = fluidIterator.next();
 					FluidStack      fluidStack = holder.getFluidStack();
 
-					Setting setting = isFluidValid(componentMenu, fluidStack);
+					Setting setting = getFluidSetting(componentMenu, fluidStack);
 
 					if ((menuItem.useWhiteList() == (setting == null)) && (setting == null || !setting.isLimitedByAmount())) {
 						continue;
@@ -747,7 +754,7 @@ public class CommandExecutor {
 				}
 				seenStacks.put(itemStack, null);
 
-				Setting setting = isItemValid(componentMenu, itemStack);
+				Setting setting = getStackSetting(componentMenu, itemStack);
 				if (setting != null) {
 					ConditionSettingChecker conditionSettingChecker = conditionSettingCheckerMap.get(setting.getId());
 					if (conditionSettingChecker == null) {
@@ -783,7 +790,7 @@ public class CommandExecutor {
 				}
 
 				FluidStack fluidStack = fluidTankInfo.getContents();
-				Setting    setting    = isFluidValid(componentMenu, fluidStack);
+				Setting    setting    = getFluidSetting(componentMenu, fluidStack);
 				if (setting != null) {
 					ConditionSettingChecker conditionSettingChecker = conditionSettingCheckerMap.get(setting.getId());
 					if (conditionSettingChecker == null) {

@@ -6,14 +6,17 @@ import net.minecraftforge.items.IItemHandler;
 import java.util.IdentityHashMap;
 import java.util.List;
 
+/**
+ * Internal object used to keep track of the flow of items into output inventories
+ */
 public class OutputItemCounter {
 	private int         currentBufferStackSize;
 	private int         currentInventoryStackSize;
 	private ItemSetting setting;
 	private boolean     useWhiteList;
 
-	public OutputItemCounter(List<ItemBufferElement> itemBuffer, List<SlotInventoryHolder> inventories, SlotInventoryHolder inventoryHolder, Setting setting, boolean useWhiteList) {
-		this.setting = (ItemSetting) setting;
+	public OutputItemCounter(List<ItemBufferElement> itemBuffer, List<SlotInventoryHolder> inventories, SlotInventoryHolder inventoryHolder, ItemSetting setting, boolean useWhiteList) {
+		this.setting = setting;
 		this.useWhiteList = useWhiteList;
 
 		if (setting != null && ((ItemSetting) setting).getItem() != null && setting.isLimitedByAmount()) {
@@ -73,5 +76,10 @@ public class OutputItemCounter {
 		} else {
 			currentBufferStackSize -= itemsToMove;
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "stack=" + (setting == null ? "unknown" : setting.getItem().toString()) + ", bufferStack=" + currentBufferStackSize + ", invStack=" + currentInventoryStackSize + (useWhiteList ? ", whitelisted" : "");
 	}
 }
