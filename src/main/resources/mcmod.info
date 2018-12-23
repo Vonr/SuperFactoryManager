@@ -8,7 +8,7 @@
   "url": "",
   "updateUrl": "",
   "authorList": ["Vswe", "TeamDman"],
-  "credits": "",
+  "credits": "ProfHugo for the NoDamI (No Damage Immunity) implementation",
   "logoFile": "",
   "screenshots": [],
   "dependencies": []
