@@ -7,7 +7,7 @@ import vswe.superfactory.CollisionHelper;
 import vswe.superfactory.Localization;
 import vswe.superfactory.components.CheckBox;
 import vswe.superfactory.components.CheckBoxList;
-import vswe.superfactory.components.ComponentType;
+import vswe.superfactory.components.internal.ComponentType;
 import vswe.superfactory.interfaces.GuiManager;
 import vswe.superfactory.interfaces.IInterfaceRenderer;
 import vswe.superfactory.tiles.TileEntityManager;

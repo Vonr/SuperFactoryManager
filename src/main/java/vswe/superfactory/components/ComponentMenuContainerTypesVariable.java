@@ -1,6 +1,8 @@
 package vswe.superfactory.components;
 
 
+import vswe.superfactory.components.internal.ConnectionSet;
+
 public class ComponentMenuContainerTypesVariable extends ComponentMenuContainerTypes {
 	public ComponentMenuContainerTypesVariable(FlowComponent parent) {
 		super(parent);

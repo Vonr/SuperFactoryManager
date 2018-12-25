@@ -1,6 +1,7 @@
 package vswe.superfactory.animation;
 
 import vswe.superfactory.components.*;
+import vswe.superfactory.components.internal.ComponentType;
 import vswe.superfactory.tiles.TileEntityManager;
 
 import java.util.*;

@@ -1,21 +1,25 @@
 package vswe.superfactory.components;
 
 import net.minecraftforge.fluids.FluidStack;
+import vswe.superfactory.components.internal.FluidSetting;
+import vswe.superfactory.components.internal.Setting;
+import vswe.superfactory.components.internal.SlotInventoryHolder;
+import vswe.superfactory.components.internal.StackTankHolder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FluidBufferElement {
-	private FlowComponent       component;
-	private int                 currentTransferSize;
-	private boolean fairShare;
+	private FlowComponent         component;
+	private int                   currentTransferSize;
+	private boolean               fairShare;
 	private List<StackTankHolder> holders;
-	private SlotInventoryHolder inventoryHolder;
-	private Setting             setting;
-	private int     shareId;
-	private int     sharedBy;
-	private int                 totalTransferSize;
-	private boolean             useWhiteList;
+	private SlotInventoryHolder   inventoryHolder;
+	private Setting               setting;
+	private int                   shareId;
+	private int                   sharedBy;
+	private int                   totalTransferSize;
+	private boolean               useWhiteList;
 
 	public FluidBufferElement(FlowComponent owner, Setting setting, SlotInventoryHolder inventoryHolder, boolean useWhiteList, StackTankHolder target) {
 		this(owner, setting, inventoryHolder, useWhiteList);

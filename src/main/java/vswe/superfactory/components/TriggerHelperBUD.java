@@ -1,6 +1,8 @@
 package vswe.superfactory.components;
 
 import vswe.superfactory.blocks.ConnectionBlockType;
+import vswe.superfactory.components.internal.ConnectionOption;
+import vswe.superfactory.components.internal.SlotInventoryHolder;
 import vswe.superfactory.tiles.TileEntityBUD;
 
 import java.util.EnumSet;

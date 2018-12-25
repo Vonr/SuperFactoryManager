@@ -4,6 +4,8 @@ import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
+import vswe.superfactory.components.internal.CraftingSetting;
+import vswe.superfactory.components.internal.ItemSetting;
 
 import java.util.Map;
 

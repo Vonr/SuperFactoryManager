@@ -1,4 +1,4 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 public interface IItemBufferElement {
 	void prepareSubElements();

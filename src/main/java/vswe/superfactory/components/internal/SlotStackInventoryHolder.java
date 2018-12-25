@@ -1,7 +1,8 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 public class SlotStackInventoryHolder implements IItemBufferSubElement {
 	private IItemHandler inventory;
@@ -19,7 +20,11 @@ public class SlotStackInventoryHolder implements IItemBufferSubElement {
 	@Override
 	public void remove() {
 		if (itemStack.getCount() == 0) {
-			getInventory().insertItem(getSlot(), ItemStack.EMPTY, false);
+			IItemHandler handler = getInventory();
+			if (handler instanceof IItemHandlerModifiable)
+				((IItemHandlerModifiable) handler).setStackInSlot(getSlot(), ItemStack.EMPTY);
+			else
+				getInventory().extractItem(getSlot(), Integer.MAX_VALUE, false); // todo: ensure this is an okay way to set slot to null, setInventorySlotContents
 		}
 	}
 
@@ -40,19 +45,13 @@ public class SlotStackInventoryHolder implements IItemBufferSubElement {
 		return Math.min(itemStack.getCount(), sizeRemaining);
 	}
 
-	public void reduceAmount(int val) {
-		if (val == 0)
+	public void reduceAmount(int amount) {
+		//todo: fix ``` .isEmpty() ? ``` for count adjustment
+		//todo: adjust stack size?
+		if (amount == 0 || getSizeRemaining() < amount)
 			return;
-		int stackSize = itemStack.getCount();
-
-		ItemStack extractStack = inventory.extractItem(getSlot(), val, false);
-
-		int extractSize = (!extractStack.isEmpty()) ? extractStack.getCount() : 0;
-
-		if (extractSize > 0 && stackSize == itemStack.getCount()) {
-			inventory.extractItem(getSlot(), extractSize, false);
-		}
-		sizeRemaining -= extractSize;
+		inventory.extractItem(getSlot(), amount, false);
+		sizeRemaining -= amount;
 	}
 
 	public ItemStack getItemStack() {
@@ -72,5 +71,12 @@ public class SlotStackInventoryHolder implements IItemBufferSubElement {
 
 		element.sizeRemaining = amount;
 		return element;
+	}
+
+	@Override
+	public String toString() {
+		return  "itemStack=" + itemStack +
+				", sizeRemaining=" + getSizeRemaining() +
+				", slot=" + slot;
 	}
 }

@@ -1,4 +1,4 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.Item;
@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import vswe.superfactory.ItemUtils;
 import vswe.superfactory.Localization;
+import vswe.superfactory.components.ComponentMenuItem;
 import vswe.superfactory.network.DataBitHelper;
 import vswe.superfactory.network.DataReader;
 import vswe.superfactory.network.DataWriter;
@@ -14,15 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ItemSetting extends Setting {
-	private static final String NBT_SETTING_FUZZY      = "FuzzyMode";
-	private static final String NBT_SETTING_FUZZY_OLD  = "Fuzzy";
-	private static final String NBT_SETTING_ITEM_COUNT = "ItemCount";
-	private static final String NBT_SETTING_ITEM_DMG   = "ItemDamage";
-	private static final String NBT_SETTING_ITEM_ID    = "ItemId";
-	private static final String NBT_TAG                = "tag"; //must be "tag" to match the vanilla value, see ItemStack.readFromNBT
-	private int       amount;
-	private FuzzyMode fuzzyMode;
-	private ItemStack item;
+	private static final String    NBT_SETTING_FUZZY      = "FuzzyMode";
+	private static final String    NBT_SETTING_FUZZY_OLD  = "Fuzzy";
+	private static final String    NBT_SETTING_ITEM_COUNT = "ItemCount";
+	private static final String    NBT_SETTING_ITEM_DMG   = "ItemDamage";
+	private static final String    NBT_SETTING_ITEM_ID    = "ItemId";
+	private static final String    NBT_TAG                = "tag"; //must be "tag" to match the vanilla value, see ItemStack.readFromNBT
+	private              int       amount;
+	private              FuzzyMode fuzzyMode;
+	private              ItemStack item;
 
 	public ItemSetting(int id) {
 		super(id);

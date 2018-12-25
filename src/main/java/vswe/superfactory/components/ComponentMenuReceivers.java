@@ -2,6 +2,7 @@ package vswe.superfactory.components;
 
 import vswe.superfactory.Localization;
 import vswe.superfactory.blocks.ConnectionBlockType;
+import vswe.superfactory.components.internal.ConnectionSet;
 
 import java.util.List;
 

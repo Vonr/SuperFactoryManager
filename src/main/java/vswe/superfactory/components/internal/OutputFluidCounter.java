@@ -1,8 +1,10 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import vswe.superfactory.components.CommandExecutor;
+import vswe.superfactory.components.FluidBufferElement;
 
 import java.util.List;
 

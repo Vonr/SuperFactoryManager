@@ -1,6 +1,7 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 import vswe.superfactory.Localization;
+import vswe.superfactory.components.FlowComponent;
 
 public enum ConnectionOption {
 	STANDARD_INPUT(Localization.CONNECTION_INPUT, ConnectionType.INPUT),

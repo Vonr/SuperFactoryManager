@@ -2,6 +2,8 @@ package vswe.superfactory.components;
 
 
 import vswe.superfactory.Localization;
+import vswe.superfactory.components.internal.IConditionStuffMenu;
+import vswe.superfactory.components.internal.Setting;
 
 import java.util.List;
 

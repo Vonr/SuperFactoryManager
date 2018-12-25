@@ -10,7 +10,7 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.FMLEventChannel;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
-import vswe.superfactory.components.ModItemHelper;
+import vswe.superfactory.components.internal.ModItemHelper;
 import vswe.superfactory.network.FileHelper;
 import vswe.superfactory.network.PacketEventHandler;
 import vswe.superfactory.proxy.CommonProxy;

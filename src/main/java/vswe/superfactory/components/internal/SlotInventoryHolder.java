@@ -1,4 +1,4 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -10,7 +10,6 @@ import vswe.superfactory.tiles.*;
 import vswe.superfactory.util.CapabilityUtils;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

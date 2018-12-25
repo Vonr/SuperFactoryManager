@@ -1,5 +1,7 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
+
+import vswe.superfactory.components.internal.ItemSetting;
 
 public class CraftingSetting extends ItemSetting {
 	public CraftingSetting(int id) {

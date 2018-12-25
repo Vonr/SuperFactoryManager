@@ -2,6 +2,8 @@ package vswe.superfactory.components;
 
 import net.minecraft.util.EnumFacing;
 import vswe.superfactory.blocks.ConnectionBlockType;
+import vswe.superfactory.components.internal.ConnectionOption;
+import vswe.superfactory.components.internal.SlotInventoryHolder;
 import vswe.superfactory.tiles.TileEntityInput;
 
 import java.util.EnumSet;

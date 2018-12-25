@@ -3,6 +3,7 @@ package vswe.superfactory.components;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import vswe.superfactory.components.internal.IContainerSelection;
 import vswe.superfactory.interfaces.GuiManager;
 
 import java.util.ArrayList;

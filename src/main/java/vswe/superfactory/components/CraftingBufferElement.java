@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.items.IItemHandler;
 import vswe.superfactory.blocks.ConnectionBlockType;
+import vswe.superfactory.components.internal.*;
 import vswe.superfactory.tiles.TileEntityManager;
 
 import java.util.*;
@@ -83,10 +84,11 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 		}
 	}
 
+	//todo: make not call getValidSlots (?)
 	private void disposeOfExtraItem(ItemStack itemStack) {
 		TileEntityManager         manager     = craftingMenu.getParent().getManager();
 		List<SlotInventoryHolder> inventories = CommandExecutor.getContainers(manager, scrapMenu, ConnectionBlockType.INVENTORY);
-		CommandExecutor.getValidSlots(scrapMenu, inventories);
+		CommandExecutor.getValidSlots(scrapMenu.getParent().getMenus().get(2), inventories);
 
 		for (SlotInventoryHolder inventoryHolder : inventories) {
 
@@ -140,9 +142,9 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 
 	@Override
 	public void onUpdate() {
-		for (IItemHandler inventory : inventories) {
-			//            inventory.markDirty();
-		}
+//		for (IItemHandler inventory : inventories) {
+//			inventory.markDirty();
+//		}
 		inventories.clear();
 	}
 
@@ -178,7 +180,7 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 	}
 
 	private boolean findItems(boolean remove) {
-		Map<Integer, ItemStack> foundItems = new HashMap<Integer, ItemStack>();
+		Map<Integer, ItemStack> foundItems = new HashMap<>();
 		for (ItemBufferElement itemBufferElement : executor.itemBuffer) {
 			int count = itemBufferElement.retrieveItemCount(9);
 			for (Iterator<SlotStackInventoryHolder> iterator = itemBufferElement.getSubElements().iterator(); iterator.hasNext(); ) {
@@ -228,5 +230,13 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 
 	private boolean useAdvancedDetection() {
 		return craftingMenu.getResultItem().getFuzzyMode() != FuzzyMode.PRECISE;
+	}
+
+	@Override
+	public String toString() {
+		return  "result=" + result +
+				", sizeRemaining=" + getSizeRemaining() +
+				", isCrafting=" + isCrafting +
+				", justRemoved=" + justRemoved;
 	}
 }

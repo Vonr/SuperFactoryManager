@@ -4,6 +4,8 @@ import net.minecraft.util.EnumFacing;
 import vswe.superfactory.blocks.ConnectionBlockType;
 import vswe.superfactory.blocks.IRedstoneNode;
 import vswe.superfactory.blocks.ITriggerNode;
+import vswe.superfactory.components.internal.ConnectionOption;
+import vswe.superfactory.components.internal.SlotInventoryHolder;
 
 import java.util.EnumSet;
 import java.util.List;

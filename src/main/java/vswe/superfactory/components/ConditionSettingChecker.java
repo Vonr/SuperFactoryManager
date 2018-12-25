@@ -1,6 +1,8 @@
 package vswe.superfactory.components;
 
 
+import vswe.superfactory.components.internal.Setting;
+
 public class ConditionSettingChecker {
 	private int     amount;
 	private Setting setting;

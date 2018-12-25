@@ -4,6 +4,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.Localization;
+import vswe.superfactory.components.internal.ComponentType;
+import vswe.superfactory.components.internal.ConnectionSet;
 import vswe.superfactory.interfaces.ContainerManager;
 import vswe.superfactory.interfaces.GuiManager;
 import vswe.superfactory.network.DataBitHelper;
@@ -14,11 +16,11 @@ import vswe.superfactory.network.PacketHandler;
 public class ComponentMenuResult extends ComponentMenu {
 
 	private static final String NBT_SELECTED = "SelectedOption";
-	private static final int RADIO_MARGIN = 13;
-	private static final int RADIO_X      = 5;
-	private static final int RADIO_Y      = 5;
-	private RadioButtonList radioButtons;
-	private ConnectionSet[] sets;
+	private static final int    RADIO_MARGIN = 13;
+	private static final int    RADIO_X      = 5;
+	private static final int    RADIO_Y      = 5;
+	private RadioButtonList     radioButtons;
+	private ConnectionSet[]     sets;
 
 	public ComponentMenuResult(FlowComponent parent) {
 		super(parent);

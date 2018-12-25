@@ -17,6 +17,7 @@ import vswe.superfactory.CollisionHelper;
 import vswe.superfactory.Localization;
 import vswe.superfactory.blocks.ConnectionBlock;
 import vswe.superfactory.blocks.ConnectionBlockType;
+import vswe.superfactory.components.internal.IContainerSelection;
 import vswe.superfactory.interfaces.*;
 import vswe.superfactory.network.DataBitHelper;
 import vswe.superfactory.network.DataReader;
@@ -31,8 +32,8 @@ import java.util.List;
 
 public abstract class ComponentMenuContainer extends ComponentMenu {
 
-	private static final int BACK_SIZE_H = 9;
-	private static final int BACK_SIZE_W = 9;
+	private static final int                                   BACK_SIZE_H = 9;
+	private static final int                                   BACK_SIZE_W = 9;
 	private static final int BACK_SRC_X  = 46;
 	private static final int BACK_SRC_Y  = 52;
 	private static final int BACK_X      = 108;
@@ -53,12 +54,12 @@ public abstract class ComponentMenuContainer extends ComponentMenu {
 	private static final int RADIO_BUTTON_MULTI_X = 2;
 	private static final int RADIO_BUTTON_MULTI_Y = 27;
 	private static final int RADIO_BUTTON_SPACING = 15;
-	private static final int TEXT_MULTI_ERROR_Y  = 30;
-	private static final int TEXT_MULTI_MARGIN_X = 5;
-	private static final int TEXT_MULTI_Y        = 10;
+	private static final int                                   TEXT_MULTI_ERROR_Y  = 30;
+	private static final int                                   TEXT_MULTI_MARGIN_X = 5;
+	private static final int                                   TEXT_MULTI_Y        = 10;
 	private static final ContainerFilter                       filter = new ContainerFilter(); //this one is static so all of the menus will share the selection
 	//ugly way to make sure the filter controller isn't updating multiple times
-	private static boolean hasUpdated;
+	private static boolean                                     hasUpdated;
 	protected            RadioButtonList                       radioButtonsMulti;
 	protected            ScrollController<IContainerSelection> scrollController;
 	protected            List<Integer>                         selectedInventories;

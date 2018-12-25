@@ -1,4 +1,4 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;

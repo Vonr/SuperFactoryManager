@@ -1,23 +1,24 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 import net.minecraft.item.ItemStack;
+import vswe.superfactory.components.FlowComponent;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class ItemBufferElement implements IItemBufferElement {
-	private FlowComponent       component;
-	private int                 currentStackSize;
-	private boolean fairShare;
-	private List<SlotStackInventoryHolder> holders;
-	private SlotInventoryHolder inventoryHolder;
+	private FlowComponent                      component;
+	private int                                currentStackSize;
+	private boolean                            fairShare;
+	private List<SlotStackInventoryHolder>     holders;
+	private SlotInventoryHolder                inventoryHolder;
 	private Iterator<SlotStackInventoryHolder> iterator;
-	private ItemSetting         setting;
-	private int     shareId;
-	private int     sharedBy;
-	private int                 totalStackSize;
-	private boolean             useWhiteList;
+	private ItemSetting                        setting;
+	private int                                shareId;
+	private int                                sharedBy;
+	private int                                totalStackSize;
+	private boolean                            useWhiteList;
 
 
 	public ItemBufferElement(FlowComponent owner, Setting setting, SlotInventoryHolder inventoryHolder, boolean useWhiteList, SlotStackInventoryHolder target) {

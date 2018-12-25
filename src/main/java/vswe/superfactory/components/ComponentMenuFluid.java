@@ -6,6 +6,8 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.Localization;
+import vswe.superfactory.components.internal.FluidSetting;
+import vswe.superfactory.components.internal.Setting;
 import vswe.superfactory.interfaces.GuiManager;
 import vswe.superfactory.network.DataBitHelper;
 import vswe.superfactory.network.DataReader;

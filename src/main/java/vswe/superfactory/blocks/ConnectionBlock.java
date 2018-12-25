@@ -6,7 +6,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.Localization;
 import vswe.superfactory.components.ComponentMenuContainer;
-import vswe.superfactory.components.IContainerSelection;
+import vswe.superfactory.components.internal.IContainerSelection;
 import vswe.superfactory.components.Variable;
 import vswe.superfactory.interfaces.GuiManager;
 import vswe.superfactory.tiles.TileEntityManager;

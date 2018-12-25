@@ -4,6 +4,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.CollisionHelper;
 import vswe.superfactory.Localization;
+import vswe.superfactory.components.internal.CraftingSetting;
+import vswe.superfactory.components.internal.Setting;
 import vswe.superfactory.interfaces.GuiManager;
 
 public class ComponentMenuCrafting extends ComponentMenuItem {

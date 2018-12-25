@@ -10,6 +10,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import vswe.superfactory.blocks.ConnectionBlock;
 import vswe.superfactory.blocks.ConnectionBlockType;
+import vswe.superfactory.components.internal.*;
 import vswe.superfactory.tiles.TileEntityManager;
 
 import java.util.*;
@@ -19,7 +20,7 @@ public class CommandExecutor {
 	final List<CraftingBufferElement> craftingBufferHigh;
 	final List<CraftingBufferElement> craftingBufferLow;
 	final List<FluidBufferElement>    fluidBuffer;
-	final List<ItemBufferElement>     itemBuffer;
+	final protected List<ItemBufferElement>     itemBuffer;
 	private final TileEntityManager manager;
 	private final List<Integer>     usedCommands;
 
@@ -46,10 +47,10 @@ public class CommandExecutor {
 		ComponentMenuContainer menuContainer = (ComponentMenuContainer) componentMenu;
 
 		if (menuContainer.getSelectedInventories().size() == 0) {
-			return null;
+			return null; // todo: return empty list
 		}
 
-		List<SlotInventoryHolder> ret         = new ArrayList<SlotInventoryHolder>();
+		List<SlotInventoryHolder> ret         = new ArrayList<>();
 		List<ConnectionBlock>     inventories = manager.getConnectedInventories();
 		Variable[]                variables   = manager.getVariables();
 		for (int i = 0; i < variables.length; i++) {
@@ -100,9 +101,10 @@ public class CommandExecutor {
 		return false;
 	}
 
+	//todo: better docs, called getValidSlots but appears to prepare SideSlotTarget map that's not returned?
+	//todo: make it return the map instead of modifying the map of the inventory
 	public static void getValidSlots(ComponentMenu componentMenu, List<SlotInventoryHolder> inventories) {
 		ComponentMenuTargetInventory menuTarget = (ComponentMenuTargetInventory) componentMenu;
-
 		for (int i = 0; i < inventories.size(); i++) {
 			Map<EnumFacing, SideSlotTarget> validSlots = inventories.get(i).getValidSlots();
 
@@ -582,8 +584,9 @@ public class CommandExecutor {
 
 	private void insertItemsFromInputBufferElement(ComponentMenuStuff menuItem, List<SlotInventoryHolder> inventories, List<OutputItemCounter> outputCounters, SlotInventoryHolder inventoryHolder, IItemBufferElement itemBufferElement) {
 		IItemBufferSubElement subElement;
+		int remaining;
 		itemBufferElement.prepareSubElements();
-		while ((subElement = itemBufferElement.getSubElement()) != null) {
+		while ((subElement = itemBufferElement.getSubElement()) != null && (remaining = subElement.getSizeRemaining()) > 0) {
 			ItemStack stackInBuffer = subElement.getItemStack();
 
 			ItemSetting setting = getStackSetting(menuItem, stackInBuffer);
@@ -614,25 +617,24 @@ public class CommandExecutor {
 						continue;
 
 					int moveCount;
-					moveCount = Math.min(subElement.getSizeRemaining(), Math.min(inventory.getSlotLimit(slot), stackInSlot.getMaxStackSize()) - (stackInSlot.isEmpty() ? 0 : stackInSlot.getCount()));
+					moveCount = Math.min(remaining, Math.min(inventory.getSlotLimit(slot), stackInSlot.getMaxStackSize()) - (stackInSlot.isEmpty() ? 0 : stackInSlot.getCount()));
 					moveCount = outputItemCounter.retrieveItemCount(moveCount);
 					moveCount = itemBufferElement.retrieveItemCount(moveCount);
 					moveCount = Math.min(moveCount, inventory.getSlotLimit(slot) - stackInSlot.getCount());
 					if (moveCount <= 0)
 						continue;
 
-					ItemStack stackToInsert = stackInBuffer.splitStack(moveCount); // make sure to only insert moveCount amount
+					ItemStack stackToInsert = stackInBuffer.copy();
+					stackToInsert.setCount(moveCount);
 					int leftoverCount = inventory.insertItem(slot, stackToInsert, false).getCount();
 
-					moveCount -= leftoverCount; // adjust movecount to reflect items that couldn't be inserted
+					moveCount -= leftoverCount;
 					itemBufferElement.decreaseStackSize(moveCount);
 					outputItemCounter.modifyStackSize(moveCount);
-
-					stackInBuffer.grow(stackToInsert.getCount()); // undo splitStack count decrement
 					subElement.reduceAmount(moveCount);
 
 
-					if (subElement.getSizeRemaining() == 0) {
+					if (subElement.getSizeRemaining() <= 0) {
 						subElement.remove();
 						itemBufferElement.removeSubElement();
 						subElement.onUpdate();
@@ -643,6 +645,7 @@ public class CommandExecutor {
 				}
 			}
 		}
+		itemBufferElement.releaseSubElements();
 	}
 
 	private void insertFluids(ComponentMenu componentMenu, List<SlotInventoryHolder> tanks) {

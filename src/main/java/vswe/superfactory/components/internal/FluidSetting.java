@@ -1,9 +1,10 @@
-package vswe.superfactory.components;
+package vswe.superfactory.components.internal;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import vswe.superfactory.Localization;
+import vswe.superfactory.components.ComponentMenuFluid;
 import vswe.superfactory.network.DataBitHelper;
 import vswe.superfactory.network.DataReader;
 import vswe.superfactory.network.DataWriter;

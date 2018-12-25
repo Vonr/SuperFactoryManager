@@ -2,6 +2,7 @@ package vswe.superfactory.components;
 
 
 import vswe.superfactory.Localization;
+import vswe.superfactory.components.internal.ConnectionSet;
 
 public class ComponentMenuListOrderVariable extends ComponentMenuListOrder {
 	public ComponentMenuListOrderVariable(FlowComponent parent) {
