@@ -3,12 +3,15 @@ package vswe.superfactory.components;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.util.EnumFacing;
 import net.minecraftforge.items.IItemHandler;
 import vswe.superfactory.blocks.ConnectionBlockType;
 import vswe.superfactory.components.internal.*;
 import vswe.superfactory.tiles.TileEntityManager;
 
 import java.util.*;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class CraftingBufferElement implements IItemBufferElement, IItemBufferSubElement {
 	private static final double SPEED_MULTIPLIER = 0.05F;
@@ -88,12 +91,27 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 	private void disposeOfExtraItem(ItemStack itemStack) {
 		TileEntityManager         manager     = craftingMenu.getParent().getManager();
 		List<SlotInventoryHolder> inventories = CommandExecutor.getContainers(manager, scrapMenu, ConnectionBlockType.INVENTORY);
-		CommandExecutor.getValidSlots(scrapMenu.getParent().getMenus().get(2), inventories);
-
+//		CommandExecutor.getValidSlots(scrapMenu.getParent().getMenus().get(2), inventories);
+//todo: pray this line isn't needed
 		for (SlotInventoryHolder inventoryHolder : inventories) {
+			List<SideSlotTarget> targets = new ArrayList<>();
+			for (EnumFacing face : EnumFacing.VALUES) {
+				SideSlotTarget target = new SideSlotTarget(face);
+				IItemHandler inventory = inventoryHolder.getInventory(face);
+				if (inventory == null)
+					continue;
+				for (int i = 0; i < inventory.getSlots(); i++) {
+					target.addSlot(i); // todo: for the love of god, add a better method to do this
+										// burn this entire method to the ground
+				}
+				targets.add(target);
+			}
 
-			for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
+//			for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
+			for (SideSlotTarget sideSlotTarget : targets) {
 				IItemHandler inventory = inventoryHolder.getInventory(sideSlotTarget.getSide());
+				if (inventory == null)
+					continue;
 				for (int slot : sideSlotTarget.getSlots()) {
 					if (inventory.insertItem(slot, itemStack, true) != itemStack) {
 						ItemStack itemInSlot = inventory.getStackInSlot(slot);
@@ -103,13 +121,14 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 							int moveCount = Math.min(itemStack.getCount(), Math.min(inventory.getSlotLimit(slot), itemStack.getMaxStackSize()) - itemCountInSlot);
 
 							if (moveCount > 0) {
-								if (itemInSlot.isEmpty()) {
-									itemInSlot = itemStack.copy();
-									itemInSlot.setCount(0);
-									inventory.insertItem(slot, itemInSlot, false);
-								}
-
-								itemInSlot.grow(moveCount);
+//								if (itemInSlot.isEmpty()) {
+//									itemInSlot = itemStack.copy();
+//									itemInSlot.setCount(moveCount);
+//								}
+								ItemStack toInsert = itemStack.copy();
+								toInsert.setCount(moveCount);
+								inventory.insertItem(slot, toInsert, false);
+//								itemInSlot.grow(moveCount);
 								itemStack.shrink(moveCount);
 								if (itemStack.getCount() == 0) {
 									return;
