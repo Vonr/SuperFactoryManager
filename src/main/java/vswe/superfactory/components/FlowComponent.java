@@ -1177,7 +1177,7 @@ public class FlowComponent implements IComponentNetworkReader, Comparable<FlowCo
 		return type;
 	}
 
-	public List<ComponentMenu> getMenus() {
+	public List<ComponentMenu> getMenus() { // todo: make Enum and hashmap for this magic number abomination
 		return menus;
 	}
 

@@ -91,8 +91,7 @@ public class CraftingBufferElement implements IItemBufferElement, IItemBufferSub
 	private void disposeOfExtraItem(ItemStack itemStack) {
 		TileEntityManager         manager     = craftingMenu.getParent().getManager();
 		List<SlotInventoryHolder> inventories = CommandExecutor.getContainers(manager, scrapMenu, ConnectionBlockType.INVENTORY);
-//		CommandExecutor.getValidSlots(scrapMenu.getParent().getMenus().get(2), inventories);
-//todo: pray this line isn't needed
+
 		for (SlotInventoryHolder inventoryHolder : inventories) {
 			List<SideSlotTarget> targets = new ArrayList<>();
 			for (EnumFacing face : EnumFacing.VALUES) {

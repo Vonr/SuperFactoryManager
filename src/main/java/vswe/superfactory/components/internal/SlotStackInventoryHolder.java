@@ -24,7 +24,7 @@ public class SlotStackInventoryHolder implements IItemBufferSubElement {
 			if (handler instanceof IItemHandlerModifiable)
 				((IItemHandlerModifiable) handler).setStackInSlot(getSlot(), ItemStack.EMPTY);
 			else
-				getInventory().extractItem(getSlot(), Integer.MAX_VALUE, false); // todo: ensure this is an okay way to set slot to null, setInventorySlotContents
+				getInventory().extractItem(getSlot(), Integer.MAX_VALUE, false);
 		}
 	}
 

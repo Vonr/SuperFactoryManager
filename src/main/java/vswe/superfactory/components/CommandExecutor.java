@@ -47,7 +47,7 @@ public class CommandExecutor {
 		ComponentMenuContainer menuContainer = (ComponentMenuContainer) componentMenu;
 
 		if (menuContainer.getSelectedInventories().size() == 0) {
-			return null; // todo: return empty list
+			return new ArrayList<>();
 		}
 
 		List<SlotInventoryHolder> ret         = new ArrayList<>();
@@ -101,19 +101,17 @@ public class CommandExecutor {
 		return false;
 	}
 
-	//todo: better docs, called getValidSlots but appears to prepare SideSlotTarget map that's not returned?
-	//todo: make it return the map instead of modifying the map of the inventory
-	public static void getValidSlots(ComponentMenu componentMenu, List<SlotInventoryHolder> inventories) {
+	public static void prepareValidSlots(ComponentMenu componentMenu, List<SlotInventoryHolder> inventories) {
 		ComponentMenuTargetInventory menuTarget = (ComponentMenuTargetInventory) componentMenu;
-		for (int i = 0; i < inventories.size(); i++) {
-			Map<EnumFacing, SideSlotTarget> validSlots = inventories.get(i).getValidSlots();
+		for (SlotInventoryHolder holder : inventories) {
+			Map<EnumFacing, SideSlotTarget> validSlots = holder.getValidSlots();
 
 			for (EnumFacing side : EnumFacing.VALUES) {
 				int          sideI     = side.ordinal();
-				IItemHandler inventory = inventories.get(i).getInventory(side);
+				IItemHandler handler = holder.getInventory(side);
 
-				if (menuTarget.isActive(sideI)) {
-					int[] reportedSlots = new int[inventory.getSlots()];
+				if (handler != null && menuTarget.isActive(sideI)) {
+					int[] reportedSlots = new int[handler.getSlots()];
 					for (int j = 0; j < reportedSlots.length; j++) {
 						reportedSlots[j] = j;
 					}
@@ -194,21 +192,21 @@ public class CommandExecutor {
 				case INPUT:
 					List<SlotInventoryHolder> inputInventory = getInventories(command.getMenus().get(0));
 					if (inputInventory != null) {
-						getValidSlots(command.getMenus().get(1), inputInventory);
+						prepareValidSlots(command.getMenus().get(1), inputInventory);
 						getItems(command.getMenus().get(2), inputInventory);
 					}
 					break;
 				case OUTPUT:
 					List<SlotInventoryHolder> outputInventory = getInventories(command.getMenus().get(0));
 					if (outputInventory != null) {
-						getValidSlots(command.getMenus().get(1), outputInventory);
+						prepareValidSlots(command.getMenus().get(1), outputInventory);
 						insertItems(command.getMenus().get(2), outputInventory);
 					}
 					break;
 				case CONDITION:
 					List<SlotInventoryHolder> conditionInventory = getInventories(command.getMenus().get(0));
 					if (conditionInventory != null) {
-						getValidSlots(command.getMenus().get(1), conditionInventory);
+						prepareValidSlots(command.getMenus().get(1), conditionInventory);
 						if (searchForStuff(command.getMenus().get(2), conditionInventory, false)) {
 							executeChildCommands(command, EnumSet.of(ConnectionOption.CONDITION_TRUE));
 						} else {
@@ -713,6 +711,8 @@ public class CommandExecutor {
 	}
 
 	private boolean searchForStuff(ComponentMenu componentMenu, List<SlotInventoryHolder> inventories, boolean useFluids) {
+		if (inventories == null || inventories.size() == 0)
+			return false;
 		if (inventories.get(0).isShared()) {
 			Map<Integer, ConditionSettingChecker> conditionSettingCheckerMap = new HashMap<Integer, ConditionSettingChecker>();
 			for (int i = 0; i < inventories.size(); i++) {

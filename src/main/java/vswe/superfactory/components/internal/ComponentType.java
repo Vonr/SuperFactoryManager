@@ -3,6 +3,8 @@ package vswe.superfactory.components.internal;
 import vswe.superfactory.Localization;
 import vswe.superfactory.components.*;
 
+import java.util.EnumSet;
+
 public enum ComponentType {
 	TRIGGER(0, Localization.TRIGGER_SHORT, Localization.TRIGGER_LONG,
 			new ConnectionSet[]{ConnectionSet.CONTINUOUSLY, ConnectionSet.REDSTONE, ConnectionSet.BUD},
@@ -63,7 +65,7 @@ public enum ComponentType {
 	private Localization                     name;
 	private ConnectionSet[]                  sets;
 
-	//todo: sets param => EnumSet<ConnectionSet> sets
+	//todo: investigate sets param => EnumSet<ConnectionSet> sets
 	ComponentType(int id, Localization name, Localization longName, ConnectionSet[] sets, Class<? extends ComponentMenu>... classes) {
 		this.classes = classes;
 		this.id = id;
