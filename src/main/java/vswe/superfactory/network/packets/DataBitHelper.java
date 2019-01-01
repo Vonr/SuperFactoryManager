@@ -1,4 +1,4 @@
-package vswe.superfactory.network;
+package vswe.superfactory.network.packets;
 
 public enum DataBitHelper {
 	FLOW_CONTROL_COUNT(9),

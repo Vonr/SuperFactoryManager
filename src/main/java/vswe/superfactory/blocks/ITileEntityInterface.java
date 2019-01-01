@@ -7,8 +7,8 @@ import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import vswe.superfactory.network.DataReader;
-import vswe.superfactory.network.DataWriter;
+import vswe.superfactory.network.packets.DataReader;
+import vswe.superfactory.network.packets.DataWriter;
 
 public interface ITileEntityInterface {
 	Container getContainer(TileEntity te, InventoryPlayer inv);

@@ -14,7 +14,7 @@ import vswe.superfactory.blocks.IRedstoneNode;
 import vswe.superfactory.components.ComponentMenuPulse;
 import vswe.superfactory.components.ComponentMenuRedstoneOutput;
 import vswe.superfactory.components.ComponentMenuRedstoneSidesEmitter;
-import vswe.superfactory.network.*;
+import vswe.superfactory.network.packets.*;
 import vswe.superfactory.registry.ModBlocks;
 
 import java.util.ArrayList;

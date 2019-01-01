@@ -6,9 +6,9 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.Localization;
 import vswe.superfactory.interfaces.ContainerManager;
 import vswe.superfactory.interfaces.GuiManager;
-import vswe.superfactory.network.DataReader;
-import vswe.superfactory.network.DataWriter;
-import vswe.superfactory.network.PacketHandler;
+import vswe.superfactory.network.packets.DataReader;
+import vswe.superfactory.network.packets.DataWriter;
+import vswe.superfactory.network.packets.PacketHandler;
 
 public class ComponentMenuCraftingPriority extends ComponentMenu {
 	private static final String NBT_SELECTED = "SelectedOption";

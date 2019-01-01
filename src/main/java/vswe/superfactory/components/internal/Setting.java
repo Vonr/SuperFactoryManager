@@ -3,8 +3,8 @@ package vswe.superfactory.components.internal;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import vswe.superfactory.network.DataReader;
-import vswe.superfactory.network.DataWriter;
+import vswe.superfactory.network.packets.DataReader;
+import vswe.superfactory.network.packets.DataWriter;
 
 import java.util.List;
 

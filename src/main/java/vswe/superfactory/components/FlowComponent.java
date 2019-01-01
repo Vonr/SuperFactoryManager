@@ -12,7 +12,7 @@ import vswe.superfactory.components.internal.ConnectionOption;
 import vswe.superfactory.components.internal.ConnectionSet;
 import vswe.superfactory.interfaces.ContainerManager;
 import vswe.superfactory.interfaces.GuiManager;
-import vswe.superfactory.network.*;
+import vswe.superfactory.network.packets.*;
 import vswe.superfactory.settings.Settings;
 import vswe.superfactory.tiles.TileEntityManager;
 

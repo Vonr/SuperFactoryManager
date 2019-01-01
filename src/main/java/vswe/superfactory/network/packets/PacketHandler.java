@@ -1,4 +1,4 @@
-package vswe.superfactory.network;
+package vswe.superfactory.network.packets;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;

@@ -3,10 +3,10 @@ package vswe.superfactory.settings;
 import net.minecraft.block.state.IBlockState;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import vswe.superfactory.network.DataReader;
-import vswe.superfactory.network.DataWriter;
-import vswe.superfactory.network.FileHelper;
-import vswe.superfactory.network.PacketHandler;
+import vswe.superfactory.network.packets.DataReader;
+import vswe.superfactory.network.packets.DataWriter;
+import vswe.superfactory.network.packets.FileHelper;
+import vswe.superfactory.network.packets.PacketHandler;
 import vswe.superfactory.tiles.TileEntityManager;
 
 public final class Settings {

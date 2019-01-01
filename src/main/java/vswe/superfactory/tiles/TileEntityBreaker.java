@@ -28,7 +28,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.wrapper.InvWrapper;
 import vswe.superfactory.blocks.BlockCableBreaker;
 import vswe.superfactory.blocks.ClusterMethodRegistration;
-import vswe.superfactory.network.*;
+import vswe.superfactory.network.packets.*;
 import vswe.superfactory.registry.ModBlocks;
 
 import java.util.ArrayList;

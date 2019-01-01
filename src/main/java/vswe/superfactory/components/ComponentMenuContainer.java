@@ -19,10 +19,10 @@ import vswe.superfactory.blocks.ConnectionBlock;
 import vswe.superfactory.blocks.ConnectionBlockType;
 import vswe.superfactory.components.internal.IContainerSelection;
 import vswe.superfactory.interfaces.*;
-import vswe.superfactory.network.DataBitHelper;
-import vswe.superfactory.network.DataReader;
-import vswe.superfactory.network.DataWriter;
-import vswe.superfactory.network.PacketHandler;
+import vswe.superfactory.network.packets.DataBitHelper;
+import vswe.superfactory.network.packets.DataReader;
+import vswe.superfactory.network.packets.DataWriter;
+import vswe.superfactory.network.packets.PacketHandler;
 import vswe.superfactory.tiles.TileEntityManager;
 
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package vswe.superfactory.network;
+package vswe.superfactory.network.packets;
 
 import java.io.File;
 import java.io.FileInputStream;

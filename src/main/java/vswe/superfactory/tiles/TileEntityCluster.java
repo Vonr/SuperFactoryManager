@@ -23,7 +23,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.blocks.ClusterMethodRegistration;
 import vswe.superfactory.blocks.ITileEntityInterface;
 import vswe.superfactory.blocks.ItemCluster;
-import vswe.superfactory.network.*;
+import vswe.superfactory.network.packets.*;
 import vswe.superfactory.registry.ClusterRegistry;
 
 import java.util.ArrayList;

@@ -11,8 +11,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.FMLEventChannel;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import vswe.superfactory.components.internal.ModItemHelper;
-import vswe.superfactory.network.FileHelper;
-import vswe.superfactory.network.PacketEventHandler;
+import vswe.superfactory.network.messages.MessageHandler;
+import vswe.superfactory.network.packets.FileHelper;
+import vswe.superfactory.network.packets.PacketEventHandler;
 import vswe.superfactory.proxy.CommonProxy;
 import vswe.superfactory.registry.ModBlocks;
 
@@ -48,7 +49,7 @@ public class SuperFactoryManager {
 
 		packetHandler.register(new PacketEventHandler());
 
-
+		MessageHandler.init();
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
 
 		FMLInterModComms.sendMessage("Waila", "register", "Provider.callbackRegister");

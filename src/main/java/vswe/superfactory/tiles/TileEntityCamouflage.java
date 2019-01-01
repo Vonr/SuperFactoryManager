@@ -21,7 +21,7 @@ import vswe.superfactory.blocks.BlockCamouflageBase;
 import vswe.superfactory.blocks.ClusterMethodRegistration;
 import vswe.superfactory.components.ComponentMenuCamouflageInside;
 import vswe.superfactory.components.ComponentMenuCamouflageShape;
-import vswe.superfactory.network.*;
+import vswe.superfactory.network.packets.*;
 
 import java.util.EnumSet;
 import java.util.Random;

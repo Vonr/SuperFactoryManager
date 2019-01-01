@@ -9,10 +9,10 @@ import vswe.superfactory.Localization;
 import vswe.superfactory.components.internal.Setting;
 import vswe.superfactory.interfaces.ContainerManager;
 import vswe.superfactory.interfaces.GuiManager;
-import vswe.superfactory.network.DataBitHelper;
-import vswe.superfactory.network.DataReader;
-import vswe.superfactory.network.DataWriter;
-import vswe.superfactory.network.PacketHandler;
+import vswe.superfactory.network.packets.DataBitHelper;
+import vswe.superfactory.network.packets.DataReader;
+import vswe.superfactory.network.packets.DataWriter;
+import vswe.superfactory.network.packets.PacketHandler;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;

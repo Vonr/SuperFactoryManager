@@ -12,9 +12,9 @@ import vswe.superfactory.CollisionHelper;
 import vswe.superfactory.Localization;
 import vswe.superfactory.animation.AnimationController;
 import vswe.superfactory.components.FlowComponent;
-import vswe.superfactory.network.DataBitHelper;
-import vswe.superfactory.network.DataWriter;
-import vswe.superfactory.network.PacketHandler;
+import vswe.superfactory.network.packets.DataBitHelper;
+import vswe.superfactory.network.packets.DataWriter;
+import vswe.superfactory.network.packets.PacketHandler;
 import vswe.superfactory.tiles.TileEntityManager;
 
 import java.io.IOException;

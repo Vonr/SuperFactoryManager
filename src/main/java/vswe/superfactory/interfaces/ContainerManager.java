@@ -6,7 +6,7 @@ import net.minecraft.inventory.IContainerListener;
 import net.minecraft.tileentity.TileEntity;
 import vswe.superfactory.blocks.ConnectionBlock;
 import vswe.superfactory.components.FlowComponent;
-import vswe.superfactory.network.PacketHandler;
+import vswe.superfactory.network.packets.PacketHandler;
 import vswe.superfactory.tiles.TileEntityManager;
 import vswe.superfactory.util.WorldCoordinate;
 

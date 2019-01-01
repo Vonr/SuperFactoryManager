@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.items.ItemHandlerHelper;
 import vswe.superfactory.CollisionHelper;
 import vswe.superfactory.Localization;
 import vswe.superfactory.components.internal.FuzzyMode;
@@ -15,34 +16,37 @@ import vswe.superfactory.components.internal.ItemSetting;
 import vswe.superfactory.components.internal.Setting;
 import vswe.superfactory.interfaces.ContainerManager;
 import vswe.superfactory.interfaces.GuiManager;
-import vswe.superfactory.network.DataBitHelper;
-import vswe.superfactory.network.DataReader;
-import vswe.superfactory.network.DataWriter;
+import vswe.superfactory.network.packets.DataBitHelper;
+import vswe.superfactory.network.packets.DataReader;
+import vswe.superfactory.network.packets.DataWriter;
+import vswe.superfactory.util.SearchUtil;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class ComponentMenuItem extends ComponentMenuStuff {
 
 
-	private static final int ARROW_HEIGHT  = 10;
-	private static final int ARROW_SRC_X   = 18;
-	private static final int ARROW_SRC_Y   = 20;
-	private static final int ARROW_TEXT_Y  = 40;
-	private static final int ARROW_WIDTH   = 6;
-	private static final int ARROW_X_LEFT  = 5;
-	private static final int ARROW_X_RIGHT = 109;
-	private static final int ARROW_Y       = 37;
-	private static final int DMG_VAL_TEXT_X = 15;
-	private static final int DMG_VAL_TEXT_Y = 55;
-	private TextBoxNumber amountTextBox;
-	private TextBoxNumber damageValueTextBox;
+	private static final int           ARROW_HEIGHT   = 10;
+	private static final int           ARROW_SRC_X    = 18;
+	private static final int           ARROW_SRC_Y    = 20;
+	private static final int           ARROW_TEXT_Y   = 40;
+	private static final int           ARROW_WIDTH    = 6;
+	private static final int           ARROW_X_LEFT   = 5;
+	private static final int           ARROW_X_RIGHT  = 109;
+	private static final int           ARROW_Y        = 37;
+	private static final int           DMG_VAL_TEXT_X = 15;
+	private static final int           DMG_VAL_TEXT_Y = 55;
+	private              TextBoxNumber amountTextBox;
+	private              TextBoxNumber damageValueTextBox;
 
 
 	public ComponentMenuItem(FlowComponent parent) {
 		this(parent, ItemSetting.class);
 	}
+
 	protected ComponentMenuItem(FlowComponent parent, Class<? extends Setting> settingClass) {
 		super(parent, settingClass);
 
@@ -270,79 +274,44 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 		}
 	}
 
+	/**
+	 * Filters items to be displayed in the scroll container
+	 *
+	 * @param search  query
+	 * @param showAll should display all, user can enter ".all" for this to be true
+	 * @return Search results
+	 */
 	@SideOnly(Side.CLIENT)
 	@Override
-	protected List updateSearch(String search, boolean showAll) {
-		NonNullList<ItemStack> ret = NonNullList.create();
+	protected List updateSearch(final String search, final boolean showAll) {
+		NonNullList<ItemStack> results = NonNullList.create();
 
 		if (search.equals(".inv")) {
-			IInventory inventory  = Minecraft.getMinecraft().player.inventory;
-			int        itemLength = inventory.getSizeInventory();
-			for (int i = 0; i < itemLength; i++) {
-				ItemStack item = inventory.getStackInSlot(i);
-				if (!item.isEmpty()) {
-					item = item.copy();
-					item.setCount(1);
-					boolean exists = false;
-					for (Object other : ret) {
-						if (ItemStack.areItemStacksEqual(item, (ItemStack) other)) {
-							exists = true;
-							break;
-						}
-					}
-
-					if (!exists) {
-						ret.add(item);
-					}
-				}
-			}
+			IInventory inventory = Minecraft.getMinecraft().player.inventory;
+			IntStream.range(0, inventory.getSizeInventory())
+					.mapToObj(inventory::getStackInSlot)
+					.filter(s -> !s.isEmpty())
+					.map(s -> ItemHandlerHelper.copyStackWithSize(s, 1))
+					.forEach(s -> {
+								if (results.stream().noneMatch(r -> ItemStack.areItemStacksEqual(s, r)))
+									results.add(s);
+							}
+					);
 		} else {
-			Iterator itemTypeIterator = Item.REGISTRY.iterator();
-			while (itemTypeIterator.hasNext()) {
-				Item item = (Item) itemTypeIterator.next();
+			new Thread(() -> {
+				if (!showAll) {
+					final Pattern pattern = Pattern.compile(search, Pattern.CASE_INSENSITIVE);
+					SearchUtil.getCache().entrySet().stream()
+							.filter(entry -> pattern.matcher(entry.getValue()).find())
+							.forEach(entry -> results.add(entry.getKey()));
 
-				if (item != null && item.getCreativeTab() != null) {
-					item.getSubItems(item.getCreativeTab(), ret);
+				} else {
+					results.addAll(SearchUtil.getCache().keySet());
 				}
-			}
-
-			if (!showAll) {
-				Thread thread = new Thread();
-				thread.start();
-				Iterator<ItemStack> itemIterator = ret.iterator();
-
-				while (itemIterator.hasNext()) {
-
-					ItemStack    itemStack = itemIterator.next();
-					List<String> description;
-
-					//if it encounters some weird items
-					try {
-						description = itemStack.getTooltip(Minecraft.getMinecraft().player, ITooltipFlag.TooltipFlags.NORMAL);
-					} catch (Throwable ex) {
-						itemIterator.remove();
-						continue;
-					}
-
-					Iterator<String> descriptionIterator = description.iterator();
-
-					boolean foundSequence = false;
-
-					while (descriptionIterator.hasNext()) {
-						String line = descriptionIterator.next().toLowerCase();
-						if (line.contains(search)) {
-							foundSequence = true;
-							break;
-						}
-					}
-
-					if (!foundSequence) {
-						itemIterator.remove();
-					}
-				}
-			}
+				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
+			}).run();
 		}
 
-		return ret;
+		return results;
 	}
 }
