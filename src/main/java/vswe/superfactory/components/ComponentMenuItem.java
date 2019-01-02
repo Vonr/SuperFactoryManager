@@ -284,7 +284,7 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 	@SideOnly(Side.CLIENT)
 	@Override
 	protected List updateSearch(final String search, final boolean showAll) {
-		NonNullList<ItemStack> results = NonNullList.create();
+		final NonNullList<ItemStack> results = NonNullList.create();
 
 		if (search.equals(".inv")) {
 			IInventory inventory = Minecraft.getMinecraft().player.inventory;

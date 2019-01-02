@@ -60,7 +60,7 @@ public abstract class ScrollController<T> {
 				@Override
 				protected void textChanged() {
 					if (getText().length() > 0) {
-						updateSearch();
+						getSearchResults();
 					} else {
 						result.clear();
 						updateScrolling();
@@ -71,19 +71,19 @@ public abstract class ScrollController<T> {
 			textBox.setTextAndCursor(defaultText);
 		}
 
-		updateSearch();
+		getSearchResults();
 	}
 
-	public void updateSearch() {
+	public void getSearchResults() {
 		if (hasSearchBox) {
-			result = updateSearch(textBox.getText().toLowerCase(), textBox.getText().toLowerCase().equals(".all"));
+			result = getSearchResults(textBox.getText().toLowerCase(), textBox.getText().toLowerCase().equals(".all"));
 		} else {
-			result = updateSearch("", false);
+			result = getSearchResults("", false);
 		}
 		updateScrolling();
 	}
 
-	protected abstract List<T> updateSearch(String search, boolean all);
+	protected abstract List<T> getSearchResults(String search, boolean all);
 
 	public void updateScrolling() {
 		canScroll = result.size() > itemsPerRow * visibleRows;
@@ -274,7 +274,7 @@ public abstract class ScrollController<T> {
 
 	public void setText(String s) {
 		textBox.setText(s);
-		updateSearch();
+		getSearchResults();
 	}
 
 	public void setTextAndCursor(String s) {

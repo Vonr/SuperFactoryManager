@@ -1,5 +1,6 @@
 package vswe.superfactory.components;
 
+import net.java.games.input.Component;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;

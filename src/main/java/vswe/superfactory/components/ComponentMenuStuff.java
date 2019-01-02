@@ -109,7 +109,7 @@ public abstract class ComponentMenuStuff extends ComponentMenu {
 		final ComponentMenuStuff self = this;
 		scrollControllerSearch = new ScrollController(true) {
 			@Override
-			protected List updateSearch(String search, boolean all) {
+			protected List getSearchResults(String search, boolean all) {
 				if (search.equals("")) {
 					return new ArrayList();
 				}
@@ -140,7 +140,7 @@ public abstract class ComponentMenuStuff extends ComponentMenu {
 
 		scrollControllerSelected = new ScrollController<Setting>(false) {
 			@Override
-			protected List<Setting> updateSearch(String search, boolean all) {
+			protected List<Setting> getSearchResults(String search, boolean all) {
 				return settings;
 			}
 

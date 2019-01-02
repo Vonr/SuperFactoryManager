@@ -49,7 +49,7 @@ public class SearchUtil {
 		return cache;
 	}
 
-	public static void queueContentUpdate(ScrollController<ItemStack> controller, List<ItemStack> content) {
+	public static void queueContentUpdate(ScrollController controller, List<ItemStack> content) {
 		scrollersQueue.put(controller, content);
 	}
 
@@ -61,8 +61,8 @@ public class SearchUtil {
 	public static void renderEvent(RenderWorldLastEvent event) {
 		if (!scrollersQueue.isEmpty()) {
 			scrollersQueue.forEach((s, i) -> {
-				s.getResult().clear();
-				s.getResult().addAll(i);
+//				s.getResult().clear();
+//				s.getResult().addAll(i);
 			});
 			scrollersQueue.clear();
 		}

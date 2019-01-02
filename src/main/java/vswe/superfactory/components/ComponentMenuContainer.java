@@ -100,7 +100,7 @@ public abstract class ComponentMenuContainer extends ComponentMenu {
 			private int lockedY;
 
 			@Override
-			protected List<IContainerSelection> updateSearch(String search, boolean all) {
+			protected List<IContainerSelection> getSearchResults(String search, boolean all) {
 				if (search.equals("") || !clientUpdate || cachedInterface == null) {
 					return new ArrayList<IContainerSelection>();
 				}
@@ -486,9 +486,9 @@ public abstract class ComponentMenuContainer extends ComponentMenu {
 
 		if (getParent().isInventoryListDirty()) {
 			getParent().setInventoryListDirty(false);
-			scrollController.updateSearch();
+			scrollController.getSearchResults();
 		}
-		filter.scrollControllerVariable.updateSearch();
+		filter.scrollControllerVariable.getSearchResults();
 
 
 		return ret;

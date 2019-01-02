@@ -108,7 +108,7 @@ public class ContainerFilter {
 
 		scrollControllerVariable = new ScrollController<Variable>(false) {
 			@Override
-			protected List<Variable> updateSearch(String search, boolean all) {
+			protected List<Variable> getSearchResults(String search, boolean all) {
 				if (currentMenu == null) {
 					return new ArrayList<Variable>();
 				}
