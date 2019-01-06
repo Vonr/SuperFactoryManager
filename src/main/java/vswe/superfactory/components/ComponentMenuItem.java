@@ -308,7 +308,7 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 				} else {
 					results.addAll(SearchUtil.getCache().keySet());
 				}
-				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
+//				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
 			}).run();
 		}
 

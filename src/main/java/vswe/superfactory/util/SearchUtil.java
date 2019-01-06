@@ -21,8 +21,6 @@ import java.util.stream.StreamSupport;
 /**
  * A class used to cache the concatenated Tooltip string representation of items for searching performance improvements
  */
-@SideOnly(Side.CLIENT)
-@Mod.EventBusSubscriber
 public class SearchUtil {
 	private static final Map<ScrollController<ItemStack>, List<ItemStack>> scrollersQueue = new LinkedHashMap<>();
 	private static final LinkedHashMap<ItemStack, String>                  cache          = new LinkedHashMap<>();
@@ -57,14 +55,14 @@ public class SearchUtil {
 	 * Update scroller contents on frame if there is a new cached list
 	 * @param event RenderWorldLastEvent
 	 */
-	@SubscribeEvent
-	public static void renderEvent(RenderWorldLastEvent event) {
-		if (!scrollersQueue.isEmpty()) {
-			scrollersQueue.forEach((s, i) -> {
+//	@SubscribeEvent
+//	public static void renderEvent(RenderWorldLastEvent event) {
+//		if (!scrollersQueue.isEmpty()) {
+//			scrollersQueue.forEach((s, i) -> {
 //				s.getResult().clear();
 //				s.getResult().addAll(i);
-			});
-			scrollersQueue.clear();
-		}
-	}
+//			});
+//			scrollersQueue.clear();
+//		}
+//	}
 }
