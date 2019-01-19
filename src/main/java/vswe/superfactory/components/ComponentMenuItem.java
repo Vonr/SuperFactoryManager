@@ -24,6 +24,7 @@ import vswe.superfactory.util.SearchUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.IntStream;
 
 public class ComponentMenuItem extends ComponentMenuStuff {
@@ -300,7 +301,14 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 		} else {
 			new Thread(() -> {
 				if (!showAll) {
-					final Pattern pattern = Pattern.compile(search, Pattern.CASE_INSENSITIVE);
+
+					Pattern p;
+					try {
+						p = Pattern.compile(search, Pattern.CASE_INSENSITIVE);
+					} catch (PatternSyntaxException e) {
+						p = Pattern.compile(Pattern.quote(search), Pattern.CASE_INSENSITIVE);
+					}
+					final Pattern pattern = p;
 					SearchUtil.getCache().entrySet().stream()
 							.filter(entry -> pattern.matcher(entry.getValue()).find())
 							.forEach(entry -> results.add(entry.getKey()));
