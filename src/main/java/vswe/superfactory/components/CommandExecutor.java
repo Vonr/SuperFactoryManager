@@ -627,6 +627,7 @@ public class CommandExecutor {
 					int leftoverCount = inventory.insertItem(slot, stackToInsert, false).getCount();
 
 					moveCount -= leftoverCount;
+					remaining -= moveCount;
 					itemBufferElement.decreaseStackSize(moveCount);
 					outputItemCounter.modifyStackSize(moveCount);
 					subElement.reduceAmount(moveCount);
