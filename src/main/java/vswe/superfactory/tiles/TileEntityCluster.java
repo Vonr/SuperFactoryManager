@@ -33,14 +33,14 @@ import java.util.Map;
 
 public class TileEntityCluster extends TileEntity implements ITileEntityInterface, IPacketBlock, ITickable {
 	private static final String                                       NBT_SUB_BLOCKS     = "SubBlocks";
-	private static final String                                       NBT_SUB_BLOCK_ID   = "SubId";
-	private static final String                                       NBT_SUB_BLOCK_META = "SubMeta";
-	private              TileEntityCamouflage                         camouflageObject;
-	private              List<TileEntityClusterElement>               elements           = new ArrayList<>();
-	private              ITileEntityInterface                         interfaceObject;  //only the relay is currently having a interface
-	private              Map<ClusterMethodRegistration, List<Pair>>   methodRegistration = new HashMap<>();
-	private              List<ClusterRegistry.ClusterRegistryElement> registryList       = new ArrayList<>();
-	private              boolean                                      requestedInfo;
+	private static final String                                                 NBT_SUB_BLOCK_ID   = "SubId";
+	private static final String                                                 NBT_SUB_BLOCK_META = "SubMeta";
+	private              TileEntityCamouflage                                   camouflageObject;
+	private              List<TileEntityClusterElement>                         elements           = new ArrayList<>();
+	private              ITileEntityInterface                                   interfaceObject;  //only the relay is currently having a interface
+	private              Map<ClusterMethodRegistration, List<TileRegistryPair>> methodRegistration = new HashMap<>();
+	private              List<ClusterRegistry.ClusterRegistryElement>           registryList       = new ArrayList<>();
+	private              boolean                                                requestedInfo;
 
 	public TileEntityCluster() {
 		for (ClusterMethodRegistration clusterMethodRegistration : ClusterMethodRegistration.values()) {
@@ -80,6 +80,11 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 		}
 	}
 
+	@Override
+	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+		return oldState.getBlock() != newState.getBlock();
+	}
+
 	private void loadElements(byte[] types) {
 		registryList.clear();
 		elements.clear();
@@ -95,9 +100,9 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 				camouflageObject = (TileEntityCamouflage) element;
 			}
 			for (ClusterMethodRegistration clusterMethodRegistration : element.getRegistrations()) {
-				methodRegistration.get(clusterMethodRegistration).add(new Pair(block, element));
+				methodRegistration.get(clusterMethodRegistration).add(new TileRegistryPair(block, element));
 			}
-			element.setPos(new BlockPos(getPos().getX(), getPos().getY(), getPos().getZ()));
+			element.setPos(getPos());
 			element.setWorld(world);
 			element.setPartOfCluster(true);
 		}
@@ -128,25 +133,25 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 	}
 
 	public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack itemStack) {
-		for (Pair blockContainer : getRegistrations(ClusterMethodRegistration.ON_BLOCK_PLACED_BY)) {
+		for (TileRegistryPair blockContainer : getRegistrations(ClusterMethodRegistration.ON_BLOCK_PLACED_BY)) {
 			setWorldObject(blockContainer.te);
 			blockContainer.registry.getBlock().onBlockPlacedBy(world, pos, state, entity, blockContainer.registry.getItemStack());
 		}
 	}
 
-	private List<Pair> getRegistrations(ClusterMethodRegistration method) {
+	private List<TileRegistryPair> getRegistrations(ClusterMethodRegistration method) {
 		return methodRegistration.get(method);
 	}
 
 	public void onNeighborBlockChange(IBlockAccess world, BlockPos pos, IBlockState state, Block block) {
-		for (Pair blockContainer : getRegistrations(ClusterMethodRegistration.ON_NEIGHBOR_BLOCK_CHANGED)) {
+		for (TileRegistryPair blockContainer : getRegistrations(ClusterMethodRegistration.ON_NEIGHBOR_BLOCK_CHANGED)) {
 			setWorldObject(blockContainer.te);
 			//            blockContainer.registry.getBlock().onNeighborBlockChange(world, pos, state, block);
 		}
 	}
 
 	public boolean canConnectRedstone(IBlockState state, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
-		for (Pair blockContainer : getRegistrations(ClusterMethodRegistration.CAN_CONNECT_REDSTONE)) {
+		for (TileRegistryPair blockContainer : getRegistrations(ClusterMethodRegistration.CAN_CONNECT_REDSTONE)) {
 			setWorldObject(blockContainer.te);
 			if (blockContainer.registry.getBlock().canConnectRedstone(state, blockAccess, pos, side)) {
 				return true;
@@ -157,14 +162,14 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 	}
 
 	public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
-		for (Pair blockContainer : getRegistrations(ClusterMethodRegistration.ON_BLOCK_ADDED)) {
+		for (TileRegistryPair blockContainer : getRegistrations(ClusterMethodRegistration.ON_BLOCK_ADDED)) {
 			setWorldObject(blockContainer.te);
 			blockContainer.registry.getBlock().onBlockAdded(world, pos, state);
 		}
 	}
 
 	public boolean shouldCheckWeakPower(IBlockState state, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
-		for (Pair blockContainer : getRegistrations(ClusterMethodRegistration.SHOULD_CHECK_WEAK_POWER)) {
+		for (TileRegistryPair blockContainer : getRegistrations(ClusterMethodRegistration.SHOULD_CHECK_WEAK_POWER)) {
 			setWorldObject(blockContainer.te);
 			if (blockContainer.registry.getBlock().shouldCheckWeakPower(state, blockAccess, pos, side)) {
 				return true;
@@ -177,7 +182,7 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 	public int isProvidingWeakPower(IBlockState state, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
 		int max = 0;
 
-		for (Pair blockContainer : getRegistrations(ClusterMethodRegistration.IS_PROVIDING_WEAK_POWER)) {
+		for (TileRegistryPair blockContainer : getRegistrations(ClusterMethodRegistration.IS_PROVIDING_WEAK_POWER)) {
 			setWorldObject(blockContainer.te);
 			max = Math.max(max, blockContainer.registry.getBlock().getStrongPower(state, blockAccess, pos, side));
 		}
@@ -188,7 +193,7 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 	public int isProvidingStrongPower(IBlockState state, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
 		int max = 0;
 
-		for (Pair blockContainer : getRegistrations(ClusterMethodRegistration.IS_PROVIDING_STRONG_POWER)) {
+		for (TileRegistryPair blockContainer : getRegistrations(ClusterMethodRegistration.IS_PROVIDING_STRONG_POWER)) {
 			setWorldObject(blockContainer.te);
 			max = Math.max(max, blockContainer.registry.getBlock().getWeakPower(state, blockAccess, pos, side));
 		}
@@ -197,7 +202,7 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 	}
 
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
-		for (Pair blockContainer : getRegistrations(ClusterMethodRegistration.ON_BLOCK_ACTIVATED)) {
+		for (TileRegistryPair blockContainer : getRegistrations(ClusterMethodRegistration.ON_BLOCK_ACTIVATED)) {
 			setWorldObject(blockContainer.te);
 			if (blockContainer.registry.getBlock().onBlockActivated(world, pos, state, player, hand, side, hitX, hitY, hitZ)) {
 				return true;
@@ -339,11 +344,11 @@ public class TileEntityCluster extends TileEntity implements ITileEntityInterfac
 		return bytes;
 	}
 
-	private class Pair {
+	private class TileRegistryPair {
 		private ClusterRegistry.ClusterRegistryElement registry;
 		private TileEntityClusterElement               te;
 
-		private Pair(ClusterRegistry.ClusterRegistryElement registry, TileEntityClusterElement te) {
+		private TileRegistryPair(ClusterRegistry.ClusterRegistryElement registry, TileEntityClusterElement te) {
 			this.registry = registry;
 			this.te = te;
 		}

@@ -3,6 +3,7 @@ package vswe.superfactory.registry;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
@@ -20,17 +21,17 @@ import java.util.List;
 @GameRegistry.ObjectHolder(SuperFactoryManager.MODID)
 public final class ModBlocks {
 
-	public static final Block CABLE            = null;
-	public static final Block CABLE_BREAKER    = null;
-	public static final Block CABLE_BUD        = null;
-	public static final Block CABLE_CAMOUFLAGE = null;
-	public static final Block CABLE_CLUSTER    = null;
-	public static final Block CABLE_INPUT      = null;
-	public static final Block CABLE_INTAKE     = null;
-	public static final Block CABLE_OUTPUT     = null;
-	public static final Block CABLE_RELAY      = null;
-	public static final Block CABLE_SIGN       = null;
-	public static final Block MANAGER          = null;
+	public static final Block CABLE            = Blocks.AIR;
+	public static final Block CABLE_BREAKER    = Blocks.AIR;
+	public static final Block CABLE_BUD        = Blocks.AIR;
+	public static final Block CABLE_CAMOUFLAGE = Blocks.AIR;
+	public static final Block CABLE_CLUSTER    = Blocks.AIR;
+	public static final Block CABLE_INPUT      = Blocks.AIR;
+	public static final Block CABLE_INTAKE     = Blocks.AIR;
+	public static final Block CABLE_OUTPUT     = Blocks.AIR;
+	public static final Block CABLE_RELAY      = Blocks.AIR;
+	public static final Block CABLE_SIGN       = Blocks.AIR;
+	public static final Block MANAGER          = Blocks.AIR;
 
 	public static List<Block> blocks;
 

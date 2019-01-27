@@ -23,8 +23,8 @@ import vswe.superfactory.tiles.TileEntityCluster;
 
 //This is indeed not a subclass to the cable, you can't relay signals through this block
 public class BlockCableBreaker extends BlockContainer {
-	public static final IProperty DIRECTION = PropertyDirection.create("direction");
-	public static final IProperty FRONT     = PropertyDirection.create("front");
+	public static final IProperty FACING = BlockCableCluster.FACING;
+	public static final IProperty FRONT  = BlockCableCluster.FRONT;
 
 	public BlockCableBreaker() {
 		super(Material.IRON);
@@ -41,7 +41,7 @@ public class BlockCableBreaker extends BlockContainer {
 
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(FRONT, getSide(meta)).withProperty(DIRECTION, getSide(meta));
+		return getDefaultState().withProperty(FRONT, getSide(meta)).withProperty(FACING, getSide(meta));
 	}
 
 	public static EnumFacing getSide(int meta) {
@@ -57,9 +57,9 @@ public class BlockCableBreaker extends BlockContainer {
 	public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
 		TileEntityBreaker entityBreaker = (TileEntityBreaker) worldIn.getTileEntity(pos);
 		if (entityBreaker != null && entityBreaker.getPlaceDirection() != null) {
-			return state.withProperty(DIRECTION, entityBreaker.getPlaceDirection()).withProperty(FRONT, getSide(getMetaFromState(state)));
+			return state.withProperty(FACING, entityBreaker.getPlaceDirection()).withProperty(FRONT, getSide(getMetaFromState(state)));
 		}
-		return state.withProperty(DIRECTION, getSide(getMetaFromState(state))).withProperty(FRONT, getSide(getMetaFromState(state)));
+		return state.withProperty(FACING, getSide(getMetaFromState(state))).withProperty(FRONT, getSide(getMetaFromState(state)));
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class BlockCableBreaker extends BlockContainer {
 	public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack item) {
 		if (!world.isRemote) {
 			EnumFacing facing = EnumFacing.getDirectionFromEntityLiving(pos, entity);
-			world.setBlockState(pos, state.withProperty(DIRECTION, facing).withProperty(FRONT, facing), 2);
+			world.setBlockState(pos, state.withProperty(FACING, facing).withProperty(FRONT, facing), 2);
 
 			TileEntityBreaker breaker = TileEntityCluster.getTileEntity(TileEntityBreaker.class, world, pos);
 			if (breaker != null) {
@@ -93,7 +93,7 @@ public class BlockCableBreaker extends BlockContainer {
 
 	@Override
 	public BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, DIRECTION, FRONT);
+		return new BlockStateContainer(this, FACING, FRONT);
 	}
 
 	@Override

@@ -381,14 +381,15 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 								visited.add(target);
 								TileEntity te = world.getTileEntity(new BlockPos(target.getX(), target.getY(), target.getZ()));
 
-								if (te instanceof TileEntityCluster) {
-
-									for (TileEntityClusterElement tileEntityClusterElement : ((TileEntityCluster) te).getElements()) {
-										((TileEntityCluster) te).setWorldObject(tileEntityClusterElement);
-										addInventory(tileEntityClusterElement, target);
+								if (te != null) {
+									if (te instanceof TileEntityCluster) {
+										for (TileEntityClusterElement tileEntityClusterElement : ((TileEntityCluster) te).getElements()) {
+											((TileEntityCluster) te).setWorldObject(tileEntityClusterElement);
+											addInventory(tileEntityClusterElement, target);
+										}
+									} else {
+										addInventory(te, target);
 									}
-								} else {
-									addInventory(te, target);
 								}
 
 								BlockPos pos = new BlockPos(target.getX(), target.getY(), target.getZ());

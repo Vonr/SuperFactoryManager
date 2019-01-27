@@ -37,18 +37,36 @@ import java.util.List;
 import java.util.UUID;
 
 public class TileEntityBreaker extends TileEntityClusterElement implements IInventory, IPacketBlock {
-	private static final UUID            FAKE_PLAYER_ID   = null;
-	private static final String          FAKE_PLAYER_NAME = "[SFM_PLAYER]";
-	private static final String NBT_DIRECTION = "Direction";
-	private static final int[] ROTATION_SIDE_MAPPING = {0, 0, 0, 2, 3, 1};
-	private static final int     UPDATE_BUFFER_DISTANCE = 5;
+	private static final UUID            FAKE_PLAYER_ID         = null;
+	private static final String          FAKE_PLAYER_NAME       = "[SFM_PLAYER]";
+	private static final String          NBT_DIRECTION          = "Direction";
+	private static final int[]           ROTATION_SIDE_MAPPING  = {0, 0, 0, 2, 3, 1};
+	private static final int             UPDATE_BUFFER_DISTANCE = 5;
 	private              boolean         blocked;
 	private              boolean         broken;
-	private              boolean hasUpdatedData;
+	private              boolean         hasUpdatedData;
 	private              List<ItemStack> inventory;
 	private              List<ItemStack> inventoryCache;
-	private boolean missingPlaceDirection;
-	private              EnumFacing      placeDirection;
+	private              boolean         missingPlaceDirection;
+	private              EnumFacing      placeDirection;// = BlockCableBreaker.getSide(getBlockMetadata());
+
+	@Override
+	protected void writeContentToNBT(NBTTagCompound tagCompound) {
+		tagCompound.setByte(NBT_DIRECTION, (byte) (placeDirection != null ? placeDirection.getIndex() : 0));
+	}
+
+	@Override
+	protected void readContentFromNBT(NBTTagCompound tagCompound) {
+		if (tagCompound.hasKey(NBT_DIRECTION)) {
+			setPlaceDirection(EnumFacing.byIndex(tagCompound.getByte(NBT_DIRECTION)));
+		} else {
+			if (world != null) {
+				setPlaceDirection(EnumFacing.byIndex(getBlockMetadata()));
+			} else {
+				missingPlaceDirection = true;
+			}
+		}
+	}
 
 	@Override
 	public void update() {
@@ -182,24 +200,6 @@ public class TileEntityBreaker extends TileEntityClusterElement implements IInve
 			}
 		}
 		return ret;
-	}
-
-	@Override
-	protected void readContentFromNBT(NBTTagCompound tagCompound) {
-		if (tagCompound.hasKey(NBT_DIRECTION)) {
-			setPlaceDirection(EnumFacing.byIndex(tagCompound.getByte(NBT_DIRECTION)));
-		} else {
-			if (world != null) {
-				setPlaceDirection(EnumFacing.byIndex(getBlockMetadata()));
-			} else {
-				missingPlaceDirection = true;
-			}
-		}
-	}
-
-	@Override
-	protected void writeContentToNBT(NBTTagCompound tagCompound) {
-		tagCompound.setByte(NBT_DIRECTION, (byte) (placeDirection != null ? placeDirection.getIndex() : 0));
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package vswe.superfactory.blocks;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
@@ -16,7 +17,6 @@ import java.util.List;
 
 public class ClusterRecipe implements IRecipe {
 	private ItemStack output = ItemStack.EMPTY;
-
 	private ResourceLocation registryName;
 
 	public ClusterRecipe(ResourceLocation name) {
@@ -29,7 +29,7 @@ public class ClusterRecipe implements IRecipe {
 		for (int i = 0; i < inventorycrafting.getSizeInventory(); i++) {
 			ItemStack item = inventorycrafting.getStackInSlot(i);
 
-			if (!item.isEmpty() && Block.getBlockFromItem(item.getItem()) == ModBlocks.CABLE_CLUSTER) {
+			if (!item.isEmpty() && item.getItem().equals(Item.getItemFromBlock(ModBlocks.CABLE_CLUSTER))) {
 				if (!cluster.isEmpty()) {
 					return false; //multiple clusters
 				} else {
@@ -40,7 +40,7 @@ public class ClusterRecipe implements IRecipe {
 
 		if (!cluster.isEmpty()) {
 			boolean        foundClusterComponent = false;
-			List<Integer>  types                 = new ArrayList<Integer>();
+			List<Integer>  types                 = new ArrayList<>();
 			NBTTagCompound compound              = cluster.getTagCompound();
 			if (compound != null && compound.hasKey(ItemCluster.NBT_CABLE)) {
 				byte[] typeIds = compound.getCompoundTag(ItemCluster.NBT_CABLE).getByteArray(ItemCluster.NBT_TYPES);
@@ -52,7 +52,7 @@ public class ClusterRecipe implements IRecipe {
 			for (int i = 0; i < inventorycrafting.getSizeInventory(); i++) {
 				ItemStack item = inventorycrafting.getStackInSlot(i);
 
-				if (!item.isEmpty() && Block.getBlockFromItem(item.getItem()) != ModBlocks.CABLE_CLUSTER) {
+				if (!item.isEmpty() && !item.getItem().equals(Item.getItemFromBlock(ModBlocks.CABLE_CLUSTER))) {
 					boolean validItem = false;
 					for (int j = 0; j < ClusterRegistry.getRegistryList().size(); j++) {
 						if (item.isItemEqual(ClusterRegistry.getRegistryList().get(j).getItemStack())) {

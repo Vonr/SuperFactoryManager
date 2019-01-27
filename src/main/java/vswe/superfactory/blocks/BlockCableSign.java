@@ -21,7 +21,7 @@ import vswe.superfactory.tiles.TileEntitySignUpdater;
 
 //This is indeed not a subclass to the cable, you can't relay signals through this block
 public class BlockCableSign extends BlockContainer {
-	public static final IProperty FACING = PropertyDirection.create("facing");
+	public static final IProperty FACING = BlockCableCluster.FACING;//PropertyDirection.create("facing");
 
 	public BlockCableSign() {
 		super(Material.IRON);

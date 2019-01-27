@@ -36,6 +36,7 @@ import java.util.ArrayList;
 public class BlockCableCluster extends BlockCamouflageBase implements ICable, IItemBlockProvider {
 	public static final IProperty ADVANCED = PropertyBool.create("advanced");
 	public static final IProperty FACING   = PropertyDirection.create("facing");
+	public static final IProperty FRONT = PropertyDirection.create("front");
 	public BlockCableCluster() {
 		super(Material.IRON);
 		setCreativeTab(SuperFactoryManager.creativeTab);
@@ -45,7 +46,7 @@ public class BlockCableCluster extends BlockCamouflageBase implements ICable, II
 
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(ADVANCED, isAdvanced(meta)).withProperty(FACING, getSide(meta));
+		return getDefaultState().withProperty(ADVANCED, isAdvanced(meta)).withProperty(FACING, getSide(meta)).withProperty(FRONT, getSide(meta).getOpposite());
 	}
 
 	@Override
@@ -70,12 +71,14 @@ public class BlockCableCluster extends BlockCamouflageBase implements ICable, II
 
 	@Override
 	public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
-		TileEntityCluster cluster = getTe(world, pos);
+		if (world.getChunk(pos).getTileEntity(pos, null) != null) {
+			//		if (world.loadedTileEntityList.contains(pos))
+			TileEntityCluster cluster = getTe(world, pos);
 
-		if (cluster != null) {
-			cluster.onBlockAdded(world, pos, state);
+			if (cluster != null) {
+				cluster.onBlockAdded(world, pos, state);
+			}
 		}
-
 		if (isAdvanced(state.getBlock().getMetaFromState(state))) {
 			BlockCable.updateInventories(world, pos);
 		}
@@ -136,6 +139,11 @@ public class BlockCableCluster extends BlockCamouflageBase implements ICable, II
 	}
 
 	@Override
+	public boolean hasTileEntity(IBlockState state) {
+		return true;
+	}
+
+	@Override
 	public void getSubBlocks(CreativeTabs item, NonNullList<ItemStack> list) {
 		list.add(new ItemStack(this, 1, 0));
 		list.add(new ItemStack(this, 1, 8));
@@ -143,7 +151,7 @@ public class BlockCableCluster extends BlockCamouflageBase implements ICable, II
 
 	@Override
 	protected BlockStateContainer createBlockState() {
-		IProperty[]         listedProperties   = new IProperty[]{ADVANCED, FACING};
+		IProperty[]         listedProperties   = new IProperty[]{ADVANCED, FACING, FRONT};
 		IUnlistedProperty[] unlistedProperties = new IUnlistedProperty[]{BlockCableCamouflages.BLOCK_POS};
 		return new ExtendedBlockState(this, listedProperties, unlistedProperties);
 	}

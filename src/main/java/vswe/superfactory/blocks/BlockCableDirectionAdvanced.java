@@ -21,8 +21,8 @@ import vswe.superfactory.tiles.TileEntityCluster;
 import vswe.superfactory.tiles.TileEntityClusterElement;
 
 public abstract class BlockCableDirectionAdvanced extends BlockContainer {
-	public static final IProperty ADVANCED = PropertyBool.create("advanced");
-	public static final IProperty FACING   = PropertyDirection.create("facing");
+	public static final IProperty ADVANCED = BlockCableCluster.ADVANCED;//PropertyBool.create("advanced");
+	public static final IProperty FACING   = BlockCableCluster.FACING;//PropertyDirection.create("facing");
 	public BlockCableDirectionAdvanced() {
 		super(Material.IRON);
 		setCreativeTab(SuperFactoryManager.creativeTab);

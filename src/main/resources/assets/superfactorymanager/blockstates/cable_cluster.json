@@ -1,16 +1,41 @@
 {
-    "variants": {
-        "advanced=false,facing=north": { "model": "superfactorymanager:builtin/cable_cluster"},
-        "advanced=false,facing=down": { "model": "superfactorymanager:builtin/cable_cluster", "x": 90 },
-        "advanced=false,facing=up": { "model": "superfactorymanager:builtin/cable_cluster", "x": 270  },
-        "advanced=false,facing=east": { "model": "superfactorymanager:builtin/cable_cluster", "y": 90 },
-        "advanced=false,facing=south": { "model": "superfactorymanager:builtin/cable_cluster", "y": 180 },
-        "advanced=false,facing=west": { "model": "superfactorymanager:builtin/cable_cluster",  "y": 270 },
-        "advanced=true,facing=north": { "model": "superfactorymanager:builtin/cable_cluster" },
-        "advanced=true,facing=down": { "model": "superfactorymanager:builtin/cable_cluster", "x": 90 },
-        "advanced=true,facing=up": { "model": "superfactorymanager:builtin/cable_cluster", "x": 270 },
-        "advanced=true,facing=east": { "model": "superfactorymanager:builtin/cable_cluster", "y": 90 },
-        "advanced=true,facing=south": { "model": "superfactorymanager:builtin/cable_cluster", "y": 180 },
-        "advanced=true,facing=west": { "model": "superfactorymanager:builtin/cable_cluster", "y": 270 }
+  "forge_marker": 1,
+  "variants": {
+    "advanced": {
+      "false": {
+        "model": "superfactorymanager:builtin/cable_cluster"
+      },
+      "true": {
+        "model": "superfactorymanager:builtin/cable_cluster"
+      }
+    },
+    "facing": {
+      "north": {
+        "x": 0
+      },
+      "down": {
+        "x": 90
+      },
+      "up": {
+        "x": 270
+      },
+      "east": {
+        "y": 90
+      },
+      "south": {
+        "y": 180
+      },
+      "west": {
+        "y": 270
+      }
+    },
+    "front": {
+      "north": {},
+      "east": {},
+      "south": {},
+      "west": {},
+      "up": {},
+      "down": {}
     }
+  }
 }
