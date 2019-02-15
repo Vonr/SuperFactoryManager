@@ -15,11 +15,11 @@ import java.util.EnumSet;
 import java.util.List;
 
 public class TileEntityInput extends TileEntityClusterElement implements IRedstoneNode, ISystemListener, ITriggerNode {
-	private static final String NBT_POWER = "Power";
-	private static final String NBT_SIDES = "Sides";
-	private int[]                   isPowered   = new int[EnumFacing.values().length];
-	private List<TileEntityManager> managerList = new ArrayList<TileEntityManager>();
-	private int[]                   oldPowered  = new int[EnumFacing.values().length];
+	private static final String                  NBT_POWER   = "Power";
+	private static final String                  NBT_SIDES   = "Sides";
+	private              int[]                   isPowered   = new int[EnumFacing.values().length];
+	private              List<TileEntityManager> managerList = new ArrayList<TileEntityManager>();
+	private              int[]                   oldPowered  = new int[EnumFacing.values().length];
 
 	@Override
 	public void added(TileEntityManager owner) {
@@ -37,13 +37,11 @@ public class TileEntityInput extends TileEntityClusterElement implements IRedsto
 		isPowered = new int[isPowered.length];
 		for (int i = 0; i < isPowered.length; i++) {
 			EnumFacing direction = EnumFacing.byIndex(i);
-			BlockPos   pos       = new BlockPos(direction.getXOffset() + this.getPos().getX(), direction.getYOffset() + this.getPos().getY(), direction.getZOffset() + this.getPos().getZ());
+			BlockPos   pos       = getPos().offset(direction);
 			isPowered[i] = world.getRedstonePower(pos, direction);
 		}
 
-		for (int i = managerList.size() - 1; i >= 0; i--) {
-			managerList.get(i).triggerRedstone(this);
-		}
+		managerList.forEach((m) -> m.triggerRedstone(this));
 
 		oldPowered = isPowered;
 		//        System.out.print(world.getRedstonePower(pos, null));
@@ -53,21 +51,6 @@ public class TileEntityInput extends TileEntityClusterElement implements IRedsto
 	public int[] getPower() {
 		return isPowered;
 	}
-
-	@Override
-	public void readContentFromNBT(NBTTagCompound nbtTagCompound) {
-		int version = nbtTagCompound.getByte(SuperFactoryManager.NBT_PROTOCOL_VERSION);
-
-
-		NBTTagList sidesTag = nbtTagCompound.getTagList(NBT_SIDES, 10);
-		for (int i = 0; i < sidesTag.tagCount(); i++) {
-
-			NBTTagCompound sideTag = sidesTag.getCompoundTagAt(i);
-
-			oldPowered[i] = isPowered[i] = sideTag.getByte(NBT_POWER);
-		}
-	}
-
 
 	@Override
 	public void writeContentToNBT(NBTTagCompound nbtTagCompound) {
@@ -84,6 +67,20 @@ public class TileEntityInput extends TileEntityClusterElement implements IRedsto
 
 
 		nbtTagCompound.setTag(NBT_SIDES, sidesTag);
+	}
+
+	@Override
+	public void readContentFromNBT(NBTTagCompound nbtTagCompound) {
+		int version = nbtTagCompound.getByte(SuperFactoryManager.NBT_PROTOCOL_VERSION);
+
+
+		NBTTagList sidesTag = nbtTagCompound.getTagList(NBT_SIDES, 10);
+		for (int i = 0; i < sidesTag.tagCount(); i++) {
+
+			NBTTagCompound sideTag = sidesTag.getCompoundTagAt(i);
+
+			oldPowered[i] = isPowered[i] = sideTag.getByte(NBT_POWER);
+		}
 	}
 
 	@Override

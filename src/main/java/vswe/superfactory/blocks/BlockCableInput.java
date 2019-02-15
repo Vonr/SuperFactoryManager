@@ -62,11 +62,11 @@ public class BlockCableInput extends BlockContainer {
 		return true;
 	}
 
-	@Override
-	public boolean shouldCheckWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
-		updateRedstone(world, pos);
-		return super.shouldCheckWeakPower(state, world, pos, side);
-	}
+//	@Override
+//	public boolean shouldCheckWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+//		updateRedstone(world, pos);
+//		return super.shouldCheckWeakPower(state, world, pos, side);
+//	}
 
 	@Override
 	public boolean getWeakChanges(IBlockAccess world, BlockPos pos) {
