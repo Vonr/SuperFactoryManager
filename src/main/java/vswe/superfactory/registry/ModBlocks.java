@@ -70,8 +70,7 @@ public final class ModBlocks {
 		GameRegistry.registerTileEntity(TileEntitySignUpdater.class, SuperFactoryManager.MODID + ":cable_sign");
 	}
 
-	@SubscribeEvent
-	public static void registerClusters(RegistryEvent.Register<Item> event) {
+	public static void registerClusters() {
 		ClusterRegistry.register(TileEntityBreaker.class, (BlockContainer) CABLE_BREAKER);
 		ClusterRegistry.register(TileEntityBUD.class, (BlockContainer) CABLE_BUD);
 		ClusterRegistry.register(TileEntityCamouflage.class, (BlockContainer) CABLE_CAMOUFLAGE);

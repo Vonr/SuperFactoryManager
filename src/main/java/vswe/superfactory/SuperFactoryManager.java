@@ -58,7 +58,7 @@ public class SuperFactoryManager {
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
 		ModBlocks.addRecipes();
-
+		ModBlocks.registerClusters();
 	}
 
 	@Mod.EventHandler

@@ -1,6 +1,8 @@
 package vswe.superfactory.registry;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import vswe.superfactory.tiles.TileEntityClusterElement;
 
