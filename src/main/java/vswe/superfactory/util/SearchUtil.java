@@ -12,10 +12,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.components.ScrollController;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.StreamSupport;
 
 /**
@@ -23,7 +21,7 @@ import java.util.stream.StreamSupport;
  */
 public class SearchUtil {
 	private static final Map<ScrollController<ItemStack>, List<ItemStack>> scrollersQueue = new LinkedHashMap<>();
-	private static final LinkedHashMap<ItemStack, String>                  cache          = new LinkedHashMap<>();
+	private static final ConcurrentHashMap<ItemStack, String>              cache          = new ConcurrentHashMap<>();
 
 	/**
 	 * Populate the {@link SearchUtil#cache} object with ItemStacks and their respective tooltips
@@ -36,15 +34,14 @@ public class SearchUtil {
 				.filter(Objects::nonNull)
 				.filter(i -> i.getCreativeTab() != null)
 				.forEach(i -> i.getSubItems(i.getCreativeTab(), stacks));
-		stacks.forEach(stack -> {
-			cache.put(stack, String.join("\n",stack.getTooltip(Minecraft.getMinecraft().player, ITooltipFlag.TooltipFlags.ADVANCED)));
-			//cache.putAll(stack, stack.getTooltip(Minecraft.getMinecraft().player, ITooltipFlag.TooltipFlags.NORMAL));
+		stacks.stream().filter(Objects::nonNull).forEach(stack -> {
+			cache.put(stack, String.join("\n",stack.getTooltip(null, ITooltipFlag.TooltipFlags.ADVANCED)));
 			//todo: investigate if NORMAL is needed
 		});
 	}
 
-	public static LinkedHashMap<ItemStack, String> getCache() {
-		return cache;
+	public static Map<ItemStack, String> getCache() {
+		return Collections.unmodifiableMap(cache);
 	}
 
 	public static void queueContentUpdate(ScrollController controller, List<ItemStack> content) {
