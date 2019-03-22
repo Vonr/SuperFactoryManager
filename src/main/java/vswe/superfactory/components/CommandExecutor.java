@@ -397,7 +397,7 @@ public class CommandExecutor {
 	}
 
 	private boolean isSlotValid(IItemHandler handler, ItemStack stack, int slot, boolean isSource) {
-		if (stack.isEmpty() || !handler.isItemValid(slot, stack)) {
+		if (stack.isEmpty()) {// || !handler.isItemValid(slot, stack)) { // unfix #9
 			return false;
 		} else {
 			if (isSource) {
