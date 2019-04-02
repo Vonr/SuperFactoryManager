@@ -16,13 +16,13 @@ import vswe.superfactory.tiles.TileEntityManager;
 import java.util.*;
 
 public class CommandExecutor {
-	public static final int MAX_FLUID_TRANSFER = 10000000;
-	final List<CraftingBufferElement> craftingBufferHigh;
-	final List<CraftingBufferElement> craftingBufferLow;
-	final List<FluidBufferElement>    fluidBuffer;
-	final protected List<ItemBufferElement>     itemBuffer;
-	private final TileEntityManager manager;
-	private final List<Integer>     usedCommands;
+	public static final int                         MAX_FLUID_TRANSFER = 10000000;
+	private final       List<CraftingBufferElement> craftingBufferHigh;
+	private final       List<CraftingBufferElement> craftingBufferLow;
+	private final       List<FluidBufferElement>    fluidBuffer;
+	final               List<ItemBufferElement>     itemBuffer;
+	private final       TileEntityManager           manager;
+	private final       List<Integer>               usedCommands;
 
 
 	public CommandExecutor(TileEntityManager manager) {
@@ -683,6 +683,8 @@ public class CommandExecutor {
 
 					for (SideSlotTarget sideSlotTarget : tankHolder.getValidSlots().values()) {
 						IFluidHandler tank = tankHolder.getTank(sideSlotTarget.getSide());
+						if (tank == null)
+							continue;
 						FluidStack    temp = fluidStack.copy();
 						temp.amount = holder.getSizeLeft();
 						int amount = tank.fill(temp, false);
@@ -751,6 +753,8 @@ public class CommandExecutor {
 		for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
 			for (int slot : sideSlotTarget.getSlots()) {
 				IItemHandler inventory = inventoryHolder.getInventory(sideSlotTarget.getSide());
+				if (inventory == null)
+					continue;
 				ItemStack    itemStack = inventory.getStackInSlot(slot);
 
 				if (seenStacks.containsKey(itemStack) || !isSlotValid(inventory, itemStack, slot, true)) {
@@ -773,6 +777,8 @@ public class CommandExecutor {
 	private void calculateConditionDataFluid(ComponentMenu componentMenu, SlotInventoryHolder inventoryHolder, Map<Integer, ConditionSettingChecker> conditionSettingCheckerMap) {
 		for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
 			IFluidHandler              tank             = inventoryHolder.getTank(sideSlotTarget.getSide());
+			if (tank == null)
+				continue;
 			List<IFluidTankProperties> tankInfos        = new ArrayList<IFluidTankProperties>();
 			IFluidTankProperties[]     currentTankInfos = tank.getTankProperties();
 			if (currentTankInfos == null) {
@@ -862,9 +868,7 @@ public class CommandExecutor {
 					}
 
 					List<Integer> usedCommandCopy = new ArrayList<Integer>();
-					for (int usedCommand : usedCommands) {
-						usedCommandCopy.add(usedCommand);
-					}
+					usedCommandCopy.addAll(usedCommands);
 
 					CommandExecutor newExecutor = new CommandExecutor(manager, itemBufferSplit, new ArrayList<CraftingBufferElement>(craftingBufferHigh), new ArrayList<CraftingBufferElement>(craftingBufferLow), fluidBufferSplit, usedCommandCopy);
 					newExecutor.executeCommand(manager.getFlowItems().get(connection.getComponentId()), connection.getConnectionId());
