@@ -70,8 +70,8 @@ public class BlockCableInput extends BlockContainer {
 
 	@Override
 	public boolean getWeakChanges(IBlockAccess world, BlockPos pos) {
-		updateRedstone(world, pos);
-		return super.getWeakChanges(world, pos);
+//		updateRedstone(world, pos); // causes infinite loop
+		return true;
 	}
 
 	private void updateRedstone(IBlockAccess world, BlockPos pos) {
