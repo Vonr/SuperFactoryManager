@@ -107,7 +107,7 @@ public class CommandExecutor {
 			Map<EnumFacing, SideSlotTarget> validSlots = holder.getValidSlots();
 
 			for (EnumFacing side : EnumFacing.VALUES) {
-				int          sideI     = side.ordinal();
+				int          sideI   = side.ordinal();
 				IItemHandler handler = holder.getInventory(side);
 
 				if (handler != null && menuTarget.isActive(sideI)) {
@@ -155,7 +155,7 @@ public class CommandExecutor {
 		if (stack.isEmpty()) {
 			return true;
 		}
-		return handler.insertItem(slot, stack, true) != stack;
+		return handler.insertItem(slot, stack, true).getCount() != stack.getCount();
 	}
 
 	public void executeTriggerCommand(FlowComponent command, EnumSet<ConnectionOption> validTriggerOutputs) {
@@ -526,7 +526,7 @@ public class CommandExecutor {
 		ComponentMenuStuff menuItem = (ComponentMenuStuff) componentMenu;
 
 		for (Setting setting : menuItem.getSettings()) {
-			if(!(setting instanceof ItemSetting))
+			if (!(setting instanceof ItemSetting))
 				continue;
 			if (((ItemSetting) setting).isEqualForCommandExecutor(itemStack)) {
 				return (ItemSetting) setting;
@@ -582,7 +582,7 @@ public class CommandExecutor {
 
 	private void insertItemsFromInputBufferElement(ComponentMenuStuff menuItem, List<SlotInventoryHolder> inventories, List<OutputItemCounter> outputCounters, SlotInventoryHolder inventoryHolder, IItemBufferElement itemBufferElement) {
 		IItemBufferSubElement subElement;
-		int remaining;
+		int                   remaining;
 		itemBufferElement.prepareSubElements();
 		while ((subElement = itemBufferElement.getSubElement()) != null && (remaining = subElement.getSizeRemaining()) > 0) {
 			ItemStack stackInBuffer = subElement.getItemStack();
@@ -608,25 +608,17 @@ public class CommandExecutor {
 					continue;
 
 				for (int slot : sideSlotTarget.getSlots()) {
-					if (!isSlotValid(inventory, stackInBuffer, slot, false))
-						continue;
-					ItemStack stackInSlot           = inventory.getStackInSlot(slot);
-					if (!stackInSlot.isEmpty() && (!stackInSlot.isStackable() || !ItemHandlerHelper.canItemStacksStack(stackInSlot, stackInBuffer)))
-						continue;
-
-					int moveCount;
-					moveCount = Math.min(remaining, Math.min(inventory.getSlotLimit(slot), stackInSlot.getMaxStackSize()) - (stackInSlot.isEmpty() ? 0 : stackInSlot.getCount()));
+					int moveCount = remaining;
 					moveCount = outputItemCounter.retrieveItemCount(moveCount);
 					moveCount = itemBufferElement.retrieveItemCount(moveCount);
-					moveCount = Math.min(moveCount, inventory.getSlotLimit(slot) - stackInSlot.getCount());
-					if (moveCount <= 0)
-						continue;
 
 					ItemStack stackToInsert = stackInBuffer.copy();
 					stackToInsert.setCount(moveCount);
 					int leftoverCount = inventory.insertItem(slot, stackToInsert, false).getCount();
+					if (leftoverCount == moveCount)
+						continue; // We moved nothing
 
-					moveCount -= leftoverCount;
+					moveCount -= leftoverCount; // Becomes the amount we actually moved
 					remaining -= moveCount;
 					itemBufferElement.decreaseStackSize(moveCount);
 					outputItemCounter.modifyStackSize(moveCount);
@@ -685,7 +677,7 @@ public class CommandExecutor {
 						IFluidHandler tank = tankHolder.getTank(sideSlotTarget.getSide());
 						if (tank == null)
 							continue;
-						FluidStack    temp = fluidStack.copy();
+						FluidStack temp = fluidStack.copy();
 						temp.amount = holder.getSizeLeft();
 						int amount = tank.fill(temp, false);
 						amount = fluidBufferElement.retrieveItemCount(amount);
@@ -755,7 +747,7 @@ public class CommandExecutor {
 				IItemHandler inventory = inventoryHolder.getInventory(sideSlotTarget.getSide());
 				if (inventory == null)
 					continue;
-				ItemStack    itemStack = inventory.getStackInSlot(slot);
+				ItemStack itemStack = inventory.getStackInSlot(slot);
 
 				if (seenStacks.containsKey(itemStack) || !isSlotValid(inventory, itemStack, slot, true)) {
 					continue;
@@ -776,7 +768,7 @@ public class CommandExecutor {
 
 	private void calculateConditionDataFluid(ComponentMenu componentMenu, SlotInventoryHolder inventoryHolder, Map<Integer, ConditionSettingChecker> conditionSettingCheckerMap) {
 		for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
-			IFluidHandler              tank             = inventoryHolder.getTank(sideSlotTarget.getSide());
+			IFluidHandler tank = inventoryHolder.getTank(sideSlotTarget.getSide());
 			if (tank == null)
 				continue;
 			List<IFluidTankProperties> tankInfos        = new ArrayList<IFluidTankProperties>();
