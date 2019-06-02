@@ -33,7 +33,13 @@ public class SearchUtil {
 		StreamSupport.stream(Item.REGISTRY.spliterator(), false)
 				.filter(Objects::nonNull)
 				.filter(i -> i.getCreativeTab() != null)
-				.forEach(i -> i.getSubItems(i.getCreativeTab(), stacks));
+				.forEach(i -> {
+					try {
+						i.getSubItems(i.getCreativeTab(), stacks);
+					} catch (Exception e) {
+						// do nothing
+					}
+				});
 		stacks.stream().filter(Objects::nonNull).forEach(stack -> {
 			cache.put(stack, String.join("\n",stack.getTooltip(null, ITooltipFlag.TooltipFlags.ADVANCED)));
 			//todo: investigate if NORMAL is needed
