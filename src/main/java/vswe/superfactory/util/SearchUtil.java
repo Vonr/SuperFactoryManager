@@ -29,6 +29,7 @@ public class SearchUtil {
 	 * Node: The method to get an ItemStack tooltip is costly, that's the point of this caching operation
 	 */
 	public static void buildCache() {
+		long time_no_see = System.currentTimeMillis();
 		NonNullList<ItemStack> stacks = NonNullList.create();
 		StreamSupport.stream(Item.REGISTRY.spliterator(), false)
 				.filter(Objects::nonNull)
@@ -40,10 +41,14 @@ public class SearchUtil {
 						// do nothing
 					}
 				});
-		stacks.stream().filter(Objects::nonNull).forEach(stack -> {
-			cache.put(stack, String.join("\n",stack.getTooltip(null, ITooltipFlag.TooltipFlags.ADVANCED)));
-			//todo: investigate if NORMAL is needed
-		});
+		stacks.stream()
+				.filter(Objects::nonNull)
+				.forEach(stack -> {
+					cache.put(stack, String.join("\n",stack.getTooltip(null, ITooltipFlag.TooltipFlags.ADVANCED)));
+					cache.put(stack, stack.getDisplayName());
+					//todo: investigate if NORMAL is needed
+				});
+		System.out.println("Generated SFM item cache in " + (System.currentTimeMillis()-time_no_see) + "ms.");
 	}
 
 	public static Map<ItemStack, String> getCache() {

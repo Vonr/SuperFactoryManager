@@ -21,9 +21,7 @@ public class MessageIndexItems implements IMessage, IMessageHandler<MessageIndex
 	@Override
 	public IMessage onMessage(MessageIndexItems message, MessageContext ctx) {
 		if (ctx.side == Side.CLIENT && SearchUtil.getCache().isEmpty()) {
-			long time_no_see = System.currentTimeMillis();
 			new Thread(SearchUtil::buildCache).run();
-			System.out.println("Generated SFM item cache in " + (System.currentTimeMillis()-time_no_see) + "ms.");
 		}
 		return null;
 	}
