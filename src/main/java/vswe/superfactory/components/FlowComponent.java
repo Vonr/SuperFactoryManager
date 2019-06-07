@@ -90,7 +90,7 @@ public class FlowComponent implements IComponentNetworkReader, Comparable<FlowCo
 	private static final int NODE_SRC_X = 120;
 	private static final int NODE_SRC_Y = 152;
 	private static final int TEXT_HEIGHT     = 10;
-	private static final int TEXT_MAX_LENGTH  = 31;
+	private static final int TEXT_MAX_LENGTH  = Integer.MAX_VALUE;//31;
 	private static final int TEXT_SPACE       = 135;
 	private static final int TEXT_SPACE_SHORT = 65;
 	private static final int TEXT_X          = 7;

@@ -54,7 +54,7 @@ public class ComponentMenuSignText extends ComponentMenu {
 					hasChanged[id] = IDLE_TIME;
 				}
 			};
-			textBoxes[i].setMult(0.6F);
+			textBoxes[i].setWidthMultiplier(0.6F);
 			textBoxes[i].setTextAndCursor("");
 
 			checkBoxes.addCheckBox(new CheckBox(Localization.UPDATE_LINE, CHECK_BOX_X, CHECK_BOX_Y + TEXT_BOX_Y + i * TEXT_BOX_Y_SPACING) {

@@ -1,32 +1,37 @@
 package vswe.superfactory.components;
 
-import net.java.games.input.Component;
 import net.minecraft.util.ChatAllowedCharacters;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.interfaces.GuiManager;
 
 public class TextBoxLogic {
-	private int     charLimit;
-	private int     cursor;
-	private int     cursorPosition;
-	private float   mult;
 	private String  text;
-	private boolean updatedCursor;
 	private int     width;
+	private int     charLimit;
+	private int     widthLimit;
+	private float   widthMultiplier;
+	private int     cursorIndex;
+	private int     cursorPosition;
+	private boolean dirtyCursor;
 
 	public TextBoxLogic(int charLimit, int width) {
 		this.charLimit = charLimit;
 		this.width = width;
-		mult = 1F;
+		widthMultiplier = 1F;
 	}
 
 	@SideOnly(Side.CLIENT)
 	private void addText(GuiManager gui, String str) {
-		String newText = text.substring(0, cursor) + str + text.substring(cursor);
+		String newText = text.substring(0, cursorIndex) + str + text.substring(cursorIndex);
 
-		if (newText.length() <= charLimit && gui.getStringWidth(newText) * mult <= width) {
+		if (newText.length() <= charLimit) { // && gui.getStringWidth(newText) * widthMultiplier <= width) {
 			text = newText;
+			if (gui.getStringWidth(newText) * widthMultiplier < width - 2)
+				widthLimit = newText.length();
+			else if (gui.getStringWidth(getDisplayText()) * widthMultiplier >= width - 2)
+				widthLimit--;
 			moveCursor(gui, str.length());
 			textChanged();
 		}
@@ -34,11 +39,11 @@ public class TextBoxLogic {
 
 	@SideOnly(Side.CLIENT)
 	private void deleteText(GuiManager gui, int direction) {
-		if (cursor + direction >= 0 && cursor + direction <= text.length()) {
+		if (cursorIndex + direction >= 0 && cursorIndex + direction <= text.length()) {
 			if (direction > 0) {
-				text = text.substring(0, cursor) + text.substring(cursor + 1);
+				text = text.substring(0, cursorIndex) + text.substring(cursorIndex + 1);
 			} else {
-				text = text.substring(0, cursor - 1) + text.substring(cursor);
+				text = text.substring(0, cursorIndex - 1) + text.substring(cursorIndex);
 				moveCursor(gui, direction);
 			}
 			textChanged();
@@ -47,7 +52,7 @@ public class TextBoxLogic {
 
 	@SideOnly(Side.CLIENT)
 	private void moveCursor(GuiManager gui, int steps) {
-		cursor += steps;
+		cursorIndex += steps;
 
 		updateCursor();
 	}
@@ -60,14 +65,18 @@ public class TextBoxLogic {
 		return text;
 	}
 
+	public String getDisplayText() {
+		return text.substring(MathHelper.clamp(text.length() - widthLimit, 0, text.length()), text.length());
+	}
+
 	public void setText(String text) {
 		this.text = text;
 	}
 
 	public int getCursorPosition(GuiManager gui) {
-		if (updatedCursor) {
-			cursorPosition = (int) (gui.getStringWidth(text.substring(0, cursor)) * mult);
-			updatedCursor = false;
+		if (dirtyCursor) {
+			cursorPosition = (int) (gui.getStringWidth(getDisplayText().substring(0, Math.min(cursorIndex, getDisplayText().length()))) * widthMultiplier);
+			dirtyCursor = false;
 		}
 
 		return cursorPosition;
@@ -89,13 +98,13 @@ public class TextBoxLogic {
 	}
 
 	public void updateCursor() {
-		if (cursor < 0) {
-			cursor = 0;
-		} else if (cursor > text.length()) {
-			cursor = text.length();
+		if (cursorIndex < 0) {
+			cursorIndex = 0;
+		} else if (cursorIndex > getDisplayText().length()) {
+			cursorIndex = text.length();
 		}
 
-		updatedCursor = true;
+		dirtyCursor = true;
 	}
 
 	public void setTextAndCursor(String s) {
@@ -104,11 +113,11 @@ public class TextBoxLogic {
 	}
 
 	public void resetCursor() {
-		cursor = text.length();
-		updatedCursor = true;
+		cursorIndex = text.length();
+		dirtyCursor = true;
 	}
 
-	public void setMult(float mult) {
-		this.mult = mult;
+	public void setWidthMultiplier(float widthMultiplier) {
+		this.widthMultiplier = widthMultiplier;
 	}
 }

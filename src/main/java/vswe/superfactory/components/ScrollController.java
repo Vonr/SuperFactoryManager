@@ -182,7 +182,7 @@ public abstract class ScrollController<T> {
 
 		if (hasSearchBox) {
 			gui.drawTexture(TEXT_BOX_X, TEXT_BOX_Y, TEXT_BOX_SRC_X, TEXT_BOX_SRC_Y + srcBoxY * TEXT_BOX_SIZE_H, TEXT_BOX_SIZE_W, TEXT_BOX_SIZE_H);
-			gui.drawString(textBox.getText(), TEXT_BOX_X + TEXT_BOX_TEXT_X, TEXT_BOX_Y + TEXT_BOX_TEXT_Y, 0xFFFFFF);
+			gui.drawString(textBox.getDisplayText(), TEXT_BOX_X + TEXT_BOX_TEXT_X, TEXT_BOX_Y + TEXT_BOX_TEXT_Y, 0xFFFFFF);
 
 			if (selected) {
 				gui.drawCursor(TEXT_BOX_X + textBox.getCursorPosition(gui) + CURSOR_X, TEXT_BOX_Y + CURSOR_Y, CURSOR_Z, 0xFFFFFFFF);
