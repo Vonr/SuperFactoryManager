@@ -1,26 +1,18 @@
 package vswe.superfactory.util;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import vswe.superfactory.components.ScrollController;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.StreamSupport;
 
 /**
  * A class used to cache the concatenated Tooltip string representation of items for searching performance improvements
  */
 public class SearchUtil {
-	private static final Map<ItemStack, String>              cache          = Collections.synchronizedMap(new LinkedHashMap<>());
+	private static final Map<ItemStack, String> cache = Collections.synchronizedMap(new LinkedHashMap<>());
 
 	/**
 	 * Populate the {@link SearchUtil#cache} object with ItemStacks and their respective tooltips
@@ -28,8 +20,8 @@ public class SearchUtil {
 	 * Node: The method to get an ItemStack tooltip is costly, that's the point of this caching operation
 	 */
 	public static void buildCache() {
-		long time_no_see = System.currentTimeMillis();
-		NonNullList<ItemStack> stacks = NonNullList.create();
+		long                   time_no_see = System.currentTimeMillis();
+		NonNullList<ItemStack> stacks      = NonNullList.create();
 
 		// Get all sub-items
 		StreamSupport.stream(Item.REGISTRY.spliterator(), false)
@@ -42,7 +34,7 @@ public class SearchUtil {
 						// do nothing
 					}
 				});
-//todo: threading test
+		//todo: threading test
 		// Index sub-item searchable strings
 		stacks.stream()
 				.filter(Objects::nonNull)
@@ -51,11 +43,11 @@ public class SearchUtil {
 				.sorted(Comparator.comparingInt(s -> s.getItem().getRegistryName() != null && s.getItem().getRegistryName().getNamespace().equals("minecraft") ? 0 : 1))
 				.forEach(stack -> {
 					// Add full tooltip text
-					cache.put(stack, String.join("\n",stack.getTooltip(null, ITooltipFlag.TooltipFlags.ADVANCED)));
+					cache.put(stack, String.join("\n", stack.getTooltip(null, ITooltipFlag.TooltipFlags.ADVANCED)));
 					// Add just the stack name, so regex anchors play nice
 					cache.put(stack, stack.getDisplayName());
 				});
-		System.out.println("Generated SFM item cache in " + (System.currentTimeMillis()-time_no_see) + "ms.");
+		System.out.println("Generated SFM item cache in " + (System.currentTimeMillis() - time_no_see) + "ms.");
 	}
 
 	public static Map<ItemStack, String> getCache() {
@@ -66,14 +58,14 @@ public class SearchUtil {
 	 * Update scroller contents on frame if there is a new cached list
 	 * @param event RenderWorldLastEvent
 	 */
-//	@SubscribeEvent
-//	public static void renderEvent(RenderWorldLastEvent event) {
-//		if (!scrollersQueue.isEmpty()) {
-//			scrollersQueue.forEach((s, i) -> {
-//				s.getResult().clear();
-//				s.getResult().addAll(i);
-//			});
-//			scrollersQueue.clear();
-//		}
-//	}
+	//	@SubscribeEvent
+	//	public static void renderEvent(RenderWorldLastEvent event) {
+	//		if (!scrollersQueue.isEmpty()) {
+	//			scrollersQueue.forEach((s, i) -> {
+	//				s.getResult().clear();
+	//				s.getResult().addAll(i);
+	//			});
+	//			scrollersQueue.clear();
+	//		}
+	//	}
 }
