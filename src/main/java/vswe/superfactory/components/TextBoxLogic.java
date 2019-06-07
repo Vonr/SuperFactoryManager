@@ -66,7 +66,7 @@ public class TextBoxLogic {
 	}
 
 	public String getDisplayText() {
-		return text.substring(MathHelper.clamp(text.length() - widthLimit, 0, text.length()), text.length());
+		return text.substring(MathHelper.clamp(text.length() - widthLimit, 0, text.length()));
 	}
 
 	public void setText(String text) {

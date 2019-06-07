@@ -59,12 +59,13 @@ public abstract class ScrollController<T> {
 			textBox = new TextBoxLogic(Integer.MAX_VALUE, TEXT_BOX_SIZE_W - TEXT_BOX_TEXT_X * 2) {
 				@Override
 				protected void textChanged() {
-					if (getText().length() > 0) {
+//					if (getText().length() > 0) {
 						getSearchResults();
-					} else {
-						result.clear();
-						updateScrolling();
-					}
+//					}
+//					else {
+//						result.clear();
+//						updateScrolling();
+//					}
 				}
 			};
 
@@ -102,6 +103,7 @@ public abstract class ScrollController<T> {
 				selected = !selected;
 			} else if (hasSearchBox) {
 				textBox.setTextAndCursor("");
+				textBox.textChanged();
 			}
 		}
 

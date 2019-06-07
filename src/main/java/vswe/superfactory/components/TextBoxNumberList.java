@@ -1,5 +1,6 @@
 package vswe.superfactory.components;
 
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vswe.superfactory.CollisionHelper;
@@ -9,15 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TextBoxNumberList {
-	private static final int TEXT_BOX_SIZE_H = 12;
-	private static final int TEXT_BOX_SRC_X  = 0;
-	private static final int TEXT_BOX_SRC_Y  = 221;
-	private TextBoxNumber       selectedTextBox;
-	private List<TextBoxNumber> textBoxes;
-
-	public TextBoxNumberList() {
-		textBoxes = new ArrayList<TextBoxNumber>();
-	}
+	private static final int                 TEXT_BOX_SIZE_H = 12;
+	private static final int                 TEXT_BOX_SRC_X  = 0;
+	private static final int                 TEXT_BOX_SRC_Y  = 221;
+	private              TextBoxNumber       selectedTextBox;
+	private              List<TextBoxNumber> textBoxes       = new ArrayList<>();
 
 	@SideOnly(Side.CLIENT)
 	public void draw(GuiManager gui, int mX, int mY) {
@@ -27,7 +24,10 @@ public class TextBoxNumberList {
 				int srcTextBoxY = textBox.isWide() ? 1 : 0;
 
 				gui.drawTexture(textBox.getX(), textBox.getY(), TEXT_BOX_SRC_X + srcTextBoxX * textBox.getWidth(), TEXT_BOX_SRC_Y + srcTextBoxY * TEXT_BOX_SIZE_H, textBox.getWidth(), TEXT_BOX_SIZE_H);
-				String str = String.valueOf(textBox.getNumber());
+				String raw = String.valueOf(textBox.getNumber());
+				String str = raw.substring(MathHelper.clamp(raw.length() - textBox.getLength(), 0, raw.length()));
+				if (str.length() != raw.length())
+					str = "~"+str;
 				gui.drawCenteredString(str, textBox.getX(), textBox.getY() + textBox.getTextY(), textBox.getTextSize(), textBox.getWidth(), 0xFFFFFF);
 			}
 		}
@@ -58,10 +58,10 @@ public class TextBoxNumberList {
 
 			if (Character.isDigit(c)) {
 				int number = Integer.parseInt(String.valueOf(c));
-				if (Math.abs(selectedTextBox.getNumber()) < Math.pow(10, selectedTextBox.getLength() - 1)) {
+				//if (Math.abs(selectedTextBox.getNumber()) < Math.pow(10, selectedTextBox.getLength() - 1)) {
 					selectedTextBox.setNumber((Math.abs(selectedTextBox.getNumber()) * 10 + number) * (selectedTextBox.getNumber() < 0 ? -1 : 1));
 					selectedTextBox.onNumberChanged();
-				}
+				//}
 				return true;
 			} else if (c == '-' && selectedTextBox.allowNegative()) {
 				selectedTextBox.setNumber(selectedTextBox.getNumber() * -1);
