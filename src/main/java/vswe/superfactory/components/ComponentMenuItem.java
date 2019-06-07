@@ -24,9 +24,11 @@ import vswe.superfactory.util.SearchUtil;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class ComponentMenuItem extends ComponentMenuStuff {
 
@@ -312,16 +314,12 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 					final Pattern pattern = p;
 					SearchUtil.getCache().entrySet().stream()
 							.filter(entry -> pattern.matcher(entry.getValue()).find())
-							.filter(e -> e.getKey().getItem().getRegistryName() != null)
-							.sorted(Comparator.comparing(e -> e.getKey().getDisplayName()))
-							.sorted(Comparator.comparingInt(e -> e.getKey().getDisplayName().length()))
-							.sorted(Comparator.comparingInt(e -> (e.getKey().getItem().getRegistryName().getNamespace().equals("minecraft") ? 0 : 1)))
 							.forEach(entry -> results.add(entry.getKey()));
 
 				} else {
 					results.addAll(SearchUtil.getCache().keySet());
 				}
-//				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
+				//				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
 			}).run();
 		}
 

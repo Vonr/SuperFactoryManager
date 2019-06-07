@@ -20,8 +20,7 @@ import java.util.stream.StreamSupport;
  * A class used to cache the concatenated Tooltip string representation of items for searching performance improvements
  */
 public class SearchUtil {
-	private static final Map<ScrollController<ItemStack>, List<ItemStack>> scrollersQueue = new LinkedHashMap<>();
-	private static final ConcurrentHashMap<ItemStack, String>              cache          = new ConcurrentHashMap<>();
+	private static final Map<ItemStack, String>              cache          = Collections.synchronizedMap(new LinkedHashMap<>());
 
 	/**
 	 * Populate the {@link SearchUtil#cache} object with ItemStacks and their respective tooltips
@@ -31,6 +30,8 @@ public class SearchUtil {
 	public static void buildCache() {
 		long time_no_see = System.currentTimeMillis();
 		NonNullList<ItemStack> stacks = NonNullList.create();
+
+		// Get all sub-items
 		StreamSupport.stream(Item.REGISTRY.spliterator(), false)
 				.filter(Objects::nonNull)
 				.filter(i -> i.getCreativeTab() != null)
@@ -41,22 +42,24 @@ public class SearchUtil {
 						// do nothing
 					}
 				});
+//todo: threading test
+		// Index sub-item searchable strings
 		stacks.stream()
 				.filter(Objects::nonNull)
+				.sorted(Comparator.comparing(ItemStack::getDisplayName))
+				.sorted(Comparator.comparingInt(s -> s.getDisplayName().length()))
+				.sorted(Comparator.comparingInt(s -> s.getItem().getRegistryName() != null && s.getItem().getRegistryName().getNamespace().equals("minecraft") ? 0 : 1))
 				.forEach(stack -> {
+					// Add full tooltip text
 					cache.put(stack, String.join("\n",stack.getTooltip(null, ITooltipFlag.TooltipFlags.ADVANCED)));
+					// Add just the stack name, so regex anchors play nice
 					cache.put(stack, stack.getDisplayName());
-					//todo: investigate if NORMAL is needed
 				});
 		System.out.println("Generated SFM item cache in " + (System.currentTimeMillis()-time_no_see) + "ms.");
 	}
 
 	public static Map<ItemStack, String> getCache() {
 		return Collections.unmodifiableMap(cache);
-	}
-
-	public static void queueContentUpdate(ScrollController controller, List<ItemStack> content) {
-		scrollersQueue.put(controller, content);
 	}
 
 	/**
