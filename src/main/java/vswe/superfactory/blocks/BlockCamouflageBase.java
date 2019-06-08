@@ -100,15 +100,15 @@ public abstract class BlockCamouflageBase extends BlockContainer {
 		return BlockRenderLayer.TRANSLUCENT;
 	}
 
-
-	@Override
-	public boolean addHitEffects(IBlockState state, World worldObj, RayTraceResult target, ParticleManager manager) {
-		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, worldObj, target.getBlockPos());
-		if (camouflage != null) {
-			return camouflage.addBlockEffect(this, state, worldObj, target.sideHit, manager);
-		}
-		return false;
-	}
+//
+//	@Override
+//	public boolean addHitEffects(IBlockState state, World worldObj, RayTraceResult target, ParticleManager manager) {
+//		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, worldObj, target.getBlockPos());
+//		if (camouflage != null) {
+//			return camouflage.addBlockEffect(this, state, worldObj, target.sideHit, manager); // did nothing
+//		}
+//		return false;
+//	}
 
 	public AxisAlignedBB getBlockBoundsBasedOnState(IBlockState state, IBlockAccess world, BlockPos pos) {
 		TileEntityCamouflage camouflage = TileEntityCluster.getTileEntity(TileEntityCamouflage.class, world, pos);

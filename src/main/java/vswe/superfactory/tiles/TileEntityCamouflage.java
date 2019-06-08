@@ -67,50 +67,50 @@ public class TileEntityCamouflage extends TileEntityClusterElement implements IP
 	public CamouflageType getCamouflageType() {
 		return CamouflageType.values()[BlockCableCamouflages.getId(getBlockMetadata())];
 	}
-
-	@SideOnly(Side.CLIENT)
-	public boolean addBlockEffect(BlockCamouflageBase camoBlock, IBlockState state, World world, EnumFacing sideHit, ParticleManager effectRenderer) {
-		try {
-			if (ids[sideHit.ordinal()] != 0) {
-				Block block = Block.getBlockById(ids[sideHit.ordinal()]);
-				if (block != null) {
-					float         f             = 0.1F;
-					AxisAlignedBB axisalignedbb = state.getBoundingBox(world, getPos());
-					double        x             = (double) getPos().getX() + rand.nextDouble() * (axisalignedbb.maxX - axisalignedbb.minX - (double) (f * 2.0F)) + (double) f + axisalignedbb.minX;
-					double        y             = (double) getPos().getY() + rand.nextDouble() * (axisalignedbb.maxY - axisalignedbb.minY - (double) (f * 2.0F)) + (double) f + axisalignedbb.minY;
-					double        z             = (double) getPos().getZ() + rand.nextDouble() * (axisalignedbb.maxZ - axisalignedbb.minZ - (double) (f * 2.0F)) + (double) f + axisalignedbb.minZ;
-
-					switch (sideHit) {
-						case DOWN:
-							y = (double) getPos().getY() + axisalignedbb.minY - (double) f;
-							break;
-						case UP:
-							y = (double) getPos().getY() + axisalignedbb.maxY + (double) f;
-							break;
-						case NORTH:
-							z = (double) getPos().getZ() + axisalignedbb.minZ - (double) f;
-							break;
-						case SOUTH:
-							z = (double) getPos().getZ() + axisalignedbb.maxZ + (double) f;
-							break;
-						case WEST:
-							x = (double) getPos().getX() + axisalignedbb.minX - (double) f;
-							break;
-						case EAST:
-							x = (double) getPos().getX() + axisalignedbb.maxX + (double) f;
-							break;
-					}
-
-
-					//                    effectRenderer.addEffect((new EntityDiggingFX.Factory().getEntityFX(0, this.worldObj, x, y, z, 0.0D, 0.0D, 0.0D, Block.getIdFromBlock(camoBlock))).multiplyVelocity(0.2F).multipleParticleScaleBy(0.6F));
-					return true;
-				}
-			}
-		} catch (Exception ignored) {
-		}
-
-		return false;
-	}
+//	// unused for now
+//	@SideOnly(Side.CLIENT)
+//	public boolean addBlockEffect(BlockCamouflageBase camoBlock, IBlockState state, World world, EnumFacing sideHit, ParticleManager effectRenderer) {
+//		try {
+//			if (ids[sideHit.ordinal()] != 0) {
+//				Block block = Block.getBlockById(ids[sideHit.ordinal()]);
+//				if (block != null) {
+//					float         f             = 0.1F;
+//					AxisAlignedBB axisalignedbb = state.getBoundingBox(world, getPos());
+//					double        x             = (double) getPos().getX() + rand.nextDouble() * (axisalignedbb.maxX - axisalignedbb.minX - (double) (f * 2.0F)) + (double) f + axisalignedbb.minX;
+//					double        y             = (double) getPos().getY() + rand.nextDouble() * (axisalignedbb.maxY - axisalignedbb.minY - (double) (f * 2.0F)) + (double) f + axisalignedbb.minY;
+//					double        z             = (double) getPos().getZ() + rand.nextDouble() * (axisalignedbb.maxZ - axisalignedbb.minZ - (double) (f * 2.0F)) + (double) f + axisalignedbb.minZ;
+//
+//					switch (sideHit) {
+//						case DOWN:
+//							y = (double) getPos().getY() + axisalignedbb.minY - (double) f;
+//							break;
+//						case UP:
+//							y = (double) getPos().getY() + axisalignedbb.maxY + (double) f;
+//							break;
+//						case NORTH:
+//							z = (double) getPos().getZ() + axisalignedbb.minZ - (double) f;
+//							break;
+//						case SOUTH:
+//							z = (double) getPos().getZ() + axisalignedbb.maxZ + (double) f;
+//							break;
+//						case WEST:
+//							x = (double) getPos().getX() + axisalignedbb.minX - (double) f;
+//							break;
+//						case EAST:
+//							x = (double) getPos().getX() + axisalignedbb.maxX + (double) f;
+//							break;
+//					}
+//
+//
+//					//                    effectRenderer.addEffect((new EntityDiggingFX.Factory().getEntityFX(0, this.worldObj, x, y, z, 0.0D, 0.0D, 0.0D, Block.getIdFromBlock(camoBlock))).multiplyVelocity(0.2F).multipleParticleScaleBy(0.6F));
+//					return true;
+//				}
+//			}
+//		} catch (Exception ignored) {
+//		}
+//
+//		return false;
+//	}
 
 	public AxisAlignedBB getBlockBounds() {
 		return new AxisAlignedBB(bounds[0] / 32D, bounds[2] / 32D, bounds[4] / 32D, bounds[1] / 32D, bounds[3] / 32D, bounds[5] / 32D);
@@ -381,6 +381,8 @@ public class TileEntityCamouflage extends TileEntityClusterElement implements IP
 			tagCompound.setByte(NBT_MAX_Z, (byte) bounds[5]);
 		}
 	}
+
+
 
 	@Override
 	protected EnumSet<ClusterMethodRegistration> getRegistrations() {

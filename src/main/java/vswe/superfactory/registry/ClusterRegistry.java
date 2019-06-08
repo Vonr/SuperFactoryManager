@@ -4,6 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import vswe.superfactory.tiles.TileEntityCluster;
 import vswe.superfactory.tiles.TileEntityClusterElement;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class ClusterRegistry {
 	private static HashMap<Class<? extends TileEntityClusterElement>, ClusterRegistryElement> registry     = new HashMap<>();
 	private static List<ClusterRegistryElement>                                               registryList = new ArrayList<>();
 
-	//todo: register cluster elements
+
 	public static void register(Class<? extends TileEntityClusterElement> clazz, BlockContainer block) {
 		register(new ClusterRegistryElement(clazz, block, new ItemStack(block)));
 	}

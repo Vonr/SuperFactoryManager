@@ -268,12 +268,12 @@ public class BlockCableCluster extends BlockCamouflageBase implements ICable, II
 
 	@Override
 	public boolean isOpaqueCube(IBlockState state) {
-		return true;
+		return false;
 	}
 
 	@Override
 	public boolean isFullCube(IBlockState state) {
-		return true;
+		return false;
 	}
 
 	@Override

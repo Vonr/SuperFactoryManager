@@ -5,6 +5,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -73,7 +74,9 @@ public final class ModBlocks {
 	public static void registerClusters() {
 		ClusterRegistry.register(TileEntityBreaker.class, (BlockContainer) CABLE_BREAKER);
 		ClusterRegistry.register(TileEntityBUD.class, (BlockContainer) CABLE_BUD);
-		ClusterRegistry.register(TileEntityCamouflage.class, (BlockContainer) CABLE_CAMOUFLAGE);
+		ClusterRegistry.register(new ClusterRegistry.ClusterRegistryMetaSensitive(TileEntityCamouflage.class, (BlockContainer) CABLE_CAMOUFLAGE, new ItemStack(CABLE_CAMOUFLAGE ,1,0)));
+		ClusterRegistry.register(new ClusterRegistry.ClusterRegistryAdvancedSensitive(TileEntityCamouflage.class, (BlockContainer) CABLE_CAMOUFLAGE, new ItemStack(CABLE_CAMOUFLAGE ,1,1)));
+		ClusterRegistry.register(new ClusterRegistry.ClusterRegistryAdvancedSensitive(TileEntityCamouflage.class, (BlockContainer) CABLE_CAMOUFLAGE, new ItemStack(CABLE_CAMOUFLAGE ,1,2)));
 		ClusterRegistry.register(TileEntityInput.class, (BlockContainer) CABLE_INPUT);
 		ClusterRegistry.register(TileEntityIntake.class, (BlockContainer) CABLE_INTAKE);
 		ClusterRegistry.register(TileEntityOutput.class, (BlockContainer) CABLE_OUTPUT);
