@@ -21,7 +21,7 @@ public class MessageIndexItems implements IMessage, IMessageHandler<MessageIndex
 	@Override
 	public IMessage onMessage(MessageIndexItems message, MessageContext ctx) {
 		if (ctx.side == Side.CLIENT && SearchUtil.getCache().isEmpty()) {
-			new Thread(SearchUtil::buildCache).run();
+			SearchUtil.buildCache();
 		}
 		return null;
 	}

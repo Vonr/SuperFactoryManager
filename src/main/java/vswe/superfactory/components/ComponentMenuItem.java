@@ -312,15 +312,16 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 						p = Pattern.compile(Pattern.quote(search), Pattern.CASE_INSENSITIVE);
 					}
 					final Pattern pattern = p;
-					SearchUtil.getCache().entrySet().stream()
+					SearchUtil.getCache().entries().stream()
 							.filter(entry -> pattern.matcher(entry.getValue()).find())
+							.filter(entry -> !results.contains(entry.getKey()))
 							.forEach(entry -> results.add(entry.getKey()));
 
 				} else {
 					results.addAll(SearchUtil.getCache().keySet());
 				}
 				//				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
-			}).run();
+			}).start();
 		}
 
 		return results;
