@@ -373,6 +373,8 @@ public class CommandExecutor {
 
 			for (EnumFacing side : EnumFacing.VALUES) {
 				IFluidHandler tank  = tanks.get(i).getTank(side);
+				if (tank == null)
+					continue;
 				int           sideI = side.ordinal();
 				if (menuTarget.isActive(sideI)) {
 					if (menuTarget.useAdvancedSetting(sideI)) {

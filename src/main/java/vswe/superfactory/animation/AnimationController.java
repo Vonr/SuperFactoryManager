@@ -7,33 +7,34 @@ import vswe.superfactory.tiles.TileEntityManager;
 import java.util.*;
 
 public class AnimationController {
-	private static final int MOVE_SPEED            = 300; //pixels per second
-	private static final int MOVE_SPEED_CONNECTION = 300; //pixels per second
-	private static final int MOVE_SPEED_NODE       = 250;
-	private final TileEntityManager   manager;
+	private static final int               MOVE_SPEED            = 300; //pixels per second
+	private static final int               MOVE_SPEED_CONNECTION = 300; //pixels per second
+	private static final int               MOVE_SPEED_NODE       = 250;
+	private final        TileEntityManager manager;
 	Map<Integer, Integer> groupNodes = new HashMap<Integer, Integer>();
-	private       FlowComponent       blueprint;
-	private Point       blueprintNode;
-	private       List<FlowComponent> blueprints;
-	private int         connectionX;
-	private int         connectionY;
-	private       float               delay;
+	private FlowComponent       blueprint;
+	private Point               blueprintNode;
+	private List<FlowComponent> blueprints;
+	private int                 connectionX;
+	private int                 connectionY;
+	private float               delay;
 	private List<FlowComponent> groupTracking;
-	private       List<FlowComponent> items;
+	private List<FlowComponent> items;
 	private int                 menuId;
-	private int                 mult;
-	private List<Point> nodesBlueprint;
-	private Connection  nodesConnection;
+	private int                 multiplier;
+	private List<Point>         nodesBlueprint;
+	private Connection          nodesConnection;
 	private boolean             openNext;
-	private       Progress            progress = Progress.GROUP;
+	private Progress            progress = Progress.GROUP;
 	private boolean             setMenuInfo;
-	private       FlowComponent       target;
-	private int targetConnectionX, targetConnectionY;
+	private FlowComponent       target;
+	private int                 targetConnectionX, targetConnectionY;
 	private float time;
-	private int                 virtualId;
-	public AnimationController(TileEntityManager manager, int mult) {
+	private int   virtualId;
+
+	public AnimationController(TileEntityManager manager, int multiplier) {
 		this.manager = manager;
-		this.mult = mult;
+		this.multiplier = multiplier;
 		blueprints = new ArrayList<FlowComponent>();
 		Map<Integer, Integer>             ids    = new HashMap<Integer, Integer>();
 		Map<Integer, List<FlowComponent>> groups = new HashMap<Integer, List<FlowComponent>>();
@@ -100,7 +101,7 @@ public class AnimationController {
 	}
 
 	public void update(float elapsedSeconds) {
-		time += elapsedSeconds * mult;
+		time += elapsedSeconds * multiplier;
 
 		while (execute())
 			;
