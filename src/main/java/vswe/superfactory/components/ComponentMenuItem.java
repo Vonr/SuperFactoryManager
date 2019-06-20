@@ -22,13 +22,10 @@ import vswe.superfactory.network.packets.DataWriter;
 import vswe.superfactory.util.SearchUtil;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class ComponentMenuItem extends ComponentMenuStuff {
 
@@ -289,7 +286,6 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 	@Override
 	protected List updateSearch(final String search, final boolean showAll) {
 		final NonNullList<ItemStack> results = NonNullList.create();
-
 		if (search.equals(".inv")) {
 			IInventory inventory = Minecraft.getMinecraft().player.inventory;
 			IntStream.range(0, inventory.getSizeInventory())
@@ -302,9 +298,10 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 							}
 					);
 		} else {
-			new Thread(() -> {
-				if (!showAll) {
-
+			if (showAll || search.length() == 0) {
+				results.addAll(SearchUtil.getCache().keySet());
+			} else {
+				new Thread(() -> {
 					Pattern p;
 					try {
 						p = Pattern.compile(search, Pattern.CASE_INSENSITIVE);
@@ -316,12 +313,9 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 							.filter(entry -> pattern.matcher(entry.getValue()).find())
 							.filter(entry -> !results.contains(entry.getKey()))
 							.forEach(entry -> results.add(entry.getKey()));
-
-				} else {
-					results.addAll(SearchUtil.getCache().keySet());
-				}
-				//				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
-			}).start();
+				}).start();
+			}
+			//				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
 		}
 
 		return results;

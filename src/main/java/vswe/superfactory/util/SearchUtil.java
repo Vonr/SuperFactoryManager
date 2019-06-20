@@ -3,10 +3,14 @@ package vswe.superfactory.util;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import mezz.jei.plugins.jei.JEIInternalPlugin;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.oredict.OreDictionary;
 
 import java.util.Comparator;
 import java.util.Objects;
@@ -29,17 +33,22 @@ public class SearchUtil {
 			try {
 				NonNullList<ItemStack> stacks = NonNullList.create();
 
-				// Get all sub-items
-				StreamSupport.stream(Item.REGISTRY.spliterator(), false)
-						.filter(Objects::nonNull)
-						.filter(i -> i.getCreativeTab() != null)
-						.forEach(i -> {
-							try {
-								i.getSubItems(i.getCreativeTab(), stacks);
-							} catch (Exception ignored) {
-							}
-						});
+				if (Loader.isModLoaded("jei") && JEIInternalPlugin.ingredientRegistry != null) {
+					stacks.addAll(JEIInternalPlugin.ingredientRegistry.getAllIngredients(ItemStack.class));
+				} else {
+					StreamSupport.stream(Item.REGISTRY.spliterator(), false)
+							.filter(Objects::nonNull)
+							.filter(i -> i.getCreativeTab() != null)
+							.forEach(i -> {
+								try {
+									i.getSubItems(CreativeTabs.SEARCH, stacks);
+								} catch (Exception ignored) {
 
+								}
+							});
+				}
+
+				cache.clear();
 				stacks.stream()
 						.filter(Objects::nonNull)
 						.filter(itemStack -> !itemStack.isEmpty())
@@ -50,8 +59,15 @@ public class SearchUtil {
 							try {
 								// Add just the stack name, so regex anchors play nice
 								cache.put(stack, stack.getDisplayName());
+
 								// Add full tooltip text
 								cache.put(stack, String.join("\n", stack.getTooltip(null, ITooltipFlag.TooltipFlags.ADVANCED)));
+
+								// Add oredict
+								int[] oreDict = OreDictionary.getOreIDs(stack);
+								for (int i = 0; i < oreDict.length; i++) {
+									cache.put(stack, OreDictionary.getOreName(oreDict[i]));
+								}
 							} catch (Exception ignored) {
 							}
 						});
