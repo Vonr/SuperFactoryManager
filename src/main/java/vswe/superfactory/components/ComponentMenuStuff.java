@@ -111,9 +111,9 @@ public abstract class ComponentMenuStuff extends ComponentMenu {
 		scrollControllerSearch = new ScrollController(true) {
 			@Override
 			protected List getSearchResults(String search, boolean all) {
-//				if (search.equals("")) {
-//					return new ArrayList();
-//				}
+				if (search.equals("")) { // Short circuit required for server to not call client only methods
+					return new ArrayList();
+				}
 
 				return self.updateSearch(search, all);
 			}
