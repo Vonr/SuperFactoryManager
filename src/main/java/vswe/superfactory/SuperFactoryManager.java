@@ -1,70 +1,35 @@
 package vswe.superfactory;
 
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.ItemStack;
+
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLInterModComms;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.network.FMLEventChannel;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import vswe.superfactory.components.internal.ModItemHelper;
-import vswe.superfactory.network.messages.MessageHandler;
-import vswe.superfactory.network.packets.FileHelper;
-import vswe.superfactory.network.packets.PacketEventHandler;
-import vswe.superfactory.proxy.CommonProxy;
-import vswe.superfactory.registry.ModBlocks;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import vswe.superfactory.config.ConfigHolder;
 
-import static vswe.superfactory.registry.ModBlocks.MANAGER;
 
-@Mod(modid = SuperFactoryManager.MODID, name = "Super Factory Manager", version = "@VERSION@", dependencies = "required-after:forge@[14.21.0.2359,)")
+@Mod(SuperFactoryManager.MOD_ID)
+@Mod.EventBusSubscriber(bus= Mod.EventBusSubscriber.Bus.MOD)
 public class SuperFactoryManager {
-	public static final String              CHANNEL                      = "factorymanager";
-	public static final String              MODID                        = "superfactorymanager";
-	public static final byte                NBT_CURRENT_PROTOCOL_VERSION = 13;
-	public static final String              NBT_PROTOCOL_VERSION         = "ProtocolVersion";
-	public static final String              RESOURCE_LOCATION            = "superfactorymanager";
-	public static final String              UNLOCALIZED_START            = "sfm.";
-	public static final CreativeTabs        creativeTab                  = new CreativeTabs("sfm") {
-		@Override
-		public ItemStack createIcon() {
-			return new ItemStack(MANAGER);
-		}
-	};
-	@Mod.Instance(MODID)
-	public static       SuperFactoryManager instance;
-	public static       FMLEventChannel     packetHandler;
-	@SidedProxy(clientSide = "vswe.superfactory.proxy.ClientProxy", serverSide = "vswe.superfactory.proxy.CommonProxy")
-	public static       CommonProxy         proxy;
+	public final static String MOD_ID = "sfm";
+	public static final Logger LOGGER = LogManager.getLogger();
 
-	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) {
-		packetHandler = NetworkRegistry.INSTANCE.newEventDrivenChannel(CHANNEL);
+	public SuperFactoryManager() {
+		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 
-		proxy.preInit();
+		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigHolder.COMMON_SPEC);
+		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ConfigHolder.SERVER_SPEC);
+		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigHolder.CLIENT_SPEC);
 
-		FileHelper.setConfigDir(event.getModConfigurationDirectory());
-
-		packetHandler.register(new PacketEventHandler());
-
-		MessageHandler.init();
-		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
-
-		FMLInterModComms.sendMessage("Waila", "register", "Provider.callbackRegister");
+		bus.addListener(this::onSetup);
 	}
 
-	@Mod.EventHandler
-	public void init(FMLInitializationEvent event) {
-		ModBlocks.addRecipes();
-		ModBlocks.registerClusters();
+	private void onSetup(final FMLCommonSetupEvent e) {
+
 	}
-
-	@Mod.EventHandler
-	public void postInit(FMLPostInitializationEvent event) {
-		ModItemHelper.init();
-	}
-
-
 }
