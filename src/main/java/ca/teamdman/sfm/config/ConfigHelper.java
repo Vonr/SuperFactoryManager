@@ -1,7 +1,10 @@
-package vswe.superfactory.config;
+package ca.teamdman.sfm.config;
 
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 
+@Mod.EventBusSubscriber
 public final class ConfigHelper {
 	private static ModConfig commonConfig;
 	private static ModConfig serverConfig;
@@ -25,5 +28,16 @@ public final class ConfigHelper {
 	public static void setValueAndSave(final ModConfig config, final String path, final Object value) {
 		config.getConfigData().set(path,value);
 		config.save();
+	}
+
+	@SubscribeEvent
+	public static void onConfig(final ModConfig.ModConfigEvent e) {
+		final ModConfig config = e.getConfig();
+		if (config.getSpec() == ConfigHolder.COMMON_SPEC)
+			bakeCommon(config);
+		else if (config.getSpec() == ConfigHolder.SERVER_SPEC)
+			bakeServer(config);
+		else if (config.getSpec() == ConfigHolder.CLIENT_SPEC)
+			bakeClient(config);
 	}
 }

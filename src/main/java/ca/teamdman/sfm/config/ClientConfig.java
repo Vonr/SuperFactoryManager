@@ -1,4 +1,4 @@
-package vswe.superfactory.config;
+package ca.teamdman.sfm.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 

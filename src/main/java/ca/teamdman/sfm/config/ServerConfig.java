@@ -1,10 +1,10 @@
-package vswe.superfactory.config;
+package ca.teamdman.sfm.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
 final class ServerConfig {
-	final ForgeConfigSpec.IntValue serInt
-			;
+	final ForgeConfigSpec.IntValue serInt;
+
 	ServerConfig(final ForgeConfigSpec.Builder builder) {
 		builder.push("General Category");
 		serInt = builder
