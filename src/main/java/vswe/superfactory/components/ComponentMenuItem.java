@@ -2,13 +2,10 @@ package vswe.superfactory.components;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.items.ItemHandlerHelper;
 import vswe.superfactory.CollisionHelper;
 import vswe.superfactory.Localization;
 import vswe.superfactory.components.internal.FuzzyMode;
@@ -23,9 +20,6 @@ import vswe.superfactory.util.SearchUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import java.util.stream.IntStream;
 
 public class ComponentMenuItem extends ComponentMenuStuff {
 
@@ -275,49 +269,8 @@ public class ComponentMenuItem extends ComponentMenuStuff {
 		}
 	}
 
-	/**
-	 * Filters items to be displayed in the scroll container
-	 *
-	 * @param search  query
-	 * @param showAll should display all, user can enter ".all" for this to be true
-	 * @return Search results
-	 */
-	@SideOnly(Side.CLIENT)
 	@Override
-	protected List updateSearch(final String search, final boolean showAll) {
-		final NonNullList<ItemStack> results = NonNullList.create();
-		if (search.equals(".inv")) {
-			IInventory inventory = Minecraft.getMinecraft().player.inventory;
-			IntStream.range(0, inventory.getSizeInventory())
-					.mapToObj(inventory::getStackInSlot)
-					.filter(s -> !s.isEmpty())
-					.map(s -> ItemHandlerHelper.copyStackWithSize(s, 1))
-					.forEach(s -> {
-								if (results.stream().noneMatch(r -> ItemStack.areItemStacksEqual(s, r)))
-									results.add(s);
-							}
-					);
-		} else {
-			if (showAll || search.length() == 0) {
-				results.addAll(SearchUtil.getCache().keySet());
-			} else {
-				new Thread(() -> {
-					Pattern p;
-					try {
-						p = Pattern.compile(search, Pattern.CASE_INSENSITIVE);
-					} catch (PatternSyntaxException e) {
-						p = Pattern.compile(Pattern.quote(search), Pattern.CASE_INSENSITIVE);
-					}
-					final Pattern pattern = p;
-					SearchUtil.getCache().entries().stream()
-							.filter(entry -> pattern.matcher(entry.getValue()).find())
-							.filter(entry -> !results.contains(entry.getKey()))
-							.forEach(entry -> results.add(entry.getKey()));
-				}).start();
-			}
-			//				SearchUtil.queueContentUpdate(scrollControllerSearch, results);
-		}
-
-		return results;
+	protected List updateSearch(String search, boolean showAll) {
+		return SearchUtil.getSearchResults(search,showAll);
 	}
 }
