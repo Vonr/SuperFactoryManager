@@ -7,7 +7,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
 import vswe.superfactory.blocks.ConnectionBlock;
 import vswe.superfactory.blocks.ConnectionBlockType;
 import vswe.superfactory.components.internal.*;
@@ -591,9 +590,10 @@ public class CommandExecutor {
 
 			ItemSetting setting = getStackSetting(menuItem, stackInBuffer);
 
-			if ((menuItem.useWhiteList() == (setting == null)) && (setting == null || !setting.isLimitedByAmount()))
+			if (setting == null && menuItem.useWhiteList())
 				continue;
-
+			if (setting != null && !menuItem.useWhiteList() && !setting.isLimitedByAmount())
+				continue;
 
 			OutputItemCounter outputItemCounter = outputCounters.stream()
 					.filter(s -> s.areSettingsSame(setting))
