@@ -604,7 +604,7 @@ public class CommandExecutor {
 						return c;
 					});
 
-			System.out.println("Begin");
+//			System.out.println("Begin");
 			for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
 				IItemHandler inventory = inventoryHolder.getInventory(sideSlotTarget.getSide());
 				if (inventory == null)
@@ -616,7 +616,7 @@ public class CommandExecutor {
 					moveCount = itemBufferElement.retrieveItemCount(moveCount);
 					if (moveCount == 0)
 						continue;
-					System.out.println("Moving " + moveCount);
+//					System.out.println("Moving " + moveCount);
 
 					ItemStack stackToInsert = stackInBuffer.copy();
 					stackToInsert.setCount(moveCount);

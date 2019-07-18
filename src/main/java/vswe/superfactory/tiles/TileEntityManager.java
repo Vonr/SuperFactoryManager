@@ -286,7 +286,7 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 				break;
 			}
 		}
-
+//		System.out.println("Trigger");
 		new CommandExecutor(this).executeTriggerCommand(component, validTriggerOutputs);
 	}
 
