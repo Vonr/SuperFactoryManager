@@ -99,6 +99,7 @@ public class ItemBufferElement implements IItemBufferElement {
 				}
 			} else {
 				itemsAllowedToBeMoved = currentStackSize - setting.getItem().getCount();
+//				itemsAllowedToBeMoved = setting.getAmount();
 			}
 
 

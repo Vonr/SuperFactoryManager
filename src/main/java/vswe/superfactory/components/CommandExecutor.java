@@ -52,11 +52,11 @@ public class CommandExecutor {
 		List<SlotInventoryHolder> ret         = new ArrayList<>();
 		List<ConnectionBlock>     inventories = manager.getConnectedInventories();
 		Variable[]                variables   = manager.getVariables();
-		for (int i = 0; i < variables.length; i++) {
-			Variable variable = variables[i];
+		for (int variableIndex = 0; variableIndex < variables.length; variableIndex++) {
+			Variable variable = variables[variableIndex];
 			if (variable.isValid()) {
-				for (int val : menuContainer.getSelectedInventories()) {
-					if (val == i) {
+				for (int inventoryIndex : menuContainer.getSelectedInventories()) {
+					if (inventoryIndex == variableIndex) { // if we selected that variable
 						List<Integer> selection = variable.getContainers();
 
 						for (int selected : selection) {
@@ -371,10 +371,10 @@ public class CommandExecutor {
 			Map<EnumFacing, SideSlotTarget> validTanks = tanks.get(i).getValidSlots();
 
 			for (EnumFacing side : EnumFacing.VALUES) {
-				IFluidHandler tank  = tanks.get(i).getTank(side);
+				IFluidHandler tank = tanks.get(i).getTank(side);
 				if (tank == null)
 					continue;
-				int           sideI = side.ordinal();
+				int sideI = side.ordinal();
 				if (menuTarget.isActive(sideI)) {
 					if (menuTarget.useAdvancedSetting(sideI)) {
 						boolean empty = true;
@@ -604,6 +604,7 @@ public class CommandExecutor {
 						return c;
 					});
 
+			System.out.println("Begin");
 			for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
 				IItemHandler inventory = inventoryHolder.getInventory(sideSlotTarget.getSide());
 				if (inventory == null)
@@ -613,6 +614,9 @@ public class CommandExecutor {
 					int moveCount = remaining;
 					moveCount = outputItemCounter.retrieveItemCount(moveCount);
 					moveCount = itemBufferElement.retrieveItemCount(moveCount);
+					if (moveCount == 0)
+						continue;
+					System.out.println("Moving " + moveCount);
 
 					ItemStack stackToInsert = stackInBuffer.copy();
 					stackToInsert.setCount(moveCount);
@@ -927,9 +931,32 @@ public class CommandExecutor {
 			if (selected >= 0 && selected < inventories.size()) {
 				ConnectionBlock inventory = inventories.get(selected);
 				if (inventory.isOfAnyType(validTypes)) {
+					// Store context
+					final List<CraftingBufferElement> craftingBufferHigh = this.craftingBufferHigh;
+					final List<CraftingBufferElement> craftingBufferLow  = this.craftingBufferLow;
+					final List<FluidBufferElement>    fluidBuffer        = this.fluidBuffer;
+					final List<ItemBufferElement>     itemBuffer         = this.itemBuffer;
+					final List<Integer>               usedCommands       = this.usedCommands;
+
+					// Execute loop item
 					element.clearContainers();
 					element.add(selected);
 					executeChildCommands(command, EnumSet.of(ConnectionOption.FOR_EACH));
+
+					// Ignore context changes
+					this.craftingBufferHigh.clear();
+					this.craftingBufferLow.clear();
+					this.fluidBuffer.clear();
+					this.itemBuffer.clear();
+					this.usedCommands.clear();
+
+					// Restore original context
+					this.craftingBufferHigh.addAll(craftingBufferHigh);
+					this.craftingBufferLow.addAll(craftingBufferLow);
+					this.fluidBuffer.addAll(fluidBuffer);
+					this.itemBuffer.addAll(itemBuffer);
+					this.usedCommands.addAll(usedCommands);
+
 				}
 			}
 		}

@@ -63,8 +63,7 @@ public abstract class ComponentMenuStuff extends ComponentMenu {
 		for (int i = 0; i < getSettingCount(); i++) {
 			try {
 				Constructor<? extends Setting> constructor = settingClass.getConstructor(int.class);
-				Object                         obj         = constructor.newInstance(i);
-				Setting                        setting     = (Setting) obj;
+				Setting                        setting     = constructor.newInstance(i);
 				settings.add(setting);
 				externalSettings.add(setting);
 			} catch (Exception ex) {
