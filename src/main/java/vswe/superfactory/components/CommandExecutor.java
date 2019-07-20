@@ -1,5 +1,6 @@
 package vswe.superfactory.components;
 
+import com.google.common.collect.ImmutableList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -604,7 +605,7 @@ public class CommandExecutor {
 						return c;
 					});
 
-//			System.out.println("Begin");
+			//			System.out.println("Begin");
 			for (SideSlotTarget sideSlotTarget : inventoryHolder.getValidSlots().values()) {
 				IItemHandler inventory = inventoryHolder.getInventory(sideSlotTarget.getSide());
 				if (inventory == null)
@@ -616,7 +617,7 @@ public class CommandExecutor {
 					moveCount = itemBufferElement.retrieveItemCount(moveCount);
 					if (moveCount == 0)
 						continue;
-//					System.out.println("Moving " + moveCount);
+					//					System.out.println("Moving " + moveCount);
 
 					ItemStack stackToInsert = stackInBuffer.copy();
 					stackToInsert.setCount(moveCount);
@@ -932,11 +933,11 @@ public class CommandExecutor {
 				ConnectionBlock inventory = inventories.get(selected);
 				if (inventory.isOfAnyType(validTypes)) {
 					// Store context
-					final List<CraftingBufferElement> craftingBufferHigh = this.craftingBufferHigh;
-					final List<CraftingBufferElement> craftingBufferLow  = this.craftingBufferLow;
-					final List<FluidBufferElement>    fluidBuffer        = this.fluidBuffer;
-					final List<ItemBufferElement>     itemBuffer         = this.itemBuffer;
-					final List<Integer>               usedCommands       = this.usedCommands;
+					final List<CraftingBufferElement> craftingBufferHigh = ImmutableList.copyOf(this.craftingBufferHigh);
+					final List<CraftingBufferElement> craftingBufferLow  = ImmutableList.copyOf(this.craftingBufferLow);
+					final List<FluidBufferElement>    fluidBuffer        = ImmutableList.copyOf(this.fluidBuffer);
+					final List<ItemBufferElement>     itemBuffer         = ImmutableList.copyOf(this.itemBuffer);
+					final List<Integer>               usedCommands       = ImmutableList.copyOf(this.usedCommands);
 
 					// Execute loop item
 					element.clearContainers();
