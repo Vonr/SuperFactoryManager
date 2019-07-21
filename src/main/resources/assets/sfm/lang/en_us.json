@@ -1,4 +1,5 @@
 {
   "mod.name": "Super Factory Manager",
-  "itemGroup.sfm": "Super Factory Manager"
+  "itemGroup.sfm": "Super Factory Manager",
+  "container.sfm.manager": "Super Factory Manager"
 }

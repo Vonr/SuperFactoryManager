@@ -13,7 +13,6 @@ import ca.teamdman.sfm.config.ConfigHolder;
 
 
 @Mod(SFM.MOD_ID)
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class SFM {
 	public static final String MOD_ID = "sfm";
 	public static final String MOD_NAME = "Super Factory ManagerTileEntity";
