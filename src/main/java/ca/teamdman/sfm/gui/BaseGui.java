@@ -26,6 +26,9 @@ public abstract class BaseGui extends Screen {
 	}
 
 
+	/**
+	 * Initializes content, centers GUI on screen
+	 */
 	@Override
 	protected void init() {
 		super.init();
@@ -35,6 +38,12 @@ public abstract class BaseGui extends Screen {
 
 	/**
 	 * Scales and draws the currently bound texture.
+	 * @param x Local value
+	 * @param y Local value
+	 * @param srcX Sprite value
+	 * @param srcY Sprite value
+	 * @param w Local width
+	 * @param h Local height
 	 */
 	protected void drawTexture(int x, int y, int srcX, int srcY, int w, int h) {
 		double scale = getScale();
@@ -50,13 +59,23 @@ public abstract class BaseGui extends Screen {
 	}
 
 	/**
-	 * Draws the sprite, does not bind.
+	 * Draws a sprite, does not bind.
+	 * @param x Local value
+	 * @param y Local value
+	 * @param sprite Sprite data
 	 */
 	protected void drawSprite(int x, int y, ISprite sprite) {
 		drawTexture(x, y, sprite.getLeft(), sprite.getTop(), sprite.getWidth(), sprite.getHeight());
 	}
 
-	private double fixScaledCoordinate(int val, double scale, int size) {
+	/**
+	 * Converts local values to screen values.
+	 * @param val Local value
+	 * @param scale Scale factor
+	 * @param size Screen dimension
+	 * @return Screen value
+	 */
+	protected double fixScaledCoordinate(int val, double scale, int size) {
 		double d = val / scale;
 		d *= size;
 		d = Math.floor(d);
@@ -66,6 +85,15 @@ public abstract class BaseGui extends Screen {
 		return d;
 	}
 
+	/**
+	 * Draws texture using screen values
+	 * @param x Screen value
+	 * @param y Screen value
+	 * @param srcX Sprite value
+	 * @param srcY Sprite value
+	 * @param w Screen width
+	 * @param h Screen height
+	 */
 	protected void drawScaleFriendlyTexture(double x, double y, double srcX, double srcY, double w, double h) {
 		float         f             = 0.00390625F;
 		float         f1            = 0.00390625F;
@@ -79,6 +107,10 @@ public abstract class BaseGui extends Screen {
 		tessellator.draw();
 	}
 
+	/**
+	 * Gets the ratio from screen to local.
+	 * @return Scaling factor
+	 */
 	public double getScale() {
 		double xFactor = (width * 0.9F) / this.xSize;
 		double yFactor = (height * 0.9F) / this.ySize;
@@ -89,6 +121,11 @@ public abstract class BaseGui extends Screen {
 		return mult;
 	}
 
+	/**
+	 * Converts a screen X value to a local one.
+	 * @param x Screen value
+	 * @return Local value
+	 */
 	protected int scaleX(double x) {
 		double scale = getScale();
 		x /= scale;
@@ -97,6 +134,11 @@ public abstract class BaseGui extends Screen {
 		return (int) x;
 	}
 
+	/**
+	 * Converts a screen X value to a local one.
+	 * @param y Screen value
+	 * @return Local value
+	 */
 	protected int scaleY(double y) {
 		double scale = getScale();
 		y /= scale;
@@ -105,11 +147,17 @@ public abstract class BaseGui extends Screen {
 		return (int) y;
 	}
 
-
+	/**
+	 * Binds a texture to be drawn
+	 * @param resource Texture location
+	 */
 	protected static void bindTexture(ResourceLocation resource) {
 		Minecraft.getInstance().getTextureManager().bindTexture(resource);
 	}
 
+	/**
+	 * Sets GL state to fit the current scale ratio.
+	 */
 	private void startScaling() {
 		GlStateManager.pushMatrix();
 		double scale = getScale();
@@ -118,10 +166,19 @@ public abstract class BaseGui extends Screen {
 		GlStateManager.translated((this.width - this.xSize * scale) / (2 * scale), (this.height - this.ySize * scale) / (2 * scale), 0.0F);
 	}
 
+	/**
+	 * Reverts GL state to normal scaling.
+	 */
 	private void stopScaling() {
 		GlStateManager.popMatrix();
 	}
 
+	/**
+	 * Scales and renders main gui.
+	 * @param mouseX Screen value
+	 * @param mouseY Screen value
+	 * @param f Unknown?
+	 */
 	@Override
 	public void render(int mouseX, int mouseY, float f) {
 		this.renderBackground();
