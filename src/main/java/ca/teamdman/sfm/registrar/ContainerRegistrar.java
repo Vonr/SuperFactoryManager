@@ -2,7 +2,7 @@ package ca.teamdman.sfm.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.container.ManagerContainer;
-import ca.teamdman.sfm.container.ManagerGui;
+import ca.teamdman.sfm.gui.ManagerGui;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraftforge.common.extensions.IForgeContainerType;

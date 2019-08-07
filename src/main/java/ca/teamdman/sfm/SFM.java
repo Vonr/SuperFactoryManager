@@ -1,6 +1,7 @@
 package ca.teamdman.sfm;
 
 
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -15,7 +16,7 @@ import ca.teamdman.sfm.config.ConfigHolder;
 @Mod(SFM.MOD_ID)
 public class SFM {
 	public static final String MOD_ID = "sfm";
-	public static final String MOD_NAME = "Super Factory ManagerTileEntity";
+	public static final String MOD_NAME = "Super Factory Manager";
 	public static final Logger LOGGER = LogManager.getLogger();
 
 	public SFM() {

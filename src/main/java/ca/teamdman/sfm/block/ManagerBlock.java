@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
@@ -26,6 +27,7 @@ public class ManagerBlock extends Block {
 		if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
 			TileEntity tile = worldIn.getTileEntity(pos);
 			if (tile instanceof ManagerTileEntity) {
+				
 				player.openContainer((INamedContainerProvider) tile);
 			}
 		}
