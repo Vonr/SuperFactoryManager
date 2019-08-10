@@ -53,8 +53,12 @@ public class PositionController {
 	}
 
 	public boolean onMouseUp(int x, int y, int button) {
-		dragging = null;
-		return false;
+		if (dragging != null) {
+			dragging = null;
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	protected enum DragMode {

@@ -2,12 +2,14 @@ package ca.teamdman.sfm.gui;
 
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class Button extends Component {
-	protected final Runnable                 ACTION;
-	protected final TranslationTextComponent LABEL;
-	private boolean pressed = false;
+import java.util.function.Consumer;
 
-	public Button(int x, int y, int width, int height, TranslationTextComponent label, Runnable action) {
+public class Button extends Component {
+	protected final Consumer<? super Component>      ACTION;
+	protected final TranslationTextComponent LABEL;
+	private         boolean                  pressed = false;
+
+	public Button(int x, int y, int width, int height, TranslationTextComponent label, Consumer<? super Component> action) {
 		super(x, y, width, height);
 		this.LABEL = label;
 		this.ACTION = action;
@@ -26,13 +28,13 @@ public class Button extends Component {
 	}
 
 	public void click() {
-		ACTION.run();
+		ACTION.accept(this);
 	}
 
 	@Override
 	protected <T extends Component> T copy(ManagerGui gui) {
 		Button copy = new Button(x, y, width, height, LABEL, ACTION);
-		gui.buttonController.addButton(copy);
+		gui.BUTTON_CONTROLLER.addButton(copy);
 		return (T) copy;
 	}
 }

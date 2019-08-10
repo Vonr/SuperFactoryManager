@@ -15,20 +15,20 @@ public class CommandController {
 
 	public CommandController(ManagerGui gui) {
 		this.GUI = gui;
-		addCommand(new Command(50, 50, INPUT, new TranslationTextComponent("woot"), () -> {
-			System.out.println("left");
+		addCommand(new Command(50, 50, INPUT, new TranslationTextComponent("woot"), (c) -> {
+			System.out.println("left " + c.x + "\t" + c.y);
 		}));
-		addCommand(new Command(150, 50, OUTPUT, new TranslationTextComponent("woot"), () -> {
-			System.out.println("center");
+		addCommand(new Command(150, 50, OUTPUT, new TranslationTextComponent("woot"), (c) -> {
+			System.out.println("center " + c.x + "\t" + c.y);
 		}));
-		addCommand(new Command(250, 50, INPUT, new TranslationTextComponent("woot"), () -> {
-			System.out.println("right");
+		addCommand(new Command(250, 50, INPUT, new TranslationTextComponent("woot"), (c) -> {
+			System.out.println("right " + c.x + "\t" + c.y);
 		}));
 	}
 
 	public Command addCommand(Command c) {
 		COMMAND_LIST.add(c);
-		GUI.buttonController.addButton(c);
+		GUI.BUTTON_CONTROLLER.addButton(c);
 		return c;
 	}
 

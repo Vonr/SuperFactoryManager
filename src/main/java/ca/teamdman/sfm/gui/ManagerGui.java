@@ -10,15 +10,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
 public class ManagerGui extends BaseGui implements IHasContainer<ManagerContainer> {
-	public static final int LEFT   = 0;
-	public static final int MIDDLE = 2;
-	public static final int RIGHT  = 1;
-	private static final ResourceLocation BACKGROUND_LEFT  = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_1.png");
-	private static final ResourceLocation BACKGROUND_RIGHT = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_2.png");
-	public final ButtonController   buttonController   = new ButtonController(this);
-	public final CommandController  commandController  = new CommandController(this);
-	public final PositionController positionController = new PositionController(this);
-	private final ManagerContainer CONTAINER;
+	public static final int               LEFT                 = 0;
+	public static final int               MIDDLE               = 2;
+	public static final int               RIGHT                = 1;
+	private static final ResourceLocation BACKGROUND_LEFT      = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_1.png");
+	private static final ResourceLocation BACKGROUND_RIGHT     = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_2.png");
+	public final ButtonController         BUTTON_CONTROLLER    = new ButtonController(this);
+	public final CommandController        COMMAND_CONTROLLER   = new CommandController(this);
+	public final PositionController       POSITION_CONTROLLER  = new PositionController(this);
+	public final HierarchyController      HIERARCHY_CONTROLLER = new HierarchyController(this);
+	private final ManagerContainer        CONTAINER;
 
 
 	public ManagerGui(ManagerContainer container, PlayerInventory inv, ITextComponent name) {
@@ -37,11 +38,13 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 	public boolean mouseClicked(double x, double y, int button) {
 		int mx = scaleX((float) x) - guiLeft;
 		int my = scaleY((float) y) - guiTop;
-		for (Command c : commandController.getCommands()) {
+		for (Command c : COMMAND_CONTROLLER.getCommands()) {
 			if (c.isInBounds(mx, my)) {
-				if (positionController.onMouseDown(mx, my, button, c))
+				if (POSITION_CONTROLLER.onMouseDown(mx, my, button, c))
 					return true;
-				if (buttonController.onMouseDown(mx, my, button, c))
+				if (HIERARCHY_CONTROLLER.onMouseDown(mx, my, button, c))
+					return true;
+				if (BUTTON_CONTROLLER.onMouseDown(mx, my, button, c))
 					return true;
 			}
 		}
@@ -52,25 +55,36 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 	public boolean mouseReleased(double x, double y, int button) {
 		int mx = scaleX(x) - guiLeft;
 		int my = scaleY(y) - guiTop;
-		if (positionController.onMouseUp(mx, my, button))
+		if (POSITION_CONTROLLER.onMouseUp(mx, my, button))
 			return true;
-		return buttonController.onMouseUp(mx, my, button);
+		if (HIERARCHY_CONTROLLER.onMouseUp(mx, my, button))
+			return true;
+		if (BUTTON_CONTROLLER.onMouseUp(mx, my, button))
+			return true;
+		return false;
 	}
 
 	@Override
 	public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
 		int mx = scaleX(x) - guiLeft;
 		int my = scaleY(y) - guiTop;
-		if (positionController.onDrag(mx, my, button))
+
+		if (POSITION_CONTROLLER.onDrag(mx, my, button))
 			return true;
-		return buttonController.onDrag(mx, my, button);
+		if (HIERARCHY_CONTROLLER.onDrag(mx, my, button))
+			return true;
+		if (BUTTON_CONTROLLER.onDrag(mx, my, button))
+			return true;
+		return false;
 	}
 
 	@Override
-	public void draw(int mouseX, int p_render_2_, float p_render_3_) {
+	public void draw(int x, int y, float deltaTime) {
 		// Background Layer
 		drawBackground();
-		commandController.draw();
+		HIERARCHY_CONTROLLER.draw(x,y);
+		COMMAND_CONTROLLER.draw();
+
 	}
 
 	private void drawBackground() {

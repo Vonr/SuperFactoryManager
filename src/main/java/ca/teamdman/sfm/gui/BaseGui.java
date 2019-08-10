@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import org.lwjgl.opengl.GL11;
 
 /**
  * Credit to VSWE for lots of the rendering scaling tech
@@ -164,7 +165,7 @@ public abstract class BaseGui extends Screen {
 	public void render(int mouseX, int mouseY, float f) {
 		this.renderBackground();
 		startScaling();
-		draw(scaleX(mouseX), scaleY(mouseY), f);
+		draw(scaleX(mouseX) - guiLeft, scaleY(mouseY) - guiTop, f);
 		stopScaling();
 		super.render(mouseX, mouseY, f);
 	}
@@ -226,4 +227,55 @@ public abstract class BaseGui extends Screen {
 	}
 
 	public abstract void draw(int mouseX, int mouseY, float f);
+
+	public void drawLine(int x1, int y1, int x2, int y2) {
+		GlStateManager.pushMatrix();
+
+		GlStateManager.disableTexture();
+		GlStateManager.color4f(0.4F, 0.4F, 0.4F, 1F);
+
+		//GlStateManager.enableBlend();
+		//GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_DST_COLOR);
+		//GL11.glShadeModel(GL11.GL_SMOOTH);
+		//GL11.glEnable(GL11.GL_LINE_SMOOTH);
+		//GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
+		//GL11.glLineWidth(5);
+		GL11.glLineWidth(1 + 5 * this.width / 500F);
+
+		GL11.glBegin(GL11.GL_LINES);
+		GL11.glVertex3f(guiLeft + x1, guiTop + y1, 0);
+		GL11.glVertex3f(guiLeft + x2, guiTop + y2, 0);
+		GL11.glEnd();
+
+		GlStateManager.disableBlend();
+		GlStateManager.color4f(1F, 1F, 1F, 1F);
+		GlStateManager.enableTexture();
+		GlStateManager.popMatrix();
+	}
+
+	public void drawArrow(int x1, int y1, int x2, int y2) {
+		drawLine(x1,y1,x2,y2);
+		int lookX = x2 - x1;
+		int lookY = y2 - y1;
+		double mag = Math.sqrt((lookX * lookX) + (lookY * lookY));
+		mag*=1/14d;
+		lookX/=mag;
+		lookY/=mag;
+
+		double ang = Math.PI * -7/8d;
+		drawLine(
+				x2,
+				y2,
+				x2 + (int) (Math.cos(ang) * lookX - Math.sin(ang) * lookY),
+				y2 + (int) (Math.sin(ang)*lookX + Math.cos(ang) * lookY)
+		);
+
+		ang = Math.PI * 7/8d;
+		drawLine(
+				x2,
+				y2,
+				x2 + (int) (Math.cos(ang) * lookX - Math.sin(ang) * lookY),
+				y2 + (int) (Math.sin(ang)*lookX + Math.cos(ang) * lookY)
+		);
+	}
 }
