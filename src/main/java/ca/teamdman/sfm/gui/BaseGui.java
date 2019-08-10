@@ -13,11 +13,11 @@ import net.minecraft.util.text.ITextComponent;
  * Credit to VSWE for lots of the rendering scaling tech
  */
 public abstract class BaseGui extends Screen {
-	protected int zLevel = 0;
+	protected int zLevel  = 0;
 	protected int guiLeft = 0;
-	protected int guiTop = 0;
-	protected int xSize = 176;
-	protected int ySize = 166;
+	protected int guiTop  = 0;
+	protected int xSize   = 176;
+	protected int ySize   = 166;
 
 	public BaseGui(ITextComponent titleIn, int width, int height) {
 		super(titleIn);
@@ -32,18 +32,48 @@ public abstract class BaseGui extends Screen {
 	@Override
 	protected void init() {
 		super.init();
-		this.guiLeft = (this.width - this.xSize)/2;
-		this.guiTop = (this.height - this.ySize)/2;
+		this.guiLeft = (this.width - this.xSize) / 2;
+		this.guiTop = (this.height - this.ySize) / 2;
 	}
 
+	public void drawString(String str, int x, int y, int color) {
+		drawString(str, x, y, 1F, color);
+	}
+
+
+
+	public void drawString(String str, int x, int y, float mult, int color) {
+		GlStateManager.pushMatrix();
+		GlStateManager.scalef(mult, mult, 1F);
+		this.font.drawString(str, (int) ((x + guiLeft) / mult), (int) ((y + guiTop) / mult), color);
+		//bindTexture(getComponentResource());
+		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		GlStateManager.popMatrix();
+	}
+
+
+	public void drawRightAlignedString(String str, int x, int y, int color) {
+		drawRightAlignedString(str, x, y, 1, color);
+	}
+
+	public void drawRightAlignedString(String str, int x, int y, float mult, int color) {
+		drawString(
+				str,
+				(int) (x - fixScaledCoordinate(font.getStringWidth(str), getScale(), minecraft.mainWindow.getWidth())),
+				y,
+				mult,
+				color
+		);
+	}
 	/**
 	 * Scales and draws the currently bound texture.
-	 * @param x Local value
-	 * @param y Local value
+	 *
+	 * @param x    Local value
+	 * @param y    Local value
 	 * @param srcX Sprite value
 	 * @param srcY Sprite value
-	 * @param w Local width
-	 * @param h Local height
+	 * @param w    Local width
+	 * @param h    Local height
 	 */
 	protected void drawTexture(int x, int y, int srcX, int srcY, int w, int h) {
 		double scale = getScale();
@@ -60,8 +90,9 @@ public abstract class BaseGui extends Screen {
 
 	/**
 	 * Draws a sprite, does not bind.
-	 * @param x Local value
-	 * @param y Local value
+	 *
+	 * @param x      Local value
+	 * @param y      Local value
 	 * @param sprite Sprite data
 	 */
 	protected void drawSprite(int x, int y, ISprite sprite) {
@@ -70,9 +101,10 @@ public abstract class BaseGui extends Screen {
 
 	/**
 	 * Converts local values to screen values.
-	 * @param val Local value
+	 *
+	 * @param val   Local value
 	 * @param scale Scale factor
-	 * @param size Screen dimension
+	 * @param size  Screen dimension
 	 * @return Screen value
 	 */
 	protected double fixScaledCoordinate(int val, double scale, int size) {
@@ -87,12 +119,13 @@ public abstract class BaseGui extends Screen {
 
 	/**
 	 * Draws texture using screen values
-	 * @param x Screen value
-	 * @param y Screen value
+	 *
+	 * @param x    Screen value
+	 * @param y    Screen value
 	 * @param srcX Sprite value
 	 * @param srcY Sprite value
-	 * @param w Screen width
-	 * @param h Screen height
+	 * @param w    Screen width
+	 * @param h    Screen height
 	 */
 	protected void drawScaleFriendlyTexture(double x, double y, double srcX, double srcY, double w, double h) {
 		float         f             = 0.00390625F;
@@ -109,20 +142,22 @@ public abstract class BaseGui extends Screen {
 
 	/**
 	 * Gets the ratio from screen to local.
+	 *
 	 * @return Scaling factor
 	 */
 	public double getScale() {
 		double xFactor = (width * 0.9F) / this.xSize;
 		double yFactor = (height * 0.9F) / this.ySize;
-		double mult = Math.min(xFactor, yFactor);
-		mult = Math.min(1,mult);
-		mult = (double) Math.floor(mult*1000) / 1000F;
-//		System.out.printf("xsize %d\tysize %d\twidth %d\theight %d\txfac %f\tyfac %f\tmult %f\n",xSize, ySize, width, height, xFactor, yFactor, mult);
+		double mult    = Math.min(xFactor, yFactor);
+		mult = Math.min(1, mult);
+		mult = (double) Math.floor(mult * 1000) / 1000F;
+		//		System.out.printf("xsize %d\tysize %d\twidth %d\theight %d\txfac %f\tyfac %f\tmult %f\n",xSize, ySize, width, height, xFactor, yFactor, mult);
 		return mult;
 	}
 
 	/**
 	 * Converts a screen X value to a local one.
+	 *
 	 * @param x Screen value
 	 * @return Local value
 	 */
@@ -136,6 +171,7 @@ public abstract class BaseGui extends Screen {
 
 	/**
 	 * Converts a screen X value to a local one.
+	 *
 	 * @param y Screen value
 	 * @return Local value
 	 */
@@ -149,6 +185,7 @@ public abstract class BaseGui extends Screen {
 
 	/**
 	 * Binds a texture to be drawn
+	 *
 	 * @param resource Texture location
 	 */
 	protected static void bindTexture(ResourceLocation resource) {
@@ -175,9 +212,10 @@ public abstract class BaseGui extends Screen {
 
 	/**
 	 * Scales and renders main gui.
+	 *
 	 * @param mouseX Screen value
 	 * @param mouseY Screen value
-	 * @param f Unknown?
+	 * @param f      Unknown?
 	 */
 	@Override
 	public void render(int mouseX, int mouseY, float f) {

@@ -3,28 +3,37 @@ package ca.teamdman.sfm.gui;
 import net.minecraft.util.text.TranslationTextComponent;
 
 public class Button extends Component {
-	private TranslationTextComponent label;
-	private Runnable onClick;
-	private int width, height;
+	protected TranslationTextComponent label;
+	protected Runnable                 onClick;
+
 	public TranslationTextComponent getLabel() {
 		return label;
+	}
+
+	private boolean pressed = false;
+
+	public Button(int x, int y, int width, int height, TranslationTextComponent label, Runnable onClick) {
+		super(x, y, width, height);
+		this.label = label;
+		this.onClick = onClick;
+	}
+
+	public boolean isPressed() {
+		return pressed;
+	}
+
+	public void setPressed(boolean pressed) {
+		this.pressed = pressed;
 	}
 
 	public void click() {
 		onClick.run();
 	}
 
-	public boolean isInBounds(int mx, int my) {
-		return mx >= x && mx <= x+width && my >= y && my <= y+height;
+	@Override
+	protected <T extends Component> T copy(ManagerGui gui) {
+		Button copy = new Button(x,y,width,height,label,onClick);
+		gui.buttonController.addButton(copy);
+		return (T) copy;
 	}
-
-	public Button(int x, int y, int width, int height, TranslationTextComponent label, Runnable onClick) {
-		super(x, y);
-		this.width = width;
-		this.height = height;
-		this.label = label;
-		this.onClick = onClick;
-	}
-
-
 }
