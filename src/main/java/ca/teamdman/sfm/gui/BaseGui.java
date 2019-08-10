@@ -10,6 +10,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import org.lwjgl.opengl.GL11;
 
+import javax.vecmath.Color4f;
+
 /**
  * Credit to VSWE for lots of the rendering scaling tech
  */
@@ -228,11 +230,19 @@ public abstract class BaseGui extends Screen {
 
 	public abstract void draw(int mouseX, int mouseY, float f);
 
+	public void drawLine(Line line) {
+		drawLine(line.HEAD.getX(), line.HEAD.getY(), line.TAIL.getX(), line.TAIL.getY(), line.color);
+	}
+
 	public void drawLine(int x1, int y1, int x2, int y2) {
+		drawLine(x1, y1, x2, y2, new Color4f(0.4f, 0.4f, 0.4f, 1));
+	}
+
+	public void drawLine(int x1, int y1, int x2, int y2, Color4f color) {
 		GlStateManager.pushMatrix();
 
 		GlStateManager.disableTexture();
-		GlStateManager.color4f(0.4F, 0.4F, 0.4F, 1F);
+		GlStateManager.color4f(color.x, color.y, color.z, color.w);
 
 		//GlStateManager.enableBlend();
 		//GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_DST_COLOR);
@@ -253,29 +263,38 @@ public abstract class BaseGui extends Screen {
 		GlStateManager.popMatrix();
 	}
 
-	public void drawArrow(int x1, int y1, int x2, int y2) {
-		drawLine(x1,y1,x2,y2);
-		int lookX = x2 - x1;
-		int lookY = y2 - y1;
-		double mag = Math.sqrt((lookX * lookX) + (lookY * lookY));
-		mag*=1/14d;
-		lookX/=mag;
-		lookY/=mag;
+	public void drawArrow(Line line) {
+		drawArrow(line.HEAD.getX(), line.HEAD.getY(), line.TAIL.getX(), line.TAIL.getY(), line.color);
+	}
 
-		double ang = Math.PI * -7/8d;
+	public void drawArrow(int x1, int y1, int x2, int y2) {
+		drawArrow(x1, y1, x2, y2, new Color4f(0.4f, 0.4f, 0.4f, 1));
+	}
+	public void drawArrow(int x1, int y1, int x2, int y2, Color4f color) {
+		drawLine(x1, y1, x2, y2, color);
+		int    lookX = x2 - x1;
+		int    lookY = y2 - y1;
+		double mag   = Math.sqrt((lookX * lookX) + (lookY * lookY));
+		mag *= 1 / 24d;
+		lookX /= mag;
+		lookY /= mag;
+
+		double ang = Math.PI * -7 / 8d;
 		drawLine(
 				x2,
 				y2,
 				x2 + (int) (Math.cos(ang) * lookX - Math.sin(ang) * lookY),
-				y2 + (int) (Math.sin(ang)*lookX + Math.cos(ang) * lookY)
+				y2 + (int) (Math.sin(ang) * lookX + Math.cos(ang) * lookY),
+				color
 		);
 
-		ang = Math.PI * 7/8d;
+		ang = Math.PI * 7 / 8d;
 		drawLine(
 				x2,
 				y2,
 				x2 + (int) (Math.cos(ang) * lookX - Math.sin(ang) * lookY),
-				y2 + (int) (Math.sin(ang)*lookX + Math.cos(ang) * lookY)
+				y2 + (int) (Math.sin(ang) * lookX + Math.cos(ang) * lookY),
+				color
 		);
 	}
 }

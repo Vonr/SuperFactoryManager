@@ -2,6 +2,7 @@
   "mod.name": "Super Factory Manager",
   "itemGroup.sfm": "Super Factory Manager",
   "container.sfm.manager": "Super Factory Manager",
+  "gui.sfm.manager.legend.chain": "Chain: [Shift+Drag]",
   "gui.sfm.manager.legend.move": "Move: [Alt+Drag]",
   "gui.sfm.manager.legend.clone": "Clone: [Ctrl+Drag]",
   "gui.sfm.manager.legend.snaptogrid": "Hold shift while dragging to use grid"

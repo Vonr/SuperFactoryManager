@@ -18,7 +18,8 @@ public class PositionController {
 	public boolean onMouseDown(int x, int y, int button, Component comp) {
 		if (button != LEFT)
 			return false;
-
+		if (comp == null)
+			return false;
 		if (hasAltDown()) {
 			mode = MOVE;
 			dragging = comp;
@@ -48,6 +49,7 @@ public class PositionController {
 
 		dragging.setX(x + dragOffsetX);
 		dragging.setY(y + dragOffsetY);
+		GUI.FLOW_CONTROLLER.reflow(dragging);
 
 		return true;
 	}

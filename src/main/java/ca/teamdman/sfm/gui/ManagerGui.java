@@ -13,13 +13,13 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 	public static final int               LEFT                 = 0;
 	public static final int               MIDDLE               = 2;
 	public static final int               RIGHT                = 1;
-	private static final ResourceLocation BACKGROUND_LEFT      = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_1.png");
-	private static final ResourceLocation BACKGROUND_RIGHT     = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_2.png");
-	public final ButtonController         BUTTON_CONTROLLER    = new ButtonController(this);
-	public final CommandController        COMMAND_CONTROLLER   = new CommandController(this);
-	public final PositionController       POSITION_CONTROLLER  = new PositionController(this);
-	public final HierarchyController      HIERARCHY_CONTROLLER = new HierarchyController(this);
-	private final ManagerContainer        CONTAINER;
+	private static final ResourceLocation   BACKGROUND_LEFT     = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_1.png");
+	private static final ResourceLocation   BACKGROUND_RIGHT    = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_2.png");
+	public final         ButtonController   BUTTON_CONTROLLER   = new ButtonController(this);
+	public final         CommandController  COMMAND_CONTROLLER  = new CommandController(this);
+	public final         PositionController POSITION_CONTROLLER = new PositionController(this);
+	public final         FlowController     FLOW_CONTROLLER     = new FlowController(this);
+	private final        ManagerContainer   CONTAINER;
 
 
 	public ManagerGui(ManagerContainer container, PlayerInventory inv, ITextComponent name) {
@@ -38,16 +38,21 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 	public boolean mouseClicked(double x, double y, int button) {
 		int mx = scaleX((float) x) - guiLeft;
 		int my = scaleY((float) y) - guiTop;
+		Command pressed = null;
+
 		for (Command c : COMMAND_CONTROLLER.getCommands()) {
 			if (c.isInBounds(mx, my)) {
-				if (POSITION_CONTROLLER.onMouseDown(mx, my, button, c))
-					return true;
-				if (HIERARCHY_CONTROLLER.onMouseDown(mx, my, button, c))
-					return true;
-				if (BUTTON_CONTROLLER.onMouseDown(mx, my, button, c))
-					return true;
+				pressed = c;
+				break;
 			}
 		}
+
+		if (POSITION_CONTROLLER.onMouseDown(mx, my, button, pressed))
+			return true;
+		if (FLOW_CONTROLLER.onMouseDown(mx, my, button, pressed))
+			return true;
+		if (BUTTON_CONTROLLER.onMouseDown(mx, my, button, pressed))
+			return true;
 		return true;
 	}
 
@@ -57,7 +62,7 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 		int my = scaleY(y) - guiTop;
 		if (POSITION_CONTROLLER.onMouseUp(mx, my, button))
 			return true;
-		if (HIERARCHY_CONTROLLER.onMouseUp(mx, my, button))
+		if (FLOW_CONTROLLER.onMouseUp(mx, my, button))
 			return true;
 		if (BUTTON_CONTROLLER.onMouseUp(mx, my, button))
 			return true;
@@ -71,7 +76,7 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 
 		if (POSITION_CONTROLLER.onDrag(mx, my, button))
 			return true;
-		if (HIERARCHY_CONTROLLER.onDrag(mx, my, button))
+		if (FLOW_CONTROLLER.onDrag(mx, my, button))
 			return true;
 		if (BUTTON_CONTROLLER.onDrag(mx, my, button))
 			return true;
@@ -82,7 +87,7 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 	public void draw(int x, int y, float deltaTime) {
 		// Background Layer
 		drawBackground();
-		HIERARCHY_CONTROLLER.draw(x,y);
+		FLOW_CONTROLLER.draw(x,y);
 		COMMAND_CONTROLLER.draw();
 
 	}
@@ -93,6 +98,7 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 		drawTexture(0, 0, 0, 0, 256, 256);
 		bindTexture(BACKGROUND_RIGHT);
 		drawTexture(256, 0, 0, 0, 256, 256);
+		drawRightAlignedString(I18n.format("gui.sfm.manager.legend.chain"), 506, 212, 0x999999);
 		drawRightAlignedString(I18n.format("gui.sfm.manager.legend.clone"), 506, 222, 0x999999);
 		drawRightAlignedString(I18n.format("gui.sfm.manager.legend.move"), 506, 232, 0x999999);
 		drawRightAlignedString(I18n.format("gui.sfm.manager.legend.snaptogrid"), 506, 242, 0x999999);
