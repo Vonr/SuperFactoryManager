@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.gui;
 
-import com.google.common.collect.ImmutableList;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
@@ -11,11 +10,11 @@ import static ca.teamdman.sfm.gui.BaseGui.bindTexture;
 import static ca.teamdman.sfm.gui.Sprite.*;
 
 public class CommandController {
-	private final ManagerGui gui;
-	private final ArrayList<Command> commandList = new ArrayList<>();
+	private final ArrayList<Command> COMMAND_LIST = new ArrayList<>();
+	private final ManagerGui         GUI;
 
 	public CommandController(ManagerGui gui) {
-		this.gui = gui;
+		this.GUI = gui;
 		addCommand(new Command(50, 50, INPUT, new TranslationTextComponent("woot"), () -> {
 			System.out.println("left");
 		}));
@@ -28,20 +27,20 @@ public class CommandController {
 	}
 
 	public Command addCommand(Command c) {
-		commandList.add(c);
-		gui.buttonController.addButton(c);
+		COMMAND_LIST.add(c);
+		GUI.buttonController.addButton(c);
 		return c;
 	}
 
 	public void draw() {
 		bindTexture(SHEET);
-		for (Command action : commandList) {
-			gui.drawSprite(action.getX(), action.getY(), action.isPressed() ? CASE_DARK : CASE);
-			gui.drawSprite(action.getX() + 4, action.getY() + 4, action.getSprite());
+		for (Command action : COMMAND_LIST) {
+			GUI.drawSprite(action.getX(), action.getY(), action.isPressed() ? CASE_DARK : CASE);
+			GUI.drawSprite(action.getX() + 4, action.getY() + 4, action.getSprite());
 		}
 	}
 
 	public List<Command> getCommands() {
-		return Collections.unmodifiableList(commandList);
+		return Collections.unmodifiableList(COMMAND_LIST);
 	}
 }

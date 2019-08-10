@@ -2,19 +2,19 @@ package ca.teamdman.sfm.gui;
 
 import java.util.ArrayList;
 
-import static ca.teamdman.sfm.gui.MouseButton.LEFT;
+import static ca.teamdman.sfm.gui.ManagerGui.LEFT;
 
 public class ButtonController {
-	private final ManagerGui        gui;
-	private       Button            active = null;
-	private       ArrayList<Button> buttons = new ArrayList<>();
+	private final ArrayList<Button> BUTTON_LIST = new ArrayList<>();
+	private final ManagerGui        GUI;
+	private       Button            active      = null;
 
 	public ButtonController(ManagerGui gui) {
-		this.gui = gui;
+		this.GUI = gui;
 	}
 
 	public Button addButton(Button b) {
-		buttons.add(b);
+		BUTTON_LIST.add(b);
 		return b;
 	}
 

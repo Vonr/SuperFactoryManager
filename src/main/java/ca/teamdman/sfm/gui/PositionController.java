@@ -1,25 +1,17 @@
 package ca.teamdman.sfm.gui;
 
 
-import static ca.teamdman.sfm.gui.DragController.DragMode.*;
-import static ca.teamdman.sfm.gui.MouseButton.LEFT;
 import static ca.teamdman.sfm.gui.ManagerGui.*;
+import static ca.teamdman.sfm.gui.PositionController.DragMode.*;
 
-public class DragController {
-	protected enum DragMode {
-		NONE,
-		MOVE,
-		COPY;
-	}
-
-	private final ManagerGui gui;
-	private       DragMode   mode        = NONE;
+public class PositionController {
+	private final ManagerGui GUI;
 	private       int        dragOffsetX = 0;
 	private       int        dragOffsetY = 0;
 	private       Component  dragging    = null;
-
-	public DragController(ManagerGui gui) {
-		this.gui = gui;
+	private       DragMode   mode        = NONE;
+	public PositionController(ManagerGui gui) {
+		this.GUI = gui;
 	}
 
 	// Return false to pass through
@@ -30,10 +22,9 @@ public class DragController {
 		if (hasAltDown()) {
 			mode = MOVE;
 			dragging = comp;
-		}
-		else if (hasControlDown()) {
+		} else if (hasControlDown()) {
 			mode = COPY;
-			dragging = comp.copy(gui);
+			dragging = comp.copy(GUI);
 		} else {
 			mode = NONE;
 		}
@@ -51,8 +42,8 @@ public class DragController {
 			return false;
 
 		if (hasShiftDown()) {
-			x -= (x + dragOffsetX)%10;
-			y -= (y + dragOffsetY)%10;
+			x -= (x + dragOffsetX) % 10;
+			y -= (y + dragOffsetY) % 10;
 		}
 
 		dragging.setX(x + dragOffsetX);
@@ -64,6 +55,12 @@ public class DragController {
 	public boolean onMouseUp(int x, int y, int button) {
 		dragging = null;
 		return false;
+	}
+
+	protected enum DragMode {
+		NONE,
+		MOVE,
+		COPY
 	}
 
 }
