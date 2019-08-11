@@ -80,13 +80,21 @@ public class FlowController {
 	public void addRelationship(Relationship r) {
 		if (RELATIONSHIP_LIST.contains(r))
 			return;
+		if (RELATIONSHIP_LIST.contains(r.inverse()))
+			return;
 		HIERARCHY.computeIfAbsent(r.PARENT, (__) -> new HashMap<>()).put(r.CHILD, r);
 		HIERARCHY.computeIfAbsent(r.CHILD, (__) -> new HashMap<>()).put(r.PARENT, r);
 		RELATIONSHIP_LIST.add(r);
 	}
 
 	public Optional<Relationship> getRelationship(Component a, Component b) {
-		return Optional.ofNullable(HIERARCHY.getOrDefault(a, new HashMap<>()).get(b));
+		if (HIERARCHY.containsKey(a))
+			if (HIERARCHY.get(a).containsKey(b))
+				return Optional.of(HIERARCHY.get(a).get(b));
+		if (HIERARCHY.containsKey(b))
+			if (HIERARCHY.get(b).containsKey(a))
+				return Optional.of(HIERARCHY.get(b).get(a));
+		return Optional.empty();
 	}
 
 	public void draw(int x, int y) {
@@ -118,8 +126,9 @@ public class FlowController {
 						line.HEAD.setXY(c.snapToEdge(line.TAIL));
 						line.reflow(Line.Direction.FORWARDS);
 					} else {
-						r.LINE_LIST.get(r.LINE_LIST.size() - 1).TAIL.setXY(c);
-						r.LINE_LIST.get(r.LINE_LIST.size() - 1).reflow(Line.Direction.BACKWARDS);
+						Line line = r.LINE_LIST.get(r.LINE_LIST.size()-1);
+						line.TAIL.setXY(c.snapToEdge(line.HEAD));
+						line.reflow(Line.Direction.BACKWARDS);
 					}
 				});
 	}

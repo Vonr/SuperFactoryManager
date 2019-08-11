@@ -47,8 +47,7 @@ public class PositionController {
 			y -= (y + dragOffsetY) % 10;
 		}
 
-		dragging.setX(x + dragOffsetX);
-		dragging.setY(y + dragOffsetY);
+		dragging.setXY(x + dragOffsetX, y+dragOffsetY);
 		GUI.FLOW_CONTROLLER.reflow(dragging);
 
 		return true;

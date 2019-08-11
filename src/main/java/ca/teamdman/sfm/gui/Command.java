@@ -23,4 +23,13 @@ public class Command extends Button {
 		//noinspection unchecked
 		return (T) copy;
 	}
+
+	@Override
+	public Point snapToEdge(int x, int y) {
+		int bevel = 2;
+		return new Point(
+				x < getX() + bevel ? getX() + bevel : Math.min(x, getX() + width - bevel),
+				y < getY() - bevel ? getY() + bevel : Math.min(y, getY() + height - bevel)
+		);
+	}
 }

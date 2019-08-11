@@ -35,6 +35,7 @@ public class Line extends Component {
 		}
 	}
 
+	//https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
 	public double getDistance(int x, int y) {
 		return Math.abs(
 				(TAIL.getY() - HEAD.getY()) * x
