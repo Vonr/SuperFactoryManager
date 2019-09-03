@@ -16,11 +16,13 @@ import javax.vecmath.Color4f;
  * Credit to VSWE for lots of the rendering scaling tech
  */
 public abstract class BaseGui extends Screen {
-	protected int guiLeft = 0;
-	protected int guiTop  = 0;
-	protected int xSize   = 176;
-	protected int ySize   = 166;
-	protected int zLevel  = 0;
+	public static final Color4f DEFAULT_LINE_COLOUR     = new Color4f(0.4f, 0.4f, 0.4f, 1);
+	public static final Color4f HIGHLIGHTED_LINE_COLOUR = new Color4f(0.15686275f, 0.5294118f, 0.94509804f, 1);
+	final               int     zLevel                  = 0;
+	protected           int     guiLeft                 = 0;
+	protected           int     guiTop                  = 0;
+	protected           int     xSize                   = 176;
+	protected           int     ySize                   = 166;
 
 	public BaseGui(ITextComponent titleIn, int width, int height) {
 		super(titleIn);
@@ -231,11 +233,11 @@ public abstract class BaseGui extends Screen {
 	public abstract void draw(int mouseX, int mouseY, float f);
 
 	public void drawLine(Line line) {
-		drawLine(line.HEAD.getX(), line.HEAD.getY(), line.TAIL.getX(), line.TAIL.getY(), line.color);
+		drawLine(line.HEAD, line.TAIL, line.getColor());
 	}
 
-	public void drawLine(int x1, int y1, int x2, int y2) {
-		drawLine(x1, y1, x2, y2, new Color4f(0.4f, 0.4f, 0.4f, 1));
+	public void drawLine(Point head, Point tail, Color4f color) {
+		drawLine(head.getX(), head.getY(), tail.getX(), tail.getY(), color);
 	}
 
 	public void drawLine(int x1, int y1, int x2, int y2, Color4f color) {
@@ -263,13 +265,18 @@ public abstract class BaseGui extends Screen {
 		GlStateManager.popMatrix();
 	}
 
-	public void drawArrow(Line line) {
-		drawArrow(line.HEAD.getX(), line.HEAD.getY(), line.TAIL.getX(), line.TAIL.getY(), line.color);
+	public void drawLine(Point head, Point tail) {
+		drawLine(head.getX(), head.getY(), tail.getX(), tail.getY());
 	}
 
-	public void drawArrow(int x1, int y1, int x2, int y2) {
-		drawArrow(x1, y1, x2, y2, new Color4f(0.4f, 0.4f, 0.4f, 1));
+	public void drawLine(int x1, int y1, int x2, int y2) {
+		drawLine(x1, y1, x2, y2, new Color4f(0.4f, 0.4f, 0.4f, 1));
 	}
+
+	public void drawArrow(Line line) {
+		drawArrow(line.HEAD.getX(), line.HEAD.getY(), line.TAIL.getX(), line.TAIL.getY(), line.getColor());
+	}
+
 	public void drawArrow(int x1, int y1, int x2, int y2, Color4f color) {
 		drawLine(x1, y1, x2, y2, color);
 		int    lookX = x2 - x1;
@@ -296,5 +303,9 @@ public abstract class BaseGui extends Screen {
 				y2 + (int) (Math.sin(ang) * lookX + Math.cos(ang) * lookY),
 				color
 		);
+	}
+
+	public void drawArrow(int x1, int y1, int x2, int y2) {
+		drawArrow(x1, y1, x2, y2, DEFAULT_LINE_COLOUR);
 	}
 }

@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.gui;
 
 public class HLine extends Line {
-	public HLine(Point head, Point tail) {
-		super(head, tail);
+	public HLine(Relationship r, Point head, Point tail) {
+		super(r, head, tail);
 	}
 
 	@Override
@@ -10,7 +10,6 @@ public class HLine extends Line {
 		super.drag(x, y);
 		HEAD.setY(y);
 		TAIL.setY(y);
-		reflow(Direction.FORWARDS);
-		reflow(Direction.BACKWARDS);
+		reflow();
 	}
 }

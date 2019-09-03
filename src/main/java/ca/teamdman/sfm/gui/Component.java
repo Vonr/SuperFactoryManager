@@ -1,23 +1,27 @@
 package ca.teamdman.sfm.gui;
 
-import javax.vecmath.Vector2d;
+import java.util.Optional;
 
 public abstract class Component {
-	protected int x, y, width, height;
+	protected Point position;
+	protected int   width, height;
 
-	public Component(int x, int y, int width, int height) {
-		this.x = x;
-		this.y = y;
+	public Component(Point position, int width, int height) {
+		this.position = position;
 		this.width = width;
 		this.height = height;
 	}
 
+	public Point getCenteredPosition() {
+		return new Point(getXCentered(), getYCentered());
+	}
+
 	public int getXCentered() {
-		return x + width / 2;
+		return position.getX() + width / 2;
 	}
 
 	public int getYCentered() {
-		return y + height / 2;
+		return position.getY() + height / 2;
 	}
 
 	public Point snapToEdge(Point p) {
@@ -26,39 +30,30 @@ public abstract class Component {
 
 	public Point snapToEdge(int x, int y) {
 		return new Point(
-				x < getX() ? getX() : Math.min(x, getX() + width),
-				y < getY() ? getY() : Math.min(y, getY() + height)
+				x < position.getX() ? position.getX() : Math.min(x, position.getX() + width),
+				y < position.getY() ? position.getY() : Math.min(y, position.getY() + height)
 		);
 	}
 
-	public int getX() {
-		return x;
+	public Point getPosition() {
+		return position;
 	}
 
-	public void setX(int x) {
-		this.x = x;
-	}
-
-	public int getY() {
-		return y;
-	}
-
-	public void setY(int y) {
-		this.y = y;
-	}
-
-	public void setXY(Component c) {
-		setXY(c.getXCentered(), c.getYCentered());
-	}
-
-	public void setXY(int x, int y) {
-		setX(x);
-		setY(y);
+	public boolean isInBounds(Point p) {
+		return isInBounds(p.getX(), p.getY());
 	}
 
 	public boolean isInBounds(int mx, int my) {
-		return mx >= x && mx <= x + width && my >= y && my <= y + height;
+		return mx >= position.getX() && mx <= position.getX() + width && my >= position.getY() && my <= position.getY() + height;
 	}
 
-	protected <T extends Component> T copy(ManagerGui gui) { return null; };
+	protected <T extends Component> Optional<T> copy(ManagerGui gui) {
+		return Optional.empty();
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Component (%d,%d) ", position.getX(), position.getY());
+	}
+
 }

@@ -2,21 +2,26 @@ package ca.teamdman.sfm.gui;
 
 import javafx.util.Pair;
 
-import javax.vecmath.Color4f;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Optional;
 
+import static ca.teamdman.sfm.SFM.LOGGER;
+import static ca.teamdman.sfm.gui.BaseGui.DEFAULT_LINE_COLOUR;
+import static ca.teamdman.sfm.gui.BaseGui.HIGHLIGHTED_LINE_COLOUR;
 import static ca.teamdman.sfm.gui.ManagerGui.LEFT;
 import static net.minecraft.client.gui.screen.Screen.hasAltDown;
 import static net.minecraft.client.gui.screen.Screen.hasShiftDown;
 
-public class FlowController {
+public class RelationshipController {
 	private final ManagerGui                                           GUI;
 	private final HashMap<Component, HashMap<Component, Relationship>> HIERARCHY         = new HashMap<>();
 	private final ArrayList<Relationship>                              RELATIONSHIP_LIST = new ArrayList<>();
 	private       Pair<Relationship, Pair<Line, Double>>               dragging          = null;
 	private       Component                                            start             = null;
 
-	public FlowController(ManagerGui GUI) {
+	public RelationshipController(ManagerGui GUI) {
 		this.GUI = GUI;
 	}
 
@@ -28,21 +33,27 @@ public class FlowController {
 		if (comp == null) {
 			dragging = null;
 			getRelationship(x, y).ifPresent(r -> {
-				if (r.getValue().getValue() > 5)
+				if (r.getValue().getValue() > 5) // distance too far
 					return;
 				dragging = r;
-				r.getValue().getKey().color = new Color4f((float) Math.random(), (float) Math.random(), (float) Math.random(), 1);
+				r.getValue().getKey().setColor(HIGHLIGHTED_LINE_COLOUR);
 			});
+			if (dragging != null) {
+				LOGGER.debug("Relationship controller began line dragging. Mouse down terminated.");
+				return true;
+			}
+			return false;
 		} else if (hasShiftDown()) {
 			start = comp;
+			LOGGER.debug("Relationship controller began linking. Mouse down terminated.");
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	public Optional<Pair<Relationship, Pair<Line, Double>>> getRelationship(int x, int y) {
 		return RELATIONSHIP_LIST.stream()
 				.map(r -> new Pair<>(r, r.getNearestLineDistance(x, y)))
-				//				.filter(p -> p.getValue().getValue() < 5)
 				.min(Comparator.comparingDouble(p -> p.getValue().getValue()));
 	}
 
@@ -54,15 +65,20 @@ public class FlowController {
 
 		if (hasAltDown() && dragging != null) {
 			dragging.getValue().getKey().drag(x, y);
+			LOGGER.debug("Relationship controller dragged component. Mouse drag terminated.");
+			return true;
 		} else if (!hasAltDown() && dragging != null) {
 			dragging = null;
-			return false;
 		}
-		return true;
+		return false;
 	}
 
 	public boolean onMouseUp(int x, int y, int button) {
-		dragging = null;
+		if (dragging != null) {
+			dragging.getValue().getKey().setColor(DEFAULT_LINE_COLOUR);
+			dragging = null;
+		}
+
 		if (start == null)
 			return false;
 		if (!hasShiftDown())
@@ -71,6 +87,7 @@ public class FlowController {
 			if (c != start && c.isInBounds(x, y)) {
 				addRelationship(new Relationship(start, c));
 				start = null;
+				LOGGER.debug("Relationship controller linked components. Mouse up terminated.");
 				return true;
 			}
 		}
@@ -101,19 +118,18 @@ public class FlowController {
 		RELATIONSHIP_LIST.forEach(this::drawRelationship);
 		if (start != null)
 			if (hasShiftDown())
-				GUI.drawArrow(start.getX() + start.width / 2, start.getY() + start.height / 2, x, y);
+				GUI.drawArrow(start.getPosition().getX() + start.width / 2, start.getPosition().getY() + start.height / 2, x, y);
 			else
 				start = null;
 	}
 
 	public void drawRelationship(Relationship r) {
-		Iterator<Line> iter = r.LINE_LIST.iterator();
-		while (iter.hasNext()) {
-			Line line = iter.next();
-			if (iter.hasNext())
-				GUI.drawLine(line);
-			else
+		for (Line line : r.LINE_LIST) {
+			if (line.getNext() == r.CHILD) {
 				GUI.drawArrow(line);
+			} else {
+				GUI.drawLine(line);
+			}
 		}
 	}
 
@@ -122,13 +138,15 @@ public class FlowController {
 				.filter(r -> r.PARENT == c || r.CHILD == c)
 				.forEach(r -> {
 					if (r.PARENT == c) {
-						Line line = r.LINE_LIST.get(0);
-						line.HEAD.setXY(c.snapToEdge(line.TAIL));
-						line.reflow(Line.Direction.FORWARDS);
+						r.getFirst().ifPresent(line -> {
+							line.HEAD.setXY(c.snapToEdge(line.TAIL));
+							line.reflow(Line.Direction.FORWARDS);
+						});
 					} else {
-						Line line = r.LINE_LIST.get(r.LINE_LIST.size()-1);
-						line.TAIL.setXY(c.snapToEdge(line.HEAD));
-						line.reflow(Line.Direction.BACKWARDS);
+						r.getLast().ifPresent(line -> {
+							line.TAIL.setXY(c.snapToEdge(line.HEAD));
+							line.reflow(Line.Direction.BACKWARDS);
+						});
 					}
 				});
 	}

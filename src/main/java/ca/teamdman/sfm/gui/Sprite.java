@@ -10,7 +10,7 @@ public enum Sprite implements ISprite {
 	CASE_DARK(14, 22, 22, 22);
 
 	public static final ResourceLocation SHEET = new ResourceLocation(SFM.MOD_ID, "textures/gui/sprites.png");
-	private final int LEFT, TOP, WIDTH, HEIGHT;
+	private final       int              LEFT, TOP, WIDTH, HEIGHT;
 
 	Sprite(int left, int top, int width, int height) {
 		this.TOP = top;
@@ -37,5 +37,10 @@ public enum Sprite implements ISprite {
 	@Override
 	public int getHeight() {
 		return HEIGHT;
+	}
+
+	@Override
+	public String getName() {
+		return name();
 	}
 }

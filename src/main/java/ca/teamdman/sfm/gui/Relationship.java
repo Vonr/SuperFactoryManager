@@ -2,11 +2,7 @@ package ca.teamdman.sfm.gui;
 
 import javafx.util.Pair;
 
-import javax.vecmath.Vector2d;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class Relationship {
 	public final List<Line> LINE_LIST = new ArrayList<>();
@@ -15,22 +11,39 @@ public class Relationship {
 	public Relationship(Component parent, Component child) {
 		this.PARENT = parent;
 		this.CHILD = child;
-		Point first = new Point(
+		Point a = new Point(
 				PARENT.getXCentered(),
 				CHILD.getYCentered() - (CHILD.getYCentered() - PARENT.getYCentered()) / 2
 		);
-		Point second = new Point(
+		Point b = new Point(
 				CHILD.getXCentered(),
 				CHILD.getYCentered() - (CHILD.getYCentered() - PARENT.getYCentered()) / 2
 		);
-		LINE_LIST.addAll(Arrays.asList(
-				new VLine(new Point(
-						PARENT.getXCentered(),
-						PARENT.getYCentered()
-				), first),
-				new HLine(first, second),
-				new VLine(second, CHILD.snapToEdge(second))
-		));
+
+		Line first = new VLine(this, PARENT.getCenteredPosition(), a),
+				second = new HLine(this, a, b),
+				third = new VLine(this, b, CHILD.snapToEdge(b));
+
+		first.setPrev(PARENT);
+		first.setNext(second);
+		second.setPrev(first);
+		second.setNext(third);
+		third.setPrev(second);
+		third.setNext(CHILD);
+
+		LINE_LIST.addAll(Arrays.asList(first, second, third));
+	}
+
+	public void addLine(Line l) {
+		LINE_LIST.add(l);
+	}
+
+	public void removeLine(Line l) {
+		LINE_LIST.remove(l);
+	}
+
+	public void addLines(Collection<Line> l) {
+		LINE_LIST.addAll(l);
 	}
 
 	@Override
@@ -40,13 +53,25 @@ public class Relationship {
 				&& ((Relationship) obj).CHILD == CHILD;
 	}
 
+	public Optional<Line> getFirst() {
+		return LINE_LIST.stream()
+				.filter(line -> line.getPrev().equals(PARENT))
+				.findFirst();
+	}
+
+	public Optional<Line> getLast() {
+		return LINE_LIST.stream()
+				.filter(line -> line.getNext().equals(CHILD))
+				.findFirst();
+	}
+
 	public Pair<Line, Double> getNearestLineDistance(int x, int y) {
 		return LINE_LIST.stream()
-				.map(line -> new Pair<>(line, line.getDistance(x,y)))
+				.map(line -> new Pair<>(line, line.getDistance(x, y)))
 				.min(Comparator.comparingDouble(Pair::getValue)).orElse(new Pair<>(null, Double.NaN));
 	}
 
 	public Relationship inverse() {
-		return new Relationship(CHILD,PARENT);
+		return new Relationship(CHILD, PARENT);
 	}
 }

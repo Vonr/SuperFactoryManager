@@ -9,17 +9,19 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
+import static ca.teamdman.sfm.SFM.LOGGER;
+
 public class ManagerGui extends BaseGui implements IHasContainer<ManagerContainer> {
-	public static final int               LEFT                 = 0;
-	public static final int               MIDDLE               = 2;
-	public static final int               RIGHT                = 1;
-	private static final ResourceLocation   BACKGROUND_LEFT     = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_1.png");
-	private static final ResourceLocation   BACKGROUND_RIGHT    = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_2.png");
-	public final         ButtonController   BUTTON_CONTROLLER   = new ButtonController(this);
-	public final         CommandController  COMMAND_CONTROLLER  = new CommandController(this);
-	public final         PositionController POSITION_CONTROLLER = new PositionController(this);
-	public final         FlowController     FLOW_CONTROLLER     = new FlowController(this);
-	private final        ManagerContainer   CONTAINER;
+	public static final  int                    LEFT                    = 0;
+	public static final  int                    MIDDLE                  = 2;
+	public static final  int                    RIGHT                   = 1;
+	private static final ResourceLocation       BACKGROUND_LEFT         = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_1.png");
+	private static final ResourceLocation       BACKGROUND_RIGHT        = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_2.png");
+	public final         ButtonController       BUTTON_CONTROLLER       = new ButtonController(this);
+	public final         CommandController      COMMAND_CONTROLLER      = new CommandController(this);
+	public final         PositionController     POSITION_CONTROLLER     = new PositionController(this);
+	public final         RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
+	private final        ManagerContainer       CONTAINER;
 
 
 	public ManagerGui(ManagerContainer container, PlayerInventory inv, ITextComponent name) {
@@ -36,8 +38,8 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
-		int mx = scaleX((float) x) - guiLeft;
-		int my = scaleY((float) y) - guiTop;
+		int     mx      = scaleX((float) x) - guiLeft;
+		int     my      = scaleY((float) y) - guiTop;
 		Command pressed = null;
 
 		for (Command c : COMMAND_CONTROLLER.getCommands()) {
@@ -47,12 +49,18 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 			}
 		}
 
-		if (POSITION_CONTROLLER.onMouseDown(mx, my, button, pressed))
+		if (POSITION_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
+			LOGGER.debug("Stopped at position controller mouse down.");
 			return true;
-		if (FLOW_CONTROLLER.onMouseDown(mx, my, button, pressed))
+		}
+		if (RELATIONSHIP_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
+			LOGGER.debug("Stopped at relationship controller mouse down.");
 			return true;
-		if (BUTTON_CONTROLLER.onMouseDown(mx, my, button, pressed))
+		}
+		if (BUTTON_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
+			LOGGER.debug("Stopped at button controller mouse down.");
 			return true;
+		}
 		return true;
 	}
 
@@ -60,12 +68,18 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 	public boolean mouseReleased(double x, double y, int button) {
 		int mx = scaleX(x) - guiLeft;
 		int my = scaleY(y) - guiTop;
-		if (POSITION_CONTROLLER.onMouseUp(mx, my, button))
+		if (POSITION_CONTROLLER.onMouseUp(mx, my, button)) {
+			LOGGER.debug("Stopped at position controller mouse released.");
 			return true;
-		if (FLOW_CONTROLLER.onMouseUp(mx, my, button))
+		}
+		if (RELATIONSHIP_CONTROLLER.onMouseUp(mx, my, button)) {
+			LOGGER.debug("Stopped at relationship controller mouse released.");
 			return true;
-		if (BUTTON_CONTROLLER.onMouseUp(mx, my, button))
+		}
+		if (BUTTON_CONTROLLER.onMouseUp(mx, my, button)) {
+			LOGGER.debug("Stopped at button controller mouse released.");
 			return true;
+		}
 		return false;
 	}
 
@@ -74,12 +88,18 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 		int mx = scaleX(x) - guiLeft;
 		int my = scaleY(y) - guiTop;
 
-		if (POSITION_CONTROLLER.onDrag(mx, my, button))
+		if (POSITION_CONTROLLER.onDrag(mx, my, button)) {
+			LOGGER.debug("Stopped at position controller mouse dragged.");
 			return true;
-		if (FLOW_CONTROLLER.onDrag(mx, my, button))
+		}
+		if (RELATIONSHIP_CONTROLLER.onDrag(mx, my, button)) {
+			LOGGER.debug("Stopped at relationship controller mouse dragged.");
 			return true;
-		if (BUTTON_CONTROLLER.onDrag(mx, my, button))
+		}
+		if (BUTTON_CONTROLLER.onDrag(mx, my, button)) {
+			LOGGER.debug("Stopped at button controller mouse dragged.");
 			return true;
+		}
 		return false;
 	}
 
@@ -87,7 +107,7 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 	public void draw(int x, int y, float deltaTime) {
 		// Background Layer
 		drawBackground();
-		FLOW_CONTROLLER.draw(x,y);
+		RELATIONSHIP_CONTROLLER.draw(x, y);
 		COMMAND_CONTROLLER.draw();
 
 	}

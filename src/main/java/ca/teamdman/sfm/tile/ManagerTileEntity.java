@@ -15,14 +15,13 @@ import net.minecraft.util.text.TranslationTextComponent;
 import javax.annotation.Nullable;
 
 public class ManagerTileEntity extends TileEntity implements INamedContainerProvider {
-	public ManagerTileEntity(final TileEntityType<?> type) {
-		super(type);
-	}
-
 	public ManagerTileEntity() {
 		this(TileEntityRegistrar.Tiles.MANAGER);
 	}
 
+	public ManagerTileEntity(final TileEntityType<?> type) {
+		super(type);
+	}
 
 	@Override
 	public ITextComponent getDisplayName() {

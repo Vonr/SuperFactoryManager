@@ -16,12 +16,6 @@ import net.minecraftforge.registries.ObjectHolder;
 public class ContainerRegistrar {
 	private static final ContainerType WAITING = null;
 
-	@SuppressWarnings("unchecked")
-	@ObjectHolder(SFM.MOD_ID)
-	public static class Containers {
-		public static final ContainerType<ManagerContainer> MANAGER = WAITING;
-	}
-
 	@SubscribeEvent
 	public static void onRegister(final RegistryEvent.Register<ContainerType<?>> e) {
 		e.getRegistry().register(IForgeContainerType.create(ManagerContainer::new).setRegistryName(SFM.MOD_ID, "manager"));
@@ -30,5 +24,11 @@ public class ContainerRegistrar {
 	@SubscribeEvent
 	public static void setup(FMLClientSetupEvent e) {
 		ScreenManager.registerFactory(Containers.MANAGER, ManagerGui::new);
+	}
+
+	@SuppressWarnings("unchecked")
+	@ObjectHolder(SFM.MOD_ID)
+	public static class Containers {
+		public static final ContainerType<ManagerContainer> MANAGER = WAITING;
 	}
 }

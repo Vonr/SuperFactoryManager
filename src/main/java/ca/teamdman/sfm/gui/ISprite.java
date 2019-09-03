@@ -8,4 +8,6 @@ public interface ISprite {
 	int getWidth();
 
 	int getHeight();
+
+	String getName();
 }

@@ -2,15 +2,16 @@ package ca.teamdman.sfm.gui;
 
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class Button extends Component {
-	protected final Consumer<? super Component>      ACTION;
+	protected final Consumer<Component>      ACTION;
 	protected final TranslationTextComponent LABEL;
 	private         boolean                  pressed = false;
 
-	public Button(int x, int y, int width, int height, TranslationTextComponent label, Consumer<? super Component> action) {
-		super(x, y, width, height);
+	public Button(Point position, int width, int height, TranslationTextComponent label, Consumer<Component> action) {
+		super(position, width, height);
 		this.LABEL = label;
 		this.ACTION = action;
 	}
@@ -31,10 +32,11 @@ public class Button extends Component {
 		ACTION.accept(this);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	protected <T extends Component> T copy(ManagerGui gui) {
-		Button copy = new Button(x, y, width, height, LABEL, ACTION);
+	protected <T extends Component> Optional<T> copy(ManagerGui gui) {
+		Button copy = new Button(position, width, height, LABEL, ACTION);
 		gui.BUTTON_CONTROLLER.addButton(copy);
-		return (T) copy;
+		return Optional.of((T) copy);
 	}
 }

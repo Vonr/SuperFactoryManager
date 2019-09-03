@@ -9,7 +9,7 @@ final class CommonConfig {
 		builder.push("General Category");
 		comInt = builder
 				.comment("Common Int")
-				.defineInRange("comInt",0,0,1);
+				.defineInRange("comInt", 0, 0, 1);
 		builder.pop();
 	}
 }

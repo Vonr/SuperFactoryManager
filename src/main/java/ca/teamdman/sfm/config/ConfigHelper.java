@@ -6,9 +6,25 @@ import net.minecraftforge.fml.config.ModConfig;
 
 @Mod.EventBusSubscriber
 public final class ConfigHelper {
+	private static ModConfig clientConfig;
 	private static ModConfig commonConfig;
 	private static ModConfig serverConfig;
-	private static ModConfig clientConfig;
+
+	public static void setValueAndSave(final ModConfig config, final String path, final Object value) {
+		config.getConfigData().set(path, value);
+		config.save();
+	}
+
+	@SubscribeEvent
+	public static void onConfig(final ModConfig.ModConfigEvent e) {
+		final ModConfig config = e.getConfig();
+		if (config.getSpec() == ConfigHolder.COMMON_SPEC)
+			bakeCommon(config);
+		else if (config.getSpec() == ConfigHolder.SERVER_SPEC)
+			bakeServer(config);
+		else if (config.getSpec() == ConfigHolder.CLIENT_SPEC)
+			bakeClient(config);
+	}
 
 	public static void bakeCommon(final ModConfig config) {
 		commonConfig = config;
@@ -23,21 +39,5 @@ public final class ConfigHelper {
 	public static void bakeClient(final ModConfig config) {
 		clientConfig = config;
 		Config.funCli = ConfigHolder.CLIENT.cliInt.get();
-	}
-
-	public static void setValueAndSave(final ModConfig config, final String path, final Object value) {
-		config.getConfigData().set(path,value);
-		config.save();
-	}
-
-	@SubscribeEvent
-	public static void onConfig(final ModConfig.ModConfigEvent e) {
-		final ModConfig config = e.getConfig();
-		if (config.getSpec() == ConfigHolder.COMMON_SPEC)
-			bakeCommon(config);
-		else if (config.getSpec() == ConfigHolder.SERVER_SPEC)
-			bakeServer(config);
-		else if (config.getSpec() == ConfigHolder.CLIENT_SPEC)
-			bakeClient(config);
 	}
 }

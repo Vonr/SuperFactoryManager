@@ -1,8 +1,57 @@
 package ca.teamdman.sfm.gui;
 
-public class Point extends Component {
-	public Component PREV, NEXT;
+public class Point implements Cloneable {
+	private int x, y;
+
+	public Point(Component c) {
+		this(c.getCenteredPosition());
+	}
+
+	@SuppressWarnings("CopyConstructorMissesField")
+	public Point(Point p) {
+		this(p.getX(), p.getY());
+	}
+
 	public Point(int x, int y) {
-		super(x, y, 0, 0);
+		this.x = x;
+		this.y = y;
+	}
+
+	public int getX() {
+		return x;
+	}
+
+	public void setX(int x) {
+		this.x = x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public void setY(int y) {
+		this.y = y;
+	}
+
+	public void setXY(Component c) {
+		setXY(c.getCenteredPosition());
+	}
+
+	public void setXY(Point p) {
+		setXY(p.getX(), p.getY());
+	}
+
+	public void setXY(int x, int y) {
+		setX(x);
+		setY(y);
+	}
+
+	@Override
+	public String toString() {
+		return "Point (" + x + "," + y + ")";
+	}
+
+	public Point copy() {
+		return new Point(this);
 	}
 }

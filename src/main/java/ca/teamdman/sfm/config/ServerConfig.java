@@ -9,7 +9,7 @@ final class ServerConfig {
 		builder.push("General Category");
 		serInt = builder
 				.comment("Common Int")
-				.defineInRange("serInt",0,0,1);
+				.defineInRange("serInt", 0, 0, 1);
 		builder.pop();
 	}
 }

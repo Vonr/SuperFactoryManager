@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.gui;
 
 public class VLine extends Line {
-	public VLine(Point head, Point tail) {
-		super(head, tail);
+	public VLine(Relationship r, Point head, Point tail) {
+		super(r, head, tail);
 	}
 
 	@Override
@@ -10,7 +10,6 @@ public class VLine extends Line {
 		super.drag(x, y);
 		HEAD.setX(x);
 		TAIL.setX(x);
-		reflow(Direction.FORWARDS);
-		reflow(Direction.BACKWARDS);
+		reflow();
 	}
 }

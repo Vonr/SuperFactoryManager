@@ -9,7 +9,7 @@ final class ClientConfig {
 		builder.push("General Category");
 		cliInt = builder
 				.comment("Client Int")
-				.defineInRange("cliInt",0,0,1);
+				.defineInRange("cliInt", 0, 0, 1);
 		builder.pop();
 	}
 }
