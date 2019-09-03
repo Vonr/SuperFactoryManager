@@ -95,6 +95,7 @@ public abstract class GuiBase extends GuiAntiNEI {
 		}
 
 		mult = (float) (Math.floor(mult * 1000)) / 1000F;
+//		System.out.printf("xsize %d\tysize %d\twidth %d\theight %d\txfac %f\tyfac %f\tmult %f\n",xSize, ySize, width, height, multX, multY, mult);
 
 		return mult;
 	}
