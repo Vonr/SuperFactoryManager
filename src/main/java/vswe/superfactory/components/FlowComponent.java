@@ -815,6 +815,9 @@ public class FlowComponent implements IComponentNetworkReader, Comparable<FlowCo
 						} else if (current.getComponentId() == this.id && current.getConnectionId() == i) {
 							manager.setCurrentlyConnecting(null);
 						} else if (current.getComponentId() != id) {
+							if (manager.getFlowItems().size() >= current.getComponentId() || current.getComponentId() < 0)
+								return true;
+
 							FlowComponent    connectTo       = manager.getFlowItems().get(current.getComponentId());
 
 							if (connectTo.connectionSet.getConnections().length <= current.getConnectionId() || current.getConnectionId() < 0)
