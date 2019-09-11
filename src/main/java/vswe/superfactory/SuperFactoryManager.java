@@ -43,9 +43,9 @@ public class SuperFactoryManager {
 	public void preInit(FMLPreInitializationEvent event) {
 		packetHandler = NetworkRegistry.INSTANCE.newEventDrivenChannel(CHANNEL);
 
-		proxy.preInit();
-
 		FileHelper.setConfigDir(event.getModConfigurationDirectory());
+
+		proxy.preInit();
 
 		packetHandler.register(new PacketEventHandler());
 
