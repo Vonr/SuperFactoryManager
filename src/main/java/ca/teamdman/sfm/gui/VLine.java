@@ -7,9 +7,8 @@ public class VLine extends Line {
 
 	@Override
 	public void drag(int x, int y) {
-		super.drag(x, y);
 		HEAD.setX(x);
 		TAIL.setX(x);
-		reflow();
+		super.drag(x, y);
 	}
 }

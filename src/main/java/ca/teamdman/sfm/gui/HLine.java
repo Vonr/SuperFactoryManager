@@ -7,9 +7,8 @@ public class HLine extends Line {
 
 	@Override
 	public void drag(int x, int y) {
-		super.drag(x, y);
 		HEAD.setY(y);
 		TAIL.setY(y);
-		reflow();
+		super.drag(x, y);
 	}
 }

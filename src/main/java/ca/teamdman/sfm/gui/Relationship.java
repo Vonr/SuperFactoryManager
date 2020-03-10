@@ -6,30 +6,30 @@ import java.util.*;
 
 public class Relationship {
 	public final List<Line> LINE_LIST = new ArrayList<>();
-	public final Component  PARENT, CHILD;
+	public final Component  HEAD, TAIL;
 
 	public Relationship(Component parent, Component child) {
-		this.PARENT = parent;
-		this.CHILD = child;
+		this.HEAD = parent;
+		this.TAIL = child;
 		Point a = new Point(
-				PARENT.getXCentered(),
-				CHILD.getYCentered() - (CHILD.getYCentered() - PARENT.getYCentered()) / 2
+				HEAD.getXCentered(),
+				TAIL.getYCentered() - (TAIL.getYCentered() - HEAD.getYCentered()) / 2
 		);
 		Point b = new Point(
-				CHILD.getXCentered(),
-				CHILD.getYCentered() - (CHILD.getYCentered() - PARENT.getYCentered()) / 2
+				TAIL.getXCentered(),
+				TAIL.getYCentered() - (TAIL.getYCentered() - HEAD.getYCentered()) / 2
 		);
 
-		Line first = new VLine(this, PARENT.getCenteredPosition(), a),
+		Line first = new VLine(this, HEAD.getCenteredPosition(), a),
 				second = new HLine(this, a, b),
-				third = new VLine(this, b, CHILD.snapToEdge(b));
+				third = new VLine(this, b, TAIL.snapToEdge(b));
 
-		first.setPrev(PARENT);
+		first.setPrev(HEAD);
 		first.setNext(second);
 		second.setPrev(first);
 		second.setNext(third);
 		third.setPrev(second);
-		third.setNext(CHILD);
+		third.setNext(TAIL);
 
 		LINE_LIST.addAll(Arrays.asList(first, second, third));
 	}
@@ -49,19 +49,19 @@ public class Relationship {
 	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof Relationship
-				&& ((Relationship) obj).PARENT == PARENT
-				&& ((Relationship) obj).CHILD == CHILD;
+				&& ((Relationship) obj).HEAD == HEAD
+				&& ((Relationship) obj).TAIL == TAIL;
 	}
 
 	public Optional<Line> getFirst() {
 		return LINE_LIST.stream()
-				.filter(line -> line.getPrev().equals(PARENT))
+				.filter(line -> line.getPrev().equals(HEAD))
 				.findFirst();
 	}
 
 	public Optional<Line> getLast() {
 		return LINE_LIST.stream()
-				.filter(line -> line.getNext().equals(CHILD))
+				.filter(line -> line.getNext().equals(TAIL))
 				.findFirst();
 	}
 
@@ -72,6 +72,6 @@ public class Relationship {
 	}
 
 	public Relationship inverse() {
-		return new Relationship(CHILD, PARENT);
+		return new Relationship(TAIL, HEAD);
 	}
 }

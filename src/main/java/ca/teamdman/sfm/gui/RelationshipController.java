@@ -99,8 +99,8 @@ public class RelationshipController {
 			return;
 		if (RELATIONSHIP_LIST.contains(r.inverse()))
 			return;
-		HIERARCHY.computeIfAbsent(r.PARENT, (__) -> new HashMap<>()).put(r.CHILD, r);
-		HIERARCHY.computeIfAbsent(r.CHILD, (__) -> new HashMap<>()).put(r.PARENT, r);
+		HIERARCHY.computeIfAbsent(r.HEAD, (__) -> new HashMap<>()).put(r.TAIL, r);
+		HIERARCHY.computeIfAbsent(r.TAIL, (__) -> new HashMap<>()).put(r.HEAD, r);
 		RELATIONSHIP_LIST.add(r);
 	}
 
@@ -125,7 +125,7 @@ public class RelationshipController {
 
 	public void drawRelationship(Relationship r) {
 		for (Line line : r.LINE_LIST) {
-			if (line.getNext() == r.CHILD) {
+			if (line.getNext() == r.TAIL) {
 				GUI.drawArrow(line);
 			} else {
 				GUI.drawLine(line);
@@ -135,9 +135,9 @@ public class RelationshipController {
 
 	public void reflow(Component c) {
 		RELATIONSHIP_LIST.stream()
-				.filter(r -> r.PARENT == c || r.CHILD == c)
+				.filter(r -> r.HEAD == c || r.TAIL == c)
 				.forEach(r -> {
-					if (r.PARENT == c) {
+					if (r.HEAD == c) {
 						r.getFirst().ifPresent(line -> {
 							line.HEAD.setXY(c.snapToEdge(line.TAIL));
 							line.reflow(Line.Direction.FORWARDS);

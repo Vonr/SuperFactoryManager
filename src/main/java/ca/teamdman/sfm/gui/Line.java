@@ -33,9 +33,9 @@ public class Line extends Component {
 			case FORWARDS:
 				if (NEXT != null) {
 					if (NEXT instanceof Line) {
-						if (RELATIONSHIP.CHILD.isInBounds(TAIL)) {
+						if (RELATIONSHIP.TAIL.isInBounds(TAIL)) {
 							RELATIONSHIP.removeLine((Line) NEXT);
-							setNext(RELATIONSHIP.CHILD);
+							setNext(RELATIONSHIP.TAIL);
 						}
 					} else if (!(NEXT.isInBounds(TAIL))) {
 						Line line;
@@ -55,9 +55,9 @@ public class Line extends Component {
 			case BACKWARDS:
 				if (PREV != null) {
 					if (PREV instanceof Line) {
-						if (RELATIONSHIP.PARENT.isInBounds(HEAD)) {
+						if (RELATIONSHIP.HEAD.isInBounds(HEAD)) {
 							RELATIONSHIP.removeLine((Line) PREV);
-							setNext(RELATIONSHIP.PARENT);
+							setNext(RELATIONSHIP.HEAD);
 						}
 					} else if (!(PREV.isInBounds(HEAD))) {
 						Line line;
@@ -85,7 +85,6 @@ public class Line extends Component {
 				if (this instanceof HLine)
 					TAIL.setY(HEAD.getY());
 				if (NEXT != null) {
-					checkAndOptimizeContinuity(Direction.FORWARDS);
 					if (NEXT instanceof Line) {
 						((Line) NEXT).reflow(d);
 					}
@@ -97,7 +96,6 @@ public class Line extends Component {
 				if (this instanceof HLine)
 					HEAD.setY(TAIL.getY());
 				if (PREV != null) {
-					checkAndOptimizeContinuity(Direction.BACKWARDS);
 					if (PREV instanceof Line) {
 						((Line) PREV).reflow(d);
 					}
@@ -120,7 +118,8 @@ public class Line extends Component {
 	}
 
 	public void drag(int x, int y) {
-
+		reflow();
+		RELATIONSHIP.LINE_LIST.get(0).checkAndOptimizeContinuity(Direction.FORWARDS);
 	}
 
 
