@@ -1,7 +1,5 @@
 package ca.teamdman.sfm.gui;
 
-import com.sun.org.apache.regexp.internal.RE;
-
 import javax.vecmath.Color4f;
 
 public class Line extends Component {
@@ -44,6 +42,7 @@ public class Line extends Component {
 	/**
 	 * Checks if the line is redundant and should be removed.
 	 */
+	@SuppressWarnings("RedundantIfStatement")
 	public boolean shouldPrune() {
 		if (PREV == RELATIONSHIP.TAIL && NEXT == RELATIONSHIP.HEAD)
 			return false; // do not remove the last line.

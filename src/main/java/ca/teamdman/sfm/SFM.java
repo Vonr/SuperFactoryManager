@@ -28,6 +28,7 @@ public class SFM {
 		bus.addListener(this::onSetup);
 	}
 
+	@SuppressWarnings("EmptyMethod")
 	private void onSetup(final FMLCommonSetupEvent e) {
 
 	}

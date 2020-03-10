@@ -6,8 +6,11 @@ import net.minecraftforge.fml.config.ModConfig;
 
 @Mod.EventBusSubscriber
 public final class ConfigHelper {
+	@SuppressWarnings("FieldCanBeLocal")
 	private static ModConfig clientConfig;
+	@SuppressWarnings("FieldCanBeLocal")
 	private static ModConfig commonConfig;
+	@SuppressWarnings("FieldCanBeLocal")
 	private static ModConfig serverConfig;
 
 	public static void setValueAndSave(final ModConfig config, final String path, final Object value) {

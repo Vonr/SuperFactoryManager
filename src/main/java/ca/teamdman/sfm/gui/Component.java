@@ -3,7 +3,9 @@ package ca.teamdman.sfm.gui;
 import java.util.Optional;
 
 public abstract class Component {
+	@SuppressWarnings("CanBeFinal")
 	protected Point position;
+	@SuppressWarnings("CanBeFinal")
 	protected int   width, height;
 
 	public Component(Point position, int width, int height) {

@@ -7,6 +7,7 @@ import static ca.teamdman.sfm.gui.ManagerGui.LEFT;
 
 public class ButtonController {
 	private final ArrayList<Button> BUTTON_LIST = new ArrayList<>();
+	@SuppressWarnings("FieldCanBeLocal")
 	private final ManagerGui        GUI;
 	private       Button            active      = null;
 
