@@ -34,10 +34,14 @@ public class Point implements Cloneable {
 	}
 
 	public void setXY(Component c) {
+		if (c == null)
+			return;
 		setXY(c.getCenteredPosition());
 	}
 
 	public void setXY(Point p) {
+		if (p == null)
+			return;
 		setXY(p.getX(), p.getY());
 	}
 

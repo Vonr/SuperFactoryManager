@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.gui;
 
 public class VLine extends Line {
-	public VLine(Relationship r, Point head, Point tail) {
-		super(r, head, tail);
+	public VLine(Relationship r, Point tail, Point head) {
+		super(r, tail, head);
 	}
 
 	@Override

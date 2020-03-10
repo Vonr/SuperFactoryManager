@@ -274,7 +274,7 @@ public abstract class BaseGui extends Screen {
 	}
 
 	public void drawArrow(Line line) {
-		drawArrow(line.HEAD.getX(), line.HEAD.getY(), line.TAIL.getX(), line.TAIL.getY(), line.getColor());
+		drawArrow(line.TAIL.getX(), line.TAIL.getY(), line.HEAD.getX(), line.HEAD.getY(), line.getColor());
 	}
 
 	public void drawArrow(int x1, int y1, int x2, int y2, Color4f color) {

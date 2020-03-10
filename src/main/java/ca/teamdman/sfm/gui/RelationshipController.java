@@ -1,10 +1,10 @@
 package ca.teamdman.sfm.gui;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import javafx.util.Pair;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Optional;
 
 import static ca.teamdman.sfm.SFM.LOGGER;
@@ -15,11 +15,10 @@ import static net.minecraft.client.gui.screen.Screen.hasAltDown;
 import static net.minecraft.client.gui.screen.Screen.hasShiftDown;
 
 public class RelationshipController {
-	private final ManagerGui                                           GUI;
-	private final HashMap<Component, HashMap<Component, Relationship>> HIERARCHY         = new HashMap<>();
-	private final ArrayList<Relationship>                              RELATIONSHIP_LIST = new ArrayList<>();
-	private       Pair<Relationship, Pair<Line, Double>>               dragging          = null;
-	private       Component                                            start             = null;
+	private final ManagerGui                             GUI;
+	private final Multimap<Component, Relationship>      RELATIONSHIP_MAP = HashMultimap.create();
+	private       Pair<Relationship, Pair<Line, Double>> dragging         = null;
+	private       Component                              start            = null;
 
 	public RelationshipController(ManagerGui GUI) {
 		this.GUI = GUI;
@@ -52,7 +51,7 @@ public class RelationshipController {
 	}
 
 	public Optional<Pair<Relationship, Pair<Line, Double>>> getRelationship(int x, int y) {
-		return RELATIONSHIP_LIST.stream()
+		return RELATIONSHIP_MAP.values().stream()
 				.map(r -> new Pair<>(r, r.getNearestLineDistance(x, y)))
 				.min(Comparator.comparingDouble(p -> p.getValue().getValue()));
 	}
@@ -95,27 +94,14 @@ public class RelationshipController {
 	}
 
 	public void addRelationship(Relationship r) {
-		if (RELATIONSHIP_LIST.contains(r))
+		if (RELATIONSHIP_MAP.containsValue(r))
 			return;
-		if (RELATIONSHIP_LIST.contains(r.inverse()))
-			return;
-		HIERARCHY.computeIfAbsent(r.HEAD, (__) -> new HashMap<>()).put(r.TAIL, r);
-		HIERARCHY.computeIfAbsent(r.TAIL, (__) -> new HashMap<>()).put(r.HEAD, r);
-		RELATIONSHIP_LIST.add(r);
-	}
-
-	public Optional<Relationship> getRelationship(Component a, Component b) {
-		if (HIERARCHY.containsKey(a))
-			if (HIERARCHY.get(a).containsKey(b))
-				return Optional.of(HIERARCHY.get(a).get(b));
-		if (HIERARCHY.containsKey(b))
-			if (HIERARCHY.get(b).containsKey(a))
-				return Optional.of(HIERARCHY.get(b).get(a));
-		return Optional.empty();
+		RELATIONSHIP_MAP.put(r.HEAD, r);
+		RELATIONSHIP_MAP.put(r.TAIL, r);
 	}
 
 	public void draw(int x, int y) {
-		RELATIONSHIP_LIST.forEach(this::drawRelationship);
+		RELATIONSHIP_MAP.values().forEach(this::drawRelationship);
 		if (start != null)
 			if (hasShiftDown())
 				GUI.drawArrow(start.getPosition().getX() + start.width / 2, start.getPosition().getY() + start.height / 2, x, y);
@@ -125,7 +111,7 @@ public class RelationshipController {
 
 	public void drawRelationship(Relationship r) {
 		for (Line line : r.LINE_LIST) {
-			if (line.getNext() == r.TAIL) {
+			if (line.getNext() == r.HEAD) {
 				GUI.drawArrow(line);
 			} else {
 				GUI.drawLine(line);
@@ -134,21 +120,31 @@ public class RelationshipController {
 	}
 
 	public void reflow(Component c) {
-		RELATIONSHIP_LIST.stream()
-				.filter(r -> r.HEAD == c || r.TAIL == c)
-				.forEach(r -> {
-					if (r.HEAD == c) {
-						r.getFirst().ifPresent(line -> {
-							line.HEAD.setXY(c.snapToEdge(line.TAIL));
-							line.reflow(Line.Direction.FORWARDS);
-						});
-					} else {
-						r.getLast().ifPresent(line -> {
-							line.TAIL.setXY(c.snapToEdge(line.HEAD));
-							line.reflow(Line.Direction.BACKWARDS);
-						});
+		for (Relationship r : RELATIONSHIP_MAP.get(c)) {
+			if (r.TAIL == c) {
+				r.getFirst().ifPresent(line -> {
+					line.TAIL.setXY(c.snapToEdge(line.TAIL));
+					if (line instanceof VLine) {
+						line.HEAD.setX(line.TAIL.getX());
+					} else if (line instanceof HLine) {
+						line.HEAD.setY(line.TAIL.getY());
 					}
+					line.ensureHeadConnection();
+					line.pruneIfRedundant();
 				});
+			} else {
+				r.getLast().ifPresent(line -> {
+					line.HEAD.setXY(c.snapToEdge(line.HEAD));
+					if (line instanceof VLine) {
+						line.TAIL.setX(line.HEAD.getX());
+					} else if (line instanceof HLine) {
+						line.TAIL.setY(line.HEAD.getY());
+					}
+					line.ensureTailConnection();
+					line.pruneIfRedundant();
+				});
+			}
+		}
 	}
 
 }
