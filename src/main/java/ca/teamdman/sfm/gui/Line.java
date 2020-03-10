@@ -1,5 +1,7 @@
 package ca.teamdman.sfm.gui;
 
+import com.sun.org.apache.regexp.internal.RE;
+
 import javax.vecmath.Color4f;
 
 public class Line extends Component {
@@ -39,23 +41,42 @@ public class Line extends Component {
 		RELATIONSHIP.addLine(line);
 	}
 
-	public void pruneIfRedundant() {
+	/**
+	 * Checks if the line is redundant and should be removed.
+	 */
+	public boolean shouldPrune() {
+		if (PREV == RELATIONSHIP.TAIL && NEXT == RELATIONSHIP.HEAD)
+			return false; // do not remove the last line.
+		if ((PREV == RELATIONSHIP.TAIL || NEXT == RELATIONSHIP.HEAD) && HEAD.equals(TAIL))
+			return true;
 		if (!(PREV instanceof Line)) {
 			if (NEXT instanceof Line) {
 				if (RELATIONSHIP.TAIL.isInBounds(HEAD)) {
-					RELATIONSHIP.removeLine(this);
-					((Line) NEXT).setPrev(PREV);
+					return true;
 				}
 			}
 		}
 		if (!(NEXT instanceof Line)) {
 			if (PREV instanceof Line) {
 				if (RELATIONSHIP.HEAD.isInBounds(TAIL)) {
-					RELATIONSHIP.removeLine(this);
-					((Line) PREV).setNext(NEXT);
+					return true;
 				}
 			}
 		}
+		return false;
+	}
+
+	/**
+	 * Removes the line from the chain of lines from TAIL to HEAD.
+	 * Does NOT remove the line from the relationship's line list.
+	 */
+	public void pruneIfRedundant() {
+		if (!shouldPrune())
+			return;
+		if (PREV instanceof Line)
+			((Line) PREV).setNext(NEXT);
+		if (NEXT instanceof Line)
+			((Line) NEXT).setPrev(PREV);
 	}
 
 	public void ensureTailConnection() {
@@ -98,7 +119,6 @@ public class Line extends Component {
 			((Line) NEXT).TAIL.setXY(HEAD);
 		ensureHeadConnection();
 		ensureTailConnection();
-		pruneIfRedundant();
 		RELATIONSHIP.cleanupLines();
 	}
 

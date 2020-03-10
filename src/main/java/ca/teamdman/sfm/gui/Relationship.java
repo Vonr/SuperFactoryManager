@@ -83,9 +83,7 @@ public class Relationship {
 				line.HEAD.setY(line.TAIL.getY());
 			}
 			line.ensureHeadConnection();
-			line.pruneIfRedundant();
 		});
-		getLast().ifPresent(Line::pruneIfRedundant);
 	}
 
 	/**
@@ -100,15 +98,15 @@ public class Relationship {
 				line.TAIL.setY(line.HEAD.getY());
 			}
 			line.ensureTailConnection();
-			line.pruneIfRedundant();
 		});
-		getFirst().ifPresent(Line::pruneIfRedundant);
 	}
 
 	/**
 	 * Ensure that connections to the HEAD and TAIL are using the closest available edge.
 	 */
 	public void cleanupLines() {
+		LINE_LIST.forEach(Line::pruneIfRedundant);
+		LINE_LIST.removeIf(Line::shouldPrune);
 		getFirst().ifPresent(line -> {
 			line.TAIL.setXY(line.getPrev().snapToEdge(line.HEAD));
 		});

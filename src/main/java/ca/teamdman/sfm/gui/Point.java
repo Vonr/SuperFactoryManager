@@ -17,6 +17,11 @@ public class Point implements Cloneable {
 		this.y = y;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof Point && ((Point) obj).x == x && ((Point) obj).y == y;
+	}
+
 	public int getX() {
 		return x;
 	}
