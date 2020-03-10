@@ -32,6 +32,7 @@ public class Relationship {
 		third.setNext(HEAD);
 
 		LINE_LIST.addAll(Arrays.asList(first, second, third));
+		cleanupLines();
 	}
 
 	public void addLine(Line l) {
