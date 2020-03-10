@@ -26,7 +26,7 @@ public class Command extends Button {
 		int bevel = 4;
 		return new Point(
 				x < position.getX() + bevel ? position.getX() + bevel : Math.min(x, position.getX() + width - bevel),
-				y < position.getY() - bevel ? position.getY() + bevel : Math.min(y, position.getY() + height - bevel)
+				y < position.getY() + bevel ? position.getY() + bevel : Math.min(y, position.getY() + height - bevel)
 		);
 	}
 
