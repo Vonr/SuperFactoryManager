@@ -23,6 +23,10 @@ public class ManagerGui extends BaseGui implements IHasContainer<ManagerContaine
 	public final         RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
 	private final        ManagerContainer       CONTAINER;
 
+	@Override
+	public boolean isPauseScreen() {
+		return false;
+	}
 
 	public ManagerGui(ManagerContainer container, PlayerInventory inv, ITextComponent name) {
 		super(name, 180, 160);
