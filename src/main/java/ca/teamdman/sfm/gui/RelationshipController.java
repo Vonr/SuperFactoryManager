@@ -132,7 +132,8 @@ public class RelationshipController {
 					line.ensureHeadConnection();
 					line.pruneIfRedundant();
 				});
-			} else {
+				r.getLast().ifPresent(Line::pruneIfRedundant);
+			} else { // component is head
 				r.getLast().ifPresent(line -> {
 					line.HEAD.setXY(c.snapToEdge(line.HEAD));
 					if (line instanceof VLine) {
@@ -143,6 +144,7 @@ public class RelationshipController {
 					line.ensureTailConnection();
 					line.pruneIfRedundant();
 				});
+				r.getFirst().ifPresent(Line::pruneIfRedundant);
 			}
 		}
 	}
