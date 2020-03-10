@@ -119,34 +119,17 @@ public class RelationshipController {
 		}
 	}
 
-	public void reflow(Component c) {
+	/**
+	 * Ensures that lines are visibly touching the component in all of its relationships.
+	 */
+	public void postComponentReposition(Component c) {
 		for (Relationship r : RELATIONSHIP_MAP.get(c)) {
 			if (r.TAIL == c) {
-				r.getFirst().ifPresent(line -> {
-					line.TAIL.setXY(c.snapToEdge(line.TAIL));
-					if (line instanceof VLine) {
-						line.HEAD.setX(line.TAIL.getX());
-					} else if (line instanceof HLine) {
-						line.HEAD.setY(line.TAIL.getY());
-					}
-					line.ensureHeadConnection();
-					line.pruneIfRedundant();
-				});
-				r.getLast().ifPresent(Line::pruneIfRedundant);
+				r.postTailReposition();
 			} else { // component is head
-				r.getLast().ifPresent(line -> {
-					line.HEAD.setXY(c.snapToEdge(line.HEAD));
-					if (line instanceof VLine) {
-						line.TAIL.setX(line.HEAD.getX());
-					} else if (line instanceof HLine) {
-						line.TAIL.setY(line.HEAD.getY());
-					}
-					line.ensureTailConnection();
-					line.pruneIfRedundant();
-				});
-				r.getFirst().ifPresent(Line::pruneIfRedundant);
+				r.postHeadReposition();
 			}
+			r.cleanupLines();
 		}
 	}
-
 }

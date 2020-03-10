@@ -55,7 +55,7 @@ public class PositionController {
 		}
 
 		dragging.getPosition().setXY(x + dragOffsetX, y + dragOffsetY);
-		GUI.RELATIONSHIP_CONTROLLER.reflow(dragging);
+		GUI.RELATIONSHIP_CONTROLLER.postComponentReposition(dragging);
 		LOGGER.debug("Position controller drag terminated.");
 		return true;
 	}

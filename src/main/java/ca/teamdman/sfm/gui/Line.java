@@ -96,9 +96,10 @@ public class Line extends Component {
 			((Line) PREV).HEAD.setXY(TAIL);
 		if (NEXT instanceof Line)
 			((Line) NEXT).TAIL.setXY(HEAD);
-		pruneIfRedundant();
 		ensureHeadConnection();
 		ensureTailConnection();
+		pruneIfRedundant();
+		RELATIONSHIP.cleanupLines();
 	}
 
 
