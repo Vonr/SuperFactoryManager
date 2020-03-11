@@ -6,5 +6,7 @@
   "gui.sfm.manager.legend.move": "Move: [Alt+Drag]",
   "gui.sfm.manager.legend.clone": "Clone: [Ctrl+Drag]",
   "gui.sfm.manager.legend.snaptogrid": "Hold shift while dragging to use grid",
-  "block.sfm.manager": "Super Factory Manager"
+  "block.sfm.manager": "Super Factory Manager",
+  "block.sfm.cable": "Inventory Cable",
+  "block.sfm.crafter": "Crafter"
 }

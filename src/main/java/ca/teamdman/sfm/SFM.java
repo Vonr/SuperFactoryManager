@@ -1,7 +1,7 @@
 package ca.teamdman.sfm;
 
 
-import ca.teamdman.sfm.config.ConfigHolder;
+import ca.teamdman.sfm.common.config.ConfigHolder;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
