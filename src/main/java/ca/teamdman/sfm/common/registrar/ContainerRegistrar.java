@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.client.gui.CrafterScreen;
 import ca.teamdman.sfm.client.gui.ManagerScreen;
 import ca.teamdman.sfm.common.container.factory.CrafterContainerProvider;
+import ca.teamdman.sfm.common.container.factory.ManagerContainerProvider;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraftforge.common.extensions.IForgeContainerType;
@@ -22,7 +23,7 @@ public class ContainerRegistrar {
 
 	@SubscribeEvent
 	public static void onRegister(final RegistryEvent.Register<ContainerType<?>> e) {
-		e.getRegistry().register(IForgeContainerType.create(ManagerContainer::new).setRegistryName(SFM.MOD_ID, "manager"));
+		e.getRegistry().register(IForgeContainerType.create(new ManagerContainerProvider.ManagerContainerFactory()).setRegistryName(SFM.MOD_ID, "manager"));
 		e.getRegistry().register(IForgeContainerType.create(new CrafterContainerProvider.CrafterContainerFactory()).setRegistryName(SFM.MOD_ID, "crafter"));
 	}
 

@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.container;
 
 import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
+import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
@@ -8,12 +9,7 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.network.PacketBuffer;
 
 public class ManagerContainer extends Container {
-
-	public ManagerContainer(int windowId, PlayerInventory playerInv, PacketBuffer extraData) {
-		this(windowId, new Inventory(), null);
-	}
-
-	public ManagerContainer(int windowId, Inventory inv, PlayerEntity player) {
+	public ManagerContainer(int windowId, PlayerInventory inv, ManagerTileEntity tile) {
 		super(ContainerRegistrar.Containers.MANAGER, windowId);
 	}
 
