@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.container.factory.CrafterContainerProvider;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Hand;
@@ -15,7 +16,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public class CrafterBlock extends Block {
+public class CrafterBlock extends Block   {
 	public CrafterBlock(final Properties props) {
 		super(props);
 	}
@@ -38,6 +39,5 @@ public class CrafterBlock extends Block {
 	public TileEntity createTileEntity(final BlockState state, final IBlockReader world) {
 		return TileEntityRegistrar.Tiles.CRAFTER.create();
 	}
-
 
 }

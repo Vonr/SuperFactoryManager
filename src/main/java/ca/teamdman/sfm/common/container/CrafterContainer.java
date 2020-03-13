@@ -5,23 +5,20 @@ import ca.teamdman.sfm.common.tile.CrafterTileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.CraftResultInventory;
-import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.CraftingResultSlot;
 import net.minecraft.inventory.container.Slot;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.items.SlotItemHandler;
 
 public class CrafterContainer extends Container {
-	private final CraftingInventory craftingInv = new CraftingInventory(this, 3, 3);
 	private final CraftResultInventory craftResultInv = new CraftResultInventory();
 
 	public CrafterContainer(int windowId, PlayerInventory playerInv, CrafterTileEntity tile) {
 		super(ContainerRegistrar.Containers.CRAFTER, windowId);
-		this.addSlot(new CraftingResultSlot(playerInv.player, craftingInv, craftResultInv, 0, 124, 35));
+		this.addSlot(new SlotItemHandler(tile.inventory, 9, 124, 35));
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
-				this.addSlot(new Slot(craftingInv, j+i*3, 30+ j*18, 17+i*18));
+				this.addSlot(new SlotItemHandler(tile.inventory, j+i*3, 30+ j*18, 17+i*18));
 			}
 		}
 		for (int i = 0; i < 3; ++i) {
@@ -34,6 +31,11 @@ public class CrafterContainer extends Container {
 		}
 	}
 
+	@Override
+	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
+		System.out.println(index);
+		return ItemStack.EMPTY;
+	}
 
 	@Override
 	public boolean canInteractWith(PlayerEntity playerIn) {

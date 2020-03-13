@@ -34,7 +34,7 @@ public class ItemsRegistrar {
 				new BlockItem(BlocksRegistrar.Blocks.CRAFTER, new BlockItem.Properties().group(group)).setRegistryName(SFM.MOD_ID, "crafter")
 		);
 		items.forEach(e.getRegistry()::register);
-		group.fill(items.stream().map(ItemStack::new).collect(NonNullList::create, NonNullList::add, NonNullList::addAll));
+		SFM.PROXY.fillItemGroup(group, items);
 		LogManager.getLogger(SFM.MOD_NAME + " Items Registrar").debug("Registered items");
 	}
 

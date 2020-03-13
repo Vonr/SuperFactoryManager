@@ -9,7 +9,7 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.network.PacketBuffer;
 
 public class ManagerContainer extends Container {
-	public ManagerContainer(int windowId, PlayerInventory inv, ManagerTileEntity tile) {
+	public ManagerContainer(int windowId) {
 		super(ContainerRegistrar.Containers.MANAGER, windowId);
 	}
 

@@ -31,6 +31,6 @@ public class ManagerTileEntity extends TileEntity implements INamedContainerProv
 	@Nullable
 	@Override
 	public Container createMenu(int windowId, PlayerInventory inv, PlayerEntity player) {
-		return new ManagerContainer(windowId, new Inventory(), player);
+		return new ManagerContainer(windowId);
 	}
 }
