@@ -17,10 +17,6 @@ public class Button extends Component {
 		this.ACTION = action;
 	}
 
-	public TranslationTextComponent getLABEL() {
-		return LABEL;
-	}
-
 	public boolean isPressed() {
 		return pressed;
 	}
