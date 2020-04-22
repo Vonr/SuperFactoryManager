@@ -1,6 +1,8 @@
 package ca.teamdman.sfm.client.gui.manager;
 
 import ca.teamdman.sfm.client.gui.ManagerScreen;
+import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.ManagerUpdatePacket;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
@@ -15,7 +17,10 @@ public class CommandController {
 
 	public CommandController(ManagerScreen gui) {
 		this.GUI = gui;
-		addCommand(new Command(new Point(50, 50), Sprite.INPUT, new TranslationTextComponent("woot"), (c) -> System.out.println("left " + c.getPosition().getX() + "\t" + c.getPosition().getY())));
+		addCommand(new Command(new Point(50, 50), Sprite.INPUT, new TranslationTextComponent("woot"), (c) -> {
+			System.out.println("left " + c.getPosition().getX() + "\t" + c.getPosition().getY());
+			PacketHandler.INSTANCE.sendToServer(new ManagerUpdatePacket("howdy"));
+		}));
 		addCommand(new Command(new Point(150, 50), Sprite.OUTPUT, new TranslationTextComponent("woot"), (c) -> System.out.println("center " + c.getPosition().getX() + "\t" + c.getPosition().getY())));
 		addCommand(new Command(new Point(250, 50), Sprite.INPUT, new TranslationTextComponent("woot"), (c) -> System.out.println("right " + c.getPosition().getX() + "\t" + c.getPosition().getY())));
 	}
