@@ -48,6 +48,11 @@ public class Relationship {
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hash(TAIL, HEAD);
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof Relationship
 				&& ((Relationship) obj).TAIL == TAIL

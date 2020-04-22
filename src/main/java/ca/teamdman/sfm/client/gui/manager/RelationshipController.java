@@ -3,10 +3,14 @@ package ca.teamdman.sfm.client.gui.manager;
 import ca.teamdman.sfm.client.gui.ManagerScreen;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.MutableGraph;
 import javafx.util.Pair;
+import net.minecraft.util.math.BlockPos;
 
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static ca.teamdman.sfm.SFM.LOGGER;
 import static ca.teamdman.sfm.client.gui.manager.BaseScreen.DEFAULT_LINE_COLOUR;
@@ -93,9 +97,30 @@ public class RelationshipController {
 		return false;
 	}
 
+	public Set<Component> getAncestors(Component c) {
+		Set<Component> rtn = new HashSet<>();
+		rtn.add(c);
+		while (true) {
+			Set<Component> ancestors = rtn.stream()
+					.flatMap(x -> RELATIONSHIP_MAP.get(x).stream()
+							.filter(r -> r.HEAD == x)
+							.filter(r -> !rtn.contains(r.TAIL)))
+					.map(r -> r.TAIL)
+					.collect(Collectors.toSet());
+			if (ancestors.isEmpty())
+				break;
+			rtn.addAll(ancestors);
+		}
+		rtn.remove(c);
+		return rtn;
+	}
+
 	public void addRelationship(Relationship r) {
 		if (RELATIONSHIP_MAP.containsValue(r))
 			return;
+		if (getAncestors(r.TAIL).contains(r.HEAD))
+			return;
+
 		RELATIONSHIP_MAP.put(r.HEAD, r);
 		RELATIONSHIP_MAP.put(r.TAIL, r);
 	}
