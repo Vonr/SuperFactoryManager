@@ -4,6 +4,7 @@ package ca.teamdman.sfm;
 import ca.teamdman.sfm.client.gui.ClientProxy;
 import ca.teamdman.sfm.common.CommonProxy;
 import ca.teamdman.sfm.common.config.ConfigHolder;
+import ca.teamdman.sfm.common.net.PacketHandler;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -34,6 +35,6 @@ public class SFM {
 
 	@SuppressWarnings("EmptyMethod")
 	private void onSetup(final FMLCommonSetupEvent e) {
-
+		PacketHandler.setup();
 	}
 }
