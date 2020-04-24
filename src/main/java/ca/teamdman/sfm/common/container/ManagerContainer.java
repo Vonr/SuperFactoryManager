@@ -1,5 +1,9 @@
 package ca.teamdman.sfm.common.container;
 
+import ca.teamdman.sfm.common.container.manager.ButtonController;
+import ca.teamdman.sfm.common.container.manager.CommandController;
+import ca.teamdman.sfm.common.container.manager.PositionController;
+import ca.teamdman.sfm.common.container.manager.RelationshipController;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.ManagerUpdatePacket;
 import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
@@ -22,9 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ManagerContainer extends Container {
-	private final ManagerTileEntity TILE;
-	final         Field             LISTENERS = ObfuscationReflectionHelper
+	private final ManagerTileEntity      TILE;
+	final         Field                  LISTENERS               = ObfuscationReflectionHelper
 			.findField(Container.class, "listeners");
+	public final  ButtonController       BUTTON_CONTROLLER       = new ButtonController(this);
+	public final  CommandController      COMMAND_CONTROLLER      = new CommandController(this);
+	public final  PositionController     POSITION_CONTROLLER     = new PositionController(this);
+	public final  RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
+
 	private int tick = 0;
 
 	public ManagerContainer(int windowId, ManagerTileEntity tile) {

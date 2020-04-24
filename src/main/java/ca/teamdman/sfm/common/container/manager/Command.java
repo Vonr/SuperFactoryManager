@@ -1,6 +1,6 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
 
-import ca.teamdman.sfm.client.gui.ManagerScreen;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.Optional;
@@ -9,17 +9,16 @@ import java.util.function.Consumer;
 public class Command extends Button {
 	private final ISprite SPRITE;
 
-	public Command(Point position, ISprite sprite, TranslationTextComponent label, Consumer<Component> onClick) {
-		super(position, Sprite.CASE.getWidth(), Sprite.CASE.getHeight(), label, onClick);
+	public Command(ManagerContainer container, Point position, ISprite sprite, TranslationTextComponent label, Consumer<Component> onClick) {
+		super(container, position, Sprite.CASE.getWidth(), Sprite.CASE.getHeight(), label, onClick);
 		this.SPRITE = sprite;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected <T extends Component> Optional<T> copy(ManagerScreen gui) {
-		Command copy = new Command(position.copy(), SPRITE, LABEL, ACTION);
-		gui.COMMAND_CONTROLLER.addCommand(copy);
-		return Optional.of((T) copy);
+	protected  Optional<Component> copy() {
+		Command copy = new Command(CONTAINER, position.copy(), SPRITE, LABEL, ACTION);
+		CONTAINER.COMMAND_CONTROLLER.addCommand(copy);
+		return Optional.of(copy);
 	}
 
 	@Override

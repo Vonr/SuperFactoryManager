@@ -1,16 +1,26 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
 
 import ca.teamdman.sfm.client.gui.ManagerScreen;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 
 import java.util.Optional;
 
 public abstract class Component {
-	@SuppressWarnings("CanBeFinal")
-	protected Point position;
-	@SuppressWarnings("CanBeFinal")
+	protected       Point            position;
+	protected final ManagerContainer CONTAINER;
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
 	protected int   width, height;
 
-	public Component(Point position, int width, int height) {
+	public Component(ManagerContainer container, Point position, int width, int height) {
+		this.CONTAINER = container;
 		this.position = position;
 		this.width = width;
 		this.height = height;
@@ -51,7 +61,7 @@ public abstract class Component {
 		return mx >= position.getX() && mx <= position.getX() + width && my >= position.getY() && my <= position.getY() + height;
 	}
 
-	protected <T extends Component> Optional<T> copy(ManagerScreen gui) {
+	protected Optional<Component> copy() {
 		return Optional.empty();
 	}
 

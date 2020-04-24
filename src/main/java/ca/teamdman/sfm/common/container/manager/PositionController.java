@@ -1,20 +1,21 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
 
 
 import ca.teamdman.sfm.client.gui.ManagerScreen;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 
 import static ca.teamdman.sfm.client.gui.ManagerScreen.*;
-import static ca.teamdman.sfm.client.gui.manager.PositionController.DragMode.*;
+import static ca.teamdman.sfm.common.container.manager.PositionController.DragMode.*;
 
 public class PositionController {
-	private final ManagerScreen GUI;
+	private final ManagerContainer CONTAINER;
 	private       int           dragOffsetX = 0;
 	private       int           dragOffsetY = 0;
 	private       Component     dragging    = null;
 	private       DragMode      mode        = NONE;
 
-	public PositionController(ManagerScreen gui) {
-		this.GUI = gui;
+	public PositionController(ManagerContainer container) {
+		this.CONTAINER = container;
 	}
 
 	// Return false to pass through
@@ -30,7 +31,7 @@ public class PositionController {
 			dragOffsetY = comp.getPosition().getY() - y;
 			return true;
 		} else if (hasControlDown()) {
-			comp.copy(GUI).ifPresent(c -> {
+			comp.copy().ifPresent(c -> {
 				dragging = c;
 				mode = COPY;
 			});
@@ -53,7 +54,7 @@ public class PositionController {
 		}
 
 		dragging.getPosition().setXY(x + dragOffsetX, y + dragOffsetY);
-		GUI.RELATIONSHIP_CONTROLLER.postComponentReposition(dragging);
+		CONTAINER.RELATIONSHIP_CONTROLLER.postComponentReposition(dragging);
 		return true;
 	}
 

@@ -1,18 +1,18 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
 
 import ca.teamdman.sfm.client.gui.ManagerScreen;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 
 import java.util.ArrayList;
 
 
 public class ButtonController {
 	private final ArrayList<Button> BUTTON_LIST = new ArrayList<>();
-	@SuppressWarnings("FieldCanBeLocal")
-	private final ManagerScreen     GUI;
+	private final ManagerContainer     CONTAINER;
 	private       Button            active      = null;
 
-	public ButtonController(ManagerScreen gui) {
-		this.GUI = gui;
+	public ButtonController(ManagerContainer container) {
+		this.CONTAINER = container;
 	}
 
 	public Button addButton(Button b) {

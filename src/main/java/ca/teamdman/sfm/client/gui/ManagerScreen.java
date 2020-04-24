@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.client.gui;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.client.gui.manager.*;
+import ca.teamdman.sfm.common.container.manager.*;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.IHasContainer;
@@ -11,16 +11,12 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
 public class ManagerScreen extends BaseScreen implements IHasContainer<ManagerContainer> {
-	public static final  int                    LEFT                    = 0;
-	public static final  int                    MIDDLE                  = 2;
-	public static final  int                    RIGHT                   = 1;
-	private static final ResourceLocation       BACKGROUND_LEFT         = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_1.png");
-	private static final ResourceLocation       BACKGROUND_RIGHT        = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_2.png");
-	public final         ButtonController       BUTTON_CONTROLLER       = new ButtonController(this);
-	public final         CommandController      COMMAND_CONTROLLER      = new CommandController(this);
-	public final         PositionController     POSITION_CONTROLLER     = new PositionController(this);
-	public final         RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
-	private final        ManagerContainer       CONTAINER;
+	public static final  int              LEFT             = 0;
+	public static final  int              MIDDLE           = 2;
+	public static final  int              RIGHT            = 1;
+	private static final ResourceLocation BACKGROUND_LEFT  = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_1.png");
+	private static final ResourceLocation BACKGROUND_RIGHT = new ResourceLocation(SFM.MOD_ID, "textures/gui/background_2.png");
+	private final        ManagerContainer CONTAINER;
 
 	@Override
 	public boolean isPauseScreen() {
@@ -45,22 +41,22 @@ public class ManagerScreen extends BaseScreen implements IHasContainer<ManagerCo
 		int     my      = scaleY((float) y) - guiTop;
 		Command pressed = null;
 
-		for (Command c : COMMAND_CONTROLLER.getCommands()) {
+		for (Command c : CONTAINER.COMMAND_CONTROLLER.getCommands()) {
 			if (c.isInBounds(mx, my)) {
 				pressed = c;
 				break;
 			}
 		}
 
-		if (POSITION_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
+		if (CONTAINER.POSITION_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
 			//LOGGER.debug("Stopped at position controller mouse down.");
 			return true;
 		}
-		if (RELATIONSHIP_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
+		if (CONTAINER.RELATIONSHIP_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
 			//LOGGER.debug("Stopped at relationship controller mouse down.");
 			return true;
 		}
-		if (BUTTON_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
+		if (CONTAINER.BUTTON_CONTROLLER.onMouseDown(mx, my, button, pressed)) {
 			//LOGGER.debug("Stopped at button controller mouse down.");
 			return true;
 		}
@@ -71,15 +67,15 @@ public class ManagerScreen extends BaseScreen implements IHasContainer<ManagerCo
 	public boolean mouseReleased(double x, double y, int button) {
 		int mx = scaleX(x) - guiLeft;
 		int my = scaleY(y) - guiTop;
-		if (POSITION_CONTROLLER.onMouseUp(mx, my, button)) {
+		if (CONTAINER.POSITION_CONTROLLER.onMouseUp(mx, my, button)) {
 			//LOGGER.debug("Stopped at position controller mouse released.");
 			return true;
 		}
-		if (RELATIONSHIP_CONTROLLER.onMouseUp(mx, my, button)) {
+		if (CONTAINER.RELATIONSHIP_CONTROLLER.onMouseUp(mx, my, button)) {
 			//LOGGER.debug("Stopped at relationship controller mouse released.");
 			return true;
 		}
-		if (BUTTON_CONTROLLER.onMouseUp(mx, my, button)) {
+		if (CONTAINER.BUTTON_CONTROLLER.onMouseUp(mx, my, button)) {
 			//LOGGER.debug("Stopped at button controller mouse released.");
 			return true;
 		}
@@ -91,15 +87,15 @@ public class ManagerScreen extends BaseScreen implements IHasContainer<ManagerCo
 		int mx = scaleX(x) - guiLeft;
 		int my = scaleY(y) - guiTop;
 
-		if (POSITION_CONTROLLER.onDrag(mx, my, button)) {
+		if (CONTAINER.POSITION_CONTROLLER.onDrag(mx, my, button)) {
 			//LOGGER.debug("Stopped at position controller mouse dragged.");
 			return true;
 		}
-		if (RELATIONSHIP_CONTROLLER.onDrag(mx, my, button)) {
+		if (CONTAINER.RELATIONSHIP_CONTROLLER.onDrag(mx, my, button)) {
 			//LOGGER.debug("Stopped at relationship controller mouse dragged.");
 			return true;
 		}
-		if (BUTTON_CONTROLLER.onDrag(mx, my, button)) {
+		if (CONTAINER.BUTTON_CONTROLLER.onDrag(mx, my, button)) {
 			//LOGGER.debug("Stopped at button controller mouse dragged.");
 			return true;
 		}
@@ -110,9 +106,38 @@ public class ManagerScreen extends BaseScreen implements IHasContainer<ManagerCo
 	public void draw(int x, int y, float deltaTime) {
 		// Background Layer
 		drawBackground();
-		RELATIONSHIP_CONTROLLER.draw(x, y);
-		COMMAND_CONTROLLER.draw();
+		drawRelationships();
+		drawCommands();
+		drawDraggingConnectionAndCheckClear(x, y);
+	}
 
+	public void drawDraggingConnectionAndCheckClear(int x, int y) {
+		CONTAINER.RELATIONSHIP_CONTROLLER.getDragStart().ifPresent(start -> {
+			if (hasShiftDown())
+				this.drawArrow(start.getPosition().getX() + start.getWidth() / 2, start.getPosition().getY() + start.getHeight() / 2, x, y);
+			else
+				CONTAINER.RELATIONSHIP_CONTROLLER.clearDragStart();
+		});
+	}
+
+	public void drawCommands() {
+		BaseScreen.bindTexture(Sprite.SHEET);
+		for (Command action : CONTAINER.COMMAND_CONTROLLER.getCommands()) {
+			this.drawSprite(action.getPosition().getX(), action.getPosition().getY(), action.isPressed() ? Sprite.CASE_DARK : Sprite.CASE);
+			this.drawSprite(action.getPosition().getX() + 4, action.getPosition().getY() + 4, action.getSprite());
+		}
+	}
+
+	public void drawRelationships() {
+		for (Relationship r : CONTAINER.RELATIONSHIP_CONTROLLER.getRelationships().values()) {
+			for (Line line : r.LINE_LIST) {
+				if (line.getNext() == r.HEAD) {
+					this.drawArrow(line);
+				} else {
+					this.drawLine(line);
+				}
+			}
+		}
 	}
 
 	private void drawBackground() {

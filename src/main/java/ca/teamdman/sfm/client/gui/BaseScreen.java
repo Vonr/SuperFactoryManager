@@ -1,5 +1,8 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.client.gui;
 
+import ca.teamdman.sfm.common.container.manager.ISprite;
+import ca.teamdman.sfm.common.container.manager.Line;
+import ca.teamdman.sfm.common.container.manager.Point;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;

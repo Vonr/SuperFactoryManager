@@ -1,6 +1,6 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
 
-import ca.teamdman.sfm.client.gui.ManagerScreen;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.Optional;
@@ -11,8 +11,8 @@ public class Button extends Component {
 	protected final TranslationTextComponent LABEL;
 	private         boolean                  pressed = false;
 
-	public Button(Point position, int width, int height, TranslationTextComponent label, Consumer<Component> action) {
-		super(position, width, height);
+	public Button(ManagerContainer container, Point position, int width, int height, TranslationTextComponent label, Consumer<Component> action) {
+		super(container, position, width, height);
 		this.LABEL = label;
 		this.ACTION = action;
 	}
@@ -29,11 +29,10 @@ public class Button extends Component {
 		ACTION.accept(this);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected <T extends Component> Optional<T> copy(ManagerScreen gui) {
-		Button copy = new Button(position, width, height, LABEL, ACTION);
-		gui.BUTTON_CONTROLLER.addButton(copy);
-		return Optional.of((T) copy);
+	protected Optional<Component> copy() {
+		Button copy = new Button(CONTAINER, position, width, height, LABEL, ACTION);
+		CONTAINER.BUTTON_CONTROLLER.addButton(copy);
+		return Optional.of(copy);
 	}
 }

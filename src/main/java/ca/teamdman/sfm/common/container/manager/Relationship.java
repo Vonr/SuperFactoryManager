@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
 
 import javafx.util.Pair;
 
@@ -11,6 +11,8 @@ public class Relationship {
 	public Relationship(Component child, Component parent) {
 		this.TAIL = child;
 		this.HEAD = parent;
+		if (HEAD.CONTAINER != TAIL.CONTAINER)
+			throw new IllegalArgumentException("Head and tail of relationship must be the same container!");
 		Point a = new Point(
 				TAIL.getXCentered(),
 				HEAD.getYCentered() - (HEAD.getYCentered() - TAIL.getYCentered()) / 2
@@ -20,9 +22,9 @@ public class Relationship {
 				HEAD.getYCentered() - (HEAD.getYCentered() - TAIL.getYCentered()) / 2
 		);
 
-		Line first = new VLine(this, TAIL.getCenteredPosition(), a),
-				second = new HLine(this, a, b),
-				third = new VLine(this, b, HEAD.snapToEdge(b));
+		Line first = new VLine(HEAD.CONTAINER, this, TAIL.getCenteredPosition(), a),
+				second = new HLine(HEAD.CONTAINER, this, a, b),
+				third = new VLine(HEAD.CONTAINER, this, b, HEAD.snapToEdge(b));
 
 		first.setPrev(TAIL);
 		first.setNext(second);

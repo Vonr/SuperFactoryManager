@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
 
 public interface ISprite {
 	int getTop();

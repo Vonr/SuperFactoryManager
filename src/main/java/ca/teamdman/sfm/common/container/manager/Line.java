@@ -1,15 +1,18 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
+
+import ca.teamdman.sfm.client.gui.BaseScreen;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 
 import javax.vecmath.Color4f;
 
 public class Line extends Component {
-	final Point HEAD, TAIL;
-	final   Relationship RELATIONSHIP;
+	public final Point HEAD, TAIL;
+	public final   Relationship RELATIONSHIP;
 	private Component    PREV, NEXT;
 	private Color4f color = BaseScreen.DEFAULT_LINE_COLOUR;
 
-	public Line(Relationship relationship, Point tail, Point head) {
-		super(head, 0, 0);
+	public Line(ManagerContainer container, Relationship relationship, Point tail, Point head) {
+		super(container, head, 0, 0);
 		this.RELATIONSHIP = relationship;
 		this.HEAD = head;
 		this.TAIL = tail;
@@ -28,11 +31,11 @@ public class Line extends Component {
 			return;
 		Line line;
 		if (this instanceof HLine)
-			line = new VLine(RELATIONSHIP, HEAD, NEXT.snapToEdge(HEAD));
+			line = new VLine(CONTAINER, RELATIONSHIP, HEAD, NEXT.snapToEdge(HEAD));
 		else if (this instanceof VLine)
-			line = new HLine(RELATIONSHIP, HEAD, NEXT.snapToEdge(HEAD));
+			line = new HLine(CONTAINER, RELATIONSHIP, HEAD, NEXT.snapToEdge(HEAD));
 		else
-			line = new Line(RELATIONSHIP, HEAD, NEXT.snapToEdge(HEAD));
+			line = new Line(CONTAINER, RELATIONSHIP, HEAD, NEXT.snapToEdge(HEAD));
 		line.setNext(NEXT);
 		line.setPrev(this);
 		setNext(line);
@@ -83,11 +86,11 @@ public class Line extends Component {
 			return;
 		Line line;
 		if (this instanceof HLine)
-			line = new VLine(RELATIONSHIP, PREV.snapToEdge(TAIL), TAIL);
+			line = new VLine(CONTAINER, RELATIONSHIP, PREV.snapToEdge(TAIL), TAIL);
 		else if (this instanceof VLine)
-			line = new HLine(RELATIONSHIP, PREV.snapToEdge(TAIL), TAIL);
+			line = new HLine(CONTAINER, RELATIONSHIP, PREV.snapToEdge(TAIL), TAIL);
 		else
-			line = new Line(RELATIONSHIP, PREV.snapToEdge(TAIL), TAIL);
+			line = new Line(CONTAINER, RELATIONSHIP, PREV.snapToEdge(TAIL), TAIL);
 		line.setPrev(PREV);
 		line.setNext(this);
 		setPrev(line);

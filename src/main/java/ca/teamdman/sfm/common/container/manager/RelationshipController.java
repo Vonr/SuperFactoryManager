@@ -1,33 +1,35 @@
-package ca.teamdman.sfm.client.gui.manager;
+package ca.teamdman.sfm.common.container.manager;
 
 import ca.teamdman.sfm.client.gui.ManagerScreen;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.MutableGraph;
 import javafx.util.Pair;
-import net.minecraft.util.math.BlockPos;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static ca.teamdman.sfm.SFM.LOGGER;
-import static ca.teamdman.sfm.client.gui.manager.BaseScreen.DEFAULT_LINE_COLOUR;
-import static ca.teamdman.sfm.client.gui.manager.BaseScreen.HIGHLIGHTED_LINE_COLOUR;
+import static ca.teamdman.sfm.client.gui.BaseScreen.DEFAULT_LINE_COLOUR;
+import static ca.teamdman.sfm.client.gui.BaseScreen.HIGHLIGHTED_LINE_COLOUR;
 import static net.minecraft.client.gui.screen.Screen.hasAltDown;
 import static net.minecraft.client.gui.screen.Screen.hasShiftDown;
 
 public class RelationshipController {
-	private final ManagerScreen                          GUI;
+	private final ManagerContainer CONTAINER;
 	private final Multimap<Component, Relationship>      RELATIONSHIP_MAP = HashMultimap.create();
 	private       Pair<Relationship, Pair<Line, Double>> dragging         = null;
 	private       Component                              start            = null;
 
-	public RelationshipController(ManagerScreen GUI) {
-		this.GUI = GUI;
+	public RelationshipController(ManagerContainer container) {
+		this.CONTAINER = container;
 	}
 
+	public Optional<Component> getDragStart() {
+		return Optional.ofNullable(this.start);
+	}
+	public void clearDragStart() {
+		this.start = null;
+	}
 
 	// Return false to pass through
 	public boolean onMouseDown(int x, int y, int button, Component comp) {
@@ -83,7 +85,7 @@ public class RelationshipController {
 			return false;
 		if (!hasShiftDown())
 			return false;
-		for (Command c : GUI.COMMAND_CONTROLLER.getCommands()) {
+		for (Command c : CONTAINER.COMMAND_CONTROLLER.getCommands()) {
 			if (c != start && c.isInBounds(x, y)) {
 				addRelationship(new Relationship(start, c));
 				start = null;
@@ -121,24 +123,6 @@ public class RelationshipController {
 		RELATIONSHIP_MAP.put(r.TAIL, r);
 	}
 
-	public void draw(int x, int y) {
-		RELATIONSHIP_MAP.values().forEach(this::drawRelationship);
-		if (start != null)
-			if (hasShiftDown())
-				GUI.drawArrow(start.getPosition().getX() + start.width / 2, start.getPosition().getY() + start.height / 2, x, y);
-			else
-				start = null;
-	}
-
-	public void drawRelationship(Relationship r) {
-		for (Line line : r.LINE_LIST) {
-			if (line.getNext() == r.HEAD) {
-				GUI.drawArrow(line);
-			} else {
-				GUI.drawLine(line);
-			}
-		}
-	}
 
 	/**
 	 * Ensures that lines are visibly touching the component in all of its relationships.
@@ -152,5 +136,9 @@ public class RelationshipController {
 			}
 			r.cleanupLines();
 		}
+	}
+
+	public Multimap<Component, Relationship> getRelationships() {
+		return this.RELATIONSHIP_MAP;
 	}
 }
