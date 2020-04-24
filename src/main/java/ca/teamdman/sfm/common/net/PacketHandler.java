@@ -14,7 +14,7 @@ public class PacketHandler {
 			new ResourceLocation(SFM.MOD_ID, CHANNEL_NAME),
 			() -> PROTOCOL_VERSION,
 			PROTOCOL_VERSION::equals,
-			PROTOCOL_VERSION::equals
+			PROTOCOL_VERSION::equals// todo: C2S packet, predicate always false etc
 	);
 
 
