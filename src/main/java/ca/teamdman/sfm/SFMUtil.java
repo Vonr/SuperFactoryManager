@@ -16,6 +16,7 @@ public class SFMUtil {
 		if (tile == null)
 			return Optional.empty();
 		if (clazz.isInstance(tile))
+			//noinspection unchecked
 			return (Optional<T>) Optional.of(tile);
 		return Optional.empty();
 	}
