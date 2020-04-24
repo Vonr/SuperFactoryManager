@@ -4,7 +4,6 @@ import ca.teamdman.sfm.client.gui.ManagerScreen;
 
 import java.util.ArrayList;
 
-import static ca.teamdman.sfm.SFM.LOGGER;
 
 public class ButtonController {
 	private final ArrayList<Button> BUTTON_LIST = new ArrayList<>();
@@ -17,7 +16,6 @@ public class ButtonController {
 	}
 
 	public Button addButton(Button b) {
-		LOGGER.debug("Button controller added button " + b);
 		BUTTON_LIST.add(b);
 		return b;
 	}
@@ -29,7 +27,6 @@ public class ButtonController {
 			return false;
 		active = (Button) comp;
 		active.setPressed(true);
-		LOGGER.debug("Button controller activated button. Mouse down terminated.");
 		return true;
 	}
 
@@ -41,7 +38,6 @@ public class ButtonController {
 		if (active.isInBounds(x, y) == active.isPressed())
 			return false;
 		active.setPressed(!active.isPressed());
-		LOGGER.debug("Button controller dragged button. Mouse drag terminated.");
 		return true;
 	}
 
@@ -55,7 +51,6 @@ public class ButtonController {
 		active.click();
 		active.setPressed(false);
 		active = null;
-		LOGGER.debug("Button clicked button. Mouse up terminated.");
 		return true;
 	}
 

@@ -42,13 +42,11 @@ public class RelationshipController {
 				r.getValue().getKey().setColor(HIGHLIGHTED_LINE_COLOUR);
 			});
 			if (dragging != null) {
-				LOGGER.debug("Relationship controller began line dragging. Mouse down terminated.");
 				return true;
 			}
 			return false;
 		} else if (hasShiftDown()) {
 			start = comp;
-			LOGGER.debug("Relationship controller began linking. Mouse down terminated.");
 			return true;
 		}
 		return false;
@@ -68,7 +66,6 @@ public class RelationshipController {
 
 		if (hasAltDown() && dragging != null) {
 			dragging.getValue().getKey().drag(x, y);
-			LOGGER.debug("Relationship controller dragged component. Mouse drag terminated.");
 			return true;
 		} else if (!hasAltDown() && dragging != null) {
 			dragging = null;
@@ -90,7 +87,6 @@ public class RelationshipController {
 			if (c != start && c.isInBounds(x, y)) {
 				addRelationship(new Relationship(start, c));
 				start = null;
-				LOGGER.debug("Relationship controller linked components. Mouse up terminated.");
 				return true;
 			}
 		}

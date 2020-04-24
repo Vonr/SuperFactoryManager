@@ -29,6 +29,7 @@ public class ManagerContainer extends Container {
 
 	public ManagerContainer(int windowId, ManagerTileEntity tile) {
 		super(ContainerRegistrar.Containers.MANAGER, windowId);
+		System.out.printf("Created container on side %s\n", tile.getWorld().isRemote ? "REMOTE" : "SERVER");
 		this.TILE = tile;
 	}
 

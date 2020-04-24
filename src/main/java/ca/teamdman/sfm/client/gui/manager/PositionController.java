@@ -3,7 +3,6 @@ package ca.teamdman.sfm.client.gui.manager;
 
 import ca.teamdman.sfm.client.gui.ManagerScreen;
 
-import static ca.teamdman.sfm.SFM.LOGGER;
 import static ca.teamdman.sfm.client.gui.ManagerScreen.*;
 import static ca.teamdman.sfm.client.gui.manager.PositionController.DragMode.*;
 
@@ -29,17 +28,14 @@ public class PositionController {
 			dragging = comp;
 			dragOffsetX = comp.getPosition().getX() - x;
 			dragOffsetY = comp.getPosition().getY() - y;
-			LOGGER.debug("Position controller began dragging. Mouse down terminated.");
 			return true;
 		} else if (hasControlDown()) {
 			comp.copy(GUI).ifPresent(c -> {
 				dragging = c;
 				mode = COPY;
-				LOGGER.debug("Position controller cloned component.");
 			});
 			dragOffsetX = comp.getPosition().getX() - x;
 			dragOffsetY = comp.getPosition().getY() - y;
-			LOGGER.debug("Position controller began copy. Mouse down terminated.");
 			return true;
 		} else {
 			mode = NONE;
@@ -58,14 +54,12 @@ public class PositionController {
 
 		dragging.getPosition().setXY(x + dragOffsetX, y + dragOffsetY);
 		GUI.RELATIONSHIP_CONTROLLER.postComponentReposition(dragging);
-		LOGGER.debug("Position controller drag terminated.");
 		return true;
 	}
 
 	public boolean onMouseUp(int x, int y, int button) {
 		if (dragging != null) {
 			dragging = null;
-			LOGGER.debug("Position controller mouse up terminated.");
 			return true;
 		} else {
 			return false;

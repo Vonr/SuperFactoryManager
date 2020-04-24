@@ -49,8 +49,10 @@ public class ManagerContainerProvider implements INamedContainerProvider {
 	public static class ManagerContainerFactory implements IContainerFactory<ManagerContainer> {
 		@Override
 		public ManagerContainer create(int windowId, PlayerInventory inv, PacketBuffer data) {
-			return SFMUtil.getClientTile(IWorldPosCallable.of(inv.player.world, data.readBlockPos()), ManagerTileEntity.class)
-					.map(tile -> new ManagerContainer(windowId, tile)).orElse(null);
+			return SFMUtil.getClientTile(
+					IWorldPosCallable.of(inv.player.world, data.readBlockPos()),ManagerTileEntity.class)
+					.map(tile -> new ManagerContainer(windowId, tile))
+					.orElse(null);
 		}
 	}
 }

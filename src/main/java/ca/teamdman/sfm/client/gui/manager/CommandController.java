@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static ca.teamdman.sfm.SFM.LOGGER;
 
 public class CommandController {
 	private final ArrayList<Command> COMMAND_LIST = new ArrayList<>();
@@ -28,7 +27,6 @@ public class CommandController {
 	public Command addCommand(Command c) {
 		COMMAND_LIST.add(c);
 		GUI.BUTTON_CONTROLLER.addButton(c);
-		LOGGER.debug("Command controller added command " + c);
 		return c;
 	}
 
