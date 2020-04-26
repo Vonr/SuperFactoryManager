@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.container.manager;
+package ca.teamdman.sfm.common.container.core;
 
 import ca.teamdman.sfm.SFM;
 import net.minecraft.util.ResourceLocation;

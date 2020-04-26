@@ -1,19 +1,21 @@
-package ca.teamdman.sfm.common.container.manager;
+package ca.teamdman.sfm.common.container.core.controller;
 
 import ca.teamdman.sfm.client.gui.ManagerScreen;
-import ca.teamdman.sfm.common.container.ManagerContainer;
+import ca.teamdman.sfm.common.container.CoreContainer;
+import ca.teamdman.sfm.common.container.core.component.Button;
+import ca.teamdman.sfm.common.container.core.component.Component;
 
 import java.util.ArrayList;
 
 
-public class ButtonController {
+public class ButtonController extends BaseController {
 	private final ArrayList<Button> BUTTON_LIST = new ArrayList<>();
-	private final ManagerContainer     CONTAINER;
 	private       Button            active      = null;
 
-	public ButtonController(ManagerContainer container) {
-		this.CONTAINER = container;
+	public ButtonController(CoreContainer<?> CONTAINER) {
+		super(CONTAINER);
 	}
+
 
 	public Button addButton(Button b) {
 		BUTTON_LIST.add(b);
@@ -53,5 +55,4 @@ public class ButtonController {
 		active = null;
 		return true;
 	}
-
 }

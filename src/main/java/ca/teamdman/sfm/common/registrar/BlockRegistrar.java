@@ -14,7 +14,7 @@ import net.minecraftforge.registries.ObjectHolder;
 import org.apache.logging.log4j.LogManager;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public final class BlocksRegistrar {
+public final class BlockRegistrar {
 	private static final Block WAITING = null;
 
 	@SubscribeEvent

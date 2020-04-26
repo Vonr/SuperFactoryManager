@@ -1,21 +1,20 @@
-package ca.teamdman.sfm.common.container.manager;
+package ca.teamdman.sfm.common.container.core.controller;
 
 
-import ca.teamdman.sfm.client.gui.ManagerScreen;
-import ca.teamdman.sfm.common.container.ManagerContainer;
+import ca.teamdman.sfm.common.container.CoreContainer;
+import ca.teamdman.sfm.common.container.core.component.Component;
 
 import static ca.teamdman.sfm.client.gui.ManagerScreen.*;
-import static ca.teamdman.sfm.common.container.manager.PositionController.DragMode.*;
+import static ca.teamdman.sfm.common.container.core.controller.PositionController.DragMode.*;
 
-public class PositionController {
-	private final ManagerContainer CONTAINER;
-	private       int           dragOffsetX = 0;
-	private       int           dragOffsetY = 0;
-	private       Component     dragging    = null;
-	private       DragMode      mode        = NONE;
+public class PositionController extends BaseController {
+	private int       dragOffsetX = 0;
+	private int       dragOffsetY = 0;
+	private Component dragging    = null;
+	private DragMode  mode        = NONE;
 
-	public PositionController(ManagerContainer container) {
-		this.CONTAINER = container;
+	public PositionController(CoreContainer<?> container) {
+		super(container);
 	}
 
 	// Return false to pass through

@@ -6,6 +6,6 @@ import net.minecraft.item.ItemGroup;
 import java.util.Collection;
 
 public class CommonProxy {
-	public void fillItemGroup(ItemGroup group, Collection<Item> items) {
+	public void fillItemGroup(ItemGroup group, Item[] items) {
 	}
 }

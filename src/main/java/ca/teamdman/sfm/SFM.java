@@ -1,7 +1,7 @@
 package ca.teamdman.sfm;
 
 
-import ca.teamdman.sfm.client.gui.ClientProxy;
+import ca.teamdman.sfm.client.ClientProxy;
 import ca.teamdman.sfm.common.CommonProxy;
 import ca.teamdman.sfm.common.config.ConfigHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;

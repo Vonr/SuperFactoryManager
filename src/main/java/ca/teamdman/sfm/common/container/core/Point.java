@@ -1,13 +1,18 @@
-package ca.teamdman.sfm.common.container.manager;
+package ca.teamdman.sfm.common.container.core;
 
-public class Point implements Cloneable {
+import ca.teamdman.sfm.common.container.core.component.Component;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.common.util.INBTSerializable;
+
+public class Point implements INBTSerializable<CompoundNBT> {
 	private int x, y;
 
+	public Point() {}
+
 	public Point(Component c) {
-		this(c.getCenteredPosition());
+		this(c.getPosition());
 	}
 
-	@SuppressWarnings("CopyConstructorMissesField")
 	public Point(Point p) {
 		this(p.getX(), p.getY());
 	}
@@ -63,4 +68,19 @@ public class Point implements Cloneable {
 	public Point copy() {
 		return new Point(this);
 	}
+
+	@Override
+	public CompoundNBT serializeNBT() {
+		CompoundNBT nbt = new CompoundNBT();
+		nbt.putInt("x", x);
+		nbt.putInt("y", y);
+		return nbt;
+	}
+
+	@Override
+	public void deserializeNBT(CompoundNBT nbt) {
+		this.x = nbt.getInt("x");
+		this.y = nbt.getInt("y");
+	}
+
 }

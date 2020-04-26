@@ -1,13 +1,22 @@
-package ca.teamdman.sfm.common.container.manager;
+package ca.teamdman.sfm.common.container.core.component;
 
-import ca.teamdman.sfm.client.gui.ManagerScreen;
-import ca.teamdman.sfm.common.container.ManagerContainer;
+import ca.teamdman.sfm.common.container.core.Point;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.common.util.INBTSerializable;
 
 import java.util.Optional;
 
-public abstract class Component {
-	protected       Point            position;
-	protected final ManagerContainer CONTAINER;
+public abstract class Component implements INBTSerializable<CompoundNBT> {
+
+	protected Point position;
+	protected int width, height;
+
+
+	public Component(Point position, int width, int height) {
+		this.position = position;
+		this.width = width;
+		this.height = height;
+	}
 
 	public int getWidth() {
 		return width;
@@ -15,15 +24,6 @@ public abstract class Component {
 
 	public int getHeight() {
 		return height;
-	}
-
-	protected int   width, height;
-
-	public Component(ManagerContainer container, Point position, int width, int height) {
-		this.CONTAINER = container;
-		this.position = position;
-		this.width = width;
-		this.height = height;
 	}
 
 	public Point getCenteredPosition() {
@@ -53,6 +53,10 @@ public abstract class Component {
 		return position;
 	}
 
+	public void setPosition(Point position) {
+		this.position = position;
+	}
+
 	public boolean isInBounds(Point p) {
 		return isInBounds(p.getX(), p.getY());
 	}
@@ -61,7 +65,7 @@ public abstract class Component {
 		return mx >= position.getX() && mx <= position.getX() + width && my >= position.getY() && my <= position.getY() + height;
 	}
 
-	protected Optional<Component> copy() {
+	public Optional<Component> copy() {
 		return Optional.empty();
 	}
 
@@ -70,4 +74,21 @@ public abstract class Component {
 		return String.format("Component (%d,%d) ", position.getX(), position.getY());
 	}
 
+	@Override
+	public CompoundNBT serializeNBT() {
+		CompoundNBT tag = new CompoundNBT();
+		tag.put("position", position.serializeNBT());
+		tag.putInt("width", width);
+		tag.putInt("height", height);
+		return null;
+	}
+
+	@Override
+	public void deserializeNBT(CompoundNBT nbt) {
+		Point position = new Point();
+		position.deserializeNBT(nbt.getCompound("position"));
+		this.position = position;
+		this.width = nbt.getInt("width");
+		this.height = nbt.getInt("height");
+	}
 }

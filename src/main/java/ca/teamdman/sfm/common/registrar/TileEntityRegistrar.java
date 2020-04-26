@@ -25,8 +25,8 @@ public final class TileEntityRegistrar {
 	@SubscribeEvent
 	public static void onRegisterTileEntityTypes(@Nonnull final RegistryEvent.Register<TileEntityType<?>> e) {
 		e.getRegistry().registerAll(
-				TileEntityType.Builder.create(ManagerTileEntity::new, BlocksRegistrar.Blocks.MANAGER).build(NO_TYPE).setRegistryName(SFM.MOD_ID, "manager"),
-				TileEntityType.Builder.create(CrafterTileEntity::new, BlocksRegistrar.Blocks.CRAFTER).build(NO_TYPE).setRegistryName(SFM.MOD_ID, "crafter")
+				TileEntityType.Builder.create(ManagerTileEntity::new, BlockRegistrar.Blocks.MANAGER).build(NO_TYPE).setRegistryName(SFM.MOD_ID, "manager"),
+				TileEntityType.Builder.create(CrafterTileEntity::new, BlockRegistrar.Blocks.CRAFTER).build(NO_TYPE).setRegistryName(SFM.MOD_ID, "crafter")
 		);
 		LogManager.getLogger(SFM.MOD_NAME + " Tile Entity Registrar").debug("Registered tiles");
 	}

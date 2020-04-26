@@ -5,15 +5,11 @@ import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
 import ca.teamdman.sfm.common.tile.CrafterTileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.CraftResultInventory;
-import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.SlotItemHandler;
-
-import javax.annotation.Nonnull;
 
 public class CrafterContainer extends Container {
 	public CrafterContainer(int windowId, PlayerInventory playerInv, CrafterTileEntity tile) {

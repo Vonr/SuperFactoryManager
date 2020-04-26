@@ -1,9 +1,7 @@
 package ca.teamdman.sfm.common.container.factory;
 
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.common.container.CrafterContainer;
 import ca.teamdman.sfm.common.container.ManagerContainer;
-import ca.teamdman.sfm.common.tile.CrafterTileEntity;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;

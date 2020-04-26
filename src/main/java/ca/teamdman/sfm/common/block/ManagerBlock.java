@@ -2,11 +2,9 @@ package ca.teamdman.sfm.common.block;
 
 import ca.teamdman.sfm.common.container.factory.ManagerContainerProvider;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
-import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.IWorldPosCallable;

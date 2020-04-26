@@ -1,32 +1,38 @@
-package ca.teamdman.sfm.common.container.manager;
+package ca.teamdman.sfm.common.container.core.controller;
 
 import ca.teamdman.sfm.client.gui.ManagerScreen;
-import ca.teamdman.sfm.common.container.ManagerContainer;
+import ca.teamdman.sfm.common.container.CoreContainer;
+import ca.teamdman.sfm.common.container.core.Relationship;
+import ca.teamdman.sfm.common.container.core.component.CommandButton;
+import ca.teamdman.sfm.common.container.core.component.Component;
+import ca.teamdman.sfm.common.container.core.component.Line;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import javafx.util.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static ca.teamdman.sfm.client.gui.BaseScreen.DEFAULT_LINE_COLOUR;
-import static ca.teamdman.sfm.client.gui.BaseScreen.HIGHLIGHTED_LINE_COLOUR;
+import static ca.teamdman.sfm.client.gui.core.BaseScreen.DEFAULT_LINE_COLOUR;
+import static ca.teamdman.sfm.client.gui.core.BaseScreen.HIGHLIGHTED_LINE_COLOUR;
 import static net.minecraft.client.gui.screen.Screen.hasAltDown;
 import static net.minecraft.client.gui.screen.Screen.hasShiftDown;
 
-public class RelationshipController {
-	private final ManagerContainer CONTAINER;
+
+public class RelationshipController extends BaseController {
 	private final Multimap<Component, Relationship>      RELATIONSHIP_MAP = HashMultimap.create();
 	private       Pair<Relationship, Pair<Line, Double>> dragging         = null;
 	private       Component                              start            = null;
 
-	public RelationshipController(ManagerContainer container) {
-		this.CONTAINER = container;
+	public RelationshipController(CoreContainer<?> container) {
+		super(container);
 	}
 
 	public Optional<Component> getDragStart() {
 		return Optional.ofNullable(this.start);
 	}
+
 	public void clearDragStart() {
 		this.start = null;
 	}
@@ -85,7 +91,7 @@ public class RelationshipController {
 			return false;
 		if (!hasShiftDown())
 			return false;
-		for (Command c : CONTAINER.COMMAND_CONTROLLER.getCommands()) {
+		for (CommandButton c : CONTAINER.COMMAND_CONTROLLER.getCommands()) {
 			if (c != start && c.isInBounds(x, y)) {
 				addRelationship(new Relationship(start, c));
 				start = null;
@@ -93,6 +99,16 @@ public class RelationshipController {
 			}
 		}
 		return false;
+	}
+
+	public void addRelationship(Relationship r) {
+		if (RELATIONSHIP_MAP.containsValue(r))
+			return;
+		if (getAncestors(r.TAIL).contains(r.HEAD))
+			return;
+
+		RELATIONSHIP_MAP.put(r.HEAD, r);
+		RELATIONSHIP_MAP.put(r.TAIL, r);
 	}
 
 	public Set<Component> getAncestors(Component c) {
@@ -113,17 +129,6 @@ public class RelationshipController {
 		return rtn;
 	}
 
-	public void addRelationship(Relationship r) {
-		if (RELATIONSHIP_MAP.containsValue(r))
-			return;
-		if (getAncestors(r.TAIL).contains(r.HEAD))
-			return;
-
-		RELATIONSHIP_MAP.put(r.HEAD, r);
-		RELATIONSHIP_MAP.put(r.TAIL, r);
-	}
-
-
 	/**
 	 * Ensures that lines are visibly touching the component in all of its relationships.
 	 */
@@ -140,5 +145,11 @@ public class RelationshipController {
 
 	public Multimap<Component, Relationship> getRelationships() {
 		return this.RELATIONSHIP_MAP;
+	}
+
+	public Stream<Relationship> getUniqueRelationships() {
+		return this.RELATIONSHIP_MAP.entries().stream()
+				.filter(e -> e.getKey() == e.getValue().TAIL)
+				.map(Map.Entry::getValue);
 	}
 }
