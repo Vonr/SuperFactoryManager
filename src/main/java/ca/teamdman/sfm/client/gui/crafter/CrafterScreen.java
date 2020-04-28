@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui;
+package ca.teamdman.sfm.client.gui.crafter;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.CrafterContainer;

@@ -33,7 +33,7 @@ public class ManagerContainerProvider implements INamedContainerProvider {
 	@Override
 	public Container createMenu(int windowId, PlayerInventory playerInv, PlayerEntity player) {
 		return SFMUtil.getServerTile(ACCESS, ManagerTileEntity.class)
-				.map(tile -> new ManagerContainer(windowId, tile)).orElse(null);
+				.map(tile -> new ManagerContainer(windowId, tile, false)).orElse(null);
 	}
 
 	public void openGui(PlayerEntity player) {
@@ -49,7 +49,7 @@ public class ManagerContainerProvider implements INamedContainerProvider {
 		public ManagerContainer create(int windowId, PlayerInventory inv, PacketBuffer data) {
 			return SFMUtil.getClientTile(
 					IWorldPosCallable.of(inv.player.world, data.readBlockPos()),ManagerTileEntity.class)
-					.map(tile -> new ManagerContainer(windowId, tile))
+					.map(tile -> new ManagerContainer(windowId, tile, true))
 					.orElse(null);
 		}
 	}

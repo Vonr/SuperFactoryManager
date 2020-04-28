@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.packet.ManagerUpdatePacket;
+import ca.teamdman.sfm.common.net.packet.NumberUpdatePacketC2S;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -24,7 +25,12 @@ public class PacketHandler {
 				ManagerUpdatePacket.class,
 				ManagerUpdatePacket::encode,
 				ManagerUpdatePacket::decode,
-				ManagerUpdatePacket::handle
-		);
+				ManagerUpdatePacket::handle);
+
+		INSTANCE.registerMessage(i++,
+				NumberUpdatePacketC2S.class,
+				NumberUpdatePacketC2S::encode,
+				NumberUpdatePacketC2S::decode,
+				NumberUpdatePacketC2S::handle);
 	}
 }

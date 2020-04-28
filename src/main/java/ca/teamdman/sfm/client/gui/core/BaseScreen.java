@@ -1,8 +1,5 @@
 package ca.teamdman.sfm.client.gui.core;
 
-import ca.teamdman.sfm.common.container.core.ISprite;
-import ca.teamdman.sfm.common.container.core.component.Line;
-import ca.teamdman.sfm.common.container.core.Point;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
@@ -105,14 +102,17 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
-	 * Draws a sprite, does not bind.
+	 * Draws the bound texture to the screen
 	 *
-	 * @param x      Local value
-	 * @param y      Local value
-	 * @param sprite Sprite data
+	 * @param x      Draw begin x scaled coordinate
+	 * @param y      Draw begin y scaled coordinate
+	 * @param left   Texture begin x offset
+	 * @param top    Texture begin y offset
+	 * @param width  Texture sample width
+	 * @param height Texture sample height
 	 */
-	public void drawSprite(int x, int y, ISprite sprite) {
-		drawTexture(x, y, sprite.getLeft(), sprite.getTop(), sprite.getWidth(), sprite.getHeight());
+	public void drawSprite(int x, int y, int left, int top, int width, int height) {
+		drawTexture(x, y, left, top, width, height);
 	}
 
 	/**
@@ -235,13 +235,13 @@ public abstract class BaseScreen extends Screen {
 
 	public abstract void draw(int mouseX, int mouseY, float f);
 
-	public void drawLine(Line line) {
-		drawLine(line.HEAD, line.TAIL, line.getColor());
-	}
-
-	public void drawLine(Point head, Point tail, Color4f color) {
-		drawLine(head.getX(), head.getY(), tail.getX(), tail.getY(), color);
-	}
+//	public void drawLine(Line line) {
+//		drawLine(line.HEAD, line.TAIL, line.getColor());
+//	}
+//
+//	public void drawLine(Point head, Point tail, Color4f color) {
+//		drawLine(head.getX(), head.getY(), tail.getX(), tail.getY(), color);
+//	}
 
 	public void drawLine(int x1, int y1, int x2, int y2, Color4f color) {
 		GlStateManager.pushMatrix();
@@ -268,17 +268,17 @@ public abstract class BaseScreen extends Screen {
 		GlStateManager.popMatrix();
 	}
 
-	public void drawLine(Point head, Point tail) {
-		drawLine(head.getX(), head.getY(), tail.getX(), tail.getY());
-	}
-
-	public void drawLine(int x1, int y1, int x2, int y2) {
-		drawLine(x1, y1, x2, y2, new Color4f(0.4f, 0.4f, 0.4f, 1));
-	}
-
-	public void drawArrow(Line line) {
-		drawArrow(line.TAIL.getX(), line.TAIL.getY(), line.HEAD.getX(), line.HEAD.getY(), line.getColor());
-	}
+//	public void drawLine(Point head, Point tail) {
+//		drawLine(head.getX(), head.getY(), tail.getX(), tail.getY());
+//	}
+//
+//	public void drawLine(int x1, int y1, int x2, int y2) {
+//		drawLine(x1, y1, x2, y2, new Color4f(0.4f, 0.4f, 0.4f, 1));
+//	}
+//
+//	public void drawArrow(Line line) {
+//		drawArrow(line.TAIL.getX(), line.TAIL.getY(), line.HEAD.getX(), line.HEAD.getY(), line.getColor());
+//	}
 
 	public void drawArrow(int x1, int y1, int x2, int y2, Color4f color) {
 		drawLine(x1, y1, x2, y2, color);
