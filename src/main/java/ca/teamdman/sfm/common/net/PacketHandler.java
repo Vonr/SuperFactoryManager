@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.NumberUpdatePacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketS2C;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -14,7 +15,7 @@ public class PacketHandler {
 			new ResourceLocation(SFM.MOD_ID, CHANNEL_NAME),
 			() -> PROTOCOL_VERSION,
 			PROTOCOL_VERSION::equals,
-			PROTOCOL_VERSION::equals// todo: C2S packet, predicate always false etc
+			PROTOCOL_VERSION::equals
 	);
 
 
@@ -32,5 +33,12 @@ public class PacketHandler {
 				NumberUpdatePacketC2S::encode,
 				NumberUpdatePacketC2S::decode,
 				NumberUpdatePacketC2S::handle);
+
+
+		INSTANCE.registerMessage(i++,
+				ButtonPositionPacketS2C.class,
+				ButtonPositionPacketS2C::encode,
+				ButtonPositionPacketS2C::decode,
+				ButtonPositionPacketS2C::handle);
 	}
 }

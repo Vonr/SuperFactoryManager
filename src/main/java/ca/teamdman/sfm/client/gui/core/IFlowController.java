@@ -45,6 +45,7 @@ public interface IFlowController {
 
 	/**
 	 * Called once the container has set all the values needed to set the controller defaults.
+	 * Expected behaviour: overwrite values in controller with values from container.
 	 */
-	default void init(){};
+	default void load(){};
 }

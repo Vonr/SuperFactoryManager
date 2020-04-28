@@ -46,7 +46,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public void init() {
+	public void load() {
 		this.button.setXY(CONTAINER.x, CONTAINER.y);
 	}
 
