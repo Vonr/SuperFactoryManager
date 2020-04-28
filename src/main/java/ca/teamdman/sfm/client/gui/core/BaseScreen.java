@@ -101,6 +101,11 @@ public abstract class BaseScreen extends Screen {
 		return mult;
 	}
 
+	@Override
+	public boolean isPauseScreen() {
+		return false;
+	}
+
 	/**
 	 * Draws the bound texture to the screen
 	 *
