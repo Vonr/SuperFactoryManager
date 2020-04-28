@@ -2,7 +2,6 @@ package ca.teamdman.sfm.common.container;
 
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
-import com.google.common.eventbus.EventBus;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
@@ -18,27 +17,29 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public abstract class CoreContainer<T> extends Container implements INBTSerializable<CompoundNBT> {
+public abstract class BaseContainer<T> extends Container {
 	private final List<IFlowController> CONTROLLERS = new ArrayList<>();
-	private final EventBus              EVENT_BUS   = new EventBus();
 	private final Field                 LISTENERS   = ObfuscationReflectionHelper
 			.findField(Container.class, "listeners");
-
-	public T getSource() {
-		return SOURCE;
-	}
-
-	private final T SOURCE;
-
-	public CoreContainer(ContainerType type, int windowId, T source, boolean isRemote) {
+	private final T                     SOURCE;
+	private final boolean IS_REMOTE;
+	public BaseContainer(ContainerType type, int windowId, T source, boolean isRemote) {
 		super(type, windowId);
 		this.SOURCE = source;
-		if (isRemote) {
+		this.IS_REMOTE = isRemote;
+	}
+
+	public void init() {
+		if (IS_REMOTE) {
 			gatherControllers(CONTROLLERS::add);
 		}
 	}
 
 	public abstract void gatherControllers(Consumer<IFlowController> c);
+
+	public T getSource() {
+		return SOURCE;
+	}
 
 	public Stream<IFlowView> getViews() {
 		return getControllers()
@@ -68,13 +69,4 @@ public abstract class CoreContainer<T> extends Container implements INBTSerializ
 		return true;
 	}
 
-	@Override
-	public CompoundNBT serializeNBT() {
-		return null;
-	}
-
-	@Override
-	public void deserializeNBT(CompoundNBT nbt) {
-
-	}
 }

@@ -4,12 +4,13 @@ import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
 import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import net.minecraft.network.PacketBuffer;
 
 import java.util.function.Consumer;
 
-public class ManagerContainer extends CoreContainer<ManagerTileEntity> {
-	public  int                   x,y;
-	private ManagerFlowController controller;
+public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
+	private final ManagerFlowController CONTROLLER = new ManagerFlowController(this);
+	public        int                   x, y;
 
 	public ManagerContainer(int windowId, ManagerTileEntity tile, boolean isRemote) {
 		super(ContainerRegistrar.Containers.MANAGER, windowId, tile, isRemote);
@@ -18,13 +19,28 @@ public class ManagerContainer extends CoreContainer<ManagerTileEntity> {
 	}
 
 	@Override
+	public void init() {
+		super.init();
+		CONTROLLER.init();
+	}
+
+	@Override
 	public void gatherControllers(Consumer<IFlowController> c) {
-		this.controller = new ManagerFlowController(this);
-		c.accept(controller);
+		c.accept(CONTROLLER);
 	}
 
 	@Override
 	public void detectAndSendChanges() {
 		super.detectAndSendChanges();
+	}
+
+	public void writeData(PacketBuffer data) {
+		data.writeInt(x);
+		data.writeInt(y);
+	}
+
+	public void readData(PacketBuffer data) {
+		this.x = data.readInt();
+		this.y = data.readInt();
 	}
 }

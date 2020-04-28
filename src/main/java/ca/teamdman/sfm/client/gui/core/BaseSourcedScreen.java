@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.client.gui.core;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.container.CoreContainer;
+import ca.teamdman.sfm.common.container.BaseContainer;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.resources.I18n;
@@ -11,7 +11,7 @@ import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nonnull;
 
-public class BaseSourcedScreen<C extends CoreContainer<?>> extends BaseScreen implements IHasContainer<C> {
+public class BaseSourcedScreen<C extends BaseContainer<?>> extends BaseScreen implements IHasContainer<C> {
 	public static final  int              LEFT             = 0;
 	public static final  int              MIDDLE           = 2;
 	public static final  int              RIGHT            = 1;

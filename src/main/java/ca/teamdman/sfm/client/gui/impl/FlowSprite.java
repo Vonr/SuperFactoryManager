@@ -6,10 +6,32 @@ import ca.teamdman.sfm.client.gui.core.IFlowView;
 import net.minecraft.util.ResourceLocation;
 
 public class FlowSprite implements IFlowController {
-	private final ResourceLocation SHEET;
 	private final int LEFT, TOP, WIDTH, HEIGHT;
-	private int x, y;
+	private final ResourceLocation SHEET;
+	private       int              x, y;
 
+	/**
+	 * Helper constructor for when you don't care about the starting position, or when it will be overwritten soon.
+	 *
+	 * @param sheet  Sprite sheet to be bound for render
+	 * @param left   Offset on the sheet from the left
+	 * @param top    Offset on the sheet from the top
+	 * @param width  Width of the render area on the sheet
+	 * @param height Height of the render area on the sheet
+	 */
+	public FlowSprite(ResourceLocation sheet, int left, int top, int width, int height) {
+		this(sheet, 0, 0, left, top, width, height);
+	}
+
+	/**
+	 * @param sheet  Sprite sheet to be bound for render
+	 * @param x      Scaled x coordinate of the element on the screen
+	 * @param y      Scaled y coordinate of the element on the screen
+	 * @param left   Offset on the sheet from the left
+	 * @param top    Offset on the sheet from the top
+	 * @param width  Width of the render area on the sheet
+	 * @param height Height of the render area on the sheet
+	 */
 	public FlowSprite(ResourceLocation sheet, int x, int y, int left, int top, int width, int height) {
 		this.SHEET = sheet;
 		this.LEFT = left;

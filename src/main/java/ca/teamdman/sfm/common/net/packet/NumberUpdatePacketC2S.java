@@ -34,7 +34,7 @@ public class NumberUpdatePacketC2S {
 				TileEntity tile = world.getTileEntity(msg.POSITION);
 				if (!(tile instanceof ManagerTileEntity)) return;
 				ManagerTileEntity manager = (ManagerTileEntity) tile;
-				manager.setMyNumber(msg.PAYLOAD);
+				manager.x = msg.PAYLOAD;
 				manager.markDirty();
 				world.notifyBlockUpdate(msg.POSITION, state, state, Constants.BlockFlags.BLOCK_UPDATE & Constants.BlockFlags.NOTIFY_NEIGHBORS
 				);
