@@ -23,7 +23,6 @@ public class BaseSourcedScreen<C extends CoreContainer<?>> extends BaseScreen im
 		super(name, width,height);
 		this.CONTAINER = container;
 	}
-
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
 		int           mx      = scaleX((float) x) - guiLeft;

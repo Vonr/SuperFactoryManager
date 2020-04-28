@@ -14,7 +14,7 @@ public interface IFlowController {
 	 * @param button Mouse button pressed
 	 * @return Consume event
 	 */
-	boolean mouseClicked(BaseScreen screen, int mx, int my, int button);
+	default boolean mouseClicked(BaseScreen screen, int mx, int my, int button) { return false; };
 
 	/**
 	 * Fired when a mouse button is released
@@ -26,7 +26,7 @@ public interface IFlowController {
 	 * @param button Mouse button pressed
 	 * @return Consume event
 	 */
-	boolean mouseReleased(BaseScreen screen, int mx, int my, int button);
+	default boolean mouseReleased(BaseScreen screen, int mx, int my, int button) { return false; };
 
 	/**
 	 * Fired when a mouse is dragged from one position to another
@@ -40,7 +40,7 @@ public interface IFlowController {
 	 * @param dmy    Drag ended scaled mouse y coordiante
 	 * @return Consume event
 	 */
-	boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy);
+	default boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy) { return false; };
 
 	/**
 	 * Gets the view used to draw this controller
@@ -50,6 +50,4 @@ public interface IFlowController {
 	default IFlowView getView() {
 		return NO_VIEW;
 	}
-
-	;
 }

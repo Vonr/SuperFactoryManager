@@ -23,7 +23,12 @@ public abstract class CoreContainer<T> extends Container implements INBTSerializ
 	private final EventBus              EVENT_BUS   = new EventBus();
 	private final Field                 LISTENERS   = ObfuscationReflectionHelper
 			.findField(Container.class, "listeners");
-	private final T                     SOURCE;
+
+	public T getSource() {
+		return SOURCE;
+	}
+
+	private final T SOURCE;
 
 	public CoreContainer(ContainerType type, int windowId, T source, boolean isRemote) {
 		super(type, windowId);

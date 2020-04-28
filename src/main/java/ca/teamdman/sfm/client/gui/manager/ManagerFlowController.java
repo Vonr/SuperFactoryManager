@@ -1,33 +1,41 @@
 package ca.teamdman.sfm.client.gui.manager;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.gui.core.BaseFlowController;
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.impl.FlowPositionable;
 import ca.teamdman.sfm.client.gui.impl.FlowSprite;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import net.minecraft.client.renderer.Rectangle2d;
 import net.minecraft.util.ResourceLocation;
 
-public class ManagerFlowController implements IFlowController {
-	final FlowPositionable POSITION          = new FlowPositionable(new Rectangle2d(5, 5, 20, 20)) {
+public class ManagerFlowController extends BaseFlowController<ManagerContainer> {
+
+
+	private final FlowPositionable POSITION          = new FlowPositionable(new Rectangle2d(5, 5, 20, 20)) {
 		@Override
 		public void setArea(Rectangle2d area) {
 			super.setArea(area);
 			BUTTON_BACKGROUND.setX(area.getX());
 			BUTTON_BACKGROUND.setY(area.getY());
-			BUTTON_LABEL.setX(area.getX()+4);
-			BUTTON_LABEL.setY(area.getY()+4);
+			BUTTON_LABEL.setX(area.getX() + 4);
+			BUTTON_LABEL.setY(area.getY() + 4);
 		}
 	};
-	final FlowSprite       BUTTON_BACKGROUND = new FlowSprite(
+	private final FlowSprite       BUTTON_BACKGROUND = new FlowSprite(
 			new ResourceLocation(SFM.MOD_ID, "textures/gui/sprites.png"),
 			POSITION.getArea().getX(), POSITION.getArea().getY(),
 			14, 0, 22, 22);
-	final FlowSprite       BUTTON_LABEL      = new FlowSprite(
+	private final FlowSprite       BUTTON_LABEL      = new FlowSprite(
 			new ResourceLocation(SFM.MOD_ID, "textures/gui/sprites.png"),
-			POSITION.getArea().getX()+4, POSITION.getArea().getY()+4,
+			POSITION.getArea().getX() + 4, POSITION.getArea().getY() + 4,
 			0, 0, 14, 14);
+
+	public ManagerFlowController(ManagerContainer CONTAINER) {
+		super(CONTAINER);
+		POSITION.setArea(new Rectangle2d(CONTAINER.x, CONTAINER.y, POSITION.getArea().getWidth(), POSITION.getArea().getHeight()));
+	}
 
 	@Override
 	public boolean mouseClicked(BaseScreen screen, int mx, int my, int button) {
