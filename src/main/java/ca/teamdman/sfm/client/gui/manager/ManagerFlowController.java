@@ -18,7 +18,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 					0,
 					this.getX(),
 					this.getY()));
-			ManagerFlowController.this.CONTAINER.getSource().x = this.getX();
 		}
 	};
 
