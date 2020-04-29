@@ -2,7 +2,6 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.NumberUpdatePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketS2C;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
@@ -27,13 +26,6 @@ public class PacketHandler {
 				ButtonPositionPacketC2S::encode,
 				ButtonPositionPacketC2S::decode,
 				ButtonPositionPacketC2S::handle);
-
-		INSTANCE.registerMessage(i++,
-				NumberUpdatePacketC2S.class,
-				NumberUpdatePacketC2S::encode,
-				NumberUpdatePacketC2S::decode,
-				NumberUpdatePacketC2S::handle);
-
 
 		INSTANCE.registerMessage(i++,
 				ButtonPositionPacketS2C.class,

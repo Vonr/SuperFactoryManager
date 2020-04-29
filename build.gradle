@@ -14,7 +14,6 @@ apply plugin: 'idea'
 version = mod_version
 group = mod_group
 archivesBaseName = mod_name
-
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
 minecraft {
@@ -62,7 +61,16 @@ jar {
         ])
     }
 }
-
+jar {
+    sourceSets {
+        //noinspection GroovyAssignabilityCheck
+        main {
+            java {
+                exclude '**/nocompile/'
+            }
+        }
+    }
+}
 processResources {
     inputs.property 'version', project.version
     from(sourceSets.main.resources.srcDirs) {

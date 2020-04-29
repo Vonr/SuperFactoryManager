@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
@@ -43,6 +44,9 @@ public abstract class BaseScreen extends Screen {
 		drawString(str, x, y, 1F, color);
 	}
 
+	public ItemRenderer getItemRenderer() {
+		return this.itemRenderer;
+	}
 
 	public void drawString(String str, int x, int y, float mult, int color) {
 		GlStateManager.pushMatrix();
