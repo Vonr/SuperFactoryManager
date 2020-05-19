@@ -21,6 +21,7 @@ import net.minecraft.world.IEnviromentBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
@@ -121,10 +122,10 @@ public class BlockGooey<E extends TileEntity> {
 		world = mc.player.world;
 	}
 
-	@SubscribeEvent
-	public static void init(@Nonnull EnderIOLifecycleEvent.PreInit event) {
-		// only init selectedFaceIcon
-	}
+//	@SubscribeEvent
+//	public static void init(@Nonnull EnderIOLifecycleEvent.PreInit event) {
+//		// only init selectedFaceIcon
+//	}
 
 	public void init() {
 		initTime = System.currentTimeMillis();

@@ -1,18 +1,13 @@
 package ca.teamdman.sfm.client.gui.impl;
 
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.core.IFlowController;
-import ca.teamdman.sfm.client.gui.core.IFlowView;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowSprite implements IFlowController {
+public class FlowSprite {
 	private final int LEFT, TOP, WIDTH, HEIGHT;
 	private final ResourceLocation SHEET;
-	private       int              x, y;
 
 	/**
-	 * Helper constructor for when you don't care about the starting position, or when it will be overwritten soon.
-	 *
 	 * @param sheet  Sprite sheet to be bound for render
 	 * @param left   Offset on the sheet from the left
 	 * @param top    Offset on the sheet from the top
@@ -20,65 +15,19 @@ public class FlowSprite implements IFlowController {
 	 * @param height Height of the render area on the sheet
 	 */
 	public FlowSprite(ResourceLocation sheet, int left, int top, int width, int height) {
-		this(sheet, 0, 0, left, top, width, height);
-	}
-
-	/**
-	 * @param sheet  Sprite sheet to be bound for render
-	 * @param x      Scaled x coordinate of the element on the screen
-	 * @param y      Scaled y coordinate of the element on the screen
-	 * @param left   Offset on the sheet from the left
-	 * @param top    Offset on the sheet from the top
-	 * @param width  Width of the render area on the sheet
-	 * @param height Height of the render area on the sheet
-	 */
-	public FlowSprite(ResourceLocation sheet, int x, int y, int left, int top, int width, int height) {
 		this.SHEET = sheet;
 		this.LEFT = left;
 		this.TOP = top;
 		this.WIDTH = width;
 		this.HEIGHT = height;
-		this.x = x;
-		this.y = y;
 	}
 
-	public int getX() {
-		return x;
+	public void drawAt(BaseScreen screen, Position pos) {
+		drawAt(screen, pos.getX(), pos.getY());
 	}
 
-	public void setX(int x) {
-		this.x = x;
-	}
-
-	public int getY() {
-		return y;
-	}
-
-	public void setY(int y) {
-		this.y = y;
-	}
-
-	@Override
-	public boolean mouseClicked(BaseScreen screen, int mx, int my, int button) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseReleased(BaseScreen screen, int mx, int my, int button) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy) {
-		return false;
-	}
-
-	@SuppressWarnings("AccessStaticViaInstance")
-	@Override
-	public IFlowView getView() {
-		return (screen, mx, my, deltaTime) -> {
-			screen.bindTexture(SHEET);
-			screen.drawSprite(x, y, LEFT, TOP, WIDTH, HEIGHT);
-		};
+	public void drawAt(BaseScreen screen, int x, int y) {
+		BaseScreen.bindTexture(SHEET);
+		screen.drawSprite(x, y, LEFT, TOP, WIDTH, HEIGHT);
 	}
 }

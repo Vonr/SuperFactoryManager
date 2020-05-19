@@ -26,7 +26,7 @@ public class ManagerBlock extends Block {
 	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-		if (!world.isRemote) {
+		if (!world.isRemote && false) {
 			System.out.println("Finding blocks");
 			ManagerTileEntity tile = (ManagerTileEntity) world.getTileEntity(pos);
 			tile.getNeighbours(tile.getPos()).forEach(p -> {

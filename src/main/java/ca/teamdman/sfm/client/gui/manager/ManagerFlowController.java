@@ -1,45 +1,35 @@
 package ca.teamdman.sfm.client.gui.manager;
 
+import ca.teamdman.sfm.client.gui.WorldFlowView;
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.impl.FlowIconButton;
+import ca.teamdman.sfm.client.gui.impl.Position;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketC2S;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelDataManager;
-import net.minecraftforge.client.model.data.IModelData;
-
-import java.util.Random;
 
 public class ManagerFlowController implements IFlowController, IFlowView {
-	private static final ItemStack        asd    = new ItemStack(Blocks.PUMPKIN);
-	public final         ManagerContainer CONTAINER;
-	public               FlowIconButton   button = new FlowIconButton(FlowIconButton.ButtonLabel.INPUT) {
-		@Override
-		public void onPositionChanged() {
-			PacketHandler.INSTANCE.sendToServer(new ButtonPositionPacketC2S(
-					CONTAINER.windowId,
-					CONTAINER.getSource().getPos(),
-					0,
-					this.getX(),
-					this.getY()));
-		}
-	};
+	public final ManagerContainer CONTAINER;
+	public final FlowIconButton   button;
+	public final IFlowView        worldView;
+
 
 	public ManagerFlowController(ManagerContainer container) {
 		this.CONTAINER = container;
+		this.button = new FlowIconButton(FlowIconButton.ButtonLabel.INPUT, new Position(CONTAINER.x, CONTAINER.y) {
+			@Override
+			public void onPositionChanged(int oldX, int oldY, int newX, int newY) {
+				PacketHandler.INSTANCE.sendToServer(new ButtonPositionPacketC2S(
+						CONTAINER.windowId,
+						CONTAINER.getSource().getPos(),
+						0,
+						newX,
+						newY));
+			}
+		});
+		this.worldView = new WorldFlowView(CONTAINER.getSource().getWorld(), CONTAINER.getSource().getPos());
 	}
 
 	@Override
@@ -63,42 +53,8 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public void load() {
-		this.button.setXY(CONTAINER.x, CONTAINER.y);
-	}
-
-	@Override
 	public void draw(BaseScreen screen, int mx, int my, float deltaTime) {
 		button.draw(screen, mx, my, deltaTime);
-		RenderHelper.disableStandardItemLighting();
-		RenderHelper.enableGUIStandardItemLighting();
-		screen.getItemRenderer().renderItemAndEffectIntoGUI(asd, 25, 25);
-		BufferBuilder           bb            = Tessellator.getInstance().getBuffer();
-		BlockRendererDispatcher blockRenderer = Minecraft.getInstance().getBlockRendererDispatcher();
-		BlockState              state         = Blocks.PUMPKIN.getDefaultState();
-		//Minecraft.getInstance().getBlockRendererDispatcher().getModelForState(Blocks.PUMPKIN.getDefaultState())
-		IBakedModel             model         = blockRenderer.getBlockModelShapes().getModel(state);
-		World                   world         = CONTAINER.getSource().getWorld();
-
-		IModelData data = model.getModelData(world,
-				BlockPos.ZERO,
-				state,
-				ModelDataManager.getModelData(
-						world,
-						CONTAINER.getSource().getPos()));
-		Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelRenderer().renderModel(
-				world,
-				model,
-				state,
-				BlockPos.ZERO,
-				bb,
-				true,
-				new Random(),
-				42,
-				data
-				);
-		//		Minecraft.getInstance().getBlockRendererDispatcher().renderBlockBrightness(Blocks.PUMPKIN.getDefaultState(), 1);
-		//		Minecraft.getInstance().worldRenderer.
-		RenderHelper.enableStandardItemLighting();
+		worldView.draw(screen, mx, my, deltaTime);
 	}
 }
