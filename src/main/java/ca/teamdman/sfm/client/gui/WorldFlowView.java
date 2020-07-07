@@ -87,8 +87,8 @@ public class WorldFlowView implements IFlowView {
 						> 0); // FORGE: fix flickering leaves when mods mess up the blurMipmap settings
 			wr.renderBlockLayer(BlockRenderLayer.CUTOUT_MIPPED, ar);
 			{
-				AbstractChunkRenderContainer crc = new RenderList();
-				crc.addRenderChunk();
+//				AbstractChunkRenderContainer crc = new RenderList();
+//				crc.addRenderChunk();
 			}
 			mc.getTextureManager().getTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE)
 				.restoreLastBlurMipmap();
