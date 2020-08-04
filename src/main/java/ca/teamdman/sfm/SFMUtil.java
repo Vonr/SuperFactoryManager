@@ -51,6 +51,7 @@ public class SFMUtil {
 		if (sender.openContainer.windowId != packet.getWindowId())
 			return Optional.empty();
 		ServerWorld world = sender.getServerWorld();
+		//noinspection deprecation
 		if (!world.isBlockLoaded(packet.getTilePosition()))
 			return Optional.empty();
 		TileEntity tile = world.getTileEntity(packet.getTilePosition());
