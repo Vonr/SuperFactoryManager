@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.BlockPos;
@@ -22,10 +23,10 @@ public class CrafterBlock extends Block   {
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public boolean onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 		if (!world.isRemote && handIn == Hand.MAIN_HAND)
 			new CrafterContainerProvider(IWorldPosCallable.of(world, pos)).openGui(player);
-		return true;
+		return ActionResultType.CONSUME;
 	}
 
 	@Override
