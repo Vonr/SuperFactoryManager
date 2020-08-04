@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.client.gui.manager;
 
-import ca.teamdman.sfm.client.gui.WorldFlowView;
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
@@ -9,11 +8,11 @@ import ca.teamdman.sfm.client.gui.impl.Position;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketC2S;
+import com.mojang.blaze3d.matrix.MatrixStack;
 
 public class ManagerFlowController implements IFlowController, IFlowView {
 	public final ManagerContainer CONTAINER;
 	public final FlowIconButton   button;
-	public final IFlowView        worldView;
 
 
 	public ManagerFlowController(ManagerContainer container) {
@@ -29,7 +28,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 						newY));
 			}
 		});
-		this.worldView = new WorldFlowView(CONTAINER.getSource().getWorld(), CONTAINER.getSource().getPos());
 	}
 
 	@Override
@@ -53,8 +51,8 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public void draw(BaseScreen screen, int mx, int my, float deltaTime) {
-		button.draw(screen, mx, my, deltaTime);
-		worldView.draw(screen, mx, my, deltaTime);
+	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx,
+		int my, float deltaTime) {
+		button.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 }
