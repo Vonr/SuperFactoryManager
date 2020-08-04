@@ -1,29 +1,37 @@
 package ca.teamdman.sfm.client.gui.core;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexBuffer;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import org.lwjgl.opengl.GL11;
 
-import javax.vecmath.Color4f;
 
 /**
  * Credit to VSWE for lots of the rendering scaling tech
  */
 public abstract class BaseScreen extends Screen {
-	public static final Color4f DEFAULT_LINE_COLOUR     = new Color4f(0.4f, 0.4f, 0.4f, 1);
-	public static final Color4f HIGHLIGHTED_LINE_COLOUR = new Color4f(0.15686275f, 0.5294118f, 0.94509804f, 1);
-	final               int     zLevel                  = 0;
-	protected           int     guiLeft                 = 0;
-	protected           int     guiTop                  = 0;
-	protected           int     xSize                   = 176;
-	protected           int     ySize                   = 166;
+
+	public static final Colour3f DEFAULT_LINE_COLOUR = new Colour3f(0.4f, 0.4f, 0.4f);
+	public static final Colour3f HIGHLIGHTED_LINE_COLOUR = new Colour3f(0.15686275f, 0.5294118f,
+		0.94509804f);
+	final int zLevel = 0;
+	protected int guiLeft = 0;
+	protected int guiTop = 0;
+	protected int xSize = 176;
+	protected int ySize = 166;
 
 	public BaseScreen(ITextComponent titleIn, int width, int height) {
 		super(titleIn);
@@ -40,35 +48,42 @@ public abstract class BaseScreen extends Screen {
 		Minecraft.getInstance().getTextureManager().bindTexture(resource);
 	}
 
-	public void drawString(String str, int x, int y, int color) {
-		drawString(str, x, y, 1F, color);
-	}
-
 	public ItemRenderer getItemRenderer() {
 		return this.itemRenderer;
 	}
 
-	public void drawString(String str, int x, int y, float mult, int color) {
-		GlStateManager.pushMatrix();
-		GlStateManager.scalef(mult, mult, 1F);
-		this.font.drawString(str, (int) ((x + guiLeft) / mult), (int) ((y + guiTop) / mult), color);
+	/**
+	 * Draws a string to the screen
+	 */
+	public void drawString(MatrixStack matrixStack, String str, int x,
+		int y, float mult, int color) {
+		RenderSystem.pushMatrix();
+		RenderSystem.scalef(mult, mult, 1F);
+		this.font
+			.drawString(matrixStack, str, (int) ((x + guiLeft) / mult), (int) ((y + guiTop) / mult),
+				color);
 		//bindTexture(getComponentResource());
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GlStateManager.popMatrix();
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.popMatrix();
 	}
 
-
-	public void drawRightAlignedString(String str, int x, int y, int color) {
-		drawRightAlignedString(str, x, y, 1, color);
+	public void drawRightAlignedString(MatrixStack matrixStack,
+		String str, int x, int y, int color) {
+		drawRightAlignedString(matrixStack, str, x, y, 1, color);
 	}
 
-	public void drawRightAlignedString(String str, int x, int y, float mult, int color) {
+	/**
+	 * Draws a string, aligned to the right of the screen
+	 */
+	public void drawRightAlignedString(MatrixStack matrixStack, String str, int x, int y,
+		float mult, int color) {
 		drawString(
-				str,
-				(int) (x - fixScaledCoordinate(font.getStringWidth(str), getScale(), minecraft.mainWindow.getWidth())),
-				y,
-				mult,
-				color
+			matrixStack, str,
+			(int) (x - fixScaledCoordinate(font.getStringWidth(str), getScale(),
+				Minecraft.getInstance().getMainWindow().getWidth())),
+			y,
+			mult,
+			color
 		);
 	}
 
@@ -98,10 +113,9 @@ public abstract class BaseScreen extends Screen {
 	public double getScale() {
 		double xFactor = (width * 0.9F) / this.xSize;
 		double yFactor = (height * 0.9F) / this.ySize;
-		double mult    = Math.min(xFactor, yFactor);
+		double mult = Math.min(xFactor, yFactor);
 		mult = Math.min(1, mult);
 		mult = Math.floor(mult * 1000) / 1000F;
-		//		System.out.printf("xsize %d\tysize %d\twidth %d\theight %d\txfac %f\tyfac %f\tmult %f\n",xSize, ySize, width, height, xFactor, yFactor, mult);
 		return mult;
 	}
 
@@ -113,77 +127,50 @@ public abstract class BaseScreen extends Screen {
 	/**
 	 * Draws the bound texture to the screen
 	 *
-	 * @param x      Draw begin x scaled coordinate
-	 * @param y      Draw begin y scaled coordinate
-	 * @param left   Texture begin x offset
-	 * @param top    Texture begin y offset
-	 * @param width  Texture sample width
-	 * @param height Texture sample height
+	 * @param matrixStack
+	 * @param x           Draw begin x scaled coordinate
+	 * @param y           Draw begin y scaled coordinate
+	 * @param left        Texture begin x offset
+	 * @param top         Texture begin y offset
+	 * @param width       Texture sample width
+	 * @param height      Texture sample height
 	 */
-	public void drawSprite(int x, int y, int left, int top, int width, int height) {
-		drawTexture(x, y, left, top, width, height);
+	public void drawSprite(MatrixStack matrixStack, int x, int y,
+		int left, int top, int width, int height) {
+		drawTexture(matrixStack, x, y, left, top, width, height);
 	}
 
 	/**
 	 * Scales and draws the currently bound texture.
 	 *
-	 * @param x    Local value
-	 * @param y    Local value
-	 * @param srcX Sprite value
-	 * @param srcY Sprite value
-	 * @param w    Local width
-	 * @param h    Local height
+	 * @param matrixStack
+	 * @param x           Local value
+	 * @param y           Local value
+	 * @param srcX        Sprite value
+	 * @param srcY        Sprite value
+	 * @param w           Local width
+	 * @param h           Local height
 	 */
-	public void drawTexture(int x, int y, int srcX, int srcY, int w, int h) {
-		double scale = getScale();
-
-		drawScaleFriendlyTexture(
-				fixScaledCoordinate(guiLeft + x, scale, minecraft.mainWindow.getWidth()),
-				fixScaledCoordinate(guiTop + y, scale, minecraft.mainWindow.getHeight()),
-				fixScaledCoordinate(srcX, scale, 256),
-				fixScaledCoordinate(srcY, scale, 256),
-				fixScaledCoordinate(w, scale, minecraft.mainWindow.getWidth()),
-				fixScaledCoordinate(h, scale, minecraft.mainWindow.getHeight())
+	public void drawTexture(MatrixStack matrixStack, int x, int y,
+		int srcX, int srcY, int w, int h) {
+		blit(matrixStack,
+			guiLeft + x,
+			guiTop + y,
+			srcX, srcY,
+			w, h
 		);
 	}
 
 	/**
-	 * Draws texture using screen values
-	 *
-	 * @param x    Screen value
-	 * @param y    Screen value
-	 * @param srcX Sprite value
-	 * @param srcY Sprite value
-	 * @param w    Screen width
-	 * @param h    Screen height
-	 */
-	public void drawScaleFriendlyTexture(double x, double y, double srcX, double srcY, double w, double h) {
-		float         f             = 0.00390625F;
-		float         f1            = 0.00390625F;
-		Tessellator   tessellator   = Tessellator.getInstance();
-		BufferBuilder worldRenderer = tessellator.getBuffer();
-		worldRenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-		worldRenderer.pos(x + 0, y + h, this.zLevel).tex((srcX + 0) * f, (srcY + h) * f1).endVertex();
-		worldRenderer.pos(x + w, y + h, this.zLevel).tex((srcX + w) * f, (srcY + h) * f1).endVertex();
-		worldRenderer.pos(x + w, y + 0, this.zLevel).tex((srcX + w) * f, (srcY + 0) * f1).endVertex();
-		worldRenderer.pos(x + 0, y + 0, this.zLevel).tex((srcX + 0) * f, (srcY + 0) * f1).endVertex();
-		tessellator.draw();
-	}
-
-	/**
-	 * Scales and renders main gui.
-	 *
-	 * @param mouseX Screen value
-	 * @param mouseY Screen value
-	 * @param f      Unknown?
+	 * Renders the GUI, creating a scaled matrix for sub-renderers.
 	 */
 	@Override
-	public void render(int mouseX, int mouseY, float f) {
-		this.renderBackground();
-		startScaling();
-		draw(scaleX(mouseX) - guiLeft, scaleY(mouseY) - guiTop, f);
-		stopScaling();
-		super.render(mouseX, mouseY, f);
+	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+		this.renderBackground(matrixStack); // MC method, draw greyed out background
+		startScaling(matrixStack);
+		draw(matrixStack, scaleX(mouseX) - guiLeft, scaleY(mouseY) - guiTop, partialTicks);
+		stopScaling(matrixStack);
+		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
 
 	/**
@@ -226,98 +213,87 @@ public abstract class BaseScreen extends Screen {
 
 	/**
 	 * Sets GL state to fit the current scale ratio.
+	 *
+	 * @param matrixStack
 	 */
-	private void startScaling() {
-		GlStateManager.pushMatrix();
-		double scale = getScale();
-		GlStateManager.scaled(scale, scale, 1);
-		GlStateManager.translated(-guiLeft, -guiTop, 0.0F);
-		GlStateManager.translated((this.width - this.xSize * scale) / (2 * scale), (this.height - this.ySize * scale) / (2 * scale), 0.0F);
+	private void startScaling(MatrixStack matrixStack) {
+		matrixStack.push();
+		float scale = (float) getScale();
+		matrixStack.scale(scale, scale, 1);
+		matrixStack.translate(-guiLeft, -guiTop, 0.0F);
+		matrixStack.translate((this.width - this.xSize * scale) / (2 * scale),
+			(this.height - this.ySize * scale) / (2 * scale), 0.0F);
 	}
 
 	/**
 	 * Reverts GL state to normal scaling.
+	 *
+	 * @param matrixStack
 	 */
-	private void stopScaling() {
-		GlStateManager.popMatrix();
+	private void stopScaling(MatrixStack matrixStack) {
+		matrixStack.pop();
 	}
 
-	public abstract void draw(int mouseX, int mouseY, float f);
+	public abstract void draw(MatrixStack matrixStack, int mouseX,
+		int mouseY, float partialTicks);
 
-//	public void drawLine(Line line) {
-//		drawLine(line.HEAD, line.TAIL, line.getColor());
-//	}
-//
-//	public void drawLine(Point head, Point tail, Color4f color) {
-//		drawLine(head.getX(), head.getY(), tail.getX(), tail.getY(), color);
-//	}
-
-	public void drawLine(int x1, int y1, int x2, int y2, Color4f color) {
-		GlStateManager.pushMatrix();
-
-		GlStateManager.disableTexture();
-		GlStateManager.color4f(color.x, color.y, color.z, color.w);
-
-		//GlStateManager.enableBlend();
-		//GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_DST_COLOR);
-		//GL11.glShadeModel(GL11.GL_SMOOTH);
-		//GL11.glEnable(GL11.GL_LINE_SMOOTH);
-		//GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
-		//GL11.glLineWidth(5);
+	public void drawLine(MatrixStack matrixStack, int x1, int y1, int x2,
+		int y2, Colour3f color) {
+		RenderSystem.pushMatrix();
+		RenderSystem.disableTexture();
+		RenderSystem.color4f(color.RED, color.GREEN, color.BLUE, 1);//color.w);
 		GL11.glLineWidth(1 + 5 * this.width / 500F);
-
 		GL11.glBegin(GL11.GL_LINES);
 		GL11.glVertex3f(guiLeft + x1, guiTop + y1, 0);
 		GL11.glVertex3f(guiLeft + x2, guiTop + y2, 0);
 		GL11.glEnd();
+		RenderSystem.disableBlend();
+		RenderSystem.color4f(1F, 1F, 1F, 1F);
+		RenderSystem.enableTexture();
+		RenderSystem.popMatrix();
 
-		GlStateManager.disableBlend();
-		GlStateManager.color4f(1F, 1F, 1F, 1F);
-		GlStateManager.enableTexture();
-		GlStateManager.popMatrix();
+//		matrixStack.push();
+//		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+//		bufferBuilder.addVertex();
+//		bufferBuilder.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
+//		bufferBuilder.pos(guiLeft + x1, guiTop + y1, 0);
+//		bufferBuilder.pos(guiLeft + x2, guiTop + y2, 0);
+//		bufferBuilder.pos(0,0, 0);
+//		bufferBuilder.finishDrawing();
+//		WorldVertexBufferUploader.draw(bufferBuilder);
+//		matrixStack.pop();
+
+		matrixStack.push();
+
+		matrixStack.pop();
 	}
 
-//	public void drawLine(Point head, Point tail) {
-//		drawLine(head.getX(), head.getY(), tail.getX(), tail.getY());
-//	}
-//
-//	public void drawLine(int x1, int y1, int x2, int y2) {
-//		drawLine(x1, y1, x2, y2, new Color4f(0.4f, 0.4f, 0.4f, 1));
-//	}
-//
-//	public void drawArrow(Line line) {
-//		drawArrow(line.TAIL.getX(), line.TAIL.getY(), line.HEAD.getX(), line.HEAD.getY(), line.getColor());
-//	}
-
-	public void drawArrow(int x1, int y1, int x2, int y2, Color4f color) {
-		drawLine(x1, y1, x2, y2, color);
-		int    lookX = x2 - x1;
-		int    lookY = y2 - y1;
-		double mag   = Math.sqrt((lookX * lookX) + (lookY * lookY));
+	public void drawArrow(MatrixStack matrixStack, int x1, int y1, int x2,
+		int y2, Colour3f color) {
+		drawLine(matrixStack, x1, y1, x2, y2, color);
+		int lookX = x2 - x1;
+		int lookY = y2 - y1;
+		double mag = Math.sqrt((lookX * lookX) + (lookY * lookY));
 		mag *= 1 / 24d;
 		lookX /= mag;
 		lookY /= mag;
 
 		double ang = Math.PI * -7 / 8d;
 		drawLine(
-				x2,
-				y2,
-				x2 + (int) (Math.cos(ang) * lookX - Math.sin(ang) * lookY),
-				y2 + (int) (Math.sin(ang) * lookX + Math.cos(ang) * lookY),
-				color
+			matrixStack, x2,
+			y2,
+			x2 + (int) (Math.cos(ang) * lookX - Math.sin(ang) * lookY),
+			y2 + (int) (Math.sin(ang) * lookX + Math.cos(ang) * lookY),
+			color
 		);
 
 		ang = Math.PI * 7 / 8d;
 		drawLine(
-				x2,
-				y2,
-				x2 + (int) (Math.cos(ang) * lookX - Math.sin(ang) * lookY),
-				y2 + (int) (Math.sin(ang) * lookX + Math.cos(ang) * lookY),
-				color
+			matrixStack, x2,
+			y2,
+			x2 + (int) (Math.cos(ang) * lookX - Math.sin(ang) * lookY),
+			y2 + (int) (Math.sin(ang) * lookX + Math.cos(ang) * lookY),
+			color
 		);
-	}
-
-	public void drawArrow(int x1, int y1, int x2, int y2) {
-		drawArrow(x1, y1, x2, y2, DEFAULT_LINE_COLOUR);
 	}
 }

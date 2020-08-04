@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.client.gui.impl;
 
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 
 public class FlowSprite {
@@ -22,12 +23,14 @@ public class FlowSprite {
 		this.HEIGHT = height;
 	}
 
-	public void drawAt(BaseScreen screen, Position pos) {
-		drawAt(screen, pos.getX(), pos.getY());
+	public void drawAt(BaseScreen screen, MatrixStack matrixStack,
+		Position pos) {
+		drawAt(screen, matrixStack, pos.getX(), pos.getY());
 	}
 
-	public void drawAt(BaseScreen screen, int x, int y) {
+	public void drawAt(BaseScreen screen, MatrixStack matrixStack, int x,
+		int y) {
 		BaseScreen.bindTexture(SHEET);
-		screen.drawSprite(x, y, LEFT, TOP, WIDTH, HEIGHT);
+		screen.drawSprite(matrixStack, x, y, LEFT, TOP, WIDTH, HEIGHT);
 	}
 }

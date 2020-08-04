@@ -4,6 +4,8 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.util.ResourceLocation;
 
 public class FlowIconButton implements IFlowController, IFlowView, PositionProvider, SizeProvider {
@@ -56,10 +58,11 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 	}
 
 	@Override
-	public void draw(BaseScreen screen, int mx, int my, float deltaTime) {
+	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx,
+		int my, float deltaTime) {
 		Position p = POS.getPosition();
-		BACKGROUND.drawAt(screen, p);
-		ICON.drawAt(screen, p.getX() + 4, p.getY() + 4);
+		BACKGROUND.drawAt(screen, matrixStack, p);
+		ICON.drawAt(screen, matrixStack, p.getX() + 4, p.getY() + 4);
 	}
 
 	@Override
