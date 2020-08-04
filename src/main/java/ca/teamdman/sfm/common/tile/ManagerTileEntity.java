@@ -31,16 +31,17 @@ public class ManagerTileEntity extends TileEntity {
 	}
 
 	@Override
-	public void read(CompoundNBT compound) {
-		this.x = compound.getInt("x");
-		this.y = compound.getInt("y");
+	public CompoundNBT serializeNBT() {
+		CompoundNBT c = new CompoundNBT();
+		c.putInt("x", x);
+		c.putInt("y", y);
+		return c;
 	}
 
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
-		compound.putInt("x", x);
-		compound.putInt("y", y);
-		return compound;
+	public void deserializeNBT(CompoundNBT compound) {
+		this.x = compound.getInt("x");
+		this.y = compound.getInt("y");
 	}
 
 	public Stream<BlockPos> getNeighbours(BlockPos pos) {

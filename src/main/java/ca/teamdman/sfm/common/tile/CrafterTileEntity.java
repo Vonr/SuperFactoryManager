@@ -84,16 +84,13 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 	}
 
 	@Override
-	public void read(CompoundNBT compound) {
-		super.read(compound);
-		this.inventory.deserializeNBT(compound.getCompound("inv"));
+	public void deserializeNBT(CompoundNBT nbt) {
+		this.inventory.deserializeNBT(nbt);
 	}
 
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
-		super.write(compound);
-		compound.put("inv", inventory.serializeNBT());
-		return compound;
+	public CompoundNBT serializeNBT() {
+		return this.inventory.serializeNBT();
 	}
 
 	@Override
