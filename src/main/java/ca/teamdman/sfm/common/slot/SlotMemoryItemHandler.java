@@ -20,10 +20,4 @@ public class SlotMemoryItemHandler extends SlotItemHandler {
 		ghost = stack.copy();
 		super.putStack(stack);
 	}
-
-	@Nullable
-	@Override
-	public String getSlotTexture() {
-		return super.getSlotTexture();
-	}
 }
