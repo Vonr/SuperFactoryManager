@@ -2,15 +2,15 @@ modLoader="javafml"
 loaderVersion="[26,)"
 issueTrackerURL="https://github.com/TeamDman/SuperFactoryManager/issues"
 [[mods]]
-modId="sfm"
-version="${version}"
-displayName="Super Factory Manager"
-#updateJSONURL="http://myurl.me/"
-displayURL="https://www.curseforge.com/minecraft/mc-mods/super-factory-manager"
-logoFile="sfm.png"
-credits="Thanks to VSWE for the original mod, and gigabit101 for the 1.10 work"
-authors="TeamDman"
-description='''
+  modId="sfm"
+  version="${version}"
+  displayName="Super Factory Manager"
+  #updateJSONURL="http://myurl.me/"
+  displayURL="https://www.curseforge.com/minecraft/mc-mods/super-factory-manager"
+  logoFile="sfm.png"
+  credits="Thanks to VSWE for the original mod, and gigabit101 for the 1.10 work"
+  authors="TeamDman"
+  description='''
 Adds a certain magical factory manager to the game.
 Automation is within your grasp!
 '''
@@ -24,6 +24,6 @@ Automation is within your grasp!
 [[dependencies.sfm]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.14.3,1.15)"
+    versionRange="[1.16,1.17)"
     ordering="NONE"
     side="BOTH"
