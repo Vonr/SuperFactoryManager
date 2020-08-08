@@ -58,13 +58,8 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	@Override
 	public void draw(MatrixStack matrixStack, int mx, int my,
 		float partialTicks) {
-//		int mx = scaleX(x) - guiLeft;
-//		int my = scaleY(y) - guiTop;
 		drawBackground(matrixStack);
 		CONTAINER.getViews().forEach(v -> v.draw(this, matrixStack, mx, my, partialTicks));
-		drawLine(matrixStack, 0,0,255, 255, new Colour3f(1f, 0.4f, 0.4f));
-		drawLine(matrixStack, 20,20,20, 255, new Colour3f(1f, 0.4f, 0.4f));
-		drawLine(matrixStack, 20,20,255, 20, new Colour3f(1f, 0.4f, 0.4f));
 	}
 
 	public void drawBackground(MatrixStack matrixStack) {
