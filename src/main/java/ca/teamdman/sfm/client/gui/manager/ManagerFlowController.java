@@ -22,7 +22,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 			new Position(CONTAINER.x, CONTAINER.y)) {
 			@Override
 			public void onPositionChanged() {
-				System.out.println("Change!");
 				PacketHandler.INSTANCE.sendToServer(new ButtonPositionPacketC2S(
 					CONTAINER.windowId,
 					CONTAINER.getSource().getPos(),
