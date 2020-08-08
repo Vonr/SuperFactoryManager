@@ -11,23 +11,26 @@ import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 public class ManagerFlowController implements IFlowController, IFlowView {
+
 	public final ManagerContainer CONTAINER;
-	public final FlowIconButton   button;
+	public final FlowIconButton button;
 
 
 	public ManagerFlowController(ManagerContainer container) {
 		this.CONTAINER = container;
-		this.button = new FlowIconButton(FlowIconButton.ButtonLabel.INPUT, new Position(CONTAINER.x, CONTAINER.y) {
+		this.button = new FlowIconButton(FlowIconButton.ButtonLabel.INPUT,
+			new Position(CONTAINER.x, CONTAINER.y)) {
 			@Override
-			public void onPositionChanged(int oldX, int oldY, int newX, int newY) {
+			public void onPositionChanged() {
+				System.out.println("Change!");
 				PacketHandler.INSTANCE.sendToServer(new ButtonPositionPacketC2S(
-						CONTAINER.windowId,
-						CONTAINER.getSource().getPos(),
-						0,
-						newX,
-						newY));
+					CONTAINER.windowId,
+					CONTAINER.getSource().getPos(),
+					0,
+					this.getPosition().getX(),
+					this.getPosition().getY()));
 			}
-		});
+		};
 	}
 
 	@Override
