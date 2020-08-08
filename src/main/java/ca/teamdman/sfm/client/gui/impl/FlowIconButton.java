@@ -38,10 +38,11 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 
 	@Override
 	public boolean mouseReleased(BaseScreen screen, int mx, int my, int button) {
-		if (!POS.mouseReleased(screen, mx, my, button))
-			return false;
-		this.onPositionChanged();
-		return true;
+		if (POS.mouseReleased(screen, mx, my, button)) {
+			this.onPositionChanged();
+			return true;
+		}
+		return false;
 	}
 
 	public void onPositionChanged() {
