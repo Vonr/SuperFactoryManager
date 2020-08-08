@@ -238,7 +238,7 @@ public abstract class BaseScreen extends Screen {
 		int dx = x2 - x1;
 		int dy = y2 - y1;
 
-		// scale vector to normal, the to width
+		// scale vector to normal, then to width
 		int sqrMag = dx * dx + dy * dy;
 		double mag = Math.sqrt(sqrMag == 0 ? 1 : sqrMag);
 		int width = 10;
