@@ -45,8 +45,6 @@ public class FlowRepositionable implements IFlowController, PositionProvider, Si
 
 	@Override
 	public boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy) {
-		if (!Screen.hasAltDown())
-			isSelected = false;
 		if (!isSelected)
 			return false;
 		int newX = MathHelper.clamp(mx - getDragXOffset(), 0, 512 - size.getWidth());
