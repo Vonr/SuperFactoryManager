@@ -7,8 +7,6 @@ import net.minecraft.util.text.ITextComponent;
 
 public class ManagerScreen extends BaseContainerScreen<ManagerContainer> {
 	public ManagerScreen(ManagerContainer container, PlayerInventory inv, ITextComponent name) {
-		super(container, 180, 160, inv, name);
-		this.xSize = 512;
-		this.ySize = 256;
+		super(container, 512, 256, inv, name);
 	}
 }

@@ -2,19 +2,15 @@ package ca.teamdman.sfm.client.gui.core;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.ItemRenderer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexBuffer;
-import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
 import org.lwjgl.opengl.GL11;
 
@@ -28,15 +24,15 @@ public abstract class BaseScreen extends Screen {
 	public static final Colour3f HIGHLIGHTED_LINE_COLOUR = new Colour3f(0.15686275f, 0.5294118f,
 		0.94509804f);
 	final int zLevel = 0;
-	protected int guiLeft = 0;
-	protected int guiTop = 0;
-	protected int xSize = 176;
-	protected int ySize = 166;
+	protected int guiLeft;
+	protected int guiTop;
+	protected int scaledWidth;
+	protected int scaledHeight;
 
-	public BaseScreen(ITextComponent titleIn, int width, int height) {
+	public BaseScreen(ITextComponent titleIn, int scaledWidth, int scaledHeight) {
 		super(titleIn);
-		this.width = width;
-		this.height = height;
+		this.scaledWidth = scaledWidth;
+		this.scaledHeight = scaledHeight;
 	}
 
 	/**
@@ -60,8 +56,8 @@ public abstract class BaseScreen extends Screen {
 		RenderSystem.pushMatrix();
 		RenderSystem.scalef(mult, mult, 1F);
 		this.font
-			.drawString(matrixStack, str, (int) ((x + guiLeft) / mult), (int) ((y + guiTop) / mult),
-				color);
+//			.drawString(matrixStack, str, (int) ((x + guiLeft) / mult), (int) ((y + guiTop) / mult), color);
+			.drawString(matrixStack, str, (int) ((x) / mult), (int) ((y) / mult), color);
 		//bindTexture(getComponentResource());
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		RenderSystem.popMatrix();
@@ -111,8 +107,8 @@ public abstract class BaseScreen extends Screen {
 	 * @return Scaling factor
 	 */
 	public double getScale() {
-		double xFactor = (width * 0.9F) / this.xSize;
-		double yFactor = (height * 0.9F) / this.ySize;
+		double xFactor = (width * 0.9F) / this.scaledWidth;
+		double yFactor = (height * 0.9F) / this.scaledHeight;
 		double mult = Math.min(xFactor, yFactor);
 		mult = Math.min(1, mult);
 		mult = Math.floor(mult * 1000) / 1000F;
@@ -154,8 +150,8 @@ public abstract class BaseScreen extends Screen {
 	public void drawTexture(MatrixStack matrixStack, int x, int y,
 		int srcX, int srcY, int w, int h) {
 		blit(matrixStack,
-			guiLeft + x,
-			guiTop + y,
+			x,
+			y,
 			srcX, srcY,
 			w, h
 		);
@@ -179,8 +175,8 @@ public abstract class BaseScreen extends Screen {
 	@Override
 	protected void init() {
 		super.init();
-		this.guiLeft = (this.width - this.xSize) / 2;
-		this.guiTop = (this.height - this.ySize) / 2;
+		this.guiLeft = (this.width - this.scaledWidth) / 2;
+		this.guiTop = (this.height - this.scaledHeight) / 2;
 	}
 
 	/**
@@ -193,7 +189,7 @@ public abstract class BaseScreen extends Screen {
 		double scale = getScale();
 		x /= scale;
 		x += guiLeft;
-		x -= (this.width - this.xSize * scale) / (2 * scale);
+		x -= (this.width - this.scaledWidth * scale) / (2 * scale);
 		return (int) x;
 	}
 
@@ -207,7 +203,7 @@ public abstract class BaseScreen extends Screen {
 		double scale = getScale();
 		y /= scale;
 		y += guiTop;
-		y -= (this.height - this.ySize * scale) / (2 * scale);
+		y -= (this.height - this.scaledHeight * scale) / (2 * scale);
 		return (int) y;
 	}
 
@@ -217,12 +213,12 @@ public abstract class BaseScreen extends Screen {
 	 * @param matrixStack
 	 */
 	private void startScaling(MatrixStack matrixStack) {
-		matrixStack.push();
 		float scale = (float) getScale();
+		matrixStack.push();
+		matrixStack.translate(this.width / 2F, this.height / 2F, 0.0F);
 		matrixStack.scale(scale, scale, 1);
-		matrixStack.translate(-guiLeft, -guiTop, 0.0F);
-		matrixStack.translate((this.width - this.xSize * scale) / (2 * scale),
-			(this.height - this.ySize * scale) / (2 * scale), 0.0F);
+//		matrixStack.translate(-guiLeft, -guiTop, 0.0F);
+		matrixStack.translate(-this.scaledWidth / 2F, -this.scaledHeight / 2F, 0.0F);
 	}
 
 	/**
@@ -237,34 +233,39 @@ public abstract class BaseScreen extends Screen {
 	public abstract void draw(MatrixStack matrixStack, int mouseX,
 		int mouseY, float partialTicks);
 
-	public void drawLine(MatrixStack matrixStack, int x1, int y1, int x2,
-		int y2, Colour3f color) {
-		RenderSystem.pushMatrix();
-		RenderSystem.disableTexture();
-		RenderSystem.color4f(color.RED, color.GREEN, color.BLUE, 1);//color.w);
-		GL11.glLineWidth(1 + 5 * this.width / 500F);
-		GL11.glBegin(GL11.GL_LINES);
-		GL11.glVertex3f(guiLeft + x1, guiTop + y1, 0);
-		GL11.glVertex3f(guiLeft + x2, guiTop + y2, 0);
-		GL11.glEnd();
-		RenderSystem.disableBlend();
-		RenderSystem.color4f(1F, 1F, 1F, 1F);
-		RenderSystem.enableTexture();
-		RenderSystem.popMatrix();
+	public void drawLine(MatrixStack matrixStack, int x1, int y1, int x2, int y2, Colour3f color) {
+		// normal vector
+		int dx = x2 - x1;
+		int dy = y2 - y1;
 
-//		matrixStack.push();
-//		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-//		bufferBuilder.addVertex();
-//		bufferBuilder.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
-//		bufferBuilder.pos(guiLeft + x1, guiTop + y1, 0);
-//		bufferBuilder.pos(guiLeft + x2, guiTop + y2, 0);
-//		bufferBuilder.pos(0,0, 0);
-//		bufferBuilder.finishDrawing();
-//		WorldVertexBufferUploader.draw(bufferBuilder);
-//		matrixStack.pop();
+		// scale vector to normal, the to width
+		int sqrMag = dx * dx + dy * dy;
+		double mag = Math.sqrt(sqrMag == 0 ? 1 : sqrMag);
+		int width = 10;
+		dx = (int) ((dx / mag) * width / 2f);
+		dy = (int) ((dy / mag) * width / 2f);
 
+		Matrix4f m = matrixStack.getLast().getMatrix();
 		matrixStack.push();
-
+		RenderSystem.disableTexture();
+		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+		bufferBuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+		bufferBuilder.pos(m, x1 - dy, y1 + dx, 0)
+			.color(color.RED, color.GREEN, color.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, x2 - dy, y2 + dx, 0)
+			.color(color.RED, color.GREEN, color.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, x2 + dy, y2 - dx, 0)
+			.color(color.RED, color.GREEN, color.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, x1 + dy, y1 - dx, 0)
+			.color(color.RED, color.GREEN, color.BLUE, 1)
+			.endVertex();
+		bufferBuilder.finishDrawing();
+		WorldVertexBufferUploader.draw(bufferBuilder);
+		RenderSystem.enableTexture();
+//		RenderSystem.disableBlend();
 		matrixStack.pop();
 	}
 
