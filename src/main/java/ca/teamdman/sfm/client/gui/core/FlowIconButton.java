@@ -2,53 +2,70 @@ package ca.teamdman.sfm.client.gui.core;
 
 import ca.teamdman.sfm.SFM;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.INBTSerializable;
 
 public class FlowIconButton implements IFlowController, IFlowView, PositionProvider, SizeProvider {
-	private final FlowSprite         BACKGROUND;
-	private final FlowSprite         ICON;
-	private final FlowRepositionable POS;
+
+	public final FlowSprite BACKGROUND;
+	public final FlowSprite ICON;
+	public final FlowPositionBox POS;
 
 	public FlowIconButton(ButtonLabel type, Position pos) {
-		this.BACKGROUND = new FlowSprite(
-				ButtonBackground.SPRITE_SHEET,
-				ButtonBackground.NORMAL.left,
-				ButtonBackground.NORMAL.top,
-				ButtonBackground.NORMAL.width,
-				ButtonBackground.NORMAL.height);
-
-		this.ICON = new FlowSprite(
-				ButtonLabel.SPRITE_SHEET,
-				type.left,
-				type.top,
-				type.width,
-				type.height);
-
-		this.POS = new FlowRepositionable(pos, new Size(ButtonBackground.NORMAL.width, ButtonBackground.NORMAL.height));
+		this.BACKGROUND = createBackground(
+			ButtonBackground.SPRITE_SHEET,
+			ButtonBackground.NORMAL.left,
+			ButtonBackground.NORMAL.top,
+			ButtonBackground.NORMAL.width,
+			ButtonBackground.NORMAL.height);
+		this.ICON = createLabel(
+			ButtonLabel.SPRITE_SHEET,
+			type.left,
+			type.top,
+			type.width,
+			type.height);
+		this.POS = createPositionBox(pos, ButtonBackground.NORMAL.width,
+			ButtonBackground.NORMAL.height);
 	}
 
 	public FlowIconButton(ButtonLabel type) {
-		this(type, new Position(0,0));
+		this(type, new Position(0, 0));
+	}
+
+	public FlowSprite createBackground(ResourceLocation sheet, int left, int top, int width,
+		int height) {
+		return new FlowSprite(sheet, left, top, width, height);
+	}
+
+	public FlowSprite createLabel(ResourceLocation sheet, int left, int top, int width,
+		int height) {
+		return new FlowSprite(sheet, left, top, width, height);
+	}
+
+	public FlowPositionBox createPositionBox(Position pos, int width, int height) {
+		return new FlowPositionBox(pos,
+			new Size(width, height));
 	}
 
 	@Override
-	public boolean mouseClicked(BaseScreen screen, int mx, int my, int button) {
-		return POS.mouseClicked(screen, mx, my, button);
+	public boolean mousePressed(BaseScreen screen, int mx, int my, int button) {
+		return POS.mousePressed(screen, mx, my, button);
 	}
 
 	@Override
 	public boolean mouseReleased(BaseScreen screen, int mx, int my, int button) {
 		if (POS.mouseReleased(screen, mx, my, button)) {
-			this.onPositionChanged();
 			return true;
+		}
+		if (POS.getSize().contains(POS.getPosition(), mx, my)) {
+			this.onClicked(screen, mx, my, button);
 		}
 		return false;
 	}
 
-	public void onPositionChanged() {
+	public void onClicked(BaseScreen screen, int mx, int my, int button) {
+
 	}
+
 
 	@Override
 	public boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy) {
@@ -82,8 +99,9 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 		NORMAL(14, 0, 22, 22),
 		DEPRESSED(14, 22, 22, 22);
 
-		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID, "textures/gui/sprites.png");
-		final        int              left, top, width, height;
+		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID,
+			"textures/gui/sprites.png");
+		final int left, top, width, height;
 
 		ButtonBackground(int left, int top, int width, int height) {
 			this.left = left;
@@ -97,8 +115,9 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 		INPUT(0, 0, 14, 14),
 		OUTPUT(0, 14, 14, 14);
 
-		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID, "textures/gui/sprites.png");
-		final        int              left, top, width, height;
+		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID,
+			"textures/gui/sprites.png");
+		final int left, top, width, height;
 
 		ButtonLabel(int left, int top, int width, int height) {
 			this.left = left;

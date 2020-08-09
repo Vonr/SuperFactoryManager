@@ -11,12 +11,18 @@ public class FlowDataFactory<T extends FlowData> extends
 		setRegistryName(registryName);
 	}
 
+	public static final String NBT_STAMP_KEY = "factory_registry_name";
+
 	public boolean matches(CompoundNBT tag) {
-		if (!tag.contains("factory_registry_name", NBT.TAG_STRING)) {
+		if (!tag.contains(NBT_STAMP_KEY, NBT.TAG_STRING)) {
 			return false;
 		}
-		String name = tag.getString("factory_registry_name");
+		String name = tag.getString(NBT_STAMP_KEY);
 		return name.equals(getRegistryName().toString());
+	}
+
+	public void stampNBT(CompoundNBT tag) {
+		tag.putString(NBT_STAMP_KEY, getRegistryName().toString());
 	}
 
 	public T fromNBT(CompoundNBT tag) {

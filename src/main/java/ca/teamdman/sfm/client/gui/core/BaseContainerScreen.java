@@ -33,7 +33,7 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	public boolean mouseClicked(double x, double y, int button) {
 		int mx = scaleX((float) x) - guiLeft;
 		int my = scaleY((float) y) - guiTop;
-		CONTAINER.getControllers().forEach(c -> c.mouseClicked(this, mx, my, button));
+		CONTAINER.getControllers().forEach(c -> c.mousePressed(this, mx, my, button));
 		return true;
 	}
 

@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.tile;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
 import ca.teamdman.sfm.common.flowdata.IFlowData;
 import ca.teamdman.sfm.common.registrar.BlockRegistrar;
@@ -22,8 +23,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 public class ManagerTileEntity extends TileEntity {
+
+	public final Marker MARKER = MarkerManager.getMarker(getClass().getSimpleName());
 
 	public ArrayList<IFlowData> data = new ArrayList<>();
 
@@ -37,6 +42,7 @@ public class ManagerTileEntity extends TileEntity {
 
 	@Override
 	public CompoundNBT serializeNBT() {
+		SFM.LOGGER.debug(MARKER, "Saving NBT on {}, writing {} entries", world.isRemote ? "client" : "server", data.size());
 		CompoundNBT c = new CompoundNBT();
 		ListNBT list = new ListNBT();
 		data.forEach(d -> list.add(d.serializeNBT()));
@@ -47,6 +53,8 @@ public class ManagerTileEntity extends TileEntity {
 	final LazyOptional<Collection<FlowDataFactory>> factories = LazyOptional.of(()->GameRegistry.findRegistry(FlowDataFactory.class).getValues());
 	@Override
 	public void deserializeNBT(CompoundNBT compound) {
+		SFM.LOGGER.debug(MARKER, "Loading nbt on {}, replacing {} entries", world.isRemote ? "client" : "server", data.size());
+		data.clear();
 		compound.getList("flow_data_list", NBT.TAG_COMPOUND).forEach(c -> {
 			CompoundNBT tag = (CompoundNBT) c;
 			factories.ifPresent(fs -> fs.stream()

@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.container;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
 import ca.teamdman.sfm.common.flowdata.IFlowData;
@@ -8,22 +9,28 @@ import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 import net.minecraft.network.PacketBuffer;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 public class ManagerContainer extends
-	BaseContainer<ManagerTileEntity> /*implements INBTSerializable<CompoundNBT>*/ {
-
-	public final ManagerFlowController CONTROLLER = new ManagerFlowController(this);
+	BaseContainer<ManagerTileEntity> {
+	public final Marker MARKER = MarkerManager.getMarker(getClass().getSimpleName());
 	public final ArrayList<IFlowData> DATA = new ArrayList<>();
+	public final ManagerFlowController CONTROLLER = new ManagerFlowController(this);
 
 	public ManagerContainer(int windowId, ManagerTileEntity tile, boolean isRemote) {
 		super(ContainerRegistrar.Containers.MANAGER, windowId, tile, isRemote);
-		tile.data.forEach(data -> DATA.add(data.copy()));
 	}
 
 	@Override
 	public void init() {
 		super.init();
-		CONTROLLER.load();
+		if (IS_REMOTE) {
+			SFM.LOGGER.debug(MARKER, "Initializing with {} data entries", getSource().data.size());
+			DATA.clear();
+			getSource().data.forEach(data -> DATA.add(data.copy()));
+			CONTROLLER.load();
+		}
 	}
 
 	@Override
@@ -45,38 +52,11 @@ public class ManagerContainer extends
 //		}
 //	}
 
-//	@Override
-//	public CompoundNBT serializeNBT() {
-//		CompoundNBT tag = new CompoundNBT();
-//		ListNBT list = new ListNBT();
-//		DATA.forEach(b -> {
-//			list.add(b.serializeNBT());
-//		});
-//		tag.put("inputs", list);
-//		return tag;
-//	}
-//
-//	@Override
-//	public void deserializeNBT(CompoundNBT c) {
-//		try {
-//			c.getList("inputs", NBT.TAG_COMPOUND).forEach(tag -> {
-//				FlowData data =
-//				FlowInputButton btn = new FlowInputButton();
-//				btn.deserializeNBT((CompoundNBT) tag);
-//				INPUTS.add(btn);
-//			});
-//		} catch (Exception e) {
-//			SFM.LOGGER.error("Error deserializing " + getClass().getName(), e);
-//		}
-//	}
+	public static void writeData(ManagerTileEntity tile, PacketBuffer data) {
+		data.writeCompoundTag(tile.serializeNBT());
+	}
 
-//	public void writeData(PacketBuffer data) {
-//		data.writeInt(x);
-//		data.writeInt(y);
-//	}
-//
-//	public void readData(PacketBuffer data) {
-//		this.x = data.readInt();
-//		this.y = data.readInt();
-//	}
+	public void readData(PacketBuffer data) {
+		getSource().deserializeNBT(data.readCompoundTag());
+	}
 }

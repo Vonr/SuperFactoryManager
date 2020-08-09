@@ -7,6 +7,14 @@ public class FlowData implements IFlowData {
 
 	public UUID uuid;
 
+	public FlowData(UUID uuid) {
+		this.uuid = uuid;
+	}
+
+	public FlowData() {
+		this.uuid = UUID.randomUUID();
+	}
+
 	@Override
 	public UUID getId() {
 		return uuid;

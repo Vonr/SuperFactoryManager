@@ -1,6 +1,8 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.PositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.PositionPacketS2C;
 import net.minecraft.util.ResourceLocation;
@@ -32,5 +34,17 @@ public class PacketHandler {
 				PositionPacketS2C::encode,
 				PositionPacketS2C::decode,
 				PositionPacketS2C::handle);
+
+		INSTANCE.registerMessage(i++,
+			ManagerCreateInputPacketC2S.class,
+			ManagerCreateInputPacketC2S::encode,
+			ManagerCreateInputPacketC2S::decode,
+			ManagerCreateInputPacketC2S::handle);
+
+		INSTANCE.registerMessage(i++,
+			ManagerCreateInputPacketS2C.class,
+			ManagerCreateInputPacketS2C::encode,
+			ManagerCreateInputPacketS2C::decode,
+			ManagerCreateInputPacketS2C::handle);
 	}
 }

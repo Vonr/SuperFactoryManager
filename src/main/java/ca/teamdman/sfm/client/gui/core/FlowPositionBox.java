@@ -3,15 +3,25 @@ package ca.teamdman.sfm.client.gui.core;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 
-public class FlowRepositionable implements IFlowController, PositionProvider, SizeProvider {
-	private boolean isSelected = false;
+public class FlowPositionBox implements IFlowController, PositionProvider, SizeProvider {
+
 	private final Position pos;
 	private final Size size;
-	private int     dx, dy;
+	private boolean isSelected = false;
+	private int dx, dy;
+	private int startMouseX, startMouseY;
+	private boolean moved = false;
+	private boolean moveable = false;
 
-	public FlowRepositionable(Position pos, Size size) {
+
+	public FlowPositionBox(Position pos, Size size) {
 		this.pos = pos;
 		this.size = size;
+	}
+
+	public FlowPositionBox setMovable(boolean movable) {
+		this.moveable = movable;
+		return this;
 	}
 
 	public boolean isSelected() {
@@ -23,31 +33,51 @@ public class FlowRepositionable implements IFlowController, PositionProvider, Si
 	}
 
 	@Override
-	public boolean mouseClicked(BaseScreen screen, int mx, int my, int button) {
-		if (!Screen.hasAltDown() || !size.contains(pos, mx, my))
+	public boolean mousePressed(BaseScreen screen, int mx, int my, int button) {
+		if (!moveable || !Screen.hasAltDown() || !size.contains(pos, mx, my)) {
 			return false;
+		}
 		isSelected = true;
+		startMouseX = mx;
+		startMouseY = my;
 		dx = mx - pos.getX();
 		dy = my - pos.getY();
+		moved = false;
 		return true;
 	}
 
 	@Override
 	public boolean mouseReleased(BaseScreen screen, int mx, int my, int button) {
-		if (!isSelected)
+		if (!isSelected) {
 			return false;
+		}
 		isSelected = false;
+		if (moved) {
+			onMoveFinished(screen, startMouseX, startMouseY, mx, my, button);
+		}
 		return true;
+	}
+
+	public void onMoveFinished(BaseScreen screen, int startMouseX, int startMouseY,
+		int finishMouseX, int finishMouseY, int button) {
+	}
+
+	public void onMove(BaseScreen screen, int startMouseX, int startMouseY, int finishMouseX,
+		int finishMouseY, int button) {
+
 	}
 
 	@Override
 	public boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy) {
-		if (!isSelected)
+		if (!isSelected) {
 			return false;
+		}
 		int newX = MathHelper.clamp(mx - getDragXOffset(), 0, 512 - size.getWidth());
 		int newY = MathHelper.clamp(my - getDragYOffset(), 0, 256 - size.getHeight());
 		pos.setX(newX);
 		pos.setY(newY);
+		moved = true;
+		onMove(screen, startMouseX, startMouseY, mx, my, button);
 		return true;
 	}
 

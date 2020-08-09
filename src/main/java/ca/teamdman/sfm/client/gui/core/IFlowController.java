@@ -10,7 +10,7 @@ public interface IFlowController {
 	 * @param button Mouse button pressed
 	 * @return Consume event
 	 */
-	boolean mouseClicked(BaseScreen screen, int mx, int my, int button);
+	boolean mousePressed(BaseScreen screen, int mx, int my, int button);
 
 	/**
 	 * Fired when a mouse button is released

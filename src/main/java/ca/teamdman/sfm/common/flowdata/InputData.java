@@ -2,6 +2,8 @@ package ca.teamdman.sfm.common.flowdata;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.core.Position;
+import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
+import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactoryRegistry;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
@@ -10,15 +12,25 @@ public class InputData extends FlowData implements IHasPosition {
 
 	public Position position;
 
+	public InputData(UUID uuid, Position position) {
+		super(uuid);
+		this.position = position;
+	}
+
+	public InputData(Position position) {
+		super();
+		this.position = position;
+	}
+
 	public InputData() {
-		this.uuid = UUID.randomUUID();
-		this.position = new Position(0, 0);
+		this(new Position(0, 0));
 	}
 
 	@Override
 	public CompoundNBT serializeNBT() {
 		CompoundNBT tag = super.serializeNBT();
 		tag.put("pos", position.serializeNBT());
+		FlowDataFactories.INPUT.stampNBT(tag);
 		return tag;
 	}
 

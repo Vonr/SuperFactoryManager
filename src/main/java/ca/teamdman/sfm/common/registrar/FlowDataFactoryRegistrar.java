@@ -2,15 +2,14 @@ package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.FlowDataFactory.DummyFlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.FlowDataFactory.MissingFlowDataFactory;
+import ca.teamdman.sfm.common.flowdata.InputData;
 import ca.teamdman.sfm.common.flowdata.InputData.InputDataFactory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import net.minecraftforge.registries.ObjectHolder;
 import net.minecraftforge.registries.RegistryBuilder;
 
@@ -32,24 +31,31 @@ public class FlowDataFactoryRegistrar {
 		MinecraftForge.EVENT_BUS.register(new FlowDataFactoryRegistry());
 	}
 
+	private static <T extends IForgeRegistryEntry<T>> RegistryBuilder<T> makeRegistry(
+		ResourceLocation name, Class<T> type) {
+		return new RegistryBuilder<T>().setName(name).setType(type);
+	}
+
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataFactories {
-		public static final FlowDataFactory<?> INPUT = WAITING;
+		public static final FlowDataFactory<InputData> INPUT = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {
 
 		public FlowDataFactoryRegistry() {
-			new RegistryBuilder<FlowDataFactory>()
-				.setName(new ResourceLocation(SFM.MOD_ID, "flow_components"))
-				.setType(FlowDataFactory.class)
-				.add(
-					(IForgeRegistry.AddCallback<FlowDataFactory>) (owner, stage, id, obj, oldObj) -> System.out
-						.println("new entry " + obj.getRegistryName()))
-				.set(DummyFlowDataFactory::new)
-				.set(MissingFlowDataFactory::new)
-				.allowModification()
-				.create();
+			makeRegistry(new ResourceLocation(SFM.MOD_ID, "flow_data_factory_registry"),
+				FlowDataFactory.class).create();
+//			new RegistryBuilder<FlowDataFactory<?>>()
+//				.setName(new ResourceLocation(SFM.MOD_ID, "flow_components"))
+//				.setType(FlowDataFactory.class)
+//				.add(
+//					(IForgeRegistry.AddCallback<FlowDataFactory<?>>) (owner, stage, id, obj, oldObj) -> System.out
+//						.println("new entry " + obj.getRegistryName()))
+//				.set(DummyFlowDataFactory::new)
+//				.set(MissingFlowDataFactory::new)
+//				.allowModification()
+//				.create();
 		}
 	}
 }

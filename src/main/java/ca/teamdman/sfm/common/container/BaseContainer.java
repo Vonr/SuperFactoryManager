@@ -22,7 +22,7 @@ public abstract class BaseContainer<T> extends Container {
 	private final Field                 LISTENERS   = ObfuscationReflectionHelper
 			.findField(Container.class, "listeners");
 	private final T                     SOURCE;
-	private final boolean IS_REMOTE;
+	public final boolean IS_REMOTE;
 	public BaseContainer(ContainerType type, int windowId, T source, boolean isRemote) {
 		super(type, windowId);
 		this.SOURCE = source;
