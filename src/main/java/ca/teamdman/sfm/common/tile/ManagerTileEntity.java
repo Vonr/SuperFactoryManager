@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import net.minecraft.block.Block;
@@ -42,7 +43,7 @@ public class ManagerTileEntity extends TileEntity {
 
 	@Override
 	public CompoundNBT serializeNBT() {
-		SFM.LOGGER.debug(MARKER, "Saving NBT on {}, writing {} entries", world.isRemote ? "client" : "server", data.size());
+		SFM.LOGGER.debug(MARKER, "Saving NBT on {}, writing {} entries", world == null ? "null world" : world.isRemote ? "client" : "server", data.size());
 		CompoundNBT c = new CompoundNBT();
 		ListNBT list = new ListNBT();
 		data.forEach(d -> list.add(d.serializeNBT()));
@@ -53,7 +54,7 @@ public class ManagerTileEntity extends TileEntity {
 	final LazyOptional<Collection<FlowDataFactory>> factories = LazyOptional.of(()->GameRegistry.findRegistry(FlowDataFactory.class).getValues());
 	@Override
 	public void deserializeNBT(CompoundNBT compound) {
-		SFM.LOGGER.debug(MARKER, "Loading nbt on {}, replacing {} entries", world.isRemote ? "client" : "server", data.size());
+		SFM.LOGGER.debug(MARKER, "Loading nbt on {}, replacing {} entries", world == null ? "null world" : world.isRemote ? "client" : "server", data.size());
 		data.clear();
 		compound.getList("flow_data_list", NBT.TAG_COMPOUND).forEach(c -> {
 			CompoundNBT tag = (CompoundNBT) c;
@@ -62,6 +63,19 @@ public class ManagerTileEntity extends TileEntity {
 				.findFirst()
 				.ifPresent(fac -> data.add(fac.fromNBT(tag))));
 		});
+	}
+
+	@Override
+	public void read(BlockState state, CompoundNBT tag) {
+		super.read(state, tag);
+		deserializeNBT(tag.getCompound("data"));
+	}
+
+	@Override
+	public CompoundNBT write(CompoundNBT compound) {
+		super.write(compound);
+		compound.put("data", serializeNBT());
+		return compound;
 	}
 
 	public Stream<BlockPos> getNeighbours(BlockPos pos) {
