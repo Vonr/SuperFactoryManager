@@ -1,6 +1,5 @@
-package ca.teamdman.sfm.client.gui.impl;
+package ca.teamdman.sfm.client.gui.core;
 
-import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 

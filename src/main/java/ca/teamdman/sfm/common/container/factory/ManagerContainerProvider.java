@@ -45,7 +45,7 @@ public class ManagerContainerProvider implements INamedContainerProvider {
 			SFMUtil.getServerTile(ACCESS, ManagerTileEntity.class)
 					.ifPresent(tile -> NetworkHooks.openGui((ServerPlayerEntity) player, this, data -> {
 						data.writeBlockPos(tile.getPos());
-						new ManagerContainer(-1, tile, false).writeData(data);
+//						new ManagerContainer(-1, tile, false).writeData(data);
 					}));
 	}
 
@@ -56,7 +56,7 @@ public class ManagerContainerProvider implements INamedContainerProvider {
 					IWorldPosCallable.of(inv.player.world, data.readBlockPos()),ManagerTileEntity.class)
 					.map(tile -> {
 						ManagerContainer managerContainer = new ManagerContainer(windowId, tile, true);
-						managerContainer.readData(data);
+//						managerContainer.readData(data);
 						managerContainer.init();
 						return managerContainer;
 					})

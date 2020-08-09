@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ButtonPositionPacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.PositionPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.PositionPacketS2C;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -22,15 +22,15 @@ public class PacketHandler {
 	public static void setup() {
 		int i = 0;
 		INSTANCE.registerMessage(i++,
-				ButtonPositionPacketC2S.class,
-				ButtonPositionPacketC2S::encode,
-				ButtonPositionPacketC2S::decode,
-				ButtonPositionPacketC2S::handle);
+				PositionPacketC2S.class,
+				PositionPacketC2S::encode,
+				PositionPacketC2S::decode,
+				PositionPacketC2S::handle);
 
 		INSTANCE.registerMessage(i++,
-				ButtonPositionPacketS2C.class,
-				ButtonPositionPacketS2C::encode,
-				ButtonPositionPacketS2C::decode,
-				ButtonPositionPacketS2C::handle);
+				PositionPacketS2C.class,
+				PositionPacketS2C::encode,
+				PositionPacketS2C::decode,
+				PositionPacketS2C::handle);
 	}
 }

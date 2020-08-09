@@ -1,8 +1,5 @@
-package ca.teamdman.sfm.client.gui.impl;
+package ca.teamdman.sfm.client.gui.core;
 
-import ca.teamdman.sfm.client.gui.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.core.IFlowController;
-import ca.teamdman.sfm.client.gui.core.IFlowView;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 

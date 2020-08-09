@@ -1,9 +1,12 @@
-package ca.teamdman.sfm.client.gui.impl;
+package ca.teamdman.sfm.client.gui.core;
+
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.common.util.INBTSerializable;
 
 /**
  * Position class for GUI elements.
  */
-public class Position {
+public class Position implements INBTSerializable<CompoundNBT> {
 	public static final Position ZERO = new Position(0, 0) {
 		@Override
 		public void setX(int x) {
@@ -26,6 +29,10 @@ public class Position {
 	public Position(int x, int y) {
 		this.x = x;
 		this.y = y;
+	}
+
+	public Position() {
+		this(0,0);
 	}
 
 	public Position copy() {
@@ -65,5 +72,19 @@ public class Position {
 		this.y = y;
 		if (!posChangeDebounce)
 			onPositionChanged(x, oldY, x, y);
+	}
+
+	@Override
+	public CompoundNBT serializeNBT() {
+		CompoundNBT tag = new CompoundNBT();
+		tag.putInt("x", x);
+		tag.putInt("y", y);
+		return tag;
+	}
+
+	@Override
+	public void deserializeNBT(CompoundNBT nbt) {
+		x = nbt.getInt("x");
+		y = nbt.getInt("y");
 	}
 }

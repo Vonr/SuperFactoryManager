@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.impl;
+package ca.teamdman.sfm.client.gui.core;
 
 public class Size {
 	private int width, height;

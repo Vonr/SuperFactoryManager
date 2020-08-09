@@ -1,12 +1,10 @@
-package ca.teamdman.sfm.client.gui.impl;
+package ca.teamdman.sfm.client.gui.core;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.client.gui.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.core.IFlowController;
-import ca.teamdman.sfm.client.gui.core.IFlowView;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.util.INBTSerializable;
 
 public class FlowIconButton implements IFlowController, IFlowView, PositionProvider, SizeProvider {
 	private final FlowSprite         BACKGROUND;
@@ -29,6 +27,10 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 				type.height);
 
 		this.POS = new FlowRepositionable(pos, new Size(ButtonBackground.NORMAL.width, ButtonBackground.NORMAL.height));
+	}
+
+	public FlowIconButton(ButtonLabel type) {
+		this(type, new Position(0,0));
 	}
 
 	@Override
