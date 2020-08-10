@@ -48,6 +48,10 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		onPositionChanged(oldX, oldY, x, y);
 	}
 
+	public void setXY(Position pos){
+		setXY(pos.x, pos.y);
+	}
+
 	public int getX() {
 		return x;
 	}

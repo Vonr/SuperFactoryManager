@@ -3,8 +3,8 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.PositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.PositionPacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketS2C;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -24,16 +24,16 @@ public class PacketHandler {
 	public static void setup() {
 		int i = 0;
 		INSTANCE.registerMessage(i++,
-				PositionPacketC2S.class,
-				PositionPacketC2S::encode,
-				PositionPacketC2S::decode,
-				PositionPacketC2S::handle);
+				ManagerPositionPacketC2S.class,
+				ManagerPositionPacketC2S::encode,
+				ManagerPositionPacketC2S::decode,
+				ManagerPositionPacketC2S::handle);
 
 		INSTANCE.registerMessage(i++,
-				PositionPacketS2C.class,
-				PositionPacketS2C::encode,
-				PositionPacketS2C::decode,
-				PositionPacketS2C::handle);
+				ManagerPositionPacketS2C.class,
+				ManagerPositionPacketS2C::encode,
+				ManagerPositionPacketS2C::decode,
+				ManagerPositionPacketS2C::handle);
 
 		INSTANCE.registerMessage(i++,
 			ManagerCreateInputPacketC2S.class,

@@ -4,6 +4,8 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.BaseContainer;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.ArrayList;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.resources.I18n;
@@ -13,6 +15,7 @@ import net.minecraft.util.text.ITextComponent;
 
 public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen implements
 	IHasContainer<C> {
+
 
 	public static final int LEFT = 0;
 	public static final int MIDDLE = 2;
@@ -29,11 +32,19 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		this.CONTAINER = container;
 	}
 
+	public Stream<IFlowController> getControllers() {
+		return Stream.empty();
+	}
+
+	public Stream<IFlowView> getViews() {
+		return Stream.empty();
+	}
+
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
 		int mx = scaleX((float) x) - guiLeft;
 		int my = scaleY((float) y) - guiTop;
-		CONTAINER.getControllers().forEach(c -> c.mousePressed(this, mx, my, button));
+		getControllers().forEach(c -> c.mousePressed(this, mx, my, button));
 		return true;
 	}
 
@@ -41,7 +52,7 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	public boolean mouseReleased(double x, double y, int button) {
 		int mx = scaleX(x) - guiLeft;
 		int my = scaleY(y) - guiTop;
-		CONTAINER.getControllers().forEach(c -> c.mouseReleased(this, mx, my, button));
+		getControllers().forEach(c -> c.mouseReleased(this, mx, my, button));
 		return false;
 	}
 
@@ -51,7 +62,7 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		int my = scaleY(y) - guiTop;
 		int dmx = scaleX(dx) - guiLeft;
 		int dmy = scaleX(dy) - guiTop;
-		CONTAINER.getControllers().forEach(c -> c.mouseDragged(this, mx, my, button, dmx, dmy));
+		getControllers().forEach(c -> c.mouseDragged(this, mx, my, button, dmx, dmy));
 		return false;
 	}
 
@@ -59,7 +70,7 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	public void draw(MatrixStack matrixStack, int mx, int my,
 		float partialTicks) {
 		drawBackground(matrixStack);
-		CONTAINER.getViews().forEach(v -> v.draw(this, matrixStack, mx, my, partialTicks));
+		getViews().forEach(v -> v.draw(this, matrixStack, mx, my, partialTicks));
 	}
 
 	public void drawBackground(MatrixStack matrixStack) {

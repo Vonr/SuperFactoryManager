@@ -17,6 +17,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class SFMUtil {
+	public static final int UUID_STRING_LENGTH = 36;
+
 	public static <T extends TileEntity> Optional<T> getServerTile(IWorldPosCallable access, Class<T> clazz) {
 		return access.applyOrElse((world, pos) -> getTile(world, pos, clazz, false), Optional.empty());
 	}

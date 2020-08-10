@@ -35,7 +35,6 @@ public class ManagerContainerProvider implements INamedContainerProvider {
 		return SFMUtil.getServerTile(ACCESS, ManagerTileEntity.class)
 				.map(tile -> {
 					ManagerContainer managerContainer = new ManagerContainer(windowId, tile, false);
-					managerContainer.init();
 					return managerContainer;
 				}).orElse(null);
 	}
@@ -57,7 +56,6 @@ public class ManagerContainerProvider implements INamedContainerProvider {
 					.map(tile -> {
 						ManagerContainer managerContainer = new ManagerContainer(windowId, tile, true);
 						managerContainer.readData(data);
-						managerContainer.init();
 						return managerContainer;
 					})
 					.orElse(null);
