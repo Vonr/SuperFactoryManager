@@ -3,7 +3,6 @@ package ca.teamdman.sfm.common.flowdata;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.core.Position;
 import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
-import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactoryRegistry;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
