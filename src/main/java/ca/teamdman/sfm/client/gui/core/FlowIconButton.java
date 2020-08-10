@@ -113,7 +113,9 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 
 	public enum ButtonLabel {
 		INPUT(0, 0, 14, 14),
-		OUTPUT(0, 14, 14, 14);
+		OUTPUT(0, 14, 14, 14),
+		ADD_INPUT(0,28,14,14),
+		ADD_OUTPUT(0,42,14,14);
 
 		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID,
 			"textures/gui/sprites.png");
