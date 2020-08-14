@@ -5,7 +5,11 @@ import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
+import ca.teamdman.sfm.common.flowdata.FlowData;
+import ca.teamdman.sfm.common.flowdata.FlowRelationshipData;
 import ca.teamdman.sfm.common.flowdata.Position;
+import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,9 +55,24 @@ public class RelationshipController implements IFlowController, IFlowView {
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
+		if (!isDragging) {
+			return false;
+		}
+		getElementUnderMouse(mx, my)
+			.map(IFlowController::getData)
+			.map(Optional::get)
+			.map(FlowData::getId)
+			.ifPresent(to ->
+				PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
+					CONTROLLER.SCREEN.CONTAINER.windowId,
+					CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+					UUID.randomUUID(),
+					from,
+					to
+				)));
 		isDragging = false;
 		from = null;
-		return false;
+		return true;
 	}
 
 	@Override
@@ -75,9 +94,31 @@ public class RelationshipController implements IFlowController, IFlowView {
 
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		if (!isDragging) {
+		CONTROLLER.SCREEN.DATAS.values().stream()
+			.filter(data -> data instanceof FlowRelationshipData)
+			.map(data -> ((FlowRelationshipData) data))
+			.forEach(data -> drawRelationship(screen, matrixStack, data));
+
+		if (isDragging) {
+			screen.drawArrow(matrixStack, fromPos, toPos, FlowRelationship.COLOUR);
+		}
+	}
+
+	private void drawRelationship(BaseScreen screen, MatrixStack matrixStack,
+		FlowRelationshipData data) {
+		Optional<ITangible> from = CONTROLLER.getController(data.from)
+			.filter(c -> c instanceof ITangible)
+			.map(c -> (ITangible) c);
+		Optional<ITangible> to = CONTROLLER.getController(data.to)
+			.filter(c -> c instanceof ITangible)
+			.map(c -> (ITangible) c);
+		;
+		if (!from.isPresent() || !to.isPresent()) {
 			return;
 		}
-		screen.drawArrow(matrixStack, fromPos, toPos, FlowRelationship.COLOUR);
+		screen.drawArrow(matrixStack,
+			from.get().getCentroid(),
+			to.get().snapToEdge(from.get().getCentroid()),
+			FlowRelationship.COLOUR);
 	}
 }
