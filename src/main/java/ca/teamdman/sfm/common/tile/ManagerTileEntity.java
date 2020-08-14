@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.common.tile;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.IFlowData;
 import ca.teamdman.sfm.common.registrar.BlockRegistrar;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import java.util.ArrayDeque;
@@ -29,7 +29,7 @@ public class ManagerTileEntity extends TileEntity {
 
 	private final Marker MARKER = MarkerManager.getMarker(getClass().getSimpleName());
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
-	public HashMap<UUID, IFlowData> data = new HashMap<>();
+	public HashMap<UUID, FlowData> data = new HashMap<>();
 
 	public ManagerTileEntity() {
 		this(TileEntityRegistrar.Tiles.MANAGER);
@@ -70,7 +70,7 @@ public class ManagerTileEntity extends TileEntity {
 		compound.getList("flow_data_list", NBT.TAG_COMPOUND).forEach(c -> {
 			CompoundNBT tag = (CompoundNBT) c;
 			FlowDataFactory.getFactory(tag).ifPresent(fac -> {
-				IFlowData myData = fac.fromNBT(tag);
+				FlowData myData = fac.fromNBT(tag);
 				data.put(myData.getId(), myData);
 			});
 		});

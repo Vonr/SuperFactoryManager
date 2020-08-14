@@ -2,10 +2,11 @@ package ca.teamdman.sfm.common.flowdata;
 
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.common.util.INBTSerializable;
 
-public class FlowData implements IFlowData {
+public class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowData> {
 
-	public UUID uuid;
+	private UUID uuid;
 
 	public FlowData(UUID uuid) {
 		this.uuid = uuid;
@@ -15,7 +16,10 @@ public class FlowData implements IFlowData {
 		this.uuid = UUID.randomUUID();
 	}
 
-	@Override
+	public void setId(UUID uuid) {
+		this.uuid = uuid;
+	}
+
 	public UUID getId() {
 		return uuid;
 	}

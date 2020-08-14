@@ -34,6 +34,23 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 		this(type, new Position(0, 0));
 	}
 
+	@Override
+	public boolean isInBounds(int mx, int my) {
+		if (mx < getPosition().getX()) {
+			return false;
+		}
+		if (my < getPosition().getY()) {
+			return false;
+		}
+		if (mx > getPosition().getX() + this.BACKGROUND.WIDTH) {
+			return false;
+		}
+		if (my > getPosition().getY() + this.BACKGROUND.HEIGHT) {
+			return false;
+		}
+		return true;
+	}
+
 	public FlowSprite createBackground(ResourceLocation sheet, int left, int top, int width,
 		int height) {
 		return new FlowSprite(sheet, left, top, width, height);
@@ -50,29 +67,29 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 	}
 
 	@Override
-	public boolean mousePressed(BaseScreen screen, int mx, int my, int button) {
-		return POS.mousePressed(screen, mx, my, button);
+	public boolean mousePressed(int mx, int my, int button) {
+		return POS.mousePressed(mx, my, button);
 	}
 
 	@Override
-	public boolean mouseReleased(BaseScreen screen, int mx, int my, int button) {
-		if (POS.mouseReleased(screen, mx, my, button)) {
+	public boolean mouseReleased(int mx, int my, int button) {
+		if (POS.mouseReleased(mx, my, button)) {
 			return true;
 		}
 		if (POS.getSize().contains(POS.getPosition(), mx, my)) {
-			this.onClicked(screen, mx, my, button);
+			this.onClicked(mx, my, button);
 		}
 		return false;
 	}
 
-	public void onClicked(BaseScreen screen, int mx, int my, int button) {
+	public void onClicked(int mx, int my, int button) {
 
 	}
 
 
 	@Override
-	public boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy) {
-		return POS.mouseDragged(screen, mx, my, button, dmx, dmy);
+	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
+		return POS.mouseDragged(mx, my, button, dmx, dmy);
 	}
 
 	@Override
@@ -91,6 +108,11 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 	@Override
 	public Position getPosition() {
 		return POS.getPosition();
+	}
+
+	@Override
+	public Position getCentroid() {
+		return getPosition().withOffset(BACKGROUND.WIDTH / 2, BACKGROUND.HEIGHT / 2);
 	}
 
 	@Override
@@ -117,8 +139,8 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 	public enum ButtonLabel {
 		INPUT(0, 0, 14, 14),
 		OUTPUT(0, 14, 14, 14),
-		ADD_INPUT(0,28,14,14),
-		ADD_OUTPUT(0,42,14,14);
+		ADD_INPUT(0, 28, 14, 14),
+		ADD_OUTPUT(0, 42, 14, 14);
 
 		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID,
 			"textures/gui/sprites.png");

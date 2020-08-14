@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.client.gui.core;
 
+import ca.teamdman.sfm.common.flowdata.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -233,6 +234,14 @@ public abstract class BaseScreen extends Screen {
 	public abstract void draw(MatrixStack matrixStack, int mouseX,
 		int mouseY, float partialTicks);
 
+	public void drawLine(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
+		drawLine(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);
+	}
+
+	public void drawArrow(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
+		drawArrow(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);
+	}
+
 	public void drawLine(MatrixStack matrixStack, int x1, int y1, int x2, int y2, Colour3f color) {
 		// normal vector
 		int dx = x2 - x1;
@@ -241,7 +250,7 @@ public abstract class BaseScreen extends Screen {
 		// scale vector to normal, then to width
 		int sqrMag = dx * dx + dy * dy;
 		double mag = Math.sqrt(sqrMag == 0 ? 1 : sqrMag);
-		int width = 10;
+		int width = 4;
 		dx = (int) ((dx / mag) * width / 2f);
 		dy = (int) ((dy / mag) * width / 2f);
 
@@ -275,7 +284,7 @@ public abstract class BaseScreen extends Screen {
 		int lookX = x2 - x1;
 		int lookY = y2 - y1;
 		double mag = Math.sqrt((lookX * lookX) + (lookY * lookY));
-		mag *= 1 / 24d;
+		mag *= 1 / 16d;
 		lookX /= mag;
 		lookY /= mag;
 

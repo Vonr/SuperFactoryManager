@@ -2,9 +2,8 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
-import ca.teamdman.sfm.common.flowdata.IFlowData;
+import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.PositionProvider;
 import ca.teamdman.sfm.common.net.packet.IWindowIdProvider;
 import java.util.UUID;
@@ -33,11 +32,11 @@ public class ManagerPositionPacketS2C implements IWindowIdProvider {
 
 	public static void handle(ManagerPositionPacketS2C msg, Supplier<NetworkEvent.Context> ctx) {
 		SFM.PROXY.getScreenFromPacket(msg, ctx, ManagerScreen.class).ifPresent(screen -> {
-			IFlowData data = screen.DATAS.get(msg.ELEMENT_ID);
+			FlowData data = screen.DATAS.get(msg.ELEMENT_ID);
 			if (data instanceof PositionProvider) {
 				((PositionProvider) data).getPosition().setXY(msg.X, msg.Y);
 			}
-			screen.getControllers().forEach(IFlowController::load);
+			screen.CONTROLLER.loadFromScreenData();
 		});
 		ctx.get().setPacketHandled(true);
 	}

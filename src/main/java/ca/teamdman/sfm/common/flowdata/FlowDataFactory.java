@@ -49,17 +49,4 @@ public class FlowDataFactory<T extends FlowData> extends
 		return null;
 	}
 
-	public static final class DummyFlowDataFactory extends FlowDataFactory {
-
-		public DummyFlowDataFactory(ResourceLocation key) {
-			super(key);
-		}
-	}
-
-	public static final class MissingFlowDataFactory extends FlowDataFactory {
-
-		public MissingFlowDataFactory(ResourceLocation key, boolean isNetwork) {
-			super(key);
-		}
-	}
 }

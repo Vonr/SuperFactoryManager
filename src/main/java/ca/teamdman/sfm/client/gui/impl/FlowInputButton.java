@@ -1,22 +1,23 @@
 package ca.teamdman.sfm.client.gui.impl;
 
-import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
 import ca.teamdman.sfm.client.gui.core.FlowPositionBox;
 import ca.teamdman.sfm.client.gui.core.Size;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
-import ca.teamdman.sfm.common.flowdata.InputData;
+import ca.teamdman.sfm.common.flowdata.FlowData;
+import ca.teamdman.sfm.common.flowdata.FlowInputData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
+import java.util.Optional;
 
 public class FlowInputButton extends FlowIconButton {
 
 	public final ManagerFlowController CONTROLLER;
-	public InputData data;
+	public FlowInputData data;
 
 	public FlowInputButton(ManagerFlowController controller,
-		InputData data) {
+		FlowInputData data) {
 		super(ButtonLabel.INPUT);
 		POS.setMovable(true);
 		this.data = data;
@@ -25,10 +26,15 @@ public class FlowInputButton extends FlowIconButton {
 	}
 
 	@Override
+	public Optional<FlowData> getData() {
+		return Optional.of(data);
+	}
+
+	@Override
 	public FlowPositionBox createPositionBox(Position pos, int width, int height) {
 		return new FlowPositionBox(pos, new Size(width, height)) {
 			@Override
-			public void onMoveFinished(BaseScreen screen, int startMouseX, int startMouseY,
+			public void onMoveFinished(int startMouseX, int startMouseY,
 				int finishMouseX, int finishMouseY, int button) {
 				PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
 					CONTROLLER.SCREEN.CONTAINER.windowId,

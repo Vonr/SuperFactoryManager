@@ -2,7 +2,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.container.ManagerContainer;
-import ca.teamdman.sfm.common.flowdata.IFlowData;
+import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.PositionProvider;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
@@ -51,7 +51,7 @@ public class ManagerPositionPacketC2S implements IContainerTilePacket {
 		if (!manager.data.containsKey(msg.ELEMENT_ID)) {
 			return;
 		}
-		IFlowData data = manager.data.get(msg.ELEMENT_ID);
+		FlowData data = manager.data.get(msg.ELEMENT_ID);
 		if (!(data instanceof PositionProvider)) {
 			return;
 		}

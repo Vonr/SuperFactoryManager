@@ -2,8 +2,9 @@ package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.InputData;
-import ca.teamdman.sfm.common.flowdata.InputData.InputDataFactory;
+import ca.teamdman.sfm.common.flowdata.FlowInputData;
+import ca.teamdman.sfm.common.flowdata.FlowInputData.FlowInputDataFactory;
+import ca.teamdman.sfm.common.flowdata.FlowRelationshipData.FlowRelationshipDataFactory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
@@ -16,12 +17,13 @@ import net.minecraftforge.registries.RegistryBuilder;
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FlowDataFactoryRegistrar {
 
-	private static final InputDataFactory WAITING = null;
+	private static final FlowInputDataFactory WAITING = null;
 
 	@SubscribeEvent
 	public static void onRegister(final RegistryEvent.Register<FlowDataFactory<?>> e) {
 		e.getRegistry().registerAll(
-			new InputDataFactory(new ResourceLocation(SFM.MOD_ID, "input"))
+			new FlowInputDataFactory(new ResourceLocation(SFM.MOD_ID, "input")),
+			new FlowRelationshipDataFactory(new ResourceLocation(SFM.MOD_ID, "relationship"))
 		);
 		SFM.LOGGER.debug("Registered commands");
 	}
@@ -38,7 +40,7 @@ public class FlowDataFactoryRegistrar {
 
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataFactories {
-		public static final FlowDataFactory<InputData> INPUT = WAITING;
+		public static final FlowDataFactory<FlowInputData> INPUT = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

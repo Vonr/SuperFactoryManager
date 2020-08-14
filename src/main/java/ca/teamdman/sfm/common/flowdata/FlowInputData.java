@@ -1,26 +1,24 @@
 package ca.teamdman.sfm.common.flowdata;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class InputData extends FlowData implements PositionProvider {
+public class FlowInputData extends FlowData implements PositionProvider {
 
 	public Position position;
 
-	public InputData(UUID uuid, Position position) {
+	public FlowInputData(UUID uuid, Position position) {
 		super(uuid);
 		this.position = position;
 	}
 
-	public InputData(Position position) {
-		super();
+	public FlowInputData(Position position) {
 		this.position = position;
 	}
 
-	public InputData() {
+	public FlowInputData() {
 		this(new Position(0, 0));
 	}
 
@@ -40,8 +38,8 @@ public class InputData extends FlowData implements PositionProvider {
 
 	@Override
 	public FlowData copy() {
-		InputData copy = new InputData();
-		copy.uuid = uuid;
+		FlowInputData copy = new FlowInputData();
+		copy.setId(getId());
 		copy.position = position.copy();
 		return copy;
 	}
@@ -51,17 +49,15 @@ public class InputData extends FlowData implements PositionProvider {
 		return position;
 	}
 
-	public static class InputDataFactory extends FlowDataFactory {
+	public static class FlowInputDataFactory extends FlowDataFactory<FlowInputData> {
 
-		public final ResourceLocation TYPE = new ResourceLocation(SFM.MOD_ID, "input");
-
-		public InputDataFactory(ResourceLocation key) {
+		public FlowInputDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public InputData fromNBT(CompoundNBT tag) {
-			InputData data = new InputData();
+		public FlowInputData fromNBT(CompoundNBT tag) {
+			FlowInputData data = new FlowInputData();
 			data.deserializeNBT(tag);
 			return data;
 		}

@@ -6,22 +6,28 @@ import ca.teamdman.sfm.client.gui.core.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.impl.FlowInputButton;
-import ca.teamdman.sfm.common.flowdata.InputData;
+import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
+import ca.teamdman.sfm.common.flowdata.FlowInputData;
+import ca.teamdman.sfm.common.flowdata.FlowRelationshipData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public class ManagerFlowController implements IFlowController, IFlowView {
 
 	public final ManagerScreen SCREEN;
-	private final ArrayList<FlowInputButton> INPUTS = new ArrayList<>();
+	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
+	private final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
 	private final FlowIconButton createInputButton = new FlowIconButton(ButtonLabel.ADD_INPUT,
 		new Position(25, 25)) {
 		@Override
-		public void onClicked(BaseScreen screen, int mx, int my, int button) {
+		public void onClicked(int mx, int my, int button) {
 			PacketHandler.INSTANCE.sendToServer(new ManagerCreateInputPacketC2S(
 				SCREEN.CONTAINER.windowId,
 				SCREEN.CONTAINER.getSource().getPos(),
@@ -31,28 +37,41 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		}
 	};
 
+	public Stream<IFlowController> getControllers() {
+		return Stream.concat(Stream.of(RELATIONSHIP_CONTROLLER), CONTROLLERS.values().stream());
+	}
+
+	public Optional<IFlowController> getController(UUID id) {
+		return Optional.ofNullable(CONTROLLERS.get(id));
+	}
+
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
 	}
 
 	@Override
-	public void load() {
-		INPUTS.clear();
-		SCREEN.DATAS.values().forEach(d -> {
-			if (d instanceof InputData) {
-				FlowInputButton button = new FlowInputButton(this, ((InputData) d));
-				INPUTS.add(button);
+	public void loadFromScreenData() {
+		CONTROLLERS.clear();
+		SCREEN.DATAS.values().forEach(data -> {
+			if (data instanceof FlowInputData) {
+				FlowInputButton element = new FlowInputButton(this, ((FlowInputData) data));
+				CONTROLLERS.put(data.getId(), element);
+			} else if (data instanceof FlowRelationshipData) {
+				FlowRelationship element = new FlowRelationship(this,
+					((FlowRelationshipData) data));
+				CONTROLLERS.put(data.getId(), element);
 			}
 		});
 	}
 
 	@Override
-	public boolean mousePressed(BaseScreen screen, int mx, int my, int button) {
-		if (createInputButton.mousePressed(screen, mx, my, button)) {
+	public boolean mousePressed(int mx, int my, int button) {
+		if (createInputButton.mousePressed(mx, my, button)) {
 			return true;
 		}
-		for (FlowInputButton btn : INPUTS) {
-			if (btn.mousePressed(screen, mx, my, button)) {
+		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
+			IFlowController btn = it.next();
+			if (btn.mousePressed(mx, my, button)) {
 				return true;
 			}
 		}
@@ -60,12 +79,13 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public boolean mouseReleased(BaseScreen screen, int mx, int my, int button) {
-		if (createInputButton.mouseReleased(screen, mx, my, button)) {
+	public boolean mouseReleased(int mx, int my, int button) {
+		if (createInputButton.mouseReleased(mx, my, button)) {
 			return true;
 		}
-		for (FlowInputButton btn : INPUTS) {
-			if (btn.mouseReleased(screen, mx, my, button)) {
+		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
+			IFlowController btn = it.next();
+			if (btn.mouseReleased(mx, my, button)) {
 				return true;
 			}
 		}
@@ -73,12 +93,13 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy) {
-		if (createInputButton.mouseDragged(screen, mx, my, button, dmx, dmy)) {
+	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
+		if (createInputButton.mouseDragged(mx, my, button, dmx, dmy)) {
 			return true;
 		}
-		for (FlowInputButton btn : INPUTS) {
-			if (btn.mouseDragged(screen, mx, my, button, dmx, dmy)) {
+		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
+			IFlowController btn = it.next();
+			if (btn.mouseDragged(mx, my, button, dmx, dmy)) {
 				return true;
 			}
 		}
@@ -93,7 +114,9 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx,
 		int my, float deltaTime) {
-		INPUTS.forEach(b -> b.draw(screen, matrixStack, mx, my, deltaTime));
+		CONTROLLERS.values().stream()
+			.map(IFlowController::getView)
+			.forEach(view -> view.draw(screen, matrixStack, mx, my, deltaTime));
 		createInputButton.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 }

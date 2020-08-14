@@ -36,7 +36,7 @@ public class FlowPositionBox implements IFlowController, PositionProvider, SizeP
 	}
 
 	@Override
-	public boolean mousePressed(BaseScreen screen, int mx, int my, int button) {
+	public boolean mousePressed(int mx, int my, int button) {
 		if (!moveable || !Screen.hasAltDown() || !size.contains(pos, mx, my)) {
 			return false;
 		}
@@ -50,28 +50,28 @@ public class FlowPositionBox implements IFlowController, PositionProvider, SizeP
 	}
 
 	@Override
-	public boolean mouseReleased(BaseScreen screen, int mx, int my, int button) {
+	public boolean mouseReleased(int mx, int my, int button) {
 		if (!isSelected) {
 			return false;
 		}
 		isSelected = false;
 		if (moved) {
-			onMoveFinished(screen, startMouseX, startMouseY, mx, my, button);
+			onMoveFinished(startMouseX, startMouseY, mx, my, button);
 		}
 		return true;
 	}
 
-	public void onMoveFinished(BaseScreen screen, int startMouseX, int startMouseY,
+	public void onMoveFinished(int startMouseX, int startMouseY,
 		int finishMouseX, int finishMouseY, int button) {
 	}
 
-	public void onMove(BaseScreen screen, int startMouseX, int startMouseY, int finishMouseX,
+	public void onMove(int startMouseX, int startMouseY, int finishMouseX,
 		int finishMouseY, int button) {
 
 	}
 
 	@Override
-	public boolean mouseDragged(BaseScreen screen, int mx, int my, int button, int dmx, int dmy) {
+	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
 		if (!isSelected) {
 			return false;
 		}
@@ -85,13 +85,8 @@ public class FlowPositionBox implements IFlowController, PositionProvider, SizeP
 		pos.setX(newX);
 		pos.setY(newY);
 		moved = true;
-		onMove(screen, startMouseX, startMouseY, mx, my, button);
+		onMove(startMouseX, startMouseY, mx, my, button);
 		return true;
-	}
-
-	@Override
-	public IFlowView getView() {
-		return IFlowView.NO_VIEW;
 	}
 
 	public int getDragXOffset() {

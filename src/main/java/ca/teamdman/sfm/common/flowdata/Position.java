@@ -39,6 +39,16 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		return new Position(this);
 	}
 
+	/**
+	 * Returns a copy of this position, offset by the given x,y values
+	 * @param x Offset x
+	 * @param y Offset y
+	 * @return Offset Position
+	 */
+	public Position withOffset(int x, int y) {
+		return new Position(this.x+x, this.y+y);
+	}
+
 	public void setXY(int x, int y) {
 		int oldX = this.x, oldY = this.y;
 		posChangeDebounce = true;
@@ -84,6 +94,12 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		tag.putInt("x", x);
 		tag.putInt("y", y);
 		return tag;
+	}
+
+
+	@Override
+	public String toString() {
+		return "Position [x: " + x + ", y: " + y + "]";
 	}
 
 	@Override

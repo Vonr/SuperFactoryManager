@@ -5,8 +5,8 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 
 public class FlowSprite {
-	private final int LEFT, TOP, WIDTH, HEIGHT;
-	private final ResourceLocation SHEET;
+	public final int LEFT, TOP, WIDTH, HEIGHT;
+	public final ResourceLocation SHEET;
 
 	/**
 	 * @param sheet  Sprite sheet to be bound for render

@@ -4,8 +4,6 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.BaseContainer;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.util.ArrayList;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.resources.I18n;
@@ -32,27 +30,26 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		this.CONTAINER = container;
 	}
 
-	public Stream<IFlowController> getControllers() {
-		return Stream.empty();
-	}
-
-	public Stream<IFlowView> getViews() {
-		return Stream.empty();
-	}
-
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
 		int mx = scaleX((float) x) - guiLeft;
 		int my = scaleY((float) y) - guiTop;
-		getControllers().forEach(c -> c.mousePressed(this, mx, my, button));
-		return true;
+		return onScaledMouseClicked(mx, my, button);
+
+	}
+
+	public boolean onScaledMouseClicked(int mx, int my, int button) {
+		return false;
 	}
 
 	@Override
 	public boolean mouseReleased(double x, double y, int button) {
 		int mx = scaleX(x) - guiLeft;
 		int my = scaleY(y) - guiTop;
-		getControllers().forEach(c -> c.mouseReleased(this, mx, my, button));
+		return onScaledMouseReleased(mx, my, button);
+	}
+
+	public boolean onScaledMouseReleased(int mx, int my, int button) {
 		return false;
 	}
 
@@ -62,7 +59,10 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		int my = scaleY(y) - guiTop;
 		int dmx = scaleX(dx) - guiLeft;
 		int dmy = scaleX(dy) - guiTop;
-		getControllers().forEach(c -> c.mouseDragged(this, mx, my, button, dmx, dmy));
+		return onScaledMouseDragged(mx, my, button, dmx, dmy);
+	}
+
+	public boolean onScaledMouseDragged(int mx, int my, int button, int dmx, int dmy) {
 		return false;
 	}
 
@@ -70,7 +70,6 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	public void draw(MatrixStack matrixStack, int mx, int my,
 		float partialTicks) {
 		drawBackground(matrixStack);
-		getViews().forEach(v -> v.draw(this, matrixStack, mx, my, partialTicks));
 	}
 
 	public void drawBackground(MatrixStack matrixStack) {
@@ -79,10 +78,14 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		drawTexture(matrixStack, 0, 0, 0, 0, 256, 256);
 		bindTexture(BACKGROUND_RIGHT);
 		drawTexture(matrixStack, 256, 0, 0, 0, 256, 256);
-		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.chain"), 506, 212, 0x999999);
-		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.clone"), 506, 222, 0x999999);
-		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.move"), 506, 232, 0x999999);
-		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.snaptogrid"), 506, 242,
+		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.chain"), 506, 212,
+			0x999999);
+		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.clone"), 506, 222,
+			0x999999);
+		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.move"), 506, 232,
+			0x999999);
+		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.snaptogrid"), 506,
+			242,
 			0x999999);
 	}
 
