@@ -1,5 +1,8 @@
 package ca.teamdman.sfm.client.gui.core;
 
+import ca.teamdman.sfm.common.flowdata.Position;
+import ca.teamdman.sfm.common.flowdata.PositionProvider;
+import ca.teamdman.sfm.common.flowdata.SizeProvider;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 
@@ -74,6 +77,11 @@ public class FlowPositionBox implements IFlowController, PositionProvider, SizeP
 		}
 		int newX = MathHelper.clamp(mx - getDragXOffset(), 0, 512 - size.getWidth());
 		int newY = MathHelper.clamp(my - getDragYOffset(), 0, 256 - size.getHeight());
+
+		if (Screen.hasShiftDown()) {
+			newX = newX - newX % 5;
+			newY = newY - newY % 5;
+		}
 		pos.setX(newX);
 		pos.setY(newY);
 		moved = true;

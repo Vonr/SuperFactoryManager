@@ -1,10 +1,10 @@
 package ca.teamdman.sfm.client.gui;
 
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.core.FlowPositionBox;
-import ca.teamdman.sfm.client.gui.core.Position;
+import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.core.Size;
+import ca.teamdman.sfm.common.flowdata.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.renderer.RenderHelper;

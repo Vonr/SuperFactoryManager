@@ -1,4 +1,6 @@
-package ca.teamdman.sfm.client.gui.core;
+package ca.teamdman.sfm.common.flowdata;
+
+import ca.teamdman.sfm.client.gui.core.Size;
 
 public interface SizeProvider {
 	/**

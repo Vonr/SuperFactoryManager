@@ -3,11 +3,10 @@ package ca.teamdman.sfm.client.gui.impl;
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
 import ca.teamdman.sfm.client.gui.core.FlowPositionBox;
-import ca.teamdman.sfm.client.gui.core.Position;
 import ca.teamdman.sfm.client.gui.core.Size;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
 import ca.teamdman.sfm.common.flowdata.InputData;
+import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 

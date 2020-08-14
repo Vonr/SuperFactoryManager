@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flowdata.IFlowData;
-import ca.teamdman.sfm.common.flowdata.IHasPosition;
+import ca.teamdman.sfm.common.flowdata.PositionProvider;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
@@ -52,16 +52,16 @@ public class ManagerPositionPacketC2S implements IContainerTilePacket {
 			return;
 		}
 		IFlowData data = manager.data.get(msg.ELEMENT_ID);
-		if (!(data instanceof IHasPosition)) {
+		if (!(data instanceof PositionProvider)) {
 			return;
 		}
-		((IHasPosition) data).getPosition().setXY(msg.X, msg.Y);
+		((PositionProvider) data).getPosition().setXY(msg.X, msg.Y);
 		manager.markDirty();
 		manager.getWorld().notifyBlockUpdate(msg.TILE_POSITION, state, state,
 			Constants.BlockFlags.BLOCK_UPDATE
 				& Constants.BlockFlags.NOTIFY_NEIGHBORS);
 		manager.getContainerListeners().forEach(player -> PacketHandler.INSTANCE.send(
-			PacketDistributor.PLAYER.with(()->player),
+			PacketDistributor.PLAYER.with(() -> player),
 			new ManagerPositionPacketS2C(
 				msg.WINDOW_ID,
 				msg.ELEMENT_ID,

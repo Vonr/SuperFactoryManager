@@ -2,9 +2,9 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.client.gui.core.Position;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flowdata.InputData;
+import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;

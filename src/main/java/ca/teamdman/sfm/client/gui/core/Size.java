@@ -1,5 +1,7 @@
 package ca.teamdman.sfm.client.gui.core;
 
+import ca.teamdman.sfm.common.flowdata.Position;
+
 public class Size {
 	private int width, height;
 	public Size(int width, int height) {

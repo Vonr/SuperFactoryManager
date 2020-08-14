@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.core;
+package ca.teamdman.sfm.common.flowdata;
 
 public interface PositionProvider {
 	/**

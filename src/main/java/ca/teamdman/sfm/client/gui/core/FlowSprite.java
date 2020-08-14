@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.client.gui.core;
 
+import ca.teamdman.sfm.common.flowdata.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 
