@@ -3,10 +3,9 @@ package ca.teamdman.sfm.client.gui.manager;
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
+import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
-import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.Position;
-import ca.teamdman.sfm.common.flowdata.PositionProvider;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,13 +23,11 @@ public class RelationshipController implements IFlowController, IFlowView {
 		this.CONTROLLER = CONTROLLER;
 	}
 
-	public Optional<FlowData> getDataUnderMouse(int mx, int my) {
+	public Optional<IFlowController> getElementUnderMouse(int mx, int my) {
 		return CONTROLLER.getControllers()
-			.filter(e -> e.getView().isInBounds(mx, my))
-			.map(IFlowController::getData)
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.filter(data -> data instanceof PositionProvider)
+			.filter(e -> e instanceof ITangible)
+			.filter(e -> ((ITangible) e).isInBounds(mx, my))
+			.filter(e -> e.getData().isPresent())
 			.findFirst();
 	}
 
@@ -40,12 +37,12 @@ public class RelationshipController implements IFlowController, IFlowView {
 			return false;
 		}
 
-		Optional<FlowData> data = getDataUnderMouse(mx, my);
-
-		if (data.isPresent()) {
+		Optional<IFlowController> controller = getElementUnderMouse(mx, my);
+		if (controller.isPresent()) {
 			isDragging = true;
-			from = data.get().getId();
-			fromPos.setXY(((PositionProvider) data.get()).getCentroid());
+			//noinspection OptionalGetWithoutIsPresent
+			from = controller.get().getData().get().getId();
+			fromPos.setXY(((ITangible) controller.get()).getCentroid());
 			return true;
 		}
 
@@ -65,8 +62,8 @@ public class RelationshipController implements IFlowController, IFlowView {
 			return false;
 		}
 		toPos.setXY(mx, my);
-		getDataUnderMouse(mx, my)
-			.map(data -> ((PositionProvider) data).getPosition())
+		getElementUnderMouse(mx, my)
+			.map(x -> ((ITangible) x).snapToEdge(fromPos))
 			.ifPresent(toPos::setXY);
 		return true;
 	}

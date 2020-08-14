@@ -1,12 +1,10 @@
 package ca.teamdman.sfm.client.gui.core;
 
 import ca.teamdman.sfm.common.flowdata.Position;
-import ca.teamdman.sfm.common.flowdata.PositionProvider;
-import ca.teamdman.sfm.common.flowdata.SizeProvider;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 
-public class FlowPositionBox implements IFlowController, PositionProvider, SizeProvider {
+public class FlowPositionBox implements IFlowController, ITangible {
 
 	private final Position pos;
 	private final Size size;
@@ -15,7 +13,6 @@ public class FlowPositionBox implements IFlowController, PositionProvider, SizeP
 	private int startMouseX, startMouseY;
 	private boolean moved = false;
 	private boolean moveable = false;
-
 
 	public FlowPositionBox(Position pos, Size size) {
 		this.pos = pos;

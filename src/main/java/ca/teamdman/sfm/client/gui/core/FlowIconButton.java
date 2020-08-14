@@ -2,12 +2,10 @@ package ca.teamdman.sfm.client.gui.core;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flowdata.Position;
-import ca.teamdman.sfm.common.flowdata.PositionProvider;
-import ca.teamdman.sfm.common.flowdata.SizeProvider;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowIconButton implements IFlowController, IFlowView, PositionProvider, SizeProvider {
+public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 
 	public final FlowSprite BACKGROUND;
 	public final FlowSprite ICON;
@@ -36,19 +34,7 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 
 	@Override
 	public boolean isInBounds(int mx, int my) {
-		if (mx < getPosition().getX()) {
-			return false;
-		}
-		if (my < getPosition().getY()) {
-			return false;
-		}
-		if (mx > getPosition().getX() + this.BACKGROUND.WIDTH) {
-			return false;
-		}
-		if (my > getPosition().getY() + this.BACKGROUND.HEIGHT) {
-			return false;
-		}
-		return true;
+		return POS.isInBounds(mx, my);
 	}
 
 	public FlowSprite createBackground(ResourceLocation sheet, int left, int top, int width,
@@ -76,7 +62,7 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 		if (POS.mouseReleased(mx, my, button)) {
 			return true;
 		}
-		if (POS.getSize().contains(POS.getPosition(), mx, my)) {
+		if (isInBounds(mx, my)) {
 			this.onClicked(mx, my, button);
 		}
 		return false;
@@ -118,6 +104,11 @@ public class FlowIconButton implements IFlowController, IFlowView, PositionProvi
 	@Override
 	public Size getSize() {
 		return POS.getSize();
+	}
+
+	@Override
+	public Position snapToEdge(Position outside) {
+		return POS.snapToEdge(outside);
 	}
 
 	private enum ButtonBackground {

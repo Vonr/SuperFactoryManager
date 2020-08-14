@@ -114,7 +114,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx,
 		int my, float deltaTime) {
-		CONTROLLERS.values().stream()
+		getControllers()
 			.map(IFlowController::getView)
 			.forEach(view -> view.draw(screen, matrixStack, mx, my, deltaTime));
 		createInputButton.draw(screen, matrixStack, mx, my, deltaTime);

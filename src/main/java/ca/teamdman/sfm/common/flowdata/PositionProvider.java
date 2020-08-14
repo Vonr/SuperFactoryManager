@@ -5,8 +5,4 @@ public interface PositionProvider {
 	 * @return mutable position of this element
 	 */
 	Position getPosition();
-
-	default Position getCentroid() {
-		return getPosition();
-	}
 }

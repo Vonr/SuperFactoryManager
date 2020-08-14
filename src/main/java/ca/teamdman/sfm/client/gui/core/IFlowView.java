@@ -17,8 +17,4 @@ public interface IFlowView {
 	default void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my,
 		float deltaTime) {
 	}
-
-	default boolean isInBounds(int mx, int my) {
-		return false;
-	}
 }
