@@ -101,6 +101,7 @@ public class RelationshipController implements IFlowController, IFlowView {
 			graph.predecessors(current).forEach(enqueue), uuid -> true, child);
 	}
 
+
 	public void createRelationship(UUID from, UUID to) {
 		if (Objects.equals(from, to)) {
 			return;
@@ -110,7 +111,7 @@ public class RelationshipController implements IFlowController, IFlowView {
 		if (getAncestors(from).anyMatch(to::equals)) {
 			return;
 		}
-		
+
 		PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),

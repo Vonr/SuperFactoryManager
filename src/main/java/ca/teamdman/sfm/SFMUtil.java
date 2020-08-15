@@ -105,13 +105,15 @@ public class SFMUtil {
 
 	/**
 	 * Gets a stream using a self-feeding mapping function
+	 *
 	 * @param mapper Consumer of one element to provide the next
 	 * @param filter Predicate checked before adding a new element to the queue
-	 * @param first Initial value, not checked against the filter
-	 * @param <T> Type that the mapper consumes and produces
+	 * @param first  Initial value, not checked against the filter
+	 * @param <T>    Type that the mapper consumes and produces
 	 * @return Stream result after termination of the recursive mapping process
 	 */
-	public static <T> Stream<T> getRecursiveStream(BiConsumer<T, Consumer<T>> mapper, Predicate<T> filter, T first) {
+	public static <T> Stream<T> getRecursiveStream(BiConsumer<T, Consumer<T>> mapper,
+		Predicate<T> filter, T first) {
 		Stream.Builder<T> builder = Stream.builder();
 		Set<T> debounce = new HashSet<>();
 		Deque<T> toVisit = new ArrayDeque<>();
