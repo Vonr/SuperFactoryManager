@@ -8,8 +8,11 @@ import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
+import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import net.minecraft.client.gui.screen.Screen;
@@ -32,12 +35,17 @@ public class FlowRelationship implements IFlowView, IFlowController {
 			return false;
 		}
 		Optional<FlowRelationship> rel = CONTROLLER.RELATIONSHIP_CONTROLLER.getFlowRelationships()
-			.filter(r -> getDistance(mx, my) < 1)
+			.filter(r -> getDistance(mx, my) < 4)
 			.findFirst();
 		if (!rel.isPresent()) {
 			return false;
 		}
-
+		PacketHandler.INSTANCE.sendToServer(new ManagerCreateLineNodePacketC2S(
+			CONTROLLER.SCREEN.CONTAINER.windowId,
+			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			UUID.randomUUID(),
+			new Position(mx, my)
+		));
 		return true;
 	}
 
