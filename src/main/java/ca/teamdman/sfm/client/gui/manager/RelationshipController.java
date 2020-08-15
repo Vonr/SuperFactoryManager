@@ -12,6 +12,7 @@ import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
+import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -120,9 +121,13 @@ public class RelationshipController implements IFlowController, IFlowView {
 		}
 		graph.addNode(from);
 		graph.addNode(to);
+		if (graph.edges().contains(EndpointPair.ordered(from, to))) {
+			return;
+		}
 		if (getAncestors(from).anyMatch(to::equals)) {
 			return;
 		}
+		//todo: prevent LineNode from allowing duplicate connections to an element
 
 		PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
