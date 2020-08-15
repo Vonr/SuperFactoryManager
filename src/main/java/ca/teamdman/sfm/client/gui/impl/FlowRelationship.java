@@ -15,6 +15,11 @@ public class FlowRelationship implements IFlowView, IFlowController {
 	public final ManagerFlowController CONTROLLER;
 	public RelationshipFlowData data;
 
+	@Override
+	public int getZIndex() {
+		return -1;
+	}
+
 	public FlowRelationship(ManagerFlowController CONTROLLER,
 		RelationshipFlowData data) {
 		this.CONTROLLER = CONTROLLER;

@@ -17,4 +17,14 @@ public interface IFlowView {
 	default void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my,
 		float deltaTime) {
 	}
+
+	/**
+	 * Used to determine order of rendering.
+	 * Lower number means rendered earlier, i.e., on bottom
+	 * Default layer is 0
+	 * @return Render layer
+	 */
+	default int getZIndex() {
+		return 0;
+	}
 }
