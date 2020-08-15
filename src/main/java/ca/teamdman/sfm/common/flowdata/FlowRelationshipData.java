@@ -38,6 +38,10 @@ public class FlowRelationshipData extends FlowData {
 		return new FlowRelationshipData(getId(), from, to);
 	}
 
+	public boolean matches(UUID from, UUID to) {
+		return from.equals(this.from) && to.equals(this.to);
+	}
+
 	@Override
 	public void deserializeNBT(CompoundNBT tag) {
 		super.deserializeNBT(tag);

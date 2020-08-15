@@ -16,12 +16,12 @@ public class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowDa
 		this.uuid = UUID.randomUUID();
 	}
 
-	public void setId(UUID uuid) {
-		this.uuid = uuid;
-	}
-
 	public UUID getId() {
 		return uuid;
+	}
+
+	public void setId(UUID uuid) {
+		this.uuid = uuid;
 	}
 
 	@Override
@@ -41,5 +41,10 @@ public class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowDa
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
 		this.uuid = UUID.fromString(nbt.getString("uuid"));
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof FlowData && ((FlowData) obj).getId().equals(getId());
 	}
 }

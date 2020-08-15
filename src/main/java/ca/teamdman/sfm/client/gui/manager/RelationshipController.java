@@ -6,6 +6,7 @@ import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
 import ca.teamdman.sfm.common.flowdata.FlowData;
+import ca.teamdman.sfm.common.flowdata.FlowRelationshipData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
@@ -61,17 +62,27 @@ public class RelationshipController implements IFlowController, IFlowView {
 			.map(IFlowController::getData)
 			.map(Optional::get)
 			.map(FlowData::getId)
-			.ifPresent(to ->
-				PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
-					CONTROLLER.SCREEN.CONTAINER.windowId,
-					CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-					UUID.randomUUID(),
-					from,
-					to
-				)));
+			.ifPresent(to -> createRelationship(from, to));
 		isDragging = false;
 		from = null;
 		return true;
+	}
+
+	public void createRelationship(UUID from, UUID to) {
+		if (CONTROLLER.SCREEN.DATAS.values().stream()
+			.filter(data -> data instanceof FlowRelationshipData)
+			.anyMatch(data -> ((FlowRelationshipData) data)
+				.matches(from, to) || ((FlowRelationshipData) data).matches(to, from))
+		){
+			return;
+		}
+		PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
+			CONTROLLER.SCREEN.CONTAINER.windowId,
+			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			UUID.randomUUID(),
+			from,
+			to
+		));
 	}
 
 	@Override
