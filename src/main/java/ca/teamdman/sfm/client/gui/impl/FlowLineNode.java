@@ -11,14 +11,14 @@ import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 import java.util.Optional;
 
-public class FlowInputButton extends FlowIconButton {
+public class FlowLineNode extends FlowIconButton {
 
 	public final ManagerFlowController CONTROLLER;
 	public InputFlowData data;
 
-	public FlowInputButton(ManagerFlowController controller,
+	public FlowLineNode(ManagerFlowController controller,
 		InputFlowData data) {
-		super(ButtonLabel.INPUT);
+		super(ButtonLabel.LINE_NODE);
 		POS.setMovable(true);
 		this.data = data;
 		this.CONTROLLER = controller;

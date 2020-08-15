@@ -4,6 +4,9 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
 import ca.teamdman.sfm.common.flowdata.InputFlowData;
 import ca.teamdman.sfm.common.flowdata.InputFlowData.FlowInputDataFactory;
+import ca.teamdman.sfm.common.flowdata.LineNodeFlowData;
+import ca.teamdman.sfm.common.flowdata.LineNodeFlowData.LineNodeFlowDataFactory;
+import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.flowdata.RelationshipFlowData.FlowRelationshipDataFactory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -17,13 +20,14 @@ import net.minecraftforge.registries.RegistryBuilder;
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FlowDataFactoryRegistrar {
 
-	private static final FlowInputDataFactory WAITING = null;
+	private static final FlowDataFactory WAITING = null;
 
 	@SubscribeEvent
 	public static void onRegister(final RegistryEvent.Register<FlowDataFactory<?>> e) {
 		e.getRegistry().registerAll(
 			new FlowInputDataFactory(new ResourceLocation(SFM.MOD_ID, "input")),
-			new FlowRelationshipDataFactory(new ResourceLocation(SFM.MOD_ID, "relationship"))
+			new FlowRelationshipDataFactory(new ResourceLocation(SFM.MOD_ID, "relationship")),
+			new LineNodeFlowDataFactory(new ResourceLocation(SFM.MOD_ID, "line_node"))
 		);
 		SFM.LOGGER.debug("Registered commands");
 	}
@@ -41,7 +45,8 @@ public class FlowDataFactoryRegistrar {
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataFactories {
 		public static final FlowDataFactory<InputFlowData> INPUT = WAITING;
-		public static final FlowDataFactory<InputFlowData> RELATIONSHIP = WAITING;
+		public static final FlowDataFactory<RelationshipFlowData> RELATIONSHIP = WAITING;
+		public static final FlowDataFactory<LineNodeFlowData> LINE_NODE = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

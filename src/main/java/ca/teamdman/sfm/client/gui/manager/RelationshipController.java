@@ -35,6 +35,18 @@ public class RelationshipController implements IFlowController, IFlowView {
 		this.CONTROLLER = CONTROLLER;
 	}
 
+	public Stream<RelationshipFlowData> getFlowRelationshipDatas() {
+		return CONTROLLER.SCREEN.DATAS.values().stream()
+			.filter(data -> data instanceof RelationshipFlowData)
+			.map(data -> ((RelationshipFlowData) data));
+	}
+
+	public Stream<FlowRelationship> getFlowRelationships() {
+		return CONTROLLER.getControllers()
+			.filter(c -> c instanceof FlowRelationship)
+			.map(c -> ((FlowRelationship) c));
+	}
+
 	public void rebuildGraph() {
 		graph = GraphBuilder
 			.directed()

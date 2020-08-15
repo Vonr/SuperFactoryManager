@@ -24,7 +24,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 	public final ManagerScreen SCREEN;
 	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
-	private final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
+	public final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
 	private final FlowIconButton CREATE_INPUT_BUTTON = new FlowIconButton(ButtonLabel.ADD_INPUT,
 		new Position(25, 25)) {
 		@Override

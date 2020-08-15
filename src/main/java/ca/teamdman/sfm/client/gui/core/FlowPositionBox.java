@@ -60,6 +60,7 @@ public class FlowPositionBox implements IFlowController, ITangible {
 
 	public void onMoveFinished(int startMouseX, int startMouseY,
 		int finishMouseX, int finishMouseY, int button) {
+
 	}
 
 	public void onMove(int startMouseX, int startMouseY, int finishMouseX,

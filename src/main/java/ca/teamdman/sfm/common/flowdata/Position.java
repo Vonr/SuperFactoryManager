@@ -7,6 +7,7 @@ import net.minecraftforge.common.util.INBTSerializable;
  * Position class for GUI elements.
  */
 public class Position implements INBTSerializable<CompoundNBT> {
+
 	public static final Position ZERO = new Position(0, 0) {
 		@Override
 		public void setX(int x) {
@@ -31,8 +32,17 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		this.y = y;
 	}
 
+
 	public Position() {
-		this(0,0);
+		this(0, 0);
+	}
+
+	public static Position fromLong(long packed) {
+		return new Position((int) (packed >> 32), (int) packed);
+	}
+
+	public long toLong() {
+		return (((long) getX()) << 32) | (y & 0xffffffffL);
 	}
 
 	public Position copy() {
@@ -41,12 +51,13 @@ public class Position implements INBTSerializable<CompoundNBT> {
 
 	/**
 	 * Returns a copy of this position, offset by the given x,y values
+	 *
 	 * @param x Offset x
 	 * @param y Offset y
 	 * @return Offset Position
 	 */
 	public Position withOffset(int x, int y) {
-		return new Position(this.x+x, this.y+y);
+		return new Position(this.x + x, this.y + y);
 	}
 
 	public void setXY(int x, int y) {
@@ -58,7 +69,7 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		onPositionChanged(oldX, oldY, x, y);
 	}
 
-	public void setXY(Position pos){
+	public void setXY(Position pos) {
 		setXY(pos.x, pos.y);
 	}
 
@@ -69,8 +80,9 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	public void setX(int x) {
 		int oldX = this.x;
 		this.x = x;
-		if (!posChangeDebounce)
+		if (!posChangeDebounce) {
 			onPositionChanged(oldX, y, x, y);
+		}
 	}
 
 	public void onPositionChanged(int oldX, int oldY, int newX, int newY) {
@@ -84,8 +96,9 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	public void setY(int y) {
 		int oldY = this.y;
 		this.y = y;
-		if (!posChangeDebounce)
+		if (!posChangeDebounce) {
 			onPositionChanged(x, oldY, x, y);
+		}
 	}
 
 	@Override

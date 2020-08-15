@@ -7,6 +7,7 @@ import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flowdata.FlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.text.ITextComponent;
@@ -15,6 +16,14 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> {
 
 	public final HashMap<UUID, FlowData> DATAS = new HashMap<>();
 	public final ManagerFlowController CONTROLLER;
+
+	public void addData(FlowData data) {
+		DATAS.put(data.getId(), data);
+	}
+
+	public Optional<FlowData> getData(UUID id) {
+		return Optional.ofNullable(DATAS.get(id));
+	}
 
 	public ManagerScreen(ManagerContainer container, PlayerInventory inv, ITextComponent name) {
 		super(container, 512, 256, inv, name);
