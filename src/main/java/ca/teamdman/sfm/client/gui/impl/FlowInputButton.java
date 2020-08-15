@@ -41,8 +41,7 @@ public class FlowInputButton extends FlowIconButton {
 					CONTROLLER.SCREEN.CONTAINER.windowId,
 					CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 					data.getId(),
-					this.getPosition().getX(),
-					this.getPosition().getY()));
+					this.getPosition()));
 			}
 		};
 	}
