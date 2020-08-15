@@ -13,6 +13,7 @@ import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Optional;
@@ -110,6 +111,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		int my, float deltaTime) {
 		getControllers()
 			.map(IFlowController::getView)
+			.sorted(Comparator.comparingInt(IFlowView::getZIndex))
 			.forEach(view -> view.draw(screen, matrixStack, mx, my, deltaTime));
 	}
 }

@@ -104,7 +104,8 @@ public class SFMUtil {
 	}
 
 	/**
-	 * Gets a stream using a self-feeding mapping function
+	 * Gets a stream using a self-feeding mapping function.
+	 * Prevents the re-traversal of elements that have been visited before.
 	 *
 	 * @param mapper Consumer of one element to provide the next
 	 * @param filter Predicate checked before adding a new element to the queue
