@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.flowdata;
 
+import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
@@ -28,12 +29,13 @@ public class FlowRelationshipData extends FlowData {
 		CompoundNBT tag = super.serializeNBT();
 		tag.putString("from", from.toString());
 		tag.putString("to", to.toString());
+		FlowDataFactories.RELATIONSHIP.stampNBT(tag);
 		return tag;
 	}
 
 	@Override
 	public FlowData copy() {
-		return super.copy();
+		return new FlowRelationshipData(getId(), from, to);
 	}
 
 	@Override

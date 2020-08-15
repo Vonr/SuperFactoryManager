@@ -41,6 +41,7 @@ public class FlowDataFactoryRegistrar {
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataFactories {
 		public static final FlowDataFactory<FlowInputData> INPUT = WAITING;
+		public static final FlowDataFactory<FlowInputData> RELATIONSHIP = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

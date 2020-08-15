@@ -24,7 +24,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	public final ManagerScreen SCREEN;
 	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
 	private final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
-	private final FlowIconButton createInputButton = new FlowIconButton(ButtonLabel.ADD_INPUT,
+	private final FlowIconButton CREATE_INPUT_BUTTON = new FlowIconButton(ButtonLabel.ADD_INPUT,
 		new Position(25, 25)) {
 		@Override
 		public void onClicked(int mx, int my, int button) {
@@ -38,7 +38,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	};
 
 	public Stream<IFlowController> getControllers() {
-		return Stream.concat(Stream.of(RELATIONSHIP_CONTROLLER), CONTROLLERS.values().stream());
+		return Stream.concat(Stream.of(RELATIONSHIP_CONTROLLER, CREATE_INPUT_BUTTON), CONTROLLERS.values().stream());
 	}
 
 	public Optional<IFlowController> getController(UUID id) {
@@ -66,9 +66,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		if (createInputButton.mousePressed(mx, my, button)) {
-			return true;
-		}
 		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
 			IFlowController btn = it.next();
 			if (btn.mousePressed(mx, my, button)) {
@@ -80,9 +77,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
-		if (createInputButton.mouseReleased(mx, my, button)) {
-			return true;
-		}
 		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
 			IFlowController btn = it.next();
 			if (btn.mouseReleased(mx, my, button)) {
@@ -94,9 +88,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
-		if (createInputButton.mouseDragged(mx, my, button, dmx, dmy)) {
-			return true;
-		}
 		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
 			IFlowController btn = it.next();
 			if (btn.mouseDragged(mx, my, button, dmx, dmy)) {
@@ -117,6 +108,5 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		getControllers()
 			.map(IFlowController::getView)
 			.forEach(view -> view.draw(screen, matrixStack, mx, my, deltaTime));
-		createInputButton.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 }

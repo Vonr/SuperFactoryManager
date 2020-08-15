@@ -22,6 +22,7 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.common.util.LazyOptional;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
@@ -69,10 +70,14 @@ public class ManagerTileEntity extends TileEntity {
 		data.clear();
 		compound.getList("flow_data_list", NBT.TAG_COMPOUND).forEach(c -> {
 			CompoundNBT tag = (CompoundNBT) c;
-			FlowDataFactory.getFactory(tag).ifPresent(fac -> {
+			LazyOptional<FlowDataFactory<?>> factory = FlowDataFactory.getFactory(tag);
+			factory.ifPresent(fac -> {
 				FlowData myData = fac.fromNBT(tag);
 				data.put(myData.getId(), myData);
 			});
+			if (!factory.isPresent()) {
+				SFM.LOGGER.warn("Could not find factory for {}", tag);
+			}
 		});
 	}
 

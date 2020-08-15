@@ -38,10 +38,7 @@ public class FlowInputData extends FlowData implements PositionProvider {
 
 	@Override
 	public FlowData copy() {
-		FlowInputData copy = new FlowInputData();
-		copy.setId(getId());
-		copy.position = position.copy();
-		return copy;
+		return new FlowInputData(getId(), getPosition());
 	}
 
 	@Override

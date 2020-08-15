@@ -6,7 +6,6 @@ import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
 import ca.teamdman.sfm.common.flowdata.FlowData;
-import ca.teamdman.sfm.common.flowdata.FlowRelationshipData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
@@ -94,31 +93,8 @@ public class RelationshipController implements IFlowController, IFlowView {
 
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		CONTROLLER.SCREEN.DATAS.values().stream()
-			.filter(data -> data instanceof FlowRelationshipData)
-			.map(data -> ((FlowRelationshipData) data))
-			.forEach(data -> drawRelationship(screen, matrixStack, data));
-
 		if (isDragging) {
 			screen.drawArrow(matrixStack, fromPos, toPos, FlowRelationship.COLOUR);
 		}
-	}
-
-	private void drawRelationship(BaseScreen screen, MatrixStack matrixStack,
-		FlowRelationshipData data) {
-		Optional<ITangible> from = CONTROLLER.getController(data.from)
-			.filter(c -> c instanceof ITangible)
-			.map(c -> (ITangible) c);
-		Optional<ITangible> to = CONTROLLER.getController(data.to)
-			.filter(c -> c instanceof ITangible)
-			.map(c -> (ITangible) c);
-		;
-		if (!from.isPresent() || !to.isPresent()) {
-			return;
-		}
-		screen.drawArrow(matrixStack,
-			from.get().getCentroid(),
-			to.get().snapToEdge(from.get().getCentroid()),
-			FlowRelationship.COLOUR);
 	}
 }
