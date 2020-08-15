@@ -27,7 +27,7 @@ public class ManagerCreateLineNodePacketS2C extends S2CManagerPacket {
 		@Override
 		public ManagerCreateLineNodePacketS2C finishDecode(int windowId, PacketBuffer buf) {
 			return new ManagerCreateLineNodePacketS2C(
-				buf.readInt(),
+				windowId,
 				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong())
 			);
