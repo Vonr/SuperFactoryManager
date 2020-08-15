@@ -1,15 +1,13 @@
 package ca.teamdman.sfm.common.tile;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
 import ca.teamdman.sfm.common.registrar.BlockRegistrar;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import net.minecraft.block.Block;
@@ -23,12 +21,8 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.LazyOptional;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 
 public class ManagerTileEntity extends TileEntity {
-
-	private final Marker MARKER = MarkerManager.getMarker(getClass().getSimpleName());
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 	public HashMap<UUID, FlowData> data = new HashMap<>();
 
@@ -54,7 +48,7 @@ public class ManagerTileEntity extends TileEntity {
 
 	@Override
 	public CompoundNBT serializeNBT() {
-		SFM.LOGGER.debug(MARKER, "Saving NBT on {}, writing {} entries",
+		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Saving NBT on {}, writing {} entries",
 			world == null ? "null world" : world.isRemote ? "client" : "server", data.size());
 		CompoundNBT c = new CompoundNBT();
 		ListNBT list = new ListNBT();
@@ -65,7 +59,7 @@ public class ManagerTileEntity extends TileEntity {
 
 	@Override
 	public void deserializeNBT(CompoundNBT compound) {
-		SFM.LOGGER.debug(MARKER, "Loading nbt on {}, replacing {} entries",
+		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Loading nbt on {}, replacing {} entries",
 			world == null ? "null world" : world.isRemote ? "client" : "server", data.size());
 		data.clear();
 		compound.getList("flow_data_list", NBT.TAG_COMPOUND).forEach(c -> {
@@ -95,26 +89,11 @@ public class ManagerTileEntity extends TileEntity {
 	}
 
 	public Stream<BlockPos> getNeighbours(BlockPos pos) {
-		Stream.Builder<BlockPos> builder = Stream.builder();
-		Set<BlockPos> debounce = new HashSet<>();
-		Deque<BlockPos> toVisit = new ArrayDeque<>();
-		toVisit.add(pos);
-		while (toVisit.size() > 0) {
-			BlockPos p = toVisit.pop();
-			builder.add(p);
-			if (!isCable(p)) {
-				continue;
-			}
+		return SFMUtil.getRecursiveStream((current, list) -> {
 			for (Direction d : Direction.values()) {
-				BlockPos dx = p.offset(d);
-				if (debounce.contains(dx)) {
-					continue;
-				}
-				debounce.add(dx);
-				toVisit.add(dx);
+				list.accept(current.offset(d));
 			}
-		}
-		return builder.build();
+		}, this::isCable, pos);
 	}
 
 	public boolean isCable(BlockPos pos) {

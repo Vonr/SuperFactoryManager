@@ -5,22 +5,21 @@ import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowRelationshipData extends FlowData {
-
+public class RelationshipFlowData extends FlowData {
 	public UUID from, to;
 
-	public FlowRelationshipData(UUID uuid, UUID from, UUID to) {
+	public RelationshipFlowData(UUID uuid, UUID from, UUID to) {
 		super(uuid);
 		this.from = from;
 		this.to = to;
 	}
 
-	public FlowRelationshipData(UUID from, UUID to) {
+	public RelationshipFlowData(UUID from, UUID to) {
 		this.from = from;
 		this.to = to;
 	}
 
-	public FlowRelationshipData(CompoundNBT tag) {
+	public RelationshipFlowData(CompoundNBT tag) {
 		deserializeNBT(tag);
 	}
 
@@ -35,8 +34,9 @@ public class FlowRelationshipData extends FlowData {
 
 	@Override
 	public FlowData copy() {
-		return new FlowRelationshipData(getId(), from, to);
+		return new RelationshipFlowData(getId(), from, to);
 	}
+
 
 	public boolean matches(UUID from, UUID to) {
 		return from.equals(this.from) && to.equals(this.to);
@@ -49,15 +49,15 @@ public class FlowRelationshipData extends FlowData {
 		this.to = UUID.fromString(tag.getString("to"));
 	}
 
-	public static class FlowRelationshipDataFactory extends FlowDataFactory<FlowRelationshipData> {
+	public static class FlowRelationshipDataFactory extends FlowDataFactory<RelationshipFlowData> {
 
 		public FlowRelationshipDataFactory(ResourceLocation registryName) {
 			super(registryName);
 		}
 
 		@Override
-		public FlowRelationshipData fromNBT(CompoundNBT tag) {
-			return new FlowRelationshipData(tag);
+		public RelationshipFlowData fromNBT(CompoundNBT tag) {
+			return new RelationshipFlowData(tag);
 		}
 	}
 }

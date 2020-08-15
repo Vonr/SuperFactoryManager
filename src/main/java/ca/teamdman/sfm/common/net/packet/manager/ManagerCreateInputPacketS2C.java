@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
-import ca.teamdman.sfm.common.flowdata.FlowInputData;
+import ca.teamdman.sfm.common.flowdata.InputFlowData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.packet.IWindowIdProvider;
 import java.util.UUID;
@@ -33,7 +33,7 @@ public class ManagerCreateInputPacketS2C implements IWindowIdProvider {
 	public static void handle(ManagerCreateInputPacketS2C msg, Supplier<NetworkEvent.Context> ctx) {
 		SFM.PROXY.getScreenFromPacket(msg, ctx, ManagerScreen.class).ifPresent(screen -> {
 			screen.DATAS
-				.put(msg.ELEMENT_ID, new FlowInputData(msg.ELEMENT_ID, new Position(msg.X, msg.Y)));
+				.put(msg.ELEMENT_ID, new InputFlowData(msg.ELEMENT_ID, new Position(msg.X, msg.Y)));
 			screen.CONTROLLER.loadFromScreenData();
 		});
 		ctx.get().setPacketHandled(true);

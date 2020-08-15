@@ -5,20 +5,20 @@ import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowInputData extends FlowData implements PositionProvider {
+public class InputFlowData extends FlowData implements PositionProvider {
 
 	public Position position;
 
-	public FlowInputData(UUID uuid, Position position) {
+	public InputFlowData(UUID uuid, Position position) {
 		super(uuid);
 		this.position = position;
 	}
 
-	public FlowInputData(Position position) {
+	public InputFlowData(Position position) {
 		this.position = position;
 	}
 
-	public FlowInputData() {
+	public InputFlowData() {
 		this(new Position(0, 0));
 	}
 
@@ -38,7 +38,7 @@ public class FlowInputData extends FlowData implements PositionProvider {
 
 	@Override
 	public FlowData copy() {
-		return new FlowInputData(getId(), getPosition());
+		return new InputFlowData(getId(), getPosition());
 	}
 
 	@Override
@@ -46,15 +46,15 @@ public class FlowInputData extends FlowData implements PositionProvider {
 		return position;
 	}
 
-	public static class FlowInputDataFactory extends FlowDataFactory<FlowInputData> {
+	public static class FlowInputDataFactory extends FlowDataFactory<InputFlowData> {
 
 		public FlowInputDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public FlowInputData fromNBT(CompoundNBT tag) {
-			FlowInputData data = new FlowInputData();
+		public InputFlowData fromNBT(CompoundNBT tag) {
+			InputFlowData data = new InputFlowData();
 			data.deserializeNBT(tag);
 			return data;
 		}

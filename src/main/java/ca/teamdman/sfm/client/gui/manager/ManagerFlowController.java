@@ -7,9 +7,9 @@ import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.impl.FlowInputButton;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
-import ca.teamdman.sfm.common.flowdata.FlowInputData;
-import ca.teamdman.sfm.common.flowdata.FlowRelationshipData;
+import ca.teamdman.sfm.common.flowdata.InputFlowData;
 import ca.teamdman.sfm.common.flowdata.Position;
+import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -37,31 +37,34 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		}
 	};
 
+	public ManagerFlowController(ManagerScreen screen) {
+		this.SCREEN = screen;
+		RELATIONSHIP_CONTROLLER.rebuildGraph();
+	}
+
 	public Stream<IFlowController> getControllers() {
-		return Stream.concat(Stream.of(RELATIONSHIP_CONTROLLER, CREATE_INPUT_BUTTON), CONTROLLERS.values().stream());
+		return Stream.concat(Stream.of(RELATIONSHIP_CONTROLLER, CREATE_INPUT_BUTTON),
+			CONTROLLERS.values().stream());
 	}
 
 	public Optional<IFlowController> getController(UUID id) {
 		return Optional.ofNullable(CONTROLLERS.get(id));
 	}
 
-	public ManagerFlowController(ManagerScreen screen) {
-		this.SCREEN = screen;
-	}
-
 	@Override
 	public void loadFromScreenData() {
 		CONTROLLERS.clear();
 		SCREEN.DATAS.values().forEach(data -> {
-			if (data instanceof FlowInputData) {
-				FlowInputButton element = new FlowInputButton(this, ((FlowInputData) data));
+			if (data instanceof InputFlowData) {
+				FlowInputButton element = new FlowInputButton(this, ((InputFlowData) data));
 				CONTROLLERS.put(data.getId(), element);
-			} else if (data instanceof FlowRelationshipData) {
+			} else if (data instanceof RelationshipFlowData) {
 				FlowRelationship element = new FlowRelationship(this,
-					((FlowRelationshipData) data));
+					((RelationshipFlowData) data));
 				CONTROLLERS.put(data.getId(), element);
 			}
 		});
+		RELATIONSHIP_CONTROLLER.rebuildGraph();
 	}
 
 	@Override

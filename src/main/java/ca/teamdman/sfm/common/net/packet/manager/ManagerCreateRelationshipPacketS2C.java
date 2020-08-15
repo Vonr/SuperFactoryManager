@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
-import ca.teamdman.sfm.common.flowdata.FlowRelationshipData;
+import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.packet.IWindowIdProvider;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -32,7 +32,7 @@ public class ManagerCreateRelationshipPacketS2C implements IWindowIdProvider {
 	public static void handle(ManagerCreateRelationshipPacketS2C msg, Supplier<NetworkEvent.Context> ctx) {
 		SFM.PROXY.getScreenFromPacket(msg, ctx, ManagerScreen.class).ifPresent(screen -> {
 			screen.DATAS
-				.put(msg.ELEMENT_ID, new FlowRelationshipData(msg.ELEMENT_ID, msg.FROM_ID, msg.TO_ID));
+				.put(msg.ELEMENT_ID, new RelationshipFlowData(msg.ELEMENT_ID, msg.FROM_ID, msg.TO_ID));
 			screen.CONTROLLER.loadFromScreenData();
 		});
 		ctx.get().setPacketHandled(true);

@@ -5,7 +5,7 @@ import ca.teamdman.sfm.client.gui.core.FlowPositionBox;
 import ca.teamdman.sfm.client.gui.core.Size;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
 import ca.teamdman.sfm.common.flowdata.FlowData;
-import ca.teamdman.sfm.common.flowdata.FlowInputData;
+import ca.teamdman.sfm.common.flowdata.InputFlowData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
@@ -14,10 +14,10 @@ import java.util.Optional;
 public class FlowInputButton extends FlowIconButton {
 
 	public final ManagerFlowController CONTROLLER;
-	public FlowInputData data;
+	public InputFlowData data;
 
 	public FlowInputButton(ManagerFlowController controller,
-		FlowInputData data) {
+		InputFlowData data) {
 		super(ButtonLabel.INPUT);
 		POS.setMovable(true);
 		this.data = data;

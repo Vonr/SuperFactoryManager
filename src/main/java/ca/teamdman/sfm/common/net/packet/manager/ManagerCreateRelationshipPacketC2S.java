@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.container.ManagerContainer;
-import ca.teamdman.sfm.common.flowdata.FlowRelationshipData;
+import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
@@ -50,7 +50,7 @@ public class ManagerCreateRelationshipPacketC2S implements IContainerTilePacket 
 	public static void handleDetailed(ManagerCreateRelationshipPacketC2S msg,
 		ManagerTileEntity manager) {
 		BlockState state = manager.getWorld().getBlockState(msg.TILE_POSITION);
-		FlowRelationshipData data = new FlowRelationshipData(msg.ELEMENT_ID, msg.FROM_ID, msg.TO_ID);
+		RelationshipFlowData data = new RelationshipFlowData(msg.ELEMENT_ID, msg.FROM_ID, msg.TO_ID);
 		manager.data.put(msg.ELEMENT_ID, data);
 		manager.markDirty();
 		manager.getWorld().notifyBlockUpdate(msg.TILE_POSITION, state, state,

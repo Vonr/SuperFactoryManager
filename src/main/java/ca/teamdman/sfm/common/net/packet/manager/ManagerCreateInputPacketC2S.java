@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.container.ManagerContainer;
-import ca.teamdman.sfm.common.flowdata.FlowInputData;
+import ca.teamdman.sfm.common.flowdata.InputFlowData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
@@ -48,7 +48,7 @@ public class ManagerCreateInputPacketC2S implements IContainerTilePacket {
 
 	public static void handleDetailed(ManagerCreateInputPacketC2S msg, ManagerTileEntity manager) {
 		BlockState state = manager.getWorld().getBlockState(msg.TILE_POSITION);
-		FlowInputData data = new FlowInputData(msg.ELEMENT_ID, new Position(msg.X, msg.Y));
+		InputFlowData data = new InputFlowData(msg.ELEMENT_ID, new Position(msg.X, msg.Y));
 		manager.data.put(msg.ELEMENT_ID, data);
 		manager.markDirty();
 		manager.getWorld().notifyBlockUpdate(msg.TILE_POSITION, state, state,

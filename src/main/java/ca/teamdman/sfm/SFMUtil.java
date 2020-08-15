@@ -1,8 +1,16 @@
 package ca.teamdman.sfm;
 
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -15,10 +23,16 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.NetworkEvent;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 public class SFMUtil {
 
 	public static final int UUID_STRING_LENGTH = 36;
+
+	public static Marker getMarker(Class clazz) {
+		return MarkerManager.getMarker(clazz.getSimpleName());
+	}
 
 	public static <T extends TileEntity> Optional<T> getServerTile(IWorldPosCallable access,
 		Class<T> clazz) {
@@ -87,5 +101,33 @@ public class SFMUtil {
 		return InputMappings
 			.isKeyDown(Minecraft.getInstance().getMainWindow().getHandle(), key);
 
+	}
+
+	/**
+	 * Gets a stream using a self-feeding mapping function
+	 * @param mapper Consumer of one element to provide the next
+	 * @param filter Predicate checked before adding a new element to the queue
+	 * @param first Initial value, not checked against the filter
+	 * @param <T> Type that the mapper consumes and produces
+	 * @return Stream result after termination of the recursive mapping process
+	 */
+	public static <T> Stream<T> getRecursiveStream(BiConsumer<T, Consumer<T>> mapper, Predicate<T> filter, T first) {
+		Stream.Builder<T> builder = Stream.builder();
+		Set<T> debounce = new HashSet<>();
+		Deque<T> toVisit = new ArrayDeque<>();
+		toVisit.add(first);
+		while (toVisit.size() > 0) {
+			T current = toVisit.pop();
+			builder.add(current);
+			mapper.accept(current, next -> {
+				if (!debounce.contains(next)) {
+					debounce.add(next);
+					if (filter.test(current)) {
+						toVisit.add(next);
+					}
+				}
+			});
+		}
+		return builder.build();
 	}
 }

@@ -1,30 +1,58 @@
 package ca.teamdman.sfm.client.gui.manager;
 
+import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
 import ca.teamdman.sfm.common.flowdata.FlowData;
-import ca.teamdman.sfm.common.flowdata.FlowRelationshipData;
 import ca.teamdman.sfm.common.flowdata.Position;
+import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.MutableGraph;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import net.minecraft.client.gui.screen.Screen;
 
+@SuppressWarnings("UnstableApiUsage")
 public class RelationshipController implements IFlowController, IFlowView {
 
 	public final ManagerFlowController CONTROLLER;
 	private final Position fromPos = new Position();
 	private final Position toPos = new Position();
+	public MutableGraph<UUID> graph;
 	private UUID from;
 	private boolean isDragging = false;
 
 	public RelationshipController(ManagerFlowController CONTROLLER) {
 		this.CONTROLLER = CONTROLLER;
+	}
+
+	public void rebuildGraph() {
+		graph = GraphBuilder
+			.directed()
+			.allowsSelfLoops(false)
+			.build();
+		CONTROLLER.SCREEN.DATAS.values().stream()
+			.filter(data -> data instanceof RelationshipFlowData)
+			.map(data -> (RelationshipFlowData) data)
+			.forEach(data -> {
+				graph.addNode(data.from);
+				graph.addNode(data.to);
+				try {
+					graph.putEdge(data.from, data.to);
+				} catch (IllegalArgumentException e) {
+					SFM.LOGGER.warn(SFMUtil.getMarker(getClass()), "Illegal edge between {} and {}",
+						data.from, data.to);
+				}
+			});
 	}
 
 	public Optional<IFlowController> getElementUnderMouse(int mx, int my) {
@@ -68,14 +96,21 @@ public class RelationshipController implements IFlowController, IFlowView {
 		return true;
 	}
 
+	public Stream<UUID> getAncestors(UUID child) {
+		return SFMUtil.getRecursiveStream((current, enqueue) ->
+			graph.predecessors(current).forEach(enqueue), uuid -> true, child);
+	}
+
 	public void createRelationship(UUID from, UUID to) {
-		if (CONTROLLER.SCREEN.DATAS.values().stream()
-			.filter(data -> data instanceof FlowRelationshipData)
-			.anyMatch(data -> ((FlowRelationshipData) data)
-				.matches(from, to) || ((FlowRelationshipData) data).matches(to, from))
-		){
+		if (Objects.equals(from, to)) {
 			return;
 		}
+		graph.addNode(from);
+		graph.addNode(to);
+		if (getAncestors(from).anyMatch(to::equals)) {
+			return;
+		}
+		
 		PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
