@@ -24,7 +24,8 @@ public abstract class BaseScreen extends Screen {
 
 	public static final Colour3f DEFAULT_LINE_COLOUR = new Colour3f(0.4f, 0.4f, 0.4f);
 	public static final Colour3f HIGHLIGHTED_LINE_COLOUR = new Colour3f(0.15686275f, 0.5294118f,
-		0.94509804f);
+		0.94509804f
+	);
 	final int zLevel = 0;
 	protected int guiLeft;
 	protected int guiTop;
@@ -85,7 +86,8 @@ public abstract class BaseScreen extends Screen {
 		drawString(
 			matrixStack, str,
 			(int) (x - fixScaledCoordinate(font.getStringWidth(str), getScale(),
-				Minecraft.getInstance().getMainWindow().getWidth())),
+				Minecraft.getInstance().getMainWindow().getWidth()
+			)),
 			y,
 			color
 		);
@@ -296,7 +298,8 @@ public abstract class BaseScreen extends Screen {
 			x, y + height,
 			x + width, y + height,
 			x + width, y,
-			colour);
+			colour
+		);
 	}
 
 	public void drawLine(MatrixStack matrixStack, int x1, int y1, int x2, int y2, Colour3f colour) {
@@ -308,6 +311,9 @@ public abstract class BaseScreen extends Screen {
 		int sqrMag = dx * dx + dy * dy;
 		double mag = Math.sqrt(sqrMag == 0 ? 1 : sqrMag);
 		int width = 4;
+		if (x1 == x2 || y1 == y2) {
+			width -= 2;
+		}
 		dx = (int) ((dx / mag) * width / 2f);
 		dy = (int) ((dy / mag) * width / 2f);
 
