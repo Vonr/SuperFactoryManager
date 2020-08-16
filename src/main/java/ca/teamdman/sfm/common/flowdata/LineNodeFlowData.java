@@ -46,15 +46,15 @@ public class LineNodeFlowData extends FlowData implements PositionProvider {
 		return position;
 	}
 
-	public static class LineNodeFlowDataFactory extends FlowDataFactory<InputFlowData> {
+	public static class LineNodeFlowDataFactory extends FlowDataFactory<LineNodeFlowData> {
 
 		public LineNodeFlowDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public InputFlowData fromNBT(CompoundNBT tag) {
-			InputFlowData data = new InputFlowData();
+		public LineNodeFlowData fromNBT(CompoundNBT tag) {
+			LineNodeFlowData data = new LineNodeFlowData();
 			data.deserializeNBT(tag);
 			return data;
 		}

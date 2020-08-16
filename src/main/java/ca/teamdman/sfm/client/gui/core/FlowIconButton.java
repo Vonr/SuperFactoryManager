@@ -11,21 +11,28 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 	public final FlowSprite ICON;
 	public final FlowPositionBox POS;
 
-	public FlowIconButton(ButtonLabel type, Position pos) {
+	public FlowIconButton(ButtonBackground background, ButtonLabel label, Position pos) {
 		this.BACKGROUND = createBackground(
 			ButtonBackground.SPRITE_SHEET,
-			ButtonBackground.NORMAL.left,
-			ButtonBackground.NORMAL.top,
-			ButtonBackground.NORMAL.width,
-			ButtonBackground.NORMAL.height);
+			background.left,
+			background.top,
+			background.width,
+			background.height);
 		this.ICON = createLabel(
 			ButtonLabel.SPRITE_SHEET,
-			type.left,
-			type.top,
-			type.width,
-			type.height);
-		this.POS = createPositionBox(pos, ButtonBackground.NORMAL.width,
-			ButtonBackground.NORMAL.height);
+			label.left,
+			label.top,
+			label.width,
+			label.height);
+		this.POS = createPositionBox(pos, background.width, background.height);
+	}
+
+	public FlowIconButton(ButtonLabel type, Position pos) {
+		this(ButtonBackground.NORMAL, type, pos);
+	}
+
+	public FlowIconButton(ButtonBackground background, ButtonLabel label) {
+		this(background, label, new Position(0,0));
 	}
 
 	public FlowIconButton(ButtonLabel type) {
@@ -111,9 +118,10 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 		return POS.snapToEdge(outside);
 	}
 
-	private enum ButtonBackground {
+	public enum ButtonBackground {
 		NORMAL(14, 0, 22, 22),
-		DEPRESSED(14, 22, 22, 22);
+		DEPRESSED(14, 22, 22, 22),
+		LINE_NODE(36,0,8,8);
 
 		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID,
 			"textures/gui/sprites.png");
@@ -132,7 +140,7 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 		OUTPUT(0, 14, 14, 14),
 		ADD_INPUT(0, 28, 14, 14),
 		ADD_OUTPUT(0, 42, 14, 14),
-		LINE_NODE(36,0,8,8);
+		NONE(0,0,0,0);
 
 		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID,
 			"textures/gui/sprites.png");

@@ -30,26 +30,61 @@ import org.apache.logging.log4j.MarkerManager;
 
 public class SFMUtil {
 
+	/**
+	 * Reads a UUID from a packet buffer
+	 * Will throw an error if unable to pop a string from the buffer
+	 * Will throw an error if the string is malformed
+	 * @return UUID
+	 */
 	public static UUID readUUID(PacketBuffer buf) {
 		return UUID.fromString(buf.readString(UUID_STRING_LENGTH));
 	}
 
+	/**
+	 * Writes a UUID to a buffer
+	 * @param id UUID
+	 * @param buf Buffer
+	 */
 	public static void writeUUID(UUID id, PacketBuffer buf) {
 		buf.writeString(id.toString(), UUID_STRING_LENGTH);
 	}
 
+	/**
+	 * The length of a UUID once stringified
+	 */
 	public static final int UUID_STRING_LENGTH = 36;
 
+	/**
+	 * Gets the marker used for logging purposes
+	 * @param clazz The class used for naming the marker
+	 * @return Logging marker
+	 */
 	public static Marker getMarker(Class clazz) {
 		return MarkerManager.getMarker(clazz.getSimpleName());
 	}
 
+	/**
+	 * Gets a tile entity from the server side
+	 * @param access World
+	 * @param clazz Tile class
+	 * @param <T> Tile entity type
+	 * @return Tile of type T
+	 */
 	public static <T extends TileEntity> Optional<T> getServerTile(IWorldPosCallable access,
 		Class<T> clazz) {
 		return access
 			.applyOrElse((world, pos) -> getTile(world, pos, clazz, false), Optional.empty());
 	}
 
+	/**
+	 * Gets a tile entity from the world
+	 * @param world World
+	 * @param pos Tile position
+	 * @param clazz Tile class
+	 * @param remote isRemote
+	 * @param <T> Tile entity type
+	 * @return Tile of type T
+	 */
 	public static <T extends TileEntity> Optional<T> getTile(IWorldReader world, BlockPos pos,
 		Class<T> clazz, boolean remote) {
 		if (world.isRemote() != remote) {
@@ -67,12 +102,28 @@ public class SFMUtil {
 		return Optional.empty();
 	}
 
+	/**
+	 * Gets a tile entity on the client side
+	 * @param access World
+	 * @param clazz Tile class
+	 * @param <T> Tile entity type
+	 * @return Tile of type T
+	 */
 	public static <T extends TileEntity> Optional<T> getClientTile(IWorldPosCallable access,
 		Class<T> clazz) {
 		return access
 			.applyOrElse((world, pos) -> getTile(world, pos, clazz, true), Optional.empty());
 	}
 
+	/**
+	 * Gets a tile entity from a packet with container info
+	 * @param packet Packet
+	 * @param ctx Network context
+	 * @param containerClass Container
+	 * @param tileClass Tile class
+	 * @param <T> Tile entity type
+	 * @return Tile of type T
+	 */
 	public static <T extends TileEntity> Optional<T> getTileFromContainerPacket(
 		IContainerTilePacket packet, Supplier<NetworkEvent.Context> ctx,
 		Class<? extends Container> containerClass, Class<T> tileClass) {
@@ -106,6 +157,12 @@ public class SFMUtil {
 		return Optional.of((T) tile);
 	}
 
+	/**
+	 * Checks if a key is being held down
+	 *
+	 * @param key GLFW key
+	 * @return true if key is being held down
+	 */
 	@OnlyIn(Dist.CLIENT)
 	public static boolean isKeyDown(int key) {
 		return InputMappings
@@ -143,5 +200,4 @@ public class SFMUtil {
 		}
 		return builder.build();
 	}
-
 }

@@ -1,8 +1,7 @@
 package ca.teamdman.sfm.common.net.packet.manager;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.common.flowdata.LineNodeFlowData;
+import ca.teamdman.sfm.common.flowdata.FlowUtils;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
@@ -11,14 +10,15 @@ import net.minecraft.util.math.BlockPos;
 
 public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 
-	private final UUID ELEMENT_ID;
 	private final Position ELEMENT_POSITION;
+	private final UUID FROM_ID, TO_ID;
 
-	public ManagerCreateLineNodePacketC2S(int WINDOW_ID, BlockPos TILE_POSITION,
-		UUID ELEMENT_ID, Position POSITION) {
+	public ManagerCreateLineNodePacketC2S(int WINDOW_ID, BlockPos TILE_POSITION, UUID from, UUID to,
+		Position POSITION) {
 		super(WINDOW_ID, TILE_POSITION);
-		this.ELEMENT_ID = ELEMENT_ID;
 		this.ELEMENT_POSITION = POSITION;
+		this.FROM_ID = from;
+		this.TO_ID = to;
 	}
 
 	public static class Handler extends C2SHandler<ManagerCreateLineNodePacketC2S> {
@@ -26,7 +26,8 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 		@Override
 		public void finishEncode(ManagerCreateLineNodePacketC2S msg,
 			PacketBuffer buf) {
-			SFMUtil.writeUUID(msg.ELEMENT_ID, buf);
+			SFMUtil.writeUUID(msg.FROM_ID, buf);
+			SFMUtil.writeUUID(msg.TO_ID, buf);
 			buf.writeLong(msg.ELEMENT_POSITION.toLong());
 		}
 
@@ -37,21 +38,40 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 				windowId,
 				tilePos,
 				SFMUtil.readUUID(buf),
+				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong())
 			);
 		}
 
 		@Override
-		public void handleDetailed(ManagerCreateLineNodePacketC2S msg,
-			ManagerTileEntity manager) {
-			LineNodeFlowData data = new LineNodeFlowData(msg.ELEMENT_ID, msg.ELEMENT_POSITION);
-			manager.addData(data);
-			manager.markAndNotify();
-			manager.sendPacketToListeners(new ManagerCreateLineNodePacketS2C(
-				msg.WINDOW_ID,
-				msg.ELEMENT_ID,
-				msg.ELEMENT_POSITION));
-			SFM.LOGGER.debug("Manager tile has {} entries", manager.data.size());
+		public void handleDetailed(
+			ManagerCreateLineNodePacketC2S msg,
+			ManagerTileEntity manager
+		) {
+			UUID nodeId = UUID.randomUUID();
+			UUID fromToNodeId = UUID.randomUUID();
+			UUID toToNodeId = UUID.randomUUID();
+
+			FlowUtils.insertLineNode(
+				manager,
+				msg.FROM_ID,
+				msg.TO_ID,
+				nodeId,
+				fromToNodeId,
+				toToNodeId,
+				msg.ELEMENT_POSITION);
+
+			manager.sendPacketToListeners(
+				new ManagerCreateLineNodePacketS2C(
+					msg.WINDOW_ID,
+					msg.FROM_ID,
+					msg.TO_ID,
+					nodeId,
+					fromToNodeId,
+					toToNodeId,
+					msg.ELEMENT_POSITION
+				)
+			);
 		}
 	}
 }

@@ -12,7 +12,6 @@ import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import net.minecraft.client.gui.screen.Screen;
@@ -20,8 +19,10 @@ import net.minecraft.client.gui.screen.Screen;
 public class FlowRelationship implements IFlowView, IFlowController {
 
 	public static final Colour3f COLOUR = new Colour3f(0.4f, 0.4f, 0.4f);
+	public static final Colour3f SELECTED_COLOUR = new Colour3f(0.4f, 0.4f, 0.8f);
 	public final ManagerFlowController CONTROLLER;
 	public RelationshipFlowData data;
+	public boolean selected = false;
 
 	public FlowRelationship(ManagerFlowController CONTROLLER,
 		RelationshipFlowData data) {
@@ -40,10 +41,12 @@ public class FlowRelationship implements IFlowView, IFlowController {
 		if (!rel.isPresent()) {
 			return false;
 		}
+		selected = true;
 		PacketHandler.INSTANCE.sendToServer(new ManagerCreateLineNodePacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-			UUID.randomUUID(),
+			rel.get().data.from,
+			rel.get().data.to,
 			new Position(mx, my)
 		));
 		return true;
@@ -51,7 +54,8 @@ public class FlowRelationship implements IFlowView, IFlowController {
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
-		return false;
+		selected = false;
+		return true;
 	}
 
 	@Override
@@ -106,6 +110,6 @@ public class FlowRelationship implements IFlowView, IFlowController {
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
 		ifPositionsPresent((from, to) ->
-			screen.drawArrow(matrixStack, from, to, FlowRelationship.COLOUR));
+			screen.drawArrow(matrixStack, from, to, selected ? SELECTED_COLOUR : COLOUR));
 	}
 }

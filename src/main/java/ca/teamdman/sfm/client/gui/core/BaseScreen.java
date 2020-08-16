@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.flowdata.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.ItemRenderer;
@@ -45,6 +46,10 @@ public abstract class BaseScreen extends Screen {
 		Minecraft.getInstance().getTextureManager().bindTexture(resource);
 	}
 
+	public FontRenderer getFontRenderer() {
+		return this.font;
+	}
+
 	public ItemRenderer getItemRenderer() {
 		return this.itemRenderer;
 	}
@@ -52,8 +57,10 @@ public abstract class BaseScreen extends Screen {
 	/**
 	 * Draws a string to the screen
 	 */
-	public void drawString(MatrixStack matrixStack, String str, int x,
-		int y, float mult, int color) {
+	public void drawString(
+		MatrixStack matrixStack, String str, int x,
+		int y, float mult, int color
+	) {
 		RenderSystem.pushMatrix();
 		RenderSystem.scalef(mult, mult, 1F);
 		this.font
@@ -64,22 +71,22 @@ public abstract class BaseScreen extends Screen {
 		RenderSystem.popMatrix();
 	}
 
-	public void drawRightAlignedString(MatrixStack matrixStack,
-		String str, int x, int y, int color) {
-		drawRightAlignedString(matrixStack, str, x, y, 1, color);
+	public void drawString(MatrixStack matrixStack, String str, int x, int y, int color) {
+		drawString(matrixStack, str, x, y, 1, color);
 	}
 
 	/**
 	 * Draws a string, aligned to the right of the screen
 	 */
-	public void drawRightAlignedString(MatrixStack matrixStack, String str, int x, int y,
-		float mult, int color) {
+	public void drawRightAlignedString(
+		MatrixStack matrixStack, String str, int x, int y,
+		int color
+	) {
 		drawString(
 			matrixStack, str,
 			(int) (x - fixScaledCoordinate(font.getStringWidth(str), getScale(),
 				Minecraft.getInstance().getMainWindow().getWidth())),
 			y,
-			mult,
 			color
 		);
 	}
@@ -132,8 +139,10 @@ public abstract class BaseScreen extends Screen {
 	 * @param width       Texture sample width
 	 * @param height      Texture sample height
 	 */
-	public void drawSprite(MatrixStack matrixStack, int x, int y,
-		int left, int top, int width, int height) {
+	public void drawSprite(
+		MatrixStack matrixStack, int x, int y,
+		int left, int top, int width, int height
+	) {
 		drawTexture(matrixStack, x, y, left, top, width, height);
 	}
 
@@ -148,8 +157,10 @@ public abstract class BaseScreen extends Screen {
 	 * @param w           Local width
 	 * @param h           Local height
 	 */
-	public void drawTexture(MatrixStack matrixStack, int x, int y,
-		int srcX, int srcY, int w, int h) {
+	public void drawTexture(
+		MatrixStack matrixStack, int x, int y,
+		int srcX, int srcY, int w, int h
+	) {
 		blit(matrixStack,
 			x,
 			y,
@@ -231,8 +242,10 @@ public abstract class BaseScreen extends Screen {
 		matrixStack.pop();
 	}
 
-	public abstract void draw(MatrixStack matrixStack, int mouseX,
-		int mouseY, float partialTicks);
+	public abstract void draw(
+		MatrixStack matrixStack, int mouseX,
+		int mouseY, float partialTicks
+	);
 
 	public void drawLine(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
 		drawLine(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);
@@ -242,7 +255,51 @@ public abstract class BaseScreen extends Screen {
 		drawArrow(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);
 	}
 
-	public void drawLine(MatrixStack matrixStack, int x1, int y1, int x2, int y2, Colour3f color) {
+	public void drawQuad(
+		MatrixStack matrixStack, int ax, int ay, int bx, int by, int cx, int cy,
+		int dx, int dy, Colour3f colour
+	) {
+		Matrix4f m = matrixStack.getLast().getMatrix();
+		matrixStack.push();
+		RenderSystem.disableTexture();
+		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+		bufferBuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+		bufferBuilder.pos(m, ax, ay, 0)
+			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, bx, by, 0)
+			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, cx, cy, 0)
+			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, dx, dy, 0)
+			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
+			.endVertex();
+		bufferBuilder.finishDrawing();
+		WorldVertexBufferUploader.draw(bufferBuilder);
+		RenderSystem.enableTexture();
+//		RenderSystem.disableBlend();
+		matrixStack.pop();
+	}
+
+	public void drawRect(
+		MatrixStack matrixStack,
+		int x,
+		int y,
+		int width,
+		int height,
+		Colour3f colour
+	) {
+		drawQuad(matrixStack,
+			x, y,
+			x, y + height,
+			x + width, y + height,
+			x + width, y,
+			colour);
+	}
+
+	public void drawLine(MatrixStack matrixStack, int x1, int y1, int x2, int y2, Colour3f colour) {
 		// normal vector
 		int dx = x2 - x1;
 		int dy = y2 - y1;
@@ -254,32 +311,19 @@ public abstract class BaseScreen extends Screen {
 		dx = (int) ((dx / mag) * width / 2f);
 		dy = (int) ((dy / mag) * width / 2f);
 
-		Matrix4f m = matrixStack.getLast().getMatrix();
-		matrixStack.push();
-		RenderSystem.disableTexture();
-		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-		bufferBuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-		bufferBuilder.pos(m, x1 - dy, y1 + dx, 0)
-			.color(color.RED, color.GREEN, color.BLUE, 1)
-			.endVertex();
-		bufferBuilder.pos(m, x2 - dy, y2 + dx, 0)
-			.color(color.RED, color.GREEN, color.BLUE, 1)
-			.endVertex();
-		bufferBuilder.pos(m, x2 + dy, y2 - dx, 0)
-			.color(color.RED, color.GREEN, color.BLUE, 1)
-			.endVertex();
-		bufferBuilder.pos(m, x1 + dy, y1 - dx, 0)
-			.color(color.RED, color.GREEN, color.BLUE, 1)
-			.endVertex();
-		bufferBuilder.finishDrawing();
-		WorldVertexBufferUploader.draw(bufferBuilder);
-		RenderSystem.enableTexture();
-//		RenderSystem.disableBlend();
-		matrixStack.pop();
+		drawQuad(matrixStack,
+			x1 - dy, y1 + dx,
+			x2 - dy, y2 + dx,
+			x2 + dy, y2 - dx,
+			x1 + dy, y1 - dx,
+			colour
+		);
 	}
 
-	public void drawArrow(MatrixStack matrixStack, int x1, int y1, int x2,
-		int y2, Colour3f color) {
+	public void drawArrow(
+		MatrixStack matrixStack, int x1, int y1, int x2,
+		int y2, Colour3f color
+	) {
 		drawLine(matrixStack, x1, y1, x2, y2, color);
 		int lookX = x2 - x1;
 		int lookY = y2 - y1;

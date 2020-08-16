@@ -1,13 +1,17 @@
 package ca.teamdman.sfm.client.gui.manager;
 
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
+import ca.teamdman.sfm.client.gui.core.Colour3f;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.impl.FlowInputButton;
+import ca.teamdman.sfm.client.gui.impl.FlowLineNode;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
+import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.InputFlowData;
+import ca.teamdman.sfm.common.flowdata.LineNodeFlowData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
@@ -19,12 +23,13 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
+import net.minecraft.client.gui.screen.Screen;
 
 public class ManagerFlowController implements IFlowController, IFlowView {
 
 	public final ManagerScreen SCREEN;
-	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
 	public final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
+	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
 	private final FlowIconButton CREATE_INPUT_BUTTON = new FlowIconButton(ButtonLabel.ADD_INPUT,
 		new Position(25, 25)) {
 		@Override
@@ -52,19 +57,31 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		return Optional.ofNullable(CONTROLLERS.get(id));
 	}
 
+	public void addController(UUID id, IFlowController controller) {
+		CONTROLLERS.put(id, controller);
+	}
+
+	public Optional<IFlowController> createControllerForDataType(FlowData data) {
+		if (data instanceof InputFlowData) {
+			return Optional.of(new FlowInputButton(this, ((InputFlowData) data)));
+		} else if (data instanceof RelationshipFlowData) {
+			return Optional.of(new FlowRelationship(this,
+				((RelationshipFlowData) data)));
+		} else if (data instanceof LineNodeFlowData) {
+			return Optional.of(new FlowLineNode(this, ((LineNodeFlowData) data)));
+		}
+		return Optional.empty();
+	}
+
+	public void attemptAddDataController(FlowData data) {
+		createControllerForDataType(data)
+			.ifPresent(c -> addController(data.getId(), c));
+	}
+
 	@Override
 	public void loadFromScreenData() {
 		CONTROLLERS.clear();
-		SCREEN.DATAS.values().forEach(data -> {
-			if (data instanceof InputFlowData) {
-				FlowInputButton element = new FlowInputButton(this, ((InputFlowData) data));
-				CONTROLLERS.put(data.getId(), element);
-			} else if (data instanceof RelationshipFlowData) {
-				FlowRelationship element = new FlowRelationship(this,
-					((RelationshipFlowData) data));
-				CONTROLLERS.put(data.getId(), element);
-			}
-		});
+		SCREEN.DATAS.values().forEach(this::attemptAddDataController);
 		RELATIONSHIP_CONTROLLER.rebuildGraph();
 	}
 
@@ -113,5 +130,18 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 			.map(IFlowController::getView)
 			.sorted(Comparator.comparingInt(IFlowView::getZIndex))
 			.forEach(view -> view.draw(screen, matrixStack, mx, my, deltaTime));
+
+		if (Screen.hasControlDown() && Screen.hasAltDown()) {
+			RELATIONSHIP_CONTROLLER.getElementUnderMouse(mx, my)
+				.flatMap(IFlowController::getData)
+				.ifPresent(data ->{
+						String toDraw = data.getId().toString();
+						int width = screen.getFontRenderer().getStringWidth(toDraw)+2;
+						int yOffset = -25;
+						screen.drawRect(matrixStack, mx-1, my+yOffset-1, width, 11, Colour3f.WHITE);
+						screen.drawString(matrixStack, data.getId().toString(), mx, my+yOffset, 0x2222BB);
+					}
+				);
+		}
 	}
 }

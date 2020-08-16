@@ -7,6 +7,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
+import ca.teamdman.sfm.common.flowdata.FlowDataHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.BlockRegistrar;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
@@ -29,7 +30,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ManagerTileEntity extends TileEntity {
+public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 	public HashMap<UUID, FlowData> data = new HashMap<>();
@@ -42,10 +43,27 @@ public class ManagerTileEntity extends TileEntity {
 		super(type);
 	}
 
+	@Override
+	public Stream<FlowData> getData() {
+		return data.values().stream();
+	}
+
+	@Override
 	public void addData(FlowData data) {
 		this.data.put(data.getId(), data);
 	}
 
+	@Override
+	public Optional<FlowData> removeData(UUID id) {
+		return Optional.ofNullable(this.data.remove(id));
+	}
+
+	@Override
+	public void clearData() {
+		data.clear();
+	}
+
+	@Override
 	public Optional<FlowData> getData(UUID id) {
 		return Optional.ofNullable(data.get(id));
 	}
@@ -114,6 +132,8 @@ public class ManagerTileEntity extends TileEntity {
 			CompoundNBT tag = (CompoundNBT) c;
 			LazyOptional<FlowDataFactory<?>> factory = FlowDataFactory.getFactory(tag);
 			factory.ifPresent(fac -> {
+				SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Discovered factory {} for data {}",
+					fac.getClass().getSimpleName(), c);
 				FlowData myData = fac.fromNBT(tag);
 				data.put(myData.getId(), myData);
 			});
