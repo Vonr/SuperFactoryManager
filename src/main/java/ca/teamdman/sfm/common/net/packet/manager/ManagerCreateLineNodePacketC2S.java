@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net.packet.manager;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flowdata.FlowUtils;
 import ca.teamdman.sfm.common.flowdata.Position;
@@ -51,7 +52,15 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 			UUID nodeId = UUID.randomUUID();
 			UUID fromToNodeId = UUID.randomUUID();
 			UUID toToNodeId = UUID.randomUUID();
-
+			SFM.LOGGER.debug(
+				SFMUtil.getMarker(getClass()),
+				"C2S received, creating relationship from {} to {}, node id {}, rel ids {} and {}",
+				msg.FROM_ID,
+				msg.TO_ID,
+				nodeId,
+				fromToNodeId,
+				toToNodeId
+			);
 			FlowUtils.insertLineNode(
 				manager,
 				msg.FROM_ID,

@@ -14,17 +14,19 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 	public FlowIconButton(ButtonBackground background, ButtonLabel label, Position pos) {
 		this.BACKGROUND = createBackground(
 			ButtonBackground.SPRITE_SHEET,
-			background.left,
-			background.top,
-			background.width,
-			background.height);
+			background.LEFT,
+			background.TOP,
+			background.WIDTH,
+			background.HEIGHT
+		);
 		this.ICON = createLabel(
 			ButtonLabel.SPRITE_SHEET,
-			label.left,
-			label.top,
-			label.width,
-			label.height);
-		this.POS = createPositionBox(pos, background.width, background.height);
+			label.LEFT,
+			label.TOP,
+			label.WIDTH,
+			label.HEIGHT
+		);
+		this.POS = createPositionBox(pos, background.WIDTH, background.HEIGHT);
 	}
 
 	public FlowIconButton(ButtonLabel type, Position pos) {
@@ -32,7 +34,7 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 	}
 
 	public FlowIconButton(ButtonBackground background, ButtonLabel label) {
-		this(background, label, new Position(0,0));
+		this(background, label, new Position(0, 0));
 	}
 
 	public FlowIconButton(ButtonLabel type) {
@@ -44,19 +46,25 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 		return POS.isInBounds(mx, my);
 	}
 
-	public FlowSprite createBackground(ResourceLocation sheet, int left, int top, int width,
-		int height) {
+	public FlowSprite createBackground(
+		ResourceLocation sheet, int left, int top, int width,
+		int height
+	) {
 		return new FlowSprite(sheet, left, top, width, height);
 	}
 
-	public FlowSprite createLabel(ResourceLocation sheet, int left, int top, int width,
-		int height) {
+	public FlowSprite createLabel(
+		ResourceLocation sheet, int left, int top, int width,
+		int height
+	) {
 		return new FlowSprite(sheet, left, top, width, height);
 	}
 
 	public FlowPositionBox createPositionBox(Position pos, int width, int height) {
-		return new FlowPositionBox(pos,
-			new Size(width, height));
+		return new FlowPositionBox(
+			pos,
+			new Size(width, height)
+		);
 	}
 
 	@Override
@@ -91,8 +99,10 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 	}
 
 	@Override
-	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx,
-		int my, float deltaTime) {
+	public void draw(
+		BaseScreen screen, MatrixStack matrixStack, int mx,
+		int my, float deltaTime
+	) {
 		Position p = POS.getPosition();
 		BACKGROUND.drawAt(screen, matrixStack, p);
 		ICON.drawAt(screen, matrixStack, p.getX() + 4, p.getY() + 4);
@@ -121,17 +131,19 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 	public enum ButtonBackground {
 		NORMAL(14, 0, 22, 22),
 		DEPRESSED(14, 22, 22, 22),
-		LINE_NODE(36,0,8,8);
+		LINE_NODE(36, 0, 8, 8);
 
-		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID,
-			"textures/gui/sprites.png");
-		final int left, top, width, height;
+		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(
+			SFM.MOD_ID,
+			"textures/gui/sprites.png"
+		);
+		public final int LEFT, TOP, WIDTH, HEIGHT;
 
 		ButtonBackground(int left, int top, int width, int height) {
-			this.left = left;
-			this.top = top;
-			this.width = width;
-			this.height = height;
+			this.LEFT = left;
+			this.TOP = top;
+			this.WIDTH = width;
+			this.HEIGHT = height;
 		}
 	}
 
@@ -140,17 +152,19 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 		OUTPUT(0, 14, 14, 14),
 		ADD_INPUT(0, 28, 14, 14),
 		ADD_OUTPUT(0, 42, 14, 14),
-		NONE(0,0,0,0);
+		NONE(0, 0, 0, 0);
 
-		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(SFM.MOD_ID,
-			"textures/gui/sprites.png");
-		final int left, top, width, height;
+		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(
+			SFM.MOD_ID,
+			"textures/gui/sprites.png"
+		);
+		public final int LEFT, TOP, WIDTH, HEIGHT;
 
 		ButtonLabel(int left, int top, int width, int height) {
-			this.left = left;
-			this.top = top;
-			this.width = width;
-			this.height = height;
+			this.LEFT = left;
+			this.TOP = top;
+			this.WIDTH = width;
+			this.HEIGHT = height;
 		}
 	}
 }

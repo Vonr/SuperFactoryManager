@@ -42,6 +42,12 @@ public class ManagerCreateRelationshipPacketC2S extends C2SManagerPacket {
 		@Override
 		public void handleDetailed(ManagerCreateRelationshipPacketC2S msg,
 			ManagerTileEntity manager) {
+			SFM.LOGGER.debug(
+				SFMUtil.getMarker(getClass()),
+				"C2S Received, creating relationship between {} and {}",
+				msg.FROM_ID,
+				msg.TO_ID
+			);
 			RelationshipFlowData data = new RelationshipFlowData(
 				msg.ELEMENT_ID,
 				msg.FROM_ID,
@@ -53,7 +59,6 @@ public class ManagerCreateRelationshipPacketC2S extends C2SManagerPacket {
 				msg.ELEMENT_ID,
 				msg.FROM_ID,
 				msg.TO_ID));
-			SFM.LOGGER.debug("Manager tile has {} entries", manager.data.size());
 		}
 	}
 }

@@ -32,7 +32,6 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		this.y = y;
 	}
 
-
 	public Position() {
 		this(0, 0);
 	}
@@ -58,6 +57,51 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	 */
 	public Position withOffset(int x, int y) {
 		return new Position(this.x + x, this.y + y);
+	}
+
+	/**
+	 * Returns a new position for the result of vector substitution
+	 *
+	 * @param pos operand
+	 * @return new position
+	 */
+	public Position subtract(Position pos) {
+		return new Position(getX() - pos.getX(), getY() - pos.getY());
+	}
+
+	/**
+	 * Returns a new position for the result of vector addition
+	 * @param pos operand
+	 * @return new position
+	 */
+	public Position add(Position pos) {
+		return new Position(getX() + pos.getX(), getY() + pos.getY());
+	}
+
+	/**
+	 * Returns a new position with values multiplied
+	 * @param val multiplier
+	 * @return multiplied position
+	 */
+	public Position multiply(int val) {
+		return new Position(getX() * val, getY() * val);
+	}
+
+	/**
+	 * Gets the dot product of this position against another
+	 * @param pos operand
+	 * @return dot product
+	 */
+	public int dot(Position pos) {
+		return (getX() * pos.getX()) + (getY() * pos.getY());
+	}
+
+	/**
+	 * Gets the squared magnitude of this position
+	 * @return magnitude, squared
+	 */
+	public int magnitudeSquared() {
+		return (getX() * getX()) + (getY() * getY());
 	}
 
 	public void setXY(int x, int y) {

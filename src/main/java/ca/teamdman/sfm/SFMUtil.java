@@ -31,9 +31,14 @@ import org.apache.logging.log4j.MarkerManager;
 public class SFMUtil {
 
 	/**
-	 * Reads a UUID from a packet buffer
-	 * Will throw an error if unable to pop a string from the buffer
-	 * Will throw an error if the string is malformed
+	 * The length of a UUID once stringified
+	 */
+	public static final int UUID_STRING_LENGTH = 36;
+
+	/**
+	 * Reads a UUID from a packet buffer Will throw an error if unable to pop a string from the
+	 * buffer Will throw an error if the string is malformed
+	 *
 	 * @return UUID
 	 */
 	public static UUID readUUID(PacketBuffer buf) {
@@ -42,7 +47,8 @@ public class SFMUtil {
 
 	/**
 	 * Writes a UUID to a buffer
-	 * @param id UUID
+	 *
+	 * @param id  UUID
 	 * @param buf Buffer
 	 */
 	public static void writeUUID(UUID id, PacketBuffer buf) {
@@ -50,43 +56,46 @@ public class SFMUtil {
 	}
 
 	/**
-	 * The length of a UUID once stringified
-	 */
-	public static final int UUID_STRING_LENGTH = 36;
-
-	/**
 	 * Gets the marker used for logging purposes
+	 *
 	 * @param clazz The class used for naming the marker
 	 * @return Logging marker
 	 */
 	public static Marker getMarker(Class clazz) {
-		return MarkerManager.getMarker(clazz.getSimpleName());
+		String[] x = clazz.getName().split("\\.");
+		return MarkerManager.getMarker(x[x.length - 1]);
 	}
 
 	/**
 	 * Gets a tile entity from the server side
+	 *
 	 * @param access World
-	 * @param clazz Tile class
-	 * @param <T> Tile entity type
+	 * @param clazz  Tile class
+	 * @param <T>    Tile entity type
 	 * @return Tile of type T
 	 */
-	public static <T extends TileEntity> Optional<T> getServerTile(IWorldPosCallable access,
-		Class<T> clazz) {
+	public static <T extends TileEntity> Optional<T> getServerTile(
+		IWorldPosCallable access,
+		Class<T> clazz
+	) {
 		return access
 			.applyOrElse((world, pos) -> getTile(world, pos, clazz, false), Optional.empty());
 	}
 
 	/**
 	 * Gets a tile entity from the world
-	 * @param world World
-	 * @param pos Tile position
-	 * @param clazz Tile class
+	 *
+	 * @param world  World
+	 * @param pos    Tile position
+	 * @param clazz  Tile class
 	 * @param remote isRemote
-	 * @param <T> Tile entity type
+	 * @param <T>    Tile entity type
 	 * @return Tile of type T
 	 */
-	public static <T extends TileEntity> Optional<T> getTile(IWorldReader world, BlockPos pos,
-		Class<T> clazz, boolean remote) {
+	public static <T extends TileEntity> Optional<T> getTile(
+		IWorldReader world, BlockPos pos,
+		Class<T> clazz, boolean remote
+	) {
 		if (world.isRemote() != remote) {
 			return Optional.empty();
 		}
@@ -104,29 +113,34 @@ public class SFMUtil {
 
 	/**
 	 * Gets a tile entity on the client side
+	 *
 	 * @param access World
-	 * @param clazz Tile class
-	 * @param <T> Tile entity type
+	 * @param clazz  Tile class
+	 * @param <T>    Tile entity type
 	 * @return Tile of type T
 	 */
-	public static <T extends TileEntity> Optional<T> getClientTile(IWorldPosCallable access,
-		Class<T> clazz) {
+	public static <T extends TileEntity> Optional<T> getClientTile(
+		IWorldPosCallable access,
+		Class<T> clazz
+	) {
 		return access
 			.applyOrElse((world, pos) -> getTile(world, pos, clazz, true), Optional.empty());
 	}
 
 	/**
 	 * Gets a tile entity from a packet with container info
-	 * @param packet Packet
-	 * @param ctx Network context
+	 *
+	 * @param packet         Packet
+	 * @param ctx            Network context
 	 * @param containerClass Container
-	 * @param tileClass Tile class
-	 * @param <T> Tile entity type
+	 * @param tileClass      Tile class
+	 * @param <T>            Tile entity type
 	 * @return Tile of type T
 	 */
 	public static <T extends TileEntity> Optional<T> getTileFromContainerPacket(
 		IContainerTilePacket packet, Supplier<NetworkEvent.Context> ctx,
-		Class<? extends Container> containerClass, Class<T> tileClass) {
+		Class<? extends Container> containerClass, Class<T> tileClass
+	) {
 		if (ctx == null) {
 			return Optional.empty();
 		}
@@ -180,8 +194,10 @@ public class SFMUtil {
 	 * @param <T>    Type that the mapper consumes and produces
 	 * @return Stream result after termination of the recursive mapping process
 	 */
-	public static <T> Stream<T> getRecursiveStream(BiConsumer<T, Consumer<T>> mapper,
-		Predicate<T> filter, T first) {
+	public static <T> Stream<T> getRecursiveStream(
+		BiConsumer<T, Consumer<T>> mapper,
+		Predicate<T> filter, T first
+	) {
 		Stream.Builder<T> builder = Stream.builder();
 		Set<T> debounce = new HashSet<>();
 		Deque<T> toVisit = new ArrayDeque<>();
@@ -199,5 +215,52 @@ public class SFMUtil {
 			});
 		}
 		return builder.build();
+	}
+
+	/**
+	 * Gets shortest distance between a point and a line segment
+	 * https://stackoverflow.com/a/6853926/11141271
+	 * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
+	 *
+	 * @param x point x
+	 * @param y point y
+	 * @param x1 line start x
+	 * @param y1 line start y
+	 * @param x2 line end x
+	 * @param y2 line end y
+	 * @return distance
+	 */
+	public static double getDistanceFromLine(
+		int x, int y, int x1, int y1, int x2, int y2
+	) {
+		int A = x - x1;
+		int B = y - y1;
+		int C = x2 - x1;
+		int D = y2 - y1;
+
+		int dot = A * C + B * D;
+		int len_sq = C * C + D * D;
+		double param = -1;
+		if (len_sq != 0) //in case of 0 length line
+			param = dot / (double) len_sq;
+
+		double xx, yy;
+
+		if (param < 0) {
+			xx = x1;
+			yy = y1;
+		}
+		else if (param > 1) {
+			xx = x2;
+			yy = y2;
+		}
+		else {
+			xx = x1 + param * C;
+			yy = y1 + param * D;
+		}
+
+		double dx = x - xx;
+		double dy = y - yy;
+		return Math.sqrt(dx * dx + dy * dy);
 	}
 }

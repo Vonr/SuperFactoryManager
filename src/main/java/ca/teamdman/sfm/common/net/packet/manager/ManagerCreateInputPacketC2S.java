@@ -10,14 +10,11 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 
 public class ManagerCreateInputPacketC2S extends C2SManagerPacket {
-	private final int X, Y;
-	private final UUID ELEMENT_ID;
+	private final Position ELEMENT_POSITION;
 
-	public ManagerCreateInputPacketC2S(int windowId, BlockPos pos, UUID elementId, int x, int y) {
+	public ManagerCreateInputPacketC2S(int windowId, BlockPos pos, Position elementPosition) {
 		super(windowId, pos);
-		this.ELEMENT_ID = elementId;
-		this.X = x;
-		this.Y = y;
+		this.ELEMENT_POSITION = elementPosition;
 	}
 
 	public static class Handler extends C2SManagerPacket.C2SHandler<ManagerCreateInputPacketC2S> {
@@ -25,9 +22,7 @@ public class ManagerCreateInputPacketC2S extends C2SManagerPacket {
 		@Override
 		public void finishEncode(ManagerCreateInputPacketC2S msg,
 			PacketBuffer buf) {
-			SFMUtil.writeUUID(msg.ELEMENT_ID, buf);
-			buf.writeInt(msg.X);
-			buf.writeInt(msg.Y);
+			buf.writeLong(msg.ELEMENT_POSITION.toLong());
 		}
 
 		@Override
@@ -36,23 +31,25 @@ public class ManagerCreateInputPacketC2S extends C2SManagerPacket {
 			return new ManagerCreateInputPacketC2S(
 				windowId,
 				tilePos,
-				SFMUtil.readUUID(buf),
-				buf.readInt(),
-				buf.readInt()
+				Position.fromLong(buf.readLong())
 			);
 		}
 
 		@Override
 		public void handleDetailed(ManagerCreateInputPacketC2S msg, ManagerTileEntity manager) {
-			InputFlowData data = new InputFlowData(msg.ELEMENT_ID, new Position(msg.X, msg.Y));
+			InputFlowData data = new InputFlowData(UUID.randomUUID(), msg.ELEMENT_POSITION);
+			SFM.LOGGER.debug(
+				SFMUtil.getMarker(getClass()),
+				"C2S received, creating input at position {} with id {}",
+				msg.ELEMENT_POSITION,
+				data.getId()
+			);
 			manager.addData(data);
 			manager.markAndNotify();
 			manager.sendPacketToListeners(new ManagerCreateInputPacketS2C(
 				msg.WINDOW_ID,
-				msg.ELEMENT_ID,
-				msg.X,
-				msg.Y));
-			SFM.LOGGER.debug("Manager tile has {} entries", manager.data.size());
+				data.getId(),
+				msg.ELEMENT_POSITION));
 		}
 	}
 }

@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net.packet.manager;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
 import ca.teamdman.sfm.common.flowdata.FlowUtils;
@@ -57,6 +58,15 @@ public class ManagerCreateLineNodePacketS2C extends S2CManagerPacket {
 
 		@Override
 		public void handleDetailed(ManagerScreen screen, ManagerCreateLineNodePacketS2C msg) {
+			SFM.LOGGER.debug(
+				SFMUtil.getMarker(getClass()),
+				"S2C received, creating relationship from {} to {}, node id {}, rel ids {} and {}",
+				msg.FROM_ID,
+				msg.TO_ID,
+				msg.NODE_ID,
+				msg.FROM_TO_NODE_ID,
+				msg.TO_TO_NODE_ID
+			);
 			FlowUtils.insertLineNode(
 				screen,
 				msg.FROM_ID,

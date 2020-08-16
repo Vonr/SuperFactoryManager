@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net.packet.manager;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
 import ca.teamdman.sfm.common.flowdata.Position;
@@ -36,8 +37,16 @@ public class ManagerPositionPacketS2C extends S2CManagerPacket {
 		}
 
 		@Override
-		public void handleDetailed(ManagerScreen screen,
-			ManagerPositionPacketS2C msg) {
+		public void handleDetailed(
+			ManagerScreen screen,
+			ManagerPositionPacketS2C msg
+		) {
+			SFM.LOGGER.debug(
+				SFMUtil.getMarker(getClass()),
+				"S2C Received, setting pos to {} for element {}",
+				msg.ELEMENT_POSITION,
+				msg.ELEMENT_ID
+			);
 			screen.getData(msg.ELEMENT_ID)
 				.filter(data -> data instanceof PositionProvider)
 				.map(data -> ((PositionProvider) data).getPosition())

@@ -32,7 +32,7 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 
 	@Override
 	public Optional<FlowData> removeData(UUID id) {
-		return Optional.empty();
+		return Optional.ofNullable(DATAS.remove(id));
 	}
 
 	@Override

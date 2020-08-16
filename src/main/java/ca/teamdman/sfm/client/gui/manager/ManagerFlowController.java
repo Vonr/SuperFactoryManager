@@ -30,16 +30,17 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	public final ManagerScreen SCREEN;
 	public final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
 	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
-	private final FlowIconButton CREATE_INPUT_BUTTON = new FlowIconButton(ButtonLabel.ADD_INPUT,
-		new Position(25, 25)) {
+	private final FlowIconButton CREATE_INPUT_BUTTON = new FlowIconButton(
+		ButtonLabel.ADD_INPUT,
+		new Position(25, 25)
+	) {
 		@Override
 		public void onClicked(int mx, int my, int button) {
 			PacketHandler.INSTANCE.sendToServer(new ManagerCreateInputPacketC2S(
 				SCREEN.CONTAINER.windowId,
 				SCREEN.CONTAINER.getSource().getPos(),
-				UUID.randomUUID(),
-				0,
-				0));
+				new Position(0, 0)
+			));
 		}
 	};
 
@@ -49,8 +50,10 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	public Stream<IFlowController> getControllers() {
-		return Stream.concat(Stream.of(RELATIONSHIP_CONTROLLER, CREATE_INPUT_BUTTON),
-			CONTROLLERS.values().stream());
+		return Stream.concat(
+			Stream.of(RELATIONSHIP_CONTROLLER, CREATE_INPUT_BUTTON),
+			CONTROLLERS.values().stream()
+		);
 	}
 
 	public Optional<IFlowController> getController(UUID id) {
@@ -65,8 +68,10 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		if (data instanceof InputFlowData) {
 			return Optional.of(new FlowInputButton(this, ((InputFlowData) data)));
 		} else if (data instanceof RelationshipFlowData) {
-			return Optional.of(new FlowRelationship(this,
-				((RelationshipFlowData) data)));
+			return Optional.of(new FlowRelationship(
+				this,
+				((RelationshipFlowData) data)
+			));
 		} else if (data instanceof LineNodeFlowData) {
 			return Optional.of(new FlowLineNode(this, ((LineNodeFlowData) data)));
 		}
@@ -124,24 +129,37 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx,
-		int my, float deltaTime) {
+	public void draw(
+		BaseScreen screen, MatrixStack matrixStack, int mx,
+		int my, float deltaTime
+	) {
 		getControllers()
 			.map(IFlowController::getView)
 			.sorted(Comparator.comparingInt(IFlowView::getZIndex))
 			.forEach(view -> view.draw(screen, matrixStack, mx, my, deltaTime));
 
 		if (Screen.hasControlDown() && Screen.hasAltDown()) {
+			Optional<FlowData> check =
 			RELATIONSHIP_CONTROLLER.getElementUnderMouse(mx, my)
-				.flatMap(IFlowController::getData)
-				.ifPresent(data ->{
-						String toDraw = data.getId().toString();
-						int width = screen.getFontRenderer().getStringWidth(toDraw)+2;
-						int yOffset = -25;
-						screen.drawRect(matrixStack, mx-1, my+yOffset-1, width, 11, Colour3f.WHITE);
-						screen.drawString(matrixStack, data.getId().toString(), mx, my+yOffset, 0x2222BB);
-					}
-				);
+				.flatMap(IFlowController::getData);
+			check.ifPresent(data -> drawId(screen, matrixStack, data.getId(), mx, my));
+			if (!check.isPresent()) {
+				RELATIONSHIP_CONTROLLER.getFlowRelationships()
+					.filter(r -> r.isCloseTo(mx, my))
+					.findFirst()
+					.ifPresent(rel -> {
+						drawId(screen, matrixStack, rel.data.getId(), mx, my);
+						rel.draw(screen, matrixStack, Colour3f.HIGHLIGHT);
+					});
+			}
 		}
+	}
+
+	public void drawId(BaseScreen screen, MatrixStack matrixStack, UUID id, int x, int y) {
+		String toDraw = id.toString();
+		int width = screen.getFontRenderer().getStringWidth(toDraw) + 2;
+		int yOffset = -25;
+		screen.drawRect(matrixStack, x - 1, y + yOffset - 1, width, 11, Colour3f.WHITE);
+		screen.drawString(matrixStack, toDraw, x, y + yOffset, 0x2222BB);
 	}
 }
