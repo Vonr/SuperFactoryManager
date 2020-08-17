@@ -1,7 +1,6 @@
 package ca.teamdman.sfm.client.gui.manager;
 
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.core.Colour3f;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
@@ -24,13 +23,13 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
-import net.minecraft.client.gui.screen.Screen;
 import org.lwjgl.glfw.GLFW;
 
 public class ManagerFlowController implements IFlowController, IFlowView {
 
 	public final ManagerScreen SCREEN;
 	public final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
+	public final DebugController DEBUG_CONTROLLER = new DebugController(this);
 	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
 	private final FlowIconButton CREATE_INPUT_BUTTON = new FlowIconButton(
 		ButtonLabel.ADD_INPUT,
@@ -52,7 +51,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 	public Stream<IFlowController> getControllers() {
 		return Stream.concat(
-			Stream.of(RELATIONSHIP_CONTROLLER, CREATE_INPUT_BUTTON),
+			Stream.of(DEBUG_CONTROLLER, RELATIONSHIP_CONTROLLER, CREATE_INPUT_BUTTON),
 			CONTROLLERS.values().stream()
 		);
 	}
@@ -152,30 +151,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 			.map(IFlowController::getView)
 			.sorted(Comparator.comparingInt(IFlowView::getZIndex))
 			.forEach(view -> view.draw(screen, matrixStack, mx, my, deltaTime));
-
-		if (Screen.hasControlDown() && Screen.hasAltDown()) {
-			Optional<FlowData> check =
-				RELATIONSHIP_CONTROLLER.CONTROLLER.getElementUnderMouse(mx, my)
-					.flatMap(IFlowController::getData);
-			check.ifPresent(data -> drawId(screen, matrixStack, data.getId(), mx, my));
-			if (!check.isPresent()) {
-				RELATIONSHIP_CONTROLLER.getFlowRelationships()
-					.filter(r -> r.isCloseTo(mx, my))
-					.findFirst()
-					.ifPresent(rel -> {
-						drawId(screen, matrixStack, rel.data.getId(), mx, my);
-						rel.draw(screen, matrixStack, Colour3f.HIGHLIGHT);
-					});
-			}
-		}
-	}
-
-	public void drawId(BaseScreen screen, MatrixStack matrixStack, UUID id, int x, int y) {
-		String toDraw = id.toString();
-		int width = screen.getFontRenderer().getStringWidth(toDraw) + 2;
-		int yOffset = -25;
-		screen.drawRect(matrixStack, x - 1, y + yOffset - 1, width, 11, Colour3f.WHITE);
-		screen.drawString(matrixStack, toDraw, x, y + yOffset, 0x2222BB);
 	}
 
 	public Optional<IFlowController> getElementUnderMouse(int mx, int my) {
