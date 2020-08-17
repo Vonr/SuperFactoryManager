@@ -20,6 +20,10 @@ public class RelationshipGraph implements FlowDataHolder {
 		return nodes.size();
 	}
 
+	public int getEdgeCount() {
+		return (int) getEdges().count();
+	}
+
 	public void clear() {
 		nodes.clear();
 	}
@@ -130,7 +134,13 @@ public class RelationshipGraph implements FlowDataHolder {
 		clear();
 	}
 
+	@Override
+	public String toString() {
+		return "RelationshipGraph [" + getNodeCount() + " nodes, " + getEdgeCount() + " edges]";
+	}
+
 	public static class Node {
+
 		public final FlowData NODE_DATA;
 		public final HashSet<Edge> incoming = new HashSet<>();
 		public final HashSet<Edge> outgoing = new HashSet<>();
@@ -151,6 +161,11 @@ public class RelationshipGraph implements FlowDataHolder {
 		@Override
 		public int hashCode() {
 			return getId().hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return NODE_DATA.toString();
 		}
 	}
 
@@ -175,6 +190,11 @@ public class RelationshipGraph implements FlowDataHolder {
 			return obj instanceof Edge
 				&& ((Edge) obj).FROM.getId().equals(FROM.getId())
 				&& ((Edge) obj).TO.getId().equals(TO.getId());
+		}
+
+		@Override
+		public String toString() {
+			return FROM.getId() + " to " + TO.getId();
 		}
 	}
 }

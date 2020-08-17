@@ -71,6 +71,7 @@ public class Position implements INBTSerializable<CompoundNBT> {
 
 	/**
 	 * Returns a new position for the result of vector addition
+	 *
 	 * @param pos operand
 	 * @return new position
 	 */
@@ -80,6 +81,7 @@ public class Position implements INBTSerializable<CompoundNBT> {
 
 	/**
 	 * Returns a new position with values multiplied
+	 *
 	 * @param val multiplier
 	 * @return multiplied position
 	 */
@@ -89,6 +91,7 @@ public class Position implements INBTSerializable<CompoundNBT> {
 
 	/**
 	 * Gets the dot product of this position against another
+	 *
 	 * @param pos operand
 	 * @return dot product
 	 */
@@ -98,6 +101,7 @@ public class Position implements INBTSerializable<CompoundNBT> {
 
 	/**
 	 * Gets the squared magnitude of this position
+	 *
 	 * @return magnitude, squared
 	 */
 	public int magnitudeSquared() {
@@ -156,7 +160,7 @@ public class Position implements INBTSerializable<CompoundNBT> {
 
 	@Override
 	public String toString() {
-		return "Position [x: " + x + ", y: " + y + "]";
+		return "Position [" + x + ", " + y + "]";
 	}
 
 	@Override

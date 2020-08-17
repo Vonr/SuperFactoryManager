@@ -47,4 +47,9 @@ public class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowDa
 	public boolean equals(Object obj) {
 		return obj instanceof FlowData && ((FlowData) obj).getId().equals(getId());
 	}
+
+	@Override
+	public String toString() {
+		return getId().toString();
+	}
 }
