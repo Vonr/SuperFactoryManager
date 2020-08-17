@@ -30,6 +30,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	public final ManagerScreen SCREEN;
 	public final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
 	public final DebugController DEBUG_CONTROLLER = new DebugController(this);
+	public final CloneController CLONE_CONTROLLER = new CloneController(this);
 	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
 	private final FlowIconButton CREATE_INPUT_BUTTON = new FlowIconButton(
 		ButtonLabel.ADD_INPUT,
@@ -51,7 +52,12 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 	public Stream<IFlowController> getControllers() {
 		return Stream.concat(
-			Stream.of(DEBUG_CONTROLLER, RELATIONSHIP_CONTROLLER, CREATE_INPUT_BUTTON),
+			Stream.of(
+				DEBUG_CONTROLLER,
+				CLONE_CONTROLLER,
+				RELATIONSHIP_CONTROLLER,
+				CREATE_INPUT_BUTTON
+			),
 			CONTROLLERS.values().stream()
 		);
 	}

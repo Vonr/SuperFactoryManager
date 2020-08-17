@@ -1,13 +1,18 @@
 package ca.teamdman.sfm.client.gui.manager;
 
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
+import ca.teamdman.sfm.client.gui.core.FlowIconButton.ButtonBackground;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
-import ca.teamdman.sfm.common.flowdata.FlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.Optional;
 
 public class CloneController implements IFlowController, IFlowView {
+
+	public final ManagerFlowController CONTROLLER;
+
+	public CloneController(ManagerFlowController CONTROLLER) {
+		this.CONTROLLER = CONTROLLER;
+	}
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
@@ -26,29 +31,24 @@ public class CloneController implements IFlowController, IFlowView {
 
 	@Override
 	public IFlowView getView() {
-		return null;
-	}
-
-	@Override
-	public Optional<FlowData> getData() {
-		return Optional.empty();
-	}
-
-	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		return false;
-	}
-
-	@Override
-	public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-		return false;
+		return this;
 	}
 
 	@Override
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-
+		BaseScreen.bindTexture(ButtonBackground.SPRITE_SHEET);
+		ButtonBackground background = ButtonBackground.NORMAL;
+		screen.drawSpriteRaw(
+			matrixStack,
+			mx,
+			my,
+			background.LEFT,
+			background.TOP,
+			background.WIDTH,
+			background.HEIGHT
+		);
 	}
 
 	@Override

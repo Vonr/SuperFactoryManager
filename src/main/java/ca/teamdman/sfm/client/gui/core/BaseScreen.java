@@ -33,14 +33,6 @@ public abstract class BaseScreen extends Screen {
 	protected int scaledHeight;
 	private int latestMouseX, latestMouseY;
 
-	public int getLatestMouseX() {
-		return latestMouseX;
-	}
-
-	public int getLatestMouseY() {
-		return latestMouseY;
-	}
-
 	public BaseScreen(ITextComponent titleIn, int scaledWidth, int scaledHeight) {
 		super(titleIn);
 		this.scaledWidth = scaledWidth;
@@ -54,6 +46,14 @@ public abstract class BaseScreen extends Screen {
 	 */
 	public static void bindTexture(ResourceLocation resource) {
 		Minecraft.getInstance().getTextureManager().bindTexture(resource);
+	}
+
+	public int getLatestMouseX() {
+		return latestMouseX;
+	}
+
+	public int getLatestMouseY() {
+		return latestMouseY;
 	}
 
 	public FontRenderer getFontRenderer() {
@@ -157,6 +157,13 @@ public abstract class BaseScreen extends Screen {
 		drawTexture(matrixStack, x, y, left, top, width, height);
 	}
 
+	public void drawSpriteRaw(
+		MatrixStack matrixStack, int x, int y,
+		int left, int top, int width, int height
+	) {
+		drawTextureRaw(matrixStack, x, y, left, top, width, height);
+	}
+
 	/**
 	 * Scales and draws the currently bound texture.
 	 *
@@ -178,6 +185,38 @@ public abstract class BaseScreen extends Screen {
 			srcX, srcY,
 			w, h
 		);
+	}
+
+	public void drawTextureRaw(
+		MatrixStack matrixStack, int x, int y,
+		int srcX, int srcY, int w, int h
+	) {
+		RenderSystem.enableBlend();
+
+//		RenderSystem.enableAlphaTest();
+		Matrix4f matrix = matrixStack.getLast().getMatrix();
+		int blitOffset = getBlitOffset();
+		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
+		bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		bufferbuilder.pos(matrix, (float) x, (float) (y + h), (float) blitOffset)
+			.tex(((float) srcX + 0.0F) / (float) 256, ((float) srcY + (float) h) / (float) 256)
+			.color(1f,1f,1f,0.5f)
+			.endVertex();
+		bufferbuilder.pos(matrix, (float) (x + w), (float) (y + h), (float) blitOffset)
+			.tex(((float) srcX + (float) w) / (float) 256, ((float) srcY + (float) h) / (float) 256)
+			.color(1f,1f,1f,0.5f)
+			.endVertex();
+		bufferbuilder.pos(matrix, (float) (x + w), (float) y, (float) blitOffset)
+			.tex(((float) srcX + (float) w) / (float) 256, ((float) srcY + 0.0F) / (float) 256)
+			.color(1f,1f,1f,0.5f)
+			.endVertex();
+		bufferbuilder.pos(matrix, (float) x, (float) y, (float) blitOffset)
+			.tex(((float) srcX + 0.0F) / (float) 256, ((float) srcY + 0.0F) / (float) 256)
+			.color(1f,1f,1f,0.5f)
+			.endVertex();
+		bufferbuilder.finishDrawing();
+		RenderSystem.enableAlphaTest();
+		WorldVertexBufferUploader.draw(bufferbuilder);
 	}
 
 	/**
@@ -259,7 +298,9 @@ public abstract class BaseScreen extends Screen {
 	) {
 		latestMouseX = mouseX;
 		latestMouseY = mouseY;
-	};
+	}
+
+	;
 
 	public void drawLine(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
 		drawLine(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);

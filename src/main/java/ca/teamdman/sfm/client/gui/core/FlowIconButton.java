@@ -133,7 +133,7 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 		DEPRESSED(14, 22, 22, 22),
 		LINE_NODE(36, 0, 8, 8);
 
-		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(
+		public static final ResourceLocation SPRITE_SHEET = new ResourceLocation(
 			SFM.MOD_ID,
 			"textures/gui/sprites.png"
 		);
@@ -154,7 +154,7 @@ public class FlowIconButton implements IFlowController, IFlowView, ITangible {
 		ADD_OUTPUT(0, 42, 14, 14),
 		NONE(0, 0, 0, 0);
 
-		static final ResourceLocation SPRITE_SHEET = new ResourceLocation(
+		public static final ResourceLocation SPRITE_SHEET = new ResourceLocation(
 			SFM.MOD_ID,
 			"textures/gui/sprites.png"
 		);
