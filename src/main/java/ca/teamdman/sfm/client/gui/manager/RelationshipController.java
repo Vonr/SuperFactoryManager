@@ -1,7 +1,5 @@
 package ca.teamdman.sfm.client.gui.manager;
 
-import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
@@ -12,11 +10,7 @@ import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
-import com.google.common.graph.EndpointPair;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.MutableGraph;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -28,7 +22,6 @@ public class RelationshipController implements IFlowController, IFlowView {
 	public final ManagerFlowController CONTROLLER;
 	private final Position fromPos = new Position();
 	private final Position toPos = new Position();
-	public MutableGraph<UUID> graph;
 	private UUID from;
 	private boolean isDragging = false;
 
@@ -48,46 +41,19 @@ public class RelationshipController implements IFlowController, IFlowView {
 			.map(c -> ((FlowRelationship) c));
 	}
 
-	public void rebuildGraph() {
-		graph = GraphBuilder
-			.directed()
-			.allowsSelfLoops(false)
-			.build();
-		CONTROLLER.SCREEN.DATAS.values().stream()
-			.filter(data -> data instanceof RelationshipFlowData)
-			.map(data -> (RelationshipFlowData) data)
-			.forEach(data -> {
-				graph.addNode(data.from);
-				graph.addNode(data.to);
-				try {
-					graph.putEdge(data.from, data.to);
-				} catch (IllegalArgumentException e) {
-					SFM.LOGGER.warn(SFMUtil.getMarker(getClass()), "Illegal edge between {} and {}",
-						data.from, data.to);
-				}
-			});
-	}
-
-	public Optional<IFlowController> getElementUnderMouse(int mx, int my) {
-		return CONTROLLER.getControllers()
-			.filter(e -> e instanceof ITangible)
-			.filter(e -> ((ITangible) e).isInBounds(mx, my))
-			.filter(e -> e.getData().isPresent())
-			.findFirst();
-	}
-
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
 		if (!Screen.hasShiftDown()) {
 			return false;
 		}
 
-		Optional<IFlowController> controller = getElementUnderMouse(mx, my);
+		Optional<IFlowController> controller = CONTROLLER.getElementUnderMouse(mx, my);
 		if (controller.isPresent()) {
 			isDragging = true;
 			//noinspection OptionalGetWithoutIsPresent
 			from = controller.get().getData().get().getId();
 			fromPos.setXY(((ITangible) controller.get()).getCentroid());
+			toPos.setXY(mx, my);
 			return true;
 		}
 
@@ -99,7 +65,7 @@ public class RelationshipController implements IFlowController, IFlowView {
 		if (!isDragging) {
 			return false;
 		}
-		getElementUnderMouse(mx, my)
+		CONTROLLER.getElementUnderMouse(mx, my)
 			.map(IFlowController::getData)
 			.map(Optional::get)
 			.map(FlowData::getId)
@@ -109,30 +75,11 @@ public class RelationshipController implements IFlowController, IFlowView {
 		return true;
 	}
 
-	public Stream<UUID> getAncestors(UUID child) {
-		return SFMUtil.getRecursiveStream((current, enqueue) ->
-			graph.predecessors(current).forEach(enqueue), uuid -> true, child);
-	}
-
 
 	public void createRelationship(UUID from, UUID to) {
-		if (Objects.equals(from, to)) {
-			return;
-		}
-		graph.addNode(from);
-		graph.addNode(to);
-		if (graph.edges().contains(EndpointPair.ordered(from, to))) {
-			return;
-		}
-		if (getAncestors(from).anyMatch(to::equals)) {
-			return;
-		}
-		//todo: prevent LineNode from allowing duplicate connections to an element
-
 		PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-			UUID.randomUUID(),
 			from,
 			to
 		));
@@ -144,7 +91,7 @@ public class RelationshipController implements IFlowController, IFlowView {
 			return false;
 		}
 		toPos.setXY(mx, my);
-		getElementUnderMouse(mx, my)
+		CONTROLLER.getElementUnderMouse(mx, my)
 			.map(x -> ((ITangible) x).snapToEdge(fromPos))
 			.ifPresent(toPos::setXY);
 		return true;
