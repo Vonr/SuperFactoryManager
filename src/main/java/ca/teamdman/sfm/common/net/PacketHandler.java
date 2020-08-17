@@ -9,6 +9,8 @@ import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
@@ -80,6 +82,16 @@ public class PacketHandler {
 		register(i++,
 			ManagerCreateLineNodePacketS2C.class,
 			new ManagerCreateLineNodePacketS2C.Handler());
+
+		register(i++,
+			ManagerDeletePacketC2S.class,
+			new ManagerDeletePacketC2S.Handler()
+		);
+
+		register(i++,
+			ManagerDeletePacketS2C.class,
+			new ManagerDeletePacketS2C.Handler()
+		);
 
 	}
 

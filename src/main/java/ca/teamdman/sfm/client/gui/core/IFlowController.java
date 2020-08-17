@@ -54,6 +54,23 @@ public interface IFlowController {
 		return Optional.empty();
 	}
 
+
+	/**
+	 * Key press handler
+	 * @return consume event
+	 */
+	default boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		return false;
+	}
+
+	/**
+	 * Key press handler
+	 * @return consume event
+	 */
+	default boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+		return false;
+	}
+
 	/**
 	 * Called once the container has set all the values needed to set the controller defaults.
 	 * Expected behaviour: overwrite values in controller with values from container.

@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 public interface FlowDataHolder {
 	Stream<FlowData> getData();
 	Optional<FlowData> getData(UUID id);
-	Optional<FlowData> removeData(UUID id);
+	void removeData(UUID id);
 	void addData(FlowData data);
 	void clearData();
 }

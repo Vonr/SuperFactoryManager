@@ -31,6 +31,15 @@ public abstract class BaseScreen extends Screen {
 	protected int guiTop;
 	protected int scaledWidth;
 	protected int scaledHeight;
+	private int latestMouseX, latestMouseY;
+
+	public int getLatestMouseX() {
+		return latestMouseX;
+	}
+
+	public int getLatestMouseY() {
+		return latestMouseY;
+	}
 
 	public BaseScreen(ITextComponent titleIn, int scaledWidth, int scaledHeight) {
 		super(titleIn);
@@ -244,10 +253,13 @@ public abstract class BaseScreen extends Screen {
 		matrixStack.pop();
 	}
 
-	public abstract void draw(
+	public void draw(
 		MatrixStack matrixStack, int mouseX,
 		int mouseY, float partialTicks
-	);
+	) {
+		latestMouseX = mouseX;
+		latestMouseY = mouseY;
+	};
 
 	public void drawLine(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
 		drawLine(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);

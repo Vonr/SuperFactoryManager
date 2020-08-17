@@ -53,7 +53,8 @@ public class FlowUtils {
 		RelationshipFlowData startToNode = new RelationshipFlowData(
 			fromToNodeId,
 			from,
-			nodeData.getId());
+			nodeData.getId()
+		);
 		RelationshipFlowData nodeToEnd = new RelationshipFlowData(
 			toToNodeId,
 			nodeData.getId(),
@@ -64,5 +65,20 @@ public class FlowUtils {
 		holder.addData(nodeData);
 		holder.addData(startToNode);
 		holder.addData(nodeToEnd);
+	}
+
+	public static RelationshipGraph getRelationshipGraph(FlowDataHolder holder) {
+		RelationshipGraph graph = new RelationshipGraph();
+		holder.getData()
+			.filter(data -> data instanceof RelationshipFlowData)
+			.map(data -> (RelationshipFlowData) data)
+			.forEach(data -> holder.getData(data.from)
+				.filter(__ -> holder.getData(data.to).isPresent())
+				.ifPresent(from -> {
+					graph.addNode(from);
+					graph.addNode(holder.getData(data.to).get());
+					graph.putEdge(data.getId(), data.from, data.to);
+				}));
+		return graph;
 	}
 }

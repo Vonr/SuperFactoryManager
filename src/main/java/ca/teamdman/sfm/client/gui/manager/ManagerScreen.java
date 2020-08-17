@@ -31,8 +31,8 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 	}
 
 	@Override
-	public Optional<FlowData> removeData(UUID id) {
-		return Optional.ofNullable(DATAS.remove(id));
+	public void removeData(UUID id) {
+		DATAS.remove(id);
 	}
 
 	@Override
@@ -56,6 +56,18 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 	}
 
 	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		return super.keyPressed(keyCode, scanCode, modifiers)
+			|| CONTROLLER.keyPressed(keyCode, scanCode, modifiers);
+	}
+
+	@Override
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+		return super.keyReleased(keyCode, scanCode, modifiers)
+			|| CONTROLLER.keyReleased(keyCode, scanCode, modifiers);
+	}
+
+	@Override
 	public boolean onScaledMouseReleased(int mx, int my, int button) {
 		return CONTROLLER.mouseReleased(mx, my, button);
 	}
@@ -74,9 +86,10 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 	public void reloadFromManagerTileEntity() {
 		SFM.LOGGER
 			.debug(SFMUtil.getMarker(getClass()), "Loading {} data entries from tile",
-				CONTAINER.getSource().data.size());
+				CONTAINER.getSource().getDataCount()
+			);
 		DATAS.clear();
-		CONTAINER.getSource().data.values().forEach(data -> DATAS.put(data.getId(), data.copy()));
+		CONTAINER.getSource().getData().forEach(data -> DATAS.put(data.getId(), data.copy()));
 		CONTROLLER.loadFromScreenData();
 	}
 }

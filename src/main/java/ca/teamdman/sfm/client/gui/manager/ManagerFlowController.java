@@ -6,6 +6,7 @@ import ca.teamdman.sfm.client.gui.core.FlowIconButton;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
+import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.impl.FlowInputButton;
 import ca.teamdman.sfm.client.gui.impl.FlowLineNode;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
@@ -16,14 +17,15 @@ import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 import net.minecraft.client.gui.screen.Screen;
+import org.lwjgl.glfw.GLFW;
 
 public class ManagerFlowController implements IFlowController, IFlowView {
 
@@ -46,7 +48,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
-		RELATIONSHIP_CONTROLLER.rebuildGraph();
 	}
 
 	public Stream<IFlowController> getControllers() {
@@ -87,25 +88,44 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	public void loadFromScreenData() {
 		CONTROLLERS.clear();
 		SCREEN.DATAS.values().forEach(this::attemptAddDataController);
-		RELATIONSHIP_CONTROLLER.rebuildGraph();
 	}
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
-			IFlowController btn = it.next();
-			if (btn.mousePressed(mx, my, button)) {
-				return true;
-			}
-		}
-		return false;
+		return getControllers()
+			.anyMatch(controller -> controller.mousePressed(mx, my, button));
 	}
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
-		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
-			IFlowController btn = it.next();
-			if (btn.mouseReleased(mx, my, button)) {
+		return getControllers()
+			.anyMatch(controller -> controller.mouseReleased(mx, my, button));
+	}
+
+	@Override
+	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
+		return getControllers()
+			.anyMatch(controller -> controller.mouseDragged(mx, my, button, dmx, dmy));
+	}
+
+	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		if (getControllers()
+			.anyMatch(controller -> controller.keyPressed(keyCode, scanCode, modifiers))) {
+			return true;
+		}
+		if (keyCode == GLFW.GLFW_KEY_DELETE) {
+			if (getElementUnderMouse(SCREEN.getLatestMouseX(), SCREEN.getLatestMouseY())
+				.flatMap(IFlowController::getData)
+				.map(FlowData::getId)
+				.map(id -> {
+					PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
+						SCREEN.CONTAINER.windowId,
+						SCREEN.CONTAINER.getSource().getPos(),
+						id
+					));
+					return Void.class;
+				}).isPresent()) {
 				return true;
 			}
 		}
@@ -113,14 +133,9 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
-		for (Iterator<IFlowController> it = getControllers().iterator(); it.hasNext(); ) {
-			IFlowController btn = it.next();
-			if (btn.mouseDragged(mx, my, button, dmx, dmy)) {
-				return true;
-			}
-		}
-		return false;
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+		return getControllers()
+			.anyMatch(controller -> controller.keyReleased(keyCode, scanCode, modifiers));
 	}
 
 	@Override
@@ -140,8 +155,8 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 		if (Screen.hasControlDown() && Screen.hasAltDown()) {
 			Optional<FlowData> check =
-			RELATIONSHIP_CONTROLLER.getElementUnderMouse(mx, my)
-				.flatMap(IFlowController::getData);
+				RELATIONSHIP_CONTROLLER.CONTROLLER.getElementUnderMouse(mx, my)
+					.flatMap(IFlowController::getData);
 			check.ifPresent(data -> drawId(screen, matrixStack, data.getId(), mx, my));
 			if (!check.isPresent()) {
 				RELATIONSHIP_CONTROLLER.getFlowRelationships()
@@ -161,5 +176,13 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		int yOffset = -25;
 		screen.drawRect(matrixStack, x - 1, y + yOffset - 1, width, 11, Colour3f.WHITE);
 		screen.drawString(matrixStack, toDraw, x, y + yOffset, 0x2222BB);
+	}
+
+	public Optional<IFlowController> getElementUnderMouse(int mx, int my) {
+		return getControllers()
+			.filter(e -> e instanceof ITangible)
+			.filter(e -> ((ITangible) e).isInBounds(mx, my))
+			.filter(e -> e.getData().isPresent())
+			.findFirst();
 	}
 }

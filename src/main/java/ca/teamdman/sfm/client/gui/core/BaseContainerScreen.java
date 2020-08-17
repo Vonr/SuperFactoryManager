@@ -69,6 +69,7 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	@Override
 	public void draw(MatrixStack matrixStack, int mx, int my,
 		float partialTicks) {
+		super.draw(matrixStack, mx, my, partialTicks);
 		drawBackground(matrixStack);
 	}
 

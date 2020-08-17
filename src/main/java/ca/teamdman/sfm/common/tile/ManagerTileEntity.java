@@ -8,11 +8,13 @@ import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
 import ca.teamdman.sfm.common.flowdata.FlowDataHolder;
+import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
+import ca.teamdman.sfm.common.flowdata.RelationshipGraph;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.BlockRegistrar;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -33,7 +35,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
-	public HashMap<UUID, FlowData> data = new HashMap<>();
+	private final RelationshipGraph graph = new RelationshipGraph();
 
 	public ManagerTileEntity() {
 		this(TileEntityRegistrar.Tiles.MANAGER);
@@ -45,27 +47,60 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 
 	@Override
 	public Stream<FlowData> getData() {
-		return data.values().stream();
+		return graph.getData();
+	}
+
+	public int getDataCount() {
+		return graph.getNodeCount();
+	}
+
+	public Optional<UUID> addRelationship(UUID fromId, UUID toId) {
+		if (Objects.equals(fromId, toId)) {
+			return Optional.empty();
+		}
+		if (graph.getEdge(fromId, toId).isPresent()) {
+			return Optional.empty();
+		}
+		if (graph.getAncestors(fromId).anyMatch(node -> node.getId().equals(toId))) {
+			return Optional.empty();
+		}
+		//todo: prevent LineNode from allowing duplicate connections to an element
+		UUID relationshipId = UUID.randomUUID();
+		RelationshipFlowData data = new RelationshipFlowData(
+			relationshipId,
+			fromId,
+			toId
+		);
+		addData(data);
+		markAndNotify();
+		return Optional.of(relationshipId);
 	}
 
 	@Override
 	public void addData(FlowData data) {
-		this.data.put(data.getId(), data);
+		graph.addNode(data);
+		if (data instanceof RelationshipFlowData) {
+			graph.putEdge(
+				data.getId(),
+				((RelationshipFlowData) data).from,
+				((RelationshipFlowData) data).to
+			);
+		}
 	}
 
 	@Override
-	public Optional<FlowData> removeData(UUID id) {
-		return Optional.ofNullable(this.data.remove(id));
+	public void removeData(UUID id) {
+		graph.removeNode(id);
 	}
 
 	@Override
 	public void clearData() {
-		data.clear();
+		graph.clear();
 	}
 
 	@Override
 	public Optional<FlowData> getData(UUID id) {
-		return Optional.ofNullable(data.get(id));
+		return graph.getData(id);
 	}
 
 	public void addContainerListener(ServerPlayerEntity player) {
@@ -81,8 +116,10 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 	}
 
 
-	public void mutateManagerData(UUID dataId,
-		Consumer<FlowData> consumer, Runnable changeNotifier) {
+	public void mutateManagerData(
+		UUID dataId,
+		Consumer<FlowData> consumer, Runnable changeNotifier
+	) {
 		getData(dataId)
 			.ifPresent(data -> {
 				consumer.accept(data);
@@ -115,10 +152,11 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 	@Override
 	public CompoundNBT serializeNBT() {
 		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Saving NBT on {}, writing {} entries",
-			world == null ? "null world" : world.isRemote ? "client" : "server", data.size());
+			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
+		);
 		CompoundNBT c = new CompoundNBT();
 		ListNBT list = new ListNBT();
-		data.values().forEach(d -> list.add(d.serializeNBT()));
+		getData().forEach(d -> list.add(d.serializeNBT()));
 		c.put("flow_data_list", list);
 		return c;
 	}
@@ -126,16 +164,18 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 	@Override
 	public void deserializeNBT(CompoundNBT compound) {
 		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Loading nbt on {}, replacing {} entries",
-			world == null ? "null world" : world.isRemote ? "client" : "server", data.size());
-		data.clear();
+			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
+		);
+		clearData();
 		compound.getList("flow_data_list", NBT.TAG_COMPOUND).forEach(c -> {
 			CompoundNBT tag = (CompoundNBT) c;
 			LazyOptional<FlowDataFactory<?>> factory = FlowDataFactory.getFactory(tag);
 			factory.ifPresent(fac -> {
 				SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Discovered factory {} for data {}",
-					fac.getClass().getSimpleName(), c);
+					fac.getClass().getSimpleName(), c
+				);
 				FlowData myData = fac.fromNBT(tag);
-				data.put(myData.getId(), myData);
+				addData(myData);
 			});
 			if (!factory.isPresent()) {
 				SFM.LOGGER.warn("Could not find factory for {}", tag);
