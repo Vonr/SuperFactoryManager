@@ -5,6 +5,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 
 public class FlowSprite {
+
 	public final int LEFT, TOP, WIDTH, HEIGHT;
 	public final ResourceLocation SHEET;
 
@@ -23,14 +24,23 @@ public class FlowSprite {
 		this.HEIGHT = height;
 	}
 
-	public void drawAt(BaseScreen screen, MatrixStack matrixStack,
-		Position pos) {
+	public void drawAt(
+		BaseScreen screen, MatrixStack matrixStack,
+		Position pos
+	) {
 		drawAt(screen, matrixStack, pos.getX(), pos.getY());
 	}
 
-	public void drawAt(BaseScreen screen, MatrixStack matrixStack, int x,
-		int y) {
+	public void drawAt(
+		BaseScreen screen, MatrixStack matrixStack, int x,
+		int y
+	) {
 		BaseScreen.bindTexture(SHEET);
-		screen.drawSprite(matrixStack, x, y, LEFT, TOP, WIDTH, HEIGHT);
+		screen.drawTexture(matrixStack, x, y, LEFT, TOP, WIDTH, HEIGHT);
+	}
+
+	public void drawGhostAt(BaseScreen screen, MatrixStack matrixStack, int x, int y) {
+		BaseScreen.bindTexture(SHEET);
+		screen.drawTextureWithRGBA(matrixStack, x, y, LEFT, TOP, WIDTH, HEIGHT, 1, 1, 1, 0.5f);
 	}
 }

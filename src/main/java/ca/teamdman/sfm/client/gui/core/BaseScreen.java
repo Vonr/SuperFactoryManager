@@ -140,31 +140,6 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
-	 * Draws the bound texture to the screen
-	 *
-	 * @param matrixStack
-	 * @param x           Draw begin x scaled coordinate
-	 * @param y           Draw begin y scaled coordinate
-	 * @param left        Texture begin x offset
-	 * @param top         Texture begin y offset
-	 * @param width       Texture sample width
-	 * @param height      Texture sample height
-	 */
-	public void drawSprite(
-		MatrixStack matrixStack, int x, int y,
-		int left, int top, int width, int height
-	) {
-		drawTexture(matrixStack, x, y, left, top, width, height);
-	}
-
-	public void drawSpriteRaw(
-		MatrixStack matrixStack, int x, int y,
-		int left, int top, int width, int height
-	) {
-		drawTextureRaw(matrixStack, x, y, left, top, width, height);
-	}
-
-	/**
 	 * Scales and draws the currently bound texture.
 	 *
 	 * @param matrixStack
@@ -187,32 +162,36 @@ public abstract class BaseScreen extends Screen {
 		);
 	}
 
-	public void drawTextureRaw(
+	/**
+	 * Draws the bound texture, with the provided RGBA values.
+	 * This allows for making opaque textures transparent via the alpha channel
+	 * @param a alpha (transparency)
+	 */
+	public void drawTextureWithRGBA(
 		MatrixStack matrixStack, int x, int y,
-		int srcX, int srcY, int w, int h
+		int srcX, int srcY, int w, int h, float r, float g, float b, float a
 	) {
 		RenderSystem.enableBlend();
-
-//		RenderSystem.enableAlphaTest();
+		RenderSystem.disableAlphaTest();
 		Matrix4f matrix = matrixStack.getLast().getMatrix();
 		int blitOffset = getBlitOffset();
 		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
-		bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
 		bufferbuilder.pos(matrix, (float) x, (float) (y + h), (float) blitOffset)
+			.color(r, g, b, a)
 			.tex(((float) srcX + 0.0F) / (float) 256, ((float) srcY + (float) h) / (float) 256)
-			.color(1f,1f,1f,0.5f)
 			.endVertex();
 		bufferbuilder.pos(matrix, (float) (x + w), (float) (y + h), (float) blitOffset)
+			.color(r, g, b, a)
 			.tex(((float) srcX + (float) w) / (float) 256, ((float) srcY + (float) h) / (float) 256)
-			.color(1f,1f,1f,0.5f)
 			.endVertex();
 		bufferbuilder.pos(matrix, (float) (x + w), (float) y, (float) blitOffset)
+			.color(r, g, b, a)
 			.tex(((float) srcX + (float) w) / (float) 256, ((float) srcY + 0.0F) / (float) 256)
-			.color(1f,1f,1f,0.5f)
 			.endVertex();
 		bufferbuilder.pos(matrix, (float) x, (float) y, (float) blitOffset)
+			.color(r, g, b, a)
 			.tex(((float) srcX + 0.0F) / (float) 256, ((float) srcY + 0.0F) / (float) 256)
-			.color(1f,1f,1f,0.5f)
 			.endVertex();
 		bufferbuilder.finishDrawing();
 		RenderSystem.enableAlphaTest();

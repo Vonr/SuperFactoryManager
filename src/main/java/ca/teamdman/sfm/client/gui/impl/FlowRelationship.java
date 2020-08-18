@@ -5,8 +5,8 @@ import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.Colour3f;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton.ButtonBackground;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
+import ca.teamdman.sfm.client.gui.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
-import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
@@ -104,12 +104,12 @@ public class FlowRelationship implements IFlowView, IFlowController {
 	 * @return position pair
 	 */
 	public Optional<FlowRelationshipPositionPair> getPositions() {
-		Optional<ITangible> from = CONTROLLER.getController(data.from)
-			.filter(c -> c instanceof ITangible)
-			.map(c -> (ITangible) c);
-		Optional<ITangible> to = CONTROLLER.getController(data.to)
-			.filter(c -> c instanceof ITangible)
-			.map(c -> (ITangible) c);
+		Optional<IFlowTangible> from = CONTROLLER.getController(data.from)
+			.filter(c -> c instanceof IFlowTangible)
+			.map(c -> (IFlowTangible) c);
+		Optional<IFlowTangible> to = CONTROLLER.getController(data.to)
+			.filter(c -> c instanceof IFlowTangible)
+			.map(c -> (IFlowTangible) c);
 
 		return from
 			.filter(__ -> to.isPresent())

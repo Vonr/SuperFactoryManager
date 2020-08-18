@@ -1,19 +1,23 @@
 package ca.teamdman.sfm.client.gui.impl;
 
+import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
 import ca.teamdman.sfm.client.gui.core.FlowPositionBox;
-import ca.teamdman.sfm.client.gui.core.IDeletable;
+import ca.teamdman.sfm.client.gui.core.IFlowCloneable;
+import ca.teamdman.sfm.client.gui.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.core.Size;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
 import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.InputFlowData;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 
-public class FlowInputButton extends FlowIconButton implements IDeletable {
+public class FlowInputButton extends FlowIconButton implements IFlowDeletable, IFlowCloneable {
 
 	public final ManagerFlowController CONTROLLER;
 	public InputFlowData data;
@@ -54,6 +58,23 @@ public class FlowInputButton extends FlowIconButton implements IDeletable {
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 			data.getId()
+		));
+	}
+
+	@Override
+	public void drawGhostAtPosition(
+		BaseScreen screen, MatrixStack matrixStack, int x, int y, float deltaTime
+	) {
+		BACKGROUND.drawGhostAt(screen, matrixStack, x, y);
+		ICON.drawGhostAt(screen, matrixStack, x + 4, y + 4);
+	}
+
+	@Override
+	public void cloneWithPosition(int x, int y) {
+		PacketHandler.INSTANCE.sendToServer(new ManagerCreateInputPacketC2S(
+			CONTROLLER.SCREEN.CONTAINER.windowId,
+			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			new Position(x, y)
 		));
 	}
 }

@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.flowdata.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowIconButton implements IFlowController, IFlowView, ITangible {
+public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible {
 
 	public final FlowSprite BACKGROUND;
 	public final FlowSprite ICON;

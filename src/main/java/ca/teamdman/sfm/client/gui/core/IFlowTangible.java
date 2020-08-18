@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.flowdata.PositionProvider;
 import ca.teamdman.sfm.common.flowdata.SizeProvider;
 import net.minecraft.util.math.MathHelper;
 
-public interface ITangible extends PositionProvider, SizeProvider {
+public interface IFlowTangible extends PositionProvider, SizeProvider {
 
 	default boolean isInBounds(int mx, int my) {
 		return getSize().contains(getPosition(), mx, my);

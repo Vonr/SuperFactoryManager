@@ -4,7 +4,7 @@ import ca.teamdman.sfm.common.flowdata.Position;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 
-public class FlowPositionBox implements IFlowController, ITangible {
+public class FlowPositionBox implements IFlowController, IFlowTangible {
 
 	private final Position pos;
 	private final Size size;

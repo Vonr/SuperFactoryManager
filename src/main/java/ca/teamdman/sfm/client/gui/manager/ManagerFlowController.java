@@ -4,8 +4,8 @@ import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
+import ca.teamdman.sfm.client.gui.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
-import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.impl.FlowInputButton;
 import ca.teamdman.sfm.client.gui.impl.FlowLineNode;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
@@ -161,8 +161,8 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 
 	public Optional<IFlowController> getElementUnderMouse(int mx, int my) {
 		return getControllers()
-			.filter(e -> e instanceof ITangible)
-			.filter(e -> ((ITangible) e).isInBounds(mx, my))
+			.filter(e -> e instanceof IFlowTangible)
+			.filter(e -> ((IFlowTangible) e).isInBounds(mx, my))
 			.filter(e -> e.getData().isPresent())
 			.findFirst();
 	}

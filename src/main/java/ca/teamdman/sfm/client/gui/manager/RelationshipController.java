@@ -2,8 +2,8 @@ package ca.teamdman.sfm.client.gui.manager;
 
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.IFlowController;
+import ca.teamdman.sfm.client.gui.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.core.IFlowView;
-import ca.teamdman.sfm.client.gui.core.ITangible;
 import ca.teamdman.sfm.client.gui.impl.FlowRelationship;
 import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.Position;
@@ -52,7 +52,7 @@ public class RelationshipController implements IFlowController, IFlowView {
 			isDragging = true;
 			//noinspection OptionalGetWithoutIsPresent
 			from = controller.get().getData().get().getId();
-			fromPos.setXY(((ITangible) controller.get()).getCentroid());
+			fromPos.setXY(((IFlowTangible) controller.get()).getCentroid());
 			toPos.setXY(mx, my);
 			return true;
 		}
@@ -92,7 +92,7 @@ public class RelationshipController implements IFlowController, IFlowView {
 		}
 		toPos.setXY(mx, my);
 		CONTROLLER.getElementUnderMouse(mx, my)
-			.map(x -> ((ITangible) x).snapToEdge(fromPos))
+			.map(x -> ((IFlowTangible) x).snapToEdge(fromPos))
 			.ifPresent(toPos::setXY);
 		return true;
 	}
