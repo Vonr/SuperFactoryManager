@@ -186,7 +186,7 @@ public class SFMUtil {
 	 * Gets a stream using a self-feeding mapping function. Prevents the re-traversal of elements
 	 * that have been visited before.
 	 *
-	 * @param mapper Consumer of one element to provide the next
+	 * @param operator Consumes queue elements to build the result set and append the next queue elements
 	 * @param first  Initial value, not checked against the filter
 	 * @param <T>    Type that the mapper consumes and produces
 	 * @return Stream result after termination of the recursive mapping process
