@@ -18,7 +18,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
-public class ManagerBlock extends Block {
+public class ManagerBlock extends Block implements ICable {
 
 	public ManagerBlock(final Properties props) {
 		super(props);

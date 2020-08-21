@@ -5,13 +5,13 @@ import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBO
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
+import ca.teamdman.sfm.common.block.ICable;
 import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
 import ca.teamdman.sfm.common.flowdata.FlowDataHolder;
 import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.flowdata.RelationshipGraph;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.registrar.BlockRegistrar;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import java.util.HashSet;
 import java.util.Objects;
@@ -215,9 +215,9 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 		}
 		BlockState state = world.getBlockState(pos);
 		Block block = state.getBlock();
-		if (block == BlockRegistrar.Blocks.CABLE) {
-			return true;
+		if (block instanceof ICable) {
+			return ((ICable) block).isCableEnabled(state, world, pos);
 		}
-		return block == BlockRegistrar.Blocks.MANAGER;
+		return false;
 	}
 }
