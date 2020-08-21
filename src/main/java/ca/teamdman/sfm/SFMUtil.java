@@ -7,9 +7,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
@@ -189,14 +187,12 @@ public class SFMUtil {
 	 * that have been visited before.
 	 *
 	 * @param mapper Consumer of one element to provide the next
-	 * @param filter Predicate checked before adding a new element to the queue
 	 * @param first  Initial value, not checked against the filter
 	 * @param <T>    Type that the mapper consumes and produces
 	 * @return Stream result after termination of the recursive mapping process
 	 */
 	public static <T> Stream<T> getRecursiveStream(
-		BiConsumer<T, Consumer<T>> mapper,
-		Predicate<T> filter, T first
+		RecursiveBuilder<T> operator, T first
 	) {
 		Stream.Builder<T> builder = Stream.builder();
 		Set<T> debounce = new HashSet<>();
@@ -205,16 +201,18 @@ public class SFMUtil {
 		while (toVisit.size() > 0) {
 			T current = toVisit.pop();
 			builder.add(current);
-			mapper.accept(current, next -> {
+			operator.accept(current, next -> {
 				if (!debounce.contains(next)) {
 					debounce.add(next);
-					if (filter.test(current)) {
-						toVisit.add(next);
-					}
+					toVisit.add(next);
 				}
-			});
+			}, builder::add);
 		}
 		return builder.build();
+	}
+
+	public interface RecursiveBuilder<T> {
+		void accept(T next, Consumer<T> nextQueue, Consumer<T> resultBuilder);
 	}
 
 	/**

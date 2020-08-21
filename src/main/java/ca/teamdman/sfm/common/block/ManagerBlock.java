@@ -7,7 +7,6 @@ import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -29,17 +28,6 @@ public class ManagerBlock extends Block {
 	@Override
 	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos,
 		PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-		if (!world.isRemote && false) {
-			System.out.println("Finding blocks");
-			ManagerTileEntity tile = (ManagerTileEntity) world.getTileEntity(pos);
-			tile.getNeighbours(tile.getPos()).forEach(p -> {
-				System.out.printf("%30s %20s\n",
-					world.getBlockState(p).getBlock().getRegistryName().toString(), p.toString());
-				if (!tile.isCable(p)) {
-					world.setBlockState(p, Blocks.DIAMOND_BLOCK.getDefaultState());
-				}
-			});
-		}
 		if (!world.isRemote && handIn == Hand.MAIN_HAND) {
 			new ManagerContainerProvider(IWorldPosCallable.of(world, pos)).openGui(player);
 		}

@@ -14,21 +14,43 @@ import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
+import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
+import net.minecraft.block.Blocks;
 
 public class FlowInputButton extends FlowIconButton implements IFlowDeletable, IFlowCloneable {
 
 	public final ManagerFlowController CONTROLLER;
 	public InputFlowData data;
 
-	public FlowInputButton(ManagerFlowController controller,
-		InputFlowData data) {
+	public FlowInputButton(
+		ManagerFlowController controller,
+		InputFlowData data
+	) {
 		super(ButtonLabel.INPUT);
 		POS.setMovable(true);
 		this.data = data;
 		this.CONTROLLER = controller;
 		this.POS.getPosition().setXY(data.position);
+	}
+
+	@Override
+	public void onClicked(int mx, int my, int button) {
+		System.out.println("Finding blocks");
+		ManagerTileEntity tile = CONTROLLER.SCREEN.CONTAINER.getSource();
+		if (tile.getWorld() == null) {
+			return;
+		}
+		tile.getCableNeighbours(tile.getPos()).forEach(p -> {
+			System.out.printf("%30s %20s\n",
+				tile.getWorld().getBlockState(p).getBlock().getRegistryName().toString(),
+				p.toString()
+			);
+			if (!tile.isCable(p)) {
+				tile.getWorld().setBlockState(p, Blocks.DIAMOND_BLOCK.getDefaultState());
+			}
+		});
 	}
 
 	@Override
@@ -41,13 +63,16 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		//noinspection DuplicatedCode
 		return new FlowPositionBox(pos, new Size(width, height)) {
 			@Override
-			public void onMoveFinished(int startMouseX, int startMouseY,
-				int finishMouseX, int finishMouseY, int button) {
+			public void onMoveFinished(
+				int startMouseX, int startMouseY,
+				int finishMouseX, int finishMouseY, int button
+			) {
 				PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
 					CONTROLLER.SCREEN.CONTAINER.windowId,
 					CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 					data.getId(),
-					this.getPosition()));
+					this.getPosition()
+				));
 			}
 		};
 	}

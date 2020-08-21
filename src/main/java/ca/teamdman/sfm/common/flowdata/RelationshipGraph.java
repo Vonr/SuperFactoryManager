@@ -73,8 +73,10 @@ public class RelationshipGraph implements FlowDataHolder {
 
 	public Stream<Node> getAncestors(Node node) {
 		return SFMUtil.getRecursiveStream(
-			(current, enqueue) -> current.incoming.stream().map(edge -> edge.FROM).forEach(enqueue),
-			__ -> true,
+			(current, next, results) -> current.incoming.stream().map(edge -> edge.FROM).forEach(v -> {
+				next.accept(v);
+				results.accept(v);
+			}),
 			node
 		);
 	}
@@ -89,8 +91,10 @@ public class RelationshipGraph implements FlowDataHolder {
 
 	public Stream<Node> getDescendants(Node node) {
 		return SFMUtil.getRecursiveStream(
-			(current, enqueue) -> current.outgoing.stream().map(edge -> edge.TO).forEach(enqueue),
-			__ -> true,
+			(current, next, results) -> current.outgoing.stream().map(edge -> edge.TO).forEach(v -> {
+				next.accept(v);
+				results.accept(v);
+			}),
 			node
 		);
 	}
