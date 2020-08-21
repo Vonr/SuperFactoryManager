@@ -18,11 +18,14 @@ import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import net.minecraft.block.Blocks;
+import net.minecraft.item.ItemStack;
 
 public class FlowInputButton extends FlowIconButton implements IFlowDeletable, IFlowCloneable {
 
 	public final ManagerFlowController CONTROLLER;
+	public final FlowItemStack FLOW_STACK;
 	public InputFlowData data;
+	private boolean open = false;
 
 	public FlowInputButton(
 		ManagerFlowController controller,
@@ -33,6 +36,7 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		this.data = data;
 		this.CONTROLLER = controller;
 		this.POS.getPosition().setXY(data.position);
+		this.FLOW_STACK = new FlowItemStack(new ItemStack(Blocks.PUMPKIN));
 	}
 
 	@Override
@@ -42,13 +46,21 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		if (tile.getWorld() == null) {
 			return;
 		}
-		tile.getCableNeighbours(tile.getPos()).distinct().forEach(p -> {
-			System.out.printf("%30s %20s\n",
-				tile.getWorld().getBlockState(p).getBlock().getRegistryName().toString(),
-				p.toString()
-			);
-			tile.getWorld().setBlockState(p, Blocks.DIAMOND_BLOCK.getDefaultState());
-		});
+		this.open = !this.open;
+		tile.getCableNeighbours(tile.getPos())
+			.distinct()
+			.filter(pos -> tile.getWorld().getTileEntity(pos) != null)
+			.forEach(p -> {
+				System.out.printf(
+					"%30s %20s\n",
+					tile.getWorld().getBlockState(p).getBlock().getRegistryName().toString(),
+					p.toString()
+				);
+				tile.getWorld().setBlockState(
+					p,
+					open ? Blocks.DIAMOND_BLOCK.getDefaultState() : Blocks.AIR.getDefaultState()
+				);
+			});
 	}
 
 	@Override
@@ -99,5 +111,13 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 			new Position(x, y)
 		));
+	}
+
+	@Override
+	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
+		super.draw(screen, matrixStack, mx, my, deltaTime);
+		if (open) {
+			FLOW_STACK.draw(screen, matrixStack, mx, my, deltaTime);
+		}
 	}
 }
