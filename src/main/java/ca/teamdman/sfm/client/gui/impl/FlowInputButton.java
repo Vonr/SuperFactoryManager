@@ -42,14 +42,12 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		if (tile.getWorld() == null) {
 			return;
 		}
-		tile.getCableNeighbours(tile.getPos()).forEach(p -> {
+		tile.getCableNeighbours(tile.getPos()).distinct().forEach(p -> {
 			System.out.printf("%30s %20s\n",
 				tile.getWorld().getBlockState(p).getBlock().getRegistryName().toString(),
 				p.toString()
 			);
-			if (!tile.isCable(p)) {
-				tile.getWorld().setBlockState(p, Blocks.DIAMOND_BLOCK.getDefaultState());
-			}
+			tile.getWorld().setBlockState(p, Blocks.DIAMOND_BLOCK.getDefaultState());
 		});
 	}
 

@@ -198,9 +198,9 @@ public class SFMUtil {
 		Set<T> debounce = new HashSet<>();
 		Deque<T> toVisit = new ArrayDeque<>();
 		toVisit.add(first);
+		debounce.add(first);
 		while (toVisit.size() > 0) {
 			T current = toVisit.pop();
-			builder.add(current);
 			operator.accept(current, next -> {
 				if (!debounce.contains(next)) {
 					debounce.add(next);
