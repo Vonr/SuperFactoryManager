@@ -78,8 +78,8 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 	}
 
 	@Override
-	public void draw(MatrixStack matrixStack, int mx, int my, float partialTicks) {
-		super.draw(matrixStack, mx, my, partialTicks);
+	public void drawScaled(MatrixStack matrixStack, int mx, int my, float partialTicks) {
+		super.drawScaled(matrixStack, mx, my, partialTicks);
 		CONTROLLER.draw(this, matrixStack, mx, my, partialTicks);
 	}
 

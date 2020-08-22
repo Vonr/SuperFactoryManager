@@ -4,7 +4,7 @@ import ca.teamdman.sfm.common.flowdata.Position;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 
-public class FlowPositionBox implements IFlowController, IFlowTangible {
+public class FlowPanel implements IFlowController, IFlowTangible {
 
 	private final Position pos;
 	private final Size size;
@@ -14,12 +14,12 @@ public class FlowPositionBox implements IFlowController, IFlowTangible {
 	private boolean moved = false;
 	private boolean moveable = false;
 
-	public FlowPositionBox(Position pos, Size size) {
+	public FlowPanel(Position pos, Size size) {
 		this.pos = pos;
 		this.size = size;
 	}
 
-	public FlowPositionBox setMovable(boolean movable) {
+	public FlowPanel setMovable(boolean movable) {
 		this.moveable = movable;
 		return this;
 	}

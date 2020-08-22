@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.gui.impl;
 
 import ca.teamdman.sfm.client.gui.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
-import ca.teamdman.sfm.client.gui.core.FlowPositionBox;
+import ca.teamdman.sfm.client.gui.core.FlowPanel;
 import ca.teamdman.sfm.client.gui.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.core.Size;
@@ -15,15 +15,17 @@ import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 
 public class FlowInputButton extends FlowIconButton implements IFlowDeletable, IFlowCloneable {
 
 	public final ManagerFlowController CONTROLLER;
-	public final FlowItemStack FLOW_STACK;
+	public final FlowDrawer<FlowItemStack> DRAWER;
 	public InputFlowData data;
 	private boolean open = false;
 
@@ -36,12 +38,85 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		this.data = data;
 		this.CONTROLLER = controller;
 		this.POS.getPosition().setXY(data.position);
-		this.FLOW_STACK = new FlowItemStack(new ItemStack(Blocks.PUMPKIN));
+		this.DRAWER = new FlowDrawer<>(
+			this,
+			ImmutableList.of(
+				new FlowItemStack(new ItemStack(Items.REDSTONE), new Position()),
+				new FlowItemStack(new ItemStack(Items.CARVED_PUMPKIN), new Position()),
+				new FlowItemStack(new ItemStack(Items.LEAD), new Position()),
+				new FlowItemStack(new ItemStack(Items.ACACIA_DOOR), new Position()),
+				new FlowItemStack(new ItemStack(Items.BIRCH_BUTTON), new Position()),
+				new FlowItemStack(new ItemStack(Items.TRAPPED_CHEST), new Position()),
+				new FlowItemStack(new ItemStack(Items.STONE_SWORD), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.DIAMOND_BLOCK), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.DIAMOND_ORE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position()),
+				new FlowItemStack(new ItemStack(Blocks.STONE), new Position())
+
+			),
+			FlowItemStack.ITEM_TOTAL_WIDTH,
+			FlowItemStack.ITEM_TOTAL_HEIGHT
+		);
 	}
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		System.out.println("Finding blocks");
 		ManagerTileEntity tile = CONTROLLER.SCREEN.CONTAINER.getSource();
 		if (tile.getWorld() == null) {
 			return;
@@ -69,9 +144,9 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 	}
 
 	@Override
-	public FlowPositionBox createPositionBox(Position pos, int width, int height) {
+	public FlowPanel createPositionBox(Position pos, int width, int height) {
 		//noinspection DuplicatedCode
-		return new FlowPositionBox(pos, new Size(width, height)) {
+		return new FlowPanel(pos, new Size(width, height)) {
 			@Override
 			public void onMoveFinished(
 				int startMouseX, int startMouseY,
@@ -117,7 +192,7 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
 		super.draw(screen, matrixStack, mx, my, deltaTime);
 		if (open) {
-			FLOW_STACK.draw(screen, matrixStack, mx, my, deltaTime);
+			DRAWER.draw(screen, matrixStack, mx, my, deltaTime);
 		}
 	}
 }

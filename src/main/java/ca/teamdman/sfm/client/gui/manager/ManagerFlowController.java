@@ -120,7 +120,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 			return true;
 		}
 		if (keyCode == GLFW.GLFW_KEY_DELETE) {
-			if (getElementUnderMouse(SCREEN.getLatestMouseX(), SCREEN.getLatestMouseY())
+			return getElementUnderMouse(SCREEN.getLatestMouseX(), SCREEN.getLatestMouseY())
 				.flatMap(IFlowController::getData)
 				.map(FlowData::getId)
 				.map(id -> {
@@ -130,9 +130,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 						id
 					));
 					return Void.class;
-				}).isPresent()) {
-				return true;
-			}
+				}).isPresent();
 		}
 		return false;
 	}
@@ -149,10 +147,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public void draw(
-		BaseScreen screen, MatrixStack matrixStack, int mx,
-		int my, float deltaTime
-	) {
+	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
 		getControllers()
 			.map(IFlowController::getView)
 			.sorted(Comparator.comparingInt(IFlowView::getZIndex))

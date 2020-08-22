@@ -13,6 +13,11 @@ public class Size {
 		this(copy.width, copy.height);
 	}
 
+	public void setSize(int width, int height) {
+		this.width = width;
+		this.height = height;
+	}
+
 	/**
 	 * Checks if a coordinate is contained in this element
 	 *
@@ -24,19 +29,19 @@ public class Size {
 		return x >= myPosition.getX() && x <= myPosition.getX() + width && y >= myPosition.getY() && y <= myPosition.getY() + height;
 	}
 
-	int getWidth() {
+	public int getWidth() {
 		return this.width;
 	}
 
-	void setWidth(int width) {
+	public void setWidth(int width) {
 		this.width = width;
 	}
 
-	int getHeight() {
+	public int getHeight() {
 		return this.height;
 	}
 
-	void setHeight(int height) {
+	public void setHeight(int height) {
 		this.height = height;
 	}
 }

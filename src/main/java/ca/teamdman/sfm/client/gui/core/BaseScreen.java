@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
@@ -46,6 +47,18 @@ public abstract class BaseScreen extends Screen {
 	 */
 	public static void bindTexture(ResourceLocation resource) {
 		Minecraft.getInstance().getTextureManager().bindTexture(resource);
+	}
+
+	public int getGuiLeft() {
+		return guiLeft;
+	}
+
+	public int getGuiTop() {
+		return guiTop;
+	}
+
+	public int getScaledHeight() {
+		return scaledHeight;
 	}
 
 	public int getLatestMouseX() {
@@ -163,8 +176,9 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
-	 * Draws the bound texture, with the provided RGBA values.
-	 * This allows for making opaque textures transparent via the alpha channel
+	 * Draws the bound texture, with the provided RGBA values. This allows for making opaque
+	 * textures transparent via the alpha channel
+	 *
 	 * @param a alpha (transparency)
 	 */
 	public void drawTextureWithRGBA(
@@ -205,7 +219,12 @@ public abstract class BaseScreen extends Screen {
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		this.renderBackground(matrixStack); // MC method, draw greyed out background
 		startScaling(matrixStack);
-		draw(matrixStack, scaleX(mouseX) - guiLeft, scaleY(mouseY) - guiTop, partialTicks);
+		drawScaled(
+			matrixStack,
+			scaleX(mouseX),
+			scaleY(mouseY),
+			partialTicks
+		);
 		stopScaling(matrixStack);
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
@@ -229,13 +248,25 @@ public abstract class BaseScreen extends Screen {
 	public int scaleX(double x) {
 		double scale = getScale();
 		x /= scale;
-		x += guiLeft;
 		x -= (this.width - this.scaledWidth * scale) / (2 * scale);
 		return (int) x;
 	}
 
 	/**
-	 * Converts a screen X value to a local one.
+	 * Converts a local x value into a screen one.
+	 *
+	 * @param x Local value
+	 * @return Screen value
+	 */
+	public double unscaleX(double x) {
+		double scale = getScale();
+		x += (this.width - this.scaledWidth * scale) / (2 * scale);
+		x *= scale;
+		return x;
+	}
+
+	/**
+	 * Converts a screen Y value to a local one.
 	 *
 	 * @param y Screen value
 	 * @return Local value
@@ -243,9 +274,32 @@ public abstract class BaseScreen extends Screen {
 	public int scaleY(double y) {
 		double scale = getScale();
 		y /= scale;
-		y += guiTop;
 		y -= (this.height - this.scaledHeight * scale) / (2 * scale);
 		return (int) y;
+	}
+
+	/**
+	 * Converts a local Y value into a screen one.
+	 *
+	 * @param y Local value
+	 * @return Screen value
+	 */
+	public double unscaleY(double y) {
+		double scale = getScale();
+		y += (this.height - this.scaledHeight * scale) / (2 * scale);
+		y *= scale;
+		return y;
+	}
+
+	/**
+	 * Draws a scaled version of the item
+	 */
+	public void drawItemStack(MatrixStack matrixStack, ItemStack stack, int x, int y) {
+		Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(
+			stack,
+			(int) unscaleX(x),// + guiLeft + 10,
+			(int) unscaleY(y)// + guiTop + 1
+		);
 	}
 
 	/**
@@ -271,15 +325,13 @@ public abstract class BaseScreen extends Screen {
 		matrixStack.pop();
 	}
 
-	public void draw(
+	public void drawScaled(
 		MatrixStack matrixStack, int mouseX,
 		int mouseY, float partialTicks
 	) {
 		latestMouseX = mouseX;
 		latestMouseY = mouseY;
 	}
-
-	;
 
 	public void drawLine(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
 		drawLine(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);

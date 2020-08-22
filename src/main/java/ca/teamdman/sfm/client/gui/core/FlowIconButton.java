@@ -9,7 +9,7 @@ public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible
 
 	public final FlowSprite BACKGROUND;
 	public final FlowSprite ICON;
-	public final FlowPositionBox POS;
+	public final FlowPanel POS;
 
 	public FlowIconButton(ButtonBackground background, ButtonLabel label, Position pos) {
 		this.BACKGROUND = createBackground(
@@ -60,8 +60,8 @@ public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible
 		return new FlowSprite(sheet, left, top, width, height);
 	}
 
-	public FlowPositionBox createPositionBox(Position pos, int width, int height) {
-		return new FlowPositionBox(
+	public FlowPanel createPositionBox(Position pos, int width, int height) {
+		return new FlowPanel(
 			pos,
 			new Size(width, height)
 		);

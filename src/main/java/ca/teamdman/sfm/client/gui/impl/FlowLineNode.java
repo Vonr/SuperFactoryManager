@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.client.gui.impl;
 
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
-import ca.teamdman.sfm.client.gui.core.FlowPositionBox;
+import ca.teamdman.sfm.client.gui.core.FlowPanel;
 import ca.teamdman.sfm.client.gui.core.Size;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
 import ca.teamdman.sfm.common.flowdata.FlowData;
@@ -31,9 +31,9 @@ public class FlowLineNode extends FlowIconButton {
 	}
 
 	@Override
-	public FlowPositionBox createPositionBox(Position pos, int width, int height) {
+	public FlowPanel createPositionBox(Position pos, int width, int height) {
 		//noinspection DuplicatedCode
-		return new FlowPositionBox(pos, new Size(width, height)) {
+		return new FlowPanel(pos, new Size(width, height)) {
 			@Override
 			public void onMoveFinished(int startMouseX, int startMouseY,
 				int finishMouseX, int finishMouseY, int button) {

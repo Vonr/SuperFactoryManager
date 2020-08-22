@@ -18,22 +18,28 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	public static final int LEFT = 0;
 	public static final int MIDDLE = 2;
 	public static final int RIGHT = 1;
-	private static final ResourceLocation BACKGROUND_LEFT = new ResourceLocation(SFM.MOD_ID,
-		"textures/gui/background_1.png");
-	private static final ResourceLocation BACKGROUND_RIGHT = new ResourceLocation(SFM.MOD_ID,
-		"textures/gui/background_2.png");
+	private static final ResourceLocation BACKGROUND_LEFT = new ResourceLocation(
+		SFM.MOD_ID,
+		"textures/gui/background_1.png"
+	);
+	private static final ResourceLocation BACKGROUND_RIGHT = new ResourceLocation(
+		SFM.MOD_ID,
+		"textures/gui/background_2.png"
+	);
 	public final C CONTAINER;
 
-	public BaseContainerScreen(C container, int width, int height, PlayerInventory inv,
-		ITextComponent name) {
+	public BaseContainerScreen(
+		C container, int width, int height, PlayerInventory inv,
+		ITextComponent name
+	) {
 		super(name, width, height);
 		this.CONTAINER = container;
 	}
 
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
-		int mx = scaleX((float) x) - guiLeft;
-		int my = scaleY((float) y) - guiTop;
+		int mx = scaleX(x);
+		int my = scaleY(y);
 		return onScaledMouseClicked(mx, my, button);
 
 	}
@@ -44,8 +50,8 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 
 	@Override
 	public boolean mouseReleased(double x, double y, int button) {
-		int mx = scaleX(x) - guiLeft;
-		int my = scaleY(y) - guiTop;
+		int mx = scaleX(x);
+		int my = scaleY(y);
 		return onScaledMouseReleased(mx, my, button);
 	}
 
@@ -55,10 +61,10 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 
 	@Override
 	public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
-		int mx = scaleX(x) - guiLeft;
-		int my = scaleY(y) - guiTop;
-		int dmx = scaleX(dx) - guiLeft;
-		int dmy = scaleX(dy) - guiTop;
+		int mx = scaleX(x);
+		int my = scaleY(y);
+		int dmx = scaleX(dx);
+		int dmy = scaleY(dy);
 		return onScaledMouseDragged(mx, my, button, dmx, dmy);
 	}
 
@@ -67,9 +73,11 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	}
 
 	@Override
-	public void draw(MatrixStack matrixStack, int mx, int my,
-		float partialTicks) {
-		super.draw(matrixStack, mx, my, partialTicks);
+	public void drawScaled(
+		MatrixStack matrixStack, int mx, int my,
+		float partialTicks
+	) {
+		super.drawScaled(matrixStack, mx, my, partialTicks);
 		drawBackground(matrixStack);
 	}
 
@@ -80,14 +88,18 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		bindTexture(BACKGROUND_RIGHT);
 		drawTexture(matrixStack, 256, 0, 0, 0, 256, 256);
 		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.chain"), 506, 212,
-			0x999999);
+			0x999999
+		);
 		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.clone"), 506, 222,
-			0x999999);
+			0x999999
+		);
 		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.move"), 506, 232,
-			0x999999);
+			0x999999
+		);
 		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.snaptogrid"), 506,
 			242,
-			0x999999);
+			0x999999
+		);
 	}
 
 	@Override
