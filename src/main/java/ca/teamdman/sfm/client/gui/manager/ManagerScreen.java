@@ -90,6 +90,6 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 			);
 		DATAS.clear();
 		CONTAINER.getSource().getData().forEach(data -> DATAS.put(data.getId(), data.copy()));
-		CONTROLLER.loadFromScreenData();
+		CONTROLLER.onDataChange();
 	}
 }

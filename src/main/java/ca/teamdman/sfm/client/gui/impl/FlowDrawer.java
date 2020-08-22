@@ -36,7 +36,7 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 		this.ITEM_WIDTH = itemWidth;
 		this.ITEM_HEIGHT = itemHeight;
 		this.SELECTED = new Int2BooleanOpenHashMap(items.size());
-		updatePositionsAndSize();
+		onDataChange();
 	}
 
 	@Override
@@ -49,7 +49,9 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 		return SIZE;
 	}
 
-	public void updatePositionsAndSize() {
+
+	@Override
+	public void onDataChange() {
 		this.SIZE.setSize(
 			(ITEM_WIDTH + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X,
 			(ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
@@ -74,13 +76,13 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 	public void scrollDown() {
 		this.scroll++;
 		this.fixScroll();
-		this.updatePositionsAndSize();
+		this.onDataChange();
 	}
 
 	public void scrollUp() {
 		this.scroll--;
 		this.fixScroll();
-		this.updatePositionsAndSize();
+		this.onDataChange();
 	}
 
 

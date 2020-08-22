@@ -43,7 +43,7 @@ public class ManagerDeletePacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_ID
 			);
 			screen.removeData(msg.ELEMENT_ID);
-			screen.CONTROLLER.loadFromScreenData();
+			screen.CONTROLLER.onDataChange();
 		}
 	}
 }

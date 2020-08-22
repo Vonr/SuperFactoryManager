@@ -56,7 +56,7 @@ public class ManagerCreateRelationshipPacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_ID
 			);
 			screen.addData(new RelationshipFlowData(msg.ELEMENT_ID, msg.FROM_ID, msg.TO_ID));
-			screen.CONTROLLER.loadFromScreenData();
+			screen.CONTROLLER.onDataChange();
 		}
 	}
 }

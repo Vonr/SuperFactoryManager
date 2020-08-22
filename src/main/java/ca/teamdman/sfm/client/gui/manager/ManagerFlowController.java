@@ -90,7 +90,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public void loadFromScreenData() {
+	public void onDataChange() {
 		CONTROLLERS.clear();
 		SCREEN.DATAS.values().forEach(this::attemptAddDataController);
 	}

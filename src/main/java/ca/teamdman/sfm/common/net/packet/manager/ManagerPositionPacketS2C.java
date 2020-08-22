@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
+import ca.teamdman.sfm.client.gui.core.IFlowController;
 import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
 import ca.teamdman.sfm.common.flowdata.Position;
 import ca.teamdman.sfm.common.flowdata.PositionProvider;
@@ -51,7 +52,9 @@ public class ManagerPositionPacketS2C extends S2CManagerPacket {
 				.filter(data -> data instanceof PositionProvider)
 				.map(data -> ((PositionProvider) data).getPosition())
 				.ifPresent(pos -> pos.setXY(msg.ELEMENT_POSITION));
-			screen.CONTROLLER.loadFromScreenData();
+			screen.CONTROLLER.getController(msg.ELEMENT_ID)
+				.ifPresent(IFlowController::onDataChange);
+//			screen.CONTROLLER.loadFromScreenData();
 		}
 	}
 }

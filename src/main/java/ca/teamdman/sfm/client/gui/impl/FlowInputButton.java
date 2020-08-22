@@ -37,7 +37,6 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		POS.setMovable(true);
 		this.data = data;
 		this.CONTROLLER = controller;
-		this.POS.getPosition().setXY(data.position);
 		this.DRAWER = new FlowDrawer<>(
 			this,
 			ImmutableList.of(
@@ -113,6 +112,7 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 			FlowItemStack.ITEM_TOTAL_WIDTH,
 			FlowItemStack.ITEM_TOTAL_HEIGHT
 		);
+		onDataChange();
 	}
 
 	@Override
@@ -148,6 +148,14 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		//noinspection DuplicatedCode
 		return new FlowPanel(pos, new Size(width, height)) {
 			@Override
+			public void onMove(
+				int startMouseX, int startMouseY, int finishMouseX, int finishMouseY, int button
+			) {
+				data.position.setXY(getPosition());
+				FlowInputButton.this.onDataChange();
+			}
+
+			@Override
 			public void onMoveFinished(
 				int startMouseX, int startMouseY,
 				int finishMouseX, int finishMouseY, int button
@@ -156,7 +164,7 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 					CONTROLLER.SCREEN.CONTAINER.windowId,
 					CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 					data.getId(),
-					this.getPosition()
+					getPosition()
 				));
 			}
 		};
@@ -194,5 +202,11 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		if (open) {
 			DRAWER.draw(screen, matrixStack, mx, my, deltaTime);
 		}
+	}
+
+	@Override
+	public void onDataChange() {
+		this.POS.getPosition().setXY(data.position);
+		this.DRAWER.onDataChange();
 	}
 }

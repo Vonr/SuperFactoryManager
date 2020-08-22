@@ -51,7 +51,7 @@ public class ManagerCreateInputPacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_ID
 			);
 			screen.addData(new InputFlowData(msg.ELEMENT_ID, msg.ELEMENT_POSITION));
-			screen.CONTROLLER.loadFromScreenData();
+			screen.CONTROLLER.onDataChange();
 		}
 	}
 }
