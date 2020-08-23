@@ -13,6 +13,7 @@ import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
 import ca.teamdman.sfm.common.flowdata.RelationshipGraph;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,7 +30,6 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
@@ -167,20 +167,20 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
 		);
 		clearData();
-		compound.getList("flow_data_list", NBT.TAG_COMPOUND).forEach(c -> {
-			CompoundNBT tag = (CompoundNBT) c;
-			LazyOptional<FlowDataFactory<?>> factory = FlowDataFactory.getFactory(tag);
-			factory.ifPresent(fac -> {
-				SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Discovered factory {} for data {}",
-					fac.getClass().getSimpleName(), c
-				);
-				FlowData myData = fac.fromNBT(tag);
-				addData(myData);
-			});
-			if (!factory.isPresent()) {
-				SFM.LOGGER.warn("Could not find factory for {}", tag);
-			}
-		});
+		compound.getList("flow_data_list", NBT.TAG_COMPOUND).stream()
+			.map(c -> ((CompoundNBT) c))
+			.map(c -> {
+				Optional<FlowData> data = FlowDataFactory.getFactory(c)
+					.map(factory -> factory.fromNBT(c));
+				if (!data.isPresent()) {
+					SFM.LOGGER.warn("Could not find factory for {}", c);
+				}
+				return data;
+			})
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.sorted(Comparator.comparing(a -> a instanceof RelationshipFlowData))
+			.forEach(this::addData);
 	}
 
 	@Override
