@@ -59,7 +59,7 @@ public interface IFlowController {
 	 * Key press handler
 	 * @return consume event
 	 */
-	default boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+	default boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		return false;
 	}
 
@@ -67,7 +67,7 @@ public interface IFlowController {
 	 * Key press handler
 	 * @return consume event
 	 */
-	default boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+	default boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		return false;
 	}
 

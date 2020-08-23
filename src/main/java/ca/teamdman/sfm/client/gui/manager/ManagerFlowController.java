@@ -114,13 +114,13 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		if (getControllers()
-			.anyMatch(controller -> controller.keyPressed(keyCode, scanCode, modifiers))) {
+			.anyMatch(controller -> controller.keyPressed(keyCode, scanCode, modifiers, mx, my))) {
 			return true;
 		}
 		if (keyCode == GLFW.GLFW_KEY_DELETE) {
-			return getElementUnderMouse(SCREEN.getLatestMouseX(), SCREEN.getLatestMouseY())
+			return getElementUnderMouse(mx, my)
 				.flatMap(IFlowController::getData)
 				.map(FlowData::getId)
 				.map(id -> {
@@ -136,9 +136,9 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
-	public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		return getControllers()
-			.anyMatch(controller -> controller.keyReleased(keyCode, scanCode, modifiers));
+			.anyMatch(controller -> controller.keyReleased(keyCode, scanCode, modifiers, mx, my));
 	}
 
 	@Override

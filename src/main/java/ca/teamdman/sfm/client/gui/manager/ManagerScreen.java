@@ -51,35 +51,32 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 	}
 
 	@Override
-	public boolean onScaledMouseClicked(int mx, int my, int button) {
+	public boolean mouseClickedScaled(int mx, int my, int button) {
 		return CONTROLLER.mousePressed(mx, my, button);
 	}
 
 	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		return super.keyPressed(keyCode, scanCode, modifiers)
-			|| CONTROLLER.keyPressed(keyCode, scanCode, modifiers);
+	public boolean keyPressedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		return CONTROLLER.keyPressed(keyCode, scanCode, modifiers, mx, my);
 	}
 
 	@Override
-	public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-		return super.keyReleased(keyCode, scanCode, modifiers)
-			|| CONTROLLER.keyReleased(keyCode, scanCode, modifiers);
+	public boolean keyReleasedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		return CONTROLLER.keyReleased(keyCode, scanCode, modifiers, mx, my);
 	}
 
 	@Override
-	public boolean onScaledMouseReleased(int mx, int my, int button) {
+	public boolean mouseReleasedScaled(int mx, int my, int button) {
 		return CONTROLLER.mouseReleased(mx, my, button);
 	}
 
 	@Override
-	public boolean onScaledMouseDragged(int mx, int my, int button, int dmx, int dmy) {
+	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
 		return CONTROLLER.mouseDragged(mx, my, button, dmx, dmy);
 	}
 
 	@Override
 	public void drawScaled(MatrixStack matrixStack, int mx, int my, float partialTicks) {
-		super.drawScaled(matrixStack, mx, my, partialTicks);
 		CONTROLLER.draw(this, matrixStack, mx, my, partialTicks);
 	}
 

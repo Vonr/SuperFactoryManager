@@ -36,28 +36,8 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		this.CONTAINER = container;
 	}
 
-	@Override
-	public boolean mouseClicked(double x, double y, int button) {
-		int mx = scaleX(x);
-		int my = scaleY(y);
-		return onScaledMouseClicked(mx, my, button);
 
-	}
 
-	public boolean onScaledMouseClicked(int mx, int my, int button) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseReleased(double x, double y, int button) {
-		int mx = scaleX(x);
-		int my = scaleY(y);
-		return onScaledMouseReleased(mx, my, button);
-	}
-
-	public boolean onScaledMouseReleased(int mx, int my, int button) {
-		return false;
-	}
 
 	@Override
 	public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
@@ -65,10 +45,10 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		int my = scaleY(y);
 		int dmx = scaleX(dx);
 		int dmy = scaleY(dy);
-		return onScaledMouseDragged(mx, my, button, dmx, dmy);
+		return onMouseDraggedScaled(mx, my, button, dmx, dmy);
 	}
 
-	public boolean onScaledMouseDragged(int mx, int my, int button, int dmx, int dmy) {
+	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
 		return false;
 	}
 
@@ -77,7 +57,6 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		MatrixStack matrixStack, int mx, int my,
 		float partialTicks
 	) {
-		super.drawScaled(matrixStack, mx, my, partialTicks);
 		drawBackground(matrixStack);
 	}
 

@@ -65,6 +65,28 @@ public abstract class BaseScreen extends Screen {
 		return latestMouseX;
 	}
 
+
+	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		return super.keyPressed(keyCode, scanCode, modifiers)
+			|| keyPressedScaled(keyCode, scanCode, modifiers, getLatestMouseX(), getLatestMouseY());
+	}
+
+	public boolean keyPressedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		return false;
+	}
+
+	@Override
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+		return super.keyReleased(keyCode, scanCode, modifiers)
+			|| keyReleasedScaled(
+			keyCode, scanCode, modifiers, getLatestMouseX(), getLatestMouseY());
+	}
+
+	public boolean keyReleasedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		return false;
+	}
+
 	public int getLatestMouseY() {
 		return latestMouseY;
 	}
@@ -148,6 +170,29 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	@Override
+	public boolean mouseClicked(double x, double y, int button) {
+		int mx = scaleX(x);
+		int my = scaleY(y);
+		return mouseClickedScaled(mx, my, button);
+	}
+
+	public boolean mouseClickedScaled(int mx, int my, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean mouseReleased(double x, double y, int button) {
+		int mx = scaleX(x);
+		int my = scaleY(y);
+		return mouseReleasedScaled(mx, my, button);
+	}
+
+	public boolean mouseReleasedScaled(int mx, int my, int button) {
+		return false;
+	}
+
+
+	@Override
 	public boolean isPauseScreen() {
 		return false;
 	}
@@ -219,10 +264,14 @@ public abstract class BaseScreen extends Screen {
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		this.renderBackground(matrixStack); // MC method, draw greyed out background
 		startScaling(matrixStack);
+		int mx = scaleX(mouseX);
+		int my = scaleY(mouseY);
+		latestMouseX = mx;
+		latestMouseY = my;
 		drawScaled(
 			matrixStack,
-			scaleX(mouseX),
-			scaleY(mouseY),
+			mx,
+			my,
 			partialTicks
 		);
 		stopScaling(matrixStack);
@@ -329,8 +378,6 @@ public abstract class BaseScreen extends Screen {
 		MatrixStack matrixStack, int mouseX,
 		int mouseY, float partialTicks
 	) {
-		latestMouseX = mouseX;
-		latestMouseY = mouseY;
 	}
 
 	public void drawLine(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
