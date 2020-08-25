@@ -171,11 +171,12 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 		int myWidth = getSize().getWidth();
 		int myHeight = getSize().getHeight();
 		double scale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
+
 		GL11.glScissor(
 			(int) (screen.unscaleX(x) * scale),
-			(int) (mcHeight - ((screen.unscaleY(y) + myHeight - top) * scale)),
+			(int) (mcHeight - ((screen.unscaleY(y) + screen.unscaleY(myHeight) - top) * scale)),
 			(int) (screen.unscaleX(myWidth) * scale),
-			(int) (screen.unscaleY(myHeight) * scale)
+			(int) ((screen.unscaleY(myHeight) - screen.unscaleY(top)/2) * scale)
 		);
 
 		for (int i = 0; i < ITEMS.size(); i++) {
