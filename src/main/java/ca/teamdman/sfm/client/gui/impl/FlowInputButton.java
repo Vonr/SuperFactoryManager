@@ -139,6 +139,30 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 	}
 
 	@Override
+	public boolean mouseScrolled(int mx, int my, double scroll) {
+		return super.mouseScrolled(mx, my, scroll)
+			|| DRAWER.mouseScrolled(mx, my, scroll);
+	}
+
+	@Override
+	public boolean mousePressed(int mx, int my, int button) {
+		return super.mousePressed(mx, my, button)
+			|| DRAWER.mousePressed(mx, my, button);
+	}
+
+	@Override
+	public boolean mouseReleased(int mx, int my, int button) {
+		return super.mouseReleased(mx, my, button)
+			|| DRAWER.mouseReleased(mx, my, button);
+	}
+
+	@Override
+	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
+		return super.mouseDragged(mx, my, button, dmx, dmy)
+			|| DRAWER.mouseDragged(mx, my, button, dmx, dmy);
+	}
+
+	@Override
 	public Optional<FlowData> getData() {
 		return Optional.of(data);
 	}

@@ -72,6 +72,17 @@ public interface IFlowController {
 	}
 
 	/**
+	 * Mouse scroll handler
+	 * @param mx Scaled mouse X coordinate
+	 * @param my Scaled mouse Y coordinate
+	 * @param scroll Scroll amount
+	 * @return consume event
+	 */
+	default boolean mouseScrolled(int mx, int my, double scroll) {
+		return false;
+	}
+
+	/**
 	 * Called once the container has set all the values needed to set the controller defaults.
 	 * Expected behaviour: overwrite values in controller with values from container.
 	 */

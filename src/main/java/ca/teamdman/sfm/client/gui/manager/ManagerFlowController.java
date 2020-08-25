@@ -114,6 +114,12 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	@Override
+	public boolean mouseScrolled(int mx, int my, double scroll) {
+		return getControllers()
+			.anyMatch(controller -> controller.mouseScrolled(mx, my, scroll));
+	}
+
+	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		if (getControllers()
 			.anyMatch(controller -> controller.keyPressed(keyCode, scanCode, modifiers, mx, my))) {

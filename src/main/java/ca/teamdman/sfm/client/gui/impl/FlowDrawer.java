@@ -8,9 +8,12 @@ import ca.teamdman.sfm.client.gui.core.IFlowView;
 import ca.teamdman.sfm.client.gui.core.Size;
 import ca.teamdman.sfm.common.flowdata.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
 import java.util.List;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.opengl.GL11;
 
 public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowController, IFlowView,
 	IFlowTangible {
@@ -60,7 +63,7 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 		for (int i = 0; i < ITEMS.size(); i++) {
 			ITEMS.get(i).getPosition().setXY(
 				getPosition().getX() + getWrappedX(i),
-				getPosition().getY() + getWrappedY(i)
+				getPosition().getY() + getWrappedY(i) - scroll
 			);
 		}
 	}
@@ -73,14 +76,24 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 		);
 	}
 
+	@Override
+	public boolean mouseScrolled(int mx, int my, double scroll) {
+		if (scroll > 0) {
+			scrollUp();
+		} else {
+			scrollDown();
+		}
+		return true;
+	}
+
 	public void scrollDown() {
-		this.scroll++;
+		this.scroll += 4;
 		this.fixScroll();
 		this.onDataChange();
 	}
 
 	public void scrollUp() {
-		this.scroll--;
+		this.scroll -= 4;
 		this.fixScroll();
 		this.onDataChange();
 	}
@@ -133,11 +146,53 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 			getSize().getHeight(),
 			Colour3f.PANEL_BACKGROUND
 		);
+
+		RenderSystem.pushMatrix();
+
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+//		GL11.glScissor(
+//			screen.getGuiLeft() + (int) screen.unscaleX(getPosition().getX()),
+//			screen.getGuiTop() + (int) screen.unscaleY(getPosition().getY()),
+//			(int) screen.unscaleX(getSize().getWidth()),
+//			(int) screen.unscaleY(getSize().getHeight())
+//		);
+		int left = screen.getGuiLeft();
+		int top = screen.getGuiTop();
+		int x = getPosition().getX();
+		int y = getPosition().getY();
+		int width = screen.width;
+		int height = screen.height;
+		int scaledWidth = screen.getScaledWidth();
+		int scaledHeight = screen.getScaledHeight();
+		int unscaledHeight = (int) screen.unscaleY(scaledHeight);
+		int unscaledWidth = (int) screen.unscaleX(scaledWidth);
+		int mcWidth = Minecraft.getInstance().getMainWindow().getFramebufferWidth();
+		int mcHeight = Minecraft.getInstance().getMainWindow().getFramebufferHeight();
+		int myWidth = getSize().getWidth();
+		int myHeight = getSize().getHeight();
+		double scale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
+		GL11.glScissor(
+			(int) (screen.unscaleX(x) * scale),
+			(int) (mcHeight - ((screen.unscaleY(y) + myHeight - top) * scale)),
+			(int) (screen.unscaleX(myWidth) * scale),
+			(int) (screen.unscaleY(myHeight) * scale)
+		);
+
 		for (int i = 0; i < ITEMS.size(); i++) {
-			if (getItemRow(i) >= getItemsPerColumn()) {
-				return;
-			}
+//			if (getItemRow(i) >= getItemsPerColumn()) {
+//				return;
+//			}
 			ITEMS.get(i).draw(screen, matrixStack, mx, my, deltaTime);
 		}
+//		screen.drawRect(
+//			matrixStack,
+//			getPosition().getX(),
+//			getPosition().getY(),
+//			getSize().getWidth(),
+//			getSize().getHeight(),
+//			Colour3f.PANEL_BACKGROUND
+//		);
+		GL11.glDisable(GL11.GL_SCISSOR_TEST);
+		RenderSystem.popMatrix();
 	}
 }

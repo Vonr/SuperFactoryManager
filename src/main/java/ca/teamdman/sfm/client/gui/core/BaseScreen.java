@@ -53,6 +53,10 @@ public abstract class BaseScreen extends Screen {
 		return guiLeft;
 	}
 
+	public int getScaledWidth() {
+		return scaledWidth;
+	}
+
 	public int getGuiTop() {
 		return guiTop;
 	}
@@ -118,6 +122,19 @@ public abstract class BaseScreen extends Screen {
 
 	public void drawString(MatrixStack matrixStack, String str, int x, int y, int color) {
 		drawString(matrixStack, str, x, y, 1, color);
+	}
+
+	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
+		return mouseScrolledScaled(
+			scaleX(mouseX),
+			scaleY(mouseY),
+			scroll
+		);
+	}
+
+	public boolean mouseScrolledScaled(int mx, int my, double scroll) {
+		return false;
 	}
 
 	/**

@@ -76,7 +76,13 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 	}
 
 	@Override
+	public boolean mouseScrolledScaled(int mx, int my, double scroll) {
+		return CONTROLLER.mouseScrolled(mx, my, scroll);
+	}
+
+	@Override
 	public void drawScaled(MatrixStack matrixStack, int mx, int my, float partialTicks) {
+		super.drawScaled(matrixStack, mx, my, partialTicks);
 		CONTROLLER.draw(this, matrixStack, mx, my, partialTicks);
 	}
 
