@@ -74,7 +74,7 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 			Math.max(
 				0,
 				(
-					ITEMS.size() / getItemsPerRow()
+					(int) Math.ceil(ITEMS.size() / (float) getItemsPerRow())
 						- getItemsPerColumn()
 				) * (ITEM_HEIGHT + ITEM_MARGIN_Y)
 			)
