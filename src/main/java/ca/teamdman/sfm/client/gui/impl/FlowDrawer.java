@@ -148,16 +148,15 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 
 		RenderSystem.pushMatrix();
 
-//		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
 		int x = getPosition().getX();
 		int y = getPosition().getY();
 		int myWidth = getSize().getWidth();
 		int myHeight = getSize().getHeight();
 		screen.scissorScaledArea(x, y, myWidth, myHeight);
-		for (int i = 0; i < ITEMS.size(); i++) {
-//			if (getItemRow(i) >= getItemsPerColumn()) {
-//				return;
-//			}
+		int start = scroll / (ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerRow();
+		int lastRow = start + ( myHeight / ITEM_HEIGHT) * getItemsPerRow();
+		for (int i = start; i < Math.min(lastRow,ITEMS.size()); i++) {
 			ITEMS.get(i).draw(screen, matrixStack, mx, my, deltaTime);
 		}
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
