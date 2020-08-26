@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.impl;
+package ca.teamdman.sfm.client.gui.impl.datadriven;
 
 import ca.teamdman.sfm.client.gui.core.FlowIconButton;
 import ca.teamdman.sfm.client.gui.core.FlowPanel;

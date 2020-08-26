@@ -71,7 +71,13 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 		this.scroll = MathHelper.clamp(
 			this.scroll,
 			0,
-			ITEMS.size() / getItemsPerRow() * ITEM_HEIGHT
+			Math.max(
+				0,
+				(
+					ITEMS.size() / getItemsPerRow()
+						- getItemsPerColumn()
+				) * (ITEM_HEIGHT + ITEM_MARGIN_Y)
+			)
 		);
 	}
 
@@ -153,10 +159,15 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 		int y = getPosition().getY();
 		int myWidth = getSize().getWidth();
 		int myHeight = getSize().getHeight();
-		screen.scissorScaledArea(x, y, myWidth, myHeight);
+		screen.scissorScaledArea(
+			x + PADDING_X / 2,
+			y + PADDING_Y / 2,
+			myWidth - PADDING_X,
+			myHeight - PADDING_Y
+		);
 		int start = scroll / (ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerRow();
-		int lastRow = start + ( myHeight / ITEM_HEIGHT) * getItemsPerRow();
-		for (int i = start; i < Math.min(lastRow,ITEMS.size()); i++) {
+		int lastRow = start + (myHeight / ITEM_HEIGHT) * getItemsPerRow();
+		for (int i = start; i < Math.min(lastRow, ITEMS.size()); i++) {
 			ITEMS.get(i).draw(screen, matrixStack, mx, my, deltaTime);
 		}
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);

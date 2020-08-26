@@ -344,7 +344,7 @@ public abstract class BaseScreen extends Screen {
 		double myScale = getScale();
 		int mcHeight = Minecraft.getInstance().getMainWindow().getFramebufferHeight();
 		int scissorLeft = (int) (unscaleX(left) * mcScale);
-		int scissorBottom = (int) (mcHeight - unscaleY(top + height) * mcScale)+1;
+		int scissorBottom = (int) (mcHeight - unscaleY(top + height) * mcScale);
 		int scissorWidth = (int) (width * myScale * mcScale);
 		int scissorHeight = (int) (height * myScale * mcScale);
 		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);

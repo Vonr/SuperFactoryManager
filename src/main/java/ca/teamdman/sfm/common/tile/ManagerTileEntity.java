@@ -196,7 +196,7 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 		return compound;
 	}
 
-	public Stream<BlockPos> getCableNeighbours(BlockPos pos) {
+	public Stream<BlockPos> getCableNeighbours() {
 		return SFMUtil.getRecursiveStream((current, next, results) -> {
 			for (Direction d : Direction.values()) {
 				BlockPos offset = current.offset(d);
@@ -206,7 +206,15 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 					results.accept(offset);
 				}
 			}
-		}, pos);
+		}, getPos());
+	}
+
+	public Stream<TileEntity> getCableTiles() {
+		if (world == null) return Stream.empty();
+		return getCableNeighbours()
+			.distinct()
+			.map(pos -> world.getTileEntity(pos))
+			.filter(Objects::nonNull);
 	}
 
 	public boolean isCable(BlockPos pos) {
