@@ -332,6 +332,39 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
+	 * Scissors from the top left corner
+	 *
+	 * @param left   Scaled distance from the left of the screen
+	 * @param top    Scaled distance from the top of the screen
+	 * @param width  Scaled width
+	 * @param height Scaled height
+	 */
+	public void scissorScaledArea(int left, int top, int width, int height) {
+		double mcScale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
+		double myScale = getScale();
+		int mcHeight = Minecraft.getInstance().getMainWindow().getFramebufferHeight();
+		int scissorLeft = (int) (unscaleX(left) * mcScale);
+		int scissorBottom = (int) (mcHeight - unscaleY(top + height) * mcScale)+1;
+		int scissorWidth = (int) (width * myScale * mcScale);
+		int scissorHeight = (int) (height * myScale * mcScale);
+		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);
+	}
+
+	/**
+	 * Scissors such that only the area in the bounds is rendered. Measured from top left. First
+	 * point should be the top left of the bounds. Second point should be the lower right of the
+	 * bounds.
+	 *
+	 * @param x1 First point x coord
+	 * @param y1 First point y coord
+	 * @param x2 Second point x coord
+	 * @param y2 Second point y coord
+	 */
+	public void scissorScaledPositions(int x1, int y1, int x2, int y2) {
+		scissorScaledArea(x1, y1, x2 - x1, y2 - y1);
+	}
+
+	/**
 	 * Converts a screen Y value to a local one.
 	 *
 	 * @param y Screen value
@@ -373,7 +406,7 @@ public abstract class BaseScreen extends Screen {
 	 *
 	 * @param matrixStack
 	 */
-	private void startScaling(MatrixStack matrixStack) {
+	public void startScaling(MatrixStack matrixStack) {
 		float scale = (float) getScale();
 		matrixStack.push();
 		matrixStack.translate(this.width / 2F, this.height / 2F, 0.0F);
@@ -383,12 +416,32 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
+	 * Sets the global GL state to fit the current scale ratio.
+	 */
+	public void startScaling() {
+		float scale = (float) getScale();
+		RenderSystem.pushMatrix();
+		RenderSystem.translatef(this.width / 2F, this.height / 2F, 0.0F);
+		RenderSystem.scalef(scale, scale, 1);
+//		RenderSystem.translate(-guiLeft, -guiTop, 0.0F);
+		RenderSystem.translatef(-this.scaledWidth / 2F, -this.scaledHeight / 2F, 0.0F);
+	}
+
+
+	/**
 	 * Reverts GL state to normal scaling.
 	 *
 	 * @param matrixStack
 	 */
-	private void stopScaling(MatrixStack matrixStack) {
+	public void stopScaling(MatrixStack matrixStack) {
 		matrixStack.pop();
+	}
+
+	/**
+	 * Reverts global GL state to normal scaling.
+	 */
+	public void stopScaling() {
+		RenderSystem.popMatrix();
 	}
 
 	public void drawScaled(
