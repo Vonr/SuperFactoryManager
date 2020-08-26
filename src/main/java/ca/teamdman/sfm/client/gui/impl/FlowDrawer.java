@@ -107,7 +107,7 @@ public class FlowDrawer<T extends IFlowTangible & IFlowView> implements IFlowCon
 	}
 
 	public int getItemsPerRow() {
-		return 5;
+		return MathHelper.clamp(ITEMS.size(), 1, 5);
 	}
 
 	public int getWrappedX(int index) {
