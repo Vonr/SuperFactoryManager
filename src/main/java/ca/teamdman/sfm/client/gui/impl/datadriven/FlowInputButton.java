@@ -8,6 +8,7 @@ import ca.teamdman.sfm.client.gui.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.core.Size;
 import ca.teamdman.sfm.client.gui.impl.FlowDrawer;
 import ca.teamdman.sfm.client.gui.impl.FlowItemStack;
+import ca.teamdman.sfm.client.gui.impl.FlowTileEntity;
 import ca.teamdman.sfm.client.gui.manager.ManagerFlowController;
 import ca.teamdman.sfm.common.flowdata.FlowData;
 import ca.teamdman.sfm.common.flowdata.InputFlowData;
@@ -20,9 +21,6 @@ import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemStack;
 
 public class FlowInputButton extends FlowIconButton implements IFlowDeletable, IFlowCloneable {
 
@@ -42,11 +40,11 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 		ManagerTileEntity tile = CONTROLLER.SCREEN.CONTAINER.getSource();
 		this.DRAWER = new FlowDrawer<>(
 			this,
-//			tile.getCableTiles()
-//				.map(t -> new FlowTileEntity(t, new Position()))
-//				.collect(Collectors.toList()),
-			IntStream.range(0,100).mapToObj(__ -> new FlowItemStack(new ItemStack(Blocks.ACACIA_LOG), new Position())).collect(
-				Collectors.toList()), 
+			tile.getCableTiles()
+				.map(t -> new FlowTileEntity(t, new Position()))
+				.collect(Collectors.toList()),
+//			IntStream.range(0,100).mapToObj(__ -> new FlowItemStack(new ItemStack(Blocks.ACACIA_LOG), new Position())).collect(
+//				Collectors.toList()),
 			FlowItemStack.ITEM_TOTAL_WIDTH,
 			FlowItemStack.ITEM_TOTAL_HEIGHT
 		);
