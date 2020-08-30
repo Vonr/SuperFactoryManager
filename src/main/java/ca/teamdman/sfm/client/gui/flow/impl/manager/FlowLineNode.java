@@ -1,7 +1,6 @@
-package ca.teamdman.sfm.client.gui.flow.impl.datadriven;
+package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPanel;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;

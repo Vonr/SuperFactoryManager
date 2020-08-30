@@ -4,7 +4,6 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
-import ca.teamdman.sfm.client.gui.flow.impl.datadriven.FlowRelationship;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;
 import ca.teamdman.sfm.common.flowdata.core.Position;
 import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData;

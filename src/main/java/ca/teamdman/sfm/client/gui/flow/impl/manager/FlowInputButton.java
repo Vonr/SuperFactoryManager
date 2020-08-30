@@ -1,10 +1,9 @@
-package ca.teamdman.sfm.client.gui.flow.impl.datadriven;
+package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
