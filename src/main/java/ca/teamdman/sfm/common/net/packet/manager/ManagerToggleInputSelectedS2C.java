@@ -55,7 +55,7 @@ public class ManagerToggleInputSelectedS2C extends S2CManagerPacket {
 			);
 			screen.getData(msg.DATA_ID, FlowInputData.class)
 				.ifPresent(data -> data.setSelected(msg.BLOCK_POS, msg.SELECTED));
-			screen.CONTROLLER.onDataChange();
+			screen.CONTROLLER.onDataChange(msg.DATA_ID);
 		}
 	}
 }
