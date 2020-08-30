@@ -31,7 +31,7 @@ public class FlowInputData extends FlowData implements PositionProvider {
 	}
 
 	public FlowInputData(CompoundNBT tag) {
-		super();
+		this(null, new Position());
 		deserializeNBT(tag);
 	}
 

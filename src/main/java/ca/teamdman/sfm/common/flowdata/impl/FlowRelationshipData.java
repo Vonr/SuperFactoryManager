@@ -17,6 +17,7 @@ public class FlowRelationshipData extends FlowData {
 	}
 
 	public FlowRelationshipData(CompoundNBT tag) {
+		this(null, null, null);
 		deserializeNBT(tag);
 	}
 

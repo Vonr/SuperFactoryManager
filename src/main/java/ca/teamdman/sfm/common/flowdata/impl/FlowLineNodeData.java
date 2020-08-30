@@ -19,6 +19,7 @@ public class FlowLineNodeData extends FlowData implements PositionProvider {
 	}
 
 	public FlowLineNodeData(CompoundNBT tag) {
+		this(null, new Position());
 		deserializeNBT(tag);
 	}
 
