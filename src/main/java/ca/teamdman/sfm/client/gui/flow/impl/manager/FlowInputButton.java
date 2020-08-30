@@ -54,28 +54,6 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 			.collect(Collectors.toList());
 	}
 
-	private class FlowTileEntity extends ca.teamdman.sfm.client.gui.flow.impl.util.FlowTileEntity {
-		public FlowTileEntity(
-			TileEntity tile, Position pos
-		) {
-			super(tile, pos);
-		}
-
-		@Override
-		public void setSelected(boolean value, boolean notify) {
-			super.setSelected(value, notify);
-			if (notify) {
-				PacketHandler.INSTANCE.sendToServer(new ManagerToggleInputSelectedC2S(
-					CONTROLLER.SCREEN.CONTAINER.windowId,
-					CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-					FlowInputButton.this.data.getId(),
-					this.TILE.getPos(),
-					value
-				));
-			}
-		}
-	}
-
 	@Override
 	public void onClicked(int mx, int my, int button) {
 		ManagerTileEntity tile = CONTROLLER.SCREEN.CONTAINER.getSource();
@@ -191,6 +169,30 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 	public void onDataChange() {
 		this.POS.getPosition().setXY(data.position);
 		this.DRAWER.onDataChange();
-		this.DRAWER.ITEMS.forEach(v -> v.setSelected(data.selected.contains(v.TILE.getPos()), false));
+		this.DRAWER.ITEMS.forEach(v ->
+			v.setSelected(data.selected.contains(v.TILE.getPos()), false));
+	}
+
+	private class FlowTileEntity extends ca.teamdman.sfm.client.gui.flow.impl.util.FlowTileEntity {
+
+		public FlowTileEntity(
+			TileEntity tile, Position pos
+		) {
+			super(tile, pos);
+		}
+
+		@Override
+		public void setSelected(boolean value, boolean notify) {
+			super.setSelected(value, notify);
+			if (notify) {
+				PacketHandler.INSTANCE.sendToServer(new ManagerToggleInputSelectedC2S(
+					CONTROLLER.SCREEN.CONTAINER.windowId,
+					CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+					FlowInputButton.this.data.getId(),
+					this.TILE.getPos(),
+					value
+				));
+			}
+		}
 	}
 }
