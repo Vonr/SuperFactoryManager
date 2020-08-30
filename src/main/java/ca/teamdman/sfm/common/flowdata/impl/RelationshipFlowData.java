@@ -16,11 +16,6 @@ public class RelationshipFlowData extends FlowData {
 		this.to = to;
 	}
 
-	public RelationshipFlowData(UUID from, UUID to) {
-		this.from = from;
-		this.to = to;
-	}
-
 	public RelationshipFlowData(CompoundNBT tag) {
 		deserializeNBT(tag);
 	}

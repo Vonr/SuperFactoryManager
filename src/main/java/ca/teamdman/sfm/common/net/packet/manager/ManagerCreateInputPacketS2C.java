@@ -5,7 +5,6 @@ import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flowdata.core.Position;
 import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
-import java.util.Collections;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 
@@ -53,8 +52,7 @@ public class ManagerCreateInputPacketS2C extends S2CManagerPacket {
 			);
 			screen.addData(new InputFlowData(
 				msg.ELEMENT_ID,
-				msg.ELEMENT_POSITION,
-				Collections.emptyList()
+				msg.ELEMENT_POSITION
 			));
 			screen.CONTROLLER.onDataChange();
 		}

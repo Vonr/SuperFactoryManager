@@ -18,12 +18,8 @@ public class LineNodeFlowData extends FlowData implements PositionProvider {
 		this.position = position;
 	}
 
-	public LineNodeFlowData(Position position) {
-		this.position = position;
-	}
-
-	public LineNodeFlowData() {
-		this(new Position(0, 0));
+	public LineNodeFlowData(CompoundNBT tag) {
+		deserializeNBT(tag);
 	}
 
 	@Override
@@ -58,9 +54,7 @@ public class LineNodeFlowData extends FlowData implements PositionProvider {
 
 		@Override
 		public LineNodeFlowData fromNBT(CompoundNBT tag) {
-			LineNodeFlowData data = new LineNodeFlowData();
-			data.deserializeNBT(tag);
-			return data;
+			return new LineNodeFlowData(tag);
 		}
 	}
 }

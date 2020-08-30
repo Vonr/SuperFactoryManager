@@ -5,7 +5,6 @@ import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flowdata.core.Position;
 import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
-import java.util.Collections;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
@@ -45,8 +44,7 @@ public class ManagerCreateInputPacketC2S extends C2SManagerPacket {
 		public void handleDetailed(ManagerCreateInputPacketC2S msg, ManagerTileEntity manager) {
 			InputFlowData data = new InputFlowData(
 				UUID.randomUUID(),
-				msg.ELEMENT_POSITION,
-				Collections.emptyList()
+				msg.ELEMENT_POSITION
 			);
 
 			SFM.LOGGER.debug(

@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.manager;
+package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;

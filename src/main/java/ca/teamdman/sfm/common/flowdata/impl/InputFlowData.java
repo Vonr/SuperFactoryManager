@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.flowdata.core.Position;
 import ca.teamdman.sfm.common.flowdata.core.PositionProvider;
 import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -19,16 +20,19 @@ public class InputFlowData extends FlowData implements PositionProvider {
 	public Position position;
 	public Set<BlockPos> selected;
 
+	public InputFlowData(UUID uuid, Position position) {
+		this(uuid, position, Collections.emptyList());
+	}
+
 	public InputFlowData(UUID uuid, Position position, Collection<BlockPos> selected) {
 		super(uuid);
 		this.position = position;
 		this.selected = new HashSet<>(selected);
 	}
 
-	public InputFlowData() {
+	public InputFlowData(CompoundNBT tag) {
 		super();
-		this.position = new Position(0, 0);
-		this.selected = new HashSet<>();
+		deserializeNBT(tag);
 	}
 
 	@Override
@@ -82,9 +86,7 @@ public class InputFlowData extends FlowData implements PositionProvider {
 
 		@Override
 		public InputFlowData fromNBT(CompoundNBT tag) {
-			InputFlowData data = new InputFlowData();
-			data.deserializeNBT(tag);
-			return data;
+			return new InputFlowData(tag);
 		}
 	}
 }
