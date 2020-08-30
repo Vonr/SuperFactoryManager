@@ -3,7 +3,7 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.BaseContainerScreen;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;
 import ca.teamdman.sfm.common.flowdata.core.FlowDataHolder;

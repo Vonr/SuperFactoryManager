@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;

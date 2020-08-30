@@ -5,7 +5,7 @@ import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.core.PositionProvider;
+import ca.teamdman.sfm.common.flowdata.core.PositionHolder;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 
@@ -49,8 +49,8 @@ public class ManagerPositionPacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_ID
 			);
 			screen.getData(msg.ELEMENT_ID)
-				.filter(data -> data instanceof PositionProvider)
-				.map(data -> ((PositionProvider) data).getPosition())
+				.filter(data -> data instanceof PositionHolder)
+				.map(data -> ((PositionHolder) data).getPosition())
 				.ifPresent(pos -> pos.setXY(msg.ELEMENT_POSITION));
 			screen.CONTROLLER.getController(msg.ELEMENT_ID)
 				.ifPresent(IFlowController::onDataChange);

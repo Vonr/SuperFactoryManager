@@ -1,10 +1,13 @@
 package ca.teamdman.sfm.common.flowdata.core;
 
+import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.INBTSerializable;
 
-public class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowData> {
+public abstract class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowData> {
 
 	private UUID uuid;
 
@@ -32,11 +35,7 @@ public class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowDa
 	}
 
 	@Override
-	public FlowData copy() {
-		FlowData copy = new FlowData();
-		copy.uuid = uuid;
-		return copy;
-	}
+	public abstract FlowData copy();
 
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
@@ -52,4 +51,9 @@ public class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowDa
 	public String toString() {
 		return getId().toString();
 	}
+
+	@OnlyIn(Dist.CLIENT)
+	public abstract IFlowController createController(
+		IFlowController parent
+	);
 }

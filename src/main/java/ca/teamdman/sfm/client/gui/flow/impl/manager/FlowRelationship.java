@@ -6,6 +6,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
 import ca.teamdman.sfm.common.flowdata.core.Position;
 import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;

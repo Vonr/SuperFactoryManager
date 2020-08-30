@@ -7,14 +7,16 @@ import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleInputSelectedC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleInputSelectedS2C;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleBlockPosSelectedC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleBlockPosSelectedS2C;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket.S2CHandler;
 import net.minecraft.util.ResourceLocation;
@@ -96,13 +98,23 @@ public class PacketHandler {
 		);
 
 		register(i++,
-			ManagerToggleInputSelectedC2S.class,
-			new ManagerToggleInputSelectedC2S.Handler()
+			ManagerToggleBlockPosSelectedC2S.class,
+			new ManagerToggleBlockPosSelectedC2S.Handler()
 		);
 
 		register(i++,
-			ManagerToggleInputSelectedS2C.class,
-			new ManagerToggleInputSelectedS2C.Handler()
+			ManagerToggleBlockPosSelectedS2C.class,
+			new ManagerToggleBlockPosSelectedS2C.Handler()
+		);
+
+		register(i++,
+			ManagerCreateOutputPacketC2S.class,
+			new ManagerCreateOutputPacketC2S.Handler()
+		);
+
+		register(i++,
+			ManagerCreateOutputPacketS2C.class,
+			new ManagerCreateOutputPacketS2C.Handler()
 		);
 	}
 

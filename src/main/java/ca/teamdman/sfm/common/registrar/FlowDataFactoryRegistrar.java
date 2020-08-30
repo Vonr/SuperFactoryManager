@@ -6,6 +6,8 @@ import ca.teamdman.sfm.common.flowdata.impl.FlowInputData;
 import ca.teamdman.sfm.common.flowdata.impl.FlowInputData.FlowInputDataFactory;
 import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData;
 import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData.LineNodeFlowDataFactory;
+import ca.teamdman.sfm.common.flowdata.impl.FlowOutputData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowOutputData.FlowOutputDataFactory;
 import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData.FlowRelationshipDataFactory;
 import net.minecraft.util.ResourceLocation;
@@ -26,6 +28,7 @@ public class FlowDataFactoryRegistrar {
 	public static void onRegister(final RegistryEvent.Register<FlowDataFactory<?>> e) {
 		e.getRegistry().registerAll(
 			new FlowInputDataFactory(new ResourceLocation(SFM.MOD_ID, "input")),
+			new FlowOutputDataFactory(new ResourceLocation(SFM.MOD_ID, "output")),
 			new FlowRelationshipDataFactory(new ResourceLocation(SFM.MOD_ID, "relationship")),
 			new LineNodeFlowDataFactory(new ResourceLocation(SFM.MOD_ID, "line_node"))
 		);
@@ -45,6 +48,7 @@ public class FlowDataFactoryRegistrar {
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataFactories {
 		public static final FlowDataFactory<FlowInputData> INPUT = WAITING;
+		public static final FlowDataFactory<FlowOutputData> OUTPUT = WAITING;
 		public static final FlowDataFactory<FlowRelationshipData> RELATIONSHIP = WAITING;
 		public static final FlowDataFactory<FlowLineNodeData> LINE_NODE = WAITING;
 	}

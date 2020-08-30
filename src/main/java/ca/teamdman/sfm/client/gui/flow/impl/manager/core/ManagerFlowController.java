@@ -1,19 +1,15 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButtonSpawner;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;
-import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.FlowInputData;
-import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData;
-import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Comparator;
@@ -21,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class ManagerFlowController implements IFlowController, IFlowView {
@@ -30,19 +27,8 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	public final DebugController DEBUG_CONTROLLER = new DebugController(this);
 	public final CloneController CLONE_CONTROLLER = new CloneController(this);
 	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
-	private final FlowIconButton CREATE_INPUT_BUTTON = new FlowIconButton(
-		ButtonLabel.ADD_INPUT,
-		new Position(25, 25)
-	) {
-		@Override
-		public void onClicked(int mx, int my, int button) {
-			PacketHandler.INSTANCE.sendToServer(new ManagerCreateInputPacketC2S(
-				SCREEN.CONTAINER.windowId,
-				SCREEN.CONTAINER.getSource().getPos(),
-				new Position(0, 0)
-			));
-		}
-	};
+	private final FlowIconButton INPUT_BUTTON_SPAWNER = new FlowInputButtonSpawner(this);
+	private final FlowIconButton OUTPUT_BUTTON_SPAWNER = new FlowOutputButtonSpawner(this);
 
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
@@ -54,7 +40,8 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 				DEBUG_CONTROLLER,
 				CLONE_CONTROLLER,
 				RELATIONSHIP_CONTROLLER,
-				CREATE_INPUT_BUTTON
+				INPUT_BUTTON_SPAWNER,
+				OUTPUT_BUTTON_SPAWNER
 			),
 			CONTROLLERS.values().stream()
 		);
@@ -64,27 +51,18 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		return Optional.ofNullable(CONTROLLERS.get(id));
 	}
 
-	public void addController(UUID id, IFlowController controller) {
+	public void addController(UUID id, @Nullable IFlowController controller) {
+		if (controller == null) {
+			return;
+		}
 		CONTROLLERS.put(id, controller);
 	}
 
-	public Optional<IFlowController> createControllerForDataType(FlowData data) {
-		if (data instanceof FlowInputData) {
-			return Optional.of(new FlowInputButton(this, ((FlowInputData) data)));
-		} else if (data instanceof FlowRelationshipData) {
-			return Optional.of(new FlowRelationship(
-				this,
-				((FlowRelationshipData) data)
-			));
-		} else if (data instanceof FlowLineNodeData) {
-			return Optional.of(new FlowLineNode(this, ((FlowLineNodeData) data)));
-		}
-		return Optional.empty();
-	}
-
 	public void attemptAddDataController(FlowData data) {
-		createControllerForDataType(data)
-			.ifPresent(c -> addController(data.getId(), c));
+		addController(
+			data.getId(),
+			data.createController(this)
+		);
 	}
 
 	@Override
@@ -98,7 +76,6 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 			.filter(c -> c.getData().filter(d -> d.getId().equals(dataId)).isPresent())
 			.forEach(IFlowController::onDataChange);
 	}
-
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
@@ -172,4 +149,5 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 			.filter(e -> e.getData().isPresent())
 			.findFirst();
 	}
+
 }

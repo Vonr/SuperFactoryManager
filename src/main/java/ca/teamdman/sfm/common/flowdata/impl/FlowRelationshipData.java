@@ -1,5 +1,8 @@
 package ca.teamdman.sfm.common.flowdata.impl;
 
+import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowRelationship;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;
 import ca.teamdman.sfm.common.flowdata.core.FlowDataFactory;
 import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
@@ -45,6 +48,16 @@ public class FlowRelationshipData extends FlowData {
 		super.deserializeNBT(tag);
 		this.from = UUID.fromString(tag.getString("from"));
 		this.to = UUID.fromString(tag.getString("to"));
+	}
+
+	@Override
+	public IFlowController createController(
+		IFlowController parent
+	) {
+		if (!(parent instanceof ManagerFlowController)) {
+			return null;
+		}
+		return new FlowRelationship((ManagerFlowController) parent, this);
 	}
 
 	public static class FlowRelationshipDataFactory extends FlowDataFactory<FlowRelationshipData> {

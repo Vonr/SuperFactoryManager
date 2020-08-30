@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.core.PositionProvider;
+import ca.teamdman.sfm.common.flowdata.core.PositionHolder;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
@@ -56,8 +56,8 @@ public class ManagerPositionPacketC2S extends C2SManagerPacket {
 				msg.ELEMENT_ID
 			);
 			manager.mutateManagerData(msg.ELEMENT_ID, data -> {
-				if (data instanceof PositionProvider) {
-					((PositionProvider) data).getPosition().setXY(msg.POSITION);
+				if (data instanceof PositionHolder) {
+					((PositionHolder) data).getPosition().setXY(msg.POSITION);
 				}
 			}, () -> manager.sendPacketToListeners(new ManagerPositionPacketS2C(
 				msg.WINDOW_ID,

@@ -1,11 +1,11 @@
 package ca.teamdman.sfm.client.gui.flow.core;
 
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.core.PositionProvider;
-import ca.teamdman.sfm.common.flowdata.core.SizeProvider;
+import ca.teamdman.sfm.common.flowdata.core.PositionHolder;
+import ca.teamdman.sfm.common.flowdata.core.SizeHolder;
 import net.minecraft.util.math.MathHelper;
 
-public interface IFlowTangible extends PositionProvider, SizeProvider {
+public interface IFlowTangible extends PositionHolder, SizeHolder {
 
 	default boolean isInBounds(int mx, int my) {
 		return getSize().contains(getPosition(), mx, my);
