@@ -15,22 +15,22 @@ import net.minecraft.nbt.LongArrayNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
-public class InputFlowData extends FlowData implements PositionProvider {
+public class FlowInputData extends FlowData implements PositionProvider {
 
 	public Position position;
 	public Set<BlockPos> selected;
 
-	public InputFlowData(UUID uuid, Position position) {
+	public FlowInputData(UUID uuid, Position position) {
 		this(uuid, position, Collections.emptyList());
 	}
 
-	public InputFlowData(UUID uuid, Position position, Collection<BlockPos> selected) {
+	public FlowInputData(UUID uuid, Position position, Collection<BlockPos> selected) {
 		super(uuid);
 		this.position = position;
 		this.selected = new HashSet<>(selected);
 	}
 
-	public InputFlowData(CompoundNBT tag) {
+	public FlowInputData(CompoundNBT tag) {
 		super();
 		deserializeNBT(tag);
 	}
@@ -70,7 +70,7 @@ public class InputFlowData extends FlowData implements PositionProvider {
 
 	@Override
 	public FlowData copy() {
-		return new InputFlowData(getId(), getPosition(), selected);
+		return new FlowInputData(getId(), getPosition(), selected);
 	}
 
 	@Override
@@ -78,15 +78,15 @@ public class InputFlowData extends FlowData implements PositionProvider {
 		return position;
 	}
 
-	public static class FlowInputDataFactory extends FlowDataFactory<InputFlowData> {
+	public static class FlowInputDataFactory extends FlowDataFactory<FlowInputData> {
 
 		public FlowInputDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public InputFlowData fromNBT(CompoundNBT tag) {
-			return new InputFlowData(tag);
+		public FlowInputData fromNBT(CompoundNBT tag) {
+			return new FlowInputData(tag);
 		}
 	}
 }

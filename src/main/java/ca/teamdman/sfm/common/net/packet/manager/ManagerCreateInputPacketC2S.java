@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowInputData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
@@ -42,7 +42,7 @@ public class ManagerCreateInputPacketC2S extends C2SManagerPacket {
 
 		@Override
 		public void handleDetailed(ManagerCreateInputPacketC2S msg, ManagerTileEntity manager) {
-			InputFlowData data = new InputFlowData(
+			FlowInputData data = new FlowInputData(
 				UUID.randomUUID(),
 				msg.ELEMENT_POSITION
 			);

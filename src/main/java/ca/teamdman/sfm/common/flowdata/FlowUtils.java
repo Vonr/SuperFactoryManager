@@ -2,8 +2,8 @@ package ca.teamdman.sfm.common.flowdata;
 
 import ca.teamdman.sfm.common.flowdata.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.LineNodeFlowData;
-import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.flowdata.impl.RelationshipGraph;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,14 +18,14 @@ public class FlowUtils {
 	 * @param to         Relationship end point
 	 * @return Relationship if exists
 	 */
-	public static Optional<RelationshipFlowData> getRelationship(
+	public static Optional<FlowRelationshipData> getRelationship(
 		FlowDataHolder dataHolder,
 		UUID from,
 		UUID to
 	) {
 		return dataHolder.getData()
-			.filter(data -> data instanceof RelationshipFlowData)
-			.map(data -> ((RelationshipFlowData) data))
+			.filter(data -> data instanceof FlowRelationshipData)
+			.map(data -> ((FlowRelationshipData) data))
 			.filter(data -> data.from.equals(from))
 			.filter(data -> data.to.equals(to))
 			.findAny();
@@ -52,15 +52,15 @@ public class FlowUtils {
 		getRelationship(holder, from, to).ifPresent(data -> holder.removeData(data.getId()));
 
 		// Create node data
-		LineNodeFlowData nodeData = new LineNodeFlowData(nodeId, elementPos);
+		FlowLineNodeData nodeData = new FlowLineNodeData(nodeId, elementPos);
 
 		// Create relationship data
-		RelationshipFlowData startToNode = new RelationshipFlowData(
+		FlowRelationshipData startToNode = new FlowRelationshipData(
 			fromToNodeId,
 			from,
 			nodeData.getId()
 		);
-		RelationshipFlowData nodeToEnd = new RelationshipFlowData(
+		FlowRelationshipData nodeToEnd = new FlowRelationshipData(
 			toToNodeId,
 			nodeData.getId(),
 			to
@@ -75,8 +75,8 @@ public class FlowUtils {
 	public static RelationshipGraph getRelationshipGraph(FlowDataHolder holder) {
 		RelationshipGraph graph = new RelationshipGraph();
 		holder.getData()
-			.filter(data -> data instanceof RelationshipFlowData)
-			.map(data -> (RelationshipFlowData) data)
+			.filter(data -> data instanceof FlowRelationshipData)
+			.map(data -> (FlowRelationshipData) data)
 			.forEach(data -> holder.getData(data.from)
 				.filter(__ -> holder.getData(data.to).isPresent())
 				.ifPresent(from -> {

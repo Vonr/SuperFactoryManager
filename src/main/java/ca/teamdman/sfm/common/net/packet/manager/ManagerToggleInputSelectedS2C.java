@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowInputData;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
@@ -53,7 +53,7 @@ public class ManagerToggleInputSelectedS2C extends S2CManagerPacket {
 				msg.BLOCK_POS,
 				msg.SELECTED
 			);
-			screen.getData(msg.DATA_ID, InputFlowData.class)
+			screen.getData(msg.DATA_ID, FlowInputData.class)
 				.ifPresent(data -> data.setSelected(msg.BLOCK_POS, msg.SELECTED));
 			screen.CONTROLLER.onDataChange();
 		}

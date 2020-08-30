@@ -2,7 +2,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowInputData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
@@ -56,7 +56,7 @@ public class ManagerToggleInputSelectedC2S extends C2SManagerPacket {
 				msg.BLOCK_POS,
 				msg.SELECTED
 			);
-			manager.getData(msg.DATA_ID, InputFlowData.class).ifPresent(data -> {
+			manager.getData(msg.DATA_ID, FlowInputData.class).ifPresent(data -> {
 				data.setSelected(msg.BLOCK_POS, msg.SELECTED);
 				manager.sendPacketToListeners(new ManagerToggleInputSelectedS2C(
 					msg.WINDOW_ID,

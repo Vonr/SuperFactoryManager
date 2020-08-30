@@ -5,7 +5,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPanel;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.LineNodeFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 import java.util.Optional;
@@ -13,10 +13,10 @@ import java.util.Optional;
 public class FlowLineNode extends FlowIconButton {
 
 	public final ManagerFlowController CONTROLLER;
-	public LineNodeFlowData data;
+	public FlowLineNodeData data;
 
 	public FlowLineNode(ManagerFlowController controller,
-		LineNodeFlowData data) {
+		FlowLineNodeData data) {
 		super(ButtonBackground.LINE_NODE, ButtonLabel.NONE);
 		POS.setMovable(true);
 		this.data = data;

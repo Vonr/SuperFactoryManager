@@ -6,7 +6,7 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -28,10 +28,10 @@ public class RelationshipController implements IFlowController, IFlowView {
 		this.CONTROLLER = CONTROLLER;
 	}
 
-	public Stream<RelationshipFlowData> getFlowRelationshipDatas() {
+	public Stream<FlowRelationshipData> getFlowRelationshipDatas() {
 		return CONTROLLER.SCREEN.DATAS.values().stream()
-			.filter(data -> data instanceof RelationshipFlowData)
-			.map(data -> ((RelationshipFlowData) data));
+			.filter(data -> data instanceof FlowRelationshipData)
+			.map(data -> ((FlowRelationshipData) data));
 	}
 
 	public Stream<FlowRelationship> getFlowRelationships() {

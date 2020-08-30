@@ -10,7 +10,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPanel;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowInputData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
@@ -27,12 +27,12 @@ public class FlowInputButton extends FlowIconButton implements IFlowDeletable, I
 
 	public final ManagerFlowController CONTROLLER;
 	public final FlowDrawer<FlowTileEntity> DRAWER;
-	public InputFlowData data;
+	public FlowInputData data;
 	private boolean open = false;
 
 	public FlowInputButton(
 		ManagerFlowController controller,
-		InputFlowData data
+		FlowInputData data
 	) {
 		super(ButtonLabel.INPUT);
 		POS.setMovable(true);

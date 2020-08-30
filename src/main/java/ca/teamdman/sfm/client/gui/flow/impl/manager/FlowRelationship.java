@@ -8,7 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -19,11 +19,11 @@ public class FlowRelationship implements IFlowView, IFlowController {
 
 	public static final Colour3f COLOUR = new Colour3f(0.4f, 0.4f, 0.4f);
 	public final ManagerFlowController CONTROLLER;
-	public RelationshipFlowData data;
+	public FlowRelationshipData data;
 
 	public FlowRelationship(
 		ManagerFlowController CONTROLLER,
-		RelationshipFlowData data
+		FlowRelationshipData data
 	) {
 		this.CONTROLLER = CONTROLLER;
 		this.data = data;

@@ -9,16 +9,16 @@ import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class LineNodeFlowData extends FlowData implements PositionProvider {
+public class FlowLineNodeData extends FlowData implements PositionProvider {
 
 	public Position position;
 
-	public LineNodeFlowData(UUID uuid, Position position) {
+	public FlowLineNodeData(UUID uuid, Position position) {
 		super(uuid);
 		this.position = position;
 	}
 
-	public LineNodeFlowData(CompoundNBT tag) {
+	public FlowLineNodeData(CompoundNBT tag) {
 		deserializeNBT(tag);
 	}
 
@@ -38,7 +38,7 @@ public class LineNodeFlowData extends FlowData implements PositionProvider {
 
 	@Override
 	public FlowData copy() {
-		return new LineNodeFlowData(getId(), getPosition());
+		return new FlowLineNodeData(getId(), getPosition());
 	}
 
 	@Override
@@ -46,15 +46,15 @@ public class LineNodeFlowData extends FlowData implements PositionProvider {
 		return position;
 	}
 
-	public static class LineNodeFlowDataFactory extends FlowDataFactory<LineNodeFlowData> {
+	public static class LineNodeFlowDataFactory extends FlowDataFactory<FlowLineNodeData> {
 
 		public LineNodeFlowDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public LineNodeFlowData fromNBT(CompoundNBT tag) {
-			return new LineNodeFlowData(tag);
+		public FlowLineNodeData fromNBT(CompoundNBT tag) {
+			return new FlowLineNodeData(tag);
 		}
 	}
 }

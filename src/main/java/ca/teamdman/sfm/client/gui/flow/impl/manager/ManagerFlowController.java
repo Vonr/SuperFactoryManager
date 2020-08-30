@@ -9,9 +9,9 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flowdata.core.FlowData;
 import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
-import ca.teamdman.sfm.common.flowdata.impl.LineNodeFlowData;
-import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowInputData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData;
+import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
@@ -69,15 +69,15 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	}
 
 	public Optional<IFlowController> createControllerForDataType(FlowData data) {
-		if (data instanceof InputFlowData) {
-			return Optional.of(new FlowInputButton(this, ((InputFlowData) data)));
-		} else if (data instanceof RelationshipFlowData) {
+		if (data instanceof FlowInputData) {
+			return Optional.of(new FlowInputButton(this, ((FlowInputData) data)));
+		} else if (data instanceof FlowRelationshipData) {
 			return Optional.of(new FlowRelationship(
 				this,
-				((RelationshipFlowData) data)
+				((FlowRelationshipData) data)
 			));
-		} else if (data instanceof LineNodeFlowData) {
-			return Optional.of(new FlowLineNode(this, ((LineNodeFlowData) data)));
+		} else if (data instanceof FlowLineNodeData) {
+			return Optional.of(new FlowLineNode(this, ((FlowLineNodeData) data)));
 		}
 		return Optional.empty();
 	}
