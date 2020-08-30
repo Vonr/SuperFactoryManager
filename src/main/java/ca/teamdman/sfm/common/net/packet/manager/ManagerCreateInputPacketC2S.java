@@ -2,14 +2,16 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.common.flowdata.InputFlowData;
-import ca.teamdman.sfm.common.flowdata.Position;
+import ca.teamdman.sfm.common.flowdata.core.Position;
+import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import java.util.Collections;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 
 public class ManagerCreateInputPacketC2S extends C2SManagerPacket {
+
 	private final Position ELEMENT_POSITION;
 
 	public ManagerCreateInputPacketC2S(int windowId, BlockPos pos, Position elementPosition) {
@@ -20,14 +22,18 @@ public class ManagerCreateInputPacketC2S extends C2SManagerPacket {
 	public static class Handler extends C2SManagerPacket.C2SHandler<ManagerCreateInputPacketC2S> {
 
 		@Override
-		public void finishEncode(ManagerCreateInputPacketC2S msg,
-			PacketBuffer buf) {
+		public void finishEncode(
+			ManagerCreateInputPacketC2S msg,
+			PacketBuffer buf
+		) {
 			buf.writeLong(msg.ELEMENT_POSITION.toLong());
 		}
 
 		@Override
-		public ManagerCreateInputPacketC2S finishDecode(int windowId, BlockPos tilePos,
-			PacketBuffer buf) {
+		public ManagerCreateInputPacketC2S finishDecode(
+			int windowId, BlockPos tilePos,
+			PacketBuffer buf
+		) {
 			return new ManagerCreateInputPacketC2S(
 				windowId,
 				tilePos,
@@ -37,19 +43,26 @@ public class ManagerCreateInputPacketC2S extends C2SManagerPacket {
 
 		@Override
 		public void handleDetailed(ManagerCreateInputPacketC2S msg, ManagerTileEntity manager) {
-			InputFlowData data = new InputFlowData(UUID.randomUUID(), msg.ELEMENT_POSITION);
+			InputFlowData data = new InputFlowData(
+				UUID.randomUUID(),
+				msg.ELEMENT_POSITION,
+				Collections.emptyList()
+			);
+
 			SFM.LOGGER.debug(
 				SFMUtil.getMarker(getClass()),
 				"C2S received, creating input at position {} with id {}",
 				msg.ELEMENT_POSITION,
 				data.getId()
 			);
+
 			manager.addData(data);
 			manager.markAndNotify();
 			manager.sendPacketToListeners(new ManagerCreateInputPacketS2C(
 				msg.WINDOW_ID,
 				data.getId(),
-				msg.ELEMENT_POSITION));
+				msg.ELEMENT_POSITION
+			));
 		}
 	}
 }

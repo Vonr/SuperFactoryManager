@@ -2,8 +2,8 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
-import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
+import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 

@@ -13,6 +13,8 @@ import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleInputSelectedC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleInputSelectedS2C;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket.S2CHandler;
 import net.minecraft.util.ResourceLocation;
@@ -93,6 +95,15 @@ public class PacketHandler {
 			new ManagerDeletePacketS2C.Handler()
 		);
 
+		register(i++,
+			ManagerToggleInputSelectedC2S.class,
+			new ManagerToggleInputSelectedC2S.Handler()
+		);
+
+		register(i++,
+			ManagerToggleInputSelectedS2C.class,
+			new ManagerToggleInputSelectedS2C.Handler()
+		);
 	}
 
 	private static final class Handler {

@@ -1,13 +1,13 @@
 package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
+import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.net.packet.IWindowIdProvider;
 import java.util.function.Supplier;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class S2CManagerPacket implements IWindowIdProvider {
+public abstract class S2CManagerPacket implements IWindowIdProvider {
 
 	final int WINDOW_ID;
 

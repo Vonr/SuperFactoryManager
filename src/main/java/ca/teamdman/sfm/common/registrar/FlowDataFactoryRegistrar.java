@@ -1,13 +1,13 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.InputFlowData;
-import ca.teamdman.sfm.common.flowdata.InputFlowData.FlowInputDataFactory;
-import ca.teamdman.sfm.common.flowdata.LineNodeFlowData;
-import ca.teamdman.sfm.common.flowdata.LineNodeFlowData.LineNodeFlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
-import ca.teamdman.sfm.common.flowdata.RelationshipFlowData.FlowRelationshipDataFactory;
+import ca.teamdman.sfm.common.flowdata.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.InputFlowData.FlowInputDataFactory;
+import ca.teamdman.sfm.common.flowdata.impl.LineNodeFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.LineNodeFlowData.LineNodeFlowDataFactory;
+import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData.FlowRelationshipDataFactory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;

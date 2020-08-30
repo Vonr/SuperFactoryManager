@@ -2,10 +2,10 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.client.gui.core.IFlowController;
-import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
-import ca.teamdman.sfm.common.flowdata.Position;
-import ca.teamdman.sfm.common.flowdata.PositionProvider;
+import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
+import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.common.flowdata.core.Position;
+import ca.teamdman.sfm.common.flowdata.core.PositionProvider;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 

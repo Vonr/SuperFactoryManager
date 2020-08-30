@@ -6,11 +6,11 @@ import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBO
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.block.ICable;
-import ca.teamdman.sfm.common.flowdata.FlowData;
-import ca.teamdman.sfm.common.flowdata.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.FlowDataHolder;
-import ca.teamdman.sfm.common.flowdata.RelationshipFlowData;
-import ca.teamdman.sfm.common.flowdata.RelationshipGraph;
+import ca.teamdman.sfm.common.flowdata.core.FlowData;
+import ca.teamdman.sfm.common.flowdata.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flowdata.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flowdata.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flowdata.impl.RelationshipGraph;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import java.util.Comparator;
@@ -102,6 +102,8 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 	public Optional<FlowData> getData(UUID id) {
 		return graph.getData(id);
 	}
+
+
 
 	public void addContainerListener(ServerPlayerEntity player) {
 		CONTAINER_LISTENERS.add(player);

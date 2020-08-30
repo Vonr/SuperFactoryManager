@@ -9,7 +9,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class C2SManagerPacket implements IContainerTilePacket {
+public abstract class C2SManagerPacket implements IContainerTilePacket {
 
 	final BlockPos TILE_POSITION;
 	final int WINDOW_ID;

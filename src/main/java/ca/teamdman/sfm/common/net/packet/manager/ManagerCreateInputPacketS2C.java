@@ -2,9 +2,10 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
-import ca.teamdman.sfm.common.flowdata.InputFlowData;
-import ca.teamdman.sfm.common.flowdata.Position;
+import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.common.flowdata.core.Position;
+import ca.teamdman.sfm.common.flowdata.impl.InputFlowData;
+import java.util.Collections;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 
@@ -50,7 +51,11 @@ public class ManagerCreateInputPacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_POSITION,
 				msg.ELEMENT_ID
 			);
-			screen.addData(new InputFlowData(msg.ELEMENT_ID, msg.ELEMENT_POSITION));
+			screen.addData(new InputFlowData(
+				msg.ELEMENT_ID,
+				msg.ELEMENT_POSITION,
+				Collections.emptyList()
+			));
 			screen.CONTROLLER.onDataChange();
 		}
 	}

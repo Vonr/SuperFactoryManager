@@ -1,10 +1,10 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.gui.screen.CrafterScreen;
+import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.container.CrafterContainer;
 import ca.teamdman.sfm.common.container.ManagerContainer;
-import ca.teamdman.sfm.client.gui.crafter.CrafterScreen;
-import ca.teamdman.sfm.client.gui.manager.ManagerScreen;
 import ca.teamdman.sfm.common.container.factory.CrafterContainerProvider;
 import ca.teamdman.sfm.common.container.factory.ManagerContainerProvider;
 import net.minecraft.client.gui.ScreenManager;
