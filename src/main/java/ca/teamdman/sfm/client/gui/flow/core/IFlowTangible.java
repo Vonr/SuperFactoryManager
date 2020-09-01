@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.client.gui.flow.core;
 
-import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.core.PositionHolder;
-import ca.teamdman.sfm.common.flowdata.core.SizeHolder;
+import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.data.core.SizeHolder;
 import net.minecraft.util.math.MathHelper;
 
 public interface IFlowTangible extends PositionHolder, SizeHolder {

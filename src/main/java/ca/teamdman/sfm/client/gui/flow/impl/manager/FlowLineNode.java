@@ -4,9 +4,9 @@ import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPanel;
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
-import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 import java.util.Optional;
@@ -22,7 +22,7 @@ public class FlowLineNode extends FlowIconButton {
 		POS.setMovable(true);
 		this.data = data;
 		this.CONTROLLER = controller;
-		this.POS.getPosition().setXY(data.position);
+		this.POS.getPosition().setXY(data.getPosition());
 	}
 
 	@Override

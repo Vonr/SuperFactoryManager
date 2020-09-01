@@ -1,12 +1,12 @@
-package ca.teamdman.sfm.common.flowdata.impl;
+package ca.teamdman.sfm.common.flow.data.impl;
 
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowLineNode;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
-import ca.teamdman.sfm.common.flowdata.core.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
 import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;

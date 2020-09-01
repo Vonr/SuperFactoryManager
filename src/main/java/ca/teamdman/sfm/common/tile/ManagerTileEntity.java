@@ -6,11 +6,12 @@ import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBO
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.block.ICable;
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
-import ca.teamdman.sfm.common.flowdata.core.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
-import ca.teamdman.sfm.common.flowdata.impl.RelationshipGraph;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
+import ca.teamdman.sfm.common.flow.data.impl.RelationshipGraph;
+import ca.teamdman.sfm.common.flow.execution.ManagerFlowExecutionController;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import java.util.Comparator;
@@ -25,6 +26,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
@@ -32,10 +34,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
-
+public class ManagerTileEntity extends TileEntity implements FlowDataHolder, ITickableTileEntity {
+	private final ManagerFlowExecutionController CONTROLLER = new ManagerFlowExecutionController(this);
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
-	private final RelationshipGraph graph = new RelationshipGraph();
+	public final RelationshipGraph graph = new RelationshipGraph();
 
 	public ManagerTileEntity() {
 		this(TileEntityRegistrar.Tiles.MANAGER);
@@ -185,6 +187,8 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 			.forEach(this::addData);
 	}
 
+
+
 	@Override
 	public void read(BlockState state, CompoundNBT tag) {
 		super.read(state, tag);
@@ -229,5 +233,10 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder {
 			return ((ICable) block).isCableEnabled(state, world, pos);
 		}
 		return false;
+	}
+
+	@Override
+	public void tick() {
+		CONTROLLER.tick();
 	}
 }

@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.flowdata.core;
+package ca.teamdman.sfm.common.flow.data.core;
 
 import java.util.Optional;
 import java.util.UUID;

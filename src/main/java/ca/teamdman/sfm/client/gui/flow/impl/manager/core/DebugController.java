@@ -4,7 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;

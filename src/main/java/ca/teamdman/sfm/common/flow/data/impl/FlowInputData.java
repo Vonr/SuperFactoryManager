@@ -1,13 +1,13 @@
-package ca.teamdman.sfm.common.flowdata.impl;
+package ca.teamdman.sfm.common.flow.data.impl;
 
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButton;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
-import ca.teamdman.sfm.common.flowdata.core.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.core.PositionHolder;
-import ca.teamdman.sfm.common.flowdata.core.SelectionHolder;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.data.core.SelectionHolder;
 import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,29 +19,24 @@ import net.minecraft.nbt.LongArrayNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
-public class FlowOutputData extends FlowData implements PositionHolder,
-	SelectionHolder<BlockPos> {
+public class FlowInputData extends FlowData implements PositionHolder, SelectionHolder<BlockPos> {
 
 	public Position position;
 	public Set<BlockPos> selected;
-	public FlowOutputData(UUID uuid, Position position) {
+
+	public FlowInputData(UUID uuid, Position position) {
 		this(uuid, position, Collections.emptyList());
 	}
 
-	public FlowOutputData(UUID uuid, Position position, Collection<BlockPos> selected) {
+	public FlowInputData(UUID uuid, Position position, Collection<BlockPos> selected) {
 		super(uuid);
 		this.position = position;
 		this.selected = new HashSet<>(selected);
 	}
 
-	public FlowOutputData(CompoundNBT tag) {
+	public FlowInputData(CompoundNBT tag) {
 		this(null, new Position());
 		deserializeNBT(tag);
-	}
-
-	@Override
-	public Set<BlockPos> getSelected() {
-		return selected;
 	}
 
 	@Override
@@ -53,18 +48,13 @@ public class FlowOutputData extends FlowData implements PositionHolder,
 			new LongArrayNBT(this.selected.stream().mapToLong(BlockPos::toLong).toArray())
 		);
 
-		FlowDataFactories.OUTPUT.stampNBT(tag);
+		FlowDataFactories.INPUT.stampNBT(tag);
 		return tag;
 	}
 
 	@Override
-	public IFlowController createController(
-		IFlowController parent
-	) {
-		if (!(parent instanceof ManagerFlowController)) {
-			return null;
-		}
-		return new FlowOutputButton((ManagerFlowController) parent, this);
+	public Class<BlockPos> getSelectionType() {
+		return BlockPos.class;
 	}
 
 	@Override
@@ -74,11 +64,6 @@ public class FlowOutputData extends FlowData implements PositionHolder,
 		} else {
 			selected.remove(pos);
 		}
-	}
-
-	@Override
-	public Class<BlockPos> getSelectionType() {
-		return BlockPos.class;
 	}
 
 	@SuppressWarnings("ConstantConditions")
@@ -95,7 +80,7 @@ public class FlowOutputData extends FlowData implements PositionHolder,
 
 	@Override
 	public FlowData copy() {
-		return new FlowOutputData(getId(), getPosition(), selected);
+		return new FlowInputData(getId(), getPosition(), selected);
 	}
 
 	@Override
@@ -103,15 +88,30 @@ public class FlowOutputData extends FlowData implements PositionHolder,
 		return position;
 	}
 
-	public static class FlowOutputDataFactory extends FlowDataFactory<FlowOutputData> {
+	@Override
+	public Set<BlockPos> getSelected() {
+		return selected;
+	}
 
-		public FlowOutputDataFactory(ResourceLocation key) {
+	@Override
+	public IFlowController createController(
+		IFlowController parent
+	) {
+		if (!(parent instanceof ManagerFlowController)) {
+			return null;
+		}
+		return new FlowInputButton((ManagerFlowController) parent, this);
+	}
+
+	public static class FlowInputDataFactory extends FlowDataFactory<FlowInputData> {
+
+		public FlowInputDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public FlowOutputData fromNBT(CompoundNBT tag) {
-			return new FlowOutputData(tag);
+		public FlowInputData fromNBT(CompoundNBT tag) {
+			return new FlowInputData(tag);
 		}
 	}
 }

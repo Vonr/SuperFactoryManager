@@ -9,12 +9,11 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPanel;
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
-import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.core.PositionHolder;
-import ca.teamdman.sfm.common.flowdata.core.SelectionHolder;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.data.core.SelectionHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleBlockPosSelectedC2S;
@@ -26,7 +25,8 @@ import java.util.stream.Collectors;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
-public class CableInventoryDrawerButton<T extends FlowData & PositionHolder & SelectionHolder<BlockPos>> extends FlowIconButton implements IFlowDeletable, IFlowCloneable {
+public abstract class CableInventoryDrawerButton<T extends FlowData & PositionHolder & SelectionHolder<BlockPos>> extends
+	FlowIconButton implements IFlowDeletable, IFlowCloneable {
 
 	public final ManagerFlowController CONTROLLER;
 	public final FlowDrawer<FlowTileEntity> DRAWER;
@@ -161,15 +161,6 @@ public class CableInventoryDrawerButton<T extends FlowData & PositionHolder & Se
 	) {
 		BACKGROUND.drawGhostAt(screen, matrixStack, x, y);
 		ICON.drawGhostAt(screen, matrixStack, x + 4, y + 4);
-	}
-
-	@Override
-	public void cloneWithPosition(int x, int y) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerCreateInputPacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-			new Position(x, y)
-		));
 	}
 
 	@Override

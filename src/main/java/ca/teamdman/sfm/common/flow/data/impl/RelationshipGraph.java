@@ -1,8 +1,8 @@
-package ca.teamdman.sfm.common.flowdata.impl;
+package ca.teamdman.sfm.common.flow.data.impl;
 
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
-import ca.teamdman.sfm.common.flowdata.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;

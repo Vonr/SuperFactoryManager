@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.gui.flow.core;
 
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import java.util.Optional;
 
 public interface IFlowController {

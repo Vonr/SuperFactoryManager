@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.flowdata.core;
+package ca.teamdman.sfm.common.flow.data.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import java.util.UUID;

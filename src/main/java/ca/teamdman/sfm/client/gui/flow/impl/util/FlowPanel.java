@@ -4,7 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.common.flowdata.core.Position;
+import ca.teamdman.sfm.common.flow.data.core.Position;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 

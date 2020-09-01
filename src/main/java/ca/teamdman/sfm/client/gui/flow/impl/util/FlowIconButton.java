@@ -6,7 +6,7 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.common.flowdata.core.Position;
+import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 
@@ -157,6 +157,7 @@ public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible
 		OUTPUT(0, 14, 14, 14),
 		ADD_INPUT(0, 28, 14, 14),
 		ADD_OUTPUT(0, 42, 14, 14),
+		TRIGGER(0,56,14,14),
 		NONE(0, 0, 0, 0);
 
 		public static final ResourceLocation SPRITE_SHEET = new ResourceLocation(

@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.gui.flow.impl.util;
 
-import ca.teamdman.sfm.common.flowdata.core.Position;
+import ca.teamdman.sfm.common.flow.data.core.Position;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 

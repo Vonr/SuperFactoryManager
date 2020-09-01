@@ -11,6 +11,8 @@ import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTimerTriggerPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTimerTriggerPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
@@ -115,6 +117,16 @@ public class PacketHandler {
 		register(i++,
 			ManagerCreateOutputPacketS2C.class,
 			new ManagerCreateOutputPacketS2C.Handler()
+		);
+
+		register(i++,
+			ManagerCreateTimerTriggerPacketC2S.class,
+			new ManagerCreateTimerTriggerPacketC2S.Handler()
+		);
+
+		register(i++,
+			ManagerCreateTimerTriggerPacketS2C.class,
+			new ManagerCreateTimerTriggerPacketS2C.Handler()
 		);
 	}
 

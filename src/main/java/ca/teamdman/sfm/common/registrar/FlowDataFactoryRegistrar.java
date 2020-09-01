@@ -1,15 +1,17 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.flowdata.core.FlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.impl.FlowInputData;
-import ca.teamdman.sfm.common.flowdata.impl.FlowInputData.FlowInputDataFactory;
-import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData;
-import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData.LineNodeFlowDataFactory;
-import ca.teamdman.sfm.common.flowdata.impl.FlowOutputData;
-import ca.teamdman.sfm.common.flowdata.impl.FlowOutputData.FlowOutputDataFactory;
-import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
-import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData.FlowRelationshipDataFactory;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.FlowInputData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowInputData.FlowInputDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData.LineNodeFlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData.FlowOutputDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData.FlowRelationshipDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData.FlowTimerTriggerDataFactory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
@@ -30,7 +32,8 @@ public class FlowDataFactoryRegistrar {
 			new FlowInputDataFactory(new ResourceLocation(SFM.MOD_ID, "input")),
 			new FlowOutputDataFactory(new ResourceLocation(SFM.MOD_ID, "output")),
 			new FlowRelationshipDataFactory(new ResourceLocation(SFM.MOD_ID, "relationship")),
-			new LineNodeFlowDataFactory(new ResourceLocation(SFM.MOD_ID, "line_node"))
+			new LineNodeFlowDataFactory(new ResourceLocation(SFM.MOD_ID, "line_node")),
+			new FlowTimerTriggerDataFactory(new ResourceLocation(SFM.MOD_ID, "timer_trigger"))
 		);
 		SFM.LOGGER.debug("Registered commands");
 	}
@@ -51,6 +54,7 @@ public class FlowDataFactoryRegistrar {
 		public static final FlowDataFactory<FlowOutputData> OUTPUT = WAITING;
 		public static final FlowDataFactory<FlowRelationshipData> RELATIONSHIP = WAITING;
 		public static final FlowDataFactory<FlowLineNodeData> LINE_NODE = WAITING;
+		public static final FlowDataFactory<FlowTimerTriggerData> TIMER_TRIGGER = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

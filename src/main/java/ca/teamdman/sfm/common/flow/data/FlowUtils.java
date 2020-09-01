@@ -1,10 +1,10 @@
-package ca.teamdman.sfm.common.flowdata;
+package ca.teamdman.sfm.common.flow.data;
 
-import ca.teamdman.sfm.common.flowdata.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flowdata.core.Position;
-import ca.teamdman.sfm.common.flowdata.impl.FlowLineNodeData;
-import ca.teamdman.sfm.common.flowdata.impl.FlowRelationshipData;
-import ca.teamdman.sfm.common.flowdata.impl.RelationshipGraph;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
+import ca.teamdman.sfm.common.flow.data.impl.RelationshipGraph;
 import java.util.Optional;
 import java.util.UUID;
 

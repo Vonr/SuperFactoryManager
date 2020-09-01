@@ -6,9 +6,10 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButtonSpawner;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTimerTriggerSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.common.flowdata.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -29,6 +30,7 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
 	private final FlowIconButton INPUT_BUTTON_SPAWNER = new FlowInputButtonSpawner(this);
 	private final FlowIconButton OUTPUT_BUTTON_SPAWNER = new FlowOutputButtonSpawner(this);
+	private final FlowIconButton TIMER_TRIGGER_SPAWNER = new FlowTimerTriggerSpawner(this);
 
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
@@ -41,7 +43,8 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 				CLONE_CONTROLLER,
 				RELATIONSHIP_CONTROLLER,
 				INPUT_BUTTON_SPAWNER,
-				OUTPUT_BUTTON_SPAWNER
+				OUTPUT_BUTTON_SPAWNER,
+				TIMER_TRIGGER_SPAWNER
 			),
 			CONTROLLERS.values().stream()
 		);

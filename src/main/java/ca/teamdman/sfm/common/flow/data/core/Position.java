@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.flowdata.core;
+package ca.teamdman.sfm.common.flow.data.core;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
