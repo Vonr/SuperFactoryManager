@@ -434,32 +434,29 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 			}
 		}
 
-		if (!firstInventoryUpdate || initialInventoryPositions.size() > 0) {
-			for (WorldCoordinate oldCoordinate : oldCoordinates) {
-				if (oldCoordinate.getTileEntity() instanceof ISystemListener) {
-					boolean found = false;
-					for (ConnectionBlock inventory : inventories) {
-						if (oldCoordinate.getX() == inventory.getTileEntity().getPos().getX() && oldCoordinate.getY() == inventory.getTileEntity().getPos().getY() && oldCoordinate.getZ() == inventory.getTileEntity().getPos().getZ()) {
-							found = true;
-							break;
-						}
-					}
-
-					if (!found) {
-						((ISystemListener) oldCoordinate.getTileEntity()).removed(this);
+		for (WorldCoordinate oldCoordinate : oldCoordinates) {
+			if (oldCoordinate.getTileEntity() instanceof ISystemListener) {
+				boolean found = false;
+				for (ConnectionBlock inventory : inventories) {
+					if (oldCoordinate.getX() == inventory.getTileEntity().getPos().getX() && oldCoordinate.getY() == inventory.getTileEntity().getPos().getY() && oldCoordinate.getZ() == inventory.getTileEntity().getPos().getZ()) {
+						found = true;
+						break;
 					}
 				}
-			}
 
-			if (!world.isRemote) {
-				updateInventorySelection(oldCoordinates);
-			} else {
-				for (FlowComponent item : items) {
-					item.setInventoryListDirty(true);
+				if (!found) {
+					((ISystemListener) oldCoordinate.getTileEntity()).removed(this);
 				}
 			}
 		}
 
+		if (!world.isRemote) {
+			updateInventorySelection(oldCoordinates);
+		} else {
+			for (FlowComponent item : items) {
+				item.setInventoryListDirty(true);
+			}
+		}
 
 		firstInventoryUpdate = false;
 	}
