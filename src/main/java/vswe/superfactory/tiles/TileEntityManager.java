@@ -6,6 +6,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
@@ -45,10 +46,12 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 	private static final String NBT_COMPONENTS = "Components";
 	private static final String NBT_TIMER      = "Timer";
 	private static final String NBT_VARIABLES  = "Variables";
+	private static final String NBT_INVENTORY_POSITIONS = "InventoryPositions";
 	public              List<Button>        buttons;
 	public              boolean             justSentServerComponentRemovalPacket;
 	@SideOnly(Side.CLIENT)
 	public              IInterfaceRenderer  specialRenderer;
+	private List<BlockPos> initialInventoryPositions = new ArrayList<>(); // Used only after reading from NBT
 	List<ConnectionBlock> inventories = new ArrayList<ConnectionBlock>();
 	private             Connection          currentlyConnecting;
 	private boolean firstCommandExecution = true;
@@ -403,32 +406,57 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 			}
 		}
 
-		if (!firstInventoryUpdate) {
-			for (WorldCoordinate oldCoordinate : oldCoordinates) {
-				if (oldCoordinate.getTileEntity() instanceof ISystemListener) {
-					boolean found = false;
-					for (ConnectionBlock inventory : inventories) {
-						if (oldCoordinate.getX() == inventory.getTileEntity().getPos().getX() && oldCoordinate.getY() == inventory.getTileEntity().getPos().getY() && oldCoordinate.getZ() == inventory.getTileEntity().getPos().getZ()) {
-							found = true;
-							break;
-						}
+		if (firstInventoryUpdate) {
+			if(initialInventoryPositions.size() > 0) {
+				oldCoordinates = new WorldCoordinate[initialInventoryPositions.size()];
+				for (int i = 0; i < oldCoordinates.length; i++) {
+					final BlockPos inventoryPos = initialInventoryPositions.get(i);
+					oldCoordinates[i] = new WorldCoordinate(inventoryPos.getX(), inventoryPos.getY(), inventoryPos.getZ());
+					TileEntity inventory = world.getTileEntity(inventoryPos);
+					if (inventory == null) {
+						// Set a dummy tile entity for the case where the old tile no longer exists after a restart
+						inventory = new TileEntity() {
+						};
+						inventory.setPos(inventoryPos);
 					}
-
-					if (!found) {
-						((ISystemListener) oldCoordinate.getTileEntity()).removed(this);
-					}
+					oldCoordinates[i].setTileEntity(inventory);
 				}
-			}
-
-			if (!world.isRemote) {
-				updateInventorySelection(oldCoordinates);
 			} else {
-				for (FlowComponent item : items) {
-					item.setInventoryListDirty(true);
+				// Make the oldCoordinates match with the new ones (basically the old behaviour for the first update)
+				// Happens when first updating and inventoryPositions doesn't exist in NBT
+				// or if it had no connected inventories upon saving (nothing would have been selected anyway)
+				oldCoordinates = new WorldCoordinate[inventories.size()];
+				for (int i = 0; i < oldCoordinates.length; i++) {
+					TileEntity inventory = inventories.get(i).getTileEntity();
+					oldCoordinates[i] = new WorldCoordinate(inventory.getPos().getX(), inventory.getPos().getY(), inventory.getPos().getZ());
+					oldCoordinates[i].setTileEntity(inventory);
 				}
 			}
 		}
 
+		for (WorldCoordinate oldCoordinate : oldCoordinates) {
+			if (oldCoordinate.getTileEntity() instanceof ISystemListener) {
+				boolean found = false;
+				for (ConnectionBlock inventory : inventories) {
+					if (oldCoordinate.getX() == inventory.getTileEntity().getPos().getX() && oldCoordinate.getY() == inventory.getTileEntity().getPos().getY() && oldCoordinate.getZ() == inventory.getTileEntity().getPos().getZ()) {
+						found = true;
+						break;
+					}
+				}
+
+				if (!found) {
+					((ISystemListener) oldCoordinate.getTileEntity()).removed(this);
+				}
+			}
+		}
+
+		if (!world.isRemote) {
+			updateInventorySelection(oldCoordinates);
+		} else {
+			for (FlowComponent item : items) {
+				item.setInventoryListDirty(true);
+			}
+		}
 
 		firstInventoryUpdate = false;
 	}
@@ -703,6 +731,13 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 			variablesTag.appendTag(variableTag);
 		}
 		nbtTagCompound.setTag(NBT_VARIABLES, variablesTag);
+
+		NBTTagList inventoryPositionsTag = new NBTTagList();
+		for (ConnectionBlock connectionBlock : inventories) {
+			BlockPos pos = connectionBlock.getTileEntity().getPos();
+			inventoryPositionsTag.appendTag(NBTUtil.createPosTag(pos));
+		}
+		nbtTagCompound.setTag(NBT_INVENTORY_POSITIONS, inventoryPositionsTag);
 	}
 
 	public void readContentFromNBT(NBTTagCompound nbtTagCompound, boolean pickup) {
@@ -744,6 +779,15 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 		for (int i = 0; i < variablesTag.tagCount(); i++) {
 			NBTTagCompound variableTag = variablesTag.getCompoundTagAt(i);
 			variables[i].readFromNBT(variableTag);
+		}
+
+		if (version >= 14) {
+			initialInventoryPositions.clear();
+			NBTTagList inventoryPositionsTag = nbtTagCompound.getTagList(NBT_INVENTORY_POSITIONS, 10);
+			for (int i = 0; i < inventoryPositionsTag.tagCount(); i++) {
+				BlockPos pos = NBTUtil.getPosFromTag(inventoryPositionsTag.getCompoundTagAt(i));
+				initialInventoryPositions.add(pos);
+			}
 		}
 	}
 

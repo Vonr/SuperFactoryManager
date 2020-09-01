@@ -23,7 +23,7 @@ import static vswe.superfactory.registry.ModBlocks.MANAGER;
 public class SuperFactoryManager {
 	public static final String              CHANNEL                      = "factorymanager";
 	public static final String              MODID                        = "superfactorymanager";
-	public static final byte                NBT_CURRENT_PROTOCOL_VERSION = 13;
+	public static final byte                NBT_CURRENT_PROTOCOL_VERSION = 14;
 	public static final String              NBT_PROTOCOL_VERSION         = "ProtocolVersion";
 	public static final String              RESOURCE_LOCATION            = "superfactorymanager";
 	public static final String              UNLOCALIZED_START            = "sfm.";
