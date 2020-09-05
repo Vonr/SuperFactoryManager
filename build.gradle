@@ -44,7 +44,7 @@ repositories {
 
 dependencies {
     deobfCompile "mezz.jei:jei_${minecraft_version}:${jei_version}"
-    deobfCompile "mcp.mobius.waila:Hwyla:${hwyla_version}"
+//    deobfCompile "mcp.mobius.waila:Hwyla:${hwyla_version}"
 //    deobfCompile "cofh:RedstoneFlux:1.12-2.+:deobf"
 //    deobfCompile "codechicken:CodeChickenLib:1.12.2+:deobf"
 //    deobfCompile "cofh:CoFHCore:1.12.2+:deobf"
