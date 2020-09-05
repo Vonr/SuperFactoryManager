@@ -35,10 +35,10 @@ minecraft {
 }
 
 repositories {
-    maven {url "http://tehnut.info/maven"} // hwyla
-    maven {url "http://dvs1.progwml6.com/files/maven"} // jei
-    maven {url "http://maven.covers1624.net"} // te
-    maven {url "http://chickenbones.net/maven"} // chicken
+    maven {url "https://maven.tehnut.info"} // hwyla
+    maven {url "https://dvs1.progwml6.com/files/maven"} // jei
+    maven {url "https://maven.covers1624.net"} // te
+    maven {url "https://chickenbones.net/maven"} // chicken
     maven {url "https://dl.bintray.com/jaquadro/dev/"} // storage drawers
 }
 
