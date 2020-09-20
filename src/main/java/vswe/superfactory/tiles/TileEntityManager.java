@@ -463,7 +463,8 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 
 	private void addInventory(TileEntity te, WorldCoordinate target) {
 		ConnectionBlock connection        = new ConnectionBlock(te, target.getDepth());
-		boolean         isValidConnection = false;
+		// HACKY FIX: Always treat as a valid connection (better to sync from server -> client)
+		boolean isValidConnection = true;
 
 		for (ConnectionBlockType connectionBlockType : ConnectionBlockType.values()) {
 			if (connectionBlockType.isInstance(connection.getTileEntity())) {
