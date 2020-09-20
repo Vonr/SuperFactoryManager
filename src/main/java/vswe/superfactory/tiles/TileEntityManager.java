@@ -37,9 +37,9 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 	public static final int                 BUTTON_SIZE_W       = 14;
 	public static final int                 BUTTON_SRC_X        = 242;
 	public static final int                 BUTTON_SRC_Y        = 0;
-	public static final int MAX_CABLE_LENGTH          = 128;
+	public static final int MAX_CABLE_LENGTH          = 256;
 	public static final int MAX_COMPONENT_AMOUNT      = 511;
-	public static final int MAX_CONNECTED_INVENTORIES = 1023;
+	public static final int MAX_CONNECTED_INVENTORIES = 2048;
 	public static final TriggerHelperBUD      budTrigger        = new TriggerHelperBUD();
 	public static final TriggerHelperRedstone redstoneCondition = new TriggerHelperRedstone(1, 2);
 	public static final TriggerHelperRedstone redstoneTrigger   = new TriggerHelperRedstone(3, 4);
@@ -463,7 +463,8 @@ public class TileEntityManager extends TileEntity implements ITileEntityInterfac
 
 	private void addInventory(TileEntity te, WorldCoordinate target) {
 		ConnectionBlock connection        = new ConnectionBlock(te, target.getDepth());
-		boolean         isValidConnection = false;
+		// HACKY FIX: Always treat as a valid connection (better to sync from server -> client)
+		boolean isValidConnection = true;
 
 		for (ConnectionBlockType connectionBlockType : ConnectionBlockType.values()) {
 			if (connectionBlockType.isInstance(connection.getTileEntity())) {
