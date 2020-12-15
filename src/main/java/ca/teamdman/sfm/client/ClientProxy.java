@@ -1,7 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.common.CommonProxy;
 import ca.teamdman.sfm.common.net.packet.IWindowIdProvider;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.Item;
@@ -9,10 +15,6 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 public class ClientProxy extends CommonProxy {
 	@Override

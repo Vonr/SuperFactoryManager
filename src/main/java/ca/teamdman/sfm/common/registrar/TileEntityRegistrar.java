@@ -1,17 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.registrar;
 
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.tile.CrafterTileEntity;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import javax.annotation.Nonnull;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ObjectHolder;
 import org.apache.logging.log4j.LogManager;
-
-import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class TileEntityRegistrar {
