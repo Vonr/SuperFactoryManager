@@ -36,6 +36,7 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 
 	@Override
 	public void removeData(UUID id) {
+		CONTROLLER.removeController(id);
 		DATAS.remove(id);
 	}
 
@@ -47,6 +48,7 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 	@Override
 	public void addData(FlowData data) {
 		DATAS.put(data.getId(), data);
+		CONTROLLER.addController(data);
 	}
 
 	@Override

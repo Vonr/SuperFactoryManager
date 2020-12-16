@@ -5,6 +5,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
+import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
@@ -26,6 +27,7 @@ public class FlowItemStack implements IFlowView, IFlowController, IFlowTangible,
 	private final FlowPanel HITBOX;
 	private boolean selected;
 	private boolean depressed = false;
+
 
 	public FlowItemStack(ItemStack stack, Position pos) {
 		this.STACK = stack;
@@ -82,9 +84,9 @@ public class FlowItemStack implements IFlowView, IFlowController, IFlowTangible,
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		if (selected) {
-			drawSquare(screen, matrixStack, Colour3f.SELECTED);
+			drawSquare(screen, matrixStack, CONST.SELECTED);
 		} else if (isInBounds(mx, my)) {
-			drawSquare(screen, matrixStack, Colour3f.HIGHLIGHT);
+			drawSquare(screen, matrixStack, CONST.HIGHLIGHT);
 		}
 		screen.drawItemStack(
 			matrixStack,

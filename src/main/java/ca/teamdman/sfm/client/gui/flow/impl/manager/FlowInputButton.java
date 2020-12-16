@@ -4,17 +4,17 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.util.CableInventoryDrawerButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.util.TileEntityRuleDrawer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowInputData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
 
-public class FlowInputButton extends CableInventoryDrawerButton<FlowInputData> {
+public class FlowInputButton extends TileEntityRuleDrawer<FlowTileInputData> {
 
 	public FlowInputButton(
 		ManagerFlowController controller,
-		FlowInputData data
+		FlowTileInputData data
 	) {
 		super(controller, data, ButtonLabel.INPUT);
 	}

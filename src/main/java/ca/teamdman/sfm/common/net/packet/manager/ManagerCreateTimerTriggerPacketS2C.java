@@ -6,7 +6,6 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData;
 import java.util.UUID;
@@ -51,12 +50,12 @@ public class ManagerCreateTimerTriggerPacketS2C extends S2CManagerPacket {
 				"S2C received, creating trigger with id {}",
 				msg.ELEMENT_ID
 			);
-			FlowData data = new FlowTimerTriggerData(
+			screen.addData(new FlowTimerTriggerData(
 				msg.ELEMENT_ID,
 				msg.ELEMENT_POSITION,
 				20
-			);
-			screen.CONTROLLER.onDataChange();
+			));
+			screen.CONTROLLER.onDataChange(msg.ELEMENT_ID);
 		}
 	}
 }

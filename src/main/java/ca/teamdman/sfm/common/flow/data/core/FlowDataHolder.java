@@ -15,6 +15,14 @@ public interface FlowDataHolder {
 			.filter(clazz::isInstance)
 			.map(clazz::cast);
 	}
+
+	@SuppressWarnings("unchecked")
+	default <T extends FlowData> Stream<T> getData(Class<T> clazz) {
+		return getData()
+			.filter(clazz::isInstance)
+			.map(data -> (T) data);
+	}
+
 	void removeData(UUID id);
 	void addData(FlowData data);
 	void clearData();

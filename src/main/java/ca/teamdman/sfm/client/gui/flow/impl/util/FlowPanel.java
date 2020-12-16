@@ -19,7 +19,7 @@ public class FlowPanel implements IFlowController, IFlowTangible {
 	private int dx, dy;
 	private int startMouseX, startMouseY;
 	private boolean moved = false;
-	private boolean moveable = false;
+	private boolean movable = false;
 
 	public FlowPanel(Position pos, Size size) {
 		this.pos = pos;
@@ -27,7 +27,7 @@ public class FlowPanel implements IFlowController, IFlowTangible {
 	}
 
 	public FlowPanel setMovable(boolean movable) {
-		this.moveable = movable;
+		this.movable = movable;
 		return this;
 	}
 
@@ -41,7 +41,7 @@ public class FlowPanel implements IFlowController, IFlowTangible {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		if (!moveable || !Screen.hasAltDown() || !size.contains(pos, mx, my)) {
+		if (!movable || !Screen.hasAltDown() || !size.contains(pos, mx, my)) {
 			return false;
 		}
 		isSelected = true;

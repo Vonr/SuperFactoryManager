@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
+import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
@@ -12,11 +12,13 @@ import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
 
-public class FlowDrawer<T extends IFlowTangible & IFlowController> implements IFlowController, IFlowView,
+public class FlowDrawer implements IFlowController, IFlowView,
 	IFlowTangible {
 
 	private static final int PADDING_X = 4;
@@ -24,7 +26,7 @@ public class FlowDrawer<T extends IFlowTangible & IFlowController> implements IF
 	private static final int ITEM_MARGIN_X = 4;
 	private static final int ITEM_MARGIN_Y = 4;
 
-	public final List<T> ITEMS;
+	public final List<FlowDrawerElement> ITEMS;
 	private final int ITEM_WIDTH;
 	private final int ITEM_HEIGHT;
 	private final boolean open = false;
@@ -33,13 +35,24 @@ public class FlowDrawer<T extends IFlowTangible & IFlowController> implements IF
 	private final Size SIZE = new Size(0, 0);
 	private int scroll = 0;
 
-	public FlowDrawer(IFlowTangible parent, List<T> items, int itemWidth, int itemHeight) {
+	public FlowDrawer(IFlowTangible parent, int itemWidth, int itemHeight, List<FlowDrawerElement> items) {
 		this.PARENT = parent;
-		this.ITEMS = items;
 		this.ITEM_WIDTH = itemWidth;
 		this.ITEM_HEIGHT = itemHeight;
-		onDataChange();
+		this.ITEMS = new ArrayList<>();
+		if (items != null) {
+			this.setItems(items);
+		} else {
+			this.onDataChange();
+		}
 	}
+
+	public void setItems(Collection<FlowDrawerElement> items) {
+		this.ITEMS.clear();
+		this.ITEMS.addAll(items);
+		this.onDataChange();
+	}
+
 
 	@Override
 	public Position getPosition() {
@@ -178,7 +191,7 @@ public class FlowDrawer<T extends IFlowTangible & IFlowController> implements IF
 			getPosition().getY(),
 			getSize().getWidth(),
 			getSize().getHeight(),
-			Colour3f.PANEL_BACKGROUND
+			CONST.PANEL_BACKGROUND
 		);
 
 		RenderSystem.pushMatrix();

@@ -5,14 +5,16 @@ package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
-import ca.teamdman.sfm.common.flow.data.impl.FlowInputData;
-import ca.teamdman.sfm.common.flow.data.impl.FlowInputData.FlowInputDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData;
 import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData.LineNodeFlowDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData;
 import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData.FlowOutputDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData.FlowRelationshipDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData.FlowTileEntityRuleDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData.FlowInputDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData.FlowTimerTriggerDataFactory;
 import net.minecraft.util.ResourceLocation;
@@ -36,7 +38,8 @@ public class FlowDataFactoryRegistrar {
 			new FlowOutputDataFactory(new ResourceLocation(SFM.MOD_ID, "output")),
 			new FlowRelationshipDataFactory(new ResourceLocation(SFM.MOD_ID, "relationship")),
 			new LineNodeFlowDataFactory(new ResourceLocation(SFM.MOD_ID, "line_node")),
-			new FlowTimerTriggerDataFactory(new ResourceLocation(SFM.MOD_ID, "timer_trigger"))
+			new FlowTimerTriggerDataFactory(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
+			new FlowTileEntityRuleDataFactory(new ResourceLocation(SFM.MOD_ID, "tile_entity_rule"))
 		);
 		SFM.LOGGER.debug("Registered commands");
 	}
@@ -53,11 +56,12 @@ public class FlowDataFactoryRegistrar {
 
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataFactories {
-		public static final FlowDataFactory<FlowInputData> INPUT = WAITING;
+		public static final FlowDataFactory<FlowTileInputData> INPUT = WAITING;
 		public static final FlowDataFactory<FlowOutputData> OUTPUT = WAITING;
 		public static final FlowDataFactory<FlowRelationshipData> RELATIONSHIP = WAITING;
 		public static final FlowDataFactory<FlowLineNodeData> LINE_NODE = WAITING;
 		public static final FlowDataFactory<FlowTimerTriggerData> TIMER_TRIGGER = WAITING;
+		public static final FlowDataFactory<FlowTileEntityRuleData> TILE_ENTITY_RULE = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

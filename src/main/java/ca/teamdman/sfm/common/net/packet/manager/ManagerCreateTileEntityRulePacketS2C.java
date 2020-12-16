@@ -7,36 +7,40 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 
-public class ManagerCreateOutputPacketS2C extends S2CManagerPacket {
+public class ManagerCreateTileEntityRulePacketS2C extends S2CManagerPacket {
 
 	private final Position ELEMENT_POSITION;
 	private final UUID ELEMENT_ID;
+	private final UUID OWNER_ID;
 
-	public ManagerCreateOutputPacketS2C(int windowId, UUID elementId, Position elementPosition) {
+	public ManagerCreateTileEntityRulePacketS2C(int windowId, UUID elementId, UUID ownerId, Position elementPosition) {
 		super(windowId);
 		this.ELEMENT_ID = elementId;
+		this.OWNER_ID = ownerId;
 		this.ELEMENT_POSITION = elementPosition;
 	}
 
-	public static class Handler extends S2CHandler<ManagerCreateOutputPacketS2C> {
+	public static class Handler extends S2CHandler<ManagerCreateTileEntityRulePacketS2C> {
 
 		@Override
 		public void finishEncode(
-			ManagerCreateOutputPacketS2C msg,
+			ManagerCreateTileEntityRulePacketS2C msg,
 			PacketBuffer buf
 		) {
 			SFMUtil.writeUUID(msg.ELEMENT_ID, buf);
+			SFMUtil.writeUUID(msg.OWNER_ID, buf);
 			buf.writeLong(msg.ELEMENT_POSITION.toLong());
 		}
 
 		@Override
-		public ManagerCreateOutputPacketS2C finishDecode(int windowId, PacketBuffer buf) {
-			return new ManagerCreateOutputPacketS2C(
+		public ManagerCreateTileEntityRulePacketS2C finishDecode(int windowId, PacketBuffer buf) {
+			return new ManagerCreateTileEntityRulePacketS2C(
 				windowId,
+				SFMUtil.readUUID(buf),
 				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong())
 			);
@@ -45,16 +49,17 @@ public class ManagerCreateOutputPacketS2C extends S2CManagerPacket {
 		@Override
 		public void handleDetailed(
 			ManagerScreen screen,
-			ManagerCreateOutputPacketS2C msg
+			ManagerCreateTileEntityRulePacketS2C msg
 		) {
 			SFM.LOGGER.debug(
 				SFMUtil.getMarker(getClass()),
-				"S2C received, creating input at position {} with id {}",
+				"S2C received, creating TileEntityRule at position {} with id {}",
 				msg.ELEMENT_POSITION,
 				msg.ELEMENT_ID
 			);
-			screen.addData(new FlowOutputData(
+			screen.addData(new FlowTileEntityRuleData(
 				msg.ELEMENT_ID,
+				msg.OWNER_ID,
 				msg.ELEMENT_POSITION
 			));
 			screen.CONTROLLER.onDataChange(msg.ELEMENT_ID);

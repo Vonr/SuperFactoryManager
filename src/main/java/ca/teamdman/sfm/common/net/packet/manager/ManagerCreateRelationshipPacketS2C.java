@@ -59,7 +59,7 @@ public class ManagerCreateRelationshipPacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_ID
 			);
 			screen.addData(new FlowRelationshipData(msg.ELEMENT_ID, msg.FROM_ID, msg.TO_ID));
-			screen.CONTROLLER.onDataChange();
+			screen.CONTROLLER.onDataChange(msg.ELEMENT_ID);
 		}
 	}
 }

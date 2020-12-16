@@ -62,9 +62,14 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 			return;
 		}
 		CONTROLLERS.put(id, controller);
+		controller.onDataChange();
 	}
 
-	public void attemptAddDataController(FlowData data) {
+	public IFlowController removeController(UUID id) {
+		return CONTROLLERS.remove(id);
+	}
+
+	public void addController(FlowData data) {
 		addController(
 			data.getId(),
 			data.createController(this)
@@ -74,7 +79,8 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 	@Override
 	public void onDataChange() {
 		CONTROLLERS.clear();
-		SCREEN.DATAS.values().forEach(this::attemptAddDataController);
+		SCREEN.DATAS.values().forEach(this::addController);
+		CONTROLLERS.values().forEach(IFlowController::onDataChange);
 	}
 
 	public void onDataChange(UUID dataId) {

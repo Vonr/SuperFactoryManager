@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
+import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
@@ -30,7 +30,7 @@ public class DebugController implements IFlowController, IFlowView {
 		String toDraw = id.toString();
 		int width = screen.getFontRenderer().getStringWidth(toDraw) + 2;
 		int yOffset = -25;
-		screen.drawRect(matrixStack, x - 1, y + yOffset - 1, width, 11, Colour3f.WHITE);
+		screen.drawRect(matrixStack, x - 1, y + yOffset - 1, width, 11, CONST.WHITE);
 		screen.drawString(matrixStack, toDraw, x, y + yOffset, 0x2222BB);
 	}
 
@@ -49,7 +49,7 @@ public class DebugController implements IFlowController, IFlowView {
 					.findFirst()
 					.ifPresent(rel -> {
 						drawId(screen, matrixStack, rel.data.getId(), mx, my);
-						rel.draw(screen, matrixStack, Colour3f.HIGHLIGHT);
+						rel.draw(screen, matrixStack, CONST.HIGHLIGHT);
 					});
 			}
 		}
