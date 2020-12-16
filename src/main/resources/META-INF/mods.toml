@@ -3,7 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 modLoader="javafml"
 loaderVersion="[26,)"
-licence="Mozilla Public Licence, v. 2.0"
+license="Mozilla Public Licence, v. 2.0"
 issueTrackerURL="https://github.com/TeamDman/SuperFactoryManager/issues"
 [[mods]]
   modId="sfm"
