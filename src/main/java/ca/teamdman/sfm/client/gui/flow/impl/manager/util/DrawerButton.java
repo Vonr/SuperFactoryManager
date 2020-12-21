@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
@@ -10,6 +11,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.common.flow.data.core.Position;
+import java.util.Optional;
 
 public abstract class DrawerButton extends FlowContainer {
 
@@ -17,6 +19,11 @@ public abstract class DrawerButton extends FlowContainer {
 	public final FlowIconButton BUTTON;
 	public final FlowDrawer DRAWER;
 	private boolean open = false;
+
+	@Override
+	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
+		return super.getElementUnderMouse(mx, my).map(__ -> this);
+	}
 
 	public DrawerButton(
 		ManagerFlowController controller,
@@ -40,7 +47,7 @@ public abstract class DrawerButton extends FlowContainer {
 			}
 		};
 		this.DRAWER = new FlowDrawer(
-			pos.withConstantOffset(25,0),
+			pos.withConstantOffset(25, 0),
 			FlowItemStack.ITEM_TOTAL_WIDTH,
 			FlowItemStack.ITEM_TOTAL_HEIGHT
 		);

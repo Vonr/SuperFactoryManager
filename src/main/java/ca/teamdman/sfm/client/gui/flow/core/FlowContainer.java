@@ -73,6 +73,9 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
+		if (super.mousePressed(mx, my, button)) {
+			return true;
+		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
 		return children.stream()
@@ -82,6 +85,9 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
+		if (super.mouseReleased(mx, my, button)) {
+			return true;
+		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
 		return children.stream()
@@ -91,6 +97,9 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
+		if (super.mouseDragged(mx, my, button, dmx, dmy)) {
+			return true;
+		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
 		return children.stream()
@@ -100,6 +109,9 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		if (super.keyPressed(keyCode, scanCode, modifiers, mx, my)) {
+			return true;
+		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
 		return children.stream()
@@ -109,6 +121,9 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) {
+			return true;
+		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
 		return children.stream()
@@ -118,6 +133,9 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public boolean mouseScrolled(int mx, int my, double scroll) {
+		if (super.mouseScrolled(mx, my, scroll)) {
+			return true;
+		}
 		return children.stream()
 			.filter(FlowComponent::isEnabled)
 			.anyMatch(c -> c.mouseScrolled(mx, my, scroll));

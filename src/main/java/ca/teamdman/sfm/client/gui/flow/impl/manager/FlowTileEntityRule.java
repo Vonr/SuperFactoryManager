@@ -5,7 +5,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
@@ -38,10 +37,5 @@ public class FlowTileEntityRule extends FlowContainer {
 			5,
 			0x999999
 		);
-	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
 	}
 }

@@ -10,7 +10,8 @@ import java.util.Optional;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 
-public abstract class FlowComponent implements IFlowController, IFlowTangible, IFlowView, FlowViewHolder {
+public abstract class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
+	FlowViewHolder {
 
 	private final Position dragStart = new Position();
 	private final Position dragOffset = new Position();
@@ -146,7 +147,11 @@ public abstract class FlowComponent implements IFlowController, IFlowTangible, I
 	}
 
 	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
-		return isInBounds(mx, my) ? Optional.of(this) : Optional.empty();
+		return isVisible()
+			&& isEnabled()
+			&& isInBounds(mx, my)
+			? Optional.of(this)
+			: Optional.empty();
 	}
 
 	public boolean isDraggable() {

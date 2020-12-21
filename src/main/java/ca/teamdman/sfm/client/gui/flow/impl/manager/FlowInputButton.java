@@ -8,6 +8,8 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.util.TileEntityRuleDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
+import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
 import ca.teamdman.sfm.common.net.PacketHandler;
@@ -17,7 +19,7 @@ import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
 
 public class FlowInputButton extends TileEntityRuleDrawer implements IFlowDeletable,
-	IFlowCloneable {
+	IFlowCloneable, FlowDataHolder {
 
 	FlowTileInputData DATA;
 
@@ -65,5 +67,15 @@ public class FlowInputButton extends TileEntityRuleDrawer implements IFlowDeleta
 			DATA.getId(),
 			new Position(0, 0)
 		));
+	}
+
+	@Override
+	public FlowData getData() {
+		return DATA;
+	}
+
+	@Override
+	public void onDataChanged() {
+		getPosition().setXY(DATA.getPosition());
 	}
 }

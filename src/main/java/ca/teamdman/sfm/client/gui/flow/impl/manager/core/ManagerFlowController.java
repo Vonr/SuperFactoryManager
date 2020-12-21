@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButtonSpawner;
@@ -13,6 +14,7 @@ import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.lwjgl.glfw.GLFW;
 
@@ -32,6 +34,7 @@ public class ManagerFlowController extends FlowContainer {
 	}
 
 	public void rebuildChildren() {
+		getChildren().clear();
 		addChild(DEBUG_CONTROLLER);
 		addChild(CLONE_CONTROLLER);
 		addChild(RELATIONSHIP_CONTROLLER);
@@ -63,18 +66,14 @@ public class ManagerFlowController extends FlowContainer {
 
 		// only check delete after all other event listeners
 		if (keyCode == GLFW.GLFW_KEY_DELETE) {
-			return getElementUnderMouse(mx, my)
-				.filter(c -> c instanceof FlowDataHolder)
-				.map(c -> ((FlowDataHolder) c).getData())
-				.map(FlowData::getId)
-				.map(id -> {
-					PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
-						SCREEN.CONTAINER.windowId,
-						SCREEN.CONTAINER.getSource().getPos(),
-						id
-					));
-					return Void.class;
-				}).isPresent();
+			Optional<FlowComponent> elem = getElementUnderMouse(mx, my)
+				.filter(c -> c instanceof FlowDataHolder);
+			elem.ifPresent(c -> PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
+				SCREEN.CONTAINER.windowId,
+				SCREEN.CONTAINER.getSource().getPos(),
+				((FlowDataHolder) c).getData().getId()
+			)));
+			return elem.isPresent();
 		}
 		return false;
 	}
