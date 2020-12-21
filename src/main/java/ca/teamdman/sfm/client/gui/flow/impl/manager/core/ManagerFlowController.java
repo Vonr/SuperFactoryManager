@@ -3,125 +3,69 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
-import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
+import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTimerTriggerSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Stream;
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 import org.lwjgl.glfw.GLFW;
 
-public class ManagerFlowController implements IFlowController, IFlowView {
+public class ManagerFlowController extends FlowContainer {
 
 	public final ManagerScreen SCREEN;
 	public final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
 	public final DebugController DEBUG_CONTROLLER = new DebugController(this);
 	public final CloneController CLONE_CONTROLLER = new CloneController(this);
-	private final LinkedHashMap<UUID, IFlowController> CONTROLLERS = new LinkedHashMap<>();
 	private final FlowIconButton INPUT_BUTTON_SPAWNER = new FlowInputButtonSpawner(this);
 	private final FlowIconButton OUTPUT_BUTTON_SPAWNER = new FlowOutputButtonSpawner(this);
 	private final FlowIconButton TIMER_TRIGGER_SPAWNER = new FlowTimerTriggerSpawner(this);
 
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
+		rebuildChildren();
 	}
 
-	public Stream<IFlowController> getControllers() {
-		return Stream.concat(
-			Stream.of(
-				DEBUG_CONTROLLER,
-				CLONE_CONTROLLER,
-				RELATIONSHIP_CONTROLLER,
-				INPUT_BUTTON_SPAWNER,
-				OUTPUT_BUTTON_SPAWNER,
-				TIMER_TRIGGER_SPAWNER
-			),
-			CONTROLLERS.values().stream()
-		);
+	public void rebuildChildren() {
+		addChild(DEBUG_CONTROLLER);
+		addChild(CLONE_CONTROLLER);
+		addChild(RELATIONSHIP_CONTROLLER);
+		addChild(INPUT_BUTTON_SPAWNER);
+		addChild(OUTPUT_BUTTON_SPAWNER);
+		addChild(TIMER_TRIGGER_SPAWNER);
+		SCREEN.getData()
+			.map(data -> data.createController(this))
+			.forEach(this::addChild);
 	}
 
-	public Optional<IFlowController> getController(UUID id) {
-		return Optional.ofNullable(CONTROLLERS.get(id));
+	public void notifyDataAdded(FlowData data) {
+		addChild(data.createController(this));
 	}
 
-	public void addController(UUID id, @Nullable IFlowController controller) {
-		if (controller == null) {
-			return;
-		}
-		CONTROLLERS.put(id, controller);
-		controller.onDataChange();
-	}
-
-	public IFlowController removeController(UUID id) {
-		return CONTROLLERS.remove(id);
-	}
-
-	public void addController(FlowData data) {
-		addController(
-			data.getId(),
-			data.createController(this)
-		);
-	}
-
-	@Override
-	public void onDataChange() {
-		CONTROLLERS.clear();
-		SCREEN.DATAS.values().forEach(this::addController);
-		CONTROLLERS.values().forEach(IFlowController::onDataChange);
-	}
-
-	public void onDataChange(UUID dataId) {
-		getControllers()
-			.filter(c -> c.getData().filter(d -> d.getId().equals(dataId)).isPresent())
-			.forEach(IFlowController::onDataChange);
-	}
-
-	@Override
-	public boolean mousePressed(int mx, int my, int button) {
-		return getControllers()
-			.anyMatch(controller -> controller.mousePressed(mx, my, button));
-	}
-
-	@Override
-	public boolean mouseReleased(int mx, int my, int button) {
-		return getControllers()
-			.anyMatch(controller -> controller.mouseReleased(mx, my, button));
-	}
-
-	@Override
-	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
-		return getControllers()
-			.anyMatch(controller -> controller.mouseDragged(mx, my, button, dmx, dmy));
-	}
-
-	@Override
-	public boolean mouseScrolled(int mx, int my, double scroll) {
-		return getControllers()
-			.anyMatch(controller -> controller.mouseScrolled(mx, my, scroll));
+	public void notifyDataDeleted(FlowData data) {
+		getChildren().stream()
+			.filter(c -> c instanceof FlowDataHolder)
+			.filter(c -> ((FlowDataHolder) c).getData().equals(data))
+			.collect(Collectors.toList())
+			.forEach(this::removeChild);
 	}
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		if (getControllers()
-			.anyMatch(controller -> controller.keyPressed(keyCode, scanCode, modifiers, mx, my))) {
+		if (super.keyPressed(keyCode, scanCode, modifiers, mx, my)) {
 			return true;
 		}
+
+		// only check delete after all other event listeners
 		if (keyCode == GLFW.GLFW_KEY_DELETE) {
 			return getElementUnderMouse(mx, my)
-				.flatMap(IFlowController::getData)
+				.filter(c -> c instanceof FlowDataHolder)
+				.map(c -> ((FlowDataHolder) c).getData())
 				.map(FlowData::getId)
 				.map(id -> {
 					PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
@@ -134,32 +78,4 @@ public class ManagerFlowController implements IFlowController, IFlowView {
 		}
 		return false;
 	}
-
-	@Override
-	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		return getControllers()
-			.anyMatch(controller -> controller.keyReleased(keyCode, scanCode, modifiers, mx, my));
-	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
-	}
-
-	@Override
-	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		getControllers()
-			.map(IFlowController::getView)
-			.sorted(Comparator.comparingInt(IFlowView::getZIndex))
-			.forEach(view -> view.draw(screen, matrixStack, mx, my, deltaTime));
-	}
-
-	public Optional<IFlowController> getElementUnderMouse(int mx, int my) {
-		return getControllers()
-			.filter(e -> e instanceof IFlowTangible)
-			.filter(e -> ((IFlowTangible) e).isInBounds(mx, my))
-			.filter(e -> e.getData().isPresent())
-			.findFirst();
-	}
-
 }

@@ -4,11 +4,10 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowRelationship;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.net.PacketHandler;
@@ -19,9 +18,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import net.minecraft.client.gui.screen.Screen;
 
-@SuppressWarnings("UnstableApiUsage")
-public class RelationshipController implements IFlowController, IFlowView {
-
+public class RelationshipController extends FlowComponent {
 	public final ManagerFlowController CONTROLLER;
 	private final Position fromPos = new Position();
 	private final Position toPos = new Position();
@@ -39,7 +36,7 @@ public class RelationshipController implements IFlowController, IFlowView {
 	}
 
 	public Stream<FlowRelationship> getFlowRelationships() {
-		return CONTROLLER.getControllers()
+		return CONTROLLER.getChildren().stream()
 			.filter(c -> c instanceof FlowRelationship)
 			.map(c -> ((FlowRelationship) c));
 	}
@@ -49,18 +46,15 @@ public class RelationshipController implements IFlowController, IFlowView {
 		if (!Screen.hasShiftDown()) {
 			return false;
 		}
-
-		Optional<IFlowController> controller = CONTROLLER.getElementUnderMouse(mx, my);
-		if (controller.isPresent()) {
+		Optional<FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my);
+		hit.map(c -> c instanceof FlowDataHolder ? c : null);
+		hit.ifPresent(c -> {
 			isDragging = true;
-			//noinspection OptionalGetWithoutIsPresent
-			from = controller.get().getData().get().getId();
-			fromPos.setXY(((IFlowTangible) controller.get()).getCentroid());
+			from = ((FlowDataHolder) c).getData().getId();
+			fromPos.setXY(c.getCentroid());
 			toPos.setXY(mx, my);
-			return true;
-		}
-
-		return false;
+		});
+		return hit.isPresent();
 	}
 
 	@Override
@@ -69,8 +63,8 @@ public class RelationshipController implements IFlowController, IFlowView {
 			return false;
 		}
 		CONTROLLER.getElementUnderMouse(mx, my)
-			.map(IFlowController::getData)
-			.map(Optional::get)
+			.filter(c -> c instanceof FlowDataHolder)
+			.map(c -> ((FlowDataHolder) c).getData())
 			.map(FlowData::getId)
 			.ifPresent(to -> createRelationship(from, to));
 		isDragging = false;
@@ -95,14 +89,9 @@ public class RelationshipController implements IFlowController, IFlowView {
 		}
 		toPos.setXY(mx, my);
 		CONTROLLER.getElementUnderMouse(mx, my)
-			.map(x -> ((IFlowTangible) x).snapToEdge(fromPos))
+			.map(x -> x.snapToEdge(fromPos))
 			.ifPresent(toPos::setXY);
 		return true;
-	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
 	}
 
 	@Override

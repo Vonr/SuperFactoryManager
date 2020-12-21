@@ -5,79 +5,42 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
+import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
-import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
 
-public class FlowDrawer implements IFlowController, IFlowView,
-	IFlowTangible {
+public class FlowDrawer extends FlowContainer {
 
 	private static final int PADDING_X = 4;
 	private static final int PADDING_Y = 4;
 	private static final int ITEM_MARGIN_X = 4;
 	private static final int ITEM_MARGIN_Y = 4;
 
-	public final List<FlowDrawerElement> ITEMS;
 	private final int ITEM_WIDTH;
 	private final int ITEM_HEIGHT;
-	private final boolean open = false;
-	private final IFlowTangible PARENT;
-	private final Position POSITION = new Position();
-	private final Size SIZE = new Size(0, 0);
 	private int scroll = 0;
 
-	public FlowDrawer(IFlowTangible parent, int itemWidth, int itemHeight, List<FlowDrawerElement> items) {
-		this.PARENT = parent;
+	public FlowDrawer(int itemWidth, int itemHeight) {
+		super(5, 0, 0, 0);
 		this.ITEM_WIDTH = itemWidth;
 		this.ITEM_HEIGHT = itemHeight;
-		this.ITEMS = new ArrayList<>();
-		if (items != null) {
-			this.setItems(items);
-		} else {
-			this.onDataChange();
-		}
-	}
-
-	public void setItems(Collection<FlowDrawerElement> items) {
-		this.ITEMS.clear();
-		this.ITEMS.addAll(items);
-		this.onDataChange();
 	}
 
 
-	@Override
-	public Position getPosition() {
-		return POSITION;
-	}
-
-	@Override
-	public Size getSize() {
-		return SIZE;
-	}
-
-
-	@Override
-	public void onDataChange() {
-		this.SIZE.setSize(
+	public void update() {
+		getSize().setSize(
 			(ITEM_WIDTH + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X,
 			(ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
 		);
-		this.POSITION.setXY(PARENT.getPosition().withOffset(PARENT.getSize().getWidth() + 5, 0));
-		for (int i = 0; i < ITEMS.size(); i++) {
-			ITEMS.get(i).getPosition().setXY(
-				getPosition().getX() + getWrappedX(i),
-				getPosition().getY() + getWrappedY(i) - scroll
-			);
-		}
+		AtomicInteger i = new AtomicInteger();
+		getChildren().stream().forEachOrdered(c -> c.getPosition().setXY(
+			getWrappedX(i.get()),
+			getWrappedY(i.getAndIncrement()) - scroll
+		));
 	}
 
 	public void fixScroll() {
@@ -87,7 +50,7 @@ public class FlowDrawer implements IFlowController, IFlowView,
 			Math.max(
 				0,
 				(
-					(int) Math.ceil(ITEMS.size() / (float) getItemsPerRow())
+					(int) Math.ceil(getChildren().size() / (float) getItemsPerRow())
 						- getItemsPerColumn()
 				) * (ITEM_HEIGHT + ITEM_MARGIN_Y)
 			)
@@ -105,28 +68,28 @@ public class FlowDrawer implements IFlowController, IFlowView,
 	}
 
 	public void scrollDown() {
-		this.scroll += 7;
-		this.fixScroll();
-		this.onDataChange();
+		scroll += 7;
+		fixScroll();
+		update();
 	}
 
 	public void scrollUp() {
-		this.scroll -= 7;
-		this.fixScroll();
-		this.onDataChange();
+		scroll -= 7;
+		fixScroll();
+		update();
 	}
 
 
 	public int getItemsPerColumn() {
 		return MathHelper.clamp(
-			getItemRow(ITEMS.size()),
+			getItemRow(getChildren().size() - 1) + 1,
 			1,
 			7
 		);
 	}
 
 	public int getItemsPerRow() {
-		return MathHelper.clamp(ITEMS.size(), 1, 5);
+		return MathHelper.clamp(getChildren().size(), 1, 5);
 	}
 
 	public int getWrappedX(int index) {
@@ -152,33 +115,8 @@ public class FlowDrawer implements IFlowController, IFlowView,
 	}
 
 	@Override
-	public boolean mousePressed(int mx, int my, int button) {
-		return ITEMS.stream().anyMatch(v -> v.mousePressed(mx, my, button));
-	}
-
-	@Override
-	public boolean mouseReleased(int mx, int my, int button) {
-		return ITEMS.stream().anyMatch(v -> v.mouseReleased(mx, my, button));
-	}
-
-	@Override
-	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
-		return ITEMS.stream().anyMatch(v -> v.mouseDragged(mx, my, button, dmx, dmy));
-	}
-
-	@Override
 	public IFlowView getView() {
 		return this;
-	}
-
-	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		return ITEMS.stream().anyMatch(v -> v.keyPressed(keyCode, scanCode, modifiers, mx, my));
-	}
-
-	@Override
-	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		return ITEMS.stream().anyMatch(v -> v.keyReleased(keyCode, scanCode, modifiers, mx, my));
 	}
 
 	@Override
@@ -209,9 +147,7 @@ public class FlowDrawer implements IFlowController, IFlowView,
 		);
 		int start = scroll / (ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerRow();
 		int lastRow = start + (myHeight / ITEM_HEIGHT) * getItemsPerRow();
-		for (int i = start; i < Math.min(lastRow, ITEMS.size()); i++) {
-			ITEMS.get(i).getView().draw(screen, matrixStack, mx, my, deltaTime);
-		}
+		getChildren().stream().forEach(c -> c.draw(screen, matrixStack, mx, my, deltaTime));
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 		RenderSystem.popMatrix();
 	}

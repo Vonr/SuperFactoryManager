@@ -3,9 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.core;
 
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import java.util.Optional;
-
 public interface IFlowController {
 	/**
 	 * Fired when a mouse button is pressed
@@ -40,23 +37,6 @@ public interface IFlowController {
 	default boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) { return false; }
 
 	/**
-	 * Gets the view used to draw this controller
-	 *
-	 * @return view
-	 */
-	IFlowView getView();
-
-	/**
-	 * If this controller is responsible for representing a single FlowData,
-	 * then this method returns that data
-	 * @return FlowData
-	 */
-	default Optional<FlowData> getData() {
-		return Optional.empty();
-	}
-
-
-	/**
 	 * Key press handler
 	 * @return consume event
 	 */
@@ -82,10 +62,4 @@ public interface IFlowController {
 	default boolean mouseScrolled(int mx, int my, double scroll) {
 		return false;
 	}
-
-	/**
-	 * Called once the container has set all the values needed to set the controller defaults.
-	 * Expected behaviour: overwrite values in controller with values from container.
-	 */
-	default void onDataChange(){};
 }

@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.flow.data;
 
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData;
 import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
@@ -22,7 +22,7 @@ public class FlowUtils {
 	 * @return Relationship if exists
 	 */
 	public static Optional<FlowRelationshipData> getRelationship(
-		FlowDataHolder dataHolder,
+		FlowDataContainer dataHolder,
 		UUID from,
 		UUID to
 	) {
@@ -43,7 +43,7 @@ public class FlowUtils {
 	 * @param elementPos Line node position
 	 */
 	public static void insertLineNode(
-		FlowDataHolder holder,
+		FlowDataContainer holder,
 		UUID from,
 		UUID to,
 		UUID nodeId,
@@ -75,7 +75,7 @@ public class FlowUtils {
 		holder.addData(nodeToEnd);
 	}
 
-	public static RelationshipGraph getRelationshipGraph(FlowDataHolder holder) {
+	public static RelationshipGraph getRelationshipGraph(FlowDataContainer holder) {
 		RelationshipGraph graph = new RelationshipGraph();
 		holder.getData()
 			.filter(data -> data instanceof FlowRelationshipData)

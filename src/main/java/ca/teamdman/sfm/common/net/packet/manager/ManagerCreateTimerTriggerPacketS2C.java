@@ -55,7 +55,6 @@ public class ManagerCreateTimerTriggerPacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_POSITION,
 				20
 			));
-			screen.CONTROLLER.onDataChange(msg.ELEMENT_ID);
 		}
 	}
 }

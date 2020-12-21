@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.flow.data.core;
 
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.api.distmarker.Dist;
@@ -56,7 +56,7 @@ public abstract class FlowData implements INBTSerializable<CompoundNBT>, ICopyab
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	public abstract IFlowController createController(
-		IFlowController parent
+	public abstract FlowComponent createController(
+		FlowComponent parent
 	);
 }

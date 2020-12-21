@@ -4,7 +4,7 @@
 
 package ca.teamdman.sfm.common.flow.data.impl;
 
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTileEntityRule;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
@@ -63,8 +63,8 @@ public class FlowTileEntityRuleData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public IFlowController createController(
-		IFlowController parent
+	public FlowComponent createController(
+		FlowComponent parent
 	) {
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;

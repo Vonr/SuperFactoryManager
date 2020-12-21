@@ -5,15 +5,16 @@ package ca.teamdman.sfm.common.flow.data.impl;
 
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public class RelationshipGraph implements FlowDataHolder {
+public class RelationshipGraph implements FlowDataContainer {
 
 	private final HashMap<UUID, Node> nodes = new HashMap<>();
 
@@ -141,6 +142,18 @@ public class RelationshipGraph implements FlowDataHolder {
 	@Override
 	public void clearData() {
 		clear();
+	}
+
+	@Override
+	public void notifyChanged(UUID id) {
+
+	}
+
+	@Override
+	public void onChange(
+		UUID id, Consumer<FlowData> callback
+	) {
+
 	}
 
 	@Override

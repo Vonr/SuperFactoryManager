@@ -6,8 +6,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
@@ -19,7 +18,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import net.minecraft.client.gui.screen.Screen;
 
-public class FlowRelationship implements IFlowView, IFlowController {
+public class FlowRelationship extends FlowComponent {
 
 	public static final Colour3f COLOUR = new Colour3f(0.4f, 0.4f, 0.4f);
 	public final ManagerFlowController CONTROLLER;
@@ -107,13 +106,8 @@ public class FlowRelationship implements IFlowView, IFlowController {
 	 * @return position pair
 	 */
 	public Optional<FlowRelationshipPositionPair> getPositions() {
-		Optional<IFlowTangible> from = CONTROLLER.getController(data.from)
-			.filter(c -> c instanceof IFlowTangible)
-			.map(c -> (IFlowTangible) c);
-		Optional<IFlowTangible> to = CONTROLLER.getController(data.to)
-			.filter(c -> c instanceof IFlowTangible)
-			.map(c -> (IFlowTangible) c);
-
+		Optional<FlowComponent> from = CONTROLLER.findFirstChild(data.from);
+		Optional<FlowComponent> to = CONTROLLER.findFirstChild(data.to);
 		return from
 			.filter(__ -> to.isPresent())
 			.map(fromShape -> new FlowRelationshipPositionPair(

@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.flow.data.impl;
 
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowLineNode;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
@@ -38,8 +38,8 @@ public class FlowLineNodeData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public IFlowController createController(
-		IFlowController parent
+	public FlowComponent createController(
+		FlowComponent parent
 	) {
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;

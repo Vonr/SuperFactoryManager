@@ -57,12 +57,17 @@ public class ManagerCreateTileEntityRulePacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_POSITION,
 				msg.ELEMENT_ID
 			);
-			screen.addData(new FlowTileEntityRuleData(
+			FlowTileEntityRuleData data = new FlowTileEntityRuleData(
 				msg.ELEMENT_ID,
 				msg.OWNER_ID,
 				msg.ELEMENT_POSITION
-			));
-			screen.CONTROLLER.onDataChange(msg.ELEMENT_ID);
+			);
+			screen.addData(data);
+			screen.notifyChanged(msg.OWNER_ID);
+//			screen.CONTROLLER.getChildren().stream()
+//				.filter(c -> c instanceof TileEntityRuleDrawer
+//					&& ((TileEntityRuleDrawer) c).getData().getId().equals(msg.OWNER_ID))
+//				.forEach(c -> ((TileEntityRuleDrawer) c).addChild());
 		}
 	}
 }

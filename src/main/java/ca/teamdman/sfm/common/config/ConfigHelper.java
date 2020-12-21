@@ -45,5 +45,6 @@ public final class ConfigHelper {
 	public static void bakeClient(final ModConfig config) {
 		clientConfig = config;
 		Config.funCli = ConfigHolder.CLIENT.cliInt.get();
+		Config.allowMultipleRuleWindows = ConfigHolder.CLIENT.allowMultipleRuleWindows.get();
 	}
 }

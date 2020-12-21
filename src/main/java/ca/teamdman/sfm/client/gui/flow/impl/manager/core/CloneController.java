@@ -4,18 +4,18 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.Optional;
 import net.minecraft.client.gui.screen.Screen;
 
-public class CloneController implements IFlowController, IFlowView {
+public class CloneController extends FlowComponent {
 
 	public final ManagerFlowController CONTROLLER;
-	private IFlowCloneable cloning = null;
-	private int startX, startY;
+	private FlowComponent cloning = null;
 
 	public CloneController(ManagerFlowController CONTROLLER) {
 		this.CONTROLLER = CONTROLLER;
@@ -23,22 +23,19 @@ public class CloneController implements IFlowController, IFlowView {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		return Screen.hasControlDown() && CONTROLLER.getElementUnderMouse(mx, my)
-			.filter(c -> c instanceof IFlowCloneable)
-			.map(c -> ((IFlowCloneable) c))
-			.map(x -> {
-				startX = mx;
-				startY = my;
-				cloning = x;
-				return true;
-			})
-			.isPresent();
+		if (!Screen.hasControlDown()) {
+			return false;
+		}
+		Optional<FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my)
+			.filter(c -> c instanceof IFlowCloneable);
+		hit.ifPresent(c -> cloning = c);
+		return hit.isPresent();
 	}
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
 		if (cloning != null) {
-			cloning.cloneWithPosition(mx, my);
+			((IFlowCloneable) cloning).cloneWithPosition(mx, my);
 			cloning = null;
 			return true;
 		}
@@ -62,12 +59,11 @@ public class CloneController implements IFlowController, IFlowView {
 		if (cloning == null) {
 			return;
 		}
-		cloning.drawGhostAtPosition(screen, matrixStack, mx, my, deltaTime);
+		cloning.drawGhost(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	/**
-	 * Draws a blank background button at the position.
-	 * Unused because looked tacky.
+	 * Draws a blank background button at the position. Unused because looked tacky.
 	 */
 	private void drawGhostIndicator(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime

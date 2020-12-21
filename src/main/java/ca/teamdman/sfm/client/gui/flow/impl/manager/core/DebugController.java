@@ -5,15 +5,16 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.client.gui.screen.Screen;
 
-public class DebugController implements IFlowController, IFlowView {
+public class DebugController extends FlowComponent {
 
 	public final ManagerFlowController CONTROLLER;
 
@@ -39,10 +40,12 @@ public class DebugController implements IFlowController, IFlowView {
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		if (Screen.hasControlDown() && Screen.hasAltDown()) {
-			Optional<FlowData> check =
-				CONTROLLER.RELATIONSHIP_CONTROLLER.CONTROLLER.getElementUnderMouse(mx, my)
-					.flatMap(IFlowController::getData);
+			Optional<FlowData> check = CONTROLLER.getElementUnderMouse(mx, my)
+				.filter(c -> c instanceof FlowDataHolder)
+				.map(c -> ((FlowDataHolder) c).getData());
+
 			check.ifPresent(data -> drawId(screen, matrixStack, data.getId(), mx, my));
+
 			if (!check.isPresent()) {
 				CONTROLLER.RELATIONSHIP_CONTROLLER.getFlowRelationships()
 					.filter(r -> r.isCloseTo(mx, my))

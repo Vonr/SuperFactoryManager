@@ -4,59 +4,40 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
+import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPanel;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-public class FlowTileEntityRule implements IFlowController, IFlowView {
+public class FlowTileEntityRule extends FlowContainer {
 
-	public final FlowPanel HEADER;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowTileEntityRuleData DATA;
-	private boolean visible = false;
+	private String name = "Tile Entity Rule";
 
 	public FlowTileEntityRule(
 		ManagerFlowController controller, FlowTileEntityRuleData data
 	) {
+		super(data.getPosition(), new Size(200, 200));
 		this.CONTROLLER = controller;
-		this.HEADER = new FlowPanel(data.getPosition(), new Size(200, 25));
 		this.DATA = data;
 	}
 
-	public boolean isVisible() {
-		return visible;
-	}
-
-	public void setVisible(boolean visible) {
-		this.visible = visible;
-	}
 
 	@Override
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		if (visible) {
-			screen.drawString(
-				matrixStack,
-				"Tile Entity Rule",
-				HEADER.getPosition().getX(),
-				HEADER.getPosition().getY(),
-				0x999999
-			);
-		}
-	}
-
-	public void notifyOwner() {
-		CONTROLLER.getController(DATA.owner).ifPresent(IFlowController::onDataChange);
-	}
-
-	@Override
-	public void onDataChange() {
-		notifyOwner();
+		super.draw(screen, matrixStack, mx, my, deltaTime);
+		screen.drawString(
+			matrixStack,
+			"Tile Entity Rule",
+			5,
+			5,
+			0x999999
+		);
 	}
 
 	@Override

@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.flow.data.core;
 
+import java.util.Objects;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
 
@@ -24,6 +25,28 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	};
 	private boolean posChangeDebounce = false; // only fire positionChanged once when using setXY
 	private int x, y;
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		Position position = (Position) o;
+		return x == position.x &&
+			y == position.y;
+	}
+
+	public boolean equals(int x, int y) {
+		return x == this.x && y == this.y;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(x, y);
+	}
 
 	@SuppressWarnings("CopyConstructorMissesField")
 	public Position(Position copy) {

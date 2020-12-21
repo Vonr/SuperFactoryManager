@@ -5,21 +5,18 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible {
+public abstract class FlowIconButton extends FlowButton {
 
 	public final FlowSprite BACKGROUND;
 	public final FlowSprite ICON;
-	public final FlowPanel POS;
 
 	public FlowIconButton(ButtonBackground background, ButtonLabel label, Position pos) {
+		super(pos, new Size(background.WIDTH, background.HEIGHT));
 		this.BACKGROUND = createBackground(
 			ButtonBackground.SPRITE_SHEET,
 			background.LEFT,
@@ -34,7 +31,14 @@ public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible
 			label.WIDTH,
 			label.HEIGHT
 		);
-		this.POS = createPositionBox(pos, background.WIDTH, background.HEIGHT);
+	}
+
+	@Override
+	public void drawGhost(
+		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+	) {
+		BACKGROUND.drawGhostAt(screen, matrixStack, mx, my);
+		ICON.drawGhostAt(screen, matrixStack, mx + 4, my + 4);
 	}
 
 	public FlowIconButton(ButtonLabel type, Position pos) {
@@ -47,11 +51,6 @@ public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible
 
 	public FlowIconButton(ButtonLabel type) {
 		this(type, new Position(0, 0));
-	}
-
-	@Override
-	public boolean isInBounds(int mx, int my) {
-		return POS.isInBounds(mx, my);
 	}
 
 	public FlowSprite createBackground(
@@ -68,72 +67,13 @@ public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible
 		return new FlowSprite(sheet, left, top, width, height);
 	}
 
-	public FlowPanel createPositionBox(Position pos, int width, int height) {
-		return new FlowPanel(
-			pos,
-			new Size(width, height)
-		);
-	}
-
-	@Override
-	public boolean mousePressed(int mx, int my, int button) {
-		return POS.mousePressed(mx, my, button);
-	}
-
-	@Override
-	public boolean mouseReleased(int mx, int my, int button) {
-		if (POS.mouseReleased(mx, my, button)) {
-			return true;
-		}
-		if (isInBounds(mx, my)) {
-			this.onClicked(mx, my, button);
-		}
-		return false;
-	}
-
-	public void onClicked(int mx, int my, int button) {
-
-	}
-
-
-	@Override
-	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
-		return POS.mouseDragged(mx, my, button, dmx, dmy);
-	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
-	}
-
 	@Override
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx,
 		int my, float deltaTime
 	) {
-		Position p = POS.getPosition();
-		BACKGROUND.drawAt(screen, matrixStack, p);
-		ICON.drawAt(screen, matrixStack, p.getX() + 4, p.getY() + 4);
-	}
-
-	@Override
-	public Position getPosition() {
-		return POS.getPosition();
-	}
-
-	@Override
-	public Position getCentroid() {
-		return getPosition().withOffset(BACKGROUND.WIDTH / 2, BACKGROUND.HEIGHT / 2);
-	}
-
-	@Override
-	public Size getSize() {
-		return POS.getSize();
-	}
-
-	@Override
-	public Position snapToEdge(Position outside) {
-		return POS.snapToEdge(outside);
+		BACKGROUND.drawAt(screen, matrixStack, getPosition());
+		ICON.drawAt(screen, matrixStack, getPosition().getX() + 4, getPosition().getY() + 4);
 	}
 
 	public enum ButtonBackground {
@@ -160,7 +100,7 @@ public class FlowIconButton implements IFlowController, IFlowView, IFlowTangible
 		OUTPUT(0, 14, 14, 14),
 		ADD_INPUT(0, 28, 14, 14),
 		ADD_OUTPUT(0, 42, 14, 14),
-		TRIGGER(0,56,14,14),
+		TRIGGER(0, 56, 14, 14),
 		NONE(0, 0, 0, 0);
 
 		public static final ResourceLocation SPRITE_SHEET = new ResourceLocation(

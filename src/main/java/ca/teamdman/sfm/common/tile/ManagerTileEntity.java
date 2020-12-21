@@ -10,8 +10,8 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.block.ICable;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipGraph;
 import ca.teamdman.sfm.common.flow.execution.ManagerFlowExecutionController;
@@ -37,7 +37,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ManagerTileEntity extends TileEntity implements FlowDataHolder, ITickableTileEntity {
+public class ManagerTileEntity extends TileEntity implements FlowDataContainer, ITickableTileEntity {
 	private final ManagerFlowExecutionController CONTROLLER = new ManagerFlowExecutionController(this);
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 	public final RelationshipGraph graph = new RelationshipGraph();
@@ -101,6 +101,18 @@ public class ManagerTileEntity extends TileEntity implements FlowDataHolder, ITi
 	@Override
 	public void clearData() {
 		graph.clear();
+	}
+
+	@Override
+	public void notifyChanged(UUID id) {
+
+	}
+
+	@Override
+	public void onChange(
+		UUID id, Consumer<FlowData> callback
+	) {
+
 	}
 
 	@Override

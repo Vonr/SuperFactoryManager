@@ -6,21 +6,16 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-public class FlowPlusButton implements IFlowView, IFlowController, IFlowTangible {
+public abstract class FlowPlusButton extends FlowButton {
 
 	private final Colour3f COLOUR;
-	private final FlowPanel PANEL;
-	private boolean clicking = false;
 
 	public FlowPlusButton(Position pos, Size size, Colour3f colour) {
-		this.PANEL = new FlowPanel(pos, size);
+		super(pos, size);
 		this.COLOUR = colour;
 	}
 
@@ -28,10 +23,10 @@ public class FlowPlusButton implements IFlowView, IFlowController, IFlowTangible
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		int x = PANEL.getPosition().getX();
-		int y = PANEL.getPosition().getY();
-		int w = PANEL.getSize().getWidth();
-		int h = PANEL.getSize().getHeight();
+		int x = getPosition().getX();
+		int y = getPosition().getY();
+		int w = getSize().getWidth();
+		int h = getSize().getHeight();
 		int thickness = 4;
 		int margin = 2;
 		if (isInBounds(mx, my)) {
@@ -64,37 +59,4 @@ public class FlowPlusButton implements IFlowView, IFlowController, IFlowTangible
 			COLOUR
 		);
 	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
-	}
-
-	@Override
-	public Position getPosition() {
-		return PANEL.getPosition();
-	}
-
-	@Override
-	public Size getSize() {
-		return PANEL.getSize();
-	}
-
-	@Override
-	public boolean mousePressed(int mx, int my, int button) {
-		return clicking = isInBounds(mx, my);
-	}
-
-	@Override
-	public boolean mouseReleased(int mx, int my, int button) {
-		boolean wasClicking = clicking;
-		clicking = false;
-		if (wasClicking && isInBounds(mx, my)) {
-			onClicked();
-			return true;
-		}
-		return false;
-	}
-
-	public void onClicked() {};
 }

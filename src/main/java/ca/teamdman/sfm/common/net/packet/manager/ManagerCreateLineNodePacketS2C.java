@@ -79,7 +79,6 @@ public class ManagerCreateLineNodePacketS2C extends S2CManagerPacket {
 				msg.TO_TO_NODE_ID,
 				msg.ELEMENT_POSITION
 			);
-			screen.CONTROLLER.onDataChange(msg.NODE_ID);
 		}
 	}
 }

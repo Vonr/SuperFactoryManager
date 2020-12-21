@@ -57,11 +57,11 @@ public class ManagerToggleBlockPosSelectedS2C extends S2CManagerPacket {
 				msg.SELECTED
 			);
 			screen.getData(msg.DATA_ID)
-				.filter(data -> data instanceof SelectionHolder)
-				.filter(data -> ((SelectionHolder<?>) data).getSelectionType() == BlockPos.class)
-				.map(data -> (SelectionHolder<BlockPos>) data)
-				.ifPresent(data -> data.setSelected(msg.BLOCK_POS, msg.SELECTED));
-			screen.CONTROLLER.onDataChange(msg.DATA_ID);
+				.filter(data -> data instanceof SelectionHolder
+					&& ((SelectionHolder<?>) data).getSelectionType() == BlockPos.class)
+				.ifPresent(data ->
+					((SelectionHolder<BlockPos>) data).setSelected(msg.BLOCK_POS, msg.SELECTED));
+			screen.notifyChanged(msg.DATA_ID);
 		}
 	}
 }
