@@ -21,7 +21,7 @@ public abstract class CableInventoryDrawerButton extends
 		Position pos,
 		ButtonLabel label
 	) {
-		super(CONTROLLER, label);
+		super(CONTROLLER, pos, label);
 		this.CONTROLLER = CONTROLLER;
 		CONTROLLER.SCREEN.CONTAINER.getSource().getCableTiles()
 			.map(FlowTileEntityDrawerElement::new)

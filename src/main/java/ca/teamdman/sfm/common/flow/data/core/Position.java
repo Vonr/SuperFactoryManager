@@ -43,6 +43,20 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		return x == this.x && y == this.y;
 	}
 
+	public Position withConstantOffset(int x, int y) {
+		return new Position() {
+			@Override
+			public int getX() {
+				return Position.this.getX() + x;
+			}
+
+			@Override
+			public int getY() {
+				return Position.this.getY() + y;
+			}
+		};
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(x, y);

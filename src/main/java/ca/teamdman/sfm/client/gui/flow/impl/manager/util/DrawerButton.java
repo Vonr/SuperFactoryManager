@@ -9,6 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
+import ca.teamdman.sfm.common.flow.data.core.Position;
 
 public abstract class DrawerButton extends FlowContainer {
 
@@ -19,22 +20,34 @@ public abstract class DrawerButton extends FlowContainer {
 
 	public DrawerButton(
 		ManagerFlowController controller,
+		Position pos,
 		ButtonLabel label
 	) {
 		this.CONTROLLER = controller;
-		this.BUTTON = new FlowIconButton(label) {
+		this.BUTTON = new FlowIconButton(label, pos) {
 			@Override
 			public void onClicked(int mx, int my, int button) {
 				open = !open;
 				DRAWER.setEnabled(open);
 				DRAWER.setVisible(open);
 			}
+
+			@Override
+			public void onDragFinished(int dx, int dy, int mx, int my) {
+				DrawerButton.this.getPosition().setXY(getPosition());
+				DrawerButton.this.onDragFinished(dx, dy, mx, my);
+				DrawerButton.this.getPosition().setXY(0, 0);
+			}
 		};
 		this.DRAWER = new FlowDrawer(
+			pos.withConstantOffset(25,0),
 			FlowItemStack.ITEM_TOTAL_WIDTH,
 			FlowItemStack.ITEM_TOTAL_HEIGHT
 		);
 		addChild(BUTTON);
 		addChild(DRAWER);
+		DRAWER.setVisible(false);
+		DRAWER.setEnabled(false);
+		DRAWER.update();
 	}
 }

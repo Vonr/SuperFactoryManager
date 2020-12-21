@@ -97,7 +97,7 @@ public abstract class FlowComponent implements IFlowController, IFlowTangible, I
 	}
 
 	public void setVisible(boolean value) {
-		this.visible = false;
+		this.visible = value;
 	}
 
 	public boolean isEnabled() {

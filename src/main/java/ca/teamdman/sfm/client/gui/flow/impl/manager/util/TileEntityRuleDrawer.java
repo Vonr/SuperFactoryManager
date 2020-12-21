@@ -15,9 +15,7 @@ import ca.teamdman.sfm.common.config.Config;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
 
-public abstract class TileEntityRuleDrawer extends
-	DrawerButton {
-
+public abstract class TileEntityRuleDrawer extends DrawerButton {
 
 	public final ManagerFlowController CONTROLLER;
 	private final AddTileEntityRuleButton ADD_BUTTON;
@@ -27,9 +25,9 @@ public abstract class TileEntityRuleDrawer extends
 		Position pos,
 		ButtonLabel label
 	) {
-		super(CONTROLLER, label);
+		super(CONTROLLER, pos, label);
 		this.CONTROLLER = CONTROLLER;
-		this.ADD_BUTTON = new AddTileEntityRuleButton(pos, new Size(24, 24));
+		this.ADD_BUTTON = new AddTileEntityRuleButton(new Position(0, 0), new Size(24, 24));
 		this.DRAWER.addChild(ADD_BUTTON);
 		// discover existing children
 		this.CONTROLLER.SCREEN.getData(FlowTileEntityRuleData.class).forEach(this::addChild);
@@ -37,13 +35,16 @@ public abstract class TileEntityRuleDrawer extends
 
 	public void addChild(FlowTileEntityRuleData data) {
 		this.DRAWER.addChild(new TileEntityRuleDrawerElement(this, data));
+		this.DRAWER.update();
 	}
 
 	public void removeChild(FlowTileEntityRuleData data) {
 		this.DRAWER.getChildren().removeIf(c -> c instanceof TileEntityRuleDrawerElement
 			&& ((TileEntityRuleDrawerElement) c).DATA.equals(data));
+		this.DRAWER.update();
 	}
 
+	public abstract void createNewRule();
 
 	public static class TileEntityRuleDrawerElement extends FlowItemStack implements
 		FlowDrawerElement {
@@ -90,6 +91,7 @@ public abstract class TileEntityRuleDrawer extends
 	}
 
 	private class AddTileEntityRuleButton extends FlowPlusButton implements FlowDrawerElement {
+
 		public AddTileEntityRuleButton(Position pos, Size size) {
 			super(pos, size, new Colour3f(0.4f, 0.8f, 0.4f));
 		}
@@ -99,6 +101,4 @@ public abstract class TileEntityRuleDrawer extends
 			createNewRule();
 		}
 	}
-
-	public abstract void createNewRule();
 }

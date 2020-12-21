@@ -7,6 +7,8 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
+import ca.teamdman.sfm.client.gui.flow.core.Size;
+import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,8 +26,8 @@ public class FlowDrawer extends FlowContainer {
 	private final int ITEM_HEIGHT;
 	private int scroll = 0;
 
-	public FlowDrawer(int itemWidth, int itemHeight) {
-		super(5, 0, 0, 0);
+	public FlowDrawer(Position pos, int itemWidth, int itemHeight) {
+		super(pos, new Size(0, 0));
 		this.ITEM_WIDTH = itemWidth;
 		this.ITEM_HEIGHT = itemHeight;
 	}
@@ -147,7 +149,8 @@ public class FlowDrawer extends FlowContainer {
 		);
 		int start = scroll / (ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerRow();
 		int lastRow = start + (myHeight / ITEM_HEIGHT) * getItemsPerRow();
-		getChildren().stream().forEach(c -> c.draw(screen, matrixStack, mx, my, deltaTime));
+		super.draw(screen, matrixStack, mx, my, deltaTime);
+//		getChildren().stream().forEach(c -> c.draw(screen, matrixStack, mx, my, deltaTime));
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 		RenderSystem.popMatrix();
 	}

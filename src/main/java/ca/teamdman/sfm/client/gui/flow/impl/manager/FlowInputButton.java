@@ -25,7 +25,7 @@ public class FlowInputButton extends TileEntityRuleDrawer implements IFlowDeleta
 		ManagerFlowController controller,
 		FlowTileInputData data
 	) {
-		super(controller, data.getPosition(), ButtonLabel.INPUT);
+		super(controller, data.getPosition().copy(), ButtonLabel.INPUT);
 		this.DATA = data;
 	}
 

@@ -7,15 +7,21 @@ import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.TreeSet;
 import java.util.UUID;
 
 public abstract class FlowContainer extends FlowComponent {
 
-	private final TreeSet<FlowComponent> children = new TreeSet<>(
-		Comparator.comparingInt(IFlowView::getZIndex));
+	private final ArrayList<FlowComponent> children = new ArrayList<FlowComponent>() {
+		@Override
+		public boolean add(FlowComponent o) {
+			boolean rtn = super.add(o);
+			this.sort(Comparator.comparingInt(IFlowView::getZIndex));
+			return rtn;
+		}
+	};
 
 	public FlowContainer() {
 	}
@@ -44,7 +50,7 @@ public abstract class FlowContainer extends FlowComponent {
 		return super.getElementUnderMouse(mx, my);
 	}
 
-	public TreeSet<FlowComponent> getChildren() {
+	public ArrayList<FlowComponent> getChildren() {
 		return children;
 	}
 
@@ -67,37 +73,47 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
+		int pmx = mx - getPosition().getX();
+		int pmy = my - getPosition().getY();
 		return children.stream()
 			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.mousePressed(mx, my, button));
+			.anyMatch(c -> c.mousePressed(pmx, pmy, button));
 	}
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
+		int pmx = mx - getPosition().getX();
+		int pmy = my - getPosition().getY();
 		return children.stream()
 			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.mouseReleased(mx, my, button));
+			.anyMatch(c -> c.mouseReleased(pmx, pmy, button));
 	}
 
 	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
+		int pmx = mx - getPosition().getX();
+		int pmy = my - getPosition().getY();
 		return children.stream()
 			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.mouseDragged(mx, my, button, dmx, dmy));
+			.anyMatch(c -> c.mouseDragged(pmx, pmy, button, dmx, dmy));
 	}
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		int pmx = mx - getPosition().getX();
+		int pmy = my - getPosition().getY();
 		return children.stream()
 			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.keyPressed(keyCode, scanCode, modifiers, mx, my));
+			.anyMatch(c -> c.keyPressed(keyCode, scanCode, modifiers, pmx, pmy));
 	}
 
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		int pmx = mx - getPosition().getX();
+		int pmy = my - getPosition().getY();
 		return children.stream()
 			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.keyReleased(keyCode, scanCode, modifiers, mx, my));
+			.anyMatch(c -> c.keyReleased(keyCode, scanCode, modifiers, pmx, pmy));
 	}
 
 	@Override
@@ -116,7 +132,10 @@ public abstract class FlowContainer extends FlowComponent {
 		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
 		for (FlowComponent c : children) {
 			if (c.isVisible()) {
-				c.draw(screen, matrixStack, mx, my, deltaTime);
+				c.draw(
+					screen, matrixStack, mx - getPosition().getX(), my - getPosition().getY(),
+					deltaTime
+				);
 			}
 		}
 		matrixStack.pop();
