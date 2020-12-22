@@ -41,6 +41,11 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		this(0, 0);
 	}
 
+	public Position(CompoundNBT tag) {
+		this(0,0);
+		deserializeNBT(tag);
+	}
+
 	public static Position fromLong(long packed) {
 		return new Position((int) (packed >> 32), (int) packed);
 	}

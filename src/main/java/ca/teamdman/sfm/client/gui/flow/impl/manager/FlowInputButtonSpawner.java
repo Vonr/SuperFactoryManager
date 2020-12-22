@@ -8,6 +8,8 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
+import java.util.Collections;
+import java.util.UUID;
 
 public class FlowInputButtonSpawner extends FlowIconButton {
 
@@ -25,7 +27,9 @@ public class FlowInputButtonSpawner extends FlowIconButton {
 		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
 			managerFlowController.SCREEN.CONTAINER.windowId,
 			managerFlowController.SCREEN.CONTAINER.getSource().getPos(),
-			new Position(0, 0)
+			UUID.randomUUID(),
+			new Position(0, 0),
+			Collections.emptyList()
 		));
 	}
 }

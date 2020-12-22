@@ -137,18 +137,20 @@ public class FlowDrawer extends FlowContainer {
 		RenderSystem.pushMatrix();
 
 		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+
 		int x = getPosition().getX();
 		int y = getPosition().getY();
 		int myWidth = getSize().getWidth();
 		int myHeight = getSize().getHeight();
 		screen.scissorScaledArea(
-			x + PADDING_X / 2,
-			y + PADDING_Y / 2,
-			myWidth - PADDING_X,
-			myHeight - PADDING_Y
+			matrixStack, x,
+			y,
+			myWidth,
+			myHeight
 		);
-		int start = scroll / (ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerRow();
-		int lastRow = start + (myHeight / ITEM_HEIGHT) * getItemsPerRow();
+
+//		int start = scroll / (ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerRow();
+//		int lastRow = start + (myHeight / ITEM_HEIGHT) * getItemsPerRow();
 		super.draw(screen, matrixStack, mx, my, deltaTime);
 //		getChildren().stream().forEach(c -> c.draw(screen, matrixStack, mx, my, deltaTime));
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);

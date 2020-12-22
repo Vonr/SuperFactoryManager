@@ -9,12 +9,10 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
 
 public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, IFlowCloneable,
 	FlowDataHolder {
@@ -40,11 +38,14 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, 
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-			new Position(x, y)
-		));
+		//todo: switch to timertrigger flowdata
+//		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
+//			CONTROLLER.SCREEN.CONTAINER.windowId,
+//			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+//			UUID.randomUUID(),
+//			new Position(x, y),
+//			Collections.emptyList()
+//		));
 	}
 
 	@Override

@@ -10,58 +10,22 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
-import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
 import java.util.UUID;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowTileEntityRuleData extends FlowRuleData implements PositionHolder {
-
-	public Position position;
-
-
-	public FlowTileEntityRuleData(
-		UUID uuid, String name, ItemStack icon, Position position
-	) {
-		super(uuid, name, icon);
-		this.position = position;
-	}
+public class FlowTileEntityRuleData extends FlowRuleData {
 
 	public FlowTileEntityRuleData(CompoundNBT tag) {
 		this(null, null, null, null);
 		deserializeNBT(tag);
 	}
 
-	public ItemStack getIcon() {
-		return new ItemStack(Items.DIAMOND_AXE);
-	}
-
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT tag = super.serializeNBT();
-		tag.put("pos", position.serializeNBT());
-		tag.putString("name", name);
-		tag.put("icon", icon.serializeNBT());
-		FlowDataFactories.TILE_ENTITY_RULE.stampNBT(tag);
-		return tag;
-	}
-
-	@Override
-	public void merge(FlowData other) {
-		if (other instanceof FlowTileEntityRuleData) {
-			position = ((FlowTileEntityRuleData) other).position;
-		}
-	}
-
-	@Override
-	public void deserializeNBT(CompoundNBT tag) {
-		super.deserializeNBT(tag);
-		this.position.deserializeNBT(tag.getCompound("pos"));
-		this.name = tag.getString("name");
-		this.icon = ItemStack.read(tag.getCompound("icon"));
+	public FlowTileEntityRuleData(
+		UUID uuid, String name, ItemStack icon, Position position
+	) {
+		super(uuid, name, icon, position);
 	}
 
 	@Override
@@ -77,11 +41,6 @@ public class FlowTileEntityRuleData extends FlowRuleData implements PositionHold
 			return null;
 		}
 		return new FlowTileEntityRule((ManagerFlowController) parent, this);
-	}
-
-	@Override
-	public Position getPosition() {
-		return position;
 	}
 
 	public static class FlowTileEntityRuleDataFactory extends

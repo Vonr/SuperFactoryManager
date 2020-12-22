@@ -6,7 +6,9 @@ package ca.teamdman.sfm.client.gui.flow.core;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 
 public class Size {
+
 	private int width, height;
+
 	public Size(int width, int height) {
 		this.width = width;
 		this.height = height;
@@ -29,7 +31,8 @@ public class Size {
 	 * @return true if coordinate is contained in this element's area, false otherwise
 	 */
 	public boolean contains(Position myPosition, int x, int y) {
-		return x >= myPosition.getX() && x <= myPosition.getX() + width && y >= myPosition.getY() && y <= myPosition.getY() + height;
+		return x >= myPosition.getX() && x <= myPosition.getX() + width && y >= myPosition.getY()
+			&& y <= myPosition.getY() + height;
 	}
 
 	public int getWidth() {
@@ -46,5 +49,10 @@ public class Size {
 
 	public void setHeight(int height) {
 		this.height = height;
+	}
+
+	@Override
+	public String toString() {
+		return "Size[" + width + ", " + height + ']';
 	}
 }

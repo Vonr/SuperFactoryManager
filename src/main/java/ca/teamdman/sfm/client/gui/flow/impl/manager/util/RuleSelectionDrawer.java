@@ -13,14 +13,16 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowRuleData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
+import java.util.List;
+import java.util.stream.Collectors;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 
-public class ExistingRulesDrawer extends FlowDrawer {
+public abstract class RuleSelectionDrawer extends FlowDrawer {
 
 	final ManagerFlowController CONTROLLER;
 
-	public ExistingRulesDrawer(
+	public RuleSelectionDrawer(
 		ManagerFlowController controller, Position pos
 	) {
 		super(pos, FlowItemStack.ITEM_TOTAL_WIDTH, FlowItemStack.ITEM_TOTAL_HEIGHT);
@@ -37,26 +39,52 @@ public class ExistingRulesDrawer extends FlowDrawer {
 		getChildren().clear();
 		addChild(new AddRuleButton());
 		CONTROLLER.SCREEN.getData(FlowRuleData.class)
-			.map(RuleDrawerItem::new)
+			.map(data -> new DrawerItem(CONTROLLER, data))
 			.forEach(this::addChild);
 		update();
 	}
 
-	public static class RuleDrawerItem extends FlowItemStack {
+	public abstract void onSelectionChanged(List<FlowRuleData> data);
 
-		private final FlowRuleData DATA;
+	private class DrawerItem extends RuleDrawerItem {
 
-		public RuleDrawerItem(FlowRuleData rule) {
-			super(rule.icon, new Position());
-			this.DATA = rule;
+		public DrawerItem(
+			ManagerFlowController controller,
+			FlowRuleData rule
+		) {
+			super(RuleSelectionDrawer.this, controller, rule);
+		}
+
+		@Override
+		public void onClicked(boolean activate) {
+			onSelectionChanged(RuleSelectionDrawer.this.getChildren().stream()
+				.filter(c -> c instanceof DrawerItem)
+				.map(c -> ((DrawerItem) c))
+				.filter(c -> c.getIcon().isSelected())
+				.map(c -> ((FlowRuleData) c.getData()))
+				.collect(Collectors.toList()));
 		}
 	}
 
-	public class AddRuleButton extends FlowPlusButton {
+	private class AddRuleButton extends FlowPlusButton {
+		private ItemStack[] items = {
+			new ItemStack(Blocks.BEACON),
+			new ItemStack(Blocks.STONE),
+			new ItemStack(Blocks.SAND),
+			new ItemStack(Blocks.SANDSTONE),
+			new ItemStack(Blocks.TURTLE_EGG),
+			new ItemStack(Blocks.DRAGON_EGG),
+			new ItemStack(Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE),
+			new ItemStack(Blocks.CREEPER_HEAD),
+		};
 
 		public AddRuleButton(
 		) {
-			super(new Position(), new Size(24, 24), CONST.SELECTED);
+			super(
+				new Position(),
+				new Size(FlowItemStack.ITEM_TOTAL_WIDTH, FlowItemStack.ITEM_TOTAL_HEIGHT),
+				CONST.SELECTED
+			);
 		}
 
 		@Override
@@ -65,7 +93,7 @@ public class ExistingRulesDrawer extends FlowDrawer {
 				CONTROLLER.SCREEN.CONTAINER.windowId,
 				CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 				"New tile entity rule",
-				new ItemStack(Blocks.STONE),
+				items[(int) (Math.random()* items.length)],
 				new Position(0, 0)
 			));
 		}

@@ -6,7 +6,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
-import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.ISelectable;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
@@ -14,7 +13,7 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.item.ItemStack;
 
-public class FlowItemStack extends FlowComponent implements ISelectable {
+public class FlowItemStack extends FlowButton implements ISelectable {
 
 	public static final int ITEM_PADDING_X = 4;
 	public static final int ITEM_PADDING_Y = 4;
@@ -24,12 +23,20 @@ public class FlowItemStack extends FlowComponent implements ISelectable {
 	public static final int ITEM_TOTAL_WIDTH = ITEM_WIDTH + ITEM_PADDING_X;
 	private final ItemStack STACK;
 	private boolean selected;
+	private boolean selectable = true;
 	private boolean depressed = false;
-
 
 	public FlowItemStack(ItemStack stack, Position pos) {
 		super(pos, new Size(ITEM_TOTAL_WIDTH, ITEM_TOTAL_HEIGHT));
 		this.STACK = stack;
+	}
+
+	public boolean isSelectable() {
+		return selectable;
+	}
+
+	public void setSelectable(boolean selectable) {
+		this.selectable = selectable;
 	}
 
 	public ItemStack getItemStack() {
@@ -42,25 +49,15 @@ public class FlowItemStack extends FlowComponent implements ISelectable {
 		return this;
 	}
 
-
 	@Override
-	public boolean mousePressed(int mx, int my, int button) {
-		if (isInBounds(mx, my)) {
-			depressed = true;
-			return true;
-		}
-		return false;
+	public void onSelectionChanged() {
+
 	}
 
 	@Override
-	public boolean mouseReleased(int mx, int my, int button) {
-		boolean check = depressed;
-		depressed = false;
-		if (isInBounds(mx, my) && check) {
-			toggleSelected(true);
-			return true;
-		}
-		return false;
+	public void onClicked(int mx, int my, int button) {
+		toggleSelected();
+		onSelectionChanged();
 	}
 
 	private void drawSquare(BaseScreen screen, MatrixStack matrixStack, Colour3f colour) {
@@ -98,7 +95,9 @@ public class FlowItemStack extends FlowComponent implements ISelectable {
 	}
 
 	@Override
-	public void setSelected(boolean value, boolean notify) {
-		this.selected = value;
+	public void setSelected(boolean value) {
+		if (isSelectable()) {
+			this.selected = value;
+		}
 	}
 }

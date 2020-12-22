@@ -3,39 +3,69 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
+import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.util.TileEntityRuleDrawerButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.util.AssociatedRulesDrawer;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.data.core.RuleContainer;
+import ca.teamdman.sfm.common.flow.data.impl.FlowRuleData;
+import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.ItemStack;
 
-public class FlowInputButton extends TileEntityRuleDrawerButton implements IFlowDeletable,
-	IFlowCloneable, FlowDataHolder {
+public class FlowInputButton extends FlowContainer implements IFlowDeletable,
+	IFlowCloneable, FlowDataHolder, RuleContainer {
 
-	FlowTileInputData DATA;
+	private final FlowTileInputData DATA;
+	private final AssociatedRulesDrawer DRAWER;
+	private final ManagerFlowController CONTROLLER;
+	private final FlowIconButton BUTTON;
+	private boolean open = false;
 
 	public FlowInputButton(
 		ManagerFlowController controller,
 		FlowTileInputData data
 	) {
-		super(controller, data.getPosition().copy(), ButtonLabel.INPUT);
 		this.DATA = data;
+		this.CONTROLLER = controller;
+		this.BUTTON = new MyFlowIconButton(
+			ButtonLabel.INPUT,
+			data.getPosition().copy()
+		);
+		this.DRAWER = new MyAssociatedRulesDrawer(
+			controller,
+			BUTTON.getPosition().withConstantOffset(25, 0)
+		);
+		addChild(BUTTON);
+		addChild(DRAWER);
+		DRAWER.setVisible(false);
+		DRAWER.setEnabled(false);
 	}
+
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-			new Position(x, y)
+			UUID.randomUUID(),
+			new Position(x, y),
+			DATA.tileEntityRules
 		));
 	}
 
@@ -65,6 +95,70 @@ public class FlowInputButton extends TileEntityRuleDrawerButton implements IFlow
 
 	@Override
 	public void onDataChanged() {
-		getPosition().setXY(DATA.getPosition());
+		BUTTON.getPosition().setXY(DATA.getPosition());
+		DRAWER.rebuildChildrenDrawer();
+	}
+
+	@Override
+	public List<UUID> getRules() {
+		return DATA.tileEntityRules;
+	}
+
+	@Override
+	public void setRules(List<UUID> rules) {
+		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
+			CONTROLLER.SCREEN.CONTAINER.windowId,
+			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			DATA.getId(),
+			DATA.getPosition(),
+			rules
+		));
+	}
+
+	private class MyFlowIconButton extends FlowIconButton {
+
+		public MyFlowIconButton(ButtonLabel type, Position pos) {
+			super(type, pos);
+		}
+
+		@Override
+		public void onClicked(int mx, int my, int button) {
+			open = !open;
+			DRAWER.setVisible(open);
+			DRAWER.setEnabled(open);
+		}
+	}
+
+	private class MyAssociatedRulesDrawer extends AssociatedRulesDrawer {
+
+		public MyAssociatedRulesDrawer(ManagerFlowController controller, Position pos) {
+			super(controller, pos);
+		}
+
+		@Override
+		public List<FlowRuleData> getChildrenRules() {
+			List<FlowRuleData> rtn = new ArrayList<>();
+			rtn.add(new FlowTileEntityRuleData(
+				UUID.randomUUID(),
+				"howd7y",
+				new ItemStack(Blocks.ORANGE_BED),
+				new Position()
+			));
+			return rtn;
+//			return CONTROLLER.SCREEN.getData(FlowTileEntityRuleData.class)
+//				.filter(d -> DATA.tileEntityRules.contains(d.getId()))
+//				.collect(Collectors.toList());
+		}
+
+		@Override
+		public void setChildrenRules(List<UUID> rules) {
+			setRules(rules);
+		}
+
+		@Override
+		public List<FlowRuleData> getSelectableRules() {
+			return CONTROLLER.SCREEN.getData(FlowTileEntityRuleData.class)
+				.collect(Collectors.toList());
+		}
 	}
 }

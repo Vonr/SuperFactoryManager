@@ -10,7 +10,6 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
-import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
@@ -79,8 +78,8 @@ public class ManagerCreateTileEntityRulePacketC2S extends C2SManagerPacket {
 			manager.sendPacketToListeners(new ManagerCreateTileEntityRulePacketS2C(
 				msg.WINDOW_ID,
 				data.getId(),
-				"New tile entity rule",
-				new ItemStack(Blocks.STONE),
+				msg.NAME,
+				msg.ICON,
 				msg.ELEMENT_POSITION
 			));
 		}

@@ -7,9 +7,11 @@ public interface ISelectable {
 
 	boolean isSelected();
 
-	void setSelected(boolean value, boolean notify);
+	void setSelected(boolean value);
 
-	default void toggleSelected(boolean notify) {
-		setSelected(!isSelected(), notify);
+	default void toggleSelected() {
+		setSelected(!isSelected());
 	}
+
+	void onSelectionChanged();
 }

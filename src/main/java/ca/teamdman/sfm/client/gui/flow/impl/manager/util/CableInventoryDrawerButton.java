@@ -41,11 +41,8 @@ public abstract class CableInventoryDrawerButton extends
 		}
 
 		@Override
-		public void setSelected(boolean value, boolean notify) {
-			super.setSelected(value, notify);
-			if (notify) {
-				CableInventoryDrawerButton.this.setSelected(this.TILE.getPos(), value);
-			}
+		public void onSelectionChanged() {
+			CableInventoryDrawerButton.this.setSelected(this.TILE.getPos(), isSelected());
 		}
 	}
 }
