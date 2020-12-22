@@ -9,7 +9,7 @@ import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 
 public class FlowLineNode extends FlowIconButton implements FlowDataHolder {
 

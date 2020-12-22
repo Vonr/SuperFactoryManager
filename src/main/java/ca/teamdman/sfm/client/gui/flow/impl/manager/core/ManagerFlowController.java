@@ -13,7 +13,7 @@ import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.lwjgl.glfw.GLFW;

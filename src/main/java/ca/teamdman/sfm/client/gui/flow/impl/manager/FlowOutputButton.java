@@ -12,9 +12,9 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleBlockPosSelectedC2S;
+import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSelectedC2S;
 import net.minecraft.util.math.BlockPos;
 
 public class FlowOutputButton extends CableInventoryDrawerButton implements

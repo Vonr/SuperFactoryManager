@@ -9,18 +9,23 @@ import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
 import java.util.UUID;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 
 public class ManagerCreateTileEntityRulePacketS2C extends S2CManagerPacket {
 
+	private final String NAME;
+	private final ItemStack ICON;
 	private final Position ELEMENT_POSITION;
 	private final UUID ELEMENT_ID;
-	private final UUID OWNER_ID;
 
-	public ManagerCreateTileEntityRulePacketS2C(int windowId, UUID elementId, UUID ownerId, Position elementPosition) {
+	public ManagerCreateTileEntityRulePacketS2C(
+		int windowId, UUID elementId, String name, ItemStack icon, Position elementPosition
+	) {
 		super(windowId);
 		this.ELEMENT_ID = elementId;
-		this.OWNER_ID = ownerId;
+		this.NAME = name;
+		this.ICON = icon;
 		this.ELEMENT_POSITION = elementPosition;
 	}
 
@@ -32,7 +37,8 @@ public class ManagerCreateTileEntityRulePacketS2C extends S2CManagerPacket {
 			PacketBuffer buf
 		) {
 			SFMUtil.writeUUID(msg.ELEMENT_ID, buf);
-			SFMUtil.writeUUID(msg.OWNER_ID, buf);
+			buf.writeString(msg.NAME);
+			buf.writeItemStack(msg.ICON);
 			buf.writeLong(msg.ELEMENT_POSITION.toLong());
 		}
 
@@ -41,7 +47,8 @@ public class ManagerCreateTileEntityRulePacketS2C extends S2CManagerPacket {
 			return new ManagerCreateTileEntityRulePacketS2C(
 				windowId,
 				SFMUtil.readUUID(buf),
-				SFMUtil.readUUID(buf),
+				buf.readString(),
+				buf.readItemStack(),
 				Position.fromLong(buf.readLong())
 			);
 		}
@@ -59,11 +66,11 @@ public class ManagerCreateTileEntityRulePacketS2C extends S2CManagerPacket {
 			);
 			FlowTileEntityRuleData data = new FlowTileEntityRuleData(
 				msg.ELEMENT_ID,
-				msg.OWNER_ID,
+				msg.NAME,
+				msg.ICON,
 				msg.ELEMENT_POSITION
 			);
 			screen.addData(data);
-			screen.notifyChanged(msg.OWNER_ID);
 //			screen.CONTROLLER.getChildren().stream()
 //				.filter(c -> c instanceof TileEntityRuleDrawer
 //					&& ((TileEntityRuleDrawer) c).getData().getId().equals(msg.OWNER_ID))

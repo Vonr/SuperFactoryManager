@@ -1,13 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.common.net.packet.manager;
+package ca.teamdman.sfm.common.net.packet.manager.patch;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
+import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 
@@ -55,7 +57,7 @@ public class ManagerPositionPacketS2C extends S2CManagerPacket {
 				.ifPresent(data -> {
 					((PositionHolder) data).getPosition().setXY(msg.ELEMENT_POSITION);
 				});
-			screen.notifyChanged(msg.ELEMENT_ID);
+			screen.notifyChanged(msg.ELEMENT_ID, ChangeType.UPDATED);
 		}
 	}
 }

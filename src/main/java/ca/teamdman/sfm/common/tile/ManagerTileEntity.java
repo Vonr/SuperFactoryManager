@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import net.minecraft.block.Block;
@@ -37,10 +38,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ManagerTileEntity extends TileEntity implements FlowDataContainer, ITickableTileEntity {
-	private final ManagerFlowExecutionController CONTROLLER = new ManagerFlowExecutionController(this);
-	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
+public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
+	ITickableTileEntity {
+
 	public final RelationshipGraph graph = new RelationshipGraph();
+	private final ManagerFlowExecutionController CONTROLLER = new ManagerFlowExecutionController(
+		this);
+	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 
 	public ManagerTileEntity() {
 		this(TileEntityRegistrar.Tiles.MANAGER);
@@ -83,13 +87,18 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer, 
 
 	@Override
 	public void addData(FlowData data) {
-		graph.addNode(data);
-		if (data instanceof FlowRelationshipData) {
-			graph.putEdge(
-				data.getId(),
-				((FlowRelationshipData) data).from,
-				((FlowRelationshipData) data).to
-			);
+		Optional<FlowData> existing = graph.getData(data.getId());
+		if (existing.isPresent()) {
+			existing.get().merge(data);
+		} else {
+			graph.addNode(data);
+			if (data instanceof FlowRelationshipData) {
+				graph.putEdge(
+					data.getId(),
+					((FlowRelationshipData) data).from,
+					((FlowRelationshipData) data).to
+				);
+			}
 		}
 	}
 
@@ -104,13 +113,15 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer, 
 	}
 
 	@Override
-	public void notifyChanged(UUID id) {
+	public void notifyChanged(
+		UUID id, ChangeType type
+	) {
 
 	}
 
 	@Override
 	public void onChange(
-		UUID id, Consumer<FlowData> callback
+		UUID id, BiConsumer<FlowData, ChangeType> callback
 	) {
 
 	}
@@ -119,7 +130,6 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer, 
 	public Optional<FlowData> getData(UUID id) {
 		return graph.getData(id);
 	}
-
 
 
 	public void addContainerListener(ServerPlayerEntity player) {
@@ -203,7 +213,6 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer, 
 	}
 
 
-
 	@Override
 	public void read(BlockState state, CompoundNBT tag) {
 		super.read(state, tag);
@@ -231,7 +240,9 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer, 
 	}
 
 	public Stream<TileEntity> getCableTiles() {
-		if (world == null) return Stream.empty();
+		if (world == null) {
+			return Stream.empty();
+		}
 		return getCableNeighbours()
 			.distinct()
 			.map(pos -> world.getTileEntity(pos))

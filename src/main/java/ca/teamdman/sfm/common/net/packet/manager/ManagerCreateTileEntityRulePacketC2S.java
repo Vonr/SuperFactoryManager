@@ -10,17 +10,23 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 
 public class ManagerCreateTileEntityRulePacketC2S extends C2SManagerPacket {
 
+	private final String NAME;
+	private final ItemStack ICON;
 	private final Position ELEMENT_POSITION;
-	private final UUID OWNER_ID;
 
-	public ManagerCreateTileEntityRulePacketC2S(int windowId, BlockPos pos, UUID owner, Position elementPosition) {
+	public ManagerCreateTileEntityRulePacketC2S(
+		int windowId, BlockPos pos, String name, ItemStack icon, Position elementPosition
+	) {
 		super(windowId, pos);
-		this.OWNER_ID = owner;
+		this.NAME = name;
+		this.ICON = icon;
 		this.ELEMENT_POSITION = elementPosition;
 	}
 
@@ -31,7 +37,8 @@ public class ManagerCreateTileEntityRulePacketC2S extends C2SManagerPacket {
 			ManagerCreateTileEntityRulePacketC2S msg,
 			PacketBuffer buf
 		) {
-			buf.writeString(msg.OWNER_ID.toString());
+			buf.writeString(msg.NAME);
+			buf.writeItemStack(msg.ICON);
 			buf.writeLong(msg.ELEMENT_POSITION.toLong());
 		}
 
@@ -43,16 +50,20 @@ public class ManagerCreateTileEntityRulePacketC2S extends C2SManagerPacket {
 			return new ManagerCreateTileEntityRulePacketC2S(
 				windowId,
 				tilePos,
-				SFMUtil.readUUID(buf),
+				buf.readString(),
+				buf.readItemStack(),
 				Position.fromLong(buf.readLong())
 			);
 		}
 
 		@Override
-		public void handleDetailed(ManagerCreateTileEntityRulePacketC2S msg, ManagerTileEntity manager) {
+		public void handleDetailed(
+			ManagerCreateTileEntityRulePacketC2S msg, ManagerTileEntity manager
+		) {
 			FlowData data = new FlowTileEntityRuleData(
 				UUID.randomUUID(),
-				msg.OWNER_ID,
+				msg.NAME,
+				msg.ICON,
 				msg.ELEMENT_POSITION
 			);
 
@@ -68,7 +79,8 @@ public class ManagerCreateTileEntityRulePacketC2S extends C2SManagerPacket {
 			manager.sendPacketToListeners(new ManagerCreateTileEntityRulePacketS2C(
 				msg.WINDOW_ID,
 				data.getId(),
-				msg.OWNER_ID,
+				"New tile entity rule",
+				new ItemStack(Blocks.STONE),
 				msg.ELEMENT_POSITION
 			));
 		}

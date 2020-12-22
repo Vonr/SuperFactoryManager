@@ -3,8 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
+import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
+import ca.teamdman.sfm.client.gui.flow.core.IFlowTangible;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawerElement;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowTileEntity;
 import ca.teamdman.sfm.common.flow.data.core.Position;
@@ -30,7 +31,8 @@ public abstract class CableInventoryDrawerButton extends
 
 	public abstract void setSelected(BlockPos tilePos, boolean value);
 
-	public class FlowTileEntityDrawerElement extends FlowTileEntity implements FlowDrawerElement {
+	public class FlowTileEntityDrawerElement extends FlowTileEntity implements
+		IFlowController, IFlowTangible {
 
 		public FlowTileEntityDrawerElement(
 			TileEntity tile

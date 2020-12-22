@@ -1,12 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.common.net.packet.manager;
+package ca.teamdman.sfm.common.net.packet.manager.patch;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
 import ca.teamdman.sfm.common.flow.data.core.SelectionHolder;
+import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
@@ -61,7 +63,7 @@ public class ManagerToggleBlockPosSelectedS2C extends S2CManagerPacket {
 					&& ((SelectionHolder<?>) data).getSelectionType() == BlockPos.class)
 				.ifPresent(data ->
 					((SelectionHolder<BlockPos>) data).setSelected(msg.BLOCK_POS, msg.SELECTED));
-			screen.notifyChanged(msg.DATA_ID);
+			screen.notifyChanged(msg.DATA_ID, ChangeType.UPDATED);
 		}
 	}
 }

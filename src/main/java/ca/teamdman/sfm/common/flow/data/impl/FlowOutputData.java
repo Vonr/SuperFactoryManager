@@ -61,6 +61,14 @@ public class FlowOutputData extends FlowData implements PositionHolder,
 	}
 
 	@Override
+	public void merge(FlowData other) {
+		if (other instanceof FlowOutputData) {
+			position = ((FlowOutputData) other).position;
+			selected = ((FlowOutputData) other).selected;
+		}
+	}
+
+	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {

@@ -5,7 +5,7 @@ package ca.teamdman.sfm.common.flow.data.core;
 
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 public interface FlowDataContainer {
@@ -28,10 +28,17 @@ public interface FlowDataContainer {
 	void addData(FlowData data);
 	void clearData();
 
-	void notifyChanged(UUID id);
-	void onChange(UUID id, Consumer<FlowData> callback);
+	void notifyChanged(
+		UUID id, ChangeType type
+	);
+	void onChange(UUID id, BiConsumer<FlowData, ChangeType> callback);
 
-	default void notifyChanged(FlowData data) {
-		notifyChanged(data.getId());
+	default void notifyChanged(FlowData data, ChangeType type) {
+		notifyChanged(data.getId(), type);
 	};
+
+	public enum ChangeType {
+		ADDED,
+		UPDATED;
+	}
 }

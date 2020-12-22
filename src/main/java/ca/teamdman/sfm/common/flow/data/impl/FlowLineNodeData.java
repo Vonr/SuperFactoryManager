@@ -38,6 +38,13 @@ public class FlowLineNodeData extends FlowData implements PositionHolder {
 	}
 
 	@Override
+	public void merge(FlowData other) {
+		if (other instanceof FlowLineNodeData) {
+			position = ((FlowLineNodeData) other).position;
+		}
+	}
+
+	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {

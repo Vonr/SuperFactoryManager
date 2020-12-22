@@ -7,7 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
 
 public class FlowInputButtonSpawner extends FlowIconButton {
 
@@ -22,7 +22,7 @@ public class FlowInputButtonSpawner extends FlowIconButton {
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerCreateInputPacketC2S(
+		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
 			managerFlowController.SCREEN.CONTAINER.windowId,
 			managerFlowController.SCREEN.CONTAINER.getSource().getPos(),
 			new Position(0, 0)

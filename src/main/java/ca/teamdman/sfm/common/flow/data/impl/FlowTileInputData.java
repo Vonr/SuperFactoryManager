@@ -11,21 +11,30 @@ import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
 import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.util.Constants.NBT;
 
 public class FlowTileInputData extends FlowData implements PositionHolder {
 
 	public Position position;
+	public List<UUID> tileEntityRules;
 
-	public FlowTileInputData(UUID uuid, Position position) {
+	public FlowTileInputData(UUID uuid, Position position, List<UUID> ters) {
 		super(uuid);
 		this.position = position;
+		this.tileEntityRules = ters;
 	}
 
 	public FlowTileInputData(CompoundNBT tag) {
-		this(null, new Position());
+		this(null, new Position(), new ArrayList<>());
 		deserializeNBT(tag);
 	}
 
@@ -34,19 +43,35 @@ public class FlowTileInputData extends FlowData implements PositionHolder {
 	public CompoundNBT serializeNBT() {
 		CompoundNBT tag = super.serializeNBT();
 		tag.put("pos", position.serializeNBT());
+		tag.put("ters", tileEntityRules.stream()
+			.map(UUID::toString)
+			.map(StringNBT::valueOf)
+			.collect(ListNBT::new, ListNBT::add, ListNBT::addAll));
 		FlowDataFactories.INPUT.stampNBT(tag);
 		return tag;
+	}
+
+	@Override
+	public void merge(FlowData other) {
+		if (other instanceof FlowTileInputData) {
+			position = ((FlowTileInputData) other).position;
+			tileEntityRules = ((FlowTileInputData) other).tileEntityRules;
+		}
 	}
 
 	@Override
 	public void deserializeNBT(CompoundNBT tag) {
 		super.deserializeNBT(tag);
 		this.position.deserializeNBT(tag.getCompound("pos"));
+		this.tileEntityRules = tag.getList("ters", NBT.TAG_STRING).stream()
+			.map(INBT::getString)
+			.map(UUID::fromString)
+			.collect(Collectors.toList());
 	}
 
 	@Override
 	public FlowData copy() {
-		return new FlowTileInputData(getId(), getPosition());
+		return new FlowTileInputData(getId(), getPosition(), tileEntityRules);
 	}
 
 	@Override

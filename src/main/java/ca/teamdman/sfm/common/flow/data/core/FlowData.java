@@ -37,6 +37,12 @@ public abstract class FlowData implements INBTSerializable<CompoundNBT>, ICopyab
 		return tag;
 	}
 
+	/**
+	 * Copies all data from {@code other} into {@code this}
+	 * @param other
+	 */
+	public abstract void merge(FlowData other);
+
 	@Override
 	public abstract FlowData copy();
 

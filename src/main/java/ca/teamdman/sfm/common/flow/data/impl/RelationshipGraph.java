@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 public class RelationshipGraph implements FlowDataContainer {
@@ -145,13 +145,15 @@ public class RelationshipGraph implements FlowDataContainer {
 	}
 
 	@Override
-	public void notifyChanged(UUID id) {
+	public void notifyChanged(
+		UUID id, ChangeType type
+	) {
 
 	}
 
 	@Override
 	public void onChange(
-		UUID id, Consumer<FlowData> callback
+		UUID id, BiConsumer<FlowData, ChangeType> callback
 	) {
 
 	}

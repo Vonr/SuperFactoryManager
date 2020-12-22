@@ -6,8 +6,6 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket.C2SHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketC2S;
@@ -18,14 +16,16 @@ import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePack
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTimerTriggerPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTimerTriggerPacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleBlockPosSelectedC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerToggleBlockPosSelectedS2C;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket.S2CHandler;
+import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSelectedC2S;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSelectedS2C;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketS2C;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -71,12 +71,12 @@ public class PacketHandler {
 			new ManagerPositionPacketS2C.Handler());
 
 		register(i++,
-			ManagerCreateInputPacketC2S.class,
-			new ManagerCreateInputPacketC2S.Handler());
+			ManagerFlowInputDataPacketC2S.class,
+			new ManagerFlowInputDataPacketC2S.Handler());
 
 		register(i++,
-			ManagerCreateInputPacketS2C.class,
-			new ManagerCreateInputPacketS2C.Handler());
+			ManagerFlowInputDataPacketS2C.class,
+			new ManagerFlowInputDataPacketS2C.Handler());
 
 		register(i++,
 			ManagerCreateRelationshipPacketC2S.class,

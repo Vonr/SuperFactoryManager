@@ -18,8 +18,8 @@ public class FlowItemStack extends FlowComponent implements ISelectable {
 
 	public static final int ITEM_PADDING_X = 4;
 	public static final int ITEM_PADDING_Y = 4;
-	public static final int ITEM_WIDTH = 20;
-	public static final int ITEM_HEIGHT = 20;
+	public static final int ITEM_WIDTH = 16;
+	public static final int ITEM_HEIGHT = 16;
 	public static final int ITEM_TOTAL_HEIGHT = ITEM_HEIGHT + ITEM_PADDING_Y;
 	public static final int ITEM_TOTAL_WIDTH = ITEM_WIDTH + ITEM_PADDING_X;
 	private final ItemStack STACK;

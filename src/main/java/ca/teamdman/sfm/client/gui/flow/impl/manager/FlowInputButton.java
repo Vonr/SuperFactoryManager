@@ -6,19 +6,18 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.util.TileEntityRuleDrawer;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.util.TileEntityRuleDrawerButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateInputPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerDeletePacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerPositionPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
 
-public class FlowInputButton extends TileEntityRuleDrawer implements IFlowDeletable,
+public class FlowInputButton extends TileEntityRuleDrawerButton implements IFlowDeletable,
 	IFlowCloneable, FlowDataHolder {
 
 	FlowTileInputData DATA;
@@ -33,7 +32,7 @@ public class FlowInputButton extends TileEntityRuleDrawer implements IFlowDeleta
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerCreateInputPacketC2S(
+		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 			new Position(x, y)
@@ -56,16 +55,6 @@ public class FlowInputButton extends TileEntityRuleDrawer implements IFlowDeleta
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 			DATA.getId(),
 			getPosition()
-		));
-	}
-
-	@Override
-	public void createNewRule() {
-		PacketHandler.INSTANCE.sendToServer(new ManagerCreateTileEntityRulePacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-			DATA.getId(),
-			new Position(0, 0)
 		));
 	}
 

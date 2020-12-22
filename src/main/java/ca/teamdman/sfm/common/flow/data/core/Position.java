@@ -4,6 +4,7 @@
 package ca.teamdman.sfm.common.flow.data.core;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
 
@@ -25,6 +26,24 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	};
 	private boolean posChangeDebounce = false; // only fire positionChanged once when using setXY
 	private int x, y;
+
+	@SuppressWarnings("CopyConstructorMissesField")
+	public Position(Position copy) {
+		this(copy.x, copy.y);
+	}
+
+	public Position(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public Position() {
+		this(0, 0);
+	}
+
+	public static Position fromLong(long packed) {
+		return new Position((int) (packed >> 32), (int) packed);
+	}
 
 	@Override
 	public boolean equals(Object o) {
@@ -57,27 +76,23 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		};
 	}
 
+	public Position withConstantOffset(Supplier<Integer> x, Supplier<Integer> y) {
+		return new Position() {
+			@Override
+			public int getY() {
+				return Position.this.getY() + y.get();
+			}
+
+			@Override
+			public int getX() {
+				return Position.this.getX() + x.get();
+			}
+		};
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(x, y);
-	}
-
-	@SuppressWarnings("CopyConstructorMissesField")
-	public Position(Position copy) {
-		this(copy.x, copy.y);
-	}
-
-	public Position(int x, int y) {
-		this.x = x;
-		this.y = y;
-	}
-
-	public Position() {
-		this(0, 0);
-	}
-
-	public static Position fromLong(long packed) {
-		return new Position((int) (packed >> 32), (int) packed);
 	}
 
 	public long toLong() {

@@ -14,8 +14,8 @@ import net.minecraftforge.fml.network.NetworkEvent.Context;
 
 public abstract class C2SManagerPacket implements IContainerTilePacket {
 
-	final BlockPos TILE_POSITION;
-	final int WINDOW_ID;
+	public final BlockPos TILE_POSITION;
+	public final int WINDOW_ID;
 
 	public C2SManagerPacket(int WINDOW_ID, BlockPos TILE_POSITION) {
 		this.WINDOW_ID = WINDOW_ID;

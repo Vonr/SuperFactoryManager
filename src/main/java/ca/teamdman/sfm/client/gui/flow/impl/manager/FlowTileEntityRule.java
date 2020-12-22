@@ -22,6 +22,8 @@ public class FlowTileEntityRule extends FlowContainer {
 		super(data.getPosition(), new Size(200, 200));
 		this.CONTROLLER = controller;
 		this.DATA = data;
+		setVisible(false);
+		setEnabled(false);
 	}
 
 

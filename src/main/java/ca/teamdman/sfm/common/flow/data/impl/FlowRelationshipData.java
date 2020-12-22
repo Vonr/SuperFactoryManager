@@ -37,6 +37,14 @@ public class FlowRelationshipData extends FlowData {
 	}
 
 	@Override
+	public void merge(FlowData other) {
+		if (other instanceof FlowRelationshipData) {
+			from = ((FlowRelationshipData) other).from;
+			to = ((FlowRelationshipData) other).to;
+		}
+	}
+
+	@Override
 	public FlowData copy() {
 		return new FlowRelationshipData(getId(), from, to);
 	}

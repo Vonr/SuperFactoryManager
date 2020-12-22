@@ -18,48 +18,55 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowTileEntityRuleData extends FlowData implements PositionHolder {
+public class FlowTileEntityRuleData extends FlowRuleData implements PositionHolder {
 
 	public Position position;
-	public UUID owner;
 
 
 	public FlowTileEntityRuleData(
-		UUID uuid, UUID owner, Position position
+		UUID uuid, String name, ItemStack icon, Position position
 	) {
-		super(uuid);
-		this.owner = owner;
+		super(uuid, name, icon);
 		this.position = position;
+	}
+
+	public FlowTileEntityRuleData(CompoundNBT tag) {
+		this(null, null, null, null);
+		deserializeNBT(tag);
 	}
 
 	public ItemStack getIcon() {
 		return new ItemStack(Items.DIAMOND_AXE);
 	}
 
-	public FlowTileEntityRuleData(CompoundNBT tag) {
-		this(null, null, new Position());
-		deserializeNBT(tag);
-	}
-
 	@Override
 	public CompoundNBT serializeNBT() {
 		CompoundNBT tag = super.serializeNBT();
-		tag.putString("owner", owner.toString());
 		tag.put("pos", position.serializeNBT());
+		tag.putString("name", name);
+		tag.put("icon", icon.serializeNBT());
 		FlowDataFactories.TILE_ENTITY_RULE.stampNBT(tag);
 		return tag;
 	}
 
 	@Override
+	public void merge(FlowData other) {
+		if (other instanceof FlowTileEntityRuleData) {
+			position = ((FlowTileEntityRuleData) other).position;
+		}
+	}
+
+	@Override
 	public void deserializeNBT(CompoundNBT tag) {
 		super.deserializeNBT(tag);
-		this.owner = UUID.fromString(tag.getString("owner"));
 		this.position.deserializeNBT(tag.getCompound("pos"));
+		this.name = tag.getString("name");
+		this.icon = ItemStack.read(tag.getCompound("icon"));
 	}
 
 	@Override
 	public FlowData copy() {
-		return new FlowTileEntityRuleData(getId(), owner, getPosition());
+		return new FlowTileEntityRuleData(getId(), name, icon, getPosition());
 	}
 
 	@Override
