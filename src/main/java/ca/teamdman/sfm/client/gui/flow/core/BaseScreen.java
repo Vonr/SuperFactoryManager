@@ -338,7 +338,7 @@ public abstract class BaseScreen extends Screen {
 	/**
 	 * Scissors from the top left corner
 	 *
-	 * @param matrixStack
+	 * @param matrixStack Matrix stack to grab transforms from
 	 * @param left        Scaled distance from the left of the screen
 	 * @param top         Scaled distance from the top of the screen
 	 * @param width       Scaled width
@@ -374,8 +374,8 @@ public abstract class BaseScreen extends Screen {
 	 * point should be the top left of the bounds. Second point should be the lower right of the
 	 * bounds.
 	 *
+	 * @param matrixStack Matrix stack to grab transforms from
 	 * @param x1          First point x coord
-	 * @param matrixStack
 	 * @param y1          First point y coord
 	 * @param x2          Second point x coord
 	 * @param y2          Second point y coord
