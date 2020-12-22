@@ -397,11 +397,16 @@ public abstract class BaseScreen extends Screen {
 	 * Draws a scaled version of the item
 	 */
 	public void drawItemStack(MatrixStack matrixStack, ItemStack stack, int x, int y) {
+		RenderSystem.pushMatrix();
+		// Minecraft ItemStack renderer does not currently use MatrixStack
+		// Therefore, we must manually apply our current stack to the RenderSystem.
+		RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
 		Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(
 			stack,
-			(int) unscaleX(x),// + guiLeft + 10,
-			(int) unscaleY(y)// + guiTop + 1
+			x,
+			y
 		);
+		RenderSystem.popMatrix();
 	}
 
 	/**
