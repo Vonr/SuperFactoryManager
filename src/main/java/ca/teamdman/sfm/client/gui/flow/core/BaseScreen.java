@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector4f;
 import net.minecraft.util.text.ITextComponent;
 import org.lwjgl.opengl.GL11;
 
@@ -337,12 +338,26 @@ public abstract class BaseScreen extends Screen {
 	/**
 	 * Scissors from the top left corner
 	 *
-	 * @param left   Scaled distance from the left of the screen
-	 * @param top    Scaled distance from the top of the screen
-	 * @param width  Scaled width
-	 * @param height Scaled height
+	 * @param matrixStack
+	 * @param left        Scaled distance from the left of the screen
+	 * @param top         Scaled distance from the top of the screen
+	 * @param width       Scaled width
+	 * @param height      Scaled height
 	 */
-	public void scissorScaledArea(int left, int top, int width, int height) {
+	public void scissorScaledArea(
+		MatrixStack matrixStack, int left, int top, int width, int height
+	) {
+		left-=guiLeft;
+		top-=guiTop;
+		Matrix4f mat = matrixStack.getLast().getMatrix().copy();
+		Vector4f start = new Vector4f(left, top, 1, 1);
+		start.transform(mat);
+		Vector4f end = new Vector4f(left + width, top + height, 1, 1);
+		end.transform(mat);
+		left = (int) start.getX();
+		top = (int) start.getY();
+		width = (int) (end.getX() - start.getX());
+		height = (int) (end.getY() - start.getY());
 		double mcScale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
 		double myScale = getScale();
 		int mcHeight = Minecraft.getInstance().getMainWindow().getFramebufferHeight();
@@ -350,6 +365,7 @@ public abstract class BaseScreen extends Screen {
 		int scissorBottom = (int) (mcHeight - unscaleY(top + height) * mcScale);
 		int scissorWidth = (int) (width * myScale * mcScale);
 		int scissorHeight = (int) (height * myScale * mcScale);
+
 		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);
 	}
 
@@ -358,13 +374,16 @@ public abstract class BaseScreen extends Screen {
 	 * point should be the top left of the bounds. Second point should be the lower right of the
 	 * bounds.
 	 *
-	 * @param x1 First point x coord
-	 * @param y1 First point y coord
-	 * @param x2 Second point x coord
-	 * @param y2 Second point y coord
+	 * @param x1          First point x coord
+	 * @param matrixStack
+	 * @param y1          First point y coord
+	 * @param x2          Second point x coord
+	 * @param y2          Second point y coord
 	 */
-	public void scissorScaledPositions(int x1, int y1, int x2, int y2) {
-		scissorScaledArea(x1, y1, x2 - x1, y2 - y1);
+	public void scissorScaledPositions(
+		int x1, MatrixStack matrixStack, int y1, int x2, int y2
+	) {
+		scissorScaledArea(matrixStack, x1, y1, x2 - x1, y2 - y1);
 	}
 
 	/**
