@@ -347,9 +347,14 @@ public abstract class BaseScreen extends Screen {
 	public void scissorScaledArea(
 		MatrixStack matrixStack, int left, int top, int width, int height
 	) {
+		// Move start coords to accomodate our own gui border
 		left-=guiLeft;
 		top-=guiTop;
+
+		// Grab current transform from the matrixStack
 		Matrix4f mat = matrixStack.getLast().getMatrix().copy();
+
+		// Convert points using matrix stack transform
 		Vector4f start = new Vector4f(left, top, 1, 1);
 		start.transform(mat);
 		Vector4f end = new Vector4f(left + width, top + height, 1, 1);
@@ -358,6 +363,8 @@ public abstract class BaseScreen extends Screen {
 		top = (int) start.getY();
 		width = (int) (end.getX() - start.getX());
 		height = (int) (end.getY() - start.getY());
+
+		// Convert points to accommodate minecraft scaling messing with us
 		double mcScale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
 		double myScale = getScale();
 		int mcHeight = Minecraft.getInstance().getMainWindow().getFramebufferHeight();
@@ -366,6 +373,7 @@ public abstract class BaseScreen extends Screen {
 		int scissorWidth = (int) (width * myScale * mcScale);
 		int scissorHeight = (int) (height * myScale * mcScale);
 
+		// Apply actual cropping
 		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);
 	}
 
