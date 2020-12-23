@@ -9,7 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData;
+import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
@@ -18,9 +18,9 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, 
 	FlowDataHolder {
 
 	public final ManagerFlowController CONTROLLER;
-	public FlowTimerTriggerData data;
+	public TimerTriggerFlowData data;
 
-	public FlowTimerTrigger(ManagerFlowController controller, FlowTimerTriggerData data) {
+	public FlowTimerTrigger(ManagerFlowController controller, TimerTriggerFlowData data) {
 		super(ButtonLabel.TRIGGER, data.getPosition().copy());
 		this.CONTROLLER = controller;
 		this.data = data;

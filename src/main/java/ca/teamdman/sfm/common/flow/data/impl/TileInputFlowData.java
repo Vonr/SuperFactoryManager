@@ -22,18 +22,18 @@ import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class FlowTileInputData extends FlowData implements PositionHolder {
+public class TileInputFlowData extends FlowData implements PositionHolder {
 
 	public Position position;
 	public List<UUID> tileEntityRules;
 
-	public FlowTileInputData(UUID uuid, Position position, List<UUID> ters) {
+	public TileInputFlowData(UUID uuid, Position position, List<UUID> ters) {
 		super(uuid);
 		this.position = position;
 		this.tileEntityRules = ters;
 	}
 
-	public FlowTileInputData(CompoundNBT tag) {
+	public TileInputFlowData(CompoundNBT tag) {
 		this(null, new Position(), new ArrayList<>());
 		deserializeNBT(tag);
 	}
@@ -53,9 +53,9 @@ public class FlowTileInputData extends FlowData implements PositionHolder {
 
 	@Override
 	public void merge(FlowData other) {
-		if (other instanceof FlowTileInputData) {
-			position = ((FlowTileInputData) other).position;
-			tileEntityRules = ((FlowTileInputData) other).tileEntityRules;
+		if (other instanceof TileInputFlowData) {
+			position = ((TileInputFlowData) other).position;
+			tileEntityRules = ((TileInputFlowData) other).tileEntityRules;
 		}
 	}
 
@@ -71,7 +71,7 @@ public class FlowTileInputData extends FlowData implements PositionHolder {
 
 	@Override
 	public FlowData copy() {
-		return new FlowTileInputData(getId(), getPosition(), tileEntityRules);
+		return new TileInputFlowData(getId(), getPosition(), tileEntityRules);
 	}
 
 	@Override
@@ -89,15 +89,15 @@ public class FlowTileInputData extends FlowData implements PositionHolder {
 		return new FlowInputButton((ManagerFlowController) parent, this);
 	}
 
-	public static class FlowInputDataFactory extends FlowDataFactory<FlowTileInputData> {
+	public static class FlowInputDataFactory extends FlowDataFactory<TileInputFlowData> {
 
 		public FlowInputDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public FlowTileInputData fromNBT(CompoundNBT tag) {
-			return new FlowTileInputData(tag);
+		public TileInputFlowData fromNBT(CompoundNBT tag) {
+			return new TileInputFlowData(tag);
 		}
 	}
 }

@@ -12,7 +12,7 @@ import ca.teamdman.sfm.common.block.ICable;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
-import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
+import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipGraph;
 import ca.teamdman.sfm.common.flow.execution.ManagerFlowExecutionController;
 import ca.teamdman.sfm.common.net.PacketHandler;
@@ -75,7 +75,7 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 		}
 		//todo: prevent LineNode from allowing duplicate connections to an element
 		UUID relationshipId = UUID.randomUUID();
-		FlowRelationshipData data = new FlowRelationshipData(
+		RelationshipFlowData data = new RelationshipFlowData(
 			relationshipId,
 			fromId,
 			toId
@@ -92,11 +92,11 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 			existing.get().merge(data);
 		} else {
 			graph.addNode(data);
-			if (data instanceof FlowRelationshipData) {
+			if (data instanceof RelationshipFlowData) {
 				graph.putEdge(
 					data.getId(),
-					((FlowRelationshipData) data).from,
-					((FlowRelationshipData) data).to
+					((RelationshipFlowData) data).from,
+					((RelationshipFlowData) data).to
 				);
 			}
 		}
@@ -208,7 +208,7 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 			})
 			.filter(Optional::isPresent)
 			.map(Optional::get)
-			.sorted(Comparator.comparing(a -> a instanceof FlowRelationshipData))
+			.sorted(Comparator.comparing(a -> a instanceof RelationshipFlowData))
 			.forEach(this::addData);
 	}
 

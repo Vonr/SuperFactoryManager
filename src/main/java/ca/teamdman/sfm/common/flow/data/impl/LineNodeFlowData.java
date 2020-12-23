@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.common.flow.data.impl;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTimerTrigger;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowLineNode;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
@@ -15,19 +15,17 @@ import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowTimerTriggerData extends FlowData implements PositionHolder {
+public class LineNodeFlowData extends FlowData implements PositionHolder {
 
 	public Position position;
-	public int interval;
 
-	public FlowTimerTriggerData(UUID uuid, Position position, int interval) {
+	public LineNodeFlowData(UUID uuid, Position position) {
 		super(uuid);
 		this.position = position;
-		this.interval = interval;
 	}
 
-	public FlowTimerTriggerData(CompoundNBT tag) {
-		this(null, new Position(), 20);
+	public LineNodeFlowData(CompoundNBT tag) {
+		this(null, new Position());
 		deserializeNBT(tag);
 	}
 
@@ -35,16 +33,14 @@ public class FlowTimerTriggerData extends FlowData implements PositionHolder {
 	public CompoundNBT serializeNBT() {
 		CompoundNBT tag = super.serializeNBT();
 		tag.put("pos", position.serializeNBT());
-		tag.putInt("interval", interval);
-		FlowDataFactories.TIMER_TRIGGER.stampNBT(tag);
+		FlowDataFactories.LINE_NODE.stampNBT(tag);
 		return tag;
 	}
 
 	@Override
 	public void merge(FlowData other) {
-		if (other instanceof FlowTimerTriggerData) {
-			position = ((FlowTimerTriggerData) other).position;
-			interval = ((FlowTimerTriggerData) other).interval;
+		if (other instanceof LineNodeFlowData) {
+			position = ((LineNodeFlowData) other).position;
 		}
 	}
 
@@ -55,19 +51,18 @@ public class FlowTimerTriggerData extends FlowData implements PositionHolder {
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;
 		}
-		return new FlowTimerTrigger((ManagerFlowController) parent, this);
+		return new FlowLineNode((ManagerFlowController) parent, this);
 	}
 
 	@Override
 	public void deserializeNBT(CompoundNBT tag) {
 		super.deserializeNBT(tag);
 		this.position.deserializeNBT(tag.getCompound("pos"));
-		this.interval = tag.getInt("interval");
 	}
 
 	@Override
 	public FlowData copy() {
-		return new FlowTimerTriggerData(getId(), getPosition(), interval);
+		return new LineNodeFlowData(getId(), getPosition());
 	}
 
 	@Override
@@ -75,15 +70,15 @@ public class FlowTimerTriggerData extends FlowData implements PositionHolder {
 		return position;
 	}
 
-	public static class FlowTimerTriggerDataFactory extends FlowDataFactory<FlowTimerTriggerData> {
+	public static class LineNodeFlowDataFactory extends FlowDataFactory<LineNodeFlowData> {
 
-		public FlowTimerTriggerDataFactory(ResourceLocation key) {
+		public LineNodeFlowDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public FlowTimerTriggerData fromNBT(CompoundNBT tag) {
-			return new FlowTimerTriggerData(tag);
+		public LineNodeFlowData fromNBT(CompoundNBT tag) {
+			return new LineNodeFlowData(tag);
 		}
 	}
 }

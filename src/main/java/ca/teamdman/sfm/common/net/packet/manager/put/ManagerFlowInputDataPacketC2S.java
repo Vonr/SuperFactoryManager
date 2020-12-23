@@ -6,7 +6,7 @@ package ca.teamdman.sfm.common.net.packet.manager.put;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
+import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.List;
@@ -59,7 +59,7 @@ public class ManagerFlowInputDataPacketC2S extends C2SManagerPacket {
 
 		@Override
 		public void handleDetailed(ManagerFlowInputDataPacketC2S msg, ManagerTileEntity manager) {
-			FlowTileInputData data = new FlowTileInputData(
+			TileInputFlowData data = new TileInputFlowData(
 				msg.ELEMENT_ID,
 				msg.ELEMENT_POSITION,
 				msg.RULES

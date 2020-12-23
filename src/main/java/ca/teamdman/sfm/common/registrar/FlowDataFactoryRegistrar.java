@@ -5,18 +5,18 @@ package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
-import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData;
-import ca.teamdman.sfm.common.flow.data.impl.FlowLineNodeData.LineNodeFlowDataFactory;
-import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData;
-import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData.FlowOutputDataFactory;
-import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
-import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData.FlowRelationshipDataFactory;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData.FlowInputDataFactory;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData.FlowTimerTriggerDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.LineNodeFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.LineNodeFlowData.LineNodeFlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.OutputFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.OutputFlowData.FlowOutputDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData.FlowRelationshipDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData.FlowTileEntityRuleDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData.FlowInputDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData.FlowTimerTriggerDataFactory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
@@ -56,11 +56,11 @@ public class FlowDataFactoryRegistrar {
 
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataFactories {
-		public static final FlowDataFactory<FlowTileInputData> INPUT = WAITING;
-		public static final FlowDataFactory<FlowOutputData> OUTPUT = WAITING;
-		public static final FlowDataFactory<FlowRelationshipData> RELATIONSHIP = WAITING;
-		public static final FlowDataFactory<FlowLineNodeData> LINE_NODE = WAITING;
-		public static final FlowDataFactory<FlowTimerTriggerData> TIMER_TRIGGER = WAITING;
+		public static final FlowDataFactory<TileInputFlowData> INPUT = WAITING;
+		public static final FlowDataFactory<OutputFlowData> OUTPUT = WAITING;
+		public static final FlowDataFactory<RelationshipFlowData> RELATIONSHIP = WAITING;
+		public static final FlowDataFactory<LineNodeFlowData> LINE_NODE = WAITING;
+		public static final FlowDataFactory<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;
 		public static final FlowDataFactory<TileEntityRuleFlowData> TILE_ENTITY_RULE = WAITING;
 	}
 

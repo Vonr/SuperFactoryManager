@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.common.flow.execution;
 
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData;
+import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -21,7 +21,7 @@ public class ManagerFlowExecutionController implements ITickableTileEntity {
 	@Override
 	public void tick() {
 		Deque<FlowData> toVisit = MANAGER.getData()
-			.filter(data -> data instanceof FlowTimerTriggerData)
+			.filter(data -> data instanceof TimerTriggerFlowData)
 			.collect(Collectors.toCollection(ArrayDeque::new));
 
 		while (toVisit.size() > 0) {

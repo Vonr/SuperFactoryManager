@@ -15,9 +15,9 @@ import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.RuleContainer;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
 import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 	IFlowCloneable, FlowDataHolder, RuleContainer {
 
-	private final FlowTileInputData DATA;
+	private final TileInputFlowData DATA;
 	private final AssociatedRulesDrawer DRAWER;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowIconButton BUTTON;
@@ -37,7 +37,7 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 
 	public FlowInputButton(
 		ManagerFlowController controller,
-		FlowTileInputData data
+		TileInputFlowData data
 	) {
 		this.DATA = data;
 		this.CONTROLLER = controller;

@@ -6,7 +6,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.common.flow.data.impl.FlowRelationshipData;
+import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 
@@ -58,7 +58,7 @@ public class ManagerCreateRelationshipPacketS2C extends S2CManagerPacket {
 				msg.TO_ID,
 				msg.ELEMENT_ID
 			);
-			screen.addData(new FlowRelationshipData(msg.ELEMENT_ID, msg.FROM_ID, msg.TO_ID));
+			screen.addData(new RelationshipFlowData(msg.ELEMENT_ID, msg.FROM_ID, msg.TO_ID));
 		}
 	}
 }

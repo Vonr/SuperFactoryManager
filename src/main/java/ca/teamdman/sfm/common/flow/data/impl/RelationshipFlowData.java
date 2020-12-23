@@ -13,16 +13,16 @@ import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowRelationshipData extends FlowData {
+public class RelationshipFlowData extends FlowData {
 	public UUID from, to;
 
-	public FlowRelationshipData(UUID uuid, UUID from, UUID to) {
+	public RelationshipFlowData(UUID uuid, UUID from, UUID to) {
 		super(uuid);
 		this.from = from;
 		this.to = to;
 	}
 
-	public FlowRelationshipData(CompoundNBT tag) {
+	public RelationshipFlowData(CompoundNBT tag) {
 		this(null, null, null);
 		deserializeNBT(tag);
 	}
@@ -38,15 +38,15 @@ public class FlowRelationshipData extends FlowData {
 
 	@Override
 	public void merge(FlowData other) {
-		if (other instanceof FlowRelationshipData) {
-			from = ((FlowRelationshipData) other).from;
-			to = ((FlowRelationshipData) other).to;
+		if (other instanceof RelationshipFlowData) {
+			from = ((RelationshipFlowData) other).from;
+			to = ((RelationshipFlowData) other).to;
 		}
 	}
 
 	@Override
 	public FlowData copy() {
-		return new FlowRelationshipData(getId(), from, to);
+		return new RelationshipFlowData(getId(), from, to);
 	}
 
 
@@ -71,15 +71,15 @@ public class FlowRelationshipData extends FlowData {
 		return new FlowRelationship((ManagerFlowController) parent, this);
 	}
 
-	public static class FlowRelationshipDataFactory extends FlowDataFactory<FlowRelationshipData> {
+	public static class FlowRelationshipDataFactory extends FlowDataFactory<RelationshipFlowData> {
 
 		public FlowRelationshipDataFactory(ResourceLocation registryName) {
 			super(registryName);
 		}
 
 		@Override
-		public FlowRelationshipData fromNBT(CompoundNBT tag) {
-			return new FlowRelationshipData(tag);
+		public RelationshipFlowData fromNBT(CompoundNBT tag) {
+			return new RelationshipFlowData(tag);
 		}
 	}
 }

@@ -22,22 +22,22 @@ import net.minecraft.nbt.LongArrayNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
-public class FlowOutputData extends FlowData implements PositionHolder,
+public class OutputFlowData extends FlowData implements PositionHolder,
 	SelectionHolder<BlockPos> {
 
 	public Position position;
 	public Set<BlockPos> selected;
-	public FlowOutputData(UUID uuid, Position position) {
+	public OutputFlowData(UUID uuid, Position position) {
 		this(uuid, position, Collections.emptyList());
 	}
 
-	public FlowOutputData(UUID uuid, Position position, Collection<BlockPos> selected) {
+	public OutputFlowData(UUID uuid, Position position, Collection<BlockPos> selected) {
 		super(uuid);
 		this.position = position;
 		this.selected = new HashSet<>(selected);
 	}
 
-	public FlowOutputData(CompoundNBT tag) {
+	public OutputFlowData(CompoundNBT tag) {
 		this(null, new Position());
 		deserializeNBT(tag);
 	}
@@ -62,9 +62,9 @@ public class FlowOutputData extends FlowData implements PositionHolder,
 
 	@Override
 	public void merge(FlowData other) {
-		if (other instanceof FlowOutputData) {
-			position = ((FlowOutputData) other).position;
-			selected = ((FlowOutputData) other).selected;
+		if (other instanceof OutputFlowData) {
+			position = ((OutputFlowData) other).position;
+			selected = ((OutputFlowData) other).selected;
 		}
 	}
 
@@ -106,7 +106,7 @@ public class FlowOutputData extends FlowData implements PositionHolder,
 
 	@Override
 	public FlowData copy() {
-		return new FlowOutputData(getId(), getPosition(), selected);
+		return new OutputFlowData(getId(), getPosition(), selected);
 	}
 
 	@Override
@@ -114,15 +114,15 @@ public class FlowOutputData extends FlowData implements PositionHolder,
 		return position;
 	}
 
-	public static class FlowOutputDataFactory extends FlowDataFactory<FlowOutputData> {
+	public static class FlowOutputDataFactory extends FlowDataFactory<OutputFlowData> {
 
 		public FlowOutputDataFactory(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public FlowOutputData fromNBT(CompoundNBT tag) {
-			return new FlowOutputData(tag);
+		public OutputFlowData fromNBT(CompoundNBT tag) {
+			return new OutputFlowData(tag);
 		}
 	}
 }

@@ -7,7 +7,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData;
+import ca.teamdman.sfm.common.flow.data.impl.OutputFlowData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
@@ -46,7 +46,7 @@ public class ManagerCreateOutputPacketC2S extends C2SManagerPacket {
 
 		@Override
 		public void handleDetailed(ManagerCreateOutputPacketC2S msg, ManagerTileEntity manager) {
-			FlowData data = new FlowOutputData(
+			FlowData data = new OutputFlowData(
 				UUID.randomUUID(),
 				msg.ELEMENT_POSITION
 			);

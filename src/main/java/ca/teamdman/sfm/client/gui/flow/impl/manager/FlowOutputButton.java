@@ -9,7 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.util.CableInventoryDrawerButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowOutputData;
+import ca.teamdman.sfm.common.flow.data.impl.OutputFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
@@ -20,11 +20,11 @@ import net.minecraft.util.math.BlockPos;
 public class FlowOutputButton extends CableInventoryDrawerButton implements
 	IFlowCloneable, IFlowDeletable {
 
-	FlowOutputData DATA;
+	OutputFlowData DATA;
 
 	public FlowOutputButton(
 		ManagerFlowController controller,
-		FlowOutputData data
+		OutputFlowData data
 	) {
 		super(controller, data.getPosition(), ButtonLabel.OUTPUT);
 		this.DATA = data;

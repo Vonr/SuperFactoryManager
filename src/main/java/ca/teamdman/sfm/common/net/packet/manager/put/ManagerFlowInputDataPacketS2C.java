@@ -7,7 +7,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
+import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import java.util.List;
 import java.util.UUID;
@@ -66,7 +66,7 @@ public class ManagerFlowInputDataPacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_ID
 			);
 
-			screen.addData(new FlowTileInputData(
+			screen.addData(new TileInputFlowData(
 				msg.ELEMENT_ID,
 				msg.ELEMENT_POSITION,
 				msg.RULES

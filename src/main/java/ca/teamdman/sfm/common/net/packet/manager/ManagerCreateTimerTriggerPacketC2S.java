@@ -7,7 +7,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTimerTriggerData;
+import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
@@ -47,7 +47,7 @@ public class ManagerCreateTimerTriggerPacketC2S extends C2SManagerPacket {
 			ManagerCreateTimerTriggerPacketC2S msg,
 			ManagerTileEntity manager
 		) {
-			FlowData data = new FlowTimerTriggerData(UUID.randomUUID(), msg.ELEMENT_POSITION, 20);
+			FlowData data = new TimerTriggerFlowData(UUID.randomUUID(), msg.ELEMENT_POSITION, 20);
 			SFM.LOGGER.debug(
 				SFMUtil.getMarker(getClass()),
 				"C2S received, creating trigger with id {}",
