@@ -53,6 +53,7 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		addChild(DRAWER);
 		DRAWER.setVisible(false);
 		DRAWER.setEnabled(false);
+		DRAWER.setDraggable(false);
 		controller.SCREEN.onChange(null, this::onDataChanged);
 	}
 

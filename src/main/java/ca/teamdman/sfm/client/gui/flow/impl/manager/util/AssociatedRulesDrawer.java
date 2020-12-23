@@ -51,6 +51,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 
 		SELECTION_RULES_DRAWER.setVisible(false);
 		SELECTION_RULES_DRAWER.setEnabled(false);
+		SELECTION_RULES_DRAWER.setDraggable(false);
+		CHILDREN_RULES_DRAWER.setDraggable(false);
 		rebuildChildrenDrawer();
 		rebuildSelectionDrawer();
 		addChild(CHILDREN_RULES_DRAWER);
@@ -109,6 +111,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		) {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
+			setDraggable(false);
 		}
 
 		@Override
@@ -141,6 +144,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		) {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
+			setDraggable(false);
 		}
 
 		@Override
@@ -167,6 +171,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 				new Size(FlowItemStack.ITEM_TOTAL_WIDTH, FlowItemStack.ITEM_TOTAL_HEIGHT),
 				CONST.SELECTED
 			);
+			setDraggable(false);
 		}
 
 		@Override
@@ -196,6 +201,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 				new Size(FlowItemStack.ITEM_TOTAL_WIDTH, FlowItemStack.ITEM_TOTAL_HEIGHT),
 				CONST.SELECTED
 			);
+			setDraggable(false);
 		}
 
 		@Override

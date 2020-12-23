@@ -59,12 +59,16 @@ public class FlowDrawer extends FlowContainer {
 
 	@Override
 	public boolean mouseScrolled(int mx, int my, double scroll) {
-		if (scroll > 0) {
-			scrollUp();
+		if (isInBounds(mx, my)) {
+			if (scroll > 0) {
+				scrollUp();
+			} else {
+				scrollDown();
+			}
+			return true;
 		} else {
-			scrollDown();
+			return false;
 		}
-		return true;
 	}
 
 	public void scrollDown() {
@@ -123,12 +127,19 @@ public class FlowDrawer extends FlowContainer {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
+		screen.clearRect(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			getSize().getWidth(),
+			getSize().getHeight()
+		);
 		drawBackground(screen, matrixStack);
 
 		// Enable clipping for drawer contents
 		// +2 -4 for border padding
 		GL11.glEnable(GL11.GL_SCISSOR_TEST);
-		screen.scissorScaledArea(
+		screen.scissorRect(
 			matrixStack,
 			getPosition().getX() + 2,
 			getPosition().getY() + 2,

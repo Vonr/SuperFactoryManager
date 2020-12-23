@@ -140,9 +140,11 @@ public abstract class FlowContainer extends FlowComponent {
 		if (super.mouseScrolled(mx, my, scroll)) {
 			return true;
 		}
+		int pmx = mx - getPosition().getX();
+		int pmy = my - getPosition().getY();
 		return children.stream()
 			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.mouseScrolled(mx, my, scroll));
+			.anyMatch(c -> c.mouseScrolled(pmx, pmy, scroll));
 	}
 
 	@Override

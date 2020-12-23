@@ -367,7 +367,7 @@ public abstract class BaseScreen extends Screen {
 	 * @param width       Scaled width
 	 * @param height      Scaled height
 	 */
-	public void scissorScaledArea(
+	public void scissorRect(
 		MatrixStack matrixStack, int left, int top, int width, int height
 	) {
 		// Grab current transform from the matrixStack
@@ -394,23 +394,6 @@ public abstract class BaseScreen extends Screen {
 
 		// Apply actual cropping
 		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);
-	}
-
-	/**
-	 * Scissors such that only the area in the bounds is rendered. Measured from top left. First
-	 * point should be the top left of the bounds. Second point should be the lower right of the
-	 * bounds.
-	 *
-	 * @param matrixStack Matrix stack to grab transforms from
-	 * @param x1          First point x coord
-	 * @param y1          First point y coord
-	 * @param x2          Second point x coord
-	 * @param y2          Second point y coord
-	 */
-	public void scissorScaledPositions(
-		int x1, MatrixStack matrixStack, int y1, int x2, int y2
-	) {
-		scissorScaledArea(matrixStack, x1, y1, x2 - x1, y2 - y1);
 	}
 
 	/**
@@ -455,6 +438,13 @@ public abstract class BaseScreen extends Screen {
 		);
 		Minecraft.getInstance().getItemRenderer().zLevel = 0;
 		RenderSystem.popMatrix();
+	}
+
+	public void clearRect(MatrixStack matrixStack, int x, int y, int width, int height) {
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+		scissorRect(matrixStack, x, y, width, height);
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 	}
 
 	/**
