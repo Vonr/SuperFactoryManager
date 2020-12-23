@@ -323,6 +323,28 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
+	 * Draws a border on the inside of the given rect
+	 *
+	 * @param x         Rectangle start X
+	 * @param y         Rectangle start Y
+	 * @param width     Rectangle width
+	 * @param height    Rectangle height
+	 * @param thickness Border thickness
+	 */
+	public void drawBorder(
+		MatrixStack matrixStack, int x, int y, int width, int height, int thickness, Colour3f colour
+	) {
+		// Draw top
+		drawRect(matrixStack, x, y, width, thickness, colour);
+		// Draw bottom
+		drawRect(matrixStack, x, y + height - thickness, width, thickness, colour);
+		// Draw left
+		drawRect(matrixStack, x, y, thickness, height, colour);
+		// Draw right
+		drawRect(matrixStack, x + width - thickness, y, thickness, height, colour);
+	}
+
+	/**
 	 * Converts a local x value into a screen one.
 	 *
 	 * @param x Local value
@@ -337,6 +359,7 @@ public abstract class BaseScreen extends Screen {
 
 	/**
 	 * Scissors from the top left corner
+	 * Has some rounding issues, might be off by a pixel in either direction/size
 	 *
 	 * @param matrixStack Matrix stack to grab transforms from
 	 * @param left        Scaled distance from the left of the screen
@@ -347,11 +370,8 @@ public abstract class BaseScreen extends Screen {
 	public void scissorScaledArea(
 		MatrixStack matrixStack, int left, int top, int width, int height
 	) {
-		// Move start coords to accomodate our own gui border
-		left-=guiLeft;
-		top-=guiTop;
-
 		// Grab current transform from the matrixStack
+		// Includes our current scale and border accommodation
 		Matrix4f mat = matrixStack.getLast().getMatrix().copy();
 
 		// Convert points using matrix stack transform
@@ -359,19 +379,18 @@ public abstract class BaseScreen extends Screen {
 		start.transform(mat);
 		Vector4f end = new Vector4f(left + width, top + height, 1, 1);
 		end.transform(mat);
-		left = (int) start.getX();
-		top = (int) start.getY();
-		width = (int) (end.getX() - start.getX());
-		height = (int) (end.getY() - start.getY());
+		double mcScaledLeft = start.getX();
+		double mcScaledTop = start.getY();
+		double mcScaledWidth = (end.getX() - start.getX());
+		double mcScaledHeight = (end.getY() - start.getY());
 
 		// Convert points to accommodate minecraft scaling messing with us
 		double mcScale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
-		double myScale = getScale();
 		int mcHeight = Minecraft.getInstance().getMainWindow().getFramebufferHeight();
-		int scissorLeft = (int) (unscaleX(left) * mcScale);
-		int scissorBottom = (int) (mcHeight - unscaleY(top + height) * mcScale);
-		int scissorWidth = (int) (width * myScale * mcScale);
-		int scissorHeight = (int) (height * myScale * mcScale);
+		int scissorLeft = (int) Math.round(mcScaledLeft * mcScale);
+		int scissorBottom = (int) Math.round(mcHeight - (mcScaledTop + mcScaledHeight) * mcScale);
+		int scissorWidth = (int) Math.floor(mcScaledWidth * mcScale);
+		int scissorHeight = (int) Math.floor(mcScaledHeight * mcScale);
 
 		// Apply actual cropping
 		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);
