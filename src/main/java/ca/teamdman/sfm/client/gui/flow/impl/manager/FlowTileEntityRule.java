@@ -7,17 +7,17 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
+import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 public class FlowTileEntityRule extends FlowContainer {
 
 	private final ManagerFlowController CONTROLLER;
-	private final FlowTileEntityRuleData DATA;
+	private final TileEntityRuleFlowData DATA;
 	private String name = "Tile Entity Rule";
 
 	public FlowTileEntityRule(
-		ManagerFlowController controller, FlowTileEntityRuleData data
+		ManagerFlowController controller, TileEntityRuleFlowData data
 	) {
 		super(data.getPosition(), new Size(200, 200));
 		this.CONTROLLER = controller;

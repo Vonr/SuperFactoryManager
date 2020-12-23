@@ -15,7 +15,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.common.config.Config;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowRuleData;
+import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -40,23 +40,27 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 			FlowItemStack.ITEM_TOTAL_HEIGHT
 		);
 		this.SELECTION_RULES_DRAWER = new FlowDrawer(
-			new Position(),
+			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(
+				()->CHILDREN_RULES_DRAWER.getSize().getWidth() + 10,
+				()->0
+			),
 			FlowItemStack.ITEM_TOTAL_WIDTH,
 			FlowItemStack.ITEM_TOTAL_HEIGHT
 		);
-//		SELECTION_RULES_DRAWER.setVisible(false);
-//		SELECTION_RULES_DRAWER.setEnabled(false);
+
+		SELECTION_RULES_DRAWER.setVisible(false);
+		SELECTION_RULES_DRAWER.setEnabled(false);
 		rebuildChildrenDrawer();
 		rebuildSelectionDrawer();
 		addChild(CHILDREN_RULES_DRAWER);
 		addChild(SELECTION_RULES_DRAWER);
 	}
 
-	public abstract List<FlowRuleData> getChildrenRules();
+	public abstract List<RuleFlowData> getChildrenRules();
 
 	public abstract void setChildrenRules(List<UUID> rules);
 
-	public abstract List<FlowRuleData> getSelectableRules();
+	public abstract List<RuleFlowData> getSelectableRules();
 
 	public void rebuildChildrenDrawer() {
 		CHILDREN_RULES_DRAWER.getChildren().clear();
@@ -78,10 +82,10 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 
 	private class ChildRulesDrawerItem extends FlowItemStack {
 
-		public FlowRuleData DATA;
+		public RuleFlowData DATA;
 
 		public ChildRulesDrawerItem(
-			FlowRuleData data
+			RuleFlowData data
 		) {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
@@ -110,10 +114,10 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 
 	private class SelectionRulesDrawerItem extends FlowItemStack {
 
-		public FlowRuleData DATA;
+		public RuleFlowData DATA;
 
 		public SelectionRulesDrawerItem(
-			FlowRuleData data
+			RuleFlowData data
 		) {
 			super(data.getIcon(), new Position());
 			this.DATA = data;

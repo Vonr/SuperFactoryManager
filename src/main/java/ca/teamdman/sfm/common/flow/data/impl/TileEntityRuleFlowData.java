@@ -15,14 +15,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class FlowTileEntityRuleData extends FlowRuleData {
+public class TileEntityRuleFlowData extends RuleFlowData {
 
-	public FlowTileEntityRuleData(CompoundNBT tag) {
+	public TileEntityRuleFlowData(CompoundNBT tag) {
 		this(null, null, null, null);
 		deserializeNBT(tag);
 	}
 
-	public FlowTileEntityRuleData(
+	public TileEntityRuleFlowData(
 		UUID uuid, String name, ItemStack icon, Position position
 	) {
 		super(uuid, name, icon, position);
@@ -30,7 +30,7 @@ public class FlowTileEntityRuleData extends FlowRuleData {
 
 	@Override
 	public FlowData copy() {
-		return new FlowTileEntityRuleData(getId(), name, icon, getPosition());
+		return new TileEntityRuleFlowData(getId(), name, icon, getPosition());
 	}
 
 	@Override
@@ -44,15 +44,15 @@ public class FlowTileEntityRuleData extends FlowRuleData {
 	}
 
 	public static class FlowTileEntityRuleDataFactory extends
-		FlowDataFactory<FlowTileEntityRuleData> {
+		FlowDataFactory<TileEntityRuleFlowData> {
 
 		public FlowTileEntityRuleDataFactory(ResourceLocation registryName) {
 			super(registryName);
 		}
 
 		@Override
-		public FlowTileEntityRuleData fromNBT(CompoundNBT tag) {
-			return new FlowTileEntityRuleData(tag);
+		public TileEntityRuleFlowData fromNBT(CompoundNBT tag) {
+			return new TileEntityRuleFlowData(tag);
 		}
 	}
 }

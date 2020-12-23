@@ -136,6 +136,13 @@ public abstract class FlowComponent implements IFlowController, IFlowTangible, I
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
+		drawBackground(screen, matrixStack);
+	}
+
+	/**
+	 * Draws a rectangle at this component's position with its current dimensions
+	 */
+	public void drawBackground(BaseScreen screen, MatrixStack matrixStack) {
 		screen.drawRect(
 			matrixStack,
 			getPosition().getX(),

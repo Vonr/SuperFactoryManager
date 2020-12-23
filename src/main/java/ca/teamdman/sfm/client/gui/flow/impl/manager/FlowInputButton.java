@@ -11,22 +11,20 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.util.AssociatedRulesDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.RuleContainer;
-import ca.teamdman.sfm.common.flow.data.impl.FlowRuleData;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
 import ca.teamdman.sfm.common.flow.data.impl.FlowTileInputData;
+import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemStack;
 
 public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 	IFlowCloneable, FlowDataHolder, RuleContainer {
@@ -55,6 +53,13 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		addChild(DRAWER);
 		DRAWER.setVisible(false);
 		DRAWER.setEnabled(false);
+		controller.SCREEN.onChange(null, this::onDataChanged);
+	}
+
+	public void onDataChanged(FlowData data, ChangeType changeType) {
+		if (data instanceof RuleFlowData) {
+			DRAWER.rebuildSelectionDrawer();
+		}
 	}
 
 
@@ -75,16 +80,6 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 			DATA.getId()
-		));
-	}
-
-	@Override
-	public void onDragFinished(int dx, int dy, int mx, int my) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
-			DATA.getId(),
-			getPosition()
 		));
 	}
 
@@ -127,6 +122,16 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 			DRAWER.setVisible(open);
 			DRAWER.setEnabled(open);
 		}
+
+		@Override
+		public void onDragFinished(int dx, int dy, int mx, int my) {
+			PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
+				CONTROLLER.SCREEN.CONTAINER.windowId,
+				CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+				DATA.getId(),
+				getPosition()
+			));
+		}
 	}
 
 	private class MyAssociatedRulesDrawer extends AssociatedRulesDrawer {
@@ -136,18 +141,10 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		}
 
 		@Override
-		public List<FlowRuleData> getChildrenRules() {
-			List<FlowRuleData> rtn = new ArrayList<>();
-			rtn.add(new FlowTileEntityRuleData(
-				UUID.randomUUID(),
-				"howd7y",
-				new ItemStack(Blocks.ORANGE_BED),
-				new Position()
-			));
-			return rtn;
-//			return CONTROLLER.SCREEN.getData(FlowTileEntityRuleData.class)
-//				.filter(d -> DATA.tileEntityRules.contains(d.getId()))
-//				.collect(Collectors.toList());
+		public List<RuleFlowData> getChildrenRules() {
+			return CONTROLLER.SCREEN.getData(TileEntityRuleFlowData.class)
+				.filter(d -> DATA.tileEntityRules.contains(d.getId()))
+				.collect(Collectors.toList());
 		}
 
 		@Override
@@ -156,8 +153,8 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		}
 
 		@Override
-		public List<FlowRuleData> getSelectableRules() {
-			return CONTROLLER.SCREEN.getData(FlowTileEntityRuleData.class)
+		public List<RuleFlowData> getSelectableRules() {
+			return CONTROLLER.SCREEN.getData(TileEntityRuleFlowData.class)
 				.collect(Collectors.toList());
 		}
 	}

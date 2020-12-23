@@ -11,14 +11,14 @@ import java.util.UUID;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 
-public abstract class FlowRuleData extends FlowData implements PositionHolder {
+public abstract class RuleFlowData extends FlowData implements PositionHolder {
 
 	public String name;
 	public ItemStack icon;
 	public Position position;
 
 
-	public FlowRuleData(UUID uuid, String name, ItemStack icon, Position position) {
+	public RuleFlowData(UUID uuid, String name, ItemStack icon, Position position) {
 		super(uuid);
 		this.name = name;
 		this.icon = icon;
@@ -55,10 +55,10 @@ public abstract class FlowRuleData extends FlowData implements PositionHolder {
 
 	@Override
 	public void merge(FlowData other) {
-		if (other instanceof FlowRuleData) {
-			name = ((FlowRuleData) other).name;
-			icon = ((FlowRuleData) other).icon;
-			position = ((FlowTileEntityRuleData) other).position;
+		if (other instanceof RuleFlowData) {
+			name = ((RuleFlowData) other).name;
+			icon = ((RuleFlowData) other).icon;
+			position = ((TileEntityRuleFlowData) other).position;
 		}
 	}
 }

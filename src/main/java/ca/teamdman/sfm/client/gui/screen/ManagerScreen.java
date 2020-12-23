@@ -44,6 +44,11 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 			listeners.get(id).forEach(c -> c.accept(data, type));
 			listeners.get(null).forEach(c -> c.accept(data, type));
 		});
+		CONTROLLER.getChildren().stream()
+			.filter(c -> c instanceof FlowDataHolder)
+			.map(c -> ((FlowDataHolder) c))
+			.filter(c -> c.getData().getId().equals(id))
+			.forEach(FlowDataHolder::onDataChanged);
 	}
 
 	@Override

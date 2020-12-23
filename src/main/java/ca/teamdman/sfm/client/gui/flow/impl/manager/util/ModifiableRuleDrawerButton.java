@@ -10,7 +10,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowRuleData;
+import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
 import java.util.List;
 
 public abstract class ModifiableRuleDrawerButton extends DrawerButton {
@@ -36,18 +36,18 @@ public abstract class ModifiableRuleDrawerButton extends DrawerButton {
 		this.DRAWER.update();
 	};
 
-	public void addChild(FlowRuleData data) {
+	public void addChild(RuleFlowData data) {
 		this.DRAWER.addChild(new RuleDrawerItem(DRAWER, CONTROLLER, data));
 		this.DRAWER.update();
 	}
 
-	public void removeChild(FlowRuleData data) {
+	public void removeChild(RuleFlowData data) {
 		this.DRAWER.getChildren().removeIf(c -> c instanceof RuleDrawerItem
 			&& ((RuleDrawerItem) c).getData().equals(data));
 		this.DRAWER.update();
 	}
 
-	public abstract void onChange(List<FlowRuleData> data);
+	public abstract void onChange(List<RuleFlowData> data);
 
 	private class EditButton extends FlowPlusButton {
 
@@ -67,7 +67,7 @@ public abstract class ModifiableRuleDrawerButton extends DrawerButton {
 			)) {
 				@Override
 				public void onSelectionChanged(
-					List<FlowRuleData> data
+					List<RuleFlowData> data
 				) {
 					onChange(data);
 				}

@@ -10,7 +10,6 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
@@ -125,35 +124,29 @@ public class FlowDrawer extends FlowContainer {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		screen.drawRect(
+		drawBackground(screen, matrixStack);
+
+		// Enable clipping for drawer contents
+		// +2 -4 for border padding
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+		screen.scissorScaledArea(
+			matrixStack,
+			getPosition().getX() + 2,
+			getPosition().getY() + 2,
+			getSize().getWidth() - 4,
+			getSize().getHeight() - 4
+		);
+		super.draw(screen, matrixStack, mx, my, deltaTime);
+		GL11.glDisable(GL11.GL_SCISSOR_TEST);
+
+		screen.drawBorder(
 			matrixStack,
 			getPosition().getX(),
 			getPosition().getY(),
 			getSize().getWidth(),
 			getSize().getHeight(),
-			CONST.PANEL_BACKGROUND
+			2,
+			CONST.PANEL_BORDER
 		);
-
-		RenderSystem.pushMatrix();
-
-		GL11.glEnable(GL11.GL_SCISSOR_TEST);
-
-		int x = getPosition().getX();
-		int y = getPosition().getY();
-		int myWidth = getSize().getWidth();
-		int myHeight = getSize().getHeight();
-		screen.scissorScaledArea(
-			matrixStack, x,
-			y,
-			myWidth,
-			myHeight
-		);
-
-//		int start = scroll / (ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerRow();
-//		int lastRow = start + (myHeight / ITEM_HEIGHT) * getItemsPerRow();
-		super.draw(screen, matrixStack, mx, my, deltaTime);
-//		getChildren().stream().forEach(c -> c.draw(screen, matrixStack, mx, my, deltaTime));
-		GL11.glDisable(GL11.GL_SCISSOR_TEST);
-		RenderSystem.popMatrix();
 	}
 }

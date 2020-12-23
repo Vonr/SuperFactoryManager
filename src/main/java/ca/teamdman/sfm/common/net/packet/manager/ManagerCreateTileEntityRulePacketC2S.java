@@ -7,7 +7,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowTileEntityRuleData;
+import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
 import net.minecraft.item.ItemStack;
@@ -59,7 +59,7 @@ public class ManagerCreateTileEntityRulePacketC2S extends C2SManagerPacket {
 		public void handleDetailed(
 			ManagerCreateTileEntityRulePacketC2S msg, ManagerTileEntity manager
 		) {
-			FlowData data = new FlowTileEntityRuleData(
+			FlowData data = new TileEntityRuleFlowData(
 				UUID.randomUUID(),
 				msg.NAME,
 				msg.ICON,

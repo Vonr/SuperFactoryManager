@@ -10,7 +10,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.FlowRuleData;
+import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
 import java.util.List;
@@ -29,7 +29,7 @@ public abstract class RuleSelectionDrawer extends FlowDrawer {
 		this.CONTROLLER = controller;
 		rebuildChildren();
 		CONTROLLER.SCREEN.onChange(null, (data, type) -> {
-			if (data instanceof FlowRuleData) {
+			if (data instanceof RuleFlowData) {
 				this.rebuildChildren();
 			}
 		});
@@ -38,19 +38,19 @@ public abstract class RuleSelectionDrawer extends FlowDrawer {
 	public void rebuildChildren() {
 		getChildren().clear();
 		addChild(new AddRuleButton());
-		CONTROLLER.SCREEN.getData(FlowRuleData.class)
+		CONTROLLER.SCREEN.getData(RuleFlowData.class)
 			.map(data -> new DrawerItem(CONTROLLER, data))
 			.forEach(this::addChild);
 		update();
 	}
 
-	public abstract void onSelectionChanged(List<FlowRuleData> data);
+	public abstract void onSelectionChanged(List<RuleFlowData> data);
 
 	private class DrawerItem extends RuleDrawerItem {
 
 		public DrawerItem(
 			ManagerFlowController controller,
-			FlowRuleData rule
+			RuleFlowData rule
 		) {
 			super(RuleSelectionDrawer.this, controller, rule);
 		}
@@ -61,7 +61,7 @@ public abstract class RuleSelectionDrawer extends FlowDrawer {
 				.filter(c -> c instanceof DrawerItem)
 				.map(c -> ((DrawerItem) c))
 				.filter(c -> c.getIcon().isSelected())
-				.map(c -> ((FlowRuleData) c.getData()))
+				.map(c -> ((RuleFlowData) c.getData()))
 				.collect(Collectors.toList()));
 		}
 	}
