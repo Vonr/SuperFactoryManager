@@ -447,11 +447,13 @@ public abstract class BaseScreen extends Screen {
 		// Minecraft ItemStack renderer does not currently use MatrixStack
 		// Therefore, we must manually apply our current stack to the RenderSystem.
 		RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
+		Minecraft.getInstance().getItemRenderer().zLevel = -100;
 		Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(
 			stack,
 			x,
 			y
 		);
+		Minecraft.getInstance().getItemRenderer().zLevel = 0;
 		RenderSystem.popMatrix();
 	}
 

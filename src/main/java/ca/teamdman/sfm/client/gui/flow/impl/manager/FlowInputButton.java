@@ -3,11 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
-import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.util.AssociatedRulesDrawer;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;

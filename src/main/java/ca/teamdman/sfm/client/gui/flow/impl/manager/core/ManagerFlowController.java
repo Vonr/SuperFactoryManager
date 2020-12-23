@@ -4,10 +4,10 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTimerTriggerSpawner;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;

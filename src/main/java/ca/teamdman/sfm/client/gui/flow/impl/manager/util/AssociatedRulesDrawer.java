@@ -5,10 +5,10 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
-import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTileEntityRule;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
@@ -20,6 +20,7 @@ import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.block.Blocks;
@@ -41,8 +42,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		);
 		this.SELECTION_RULES_DRAWER = new FlowDrawer(
 			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(
-				()->CHILDREN_RULES_DRAWER.getSize().getWidth() + 10,
-				()->0
+				() -> CHILDREN_RULES_DRAWER.getSize().getWidth() + 10,
+				() -> 0
 			),
 			FlowItemStack.ITEM_TOTAL_WIDTH,
 			FlowItemStack.ITEM_TOTAL_HEIGHT
@@ -74,10 +75,29 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 	public void rebuildSelectionDrawer() {
 		SELECTION_RULES_DRAWER.getChildren().clear();
 		SELECTION_RULES_DRAWER.addChild(new AddRuleButton());
+
 		getSelectableRules().stream()
 			.map(SelectionRulesDrawerItem::new)
 			.forEach(SELECTION_RULES_DRAWER::addChild);
+
+		// Ensure children rules are selected in the global rule drawer
+		Set<UUID> selected = getChildrenRules().stream()
+			.map(FlowData::getId)
+			.collect(Collectors.toSet());
+		SELECTION_RULES_DRAWER.getChildren().stream()
+			.filter(c -> c instanceof SelectionRulesDrawerItem)
+			.map(c -> ((SelectionRulesDrawerItem) c))
+			.filter(c -> selected.contains(c.DATA.getId()))
+			.forEach(c -> c.setSelected(true));
+
 		SELECTION_RULES_DRAWER.update();
+	}
+
+	@Override
+	public void draw(
+		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+	) {
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	private class ChildRulesDrawerItem extends FlowItemStack {
@@ -189,12 +209,5 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 				new Position(0, 0)
 			));
 		}
-	}
-
-	@Override
-	public void draw(
-		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-	) {
-		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 }

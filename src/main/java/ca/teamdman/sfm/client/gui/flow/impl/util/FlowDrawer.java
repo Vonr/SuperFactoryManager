@@ -5,7 +5,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
-import ca.teamdman.sfm.client.gui.flow.core.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.data.core.Position;
