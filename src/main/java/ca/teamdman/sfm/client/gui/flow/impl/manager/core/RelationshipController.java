@@ -47,7 +47,7 @@ public class RelationshipController extends FlowComponent {
 			return false;
 		}
 		Optional<FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my);
-		hit.map(c -> c instanceof FlowDataHolder ? c : null);
+		hit.filter(c -> c instanceof FlowDataHolder);
 		hit.ifPresent(c -> {
 			isDragging = true;
 			from = ((FlowDataHolder) c).getData().getId();

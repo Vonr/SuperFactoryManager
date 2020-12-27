@@ -8,5 +8,7 @@
   "gui.sfm.manager.legend.snaptogrid": "Hold shift while dragging to use grid",
   "block.sfm.manager": "Super Factory Manager",
   "block.sfm.cable": "Inventory Cable",
-  "block.sfm.crafter": "Crafter"
+  "block.sfm.crafter": "Crafter",
+  "gui.sfm.associatedrulesdrawer.children.label": "Associated Rules",
+  "gui.sfm.associatedrulesdrawer.selection.label": "Global Rules"
 }

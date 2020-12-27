@@ -30,6 +30,13 @@ public class FlowDrawer extends FlowContainer {
 		this.ITEM_HEIGHT = itemHeight;
 	}
 
+	public int getMaxWidth() {
+		return (ITEM_WIDTH + ITEM_MARGIN_X) * getMaxItemsPerRow() + PADDING_X;
+	}
+
+	public int getMaxHeight() {
+		return (ITEM_HEIGHT + ITEM_MARGIN_Y) * getMaxItemsPerColumn() + PADDING_Y;
+	}
 
 	public void update() {
 		getSize().setSize(
@@ -88,12 +95,20 @@ public class FlowDrawer extends FlowContainer {
 		return MathHelper.clamp(
 			getItemRow(getChildren().size() - 1) + 1,
 			1,
-			7
+			getMaxItemsPerColumn()
 		);
 	}
 
+	public int getMaxItemsPerRow() {
+		return 5;
+	}
+
+	public int getMaxItemsPerColumn() {
+		return 7;
+	}
+
 	public int getItemsPerRow() {
-		return MathHelper.clamp(getChildren().size(), 1, 5);
+		return MathHelper.clamp(getChildren().size(), 1, getMaxItemsPerRow());
 	}
 
 	public int getWrappedX(int index) {

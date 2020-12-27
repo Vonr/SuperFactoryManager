@@ -11,6 +11,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.common.config.Config;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
@@ -24,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 
 public abstract class AssociatedRulesDrawer extends FlowContainer {
@@ -31,6 +33,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 	private final ManagerFlowController CONTROLLER;
 	private final FlowDrawer CHILDREN_RULES_DRAWER;
 	private final FlowDrawer SELECTION_RULES_DRAWER;
+	private final FlowLabel CHILDREN_LABEL;
+	private final FlowLabel SELECTION_LABEL;
 
 	public AssociatedRulesDrawer(ManagerFlowController controller, Position pos) {
 		super(pos, new Size(0, 0));
@@ -42,13 +46,27 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		);
 		this.SELECTION_RULES_DRAWER = new FlowDrawer(
 			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(
-				() -> CHILDREN_RULES_DRAWER.getSize().getWidth() + 10,
-				() -> 0
+//				() -> CHILDREN_RULES_DRAWER.getSize().getWidth() + 10,
+//				() -> 0
+				CHILDREN_RULES_DRAWER.getMaxWidth() + 10,
+				0
 			),
 			FlowItemStack.ITEM_TOTAL_WIDTH,
 			FlowItemStack.ITEM_TOTAL_HEIGHT
 		);
-
+		int labelHeight = 15;
+		this.CHILDREN_LABEL = new FlowLabel(
+			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(0,-labelHeight),
+			new Size(CHILDREN_RULES_DRAWER.getMaxWidth(),labelHeight),
+			I18n.format("gui.sfm.associatedrulesdrawer.children.label")
+		);
+		this.SELECTION_LABEL = new FlowLabel(
+			SELECTION_RULES_DRAWER.getPosition().withConstantOffset(0, -labelHeight),
+			new Size(SELECTION_RULES_DRAWER.getMaxWidth(), labelHeight),
+			I18n.format("gui.sfm.associatedrulesdrawer.selection.label")
+		);
+		SELECTION_LABEL.setVisible(false);
+		SELECTION_LABEL.setEnabled(false);
 		SELECTION_RULES_DRAWER.setVisible(false);
 		SELECTION_RULES_DRAWER.setEnabled(false);
 		SELECTION_RULES_DRAWER.setDraggable(false);
@@ -57,6 +75,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		rebuildSelectionDrawer();
 		addChild(CHILDREN_RULES_DRAWER);
 		addChild(SELECTION_RULES_DRAWER);
+		addChild(CHILDREN_LABEL);
+		addChild(SELECTION_LABEL);
 	}
 
 	public abstract List<RuleFlowData> getChildrenRules();
@@ -179,6 +199,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 			open = !open;
 			SELECTION_RULES_DRAWER.setEnabled(open);
 			SELECTION_RULES_DRAWER.setVisible(open);
+			SELECTION_LABEL.setVisible(open);
+			SELECTION_LABEL.setEnabled(open);
 		}
 	}
 

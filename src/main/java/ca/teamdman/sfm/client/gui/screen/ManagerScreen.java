@@ -6,6 +6,7 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.BaseContainerScreen;
+import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.text.ITextComponent;
 
@@ -128,6 +130,34 @@ public class ManagerScreen extends BaseContainerScreen<ManagerContainer> impleme
 	@Override
 	public void drawScaled(MatrixStack matrixStack, int mx, int my, float partialTicks) {
 		super.drawScaled(matrixStack, mx, my, partialTicks);
+		drawRightAlignedString(
+			matrixStack,
+			I18n.format("gui.sfm.manager.legend.chain"),
+			506,
+			212,
+			CONST.TEXT_BACKGROUND.toInt()
+		);
+		drawRightAlignedString(
+			matrixStack,
+			I18n.format("gui.sfm.manager.legend.clone"),
+			506,
+			222,
+			CONST.TEXT_BACKGROUND.toInt()
+		);
+		drawRightAlignedString(
+			matrixStack,
+			I18n.format("gui.sfm.manager.legend.move"),
+			506,
+			232,
+			CONST.TEXT_BACKGROUND.toInt()
+		);
+		drawRightAlignedString(
+			matrixStack,
+			I18n.format("gui.sfm.manager.legend.snaptogrid"),
+			506,
+			242,
+			CONST.TEXT_BACKGROUND.toInt()
+		);
 		CONTROLLER.draw(this, matrixStack, mx, my, partialTicks);
 	}
 

@@ -9,7 +9,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import javax.annotation.Nonnull;
 import net.minecraft.client.gui.IHasContainer;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -69,19 +68,6 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		drawTexture(matrixStack, 0, 0, 0, 0, 256, 256);
 		bindTexture(BACKGROUND_RIGHT);
 		drawTexture(matrixStack, 256, 0, 0, 0, 256, 256);
-		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.chain"), 506, 212,
-			0x999999
-		);
-		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.clone"), 506, 222,
-			0x999999
-		);
-		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.move"), 506, 232,
-			0x999999
-		);
-		drawRightAlignedString(matrixStack, I18n.format("gui.sfm.manager.legend.snaptogrid"), 506,
-			242,
-			0x999999
-		);
 	}
 
 	@Override
