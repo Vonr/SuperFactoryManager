@@ -18,6 +18,7 @@ import java.util.UUID;
 
 public abstract class FlowContainer extends FlowComponent {
 
+
 	private final ArrayList<FlowComponent> children = new ArrayList<FlowComponent>() {
 		@Override
 		public boolean add(FlowComponent o) {
@@ -148,15 +149,40 @@ public abstract class FlowContainer extends FlowComponent {
 	}
 
 	@Override
-	public void draw(
-		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-	) {
+	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
 		matrixStack.push();
 		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
 		for (FlowComponent c : children) {
 			if (c.isVisible()) {
 				c.draw(
-					screen, matrixStack, mx - getPosition().getX(), my - getPosition().getY(),
+					screen,
+					matrixStack,
+					mx - getPosition().getX(),
+					my - getPosition().getY(),
+					deltaTime
+				);
+			}
+		}
+		matrixStack.pop();
+	}
+
+	@Override
+	public void drawGhost(
+		BaseScreen screen,
+		MatrixStack matrixStack,
+		int mx,
+		int my,
+		float deltaTime
+	) {
+		matrixStack.push();
+		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
+		for (FlowComponent c : children) {
+			if (c.isVisible()) {
+				c.drawGhost(
+					screen,
+					matrixStack,
+					mx - getPosition().getX(),
+					my - getPosition().getY(),
 					deltaTime
 				);
 			}

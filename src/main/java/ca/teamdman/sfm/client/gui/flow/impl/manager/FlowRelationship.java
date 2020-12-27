@@ -58,7 +58,7 @@ public class FlowRelationship extends FlowComponent {
 
 	@Override
 	public int getZIndex() {
-		return super.getZIndex()-10;
+		return super.getZIndex()-200;
 	}
 
 	@Override

@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
@@ -23,6 +24,7 @@ import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -55,6 +57,11 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		DRAWER.setEnabled(false);
 		DRAWER.setDraggable(false);
 		controller.SCREEN.onChange(null, this::onDataChanged);
+	}
+
+	@Override
+	public Position snapToEdge(Position outside) {
+		return BUTTON.snapToEdge(outside);
 	}
 
 	public void onDataChanged(FlowData data, ChangeType changeType) {
@@ -109,6 +116,16 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 			DATA.getPosition(),
 			rules
 		));
+	}
+
+	@Override
+	public Position getCentroid() {
+		return BUTTON.getCentroid();
+	}
+
+	@Override
+	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
+		return super.getElementUnderMouse(mx, my).map(__ -> this);
 	}
 
 	private class MyFlowIconButton extends FlowIconButton {

@@ -33,14 +33,6 @@ public abstract class FlowIconButton extends FlowButton {
 		);
 	}
 
-	@Override
-	public void drawGhost(
-		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-	) {
-		BACKGROUND.drawGhostAt(screen, matrixStack, mx, my);
-		ICON.drawGhostAt(screen, matrixStack, mx + 4, my + 4);
-	}
-
 	public FlowIconButton(ButtonLabel type, Position pos) {
 		this(ButtonBackground.NORMAL, type, pos);
 	}
@@ -53,25 +45,36 @@ public abstract class FlowIconButton extends FlowButton {
 		this(type, new Position(0, 0));
 	}
 
+	@Override
+	public void drawGhost(
+		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+	) {
+		BACKGROUND.drawGhostAt(screen, matrixStack, mx, my);
+		ICON.drawGhostAt(screen, matrixStack, mx + 4, my + 4);
+	}
+
 	public FlowSprite createBackground(
-		ResourceLocation sheet, int left, int top, int width,
+		ResourceLocation sheet,
+		int left,
+		int top,
+		int width,
 		int height
 	) {
 		return new FlowSprite(sheet, left, top, width, height);
 	}
 
 	public FlowSprite createLabel(
-		ResourceLocation sheet, int left, int top, int width,
+		ResourceLocation sheet,
+		int left,
+		int top,
+		int width,
 		int height
 	) {
 		return new FlowSprite(sheet, left, top, width, height);
 	}
 
 	@Override
-	public void draw(
-		BaseScreen screen, MatrixStack matrixStack, int mx,
-		int my, float deltaTime
-	) {
+	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
 		BACKGROUND.drawAt(screen, matrixStack, getPosition());
 		ICON.drawAt(screen, matrixStack, getPosition().getX() + 4, getPosition().getY() + 4);
 	}

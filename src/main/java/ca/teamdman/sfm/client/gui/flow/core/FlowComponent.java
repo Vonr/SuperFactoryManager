@@ -22,6 +22,11 @@ public abstract class FlowComponent implements IFlowController, IFlowTangible, I
 	private Position position;
 	private Size size;
 
+	@Override
+	public Position getCentroid() {
+		return getPosition().withOffset(getSize().getWidth()/2, getSize().getHeight()/2);
+	}
+
 	public FlowComponent() {
 		this(0, 0, 0, 0);
 	}

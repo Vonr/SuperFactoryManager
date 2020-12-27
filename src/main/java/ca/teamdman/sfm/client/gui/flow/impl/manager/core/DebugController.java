@@ -36,9 +36,12 @@ public class DebugController extends FlowComponent {
 	}
 
 	@Override
-	public void draw(
-		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-	) {
+	public int getZIndex() {
+		return super.getZIndex() + 200;
+	}
+
+	@Override
+	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
 		if (Screen.hasControlDown() && Screen.hasAltDown()) {
 			Optional<FlowData> check = CONTROLLER.getElementUnderMouse(mx, my)
 				.filter(c -> c instanceof FlowDataHolder)

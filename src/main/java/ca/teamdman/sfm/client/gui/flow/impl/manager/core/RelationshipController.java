@@ -19,14 +19,20 @@ import java.util.stream.Stream;
 import net.minecraft.client.gui.screen.Screen;
 
 public class RelationshipController extends FlowComponent {
+
 	public final ManagerFlowController CONTROLLER;
 	private final Position fromPos = new Position();
 	private final Position toPos = new Position();
-	private UUID from;
+	private FlowDataHolder from;
 	private boolean isDragging = false;
 
 	public RelationshipController(ManagerFlowController CONTROLLER) {
 		this.CONTROLLER = CONTROLLER;
+	}
+
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() - 100;
 	}
 
 	public Stream<RelationshipFlowData> getFlowRelationshipDatas() {
@@ -46,11 +52,11 @@ public class RelationshipController extends FlowComponent {
 		if (!Screen.hasShiftDown()) {
 			return false;
 		}
-		Optional<FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my);
-		hit.filter(c -> c instanceof FlowDataHolder);
+		Optional<FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my)
+			.filter(c -> c instanceof FlowDataHolder);
 		hit.ifPresent(c -> {
 			isDragging = true;
-			from = ((FlowDataHolder) c).getData().getId();
+			from = ((FlowDataHolder) c);
 			fromPos.setXY(c.getCentroid());
 			toPos.setXY(mx, my);
 		});
@@ -64,9 +70,10 @@ public class RelationshipController extends FlowComponent {
 		}
 		CONTROLLER.getElementUnderMouse(mx, my)
 			.filter(c -> c instanceof FlowDataHolder)
+			.filter(c -> !c.equals(from))
 			.map(c -> ((FlowDataHolder) c).getData())
 			.map(FlowData::getId)
-			.ifPresent(to -> createRelationship(from, to));
+			.ifPresent(to -> createRelationship(from.getData().getId(), to));
 		isDragging = false;
 		from = null;
 		return true;
@@ -89,6 +96,7 @@ public class RelationshipController extends FlowComponent {
 		}
 		toPos.setXY(mx, my);
 		CONTROLLER.getElementUnderMouse(mx, my)
+			.filter(c -> !c.equals(from))
 			.map(x -> x.snapToEdge(fromPos))
 			.ifPresent(toPos::setXY);
 		return true;

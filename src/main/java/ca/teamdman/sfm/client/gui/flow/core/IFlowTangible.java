@@ -20,10 +20,16 @@ public interface IFlowTangible extends PositionHolder, SizeHolder {
 
 	default Position snapToEdge(Position outside) {
 		return new Position(
-			MathHelper.clamp(outside.getX(), getPosition().getX(),
-				getPosition().getX() + getSize().getWidth()),
-			MathHelper.clamp(outside.getY(), getPosition().getY(),
-				getPosition().getY() + getSize().getHeight())
+			MathHelper.clamp(
+				outside.getX(),
+				getPosition().getX(),
+				getPosition().getX() + getSize().getWidth()
+			),
+			MathHelper.clamp(
+				outside.getY(),
+				getPosition().getY(),
+				getPosition().getY() + getSize().getHeight()
+			)
 		);
 	}
 }
