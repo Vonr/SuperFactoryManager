@@ -9,7 +9,7 @@ final class ClientConfig {
 
 	final ForgeConfigSpec.IntValue cliInt;
 	final ForgeConfigSpec.BooleanValue allowMultipleRuleWindows;
-	final ForgeConfigSpec.BooleanValue showRuleNames;
+	final ForgeConfigSpec.BooleanValue showRuleDrawerLabels;
 
 	ClientConfig(final ForgeConfigSpec.Builder builder) {
 		builder.push("General Category");
@@ -19,9 +19,9 @@ final class ClientConfig {
 		allowMultipleRuleWindows = builder
 			.comment("Allow multiple rule windows to be visible at once")
 			.define("allowMultipleRuleWindows", false);
-		showRuleNames = builder
-			.comment("Show the name of the rule in addition to its icon")
-			.define("showRuleNames", false);
+		showRuleDrawerLabels = builder
+			.comment("Show the helper labels on rule drawers")
+			.define("showRuleDrawerLabels", true);
 		builder.pop();
 	}
 }

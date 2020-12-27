@@ -10,5 +10,6 @@
   "block.sfm.cable": "Inventory Cable",
   "block.sfm.crafter": "Crafter",
   "gui.sfm.associatedrulesdrawer.children.label": "Associated Rules",
-  "gui.sfm.associatedrulesdrawer.selection.label": "Global Rules"
+  "gui.sfm.associatedrulesdrawer.selection.label": "Global Rules",
+  "gui.sfm.config.title": "Super Factory Manager Configuration"
 }

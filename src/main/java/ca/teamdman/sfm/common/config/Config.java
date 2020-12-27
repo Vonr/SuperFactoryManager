@@ -7,6 +7,8 @@ public class Config {
 	// Client
 	public static int funCli;
 	public static boolean allowMultipleRuleWindows;
+	public static boolean showRuleDrawerLabels;
+
 	// Common
 	public static int funCom;
 	// Server

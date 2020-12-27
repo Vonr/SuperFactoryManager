@@ -46,5 +46,6 @@ public final class ConfigHelper {
 		clientConfig = config;
 		Config.funCli = ConfigHolder.CLIENT.cliInt.get();
 		Config.allowMultipleRuleWindows = ConfigHolder.CLIENT.allowMultipleRuleWindows.get();
+		Config.showRuleDrawerLabels = ConfigHolder.CLIENT.showRuleDrawerLabels.get();
 	}
 }
