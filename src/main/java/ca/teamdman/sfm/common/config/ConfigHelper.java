@@ -3,49 +3,68 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.config;
 
+import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.config.Config.Client;
+import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.config.ModConfig;
 
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Bus.MOD)
 public final class ConfigHelper {
-	@SuppressWarnings("FieldCanBeLocal")
-	private static ModConfig clientConfig;
-	@SuppressWarnings("FieldCanBeLocal")
-	private static ModConfig commonConfig;
-	@SuppressWarnings("FieldCanBeLocal")
-	private static ModConfig serverConfig;
 
-	public static void setValueAndSave(final ModConfig config, final String path, final Object value) {
+	@SuppressWarnings("FieldCanBeLocal")
+	public static ModConfig clientConfig;
+	@SuppressWarnings("FieldCanBeLocal")
+	public static ModConfig commonConfig;
+	@SuppressWarnings("FieldCanBeLocal")
+	public static ModConfig serverConfig;
+
+	public static void setValueAndSave(
+		final ModConfig config,
+		final String path,
+		final Object value
+	) {
 		config.getConfigData().set(path, value);
 		config.save();
+		bakeConfig(config);
+	}
+
+	public static void setValueAndSave(ModConfig config, ConfigValue<?> field, Object value) {
+		setValueAndSave(
+			config,
+			String.join(".", field.getPath()),
+			value
+		);
 	}
 
 	@SubscribeEvent
 	public static void onConfig(final ModConfig.ModConfigEvent e) {
-		final ModConfig config = e.getConfig();
-		if (config.getSpec() == ConfigHolder.COMMON_SPEC)
+		bakeConfig(e.getConfig());
+	}
+
+	public static void bakeConfig(ModConfig config) {
+		if (config.getSpec() == ConfigHolder.COMMON_SPEC) {
 			bakeCommon(config);
-		else if (config.getSpec() == ConfigHolder.SERVER_SPEC)
+		} else if (config.getSpec() == ConfigHolder.SERVER_SPEC) {
 			bakeServer(config);
-		else if (config.getSpec() == ConfigHolder.CLIENT_SPEC)
+		} else if (config.getSpec() == ConfigHolder.CLIENT_SPEC) {
 			bakeClient(config);
+		}
 	}
 
 	public static void bakeCommon(final ModConfig config) {
 		commonConfig = config;
-		Config.funCom = ConfigHolder.COMMON.comInt.get();
 	}
 
 	public static void bakeServer(final ModConfig config) {
 		serverConfig = config;
-		Config.funSer = ConfigHolder.SERVER.serInt.get();
 	}
 
 	public static void bakeClient(final ModConfig config) {
 		clientConfig = config;
-		Config.funCli = ConfigHolder.CLIENT.cliInt.get();
-		Config.allowMultipleRuleWindows = ConfigHolder.CLIENT.allowMultipleRuleWindows.get();
-		Config.showRuleDrawerLabels = ConfigHolder.CLIENT.showRuleDrawerLabels.get();
+		Client.allowMultipleRuleWindows = ConfigHolder.CLIENT.allowMultipleRuleWindows.get();
+		Client.showRuleDrawerLabels = ConfigHolder.CLIENT.showRuleDrawerLabels.get();
 	}
 }

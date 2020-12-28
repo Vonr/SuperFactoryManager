@@ -11,9 +11,8 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
-import ca.teamdman.sfm.common.config.Config;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
@@ -33,50 +32,37 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 	private final ManagerFlowController CONTROLLER;
 	private final FlowDrawer CHILDREN_RULES_DRAWER;
 	private final FlowDrawer SELECTION_RULES_DRAWER;
-	private final FlowLabel CHILDREN_LABEL;
-	private final FlowLabel SELECTION_LABEL;
 
 	public AssociatedRulesDrawer(ManagerFlowController controller, Position pos) {
 		super(pos, new Size(0, 0));
+
 		this.CONTROLLER = controller;
+
 		this.CHILDREN_RULES_DRAWER = new FlowDrawer(
 			new Position(),
 			FlowItemStack.ITEM_TOTAL_WIDTH,
-			FlowItemStack.ITEM_TOTAL_HEIGHT
+			FlowItemStack.ITEM_TOTAL_HEIGHT,
+			I18n.format("gui.sfm.associatedrulesdrawer.children.label")
 		);
+		CHILDREN_RULES_DRAWER.setDraggable(false);
+		addChild(CHILDREN_RULES_DRAWER);
+
 		this.SELECTION_RULES_DRAWER = new FlowDrawer(
 			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(
-//				() -> CHILDREN_RULES_DRAWER.getSize().getWidth() + 10,
-//				() -> 0
 				CHILDREN_RULES_DRAWER.getMaxWidth() + 10,
 				0
 			),
 			FlowItemStack.ITEM_TOTAL_WIDTH,
-			FlowItemStack.ITEM_TOTAL_HEIGHT
-		);
-		int labelHeight = 15;
-		this.CHILDREN_LABEL = new FlowLabel(
-			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(0,-labelHeight),
-			new Size(CHILDREN_RULES_DRAWER.getMaxWidth(),labelHeight),
-			I18n.format("gui.sfm.associatedrulesdrawer.children.label")
-		);
-		this.SELECTION_LABEL = new FlowLabel(
-			SELECTION_RULES_DRAWER.getPosition().withConstantOffset(0, -labelHeight),
-			new Size(SELECTION_RULES_DRAWER.getMaxWidth(), labelHeight),
+			FlowItemStack.ITEM_TOTAL_HEIGHT,
 			I18n.format("gui.sfm.associatedrulesdrawer.selection.label")
 		);
-		SELECTION_LABEL.setVisible(false);
-		SELECTION_LABEL.setEnabled(false);
 		SELECTION_RULES_DRAWER.setVisible(false);
 		SELECTION_RULES_DRAWER.setEnabled(false);
 		SELECTION_RULES_DRAWER.setDraggable(false);
-		CHILDREN_RULES_DRAWER.setDraggable(false);
+		addChild(SELECTION_RULES_DRAWER);
+
 		rebuildChildrenDrawer();
 		rebuildSelectionDrawer();
-		addChild(CHILDREN_RULES_DRAWER);
-		addChild(SELECTION_RULES_DRAWER);
-		addChild(CHILDREN_LABEL);
-		addChild(SELECTION_LABEL);
 	}
 
 	public abstract List<RuleFlowData> getChildrenRules();
@@ -136,7 +122,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 
 		@Override
 		public void onSelectionChanged() {
-			if (!Config.allowMultipleRuleWindows) {
+			if (!Client.allowMultipleRuleWindows) {
 				CONTROLLER.getChildren().stream()
 					.filter(c -> c instanceof FlowTileEntityRule)
 					.map(c -> ((FlowTileEntityRule) c))
@@ -199,8 +185,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 			open = !open;
 			SELECTION_RULES_DRAWER.setEnabled(open);
 			SELECTION_RULES_DRAWER.setVisible(open);
-			SELECTION_LABEL.setVisible(open);
-			SELECTION_LABEL.setEnabled(open);
 		}
 	}
 

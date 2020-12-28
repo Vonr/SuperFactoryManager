@@ -4,14 +4,16 @@
 package ca.teamdman.sfm.common.config;
 
 public class Config {
-	// Client
-	public static int funCli;
-	public static boolean allowMultipleRuleWindows;
-	public static boolean showRuleDrawerLabels;
+	public static class Client {
+		public static boolean allowMultipleRuleWindows;
+		public static boolean showRuleDrawerLabels;
+	}
 
-	// Common
-	public static int funCom;
-	// Server
-	public static int funSer;
+	public static class Common {
 
+	}
+
+	public static class Server {
+
+	}
 }

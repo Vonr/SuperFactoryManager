@@ -39,21 +39,6 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 	}
 
 
-
-
-	@Override
-	public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
-		int mx = scaleX(x);
-		int my = scaleY(y);
-		int dmx = scaleX(dx);
-		int dmy = scaleY(dy);
-		return onMouseDraggedScaled(mx, my, button, dmx, dmy);
-	}
-
-	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
-		return false;
-	}
-
 	@Override
 	public void drawScaled(
 		MatrixStack matrixStack, int mx, int my,

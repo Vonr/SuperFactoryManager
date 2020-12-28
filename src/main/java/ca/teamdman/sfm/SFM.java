@@ -51,7 +51,7 @@ public class SFM {
 
 	}
 
-	private void onSetup(final FMLCommonSetupEvent e) {
+	private void onSetup(FMLCommonSetupEvent e) {
 		PacketHandler.setup();
 	}
 }

@@ -10,9 +10,9 @@ public final class ConfigHolder {
 	public static final ForgeConfigSpec CLIENT_SPEC;
 	public static final ForgeConfigSpec COMMON_SPEC;
 	public static final ForgeConfigSpec SERVER_SPEC;
-	static final        ClientConfig    CLIENT;
-	static final        CommonConfig    COMMON;
-	static final        ServerConfig    SERVER;
+	public static final        ClientConfig    CLIENT;
+	public static final        CommonConfig    COMMON;
+	public static final        ServerConfig    SERVER;
 
 	static {
 		{

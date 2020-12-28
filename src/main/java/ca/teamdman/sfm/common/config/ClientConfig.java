@@ -5,17 +5,12 @@ package ca.teamdman.sfm.common.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
-final class ClientConfig {
-
-	final ForgeConfigSpec.IntValue cliInt;
-	final ForgeConfigSpec.BooleanValue allowMultipleRuleWindows;
-	final ForgeConfigSpec.BooleanValue showRuleDrawerLabels;
+public final class ClientConfig {
+	public final ForgeConfigSpec.BooleanValue allowMultipleRuleWindows;
+	public final ForgeConfigSpec.BooleanValue showRuleDrawerLabels;
 
 	ClientConfig(final ForgeConfigSpec.Builder builder) {
 		builder.push("General Category");
-		cliInt = builder
-			.comment("Client Int")
-			.defineInRange("cliInt", 0, 0, 1);
 		allowMultipleRuleWindows = builder
 			.comment("Allow multiple rule windows to be visible at once")
 			.define("allowMultipleRuleWindows", false);

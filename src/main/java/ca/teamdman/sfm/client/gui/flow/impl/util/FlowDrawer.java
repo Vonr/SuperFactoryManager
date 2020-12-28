@@ -7,6 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,12 +23,14 @@ public class FlowDrawer extends FlowContainer {
 
 	private final int ITEM_WIDTH;
 	private final int ITEM_HEIGHT;
+	private final String LABEL_TEXT;
 	private int scroll = 0;
 
-	public FlowDrawer(Position pos, int itemWidth, int itemHeight) {
+	public FlowDrawer(Position pos, int itemWidth, int itemHeight, String labelText) {
 		super(pos, new Size(0, 0));
 		this.ITEM_WIDTH = itemWidth;
 		this.ITEM_HEIGHT = itemHeight;
+		this.LABEL_TEXT = labelText;
 	}
 
 	public int getMaxWidth() {
@@ -44,7 +47,7 @@ public class FlowDrawer extends FlowContainer {
 			(ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
 		);
 		AtomicInteger i = new AtomicInteger();
-		getChildren().stream().forEachOrdered(c -> c.getPosition().setXY(
+		getChildren().forEach(c -> c.getPosition().setXY(
 			getWrappedX(i.get()),
 			getWrappedY(i.getAndIncrement()) - scroll
 		));
@@ -142,6 +145,25 @@ public class FlowDrawer extends FlowContainer {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
+		if (Client.showRuleDrawerLabels) {
+			int labelHeight = 15;
+			screen.drawRect(
+				matrixStack,
+				getPosition().getX(),
+				getPosition().getY()-labelHeight,
+				getMaxWidth(),
+				labelHeight,
+				CONST.PANEL_BORDER
+			);
+			screen.drawString(
+				matrixStack,
+				LABEL_TEXT,
+				getPosition().getX() + 5,
+				getPosition().getY() - labelHeight + 4,
+				CONST.TEXT_PRIMARY.toInt()
+			);
+		}
+
 		screen.clearRect(
 			matrixStack,
 			getPosition().getX(),
@@ -149,6 +171,7 @@ public class FlowDrawer extends FlowContainer {
 			getSize().getWidth(),
 			getSize().getHeight()
 		);
+
 		drawBackground(screen, matrixStack);
 
 		// Enable clipping for drawer contents

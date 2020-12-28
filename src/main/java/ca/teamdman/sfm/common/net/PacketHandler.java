@@ -8,8 +8,6 @@ import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket.C2SHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateOutputPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
@@ -26,6 +24,8 @@ import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSele
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSelectedS2C;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowOutputDataPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowOutputDataPacketS2C;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -58,6 +58,7 @@ public class PacketHandler {
 			handler::decode,
 			handler::handle);
 	}
+
 
 	@SuppressWarnings("UnusedAssignment")
 	public static void setup() {
@@ -115,13 +116,13 @@ public class PacketHandler {
 		);
 
 		register(i++,
-			ManagerCreateOutputPacketC2S.class,
-			new ManagerCreateOutputPacketC2S.Handler()
+			ManagerFlowOutputDataPacketC2S.class,
+			new ManagerFlowOutputDataPacketC2S.Handler()
 		);
 
 		register(i++,
-			ManagerCreateOutputPacketS2C.class,
-			new ManagerCreateOutputPacketS2C.Handler()
+			ManagerFlowOutputDataPacketS2C.class,
+			new ManagerFlowOutputDataPacketS2C.Handler()
 		);
 
 		register(i++,

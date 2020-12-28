@@ -9,7 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
-import ca.teamdman.sfm.common.config.Config;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
@@ -55,7 +55,7 @@ public class RuleDrawerItem extends FlowContainer implements FlowDataHolder {
 	public void onClicked(boolean activate) {}
 
 	public void openRule() {
-		if (!Config.allowMultipleRuleWindows) {
+		if (!Client.allowMultipleRuleWindows) {
 			CONTROLLER.getChildren().stream()
 				.filter(c -> c instanceof FlowTileEntityRule)
 				.map(c -> ((FlowTileEntityRule) c))

@@ -490,6 +490,19 @@ public abstract class BaseScreen extends Screen {
 		RenderSystem.popMatrix();
 	}
 
+	@Override
+	public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
+		int mx = scaleX(x);
+		int my = scaleY(y);
+		int dmx = scaleX(dx);
+		int dmy = scaleY(dy);
+		return onMouseDraggedScaled(mx, my, button, dmx, dmy);
+	}
+
+	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
+		return false;
+	}
+
 	public void drawScaled(
 		MatrixStack matrixStack, int mouseX,
 		int mouseY, float partialTicks

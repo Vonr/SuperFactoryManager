@@ -7,14 +7,14 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.LineNodeFlowData.LineNodeFlowDataFactory;
-import ca.teamdman.sfm.common.flow.data.impl.OutputFlowData;
-import ca.teamdman.sfm.common.flow.data.impl.OutputFlowData.FlowOutputDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData.FlowRelationshipDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData.FlowTileEntityRuleDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData.FlowInputDataFactory;
+import ca.teamdman.sfm.common.flow.data.impl.TileOutputFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileOutputFlowData.FlowOutputDataFactory;
 import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData.FlowTimerTriggerDataFactory;
 import net.minecraft.util.ResourceLocation;
@@ -57,7 +57,7 @@ public class FlowDataFactoryRegistrar {
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataFactories {
 		public static final FlowDataFactory<TileInputFlowData> INPUT = WAITING;
-		public static final FlowDataFactory<OutputFlowData> OUTPUT = WAITING;
+		public static final FlowDataFactory<TileOutputFlowData> OUTPUT = WAITING;
 		public static final FlowDataFactory<RelationshipFlowData> RELATIONSHIP = WAITING;
 		public static final FlowDataFactory<LineNodeFlowData> LINE_NODE = WAITING;
 		public static final FlowDataFactory<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;

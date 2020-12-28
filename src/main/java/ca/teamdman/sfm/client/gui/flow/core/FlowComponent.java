@@ -10,22 +10,18 @@ import java.util.Optional;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 
-public abstract class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
+public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 	FlowViewHolder {
 
 	private final Position dragStart = new Position();
 	private final Position dragOffset = new Position();
+	private Colour3f backgroundColour = CONST.PANEL_BACKGROUND;
 	private boolean visible = true;
 	private boolean enabled = true;
 	private boolean draggable = true;
 	private boolean isDragging = false;
 	private Position position;
 	private Size size;
-
-	@Override
-	public Position getCentroid() {
-		return getPosition().withOffset(getSize().getWidth()/2, getSize().getHeight()/2);
-	}
 
 	public FlowComponent() {
 		this(0, 0, 0, 0);
@@ -38,6 +34,11 @@ public abstract class FlowComponent implements IFlowController, IFlowTangible, I
 	public FlowComponent(Position pos, Size size) {
 		this.position = pos;
 		this.size = size;
+	}
+
+	@Override
+	public Position getCentroid() {
+		return getPosition().withOffset(getSize().getWidth() / 2, getSize().getHeight() / 2);
 	}
 
 	@Override
@@ -144,6 +145,14 @@ public abstract class FlowComponent implements IFlowController, IFlowTangible, I
 		drawBackground(screen, matrixStack);
 	}
 
+	public Colour3f getBackgroundColour() {
+		return backgroundColour;
+	}
+
+	public void setBackgroundColour(Colour3f backgroundColour) {
+		this.backgroundColour = backgroundColour;
+	}
+
 	/**
 	 * Draws a rectangle at this component's position with its current dimensions
 	 */
@@ -154,7 +163,7 @@ public abstract class FlowComponent implements IFlowController, IFlowTangible, I
 			getPosition().getY(),
 			getSize().getWidth(),
 			getSize().getHeight(),
-			CONST.PANEL_BACKGROUND
+			backgroundColour
 		);
 	}
 
