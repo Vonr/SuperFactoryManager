@@ -5,6 +5,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTileEntityRule;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
@@ -118,6 +119,9 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
 			setDraggable(false);
+			setSelected(CONTROLLER.findFirstChild(data.getId())
+				.filter(FlowComponent::isVisible)
+				.isPresent());
 		}
 
 		@Override
@@ -131,9 +135,10 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 						c.setEnabled(false);
 					});
 				CHILDREN_RULES_DRAWER.getChildren().stream()
-					.filter(c -> c instanceof ChildRulesDrawerItem)
+					.filter(c -> c instanceof ChildRulesDrawerItem && c != this)
 					.forEach(c -> ((ChildRulesDrawerItem) c).setSelected(false));
 			}
+			System.out.println(isSelected());
 			CONTROLLER.findFirstChild(DATA.getId()).ifPresent(comp -> {
 				comp.setVisible(isSelected());
 				comp.setEnabled(isSelected());
