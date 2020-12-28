@@ -28,11 +28,19 @@ public abstract class FlowContainer extends FlowComponent {
 		}
 	};
 
+	/**
+	 * Containers with no area are not draggable
+	 */
 	public FlowContainer() {
+		setDraggable(false);
 	}
 
-	public FlowContainer(int x, int y, int width, int height) {
-		super(x, y, width, height);
+	/**
+	 * Containers with no area are not draggable
+	 */
+	public FlowContainer(Position pos) {
+		this(pos, new Size(0,0));
+		setDraggable(false);
 	}
 
 	public FlowContainer(

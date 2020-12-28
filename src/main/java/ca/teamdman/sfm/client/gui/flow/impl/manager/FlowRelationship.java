@@ -9,6 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.RelationshipController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
@@ -37,7 +38,7 @@ public class FlowRelationship extends FlowComponent {
 		if (!Screen.hasControlDown()) {
 			return false;
 		}
-		Optional<FlowRelationship> rel = CONTROLLER.RELATIONSHIP_CONTROLLER.getFlowRelationships()
+		Optional<FlowRelationship> rel = new RelationshipController(CONTROLLER).getFlowRelationships()
 			.filter(r -> r.isCloseTo(mx, my))
 			.findFirst();
 		if (!rel.isPresent()) {

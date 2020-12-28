@@ -67,7 +67,7 @@ public class ManagerFlowInputDataPacketC2S extends C2SManagerPacket {
 
 			SFM.LOGGER.debug(
 				SFMUtil.getMarker(getClass()),
-				"C2S received, creating input with {} rules at position {} with id {}",
+				"C2S received, input with {} rules at position {} with id {}",
 				msg.RULES.size(),
 				msg.ELEMENT_POSITION,
 				msg.ELEMENT_ID

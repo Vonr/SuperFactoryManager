@@ -4,6 +4,7 @@
 package ca.teamdman.sfm.client.gui.flow.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
@@ -59,7 +60,7 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 			int newX = MathHelper.clamp(mx - dragOffset.getX(), 0, 512 - size.getWidth());
 			int newY = MathHelper.clamp(my - dragOffset.getY(), 0, 256 - size.getHeight());
 
-			if (Screen.hasShiftDown()) {
+			if (Screen.hasShiftDown() || Client.alwaysSnapMovementToGrid) {
 				newX = newX - newX % 5;
 				newY = newY - newY % 5;
 			}

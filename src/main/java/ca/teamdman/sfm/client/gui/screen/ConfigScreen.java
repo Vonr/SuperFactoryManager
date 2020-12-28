@@ -18,7 +18,7 @@ public class ConfigScreen extends BaseScreen {
 		int scaledHeight
 	) {
 		super(titleIn, scaledWidth, scaledHeight);
-		CONTROLLER = new ConfigComponent(scaledWidth, scaledHeight);
+		CONTROLLER = new ConfigComponent();
 	}
 
 	@Override

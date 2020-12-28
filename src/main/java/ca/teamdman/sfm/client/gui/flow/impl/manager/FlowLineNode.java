@@ -17,7 +17,12 @@ public class FlowLineNode extends FlowIconButton implements FlowDataHolder {
 	public LineNodeFlowData data;
 
 	public FlowLineNode(ManagerFlowController controller, LineNodeFlowData data) {
-		super(ButtonBackground.LINE_NODE, ButtonLabel.NONE, data.getPosition().copy());
+		super(
+			ButtonBackground.LINE_NODE,
+			ButtonBackground.LINE_NODE,
+			ButtonLabel.NONE,
+			data.getPosition().copy()
+		);
 		this.data = data;
 		this.CONTROLLER = controller;
 	}

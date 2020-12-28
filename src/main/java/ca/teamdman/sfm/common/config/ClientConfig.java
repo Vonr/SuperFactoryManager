@@ -7,7 +7,9 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class ClientConfig {
 	public final ForgeConfigSpec.BooleanValue allowMultipleRuleWindows;
+	public final ForgeConfigSpec.BooleanValue alwaysSnapMovementToGrid;
 	public final ForgeConfigSpec.BooleanValue showRuleDrawerLabels;
+
 
 	ClientConfig(final ForgeConfigSpec.Builder builder) {
 		builder.push("General Category");
@@ -17,6 +19,9 @@ public final class ClientConfig {
 		showRuleDrawerLabels = builder
 			.comment("Show the helper labels on rule drawers")
 			.define("showRuleDrawerLabels", true);
+		alwaysSnapMovementToGrid = builder
+			.comment("Always snap movement to grid")
+			.define("alwaysSnapMovementToGrid", false);
 		builder.pop();
 	}
 }

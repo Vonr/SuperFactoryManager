@@ -9,7 +9,7 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
 
 public abstract class FlowButton extends FlowComponent {
 
-	private boolean clicking = false;
+	protected boolean clicking = false;
 
 	public FlowButton(Position pos, Size size) {
 		super(pos, size);

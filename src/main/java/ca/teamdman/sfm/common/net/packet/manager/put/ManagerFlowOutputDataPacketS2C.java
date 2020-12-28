@@ -60,7 +60,7 @@ public class ManagerFlowOutputDataPacketS2C extends S2CManagerPacket {
 		) {
 			SFM.LOGGER.debug(
 				SFMUtil.getMarker(getClass()),
-				"S2C received, creating input with {} rules at position {} with id {}",
+				"S2C received, output with {} rules at position {} with id {}",
 				msg.RULES.size(),
 				msg.ELEMENT_POSITION,
 				msg.ELEMENT_ID

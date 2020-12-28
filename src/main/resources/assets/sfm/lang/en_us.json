@@ -13,5 +13,6 @@
   "gui.sfm.associatedrulesdrawer.selection.label": "Global Rules",
   "gui.sfm.config.title": "Super Factory Manager Configuration",
   "gui.sfm.config.allowMultipleRuleWindows": "Allow opening multiple rule windows",
-  "gui.sfm.config.showRuleDrawerLabels": "Show labels above rule drawers"
+  "gui.sfm.config.showRuleDrawerLabels": "Show labels above rule drawers",
+  "gui.sfm.config.alwaysSnapMovementToGrid": "Always snap movement to grid"
 }

@@ -22,7 +22,7 @@ import ca.teamdman.sfm.common.flow.data.impl.TileOutputFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowOutputDataPacketC2S;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,7 +73,7 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
+		PacketHandler.INSTANCE.sendToServer(new ManagerFlowOutputDataPacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 			UUID.randomUUID(),
@@ -109,7 +109,7 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 
 	@Override
 	public void setRules(List<UUID> rules) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
+		PacketHandler.INSTANCE.sendToServer(new ManagerFlowOutputDataPacketC2S(
 			CONTROLLER.SCREEN.CONTAINER.windowId,
 			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
 			DATA.getId(),

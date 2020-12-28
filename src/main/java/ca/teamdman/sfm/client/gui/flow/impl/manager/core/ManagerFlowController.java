@@ -5,13 +5,15 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButtonSpawner;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInstructions;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTimerTriggerSpawner;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import java.util.Optional;
@@ -21,12 +23,6 @@ import org.lwjgl.glfw.GLFW;
 public class ManagerFlowController extends FlowContainer {
 
 	public final ManagerScreen SCREEN;
-	public final RelationshipController RELATIONSHIP_CONTROLLER = new RelationshipController(this);
-	public final DebugController DEBUG_CONTROLLER = new DebugController(this);
-	public final CloneController CLONE_CONTROLLER = new CloneController(this);
-	private final FlowIconButton INPUT_BUTTON_SPAWNER = new FlowInputButtonSpawner(this);
-	private final FlowIconButton OUTPUT_BUTTON_SPAWNER = new FlowOutputButtonSpawner(this);
-	private final FlowIconButton TIMER_TRIGGER_SPAWNER = new FlowTimerTriggerSpawner(this);
 
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
@@ -35,12 +31,15 @@ public class ManagerFlowController extends FlowContainer {
 
 	public void rebuildChildren() {
 		getChildren().clear();
-		addChild(DEBUG_CONTROLLER);
-		addChild(CLONE_CONTROLLER);
-		addChild(RELATIONSHIP_CONTROLLER);
-		addChild(INPUT_BUTTON_SPAWNER);
-		addChild(OUTPUT_BUTTON_SPAWNER);
-		addChild(TIMER_TRIGGER_SPAWNER);
+		addChild(new FlowBackground());
+		addChild(new FlowInstructions(new Position(506,212)));
+		addChild(new DebugController(this));
+		addChild(new CloneController(this));
+		addChild(new RelationshipController(this));
+		addChild(new FlowSettingsController(SCREEN));
+		addChild(new FlowInputButtonSpawner(this));
+		addChild(new FlowOutputButtonSpawner(this));
+		addChild(new FlowTimerTriggerSpawner(this));
 		SCREEN.getData()
 			.map(data -> data.createController(this))
 			.forEach(this::addChild);

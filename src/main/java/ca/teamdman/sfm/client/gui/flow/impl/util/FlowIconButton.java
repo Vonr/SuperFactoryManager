@@ -12,17 +12,30 @@ import net.minecraft.util.ResourceLocation;
 
 public abstract class FlowIconButton extends FlowButton {
 
-	public final FlowSprite BACKGROUND;
+	public final FlowSprite NORMAL_BACKGROUND;
+	public final FlowSprite DEPRESSED_BACKGROUND;
 	public final FlowSprite ICON;
 
-	public FlowIconButton(ButtonBackground background, ButtonLabel label, Position pos) {
-		super(pos, new Size(background.WIDTH, background.HEIGHT));
-		this.BACKGROUND = createBackground(
+	public FlowIconButton(
+		ButtonBackground normalBackground,
+		ButtonBackground depressedBackground,
+		ButtonLabel label,
+		Position pos
+	) {
+		super(pos, new Size(normalBackground.WIDTH, normalBackground.HEIGHT));
+		this.NORMAL_BACKGROUND = createBackground(
 			ButtonBackground.SPRITE_SHEET,
-			background.LEFT,
-			background.TOP,
-			background.WIDTH,
-			background.HEIGHT
+			normalBackground.LEFT,
+			normalBackground.TOP,
+			normalBackground.WIDTH,
+			normalBackground.HEIGHT
+		);
+		this.DEPRESSED_BACKGROUND = createBackground(
+			ButtonBackground.SPRITE_SHEET,
+			depressedBackground.LEFT,
+			depressedBackground.TOP,
+			depressedBackground.WIDTH,
+			depressedBackground.HEIGHT
 		);
 		this.ICON = createLabel(
 			ButtonLabel.SPRITE_SHEET,
@@ -34,11 +47,7 @@ public abstract class FlowIconButton extends FlowButton {
 	}
 
 	public FlowIconButton(ButtonLabel type, Position pos) {
-		this(ButtonBackground.NORMAL, type, pos);
-	}
-
-	public FlowIconButton(ButtonBackground background, ButtonLabel label) {
-		this(background, label, new Position(0, 0));
+		this(ButtonBackground.NORMAL, ButtonBackground.DEPRESSED, type, pos);
 	}
 
 	public FlowIconButton(ButtonLabel type) {
@@ -49,7 +58,7 @@ public abstract class FlowIconButton extends FlowButton {
 	public void drawGhost(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		BACKGROUND.drawGhostAt(screen, matrixStack, mx, my);
+		NORMAL_BACKGROUND.drawGhostAt(screen, matrixStack, mx, my);
 		ICON.drawGhostAt(screen, matrixStack, mx + 4, my + 4);
 	}
 
@@ -75,7 +84,11 @@ public abstract class FlowIconButton extends FlowButton {
 
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		BACKGROUND.drawAt(screen, matrixStack, getPosition());
+		if (isInBounds(mx, my) || clicking) {
+			DEPRESSED_BACKGROUND.drawAt(screen, matrixStack, getPosition());
+		} else {
+			NORMAL_BACKGROUND.drawAt(screen, matrixStack, getPosition());
+		}
 		ICON.drawAt(screen, matrixStack, getPosition().getX() + 4, getPosition().getY() + 4);
 	}
 
@@ -102,8 +115,10 @@ public abstract class FlowIconButton extends FlowButton {
 		INPUT(0, 0, 14, 14),
 		OUTPUT(0, 14, 14, 14),
 		ADD_INPUT(0, 28, 14, 14),
+		ADD_TIMER_TRIGGER(0, 70, 14, 14),
 		ADD_OUTPUT(0, 42, 14, 14),
 		TRIGGER(0, 56, 14, 14),
+		SETTINGS(0, 84, 14, 14),
 		NONE(0, 0, 0, 0);
 
 		public static final ResourceLocation SPRITE_SHEET = new ResourceLocation(

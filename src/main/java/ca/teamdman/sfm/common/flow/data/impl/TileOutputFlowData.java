@@ -52,9 +52,9 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 
 	@Override
 	public void merge(FlowData other) {
-		if (other instanceof TileInputFlowData) {
-			position = ((TileInputFlowData) other).position;
-			tileEntityRules = ((TileInputFlowData) other).tileEntityRules;
+		if (other instanceof TileOutputFlowData) {
+			position = ((TileOutputFlowData) other).position;
+			tileEntityRules = ((TileOutputFlowData) other).tileEntityRules;
 		}
 	}
 

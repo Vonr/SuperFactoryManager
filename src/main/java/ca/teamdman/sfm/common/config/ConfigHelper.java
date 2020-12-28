@@ -66,5 +66,6 @@ public final class ConfigHelper {
 		clientConfig = config;
 		Client.allowMultipleRuleWindows = ConfigHolder.CLIENT.allowMultipleRuleWindows.get();
 		Client.showRuleDrawerLabels = ConfigHolder.CLIENT.showRuleDrawerLabels.get();
+		Client.alwaysSnapMovementToGrid = ConfigHolder.CLIENT.alwaysSnapMovementToGrid.get();
 	}
 }

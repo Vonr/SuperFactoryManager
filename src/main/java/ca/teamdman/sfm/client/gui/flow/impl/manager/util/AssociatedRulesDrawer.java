@@ -34,7 +34,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 	private final FlowDrawer SELECTION_RULES_DRAWER;
 
 	public AssociatedRulesDrawer(ManagerFlowController controller, Position pos) {
-		super(pos, new Size(0, 0));
+		super(pos);
 
 		this.CONTROLLER = controller;
 

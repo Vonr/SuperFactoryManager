@@ -50,7 +50,7 @@ public class DebugController extends FlowComponent {
 			check.ifPresent(data -> drawId(screen, matrixStack, data.getId(), mx, my));
 
 			if (!check.isPresent()) {
-				CONTROLLER.RELATIONSHIP_CONTROLLER.getFlowRelationships()
+				new RelationshipController(CONTROLLER).getFlowRelationships()
 					.filter(r -> r.isCloseTo(mx, my))
 					.findFirst()
 					.ifPresent(rel -> {

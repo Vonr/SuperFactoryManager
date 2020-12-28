@@ -7,6 +7,7 @@ public class Config {
 	public static class Client {
 		public static boolean allowMultipleRuleWindows;
 		public static boolean showRuleDrawerLabels;
+		public static boolean alwaysSnapMovementToGrid;
 	}
 
 	public static class Common {

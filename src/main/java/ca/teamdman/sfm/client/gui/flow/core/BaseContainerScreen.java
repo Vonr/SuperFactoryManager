@@ -6,7 +6,6 @@ package ca.teamdman.sfm.client.gui.flow.core;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.BaseContainer;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import javax.annotation.Nonnull;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.entity.player.PlayerInventory;
@@ -44,15 +43,6 @@ public class BaseContainerScreen<C extends BaseContainer<?>> extends BaseScreen 
 		MatrixStack matrixStack, int mx, int my,
 		float partialTicks
 	) {
-		drawBackground(matrixStack);
-	}
-
-	public void drawBackground(MatrixStack matrixStack) {
-		RenderSystem.color4f(1f, 1f, 1f, 1f);
-		bindTexture(BACKGROUND_LEFT);
-		drawTexture(matrixStack, 0, 0, 0, 0, 256, 256);
-		bindTexture(BACKGROUND_RIGHT);
-		drawTexture(matrixStack, 256, 0, 0, 0, 256, 256);
 	}
 
 	@Override

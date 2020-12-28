@@ -8,6 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowToggleBox;
 import ca.teamdman.sfm.common.config.Config.Client;
@@ -19,68 +20,26 @@ import net.minecraft.client.resources.I18n;
 
 public class ConfigComponent extends FlowContainer {
 
-	public ConfigComponent(int width, int height) {
-		super(0, 0, width, height);
+	public ConfigComponent() {
+		super(new Position(0, 0), new Size(512, 256));
+		addChild(new FlowBackground());
 		setDraggable(false);
-		setBackgroundColour(CONST.SCREEN_BACKGROUND);
-		Position pos = new Position(10, 10);
-		Size size = new Size(0, 0);
-		String content1 = I18n.format("gui.sfm.config.title");
-		Colour3f colour = new Colour3f(0.2f, 0.2f, 0.2f);
-		addChild(new FlowComponent() {
-			private String content;
-			private Colour3f textColour = CONST.TEXT_PRIMARY;
-			private int scale = 2;
 
-			@Override
-			public void draw(
-				BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-			) {
-				matrixStack.push();
-				matrixStack.scale(scale, scale, 1);
-				screen.drawString(
-					matrixStack,
-					content,
-					getPosition().getX(),
-					getPosition().getY(),
-					textColour.toInt()
-				);
-				matrixStack.pop();
-			}
-		});
+		addChild(new FlowHeader(
+			new Position(10, 10),
+			new Size(0, 0),
+			I18n.format("gui.sfm.config.title")
+		));
 
 		int row = 20;
 		int rowHeight = 25;
 		row += rowHeight;
 		addChild(new FlowComponent(10, row, 300, 14));
-		Position pos1 = new Position(30, row + 4);
-		Size size1 = new Size(0, 0);
-		String content11 = I18n.format("gui.sfm.config.allowMultipleRuleWindows");
-		addChild(new FlowComponent(pos1, size1) {
-			private String content = content11;
-			private Colour3f textColour = CONST.TEXT_PRIMARY;
-			private int scale = 1;
-
-			{
-				setDraggable(false);
-			}
-
-			@Override
-			public void draw(
-				BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-			) {
-				matrixStack.push();
-				matrixStack.scale(scale, scale, 1);
-				screen.drawString(
-					matrixStack,
-					content,
-					getPosition().getX(),
-					getPosition().getY(),
-					textColour.toInt()
-				);
-				matrixStack.pop();
-			}
-		});
+		addChild(new FlowLabel(
+			new Position(30, row + 4),
+			new Size(0, 0),
+			I18n.format("gui.sfm.config.allowMultipleRuleWindows")
+		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
 			new Size(10, 10),
@@ -98,34 +57,11 @@ public class ConfigComponent extends FlowContainer {
 
 		row += rowHeight;
 		addChild(new FlowComponent(10, row, 300, 14));
-		Position pos2 = new Position(30, row + 4);
-		Size size2 = new Size(0, 0);
-		String content12 = I18n.format("gui.sfm.config.showRuleDrawerLabels");
-		addChild(new FlowComponent(pos2, size2) {
-			private String content = content12;
-			private Colour3f textColour = CONST.TEXT_PRIMARY;
-			private int scale = 1;
-
-			{
-				setDraggable(false);
-			}
-
-			@Override
-			public void draw(
-				BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-			) {
-				matrixStack.push();
-				matrixStack.scale(scale, scale, 1);
-				screen.drawString(
-					matrixStack,
-					content,
-					getPosition().getX(),
-					getPosition().getY(),
-					textColour.toInt()
-				);
-				matrixStack.pop();
-			}
-		});
+		addChild(new FlowLabel(
+			new Position(30, row + 4),
+			new Size(0, 0),
+			I18n.format("gui.sfm.config.showRuleDrawerLabels")
+		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
 			new Size(10, 10),
@@ -140,11 +76,78 @@ public class ConfigComponent extends FlowContainer {
 				);
 			}
 		});
+
+		row += rowHeight;
+		addChild(new FlowComponent(10, row, 300, 14));
+		addChild(new FlowLabel(
+			new Position(30, row + 4),
+			new Size(0, 0),
+			I18n.format("gui.sfm.config.alwaysSnapMovementToGrid")
+		));
+		addChild(new FlowToggleBox(
+			new Position(12, row + 2),
+			new Size(10, 10),
+			Client.alwaysSnapMovementToGrid
+		) {
+			@Override
+			public void onChecked(boolean checked) {
+				ConfigHelper.setValueAndSave(
+					ConfigHelper.clientConfig,
+					ConfigHolder.CLIENT.alwaysSnapMovementToGrid,
+					checked
+				);
+			}
+		});
 	}
 
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		super.drawBackground(screen, matrixStack);
 		super.draw(screen, matrixStack, mx, my, deltaTime);
+	}
+
+	private static class FlowLabel extends FlowComponent {
+
+		protected Colour3f TEXT_COLOUR = CONST.TEXT_PRIMARY;
+		private String content;
+
+		public FlowLabel(Position pos, Size size, String content) {
+			super(pos, size);
+			this.content = content;
+		}
+
+		@Override
+		public void draw(
+			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+		) {
+			screen.drawString(
+				matrixStack,
+				content,
+				getPosition().getX(),
+				getPosition().getY(),
+				TEXT_COLOUR.toInt()
+			);
+		}
+	}
+
+	private static class FlowHeader extends FlowLabel {
+
+		public FlowHeader(Position pos, Size size, String content) {
+			super(pos, size, content);
+			TEXT_COLOUR = new Colour3f(0.2f, 0.2f, 0.2f);
+		}
+
+		@Override
+		public void draw(
+			BaseScreen screen,
+			MatrixStack matrixStack,
+			int mx,
+			int my,
+			float deltaTime
+		) {
+			matrixStack.push();
+			matrixStack.scale(2, 2, 1);
+			super.draw(screen, matrixStack, mx, my, deltaTime);
+			matrixStack.pop();
+		}
 	}
 }

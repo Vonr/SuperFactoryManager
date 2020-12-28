@@ -6,7 +6,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
-import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -27,7 +26,7 @@ public class FlowDrawer extends FlowContainer {
 	private int scroll = 0;
 
 	public FlowDrawer(Position pos, int itemWidth, int itemHeight, String labelText) {
-		super(pos, new Size(0, 0));
+		super(pos);
 		this.ITEM_WIDTH = itemWidth;
 		this.ITEM_HEIGHT = itemHeight;
 		this.LABEL_TEXT = labelText;
