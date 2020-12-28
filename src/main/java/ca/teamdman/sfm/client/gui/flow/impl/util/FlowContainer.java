@@ -13,8 +13,11 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.ListIterator;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
+import java.util.stream.Stream.Builder;
 
 public abstract class FlowContainer extends FlowComponent {
 
@@ -39,7 +42,7 @@ public abstract class FlowContainer extends FlowComponent {
 	 * Containers with no area are not draggable
 	 */
 	public FlowContainer(Position pos) {
-		this(pos, new Size(0,0));
+		this(pos, new Size(0, 0));
 		setDraggable(false);
 	}
 
@@ -50,12 +53,27 @@ public abstract class FlowContainer extends FlowComponent {
 		super(pos, size);
 	}
 
+	/**
+	 * Adds the children to a stream in reversed order.
+	 * Higher z index means that the elements render later
+	 * Rendering later means they render 'on top'.
+	 * Clicking an element that is on to of another expects the top element to consume click first.
+	 */
+	public Stream<FlowComponent> getEnabledChildrenControllers() {
+		Builder<FlowComponent> builder = Stream.builder();
+		ListIterator<FlowComponent> iter = children.listIterator(children.size());
+		while (iter.hasPrevious()) {
+			builder.add(iter.previous());
+		}
+		return builder.build().filter(FlowComponent::isEnabled);
+	}
+
 	@Override
 	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
 		Optional<FlowComponent> rtn = children.stream()
 			.map(c -> c.getElementUnderMouse(
-				mx+getPosition().getX(),
-				my+getPosition().getY()
+				mx + getPosition().getX(),
+				my + getPosition().getY()
 			))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
@@ -89,74 +107,56 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		if (super.mousePressed(mx, my, button)) {
-			return true;
-		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
-		return children.stream()
-			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.mousePressed(pmx, pmy, button));
+		return getEnabledChildrenControllers()
+			.anyMatch(c -> c.mousePressed(pmx, pmy, button))
+			|| super.mousePressed(mx, my, button);
 	}
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
-		if (super.mouseReleased(mx, my, button)) {
-			return true;
-		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
-		return children.stream()
-			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.mouseReleased(pmx, pmy, button));
+		return getEnabledChildrenControllers()
+			.anyMatch(c -> c.mouseReleased(pmx, pmy, button))
+			|| super.mouseReleased(mx, my, button);
 	}
 
 	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
-		if (super.mouseDragged(mx, my, button, dmx, dmy)) {
-			return true;
-		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
-		return children.stream()
-			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.mouseDragged(pmx, pmy, button, dmx, dmy));
+		return getEnabledChildrenControllers()
+			.anyMatch(c -> c.mouseDragged(pmx, pmy, button, dmx, dmy))
+			|| super.mouseDragged(mx, my, button, dmx, dmy);
 	}
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		if (super.keyPressed(keyCode, scanCode, modifiers, mx, my)) {
-			return true;
-		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
-		return children.stream()
-			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.keyPressed(keyCode, scanCode, modifiers, pmx, pmy));
+		return getEnabledChildrenControllers()
+			.anyMatch(c -> c.keyPressed(keyCode, scanCode, modifiers, pmx, pmy))
+			|| super.keyPressed(keyCode, scanCode, modifiers, mx, my);
 	}
 
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) {
-			return true;
-		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
-		return children.stream()
-			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.keyReleased(keyCode, scanCode, modifiers, pmx, pmy));
+		return getEnabledChildrenControllers()
+			.anyMatch(c -> c.keyReleased(keyCode, scanCode, modifiers, pmx, pmy)
+			|| super.keyReleased(keyCode, scanCode, modifiers, mx, my));
 	}
 
 	@Override
 	public boolean mouseScrolled(int mx, int my, double scroll) {
-		if (super.mouseScrolled(mx, my, scroll)) {
-			return true;
-		}
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
-		return children.stream()
-			.filter(FlowComponent::isEnabled)
-			.anyMatch(c -> c.mouseScrolled(pmx, pmy, scroll));
+		return getEnabledChildrenControllers()
+			.anyMatch(c -> c.mouseScrolled(pmx, pmy, scroll))
+			|| super.mouseScrolled(mx, my, scroll);
 	}
 
 	@Override

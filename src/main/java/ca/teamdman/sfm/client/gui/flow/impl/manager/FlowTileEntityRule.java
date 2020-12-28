@@ -4,6 +4,7 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
+import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
@@ -28,12 +29,28 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 		setEnabled(false);
 	}
 
-
 	@Override
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		super.draw(screen, matrixStack, mx, my, deltaTime);
+		screen.clearRect(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			getSize().getWidth(),
+			getSize().getWidth()
+		);
+		drawBackground(screen, matrixStack);
+		screen.drawBorder(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			getSize().getWidth(),
+			getSize().getWidth(),
+			2,
+			CONST.PANEL_BORDER
+		);
+
 		screen.drawString(
 			matrixStack,
 			"Tile Entity Rule",
@@ -41,6 +58,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			5,
 			0x999999
 		);
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	@Override
@@ -49,7 +67,12 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 	}
 
 	@Override
-	public void onDataChanged() {
+	public int getZIndex() {
+		return super.getZIndex() + 100;
+	}
 
+	@Override
+	public void onDataChanged() {
+		getPosition().setXY(DATA.getPosition());
 	}
 }

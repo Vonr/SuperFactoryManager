@@ -17,28 +17,23 @@ public abstract class FlowButton extends FlowComponent {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		if (super.mousePressed(mx, my, button)) {
-			return true;
-		} else if (isInBounds(mx, my)) {
+		if (isInBounds(mx, my) && !canStartDrag()) {
 			clicking = true;
 			return true;
-		} else {
-			return false;
 		}
+		return super.mousePressed(mx, my, button);
 	}
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
-		if (super.mouseReleased(mx, my, button)) {
-			return true;
-		} else if (clicking) {
+		if (clicking) {
 			clicking = false;
 			if (isInBounds(mx, my)) {
 				this.onClicked(mx, my, button);
 				return true;
 			}
 		}
-		return false;
+		return super.mouseReleased(mx, my, button);
 	}
 
 	public abstract void onClicked(int mx, int my, int button);

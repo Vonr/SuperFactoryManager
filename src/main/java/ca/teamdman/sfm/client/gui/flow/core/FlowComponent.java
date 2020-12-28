@@ -49,9 +49,10 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 			dragStart.setXY(mx, my);
 			dragOffset.setXY(mx - getPosition().getX(), my - getPosition().getY());
 			return true;
-		} else {
-			return false;
 		}
+		// Consume click event if mouse is over background
+		// we don't want elements occluded by this one to detect events
+		return isInBounds(mx,my);
 	}
 
 	@Override
