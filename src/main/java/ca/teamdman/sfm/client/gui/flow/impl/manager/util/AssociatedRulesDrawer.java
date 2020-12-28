@@ -138,7 +138,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 					.filter(c -> c instanceof ChildRulesDrawerItem && c != this)
 					.forEach(c -> ((ChildRulesDrawerItem) c).setSelected(false));
 			}
-			System.out.println(isSelected());
 			CONTROLLER.findFirstChild(DATA.getId()).ifPresent(comp -> {
 				comp.setVisible(isSelected());
 				comp.setEnabled(isSelected());
