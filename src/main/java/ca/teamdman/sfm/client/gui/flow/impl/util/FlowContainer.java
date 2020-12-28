@@ -53,7 +53,10 @@ public abstract class FlowContainer extends FlowComponent {
 	@Override
 	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
 		Optional<FlowComponent> rtn = children.stream()
-			.map(c -> c.getElementUnderMouse(mx, my))
+			.map(c -> c.getElementUnderMouse(
+				mx+getPosition().getX(),
+				my+getPosition().getY()
+			))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.findFirst();
