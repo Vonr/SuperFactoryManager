@@ -119,7 +119,12 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
 			setDraggable(false);
-			setSelected(CONTROLLER.findFirstChild(data.getId())
+			refreshSelection();
+			CONTROLLER.SCREEN.onChange(DATA.getId(), (d, t) -> this.refreshSelection());
+		}
+
+		private void refreshSelection() {
+			setSelected(CONTROLLER.findFirstChild(DATA.getId())
 				.filter(FlowComponent::isVisible)
 				.isPresent());
 		}
