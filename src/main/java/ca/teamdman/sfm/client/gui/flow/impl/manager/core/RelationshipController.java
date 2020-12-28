@@ -32,7 +32,7 @@ public class RelationshipController extends FlowComponent {
 
 	@Override
 	public int getZIndex() {
-		return super.getZIndex() - 100;
+		return super.getZIndex() + 300;
 	}
 
 	public Stream<RelationshipFlowData> getFlowRelationshipDatas() {
@@ -96,6 +96,7 @@ public class RelationshipController extends FlowComponent {
 		}
 		toPos.setXY(mx, my);
 		CONTROLLER.getElementUnderMouse(mx, my)
+			.filter(c -> c instanceof FlowDataHolder)
 			.filter(c -> !c.equals(from))
 			.map(x -> x.snapToEdge(fromPos))
 			.ifPresent(toPos::setXY);
@@ -108,4 +109,6 @@ public class RelationshipController extends FlowComponent {
 			screen.drawArrow(matrixStack, fromPos, toPos, FlowRelationship.COLOUR);
 		}
 	}
+	
+
 }

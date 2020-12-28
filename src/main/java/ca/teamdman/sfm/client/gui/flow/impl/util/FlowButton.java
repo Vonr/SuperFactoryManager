@@ -18,6 +18,7 @@ public abstract class FlowButton extends FlowComponent {
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
 		if (isInBounds(mx, my) && !canStartDrag()) {
+			// Disable button clicking when attempting drag or relationship creation
 			clicking = true;
 			return true;
 		}

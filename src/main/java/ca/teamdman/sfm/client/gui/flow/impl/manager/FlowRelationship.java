@@ -38,7 +38,8 @@ public class FlowRelationship extends FlowComponent {
 		if (!Screen.hasControlDown()) {
 			return false;
 		}
-		Optional<FlowRelationship> rel = new RelationshipController(CONTROLLER).getFlowRelationships()
+		Optional<FlowRelationship> rel = new RelationshipController(CONTROLLER)
+			.getFlowRelationships()
 			.filter(r -> r.isCloseTo(mx, my))
 			.findFirst();
 		if (!rel.isPresent()) {
@@ -59,7 +60,7 @@ public class FlowRelationship extends FlowComponent {
 
 	@Override
 	public int getZIndex() {
-		return super.getZIndex()-200;
+		return super.getZIndex() - 200;
 	}
 
 	@Override

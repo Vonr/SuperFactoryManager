@@ -37,7 +37,7 @@ public class DebugController extends FlowComponent {
 
 	@Override
 	public int getZIndex() {
-		return super.getZIndex() + 200;
+		return super.getZIndex() + 300;
 	}
 
 	@Override

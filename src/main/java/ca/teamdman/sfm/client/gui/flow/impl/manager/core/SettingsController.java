@@ -11,13 +11,13 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 
-public class FlowSettingsController extends FlowContainer {
+public class SettingsController extends FlowContainer {
 
 	private final ConfigComponent CONFIG_COMPONENT;
 
 	private boolean open = false;
 
-	public FlowSettingsController(ManagerScreen screen) {
+	public SettingsController(ManagerScreen screen) {
 		CONFIG_COMPONENT = new ConfigComponent();
 		CONFIG_COMPONENT.setVisible(false);
 		CONFIG_COMPONENT.setEnabled(false);

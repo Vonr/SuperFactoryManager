@@ -5,9 +5,11 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStackPicker;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowMinusButton;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
@@ -17,6 +19,8 @@ import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.item.ItemStack;
 
 public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder {
 
@@ -32,8 +36,19 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 		this.DATA = data;
 
 		addChild(new MinimizeButton(
-			new Position(180,5),
-			new Size(10,10)
+			new Position(180, 5),
+			new Size(10, 10)
+		));
+
+		addChild(new SectionHeader(
+			new Position(5,25),
+			new Size(35,10),
+			I18n.format("gui.sfm.manager.tile_entity_rule.icon.title")
+		));
+
+		addChild(new FlowIconItemStack(
+			DATA.icon,
+			new Position(5,40)
 		));
 
 		setVisible(false);
@@ -67,7 +82,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			"Tile Entity Rule",
 			getPosition().getX() + 5,
 			getPosition().getY() + 5,
-			0x999999
+			CONST.TEXT_PRIMARY.toInt()
 		);
 		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
@@ -139,6 +154,45 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 				CONST.PANEL_BORDER
 			);
 			super.draw(screen, matrixStack, mx, my, deltaTime);
+		}
+	}
+
+	public class FlowIconItemStack extends FlowItemStackPicker {
+		public FlowIconItemStack(
+			ItemStack stack,
+			Position pos
+		) {
+			super(stack, pos);
+		}
+	}
+
+	public class SectionHeader extends FlowComponent {
+
+		private final String CONTENT;
+
+		public SectionHeader(Position pos, Size size, String CONTENT) {
+			super(pos, size);
+			this.CONTENT = CONTENT;
+			setEnabled(false);
+			setBackgroundColour(CONST.PANEL_BACKGROUND_DARK);
+		}
+
+		@Override
+		public void draw(
+			BaseScreen screen,
+			MatrixStack matrixStack,
+			int mx,
+			int my,
+			float deltaTime
+		) {
+			super.draw(screen, matrixStack, mx, my, deltaTime);
+			screen.drawString(
+				matrixStack,
+				CONTENT,
+				getPosition().getX()+2,
+				getPosition().getY()+2,
+				CONST.TEXT_PRIMARY.toInt()
+			);
 		}
 	}
 }

@@ -84,6 +84,6 @@ public class CloneController extends FlowComponent {
 
 	@Override
 	public int getZIndex() {
-		return super.getZIndex() - 50;
+		return super.getZIndex() + 300;
 	}
 }
