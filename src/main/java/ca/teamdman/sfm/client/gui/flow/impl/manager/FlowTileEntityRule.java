@@ -14,6 +14,8 @@ import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
+import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder {
@@ -78,6 +80,16 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 	@Override
 	public int getZIndex() {
 		return super.getZIndex() + 100;
+	}
+
+	@Override
+	public void onDragFinished(int dx, int dy, int mx, int my) {
+		PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
+			CONTROLLER.SCREEN.CONTAINER.windowId,
+			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			DATA.getId(),
+			this.getPosition()
+		));
 	}
 
 	@Override

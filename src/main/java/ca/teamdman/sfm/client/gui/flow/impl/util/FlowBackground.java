@@ -29,6 +29,7 @@ public class FlowBackground extends FlowComponent {
 
 	@Override
 	public void drawBackground(BaseScreen screen, MatrixStack matrixStack) {
+		screen.clearRect(matrixStack, 5,5,512-10,256-10);
 		BaseScreen.bindTexture(BACKGROUND_LEFT);
 		screen.drawTexture(matrixStack, 0, 0, 0, 0, 256, 256);
 		BaseScreen.bindTexture(BACKGROUND_RIGHT);
