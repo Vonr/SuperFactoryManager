@@ -58,8 +58,13 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
 		if (isDragging) {
-			int newX = MathHelper.clamp(mx - dragOffset.getX(), 0, 512 - size.getWidth());
-			int newY = MathHelper.clamp(my - dragOffset.getY(), 0, 256 - size.getHeight());
+			int newX = mx - dragOffset.getX();
+			int newY = my - dragOffset.getY();
+
+			if (!Client.allowElementsOutOfBounds) {
+				newX = MathHelper.clamp(newX, 0, 512 - size.getWidth());
+				newY = MathHelper.clamp(newY, 0, 256 - size.getHeight());
+			}
 
 			if (Screen.hasShiftDown() || Client.alwaysSnapMovementToGrid) {
 				newX = newX - newX % 5;

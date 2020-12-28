@@ -9,6 +9,7 @@ public final class ClientConfig {
 	public final ForgeConfigSpec.BooleanValue allowMultipleRuleWindows;
 	public final ForgeConfigSpec.BooleanValue alwaysSnapMovementToGrid;
 	public final ForgeConfigSpec.BooleanValue showRuleDrawerLabels;
+	public final ForgeConfigSpec.BooleanValue allowElementsOutOfBounds;
 
 
 	ClientConfig(final ForgeConfigSpec.Builder builder) {
@@ -22,6 +23,9 @@ public final class ClientConfig {
 		alwaysSnapMovementToGrid = builder
 			.comment("Always snap movement to grid")
 			.define("alwaysSnapMovementToGrid", false);
+		allowElementsOutOfBounds = builder
+			.comment("Disable element out-of-bounds check when repositioning elements")
+			.define("allowElementsOutOfBounds", false);
 		builder.pop();
 	}
 }

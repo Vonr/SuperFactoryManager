@@ -8,6 +8,7 @@ public class Config {
 		public static boolean allowMultipleRuleWindows;
 		public static boolean showRuleDrawerLabels;
 		public static boolean alwaysSnapMovementToGrid;
+		public static boolean allowElementsOutOfBounds;
 	}
 
 	public static class Common {

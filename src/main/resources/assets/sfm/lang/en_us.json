@@ -14,5 +14,6 @@
   "gui.sfm.config.title": "Super Factory Manager Configuration",
   "gui.sfm.config.allowMultipleRuleWindows": "Allow opening multiple rule windows",
   "gui.sfm.config.showRuleDrawerLabels": "Show labels above rule drawers",
-  "gui.sfm.config.alwaysSnapMovementToGrid": "Always snap movement to grid"
+  "gui.sfm.config.alwaysSnapMovementToGrid": "Always snap movement to grid",
+  "gui.sfm.config.allowElementsOutOfBounds": "Allow elements out of bounds during repositioning"
 }

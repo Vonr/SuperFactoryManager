@@ -29,5 +29,6 @@ public class Colour3f {
 		public static final Colour3f PANEL_BACKGROUND = new Colour3f(0.4f, 0.4f, 0.4f);
 		public static final Colour3f PANEL_BORDER = new Colour3f(0.3f, 0.3f, 0.3f);
 		public static final Colour3f CHECKBOX_BACKGROUND = new Colour3f(0.3f, 0.3f, 0.3f);
+		public static final Colour3f MINIMIZE = new Colour3f(0.3f, 0.3f, 1);
 	}
 }
