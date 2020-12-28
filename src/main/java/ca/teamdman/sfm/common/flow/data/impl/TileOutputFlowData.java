@@ -46,7 +46,7 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 			.map(UUID::toString)
 			.map(StringNBT::valueOf)
 			.collect(ListNBT::new, ListNBT::add, ListNBT::addAll));
-		FlowDataFactories.INPUT.stampNBT(tag);
+		FlowDataFactories.OUTPUT.stampNBT(tag);
 		return tag;
 	}
 
