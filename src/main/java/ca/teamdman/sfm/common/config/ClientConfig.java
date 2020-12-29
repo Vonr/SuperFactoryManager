@@ -10,6 +10,7 @@ public final class ClientConfig {
 	public final ForgeConfigSpec.BooleanValue alwaysSnapMovementToGrid;
 	public final ForgeConfigSpec.BooleanValue showRuleDrawerLabels;
 	public final ForgeConfigSpec.BooleanValue allowElementsOutOfBounds;
+	public final ForgeConfigSpec.BooleanValue enableRegexSearch;
 
 
 	ClientConfig(final ForgeConfigSpec.Builder builder) {
@@ -26,6 +27,9 @@ public final class ClientConfig {
 		allowElementsOutOfBounds = builder
 			.comment("Disable element out-of-bounds check when repositioning elements")
 			.define("allowElementsOutOfBounds", false);
+		enableRegexSearch = builder
+			.comment("Use regular expressions when matching items during search queries")
+			.define("enableRegexSearch", true);
 		builder.pop();
 	}
 }

@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
+import ca.teamdman.sfm.client.SearchUtil;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButtonSpawner;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInstructions;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButtonSpawner;
@@ -22,6 +23,7 @@ public class ManagerFlowController extends FlowContainer {
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
 		rebuildChildren();
+		SearchUtil.buildCacheInBackground();
 	}
 
 	public void rebuildChildren() {

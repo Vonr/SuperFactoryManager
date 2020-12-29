@@ -3,6 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager;
 
+import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.SFMUtil;
+import ca.teamdman.sfm.client.SearchUtil;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
@@ -19,6 +22,7 @@ import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.Queue;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 
@@ -41,14 +45,14 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 		));
 
 		addChild(new SectionHeader(
-			new Position(5,25),
-			new Size(35,10),
+			new Position(5, 25),
+			new Size(35, 10),
 			I18n.format("gui.sfm.manager.tile_entity_rule.icon.title")
 		));
 
 		addChild(new FlowIconItemStack(
 			DATA.icon,
-			new Position(5,40)
+			new Position(5, 40)
 		));
 
 		setVisible(false);
@@ -158,11 +162,30 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 	}
 
 	public class FlowIconItemStack extends FlowItemStackPicker {
+
 		public FlowIconItemStack(
 			ItemStack stack,
 			Position pos
 		) {
 			super(stack, pos);
+		}
+
+		@Override
+		public void onClicked(int mx, int my, int button) {
+			super.onClicked(mx, my, button);
+			new SearchUtil.Query("stone") {
+				@Override
+				public void onResultsUpdated(Queue<ItemStack> results) {
+					SFM.LOGGER.info(
+						SFMUtil.getMarker(FlowIconItemStack.this.getClass()),
+						"Results updated with {} entries:", results.size()
+					);
+					results.forEach(stack -> SFM.LOGGER.info(
+						SFMUtil.getMarker(FlowIconItemStack.this.getClass()),
+						stack
+					));
+				}
+			}.start();
 		}
 	}
 
@@ -189,8 +212,8 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			screen.drawString(
 				matrixStack,
 				CONTENT,
-				getPosition().getX()+2,
-				getPosition().getY()+2,
+				getPosition().getX() + 2,
+				getPosition().getY() + 2,
 				CONST.TEXT_PRIMARY.toInt()
 			);
 		}

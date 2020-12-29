@@ -68,5 +68,6 @@ public final class ConfigHelper {
 		Client.showRuleDrawerLabels = ConfigHolder.CLIENT.showRuleDrawerLabels.get();
 		Client.alwaysSnapMovementToGrid = ConfigHolder.CLIENT.alwaysSnapMovementToGrid.get();
 		Client.allowElementsOutOfBounds = ConfigHolder.CLIENT.allowElementsOutOfBounds.get();
+		Client.enableRegexSearch = ConfigHolder.CLIENT.enableRegexSearch.get();
 	}
 }

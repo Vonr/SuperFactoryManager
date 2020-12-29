@@ -9,6 +9,7 @@ public class Config {
 		public static boolean showRuleDrawerLabels;
 		public static boolean alwaysSnapMovementToGrid;
 		public static boolean allowElementsOutOfBounds;
+		public static boolean enableRegexSearch;
 	}
 
 	public static class Common {
