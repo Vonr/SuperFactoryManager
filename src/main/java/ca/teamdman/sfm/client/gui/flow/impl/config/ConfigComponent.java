@@ -10,7 +10,6 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowTextArea;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowToggleBox;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.config.ConfigHelper;
@@ -146,14 +145,6 @@ public class ConfigComponent extends FlowContainer {
 				);
 			}
 		});
-
-		row += rowHeight;
-		addChild(new FlowTextArea(
-			screen,
-			"Howdy, world",
-			new Position(10, row),
-			new Size(100, 16)
-		));
 	}
 
 	@Override
