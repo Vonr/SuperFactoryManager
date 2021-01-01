@@ -74,8 +74,8 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 	@Override
 	public void cloneWithPosition(int x, int y) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerFlowOutputDataPacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			UUID.randomUUID(),
 			new Position(x, y),
 			DATA.tileEntityRules
@@ -85,8 +85,8 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 	@Override
 	public void delete() {
 		PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			DATA.getId()
 		));
 	}
@@ -110,8 +110,8 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 	@Override
 	public void setRules(List<UUID> rules) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerFlowOutputDataPacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			DATA.getId(),
 			DATA.getPosition(),
 			rules
@@ -144,8 +144,8 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 		@Override
 		public void onDragFinished(int dx, int dy, int mx, int my) {
 			PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
-				CONTROLLER.SCREEN.CONTAINER.windowId,
-				CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+				CONTROLLER.SCREEN.getContainer().windowId,
+				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 				DATA.getId(),
 				getPosition()
 			));

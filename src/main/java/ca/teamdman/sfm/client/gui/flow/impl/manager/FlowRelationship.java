@@ -46,8 +46,8 @@ public class FlowRelationship extends FlowComponent {
 			return false;
 		}
 		PacketHandler.INSTANCE.sendToServer(new ManagerCreateLineNodePacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			rel.get().data.from,
 			rel.get().data.to,
 			new Position(

@@ -26,8 +26,8 @@ public class FlowOutputButtonSpawner extends FlowIconButton {
 	@Override
 	public void onClicked(int mx, int my, int button) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerFlowOutputDataPacketC2S(
-			managerFlowController.SCREEN.CONTAINER.windowId,
-			managerFlowController.SCREEN.CONTAINER.getSource().getPos(),
+			managerFlowController.SCREEN.getContainer().windowId,
+			managerFlowController.SCREEN.getContainer().getSource().getPos(),
 			UUID.randomUUID(),
 			new Position(0, 0),
 			Collections.emptyList()

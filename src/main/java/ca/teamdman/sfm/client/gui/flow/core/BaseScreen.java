@@ -137,6 +137,21 @@ public abstract class BaseScreen extends Screen {
 		);
 	}
 
+
+	@Override
+	public boolean charTyped(char codePoint, int modifiers) {
+		return charTypedScaled(
+			codePoint,
+			modifiers,
+			scaleX(getLatestMouseX()),
+			scaleY(getLatestMouseY())
+		);
+	}
+
+	public boolean charTypedScaled(char codePoint, int modifiers, int mx, int my) {
+		return false;
+	}
+
 	public boolean mouseScrolledScaled(int mx, int my, double scroll) {
 		return false;
 	}
@@ -358,8 +373,8 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
-	 * Scissors from the top left corner
-	 * Has some rounding issues, might be off by a pixel in either direction/size
+	 * Scissors from the top left corner Has some rounding issues, might be off by a pixel in either
+	 * direction/size
 	 *
 	 * @param matrixStack Matrix stack to grab transforms from
 	 * @param left        Scaled distance from the left of the screen

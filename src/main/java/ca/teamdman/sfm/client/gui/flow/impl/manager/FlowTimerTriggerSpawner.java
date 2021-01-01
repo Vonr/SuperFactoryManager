@@ -24,8 +24,8 @@ public class FlowTimerTriggerSpawner extends FlowIconButton {
 	@Override
 	public void onClicked(int mx, int my, int button) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerCreateTimerTriggerPacketC2S(
-			managerFlowController.SCREEN.CONTAINER.windowId,
-			managerFlowController.SCREEN.CONTAINER.getSource().getPos(),
+			managerFlowController.SCREEN.getContainer().windowId,
+			managerFlowController.SCREEN.getContainer().getSource().getPos(),
 			new Position(0, 0)
 		));
 	}

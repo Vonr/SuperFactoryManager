@@ -14,14 +14,13 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
  * @see net.minecraft.util.text.TextFormatting
  */
 public class FlowTextArea extends FlowComponent {
-
-	public Style style;
 	private String content;
+//	private final TextFieldWidget delegate;
 
-	public FlowTextArea(String content, Position pos, Size size, Style style) {
+	public FlowTextArea(String content, Position pos, Size size) {
 		super(pos, size);
 		this.content = content;
-		this.style = style;
+//		this.delegate = new TextFieldWidget()
 	}
 
 	public void focus() {
@@ -41,10 +40,5 @@ public class FlowTextArea extends FlowComponent {
 	@Override
 	public Size getSize() {
 		return null;
-	}
-
-	public static enum Style {
-		DOUBLE_CLICK_TO_EDIT,
-		ALWAYS_EDITABLE
 	}
 }

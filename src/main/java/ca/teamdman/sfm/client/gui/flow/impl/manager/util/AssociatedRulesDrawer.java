@@ -223,8 +223,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		public void onClicked(int mx, int my, int button) {
 			//todo: remove debug item icons, or put more effort into random rule icons
 			PacketHandler.INSTANCE.sendToServer(new ManagerCreateTileEntityRulePacketC2S(
-				CONTROLLER.SCREEN.CONTAINER.windowId,
-				CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+				CONTROLLER.SCREEN.getContainer().windowId,
+				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 				"New tile entity rule",
 				items[(int) (Math.random() * items.length)],
 				new Position(0, 0)

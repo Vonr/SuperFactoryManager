@@ -62,4 +62,17 @@ public interface IFlowController {
 	default boolean mouseScrolled(int mx, int my, double scroll) {
 		return false;
 	}
+
+
+	/**
+	 * Keyboard character typed
+	 * @param codePoint Key typed
+	 * @param modifiers modifiers?
+	 * @param mx Scaled mouse X coordinate
+	 * @param my Scaled mouse Y coordinate
+	 * @return consume event
+	 */
+	default boolean charTyped(char codePoint, int modifiers, int mx, int my) {
+		return false;
+	}
 }

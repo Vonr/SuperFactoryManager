@@ -104,8 +104,8 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 	@Override
 	public void onDragFinished(int dx, int dy, int mx, int my) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			DATA.getId(),
 			this.getPosition()
 		));

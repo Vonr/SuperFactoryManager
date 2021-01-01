@@ -36,7 +36,7 @@ public class RelationshipController extends FlowComponent {
 	}
 
 	public Stream<RelationshipFlowData> getFlowRelationshipDatas() {
-		return CONTROLLER.SCREEN.DATAS.values().stream()
+		return CONTROLLER.SCREEN.getData()
 			.filter(data -> data instanceof RelationshipFlowData)
 			.map(data -> ((RelationshipFlowData) data));
 	}
@@ -82,8 +82,8 @@ public class RelationshipController extends FlowComponent {
 
 	public void createRelationship(UUID from, UUID to) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			from,
 			to
 		));

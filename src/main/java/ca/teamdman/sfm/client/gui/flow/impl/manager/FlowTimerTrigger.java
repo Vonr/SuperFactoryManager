@@ -40,8 +40,8 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, 
 	public void cloneWithPosition(int x, int y) {
 		//todo: switch to timertrigger flowdata
 //		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
-//			CONTROLLER.SCREEN.CONTAINER.windowId,
-//			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+//			CONTROLLER.SCREEN.getContainer().windowId,
+//			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 //			UUID.randomUUID(),
 //			new Position(x, y),
 //			Collections.emptyList()
@@ -51,8 +51,8 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, 
 	@Override
 	public void delete() {
 		PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			data.getId()
 		));
 	}
@@ -60,8 +60,8 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, 
 	@Override
 	public void onDragFinished(int dx, int dy, int mx, int my) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
-			CONTROLLER.SCREEN.CONTAINER.windowId,
-			CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			data.getId(),
 			this.getPosition()
 		));

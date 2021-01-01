@@ -25,8 +25,8 @@ public class DeletionController extends FlowComponent {
 			Optional<FlowComponent> elem = getElementUnderMouse(mx, my)
 				.filter(c -> c instanceof FlowDataHolder);
 			elem.ifPresent(c -> PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
-				CONTROLLER.SCREEN.CONTAINER.windowId,
-				CONTROLLER.SCREEN.CONTAINER.getSource().getPos(),
+				CONTROLLER.SCREEN.getContainer().windowId,
+				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 				((FlowDataHolder) c).getData().getId()
 			)));
 			return elem.isPresent();
