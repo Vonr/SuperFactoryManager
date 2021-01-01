@@ -10,6 +10,7 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowTextArea;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowToggleBox;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.config.ConfigHelper;
@@ -20,8 +21,11 @@ import net.minecraft.client.resources.I18n;
 
 public class ConfigComponent extends FlowContainer {
 
-	public ConfigComponent() {
+	BaseScreen SCREEN;
+
+	public ConfigComponent(BaseScreen screen) {
 		super(new Position(0, 0), new Size(512, 256));
+		this.SCREEN = screen;
 		addChild(new FlowBackground());
 		setDraggable(false);
 
@@ -99,7 +103,6 @@ public class ConfigComponent extends FlowContainer {
 			}
 		});
 
-
 		row += rowHeight;
 		addChild(new FlowComponent(10, row, 300, 14));
 		addChild(new FlowLabel(
@@ -143,6 +146,14 @@ public class ConfigComponent extends FlowContainer {
 				);
 			}
 		});
+
+		row += rowHeight;
+		addChild(new FlowTextArea(
+			screen,
+			"Howdy, world",
+			new Position(10, row),
+			new Size(100, 16)
+		));
 	}
 
 	@Override

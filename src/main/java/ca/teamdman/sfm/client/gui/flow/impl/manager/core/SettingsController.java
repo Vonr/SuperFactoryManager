@@ -18,7 +18,7 @@ public class SettingsController extends FlowContainer {
 	private boolean open = false;
 
 	public SettingsController(ManagerScreen screen) {
-		CONFIG_COMPONENT = new ConfigComponent();
+		CONFIG_COMPONENT = new ConfigComponent(screen);
 		CONFIG_COMPONENT.setVisible(false);
 		CONFIG_COMPONENT.setEnabled(false);
 		addChild(CONFIG_COMPONENT);

@@ -15,7 +15,7 @@ public class Size {
 	}
 
 	public Size(Size copy) {
-		this(copy.width, copy.height);
+		this(copy.getWidth(), copy.getHeight());
 	}
 
 	public void setSize(int width, int height) {
@@ -31,8 +31,8 @@ public class Size {
 	 * @return true if coordinate is contained in this element's area, false otherwise
 	 */
 	public boolean contains(Position myPosition, int x, int y) {
-		return x >= myPosition.getX() && x <= myPosition.getX() + width && y >= myPosition.getY()
-			&& y <= myPosition.getY() + height;
+		return x >= myPosition.getX() && x <= myPosition.getX() + getWidth() && y >= myPosition.getY()
+			&& y <= myPosition.getY() + getHeight();
 	}
 
 	public int getWidth() {
@@ -53,6 +53,6 @@ public class Size {
 
 	@Override
 	public String toString() {
-		return "Size[" + width + ", " + height + ']';
+		return "Size[" + getWidth() + ", " + getHeight() + ']';
 	}
 }

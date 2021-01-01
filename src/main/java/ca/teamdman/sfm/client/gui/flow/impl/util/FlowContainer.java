@@ -54,10 +54,9 @@ public abstract class FlowContainer extends FlowComponent {
 	}
 
 	/**
-	 * Adds the children to a stream in reversed order.
-	 * Higher z index means that the elements render later
-	 * Rendering later means they render 'on top'.
-	 * Clicking an element that is on to of another expects the top element to consume click first.
+	 * Adds the children to a stream in reversed order. Higher z index means that the elements
+	 * render later Rendering later means they render 'on top'. Clicking an element that is on to of
+	 * another expects the top element to consume click first.
 	 */
 	public Stream<FlowComponent> getEnabledChildrenControllers() {
 		Builder<FlowComponent> builder = Stream.builder();
@@ -125,6 +124,15 @@ public abstract class FlowContainer extends FlowComponent {
 	}
 
 	@Override
+	public boolean charTyped(char codePoint, int modifiers, int mx, int my) {
+		int pmx = mx - getPosition().getX();
+		int pmy = my - getPosition().getY();
+		return getEnabledChildrenControllers()
+			.anyMatch(c -> c.charTyped(codePoint, modifiers, pmx, pmy))
+			|| super.charTyped(codePoint, modifiers, mx, my);
+	}
+
+	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
@@ -148,7 +156,7 @@ public abstract class FlowContainer extends FlowComponent {
 		int pmy = my - getPosition().getY();
 		return getEnabledChildrenControllers()
 			.anyMatch(c -> c.keyReleased(keyCode, scanCode, modifiers, pmx, pmy)
-			|| super.keyReleased(keyCode, scanCode, modifiers, mx, my));
+				|| super.keyReleased(keyCode, scanCode, modifiers, mx, my));
 	}
 
 	@Override

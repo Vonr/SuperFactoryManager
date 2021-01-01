@@ -24,12 +24,10 @@ public class Position implements INBTSerializable<CompoundNBT> {
 			throw new RuntimeException("This ZERO position instance can not be modified.");
 		}
 	};
-	private boolean posChangeDebounce = false; // only fire positionChanged once when using setXY
 	private int x, y;
 
-	@SuppressWarnings("CopyConstructorMissesField")
 	public Position(Position copy) {
-		this(copy.x, copy.y);
+		this(copy.getX(), copy.getY());
 	}
 
 	public Position(int x, int y) {
@@ -59,8 +57,8 @@ public class Position implements INBTSerializable<CompoundNBT> {
 			return false;
 		}
 		Position position = (Position) o;
-		return x == position.x &&
-			y == position.y;
+		return getX() == position.getX() &&
+			getY() == position.getY();
 	}
 
 	public boolean equals(int x, int y) {
@@ -97,11 +95,11 @@ public class Position implements INBTSerializable<CompoundNBT> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(x, y);
+		return Objects.hash(getX(), getY());
 	}
 
 	public long toLong() {
-		return (((long) getX()) << 32) | (y & 0xffffffffL);
+		return (((long) getX()) << 32) | (getY() & 0xffffffffL);
 	}
 
 	public Position copy() {
@@ -116,7 +114,7 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	 * @return Offset Position
 	 */
 	public Position withOffset(int x, int y) {
-		return new Position(this.x + x, this.y + y);
+		return new Position(getX() + x, getY() + y);
 	}
 
 	/**
@@ -169,12 +167,8 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	}
 
 	public void setXY(int x, int y) {
-		int oldX = this.x, oldY = this.y;
-		posChangeDebounce = true;
 		setX(x);
 		setY(y);
-		posChangeDebounce = false;
-		onPositionChanged(oldX, oldY, x, y);
 	}
 
 	public void setXY(Position pos) {
@@ -186,15 +180,7 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	}
 
 	public void setX(int x) {
-		int oldX = this.x;
 		this.x = x;
-		if (!posChangeDebounce) {
-			onPositionChanged(oldX, y, x, y);
-		}
-	}
-
-	public void onPositionChanged(int oldX, int oldY, int newX, int newY) {
-
 	}
 
 	public int getY() {
@@ -202,30 +188,28 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	}
 
 	public void setY(int y) {
-		int oldY = this.y;
 		this.y = y;
-		if (!posChangeDebounce) {
-			onPositionChanged(x, oldY, x, y);
-		}
 	}
 
 	@Override
 	public CompoundNBT serializeNBT() {
 		CompoundNBT tag = new CompoundNBT();
-		tag.putInt("x", x);
-		tag.putInt("y", y);
+		tag.putInt("x", getX());
+		tag.putInt("y", getY());
 		return tag;
 	}
 
 
 	@Override
 	public String toString() {
-		return "Position [" + x + ", " + y + "]";
+		return "Position[" + getX() + ", " + getY() + "]";
 	}
 
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
-		x = nbt.getInt("x");
-		y = nbt.getInt("y");
+		setXY(
+			nbt.getInt("x"),
+			nbt.getInt("y")
+		);
 	}
 }

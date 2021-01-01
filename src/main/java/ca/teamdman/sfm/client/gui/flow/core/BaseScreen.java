@@ -73,7 +73,6 @@ public abstract class BaseScreen extends Screen {
 		return latestMouseX;
 	}
 
-
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		return super.keyPressed(keyCode, scanCode, modifiers)
@@ -100,7 +99,7 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	public FontRenderer getFontRenderer() {
-		return this.font;
+		return this.font != null ? this.font : Minecraft.getInstance().fontRenderer;
 	}
 
 	public ItemRenderer getItemRenderer() {
