@@ -41,7 +41,7 @@ public class Colour3f {
 		public static final Colour3f BUTTON_BORDER_SELECTED_HOVER = new Colour3f(0x6060c0);
 		public static final Colour3f BUTTON_TEXT_NORMAL = new Colour3f(0x44546a);
 		public static final Colour3f CHECKBOX_BACKGROUND = new Colour3f(0.3f, 0.3f, 0.3f);
-		public static final Colour3f GREEN = new Colour3f(0, 1, 0);
+		public static final Colour3f GREEN = new Colour3f(0x00FF00);
 		public static final Colour3f HIGHLIGHT = new Colour3f(0.4f, 0.4f, 0.8f);
 		public static final Colour3f MINIMIZE = new Colour3f(0.3f, 0.3f, 1);
 		public static final Colour3f PANEL_BACKGROUND_DARK = new Colour3f(0.2f, 0.2f, 0.2f);
@@ -52,7 +52,7 @@ public class Colour3f {
 		public static final Colour3f SELECTED = new Colour3f(0.4f, 0.8f, 0.4f);
 		public static final Colour3f TEXT_LIGHT = new Colour3f(0.8f, 0.8f, 0.8f);
 		public static final Colour3f TEXT_NORMAL = new Colour3f(0.4f, 0.4f, 0.4f);
-		public static final Colour3f WHITE = new Colour3f(1, 1, 1);
+		public static final Colour3f WHITE = new Colour3f(0xFFFFFF);
 		public static final Colour3f TEXT_DEBUG = new Colour3f(0x2222BB);
 	}
 }
