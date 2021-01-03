@@ -5,7 +5,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowRelationship;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowRelationship;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;

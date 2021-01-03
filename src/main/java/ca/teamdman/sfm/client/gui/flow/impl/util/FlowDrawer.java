@@ -5,6 +5,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.Position;
@@ -159,7 +160,7 @@ public class FlowDrawer extends FlowContainer {
 				LABEL_TEXT,
 				getPosition().getX() + 5,
 				getPosition().getY() - labelHeight + 4,
-				CONST.TEXT_PRIMARY.toInt()
+				CONST.TEXT_LIGHT
 			);
 		}
 
@@ -171,7 +172,14 @@ public class FlowDrawer extends FlowContainer {
 			getSize().getHeight()
 		);
 
-		drawBackground(screen, matrixStack);
+		screen.drawRect(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			getSize().getWidth(),
+			getSize().getHeight(),
+			CONST.PANEL_BACKGROUND_NORMAL
+		);
 
 		// Enable clipping for drawer contents
 		// +2 -4 for border padding
@@ -195,5 +203,20 @@ public class FlowDrawer extends FlowContainer {
 			2,
 			CONST.PANEL_BORDER
 		);
+
+		matrixStack.push();
+		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
+		for (FlowComponent c : getChildren()) {
+			if (c.isVisible()) {
+				c.drawTooltip(
+					screen,
+					matrixStack,
+					mx - getPosition().getX(),
+					my - getPosition().getY(),
+					deltaTime
+				);
+			}
+		}
+		matrixStack.pop();
 	}
 }

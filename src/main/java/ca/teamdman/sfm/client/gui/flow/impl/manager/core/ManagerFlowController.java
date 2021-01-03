@@ -4,16 +4,18 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.SearchUtil;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInputButtonSpawner;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowInstructions;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButtonSpawner;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTimerTriggerSpawner;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.FlowInstructions;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.FlowTimerTriggerSpawnerButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.InputSpawnerFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.OutputSpawnerFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.SettingsFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ManagerFlowController extends FlowContainer {
@@ -34,12 +36,13 @@ public class ManagerFlowController extends FlowContainer {
 		addChild(new CloneController(this));
 		addChild(new DeletionController(this));
 		addChild(new RelationshipController(this));
-		addChild(new SettingsController(SCREEN));
-		addChild(new FlowInputButtonSpawner(this));
-		addChild(new FlowOutputButtonSpawner(this));
-		addChild(new FlowTimerTriggerSpawner(this));
+		addChild(new SettingsFlowButton(SCREEN));
+		addChild(new InputSpawnerFlowButton(this));
+		addChild(new OutputSpawnerFlowButton(this));
+		addChild(new FlowTimerTriggerSpawnerButton(this));
 		SCREEN.getData()
 			.map(data -> data.createController(this))
+			.filter(Objects::nonNull)
 			.forEach(this::addChild);
 	}
 

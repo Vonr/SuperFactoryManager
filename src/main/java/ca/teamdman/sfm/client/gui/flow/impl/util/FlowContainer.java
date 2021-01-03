@@ -172,7 +172,7 @@ public abstract class FlowContainer extends FlowComponent {
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
 		matrixStack.push();
 		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
-		for (FlowComponent c : children) {
+		for (FlowComponent c : getChildren()) {
 			if (c.isVisible()) {
 				c.draw(
 					screen,
@@ -184,6 +184,7 @@ public abstract class FlowContainer extends FlowComponent {
 			}
 		}
 		matrixStack.pop();
+		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	@Override

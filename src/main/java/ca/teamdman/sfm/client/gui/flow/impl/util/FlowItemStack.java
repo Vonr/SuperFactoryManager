@@ -59,7 +59,7 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 		onSelectionChanged();
 	}
 
-	private void drawSquare(BaseScreen screen, MatrixStack matrixStack, Colour3f colour) {
+	protected void drawBackground(BaseScreen screen, MatrixStack matrixStack, Colour3f colour) {
 		screen.drawRect(
 			matrixStack,
 			getPosition().getX(),
@@ -75,9 +75,9 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		if (selected) {
-			drawSquare(screen, matrixStack, CONST.SELECTED);
+			drawBackground(screen, matrixStack, CONST.SELECTED);
 		} else if (isInBounds(mx, my)) {
-			drawSquare(screen, matrixStack, CONST.HIGHLIGHT);
+			drawBackground(screen, matrixStack, CONST.HIGHLIGHT);
 		}
 		screen.drawItemStack(
 			matrixStack,
@@ -85,7 +85,7 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 			getPosition().getX() + ITEM_PADDING_X / 2,
 			getPosition().getY() + ITEM_PADDING_Y / 2
 		);
-//		Minecraft.getInstance().getBlockRendererDispatcher().renderBlock();
+		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	@Override

@@ -32,7 +32,7 @@ public class DebugController extends FlowComponent {
 		int width = screen.getFontRenderer().getStringWidth(toDraw) + 2;
 		int yOffset = -25;
 		screen.drawRect(matrixStack, x - 1, y + yOffset - 1, width, 11, CONST.WHITE);
-		screen.drawString(matrixStack, toDraw, x, y + yOffset, 0x2222BB);
+		screen.drawString(matrixStack, toDraw, x, y + yOffset, CONST.TEXT_DEBUG);
 	}
 
 	@Override

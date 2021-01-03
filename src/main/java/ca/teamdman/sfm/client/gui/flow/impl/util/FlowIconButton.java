@@ -90,6 +90,7 @@ public abstract class FlowIconButton extends FlowButton {
 			NORMAL_BACKGROUND.drawAt(screen, matrixStack, getPosition());
 		}
 		ICON.drawAt(screen, matrixStack, getPosition().getX() + 4, getPosition().getY() + 4);
+		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	public enum ButtonBackground {

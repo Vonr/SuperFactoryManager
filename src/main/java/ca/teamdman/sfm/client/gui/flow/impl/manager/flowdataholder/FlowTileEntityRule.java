@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.client.gui.flow.impl.manager;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
@@ -14,11 +14,13 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStackPicker;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowMinusButton;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton.RadioGroup;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -29,11 +31,11 @@ import net.minecraft.item.ItemStack;
 public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder {
 
 	private final ManagerFlowController CONTROLLER;
-	private final TileEntityRuleFlowData DATA;
+	private final TileEntityItemStackRuleFlowData DATA;
 	private String name = "Tile Entity Rule";
 
 	public FlowTileEntityRule(
-		ManagerFlowController controller, TileEntityRuleFlowData data
+		ManagerFlowController controller, TileEntityItemStackRuleFlowData data
 	) {
 		super(data.getPosition(), new Size(200, 200));
 		this.CONTROLLER = controller;
@@ -44,9 +46,10 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			new Size(10, 10)
 		));
 
+		// Icon
 		addChild(new SectionHeader(
 			new Position(5, 25),
-			new Size(35, 10),
+			new Size(35, 12),
 			I18n.format("gui.sfm.manager.tile_entity_rule.icon.title")
 		));
 
@@ -54,6 +57,31 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			DATA.icon,
 			new Position(5, 40)
 		));
+
+		// Items
+		addChild(new SectionHeader(
+			new Position(5, 70),
+			new Size(35, 12),
+			I18n.format("gui.sfm.manager.tile_entity_rule.items.title")
+		));
+
+		// White/blacklist
+		RadioGroup itemSelectionModeGroup = new RadioGroup();
+		addChild(new FlowRadioButton(
+			new Position(5,85),
+			new Size(35,12),
+			I18n.format("gui.sfm.flow.tileentityrule.button.whitelist"),
+			itemSelectionModeGroup
+		));
+
+		addChild(new FlowRadioButton(
+			new Position(45,85),
+			new Size(35,12),
+			I18n.format("gui.sfm.flow.tileentityrule.button.blacklist"),
+			itemSelectionModeGroup
+		));
+
+		// Item drawer
 
 		setVisible(false);
 		setEnabled(false);
@@ -70,13 +98,22 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			getSize().getWidth(),
 			getSize().getWidth()
 		);
-		drawBackground(screen, matrixStack);
+
+		screen.drawRect(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			getSize().getWidth(),
+			getSize().getHeight(),
+			CONST.PANEL_BACKGROUND_NORMAL
+		);
+
 		screen.drawBorder(
 			matrixStack,
 			getPosition().getX(),
 			getPosition().getY(),
 			getSize().getWidth(),
-			getSize().getWidth(),
+			getSize().getHeight(),
 			2,
 			CONST.PANEL_BORDER
 		);
@@ -86,8 +123,9 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			"Tile Entity Rule",
 			getPosition().getX() + 5,
 			getPosition().getY() + 5,
-			CONST.TEXT_PRIMARY.toInt()
+			CONST.TEXT_LIGHT
 		);
+
 		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 
@@ -145,7 +183,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 				getPosition().getX(),
 				getPosition().getY(),
 				getSize().getWidth(),
-				getSize().getWidth(),
+				getSize().getHeight(),
 				CONST.SCREEN_BACKGROUND
 			);
 			screen.drawBorder(
@@ -153,7 +191,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 				getPosition().getX(),
 				getPosition().getY(),
 				getSize().getWidth(),
-				getSize().getWidth(),
+				getSize().getHeight(),
 				1,
 				CONST.PANEL_BORDER
 			);
@@ -187,6 +225,18 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 				}
 			}.start();
 		}
+
+		@Override
+		public void draw(
+			BaseScreen screen,
+			MatrixStack matrixStack,
+			int mx,
+			int my,
+			float deltaTime
+		) {
+			drawBackground(screen, matrixStack, CONST.PANEL_BACKGROUND_LIGHT);
+			super.draw(screen, matrixStack, mx, my, deltaTime);
+		}
 	}
 
 	public class SectionHeader extends FlowComponent {
@@ -197,7 +247,6 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			super(pos, size);
 			this.CONTENT = CONTENT;
 			setEnabled(false);
-			setBackgroundColour(CONST.PANEL_BACKGROUND_DARK);
 		}
 
 		@Override
@@ -208,13 +257,20 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 			int my,
 			float deltaTime
 		) {
-			super.draw(screen, matrixStack, mx, my, deltaTime);
-			screen.drawString(
+			screen.drawRect(
+				matrixStack,
+				getPosition().getX(),
+				getPosition().getY(),
+				getSize().getWidth(),
+				getSize().getHeight(),
+				CONST.PANEL_BACKGROUND_DARK
+			);
+			screen.drawCenteredString(
 				matrixStack,
 				CONTENT,
-				getPosition().getX() + 2,
-				getPosition().getY() + 2,
-				CONST.TEXT_PRIMARY.toInt()
+				this,
+				1,
+				CONST.TEXT_LIGHT
 			);
 		}
 	}

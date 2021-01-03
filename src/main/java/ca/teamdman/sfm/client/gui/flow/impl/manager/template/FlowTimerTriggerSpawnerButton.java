@@ -1,36 +1,44 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.client.gui.flow.impl.manager;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
-import java.util.Collections;
-import java.util.UUID;
+import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTimerTriggerPacketC2S;
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.TranslationTextComponent;
 
-public class FlowInputButtonSpawner extends FlowIconButton {
+public class FlowTimerTriggerSpawnerButton extends FlowIconButton {
 
 	private final ManagerFlowController managerFlowController;
 
-	public FlowInputButtonSpawner(
+	public FlowTimerTriggerSpawnerButton(
 		ManagerFlowController managerFlowController
 	) {
-		super(ButtonLabel.ADD_INPUT, new Position(25, 50));
+		super(ButtonLabel.ADD_TIMER_TRIGGER, new Position(25, 25));
 		setDraggable(false);
 		this.managerFlowController = managerFlowController;
 	}
 
 	@Override
+	public List<? extends ITextProperties> getTooltip() {
+		List<ITextComponent> list = new ArrayList<>();
+		list.add(new TranslationTextComponent("gui.sfm.flow.tooltip.trigger_spawner"));
+		return list;
+	}
+
+	@Override
 	public void onClicked(int mx, int my, int button) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
+		PacketHandler.INSTANCE.sendToServer(new ManagerCreateTimerTriggerPacketC2S(
 			managerFlowController.SCREEN.getContainer().windowId,
 			managerFlowController.SCREEN.getContainer().getSource().getPos(),
-			UUID.randomUUID(),
-			new Position(0, 0),
-			Collections.emptyList()
+			new Position(0, 0)
 		));
 	}
 }

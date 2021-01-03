@@ -3,12 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
-import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTileEntityRule;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTileEntityRule;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
@@ -19,7 +18,7 @@ import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -27,6 +26,9 @@ import java.util.stream.Collectors;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
 
 public abstract class AssociatedRulesDrawer extends FlowContainer {
 
@@ -102,13 +104,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		SELECTION_RULES_DRAWER.update();
 	}
 
-	@Override
-	public void draw(
-		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-	) {
-		super.draw(screen, matrixStack, mx, my, deltaTime);
-	}
-
 	private class ChildRulesDrawerItem extends FlowItemStack {
 
 		public RuleFlowData DATA;
@@ -121,6 +116,13 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 			setDraggable(false);
 			refreshSelection();
 			CONTROLLER.SCREEN.onChange(DATA.getId(), (d, t) -> this.refreshSelection());
+		}
+
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			ArrayList<ITextComponent> list = new ArrayList<>();
+			list.add(new StringTextComponent(DATA.name));
+			return list;
 		}
 
 		private void refreshSelection() {
@@ -160,6 +162,13 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
 			setDraggable(false);
+		}
+
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			ArrayList<ITextComponent> list = new ArrayList<>();
+			list.add(new StringTextComponent(DATA.name));
+			return list;
 		}
 
 		@Override

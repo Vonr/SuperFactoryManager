@@ -4,8 +4,8 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTileEntityRule;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTileEntityRule;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;

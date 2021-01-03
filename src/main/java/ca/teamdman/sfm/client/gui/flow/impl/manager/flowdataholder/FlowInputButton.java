@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.client.gui.flow.impl.manager;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
@@ -17,34 +17,34 @@ import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.RuleContainer;
 import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
-import ca.teamdman.sfm.common.flow.data.impl.TileEntityRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.impl.TileOutputFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowOutputDataPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
+public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 	IFlowCloneable, FlowDataHolder, RuleContainer {
 
-	private final TileOutputFlowData DATA;
+	private final TileInputFlowData DATA;
 	private final AssociatedRulesDrawer DRAWER;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowIconButton BUTTON;
 	private boolean open = false;
 
-	public FlowOutputButton(
+	public FlowInputButton(
 		ManagerFlowController controller,
-		TileOutputFlowData data
+		TileInputFlowData data
 	) {
 		this.DATA = data;
 		this.CONTROLLER = controller;
 		this.BUTTON = new MyFlowIconButton(
-			ButtonLabel.OUTPUT,
+			ButtonLabel.INPUT,
 			data.getPosition().copy()
 		);
 		this.DRAWER = new MyAssociatedRulesDrawer(
@@ -73,7 +73,7 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowOutputDataPacketC2S(
+		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
 			CONTROLLER.SCREEN.getContainer().windowId,
 			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			UUID.randomUUID(),
@@ -109,7 +109,7 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 
 	@Override
 	public void setRules(List<UUID> rules) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowOutputDataPacketC2S(
+		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
 			CONTROLLER.SCREEN.getContainer().windowId,
 			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			DATA.getId(),
@@ -160,7 +160,7 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 
 		@Override
 		public List<RuleFlowData> getChildrenRules() {
-			return CONTROLLER.SCREEN.getData(TileEntityRuleFlowData.class)
+			return CONTROLLER.SCREEN.getData(TileEntityItemStackRuleFlowData.class)
 				.filter(d -> DATA.tileEntityRules.contains(d.getId()))
 				.collect(Collectors.toList());
 		}
@@ -172,7 +172,7 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 
 		@Override
 		public List<RuleFlowData> getSelectableRules() {
-			return CONTROLLER.SCREEN.getData(TileEntityRuleFlowData.class)
+			return CONTROLLER.SCREEN.getData(TileEntityItemStackRuleFlowData.class)
 				.collect(Collectors.toList());
 		}
 	}

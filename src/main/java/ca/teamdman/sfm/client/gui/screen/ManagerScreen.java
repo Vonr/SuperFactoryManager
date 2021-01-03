@@ -108,7 +108,7 @@ public class ManagerScreen extends ControllerScreen<ManagerFlowController> imple
 				CONTAINER.getSource().getDataCount()
 			);
 		DATAS.clear();
-		CONTAINER.getSource().getData().forEach(data -> DATAS.put(data.getId(), data.copy()));
+		CONTAINER.getSource().getData().forEach(data -> DATAS.put(data.getId(), data));
 		getController().rebuildChildren();
 	}
 

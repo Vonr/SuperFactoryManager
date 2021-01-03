@@ -3,20 +3,22 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.core;
 
-import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
 
 public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 	FlowViewHolder {
 
 	private final Position dragStart = new Position();
 	private final Position dragOffset = new Position();
-	private Colour3f backgroundColour = CONST.PANEL_BACKGROUND;
 	private boolean visible = true;
 	private boolean enabled = true;
 	private boolean draggable = true;
@@ -52,7 +54,7 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 		}
 		// Consume click event if mouse is over background
 		// we don't want elements occluded by this one to detect events
-		return isInBounds(mx,my);
+		return isInBounds(mx, my);
 	}
 
 	@Override
@@ -149,29 +151,32 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		drawBackground(screen, matrixStack);
+		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
-	public Colour3f getBackgroundColour() {
-		return backgroundColour;
+	public boolean isTooltipEnabled(int mx, int my) {
+		return isInBounds(mx, my);
 	}
 
-	public void setBackgroundColour(Colour3f backgroundColour) {
-		this.backgroundColour = backgroundColour;
+	public void drawTooltip(
+		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+	) {
+		if (isTooltipEnabled(mx, my)) {
+			net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(
+				matrixStack,
+				getTooltip(),
+				mx,
+				my,
+				screen.scaledWidth,
+				screen.scaledHeight,
+				-1,
+				screen.getFontRenderer()
+			);
+		}
 	}
 
-	/**
-	 * Draws a rectangle at this component's position with its current dimensions
-	 */
-	public void drawBackground(BaseScreen screen, MatrixStack matrixStack) {
-		screen.drawRect(
-			matrixStack,
-			getPosition().getX(),
-			getPosition().getY(),
-			getSize().getWidth(),
-			getSize().getHeight(),
-			backgroundColour
-		);
+	public List<? extends ITextProperties> getTooltip() {
+		return new ArrayList<ITextComponent>();
 	}
 
 	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {

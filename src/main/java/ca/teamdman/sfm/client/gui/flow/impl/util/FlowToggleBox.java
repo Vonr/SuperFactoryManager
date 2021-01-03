@@ -21,7 +21,6 @@ public class FlowToggleBox extends FlowButton {
 
 	public FlowToggleBox(Position pos, Size size, boolean checked) {
 		super(pos, size);
-		setBackgroundColour(CONST.CHECKBOX_BACKGROUND);
 		this.checked = checked;
 	}
 
@@ -29,7 +28,15 @@ public class FlowToggleBox extends FlowButton {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		super.draw(screen, matrixStack, mx, my, deltaTime);
+		screen.drawRect(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			getSize().getWidth(),
+			getSize().getHeight(),
+			CONST.CHECKBOX_BACKGROUND
+		);
+
 		int checkMargin = 2;
 		Colour3f colour = isChecked()
 			? CONST.SELECTED
@@ -44,6 +51,8 @@ public class FlowToggleBox extends FlowButton {
 				colour
 			);
 		}
+
+		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	public boolean isChecked() {
@@ -55,7 +64,8 @@ public class FlowToggleBox extends FlowButton {
 		onChecked(isChecked());
 	}
 
-	public void onChecked(boolean checked) {}
+	public void onChecked(boolean checked) {
+	}
 
 	@Override
 	public void onClicked(int mx, int my, int button) {

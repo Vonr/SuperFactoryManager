@@ -147,14 +147,9 @@ public class ConfigComponent extends FlowContainer {
 		});
 	}
 
-	@Override
-	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		super.draw(screen, matrixStack, mx, my, deltaTime);
-	}
-
 	private static class FlowLabel extends FlowComponent {
 
-		protected Colour3f TEXT_COLOUR = CONST.TEXT_PRIMARY;
+		protected Colour3f TEXT_COLOUR = CONST.TEXT_LIGHT;
 		private String content;
 
 		public FlowLabel(Position pos, Size size, String content) {
@@ -171,7 +166,7 @@ public class ConfigComponent extends FlowContainer {
 				content,
 				getPosition().getX(),
 				getPosition().getY(),
-				TEXT_COLOUR.toInt()
+				TEXT_COLOUR
 			);
 		}
 	}

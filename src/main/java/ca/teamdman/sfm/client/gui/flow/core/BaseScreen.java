@@ -111,20 +111,49 @@ public abstract class BaseScreen extends Screen {
 	 */
 	public void drawString(
 		MatrixStack matrixStack, String str, int x,
-		int y, float mult, int color
+		int y, float scale, Colour3f colour
 	) {
-		RenderSystem.pushMatrix();
-		RenderSystem.scalef(mult, mult, 1F);
-		this.font
-//			.drawString(matrixStack, str, (int) ((x + guiLeft) / mult), (int) ((y + guiTop) / mult), color);
-			.drawString(matrixStack, str, (int) ((x) / mult), (int) ((y) / mult), color);
-		//bindTexture(getComponentResource());
-		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		RenderSystem.popMatrix();
+		matrixStack.push();
+		matrixStack.scale(scale, scale, 1F);
+		getFontRenderer().drawString(matrixStack, str, (int) ((x) / scale), (int) ((y) / scale), colour.toInt());
+		matrixStack.pop();
 	}
 
-	public void drawString(MatrixStack matrixStack, String str, int x, int y, int color) {
-		drawString(matrixStack, str, x, y, 1, color);
+	public void drawString(MatrixStack matrixStack, String str, int x, int y, Colour3f colour) {
+		drawString(matrixStack, str, x, y, 1, colour);
+	}
+
+	public void drawCenteredString(MatrixStack matrixStack, String str, int x, int y, Colour3f colour) {
+		drawCenteredString(matrixStack, str, x, y, 1, colour);
+	}
+
+	public void drawCenteredString(MatrixStack matrixStack, String str, IFlowTangible component, float scale, Colour3f colour) {
+		drawCenteredString(
+			matrixStack,
+			str,
+			component.getPosition().getX() + component.getSize().getWidth() / 2,
+			component.getPosition().getY() + (component.getSize().getHeight() - (int) (8 * scale)) / 2,
+			scale,
+			colour
+		);
+		//this.x + this.width / 2, this.y + (this.height - 8) / 2
+	}
+
+	@SuppressWarnings("SuspiciousNameCombination")
+	// Forge mappings has a bad name for x,y,color params.
+	// Update should fix later. Current date: 2021-01-02
+	// Once warning is unused, should be removed.
+	public void drawCenteredString(MatrixStack matrixStack, String str, int x, int y, float scale, Colour3f colour) {
+		matrixStack.push();
+		matrixStack.scale(scale, scale, 1f);
+		getFontRenderer().drawString(
+			matrixStack,
+			str,
+			(float)((int) (x/scale) - getFontRenderer().getStringWidth(str) / 2),
+			(float) (int) (y/scale),
+			colour.toInt()
+		);
+		matrixStack.pop();
 	}
 
 	@Override
@@ -135,7 +164,6 @@ public abstract class BaseScreen extends Screen {
 			scroll
 		);
 	}
-
 
 	@Override
 	public boolean charTyped(char codePoint, int modifiers) {
@@ -160,7 +188,7 @@ public abstract class BaseScreen extends Screen {
 	 */
 	public void drawRightAlignedString(
 		MatrixStack matrixStack, String str, int x, int y,
-		int color
+		Colour3f colour
 	) {
 		drawString(
 			matrixStack, str,
@@ -168,7 +196,7 @@ public abstract class BaseScreen extends Screen {
 				Minecraft.getInstance().getMainWindow().getWidth()
 			)),
 			y,
-			color
+			colour
 		);
 	}
 

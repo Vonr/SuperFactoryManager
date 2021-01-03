@@ -49,5 +49,6 @@ public abstract class FlowMinusButton extends FlowButton {
 			thickness,
 			COLOUR
 		);
+		super.drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 }

@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.client.gui.flow.impl.manager;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -29,28 +29,28 @@ public class FlowInstructions extends FlowComponent {
 			I18n.format("gui.sfm.manager.legend.chain"),
 			0,
 			0,
-			CONST.TEXT_BACKGROUND.toInt()
+			CONST.TEXT_NORMAL
 		);
 		screen.drawRightAlignedString(
 			matrixStack,
 			I18n.format("gui.sfm.manager.legend.clone"),
 			0,
 			10,
-			CONST.TEXT_BACKGROUND.toInt()
+			CONST.TEXT_NORMAL
 		);
 		screen.drawRightAlignedString(
 			matrixStack,
 			I18n.format("gui.sfm.manager.legend.move"),
 			0,
 			20,
-			CONST.TEXT_BACKGROUND.toInt()
+			CONST.TEXT_NORMAL
 		);
 		screen.drawRightAlignedString(
 			matrixStack,
 			I18n.format("gui.sfm.manager.legend.snaptogrid"),
 			0,
 			30,
-			CONST.TEXT_BACKGROUND.toInt()
+			CONST.TEXT_NORMAL
 		);
 		matrixStack.pop();
 	}
