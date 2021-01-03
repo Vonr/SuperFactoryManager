@@ -60,7 +60,7 @@ public class ManagerToggleBlockPosSelectedC2S extends C2SManagerPacket {
 				msg.BLOCK_POS,
 				msg.SELECTED
 			);
-			manager.getData(msg.DATA_ID)
+			manager.getFlowDataContainer().getData(msg.DATA_ID)
 				.filter(data -> data instanceof SelectionHolder)
 				.filter(data -> ((SelectionHolder<?>) data).getSelectionType() == BlockPos.class)
 				.map(data -> ((SelectionHolder<BlockPos>) data))

@@ -9,27 +9,20 @@ import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBO
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.block.ICable;
+import ca.teamdman.sfm.common.flow.data.core.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
-import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
-import ca.teamdman.sfm.common.flow.data.impl.RelationshipGraph;
-import ca.teamdman.sfm.common.flow.execution.ManagerFlowExecutionController;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -38,12 +31,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
-	ITickableTileEntity {
+public class ManagerTileEntity extends TileEntity implements ITickableTileEntity {
 
-	public final RelationshipGraph graph = new RelationshipGraph();
-	private final ManagerFlowExecutionController CONTROLLER = new ManagerFlowExecutionController(
-		this);
+	private final FlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 
 	public ManagerTileEntity() {
@@ -66,12 +56,16 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 		UUID dataId,
 		Consumer<FlowData> consumer, Runnable changeNotifier
 	) {
-		getData(dataId)
+		getFlowDataContainer().getData(dataId)
 			.ifPresent(data -> {
 				consumer.accept(data);
 				markAndNotify();
 				changeNotifier.run();
 			});
+	}
+
+	public FlowDataContainer getFlowDataContainer() {
+		return FLOW_DATA_CONTAINER;
 	}
 
 	public void markAndNotify() {
@@ -107,58 +101,29 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 
 	@Override
 	public void deserializeNBT(CompoundNBT compound) {
-		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Loading nbt on {}, replacing {} entries",
-			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
+		SFM.LOGGER.debug(
+			SFMUtil.getMarker(getClass()),
+			"Loading nbt on {}, replacing {} entries",
+			world == null ? "null world" : world.isRemote ? "client" : "server",
+			(int) getFlowDataContainer().getData().count()
 		);
-		clearData();
-		compound.getList("flow_data_list", NBT.TAG_COMPOUND).stream()
-			.map(c -> ((CompoundNBT) c))
-			.map(c -> {
-				Optional<FlowData> data = FlowDataSerializer.getSerializer(c)
-					.map(serializer -> serializer.fromNBT(c));
-				if (!data.isPresent()) {
-					SFM.LOGGER.warn("Could not find factory for {}", c);
-				}
-				return data;
-			})
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.sorted(Comparator.comparing(a -> a instanceof RelationshipFlowData))
-			.forEach(this::addData);
-	}
-
-	public int getDataCount() {
-		return graph.getNodeCount();
-	}
-
-	public void addRelationship(RelationshipFlowData data) {
-		if (Objects.equals(data.from, data.to)) {
-			return;
-		}
-		if (graph.getEdge(data.from, data.to).isPresent()) {
-			return;
-		}
-		if (graph.getAncestors(data.from).anyMatch(node -> node.getId().equals(data.to))) {
-			return;
-		}
-		//todo: prevent LineNode from allowing duplicate connections to an element
-		graph.addNode(data);
-		graph.putEdge(
-			data.getId(),
-			data.from,
-			data.to
+		getFlowDataContainer().clearData();
+		getFlowDataContainer().deserializeNBT(
+			compound.getList("flow_data_list", NBT.TAG_COMPOUND)
 		);
 	}
+
 
 	@Override
 	public CompoundNBT serializeNBT() {
-		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Saving NBT on {}, writing {} entries",
-			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
+		SFM.LOGGER.debug(
+			SFMUtil.getMarker(getClass()),
+			"Saving NBT on {}, writing {} entries",
+			world == null ? "null world" : world.isRemote ? "client" : "server",
+			(int) getFlowDataContainer().getData().count()
 		);
 		CompoundNBT c = new CompoundNBT();
-		ListNBT list = new ListNBT();
-		getData().forEach(d -> list.add(d.getSerializer().toNBT(d)));
-		c.put("flow_data_list", list);
+		c.put("flow_data_list", getFlowDataContainer().serializeNBT());
 		return c;
 	}
 
@@ -169,54 +134,6 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 		return compound;
 	}
 
-	@Override
-	public Stream<FlowData> getData() {
-		return graph.getData();
-	}
-
-	@Override
-	public Optional<FlowData> getData(UUID id) {
-		return graph.getData(id);
-	}
-
-	@Override
-	public void removeData(UUID id) {
-		graph.removeNode(id);
-	}
-
-	@Override
-	public void addData(FlowData data) {
-		Optional<FlowData> existing = graph.getData(data.getId());
-		if (existing.isPresent()) {
-			existing.get().merge(data);
-		} else {
-			if (data instanceof RelationshipFlowData) {
-				addRelationship(((RelationshipFlowData) data));
-			} else {
-				graph.addNode(data);
-			}
-			markAndNotify();
-		}
-	}
-
-	@Override
-	public void clearData() {
-		graph.clear();
-	}
-
-	@Override
-	public void notifyChanged(
-		UUID id, ChangeType type
-	) {
-
-	}
-
-	@Override
-	public void onChange(
-		UUID id, BiConsumer<FlowData, ChangeType> callback
-	) {
-
-	}
 
 	public Stream<TileEntity> getCableTiles() {
 		if (world == null) {
@@ -255,6 +172,6 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 
 	@Override
 	public void tick() {
-		CONTROLLER.tick();
+
 	}
 }

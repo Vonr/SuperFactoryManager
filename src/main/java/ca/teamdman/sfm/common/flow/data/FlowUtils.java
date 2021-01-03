@@ -7,7 +7,6 @@ import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
-import ca.teamdman.sfm.common.flow.data.impl.RelationshipGraph;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -75,18 +74,4 @@ public class FlowUtils {
 		holder.addData(nodeToEnd);
 	}
 
-	public static RelationshipGraph getRelationshipGraph(FlowDataContainer holder) {
-		RelationshipGraph graph = new RelationshipGraph();
-		holder.getData()
-			.filter(data -> data instanceof RelationshipFlowData)
-			.map(data -> (RelationshipFlowData) data)
-			.forEach(data -> holder.getData(data.from)
-				.filter(__ -> holder.getData(data.to).isPresent())
-				.ifPresent(from -> {
-					graph.addNode(from);
-					graph.addNode(holder.getData(data.to).get());
-					graph.putEdge(data.getId(), data.from, data.to);
-				}));
-		return graph;
-	}
 }

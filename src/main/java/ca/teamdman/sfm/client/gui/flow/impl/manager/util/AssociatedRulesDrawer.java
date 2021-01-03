@@ -114,7 +114,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 			this.DATA = data;
 			setDraggable(false);
 			refreshSelection();
-			CONTROLLER.SCREEN.onChange(DATA.getId(), (d, t) -> this.refreshSelection());
+			CONTROLLER.SCREEN.addChangeListener(DATA.getId(), (d, t) -> this.refreshSelection());
 		}
 
 		@Override

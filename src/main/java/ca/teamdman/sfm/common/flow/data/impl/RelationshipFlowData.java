@@ -8,10 +8,13 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowRelationship;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -26,18 +29,12 @@ public class RelationshipFlowData extends FlowData {
 		this.to = to;
 	}
 
-
 	@Override
 	public void merge(FlowData other) {
 		if (other instanceof RelationshipFlowData) {
 			from = ((RelationshipFlowData) other).from;
 			to = ((RelationshipFlowData) other).to;
 		}
-	}
-
-	@Override
-	public FlowDataSerializer getSerializer() {
-		return FlowDataSerializers.RELATIONSHIP;
 	}
 
 	@Override
@@ -56,6 +53,17 @@ public class RelationshipFlowData extends FlowData {
 	}
 
 	@Override
+	public void addToDataContainer(FlowDataContainer container) {
+		if (from == null || to == null) return;
+		if (from.equals(to)) return;
+		if (getAncestors(container, true)
+			.map(FlowData::getId)
+			.anyMatch(to::equals)) return;
+		container.addData(this);
+
+	}
+
+	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {
@@ -63,6 +71,41 @@ public class RelationshipFlowData extends FlowData {
 			return null;
 		}
 		return new FlowRelationship((ManagerFlowController) parent, this);
+	}
+
+	@Override
+	public FlowDataSerializer getSerializer() {
+		return FlowDataSerializers.RELATIONSHIP;
+	}
+
+	public Stream<FlowData> getAncestors(FlowDataContainer container, boolean recursive) {
+		return SFMUtil.getRecursiveStream(
+			(current, next, results) -> container.getData(RelationshipFlowData.class)
+				.filter(rel -> rel.to.equals(current.getId()))
+				.map(rel -> container.getData(rel.to))
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.forEach(v -> {
+					if (recursive) next.accept(v);
+					results.accept(v);
+				}),
+			this
+		);
+	}
+
+	public Stream<FlowData> getDescendants(FlowDataContainer container, boolean recursive) {
+		return SFMUtil.getRecursiveStream(
+			(current, next, results) -> container.getData(RelationshipFlowData.class)
+				.filter(rel -> rel.from.equals(current.getId()))
+				.map(rel -> container.getData(rel.from))
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.forEach(v -> {
+					if (recursive) next.accept(v);
+					results.accept(v);
+				}),
+			this
+		);
 	}
 
 	@Override

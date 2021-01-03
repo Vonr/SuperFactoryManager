@@ -54,7 +54,7 @@ public class FlowOutputButton extends FlowContainer implements IFlowDeletable,
 		DRAWER.setVisible(false);
 		DRAWER.setEnabled(false);
 		DRAWER.setDraggable(false);
-		controller.SCREEN.onChange(null, this::onDataChanged);
+		controller.SCREEN.addChangeListener(null, this::onDataChanged);
 	}
 
 	@Override

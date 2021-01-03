@@ -61,7 +61,7 @@ public class ManagerScreen extends ControllerScreen<ManagerFlowController> imple
 	}
 
 	@Override
-	public void onChange(
+	public void addChangeListener(
 		UUID id, BiConsumer<FlowData, ChangeType> callback
 	) {
 		listeners.put(id, callback);
@@ -115,10 +115,11 @@ public class ManagerScreen extends ControllerScreen<ManagerFlowController> imple
 	public void reloadFromManagerTileEntity() {
 		SFM.LOGGER
 			.debug(SFMUtil.getMarker(getClass()), "Loading {} data entries from tile",
-				CONTAINER.getSource().getDataCount()
+				(int) CONTAINER.getSource().getFlowDataContainer().getData().count()
 			);
 		DATAS.clear();
-		CONTAINER.getSource().getData().forEach(data -> DATAS.put(data.getId(), data));
+		CONTAINER.getSource().getFlowDataContainer().getData()
+			.forEach(data -> DATAS.put(data.getId(), data));
 		getController().rebuildChildren();
 	}
 

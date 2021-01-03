@@ -33,6 +33,16 @@ public abstract class FlowData {
 		return obj instanceof FlowData && ((FlowData) obj).getId().equals(getId());
 	}
 
+	/**
+	 * TODO move custom relationship flow logic here in override
+	 * TODO move custom line node flow logic here in override
+	 * TODO replace container add usage with this method usage
+	 * @param container
+	 */
+	public void addToDataContainer(FlowDataContainer container) {
+		container.addData(this);
+	}
+
 	public UUID getId() {
 		return uuid;
 	}
@@ -48,5 +58,5 @@ public abstract class FlowData {
 		FlowComponent parent
 	);
 
-	public abstract FlowDataSerializer getSerializer();
+	public abstract <T extends FlowData> FlowDataSerializer<T> getSerializer();
 }

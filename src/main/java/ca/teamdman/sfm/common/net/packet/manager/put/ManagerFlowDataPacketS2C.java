@@ -41,7 +41,7 @@ public class ManagerFlowDataPacketS2C extends S2CManagerPacket {
 			ManagerScreen screen, ManagerFlowDataPacketS2C msg
 		) {
 			SFM.LOGGER.debug("S2C received, FlowData {}", msg.DATA);
-			screen.addData(msg.DATA);
+			msg.DATA.addToDataContainer(screen);
 		}
 	}
 }

@@ -47,7 +47,7 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 			ManagerFlowDataPacketC2S msg, ManagerTileEntity manager
 		) {
 			SFM.LOGGER.debug("C2S received, FlowData {}", msg.DATA);
-			manager.addData(msg.DATA);
+			msg.DATA.addToDataContainer(manager.getFlowDataContainer());
 			manager.sendPacketToListeners(
 				new ManagerFlowDataPacketS2C(
 					msg.WINDOW_ID,
