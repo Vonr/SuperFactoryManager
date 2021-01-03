@@ -37,7 +37,7 @@ public class ConfigComponent extends FlowContainer {
 		int row = 20;
 		int rowHeight = 25;
 		row += rowHeight;
-		addChild(new FlowComponent(10, row, 300, 14));
+		addChild(new FlowPanel(10, row, 300, 14));
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
@@ -59,7 +59,7 @@ public class ConfigComponent extends FlowContainer {
 		});
 
 		row += rowHeight;
-		addChild(new FlowComponent(10, row, 300, 14));
+		addChild(new FlowPanel(10, row, 300, 14));
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
@@ -81,7 +81,7 @@ public class ConfigComponent extends FlowContainer {
 		});
 
 		row += rowHeight;
-		addChild(new FlowComponent(10, row, 300, 14));
+		addChild(new FlowPanel(10, row, 300, 14));
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
@@ -103,7 +103,7 @@ public class ConfigComponent extends FlowContainer {
 		});
 
 		row += rowHeight;
-		addChild(new FlowComponent(10, row, 300, 14));
+		addChild(new FlowPanel(10, row, 300, 14));
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
@@ -125,7 +125,7 @@ public class ConfigComponent extends FlowContainer {
 		});
 
 		row += rowHeight;
-		addChild(new FlowComponent(10, row, 300, 14));
+		addChild(new FlowPanel(10, row, 300, 14));
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
@@ -190,6 +190,31 @@ public class ConfigComponent extends FlowContainer {
 			matrixStack.scale(2, 2, 1);
 			super.draw(screen, matrixStack, mx, my, deltaTime);
 			matrixStack.pop();
+		}
+	}
+
+	private static class FlowPanel extends FlowComponent {
+
+		public FlowPanel(int x, int y, int width, int height) {
+			super(x, y, width, height);
+		}
+
+		@Override
+		public void draw(
+			BaseScreen screen,
+			MatrixStack matrixStack,
+			int mx,
+			int my,
+			float deltaTime
+		) {
+			screen.drawRect(
+				matrixStack,
+				getPosition().getX(),
+				getPosition().getY(),
+				getSize().getWidth(),
+				getSize().getHeight(),
+				CONST.PANEL_BACKGROUND_NORMAL
+			);
 		}
 	}
 }
