@@ -4,6 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
@@ -34,6 +35,11 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 	@Override
 	public FlowComponent createController(FlowComponent parent) {
 		return null;
+	}
+
+	@Override
+	public FlowDataSerializer getSerializer() {
+		return FlowDataSerializers.ITEM_STACK_COMPARER_MATCHER;
 	}
 
 

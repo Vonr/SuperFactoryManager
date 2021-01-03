@@ -37,11 +37,6 @@ public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
-		return FlowDataSerializers.TIMER_TRIGGER;
-	}
-
-	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {
@@ -49,6 +44,11 @@ public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 			return null;
 		}
 		return new FlowTimerTrigger((ManagerFlowController) parent, this);
+	}
+
+	@Override
+	public FlowDataSerializer getSerializer() {
+		return FlowDataSerializers.TIMER_TRIGGER;
 	}
 
 	@Override

@@ -12,11 +12,11 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.RelationshipController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
 import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.data.impl.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
+import java.util.UUID;
 import net.minecraft.client.gui.screen.Screen;
 
 public class FlowRelationship extends FlowComponent {
@@ -45,22 +45,16 @@ public class FlowRelationship extends FlowComponent {
 		if (!rel.isPresent()) {
 			return false;
 		}
-		PacketHandler.INSTANCE.sendToServer(new ManagerCreateLineNodePacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			rel.get().data.from,
-			rel.get().data.to,
-			new Position(
-				mx - ButtonBackground.LINE_NODE.WIDTH / 2,
-				my - ButtonBackground.LINE_NODE.HEIGHT / 2
+		CONTROLLER.SCREEN.sendFlowDataToServer(
+			new LineNodeFlowData(
+				UUID.randomUUID(),
+				new Position(
+					mx - ButtonBackground.LINE_NODE.WIDTH / 2,
+					my - ButtonBackground.LINE_NODE.HEIGHT / 2
+				)
 			)
-		));
+		);
 		return true;
-	}
-
-	@Override
-	public int getZIndex() {
-		return super.getZIndex() - 200;
 	}
 
 	@Override
@@ -68,6 +62,25 @@ public class FlowRelationship extends FlowComponent {
 		return this;
 	}
 
+	@Override
+	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
+		draw(screen, matrixStack, COLOUR);
+	}
+
+	public void draw(BaseScreen screen, MatrixStack matrixStack, Colour3f colour) {
+		getPositions().ifPresent(pair -> screen.drawArrow(matrixStack, pair.FROM, pair.TO, colour));
+	}
+
+	/**
+	 * Checks if the line is "close enough" to the point
+	 *
+	 * @param x x
+	 * @param y y
+	 * @return is close
+	 */
+	public boolean isCloseTo(int x, int y) {
+		return getDistance(x, y) < 3;
+	}
 
 	/**
 	 * Gets the smallest distance from a point to this line.
@@ -91,17 +104,6 @@ public class FlowRelationship extends FlowComponent {
 	}
 
 	/**
-	 * Checks if the line is "close enough" to the point
-	 *
-	 * @param x x
-	 * @param y y
-	 * @return is close
-	 */
-	public boolean isCloseTo(int x, int y) {
-		return getDistance(x, y) < 3;
-	}
-
-	/**
 	 * If both Flow elements exist for the FROM and TO ids of this relationship, returns the
 	 * positions that line use for drawing
 	 *
@@ -119,12 +121,8 @@ public class FlowRelationship extends FlowComponent {
 	}
 
 	@Override
-	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		draw(screen, matrixStack, COLOUR);
-	}
-
-	public void draw(BaseScreen screen, MatrixStack matrixStack, Colour3f colour) {
-		getPositions().ifPresent(pair -> screen.drawArrow(matrixStack, pair.FROM, pair.TO, colour));
+	public int getZIndex() {
+		return super.getZIndex() - 200;
 	}
 
 	public static class FlowRelationshipPositionPair {

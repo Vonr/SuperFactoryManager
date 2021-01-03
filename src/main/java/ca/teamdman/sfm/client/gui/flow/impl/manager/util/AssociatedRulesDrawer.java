@@ -15,9 +15,8 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
+import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData.FilterMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -68,11 +67,11 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		rebuildSelectionDrawer();
 	}
 
-	public abstract List<RuleFlowData> getChildrenRules();
+	public abstract List<TileEntityItemStackRuleFlowData> getChildrenRules();
 
 	public abstract void setChildrenRules(List<UUID> rules);
 
-	public abstract List<RuleFlowData> getSelectableRules();
+	public abstract List<TileEntityItemStackRuleFlowData> getSelectableRules();
 
 	public void rebuildChildrenDrawer() {
 		CHILDREN_RULES_DRAWER.getChildren().clear();
@@ -106,10 +105,10 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 
 	private class ChildRulesDrawerItem extends FlowItemStack {
 
-		public RuleFlowData DATA;
+		public TileEntityItemStackRuleFlowData DATA;
 
 		public ChildRulesDrawerItem(
-			RuleFlowData data
+			TileEntityItemStackRuleFlowData data
 		) {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
@@ -154,10 +153,10 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 
 	private class SelectionRulesDrawerItem extends FlowItemStack {
 
-		public RuleFlowData DATA;
+		public TileEntityItemStackRuleFlowData DATA;
 
 		public SelectionRulesDrawerItem(
-			RuleFlowData data
+			TileEntityItemStackRuleFlowData data
 		) {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
@@ -231,13 +230,16 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		@Override
 		public void onClicked(int mx, int my, int button) {
 			//todo: remove debug item icons, or put more effort into random rule icons
-			PacketHandler.INSTANCE.sendToServer(new ManagerCreateTileEntityRulePacketC2S(
-				CONTROLLER.SCREEN.getContainer().windowId,
-				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-				"New tile entity rule",
-				items[(int) (Math.random() * items.length)],
-				new Position(0, 0)
-			));
+			//todo: abstract onclicked???
+			CONTROLLER.SCREEN.sendFlowDataToServer(
+				new TileEntityItemStackRuleFlowData(
+					UUID.randomUUID(),
+					"New tile entity rule",
+					items[(int) (Math.random() * items.length)],
+					new Position(0, 0),
+					FilterMode.WHITELIST
+				)
+			);
 		}
 	}
 }

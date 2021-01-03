@@ -16,13 +16,11 @@ import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.RuleContainer;
-import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -65,7 +63,7 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 	}
 
 	public void onDataChanged(FlowData data, ChangeType changeType) {
-		if (data instanceof RuleFlowData) {
+		if (data instanceof TileEntityItemStackRuleFlowData) {
 			DRAWER.rebuildSelectionDrawer();
 		}
 	}
@@ -73,13 +71,13 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			UUID.randomUUID(),
-			new Position(x, y),
-			DATA.tileEntityRules
-		));
+		CONTROLLER.SCREEN.sendFlowDataToServer(
+			new TileInputFlowData(
+				UUID.randomUUID(),
+				new Position(x, y),
+				DATA.tileEntityRules
+			)
+		);
 	}
 
 	@Override
@@ -109,13 +107,13 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 
 	@Override
 	public void setRules(List<UUID> rules) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			DATA.getId(),
-			DATA.getPosition(),
-			rules
-		));
+		CONTROLLER.SCREEN.sendFlowDataToServer(
+			new TileInputFlowData(
+				DATA.getId(),
+				DATA.getPosition(),
+				rules
+			)
+		);
 	}
 
 	@Override
@@ -159,7 +157,7 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		}
 
 		@Override
-		public List<RuleFlowData> getChildrenRules() {
+		public List<TileEntityItemStackRuleFlowData> getChildrenRules() {
 			return CONTROLLER.SCREEN.getData(TileEntityItemStackRuleFlowData.class)
 				.filter(d -> DATA.tileEntityRules.contains(d.getId()))
 				.collect(Collectors.toList());
@@ -171,7 +169,7 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		}
 
 		@Override
-		public List<RuleFlowData> getSelectableRules() {
+		public List<TileEntityItemStackRuleFlowData> getSelectableRules() {
 			return CONTROLLER.SCREEN.getData(TileEntityItemStackRuleFlowData.class)
 				.collect(Collectors.toList());
 		}

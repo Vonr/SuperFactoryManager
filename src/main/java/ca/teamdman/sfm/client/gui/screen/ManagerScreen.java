@@ -11,6 +11,8 @@ import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
+import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.util.HashMap;
@@ -63,6 +65,14 @@ public class ManagerScreen extends ControllerScreen<ManagerFlowController> imple
 		UUID id, BiConsumer<FlowData, ChangeType> callback
 	) {
 		listeners.put(id, callback);
+	}
+
+	public void sendFlowDataToServer(FlowData data) {
+		PacketHandler.INSTANCE.sendToServer(new ManagerFlowDataPacketC2S(
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
+			data
+		));
 	}
 
 	@Override

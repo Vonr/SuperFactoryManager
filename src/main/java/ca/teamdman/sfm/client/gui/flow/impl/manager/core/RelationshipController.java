@@ -10,8 +10,6 @@ import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;
@@ -81,12 +79,13 @@ public class RelationshipController extends FlowComponent {
 
 
 	public void createRelationship(UUID from, UUID to) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerCreateRelationshipPacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			from,
-			to
-		));
+		CONTROLLER.SCREEN.sendFlowDataToServer(
+			new RelationshipFlowData(
+				UUID.randomUUID(),
+				from,
+				to
+			)
+		);
 	}
 
 	@Override

@@ -6,10 +6,10 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTimerTriggerPacketC2S;
+import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -35,10 +35,12 @@ public class FlowTimerTriggerSpawnerButton extends FlowIconButton {
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerCreateTimerTriggerPacketC2S(
-			managerFlowController.SCREEN.getContainer().windowId,
-			managerFlowController.SCREEN.getContainer().getSource().getPos(),
-			new Position(0, 0)
-		));
+		managerFlowController.SCREEN.sendFlowDataToServer(
+			new TimerTriggerFlowData(
+				UUID.randomUUID(),
+				new Position(50,50),
+				20
+			)
+		);
 	}
 }

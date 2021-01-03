@@ -54,35 +54,134 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 		super(type);
 	}
 
+	public void addContainerListener(ServerPlayerEntity player) {
+		CONTAINER_LISTENERS.add(player);
+	}
+
+	public void removeContainerListener(ServerPlayerEntity player) {
+		CONTAINER_LISTENERS.remove(player);
+	}
+
+	public void mutateManagerData(
+		UUID dataId,
+		Consumer<FlowData> consumer, Runnable changeNotifier
+	) {
+		getData(dataId)
+			.ifPresent(data -> {
+				consumer.accept(data);
+				markAndNotify();
+				changeNotifier.run();
+			});
+	}
+
+	public void markAndNotify() {
+		if (getWorld() == null) {
+			return;
+		}
+		markDirty();
+		getWorld().notifyBlockUpdate(
+			getPos(),
+			getBlockState(),
+			getBlockState(),
+			BLOCK_UPDATE & NOTIFY_NEIGHBORS
+		);
+	}
+
+	public <MSG> void sendPacketToListeners(MSG packet) {
+		getContainerListeners().forEach(player ->
+			PacketHandler.INSTANCE.send(
+				PacketDistributor.PLAYER.with(() -> player),
+				packet
+			));
+	}
+
+	public Stream<ServerPlayerEntity> getContainerListeners() {
+		return CONTAINER_LISTENERS.stream();
+	}
+
 	@Override
-	public Stream<FlowData> getData() {
-		return graph.getData();
+	public void read(BlockState state, CompoundNBT tag) {
+		super.read(state, tag);
+		deserializeNBT(tag.getCompound("data"));
+	}
+
+	@Override
+	public void deserializeNBT(CompoundNBT compound) {
+		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Loading nbt on {}, replacing {} entries",
+			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
+		);
+		clearData();
+		compound.getList("flow_data_list", NBT.TAG_COMPOUND).stream()
+			.map(c -> ((CompoundNBT) c))
+			.map(c -> {
+				Optional<FlowData> data = FlowDataSerializer.getSerializer(c)
+					.map(serializer -> serializer.fromNBT(c));
+				if (!data.isPresent()) {
+					SFM.LOGGER.warn("Could not find factory for {}", c);
+				}
+				return data;
+			})
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.sorted(Comparator.comparing(a -> a instanceof RelationshipFlowData))
+			.forEach(this::addData);
 	}
 
 	public int getDataCount() {
 		return graph.getNodeCount();
 	}
 
-	public Optional<UUID> addRelationship(UUID fromId, UUID toId) {
-		if (Objects.equals(fromId, toId)) {
-			return Optional.empty();
+	public void addRelationship(RelationshipFlowData data) {
+		if (Objects.equals(data.from, data.to)) {
+			return;
 		}
-		if (graph.getEdge(fromId, toId).isPresent()) {
-			return Optional.empty();
+		if (graph.getEdge(data.from, data.to).isPresent()) {
+			return;
 		}
-		if (graph.getAncestors(fromId).anyMatch(node -> node.getId().equals(toId))) {
-			return Optional.empty();
+		if (graph.getAncestors(data.from).anyMatch(node -> node.getId().equals(data.to))) {
+			return;
 		}
 		//todo: prevent LineNode from allowing duplicate connections to an element
-		UUID relationshipId = UUID.randomUUID();
-		RelationshipFlowData data = new RelationshipFlowData(
-			relationshipId,
-			fromId,
-			toId
+		graph.addNode(data);
+		graph.putEdge(
+			data.getId(),
+			data.from,
+			data.to
 		);
-		addData(data);
-		markAndNotify();
-		return Optional.of(relationshipId);
+	}
+
+	@Override
+	public CompoundNBT serializeNBT() {
+		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Saving NBT on {}, writing {} entries",
+			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
+		);
+		CompoundNBT c = new CompoundNBT();
+		ListNBT list = new ListNBT();
+		getData().forEach(d -> list.add(d.getSerializer().toNBT(d)));
+		c.put("flow_data_list", list);
+		return c;
+	}
+
+	@Override
+	public CompoundNBT write(CompoundNBT compound) {
+		super.write(compound);
+		compound.put("data", serializeNBT());
+		return compound;
+	}
+
+	@Override
+	public Stream<FlowData> getData() {
+		return graph.getData();
+	}
+
+	@Override
+	public Optional<FlowData> getData(UUID id) {
+		return graph.getData(id);
+	}
+
+	@Override
+	public void removeData(UUID id) {
+		graph.removeNode(id);
 	}
 
 	@Override
@@ -91,20 +190,13 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 		if (existing.isPresent()) {
 			existing.get().merge(data);
 		} else {
-			graph.addNode(data);
 			if (data instanceof RelationshipFlowData) {
-				graph.putEdge(
-					data.getId(),
-					((RelationshipFlowData) data).from,
-					((RelationshipFlowData) data).to
-				);
+				addRelationship(((RelationshipFlowData) data));
+			} else {
+				graph.addNode(data);
 			}
+			markAndNotify();
 		}
-	}
-
-	@Override
-	public void removeData(UUID id) {
-		graph.removeNode(id);
 	}
 
 	@Override
@@ -126,104 +218,14 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 
 	}
 
-	@Override
-	public Optional<FlowData> getData(UUID id) {
-		return graph.getData(id);
-	}
-
-
-	public void addContainerListener(ServerPlayerEntity player) {
-		CONTAINER_LISTENERS.add(player);
-	}
-
-	public void removeContainerListener(ServerPlayerEntity player) {
-		CONTAINER_LISTENERS.remove(player);
-	}
-
-	public Stream<ServerPlayerEntity> getContainerListeners() {
-		return CONTAINER_LISTENERS.stream();
-	}
-
-
-	public void mutateManagerData(
-		UUID dataId,
-		Consumer<FlowData> consumer, Runnable changeNotifier
-	) {
-		getData(dataId)
-			.ifPresent(data -> {
-				consumer.accept(data);
-				markAndNotify();
-				changeNotifier.run();
-			});
-	}
-
-	public <MSG> void sendPacketToListeners(MSG packet) {
-		getContainerListeners().forEach(player ->
-			PacketHandler.INSTANCE.send(
-				PacketDistributor.PLAYER.with(() -> player),
-				packet
-			));
-	}
-
-	public void markAndNotify() {
-		if (getWorld() == null) {
-			return;
+	public Stream<TileEntity> getCableTiles() {
+		if (world == null) {
+			return Stream.empty();
 		}
-		markDirty();
-		getWorld().notifyBlockUpdate(
-			getPos(),
-			getBlockState(),
-			getBlockState(),
-			BLOCK_UPDATE & NOTIFY_NEIGHBORS
-		);
-	}
-
-	@Override
-	public CompoundNBT serializeNBT() {
-		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Saving NBT on {}, writing {} entries",
-			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
-		);
-		CompoundNBT c = new CompoundNBT();
-		ListNBT list = new ListNBT();
-		getData().forEach(d -> list.add(d.serializeNBT()));
-		c.put("flow_data_list", list);
-		return c;
-	}
-
-	@Override
-	public void deserializeNBT(CompoundNBT compound) {
-		SFM.LOGGER.debug(SFMUtil.getMarker(getClass()), "Loading nbt on {}, replacing {} entries",
-			world == null ? "null world" : world.isRemote ? "client" : "server", getDataCount()
-		);
-		clearData();
-		compound.getList("flow_data_list", NBT.TAG_COMPOUND).stream()
-			.map(c -> ((CompoundNBT) c))
-			.map(c -> {
-				Optional<FlowData> data = FlowDataSerializer.getFactory(c)
-					.map(factory -> factory.fromNBT(c));
-				if (!data.isPresent()) {
-					SFM.LOGGER.warn("Could not find factory for {}", c);
-				}
-				return data;
-			})
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.sorted(Comparator.comparing(a -> a instanceof RelationshipFlowData))
-			.forEach(this::addData);
-	}
-
-
-	@Override
-	public void read(BlockState state, CompoundNBT tag) {
-		super.read(state, tag);
-		deserializeNBT(tag.getCompound("data"));
-	}
-
-	@Override
-	public CompoundNBT write(CompoundNBT compound) {
-		super.write(compound);
-		compound.put("data", serializeNBT());
-		return compound;
+		return getCableNeighbours()
+			.distinct()
+			.map(pos -> world.getTileEntity(pos))
+			.filter(Objects::nonNull);
 	}
 
 	public Stream<BlockPos> getCableNeighbours() {
@@ -237,16 +239,6 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 				}
 			}
 		}, getPos());
-	}
-
-	public Stream<TileEntity> getCableTiles() {
-		if (world == null) {
-			return Stream.empty();
-		}
-		return getCableNeighbours()
-			.distinct()
-			.map(pos -> world.getTileEntity(pos))
-			.filter(Objects::nonNull);
 	}
 
 	public boolean isCable(BlockPos pos) {

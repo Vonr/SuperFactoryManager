@@ -9,6 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowRelationship;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
+import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.Objects;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
@@ -32,6 +33,11 @@ public class RelationshipFlowData extends FlowData {
 			from = ((RelationshipFlowData) other).from;
 			to = ((RelationshipFlowData) other).to;
 		}
+	}
+
+	@Override
+	public FlowDataSerializer getSerializer() {
+		return FlowDataSerializers.RELATIONSHIP;
 	}
 
 	@Override

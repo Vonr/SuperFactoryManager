@@ -11,6 +11,7 @@ import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
+import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -40,6 +41,11 @@ public class LineNodeFlowData extends FlowData implements PositionHolder {
 			return null;
 		}
 		return new FlowLineNode((ManagerFlowController) parent, this);
+	}
+
+	@Override
+	public FlowDataSerializer getSerializer() {
+		return FlowDataSerializers.LINE_NODE;
 	}
 
 	@Override

@@ -6,8 +6,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
+import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,9 +36,7 @@ public class InputSpawnerFlowButton extends FlowIconButton {
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
-			managerFlowController.SCREEN.getContainer().windowId,
-			managerFlowController.SCREEN.getContainer().getSource().getPos(),
+		managerFlowController.SCREEN.sendFlowDataToServer(new TileInputFlowData(
 			UUID.randomUUID(),
 			new Position(0, 0),
 			Collections.emptyList()

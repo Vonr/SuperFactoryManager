@@ -6,14 +6,6 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket.C2SHandler;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateLineNodePacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateRelationshipPacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTileEntityRulePacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTimerTriggerPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.ManagerCreateTimerTriggerPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket.S2CHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
@@ -22,10 +14,10 @@ import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSelectedC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSelectedS2C;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowInputDataPacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowOutputDataPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowOutputDataPacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketS2C;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketS2C;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -72,22 +64,6 @@ public class PacketHandler {
 			new ManagerPositionPacketS2C.Handler());
 
 		register(i++,
-			ManagerFlowInputDataPacketC2S.class,
-			new ManagerFlowInputDataPacketC2S.Handler());
-
-		register(i++,
-			ManagerFlowInputDataPacketS2C.class,
-			new ManagerFlowInputDataPacketS2C.Handler());
-
-		register(i++,
-			ManagerCreateRelationshipPacketC2S.class,
-			new ManagerCreateRelationshipPacketC2S.Handler());
-
-		register(i++,
-			ManagerCreateRelationshipPacketS2C.class,
-			new ManagerCreateRelationshipPacketS2C.Handler());
-
-		register(i++,
 			ManagerCreateLineNodePacketC2S.class,
 			new ManagerCreateLineNodePacketC2S.Handler());
 
@@ -115,34 +91,15 @@ public class PacketHandler {
 			new ManagerToggleBlockPosSelectedS2C.Handler()
 		);
 
+
 		register(i++,
-			ManagerFlowOutputDataPacketC2S.class,
-			new ManagerFlowOutputDataPacketC2S.Handler()
+			ManagerFlowDataPacketC2S.class,
+			new ManagerFlowDataPacketC2S.Handler()
 		);
 
 		register(i++,
-			ManagerFlowOutputDataPacketS2C.class,
-			new ManagerFlowOutputDataPacketS2C.Handler()
-		);
-
-		register(i++,
-			ManagerCreateTimerTriggerPacketC2S.class,
-			new ManagerCreateTimerTriggerPacketC2S.Handler()
-		);
-
-		register(i++,
-			ManagerCreateTimerTriggerPacketS2C.class,
-			new ManagerCreateTimerTriggerPacketS2C.Handler()
-		);
-
-		register(i++,
-			ManagerCreateTileEntityRulePacketC2S.class,
-			new ManagerCreateTileEntityRulePacketC2S.Handler()
-		);
-
-		register(i++,
-			ManagerCreateTileEntityRulePacketS2C.class,
-			new ManagerCreateTileEntityRulePacketS2C.Handler()
+			ManagerFlowDataPacketS2C.class,
+			new ManagerFlowDataPacketS2C.Handler()
 		);
 	}
 

@@ -13,11 +13,11 @@ import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.RuleFlowData;
+import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
 
 public class RuleDrawerItem extends FlowContainer implements FlowDataHolder {
 
-	private final RuleFlowData DATA;
+	private final TileEntityItemStackRuleFlowData DATA;
 	private final FlowItemStack ICON;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowDrawer DRAWER;
@@ -26,7 +26,7 @@ public class RuleDrawerItem extends FlowContainer implements FlowDataHolder {
 		return ICON;
 	}
 
-	public RuleDrawerItem(FlowDrawer drawer, ManagerFlowController controller, RuleFlowData rule) {
+	public RuleDrawerItem(FlowDrawer drawer, ManagerFlowController controller, TileEntityItemStackRuleFlowData rule) {
 		super(rule.position, new Size(FlowItemStack.ITEM_WIDTH + 4, FlowItemStack.ITEM_HEIGHT + 4));
 		this.DRAWER = drawer;
 		this.CONTROLLER = controller;

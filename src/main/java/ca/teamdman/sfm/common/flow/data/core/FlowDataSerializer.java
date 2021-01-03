@@ -16,25 +16,28 @@ public abstract class FlowDataSerializer<T extends FlowData> extends
 	ForgeRegistryEntry<FlowDataSerializer<?>> {
 
 	public static final String NBT_STAMP_KEY = "factory_registry_name";
-	private static IForgeRegistry<FlowDataSerializer<?>> cached = null;
+	private static IForgeRegistry cached = null;
 
 	public FlowDataSerializer(ResourceLocation registryName) {
 		setRegistryName(registryName);
 	}
 
-	public static Optional<FlowDataSerializer<?>> getFactory(CompoundNBT tag) {
+	public static Optional<FlowDataSerializer<?>> getSerializer(CompoundNBT tag) {
 		if (!tag.contains(NBT_STAMP_KEY, NBT.TAG_STRING)) {
 			return Optional.empty();
 		}
-		ResourceLocation id = ResourceLocation.tryCreate(tag.getString(NBT_STAMP_KEY));
-		if (id == null) {
-			return Optional.empty();
-		}
+		return getSerializer(tag.getString(NBT_STAMP_KEY));
+	}
+
+	public static Optional<FlowDataSerializer<?>> getSerializer(ResourceLocation id) {
 		if (cached == null) {
-			//noinspection unchecked,rawtypes
-			cached = ((IForgeRegistry) GameRegistry.findRegistry(FlowDataSerializer.class));
+			cached = GameRegistry.findRegistry(FlowDataSerializer.class);
 		}
-		return Optional.ofNullable(cached).map(r -> r.getValue(id));
+		return Optional.ofNullable(cached).map(r -> ((FlowDataSerializer) r.getValue(id)));
+	}
+
+	public static Optional<FlowDataSerializer<?>> getSerializer(String id) {
+		return getSerializer(ResourceLocation.tryCreate(id));
 	}
 
 	public abstract T fromNBT(CompoundNBT tag);

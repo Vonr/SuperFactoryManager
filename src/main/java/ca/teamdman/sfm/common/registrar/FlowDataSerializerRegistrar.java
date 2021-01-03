@@ -24,6 +24,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import net.minecraftforge.registries.ObjectHolder;
 import net.minecraftforge.registries.RegistryBuilder;
 
@@ -51,6 +52,11 @@ public class FlowDataSerializerRegistrar {
 		MinecraftForge.EVENT_BUS.register(new FlowDataFactoryRegistry());
 	}
 
+	// Need the makeRegistry method to trick java into ignoring type errors!?!?
+	private static <T extends IForgeRegistryEntry<T>> RegistryBuilder<T> makeRegistry(
+		ResourceLocation name, Class<T> type) {
+		return new RegistryBuilder<T>().setName(name).setType(type);
+	}
 
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataSerializers {
@@ -67,9 +73,10 @@ public class FlowDataSerializerRegistrar {
 	public static class FlowDataFactoryRegistry {
 
 		public FlowDataFactoryRegistry() {
-			new RegistryBuilder<FlowDataSerializer>()
-				.setName(new ResourceLocation(SFM.MOD_ID, "flow_data_serializer_registry"))
-				.setType(FlowDataSerializer.class).create();
+			makeRegistry(
+				new ResourceLocation(SFM.MOD_ID, "flow_data_serializer_registry"),
+				FlowDataSerializer.class
+			).create();
 		}
 	}
 }

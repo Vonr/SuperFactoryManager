@@ -11,6 +11,7 @@ import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
+import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,7 +35,6 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 		this.tileEntityRules = ters;
 	}
 
-
 	@Override
 	public void merge(FlowData other) {
 		if (other instanceof TileOutputFlowData) {
@@ -51,6 +51,11 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 			return null;
 		}
 		return new FlowOutputButton((ManagerFlowController) parent, this);
+	}
+
+	@Override
+	public FlowDataSerializer getSerializer() {
+		return FlowDataSerializers.OUTPUT;
 	}
 
 	@Override

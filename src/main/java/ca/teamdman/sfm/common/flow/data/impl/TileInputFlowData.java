@@ -11,6 +11,7 @@ import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
+import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -50,6 +51,11 @@ public class TileInputFlowData extends FlowData implements PositionHolder {
 			return null;
 		}
 		return new FlowInputButton((ManagerFlowController) parent, this);
+	}
+
+	@Override
+	public FlowDataSerializer getSerializer() {
+		return FlowDataSerializers.INPUT;
 	}
 
 	@Override
