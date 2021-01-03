@@ -11,7 +11,7 @@ import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.block.ICable;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
 import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.data.impl.RelationshipGraph;
 import ca.teamdman.sfm.common.flow.execution.ManagerFlowExecutionController;
@@ -199,7 +199,7 @@ public class ManagerTileEntity extends TileEntity implements FlowDataContainer,
 		compound.getList("flow_data_list", NBT.TAG_COMPOUND).stream()
 			.map(c -> ((CompoundNBT) c))
 			.map(c -> {
-				Optional<FlowData> data = FlowDataFactory.getFactory(c)
+				Optional<FlowData> data = FlowDataSerializer.getFactory(c)
 					.map(factory -> factory.fromNBT(c));
 				if (!data.isPresent()) {
 					SFM.LOGGER.warn("Could not find factory for {}", c);

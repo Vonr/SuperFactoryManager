@@ -3,17 +3,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.flow.data.impl;
 
+import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowRelationship;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowRelationship;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
-import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
+import java.util.Objects;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
 public class RelationshipFlowData extends FlowData {
+
 	public UUID from, to;
 
 	public RelationshipFlowData(UUID uuid, UUID from, UUID to) {
@@ -22,19 +25,6 @@ public class RelationshipFlowData extends FlowData {
 		this.to = to;
 	}
 
-	public RelationshipFlowData(CompoundNBT tag) {
-		this(null, null, null);
-		deserializeNBT(tag);
-	}
-
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT tag = super.serializeNBT();
-		tag.putString("from", from.toString());
-		tag.putString("to", to.toString());
-		FlowDataFactories.RELATIONSHIP.stampNBT(tag);
-		return tag;
-	}
 
 	@Override
 	public void merge(FlowData other) {
@@ -45,20 +35,18 @@ public class RelationshipFlowData extends FlowData {
 	}
 
 	@Override
-	public FlowData copy() {
-		return new RelationshipFlowData(getId(), from, to);
-	}
-
-
-	public boolean matches(UUID from, UUID to) {
-		return from.equals(this.from) && to.equals(this.to);
-	}
-
-	@Override
-	public void deserializeNBT(CompoundNBT tag) {
-		super.deserializeNBT(tag);
-		this.from = UUID.fromString(tag.getString("from"));
-		this.to = UUID.fromString(tag.getString("to"));
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		if (!super.equals(o)) {
+			return false;
+		}
+		RelationshipFlowData that = (RelationshipFlowData) o;
+		return Objects.equals(from, that.from) && Objects.equals(to, that.to);
 	}
 
 	@Override
@@ -71,15 +59,50 @@ public class RelationshipFlowData extends FlowData {
 		return new FlowRelationship((ManagerFlowController) parent, this);
 	}
 
-	public static class FlowRelationshipDataFactory extends FlowDataFactory<RelationshipFlowData> {
+	@Override
+	public int hashCode() {
+		return Objects.hash(from, to);
+	}
 
-		public FlowRelationshipDataFactory(ResourceLocation registryName) {
+	public static class FlowRelationshipDataSerializer extends
+		FlowDataSerializer<RelationshipFlowData> {
+
+		public FlowRelationshipDataSerializer(ResourceLocation registryName) {
 			super(registryName);
 		}
 
 		@Override
 		public RelationshipFlowData fromNBT(CompoundNBT tag) {
-			return new RelationshipFlowData(tag);
+			return new RelationshipFlowData(
+				UUID.fromString(tag.getString("uuid")),
+				UUID.fromString(tag.getString("from")),
+				UUID.fromString(tag.getString("to"))
+			);
+		}
+
+		@Override
+		public CompoundNBT toNBT(RelationshipFlowData data) {
+			CompoundNBT tag = super.toNBT(data);
+			tag.putString("from", data.from.toString());
+			tag.putString("to", data.to.toString());
+			return tag;
+		}
+
+		@Override
+		public RelationshipFlowData fromBuffer(PacketBuffer buf) {
+			return new RelationshipFlowData(
+				SFMUtil.readUUID(buf),
+				SFMUtil.readUUID(buf),
+				SFMUtil.readUUID(buf)
+			);
+		}
+
+		@Override
+		public void toBuffer(RelationshipFlowData data, PacketBuffer buf) {
+			buf.writeString(data.getId().toString());
+			buf.writeString(data.from.toString());
+			buf.writeString(data.to.toString());
+
 		}
 	}
 }

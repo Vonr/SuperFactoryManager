@@ -3,22 +3,23 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.flow.data.impl;
 
+import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowOutputButton;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowOutputButton;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
-import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -33,22 +34,6 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 		this.tileEntityRules = ters;
 	}
 
-	public TileOutputFlowData(CompoundNBT tag) {
-		this(null, new Position(), new ArrayList<>());
-		deserializeNBT(tag);
-	}
-
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT tag = super.serializeNBT();
-		tag.put("pos", position.serializeNBT());
-		tag.put("ters", tileEntityRules.stream()
-			.map(UUID::toString)
-			.map(StringNBT::valueOf)
-			.collect(ListNBT::new, ListNBT::add, ListNBT::addAll));
-		FlowDataFactories.OUTPUT.stampNBT(tag);
-		return tag;
-	}
 
 	@Override
 	public void merge(FlowData other) {
@@ -56,16 +41,6 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 			position = ((TileOutputFlowData) other).position;
 			tileEntityRules = ((TileOutputFlowData) other).tileEntityRules;
 		}
-	}
-
-	@Override
-	public void deserializeNBT(CompoundNBT tag) {
-		super.deserializeNBT(tag);
-		this.position.deserializeNBT(tag.getCompound("pos"));
-		this.tileEntityRules = tag.getList("ters", NBT.TAG_STRING).stream()
-			.map(INBT::getString)
-			.map(UUID::fromString)
-			.collect(Collectors.toList());
 	}
 
 	@Override
@@ -79,24 +54,56 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public FlowData copy() {
-		return new TileOutputFlowData(getId(), getPosition(), tileEntityRules);
-	}
-
-	@Override
 	public Position getPosition() {
 		return position;
 	}
 
-	public static class FlowOutputDataFactory extends FlowDataFactory<TileOutputFlowData> {
+	public static class FlowOutputDataSerializer extends FlowDataSerializer<TileOutputFlowData> {
 
-		public FlowOutputDataFactory(ResourceLocation key) {
+		public FlowOutputDataSerializer(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
 		public TileOutputFlowData fromNBT(CompoundNBT tag) {
-			return new TileOutputFlowData(tag);
+			return new TileOutputFlowData(
+				UUID.fromString(tag.getString("uuid")),
+				new Position(tag.getCompound("pos")),
+				tag.getList("ters", NBT.TAG_STRING).stream()
+					.map(INBT::getString)
+					.map(UUID::fromString)
+					.collect(Collectors.toList())
+			);
+		}
+
+		@Override
+		public CompoundNBT toNBT(TileOutputFlowData data) {
+			CompoundNBT tag = super.toNBT(data);
+			tag.put("pos", data.position.serializeNBT());
+			tag.put("ters", data.tileEntityRules.stream()
+				.map(UUID::toString)
+				.map(StringNBT::valueOf)
+				.collect(ListNBT::new, ListNBT::add, ListNBT::addAll));
+			return tag;
+		}
+
+		@Override
+		public TileOutputFlowData fromBuffer(PacketBuffer buf) {
+			return new TileOutputFlowData(
+				SFMUtil.readUUID(buf),
+				Position.fromLong(buf.readLong()),
+				IntStream.range(0, buf.readInt())
+					.mapToObj(__ -> SFMUtil.readUUID(buf))
+					.collect(Collectors.toList())
+			);
+		}
+
+		@Override
+		public void toBuffer(TileOutputFlowData data, PacketBuffer buf) {
+			buf.writeString(data.getId().toString());
+			buf.writeLong(data.position.toLong());
+			buf.writeInt(data.tileEntityRules.size());
+			data.tileEntityRules.forEach(id -> buf.writeString(id.toString()));
 		}
 	}
 }

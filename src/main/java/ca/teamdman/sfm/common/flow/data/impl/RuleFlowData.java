@@ -4,9 +4,10 @@
 package ca.teamdman.sfm.common.flow.data.impl;
 
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
-import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
+import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.UUID;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -36,7 +37,8 @@ public abstract class RuleFlowData extends FlowData implements PositionHolder {
 		tag.put("pos", position.serializeNBT());
 		tag.putString("name", name);
 		tag.put("icon", icon.serializeNBT());
-		FlowDataFactories.TILE_ENTITY_RULE.stampNBT(tag);
+		tag.putString(
+			FlowDataSerializer.NBT_STAMP_KEY, FlowDataSerializers.TILE_ENTITY_RULE.getRegistryName().toString());
 		return tag;
 	}
 
@@ -58,7 +60,7 @@ public abstract class RuleFlowData extends FlowData implements PositionHolder {
 		if (other instanceof RuleFlowData) {
 			name = ((RuleFlowData) other).name;
 			icon = ((RuleFlowData) other).icon;
-			position = ((TileEntityRuleFlowData) other).position;
+			position = ((TileEntityItemStackRuleFlowData) other).position;
 		}
 	}
 }

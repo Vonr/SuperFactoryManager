@@ -17,5 +17,13 @@
   "gui.sfm.config.alwaysSnapMovementToGrid": "Always snap movement to grid",
   "gui.sfm.config.allowElementsOutOfBounds": "Allow elements out of bounds during repositioning",
   "gui.sfm.manager.tile_entity_rule.icon.title": "Icon",
-  "gui.sfm.config.enableRegexSearch": "Enable regular expressions during item searches"
+  "gui.sfm.config.enableRegexSearch": "Enable regular expressions during item searches",
+  "gui.sfm.flow.tooltip.input_spawner": "Create new input",
+  "gui.sfm.flow.tooltip.output_spawner": "Create new output",
+  "gui.sfm.flow.tooltip.trigger_spawner": "Create new trigger",
+  "gui.sfm.flow.tooltip.settings_button.close": "Close settings",
+  "gui.sfm.flow.tooltip.settings_button.open": "Open settings",
+  "gui.sfm.manager.tile_entity_rule.items.title": "Items",
+  "gui.sfm.flow.tileentityrule.button.whitelist": "Whitelist",
+  "gui.sfm.flow.tileentityrule.button.blacklist": "Blacklist"
 }

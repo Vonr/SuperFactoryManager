@@ -3,16 +3,18 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.flow.data.impl;
 
+import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.FlowTimerTrigger;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTimerTrigger;
 import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataFactory;
+import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.core.Position;
 import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
-import ca.teamdman.sfm.common.registrar.FlowDataFactoryRegistrar.FlowDataFactories;
+import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
 public class TimerTriggerFlowData extends FlowData implements PositionHolder {
@@ -26,26 +28,17 @@ public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 		this.interval = interval;
 	}
 
-	public TimerTriggerFlowData(CompoundNBT tag) {
-		this(null, new Position(), 20);
-		deserializeNBT(tag);
-	}
-
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT tag = super.serializeNBT();
-		tag.put("pos", position.serializeNBT());
-		tag.putInt("interval", interval);
-		FlowDataFactories.TIMER_TRIGGER.stampNBT(tag);
-		return tag;
-	}
-
 	@Override
 	public void merge(FlowData other) {
 		if (other instanceof TimerTriggerFlowData) {
 			position = ((TimerTriggerFlowData) other).position;
 			interval = ((TimerTriggerFlowData) other).interval;
 		}
+	}
+
+	@Override
+	public FlowDataSerializer getSerializer() {
+		return FlowDataSerializers.TIMER_TRIGGER;
 	}
 
 	@Override
@@ -59,31 +52,48 @@ public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public void deserializeNBT(CompoundNBT tag) {
-		super.deserializeNBT(tag);
-		this.position.deserializeNBT(tag.getCompound("pos"));
-		this.interval = tag.getInt("interval");
-	}
-
-	@Override
-	public FlowData copy() {
-		return new TimerTriggerFlowData(getId(), getPosition(), interval);
-	}
-
-	@Override
 	public Position getPosition() {
 		return position;
 	}
 
-	public static class FlowTimerTriggerDataFactory extends FlowDataFactory<TimerTriggerFlowData> {
+	public static class FlowTimerTriggerDataSerializer extends
+		FlowDataSerializer<TimerTriggerFlowData> {
 
-		public FlowTimerTriggerDataFactory(ResourceLocation key) {
+		public FlowTimerTriggerDataSerializer(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
 		public TimerTriggerFlowData fromNBT(CompoundNBT tag) {
-			return new TimerTriggerFlowData(tag);
+			return new TimerTriggerFlowData(
+				UUID.fromString(tag.getString("uuid")),
+				new Position(tag.getCompound("pos")),
+				tag.getInt("interval")
+			);
+		}
+
+		@Override
+		public CompoundNBT toNBT(TimerTriggerFlowData data) {
+			CompoundNBT tag = super.toNBT(data);
+			tag.put("pos", data.position.serializeNBT());
+			tag.putInt("interval", data.interval);
+			return tag;
+		}
+
+		@Override
+		public TimerTriggerFlowData fromBuffer(PacketBuffer buf) {
+			return new TimerTriggerFlowData(
+				SFMUtil.readUUID(buf),
+				Position.fromLong(buf.readLong()),
+				buf.readInt()
+			);
+		}
+
+		@Override
+		public void toBuffer(TimerTriggerFlowData data, PacketBuffer buf) {
+			buf.writeString(data.getId().toString());
+			buf.writeLong(data.position.toLong());
+			buf.writeInt(data.interval);
 		}
 	}
 }

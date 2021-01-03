@@ -17,6 +17,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 
 public class ManagerFlowInputDataPacketC2S extends C2SManagerPacket {
+
 	private final Position ELEMENT_POSITION;
 	private final UUID ELEMENT_ID;
 	private final List<UUID> RULES;

@@ -5,14 +5,13 @@ package ca.teamdman.sfm.common.flow.data.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import java.util.UUID;
-import net.minecraft.nbt.CompoundNBT;
+import javax.annotation.Nullable;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.util.INBTSerializable;
 
-public abstract class FlowData implements INBTSerializable<CompoundNBT>, ICopyable<FlowData> {
+public abstract class FlowData {
 
-	private UUID uuid;
+	private final UUID uuid;
 
 	public FlowData(UUID uuid) {
 		this.uuid = uuid;
@@ -22,38 +21,20 @@ public abstract class FlowData implements INBTSerializable<CompoundNBT>, ICopyab
 		this.uuid = UUID.randomUUID();
 	}
 
-	public UUID getId() {
-		return uuid;
-	}
-
-	public void setId(UUID uuid) {
-		this.uuid = uuid;
-	}
-
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT tag = new CompoundNBT();
-		tag.putString("uuid", uuid.toString());
-		return tag;
-	}
-
 	/**
 	 * Copies all data from {@code other} into {@code this}
+	 *
 	 * @param other
 	 */
 	public abstract void merge(FlowData other);
 
 	@Override
-	public abstract FlowData copy();
-
-	@Override
-	public void deserializeNBT(CompoundNBT nbt) {
-		this.uuid = UUID.fromString(nbt.getString("uuid"));
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof FlowData && ((FlowData) obj).getId().equals(getId());
+	}
+
+	public UUID getId() {
+		return uuid;
 	}
 
 	@Override
@@ -62,7 +43,10 @@ public abstract class FlowData implements INBTSerializable<CompoundNBT>, ICopyab
 	}
 
 	@OnlyIn(Dist.CLIENT)
+	@Nullable
 	public abstract FlowComponent createController(
 		FlowComponent parent
 	);
+
+	public abstract FlowDataSerializer getSerializer();
 }
