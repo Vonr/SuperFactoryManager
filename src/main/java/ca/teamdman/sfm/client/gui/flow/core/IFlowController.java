@@ -75,4 +75,9 @@ public interface IFlowController {
 	default boolean charTyped(char codePoint, int modifiers, int mx, int my) {
 		return false;
 	}
+
+	/**
+	 * Fired every screen tick
+	 */
+	default void tick() {}
 }

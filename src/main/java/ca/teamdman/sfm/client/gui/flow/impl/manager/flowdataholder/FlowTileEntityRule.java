@@ -3,15 +3,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
-import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.client.SearchUtil;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStackPicker;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowMinusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton;
@@ -22,12 +20,11 @@ import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.Queue;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 
 public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<TileEntityItemStackRuleFlowData> {
-
+	private final FlowItemStackPicker ICON_PICKER;
 	private final ManagerFlowController CONTROLLER;
 	private TileEntityItemStackRuleFlowData data;
 	private String name = "Tile Entity Rule";
@@ -51,10 +48,16 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 			I18n.format("gui.sfm.manager.tile_entity_rule.icon.title")
 		));
 
-		addChild(new FlowIconItemStack(
-			this.data.icon,
-			new Position(5, 40)
-		));
+		FlowItemStack icon = new FlowIconItemStack(this.data.icon, new Position(5, 40));
+		addChild(icon);
+
+		this.ICON_PICKER = new FlowItemStackPicker(
+			CONTROLLER,
+			icon.getPosition().withOffset(icon.getSize().getWidth()+5, 0)
+		);
+		ICON_PICKER.setVisible(false);
+		ICON_PICKER.setEnabled(false);
+		addChild(ICON_PICKER);
 
 		// Items
 		addChild(new SectionHeader(
@@ -198,8 +201,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 		}
 	}
 
-	public class FlowIconItemStack extends FlowItemStackPicker {
-
+	public class FlowIconItemStack extends FlowItemStack {
 		public FlowIconItemStack(
 			ItemStack stack,
 			Position pos
@@ -209,20 +211,22 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			super.onClicked(mx, my, button);
-			new SearchUtil.Query("stone") {
-				@Override
-				public void onResultsUpdated(Queue<ItemStack> results) {
-					SFM.LOGGER.info(
-						SFMUtil.getMarker(FlowIconItemStack.this.getClass()),
-						"Results updated with {} entries:", results.size()
-					);
-					results.forEach(stack -> SFM.LOGGER.info(
-						SFMUtil.getMarker(FlowIconItemStack.this.getClass()),
-						stack
-					));
-				}
-			}.start();
+			ICON_PICKER.setVisible(!ICON_PICKER.isVisible());
+			ICON_PICKER.setEnabled(ICON_PICKER.isVisible());
+//			super.onClicked(mx, my, button);
+//			new SearchUtil.Query("stone") {
+//				@Override
+//				public void onResultsUpdated(Queue<ItemStack> results) {
+//					SFM.LOGGER.info(
+//						SFMUtil.getMarker(FlowIconItemStack.this.getClass()),
+//						"Results updated with {} entries:", results.size()
+//					);
+//					results.forEach(stack -> SFM.LOGGER.info(
+//						SFMUtil.getMarker(FlowIconItemStack.this.getClass()),
+//						stack
+//					));
+//				}
+//			}.start();
 		}
 
 		@Override

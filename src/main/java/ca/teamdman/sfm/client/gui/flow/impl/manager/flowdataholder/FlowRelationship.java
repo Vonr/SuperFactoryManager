@@ -7,7 +7,6 @@ import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.RelationshipController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
@@ -58,11 +57,6 @@ public class FlowRelationship extends FlowComponent implements
 			)
 		));
 		return true;
-	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
 	}
 
 	@Override

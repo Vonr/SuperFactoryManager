@@ -5,6 +5,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
+import ca.teamdman.sfm.client.gui.flow.core.IFlowController;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
@@ -166,6 +167,11 @@ public abstract class FlowContainer extends FlowComponent {
 		return getEnabledChildrenControllers()
 			.anyMatch(c -> c.mouseScrolled(pmx, pmy, scroll))
 			|| super.mouseScrolled(mx, my, scroll);
+	}
+
+	@Override
+	public void tick() {
+		getEnabledChildrenControllers().forEach(IFlowController::tick);
 	}
 
 	@Override

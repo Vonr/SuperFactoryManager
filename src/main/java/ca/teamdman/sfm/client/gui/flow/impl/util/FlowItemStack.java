@@ -6,7 +6,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.ISelectable;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -27,6 +26,7 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 
 	public FlowItemStack(ItemStack stack, Position pos) {
 		super(pos, new Size(ITEM_TOTAL_WIDTH, ITEM_TOTAL_HEIGHT));
+		setDraggable(false);
 		this.STACK = stack;
 	}
 
@@ -40,12 +40,6 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 
 	public ItemStack getItemStack() {
 		return STACK;
-	}
-
-
-	@Override
-	public IFlowView getView() {
-		return this;
 	}
 
 	@Override

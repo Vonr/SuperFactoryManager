@@ -6,8 +6,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
-import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,31 +18,49 @@ public class FlowDrawer extends FlowContainer {
 	private static final int PADDING_Y = 4;
 	private static final int ITEM_MARGIN_X = 4;
 	private static final int ITEM_MARGIN_Y = 4;
-
-	private final int ITEM_WIDTH;
-	private final int ITEM_HEIGHT;
-	private final String LABEL_TEXT;
+	private final int MAX_ITEMS_PER_ROW;
+	private final int MAX_ITEMS_PER_COLUMN;
+	private int itemMaxWidth;
+	private int itemMaxHeight;
 	private int scroll = 0;
 
-	public FlowDrawer(Position pos, int itemWidth, int itemHeight, String labelText) {
+	public FlowDrawer(Position pos, int maxItemsPerRow, int maxItemsPerColumn) {
 		super(pos);
-		this.ITEM_WIDTH = itemWidth;
-		this.ITEM_HEIGHT = itemHeight;
-		this.LABEL_TEXT = labelText;
+		this.MAX_ITEMS_PER_ROW = maxItemsPerRow;
+		this.MAX_ITEMS_PER_COLUMN = maxItemsPerColumn;
 	}
 
 	public int getMaxWidth() {
-		return (ITEM_WIDTH + ITEM_MARGIN_X) * getMaxItemsPerRow() + PADDING_X;
+		return (itemMaxWidth + ITEM_MARGIN_X) * getMaxItemsPerRow() + PADDING_X;
+	}
+
+	public int getMaxItemsPerRow() {
+		return MAX_ITEMS_PER_ROW;
 	}
 
 	public int getMaxHeight() {
-		return (ITEM_HEIGHT + ITEM_MARGIN_Y) * getMaxItemsPerColumn() + PADDING_Y;
+		return (itemMaxHeight + ITEM_MARGIN_Y) * getMaxItemsPerColumn() + PADDING_Y;
+	}
+
+	public int getMaxItemsPerColumn() {
+		return MAX_ITEMS_PER_COLUMN;
 	}
 
 	public void update() {
+		itemMaxWidth = -getChildren().stream() // negate result
+			.mapToInt(c -> -c.getSize().getWidth()) // negative so that the 'largest' is first
+			.sorted()
+			.findFirst()
+			.orElse(-32);
+		itemMaxHeight = -getChildren().stream()
+			.mapToInt(c -> -c.getSize().getHeight())
+			.sorted()
+			.findFirst()
+			.orElse(-32);
+
 		getSize().setSize(
-			(ITEM_WIDTH + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X,
-			(ITEM_HEIGHT + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
+			(itemMaxWidth + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X,
+			(itemMaxHeight + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
 		);
 		AtomicInteger i = new AtomicInteger();
 		getChildren().forEach(c -> c.getPosition().setXY(
@@ -62,7 +78,7 @@ public class FlowDrawer extends FlowContainer {
 				(
 					(int) Math.ceil(getChildren().size() / (float) getItemsPerRow())
 						- getItemsPerColumn()
-				) * (ITEM_HEIGHT + ITEM_MARGIN_Y)
+				) * (itemMaxHeight + ITEM_MARGIN_Y)
 			)
 		);
 	}
@@ -81,89 +97,10 @@ public class FlowDrawer extends FlowContainer {
 		}
 	}
 
-	public void scrollDown() {
-		scroll += 7;
-		fixScroll();
-		update();
-	}
-
-	public void scrollUp() {
-		scroll -= 7;
-		fixScroll();
-		update();
-	}
-
-
-	public int getItemsPerColumn() {
-		return MathHelper.clamp(
-			getItemRow(getChildren().size() - 1) + 1,
-			1,
-			getMaxItemsPerColumn()
-		);
-	}
-
-	public int getMaxItemsPerRow() {
-		return 5;
-	}
-
-	public int getMaxItemsPerColumn() {
-		return 7;
-	}
-
-	public int getItemsPerRow() {
-		return MathHelper.clamp(getChildren().size(), 1, getMaxItemsPerRow());
-	}
-
-	public int getWrappedX(int index) {
-		return getItemColumn(index)
-			* (FlowItemStack.ITEM_TOTAL_WIDTH + ITEM_MARGIN_X)
-			+ ITEM_MARGIN_X / 2
-			+ PADDING_X / 2;
-	}
-
-	public int getItemColumn(int index) {
-		return index % getItemsPerRow();
-	}
-
-	public int getItemRow(int index) {
-		return (int) Math.floor(index / (float) getItemsPerRow());
-	}
-
-	public int getWrappedY(int index) {
-		return getItemRow(index)
-			* (FlowItemStack.ITEM_TOTAL_HEIGHT + ITEM_MARGIN_Y)
-			+ ITEM_MARGIN_Y / 2
-			+ PADDING_Y / 2;
-	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
-	}
-
 	@Override
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		if (Client.showRuleDrawerLabels) {
-			int labelHeight = 15;
-			screen.drawRect(
-				matrixStack,
-				getPosition().getX(),
-				getPosition().getY()-labelHeight,
-				getMaxWidth(),
-				labelHeight,
-				CONST.PANEL_BORDER
-			);
-			screen.drawString(
-				matrixStack,
-				LABEL_TEXT,
-				getPosition().getX() + 5,
-				getPosition().getY() - labelHeight + 4,
-				CONST.TEXT_LIGHT
-			);
-		}
-
 		screen.clearRect(
 			matrixStack,
 			getPosition().getX(),
@@ -218,5 +155,51 @@ public class FlowDrawer extends FlowContainer {
 			}
 		}
 		matrixStack.pop();
+	}
+
+	public void scrollDown() {
+		scroll += 7;
+		fixScroll();
+		update();
+	}
+
+	public void scrollUp() {
+		scroll -= 7;
+		fixScroll();
+		update();
+	}
+
+	public int getItemsPerColumn() {
+		return MathHelper.clamp(
+			getItemRow(getChildren().size() - 1) + 1,
+			1,
+			getMaxItemsPerColumn()
+		);
+	}
+
+	public int getItemsPerRow() {
+		return MathHelper.clamp(getChildren().size(), 1, getMaxItemsPerRow());
+	}
+
+	public int getWrappedX(int index) {
+		return getItemColumn(index)
+			* (FlowItemStack.ITEM_TOTAL_WIDTH + ITEM_MARGIN_X)
+			+ ITEM_MARGIN_X / 2
+			+ PADDING_X / 2;
+	}
+
+	public int getItemColumn(int index) {
+		return index % getItemsPerRow();
+	}
+
+	public int getItemRow(int index) {
+		return (int) Math.floor(index / (float) getItemsPerRow());
+	}
+
+	public int getWrappedY(int index) {
+		return getItemRow(index)
+			* (FlowItemStack.ITEM_TOTAL_HEIGHT + ITEM_MARGIN_Y)
+			+ ITEM_MARGIN_Y / 2
+			+ PADDING_Y / 2;
 	}
 }

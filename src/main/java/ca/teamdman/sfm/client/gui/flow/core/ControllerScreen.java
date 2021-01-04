@@ -55,4 +55,9 @@ public abstract class ControllerScreen<T extends IFlowController & IFlowView> ex
 	public boolean charTypedScaled(char codePoint, int modifiers, int mx, int my) {
 		return getController().charTyped(codePoint, modifiers, mx, my);
 	}
+
+	@Override
+	public void tick() {
+		getController().tick();
+	}
 }

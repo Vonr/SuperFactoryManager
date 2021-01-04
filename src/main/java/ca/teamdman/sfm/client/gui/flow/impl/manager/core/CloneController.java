@@ -6,7 +6,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
@@ -45,11 +44,6 @@ public class CloneController extends FlowComponent {
 	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
 		return cloning != null;
-	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
 	}
 
 	@Override

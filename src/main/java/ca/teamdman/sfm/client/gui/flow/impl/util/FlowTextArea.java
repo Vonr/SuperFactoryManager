@@ -9,6 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.function.Consumer;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.util.text.ITextComponent;
@@ -39,6 +40,10 @@ public class FlowTextArea extends FlowComponent {
 		((WidgetSizeDelegate) getSize()).setWidget(delegate);
 	}
 
+	public void setResponder(Consumer<String> responder) {
+		delegate.setResponder(responder);
+	}
+
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		return delegate.keyPressed(keyCode, scanCode, modifiers);
@@ -47,6 +52,11 @@ public class FlowTextArea extends FlowComponent {
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		return delegate.keyReleased(keyCode, scanCode, modifiers);
+	}
+
+	@Override
+	public void tick() {
+		delegate.tick();
 	}
 
 	@Override
@@ -61,12 +71,14 @@ public class FlowTextArea extends FlowComponent {
 
 	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
-		return delegate.mouseDragged(mx, my, button, dmx, dmy);
+		return false; // Ignore default widget drag
+//		return delegate.mouseDragged(mx, my, button, dmx, dmy);
 	}
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
-		return delegate.mouseReleased(mx, my, button);
+		return false; // Text widget doesn't do anything on release, but it tries to consume :/
+//		return delegate.mouseReleased(mx, my, button);
 	}
 
 	@Override

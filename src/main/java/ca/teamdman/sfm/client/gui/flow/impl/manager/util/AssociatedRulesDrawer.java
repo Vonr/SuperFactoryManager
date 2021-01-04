@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
@@ -45,23 +44,23 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 
 		this.CONTROLLER = controller;
 
+//			I18n.format("gui.sfm.associatedrulesdrawer.children.label")
 		this.CHILDREN_RULES_DRAWER = new FlowDrawer(
 			new Position(),
-			FlowItemStack.ITEM_TOTAL_WIDTH,
-			FlowItemStack.ITEM_TOTAL_HEIGHT,
-			I18n.format("gui.sfm.associatedrulesdrawer.children.label")
+			5,
+			7
 		);
 		CHILDREN_RULES_DRAWER.setDraggable(false);
 		addChild(CHILDREN_RULES_DRAWER);
 
+//			I18n.format("gui.sfm.associatedrulesdrawer.selection.label")
 		this.SELECTION_RULES_DRAWER = new FlowDrawer(
 			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(
 				CHILDREN_RULES_DRAWER.getMaxWidth() + 10,
 				0
 			),
-			FlowItemStack.ITEM_TOTAL_WIDTH,
-			FlowItemStack.ITEM_TOTAL_HEIGHT,
-			I18n.format("gui.sfm.associatedrulesdrawer.selection.label")
+5,
+7
 		);
 		SELECTION_RULES_DRAWER.setVisible(false);
 		SELECTION_RULES_DRAWER.setEnabled(false);
@@ -72,6 +71,29 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		rebuildChildrenDrawer();
 		rebuildSelectionDrawer();
 	}
+
+	/*
+	TODO: label drawing
+
+		if (Client.showRuleDrawerLabels) {
+			int labelHeight = 15;
+			screen.drawRect(
+				matrixStack,
+				getPosition().getX(),
+				getPosition().getY()-labelHeight,
+				getMaxWidth(),
+				labelHeight,
+				CONST.PANEL_BORDER
+			);
+			screen.drawString(
+				matrixStack,
+				LABEL_TEXT,
+				getPosition().getX() + 5,
+				getPosition().getY() - labelHeight + 4,
+				CONST.TEXT_LIGHT
+			);
+		}
+	 */
 
 	public void rebuildChildrenDrawer() {
 		CHILDREN_RULES_DRAWER.getChildren().clear();

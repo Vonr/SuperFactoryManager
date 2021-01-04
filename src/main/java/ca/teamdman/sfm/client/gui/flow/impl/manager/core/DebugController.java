@@ -6,7 +6,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -20,11 +19,6 @@ public class DebugController extends FlowComponent {
 
 	public DebugController(ManagerFlowController CONTROLLER) {
 		this.CONTROLLER = CONTROLLER;
-	}
-
-	@Override
-	public IFlowView getView() {
-		return this;
 	}
 
 	public void drawId(BaseScreen screen, MatrixStack matrixStack, UUID id, int x, int y) {

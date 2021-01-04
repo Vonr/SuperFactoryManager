@@ -35,6 +35,45 @@ public class Size {
 			&& y <= myPosition.getY() + getHeight();
 	}
 
+	/**
+	 * Create a new Size object that will match this width, but with a custom height
+	 * @param height Custom constant height
+	 * @return Size delegate
+	 */
+	public Size withConstantHeight(int height) {
+		return new Size(0,0) {
+			@Override
+			public int getWidth() {
+				return Size.this.getWidth();
+			}
+
+			@Override
+			public int getHeight() {
+				return height;
+			}
+		};
+	}
+
+
+	/**
+	 * Create a new Size object that will match this height, but with a custom width
+	 * @param width Custom constant width
+	 * @return Size delegate
+	 */
+	public Size withConstantWidth(int width) {
+		return new Size(0,0) {
+			@Override
+			public int getWidth() {
+				return width;
+			}
+
+			@Override
+			public int getHeight() {
+				return Size.this.getHeight();
+			}
+		};
+	}
+
 	public int getWidth() {
 		return this.width;
 	}

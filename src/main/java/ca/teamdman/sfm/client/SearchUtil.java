@@ -86,7 +86,7 @@ public class SearchUtil {
 
 	}
 
-	private static List<ItemStack> getSearchableItems() {
+	public static List<ItemStack> getSearchableItems() {
 		NonNullList<ItemStack> stacks = NonNullList.create();
 		Registry.ITEM.stream()
 			.filter(Objects::nonNull)
@@ -159,6 +159,7 @@ public class SearchUtil {
 
 				}
 			}
+			results.clear();
 			running = true;
 			background = new Thread(this::gatherResults);
 			background.start();
