@@ -30,14 +30,6 @@ public class RelationshipFlowData extends FlowData implements Observer {
 	}
 
 	@Override
-	public void merge(FlowData other) {
-		if (other instanceof RelationshipFlowData) {
-			from = ((RelationshipFlowData) other).from;
-			to = ((RelationshipFlowData) other).to;
-		}
-	}
-
-	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
 			return true;

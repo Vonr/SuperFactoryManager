@@ -34,14 +34,6 @@ public class TileInputFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public void merge(FlowData other) {
-		if (other instanceof TileInputFlowData) {
-			position = ((TileInputFlowData) other).position;
-			tileEntityRules = ((TileInputFlowData) other).tileEntityRules;
-		}
-	}
-
-	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {

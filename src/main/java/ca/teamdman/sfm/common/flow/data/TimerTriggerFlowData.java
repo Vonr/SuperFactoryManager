@@ -27,14 +27,6 @@ public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public void merge(FlowData other) {
-		if (other instanceof TimerTriggerFlowData) {
-			position = ((TimerTriggerFlowData) other).position;
-			interval = ((TimerTriggerFlowData) other).interval;
-		}
-	}
-
-	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {

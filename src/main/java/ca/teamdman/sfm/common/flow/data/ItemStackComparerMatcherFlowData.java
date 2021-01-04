@@ -24,13 +24,6 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 	}
 
 	@Override
-	public void merge(FlowData other) {
-		if (other instanceof ItemStackComparerMatcherFlowData) {
-			this.stack = ((ItemStackComparerMatcherFlowData) other).stack;
-		}
-	}
-
-	@Override
 	public FlowComponent createController(FlowComponent parent) {
 		return null;
 	}

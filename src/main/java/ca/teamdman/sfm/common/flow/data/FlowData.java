@@ -22,13 +22,6 @@ public abstract class FlowData {
 		this.uuid = UUID.randomUUID();
 	}
 
-	/**
-	 * Copies all data from {@code other} into {@code this}
-	 *
-	 * @param other
-	 */
-	public abstract void merge(FlowData other);
-
 	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof FlowData && ((FlowData) obj).getId().equals(getId());

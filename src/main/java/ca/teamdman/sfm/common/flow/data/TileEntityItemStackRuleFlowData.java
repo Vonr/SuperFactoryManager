@@ -46,15 +46,6 @@ public class TileEntityItemStackRuleFlowData extends FlowData implements
 	}
 
 	@Override
-	public void merge(FlowData other) {
-		if (other instanceof TileEntityItemStackRuleFlowData) {
-			name = ((TileEntityItemStackRuleFlowData) other).name;
-			icon = ((TileEntityItemStackRuleFlowData) other).icon;
-			position = ((TileEntityItemStackRuleFlowData) other).position;
-		}
-	}
-
-	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {

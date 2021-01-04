@@ -30,13 +30,6 @@ public class LineNodeFlowData extends FlowData implements PositionHolder, Observ
 	}
 
 	@Override
-	public void merge(FlowData other) {
-		if (other instanceof LineNodeFlowData) {
-			position = ((LineNodeFlowData) other).position;
-		}
-	}
-
-	@Override
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		super.addToDataContainer(container);
 		container.addObserver(this);
