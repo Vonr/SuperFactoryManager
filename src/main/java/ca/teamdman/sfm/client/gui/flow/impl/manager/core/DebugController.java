@@ -7,8 +7,8 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.FlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,7 +54,7 @@ public class DebugController extends FlowComponent {
 					.filter(r -> r.isCloseTo(mx, my))
 					.findFirst()
 					.ifPresent(rel -> {
-						drawId(screen, matrixStack, rel.data.getId(), mx, my);
+						drawId(screen, matrixStack, rel.getData().getId(), mx, my);
 						rel.draw(screen, matrixStack, CONST.HIGHLIGHT);
 					});
 			}

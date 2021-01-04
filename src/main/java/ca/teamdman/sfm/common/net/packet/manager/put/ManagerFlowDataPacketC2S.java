@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.common.net.packet.manager.put;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
+import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import net.minecraft.network.PacketBuffer;

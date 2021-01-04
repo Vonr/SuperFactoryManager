@@ -5,8 +5,8 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.TileOutputFlowData;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.TileOutputFlowData;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

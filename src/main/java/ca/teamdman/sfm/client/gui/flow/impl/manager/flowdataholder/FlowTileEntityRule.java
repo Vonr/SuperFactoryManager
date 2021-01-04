@@ -16,11 +16,11 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStackPicker;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowMinusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton.RadioGroup;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -28,10 +28,10 @@ import java.util.Queue;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 
-public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder {
+public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<TileEntityItemStackRuleFlowData> {
 
 	private final ManagerFlowController CONTROLLER;
-	private final TileEntityItemStackRuleFlowData DATA;
+	private TileEntityItemStackRuleFlowData data;
 	private String name = "Tile Entity Rule";
 
 	public FlowTileEntityRule(
@@ -39,7 +39,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 	) {
 		super(data.getPosition(), new Size(200, 200));
 		this.CONTROLLER = controller;
-		this.DATA = data;
+		this.data = data;
 
 		addChild(new MinimizeButton(
 			new Position(180, 5),
@@ -54,7 +54,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 		));
 
 		addChild(new FlowIconItemStack(
-			DATA.icon,
+			this.data.icon,
 			new Position(5, 40)
 		));
 
@@ -130,8 +130,14 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 	}
 
 	@Override
-	public FlowData getData() {
-		return DATA;
+	public TileEntityItemStackRuleFlowData getData() {
+		return data;
+	}
+
+	@Override
+	public void setData(TileEntityItemStackRuleFlowData data) {
+		this.data = data;
+		getPosition().setXY(data.getPosition());
 	}
 
 	@Override
@@ -144,14 +150,9 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 		PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
 			CONTROLLER.SCREEN.getContainer().windowId,
 			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			DATA.getId(),
+			data.getId(),
 			this.getPosition()
 		));
-	}
-
-	@Override
-	public void onDataChanged() {
-		getPosition().setXY(DATA.getPosition());
 	}
 
 	public class MinimizeButton extends FlowMinusButton {
@@ -167,7 +168,10 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder 
 		public void onClicked(int mx, int my, int button) {
 			FlowTileEntityRule.this.setVisible(false);
 			FlowTileEntityRule.this.setEnabled(false);
-			CONTROLLER.SCREEN.notifyChanged(DATA.getId(), ChangeType.UPDATED);
+			CONTROLLER.SCREEN.getFlowDataContainer().notifyObservers(new FlowDataContainerChange(
+				data,
+				ChangeType.UPDATED
+			));
 		}
 
 		@Override

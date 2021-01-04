@@ -7,18 +7,17 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.data.impl.TimerTriggerFlowData;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 
 public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, IFlowCloneable,
-	FlowDataHolder {
+	FlowDataHolder<TimerTriggerFlowData> {
 
 	public final ManagerFlowController CONTROLLER;
-	public TimerTriggerFlowData data;
+	private TimerTriggerFlowData data;
 
 	public FlowTimerTrigger(ManagerFlowController controller, TimerTriggerFlowData data) {
 		super(ButtonLabel.TRIGGER, data.getPosition().copy());
@@ -27,12 +26,13 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, 
 	}
 
 	@Override
-	public FlowData getData() {
+	public TimerTriggerFlowData getData() {
 		return data;
 	}
 
 	@Override
-	public void onDataChanged() {
+	public void setData(TimerTriggerFlowData data) {
+		this.data = data;
 		getPosition().setXY(data.getPosition());
 	}
 

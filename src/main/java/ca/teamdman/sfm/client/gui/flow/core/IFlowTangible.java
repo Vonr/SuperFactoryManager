@@ -3,9 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.core;
 
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
-import ca.teamdman.sfm.common.flow.data.core.SizeHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.core.SizeHolder;
 import net.minecraft.util.math.MathHelper;
 
 public interface IFlowTangible extends PositionHolder, SizeHolder {

@@ -12,8 +12,6 @@ import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSelectedC2S;
-import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerToggleBlockPosSelectedS2C;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
@@ -80,17 +78,6 @@ public class PacketHandler {
 			ManagerDeletePacketS2C.class,
 			new ManagerDeletePacketS2C.Handler()
 		);
-
-		register(i++,
-			ManagerToggleBlockPosSelectedC2S.class,
-			new ManagerToggleBlockPosSelectedC2S.Handler()
-		);
-
-		register(i++,
-			ManagerToggleBlockPosSelectedS2C.class,
-			new ManagerToggleBlockPosSelectedS2C.Handler()
-		);
-
 
 		register(i++,
 			ManagerFlowDataPacketC2S.class,

@@ -1,25 +1,25 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.common.flow.data.impl;
+package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowRelationship;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.UUID;
-import java.util.stream.Stream;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class RelationshipFlowData extends FlowData {
+public class RelationshipFlowData extends FlowData implements Observer {
 
 	public UUID from, to;
 
@@ -53,15 +53,16 @@ public class RelationshipFlowData extends FlowData {
 	}
 
 	@Override
-	public void addToDataContainer(FlowDataContainer container) {
+	public void addToDataContainer(BasicFlowDataContainer container) {
 		if (from == null || to == null) return;
 		if (from.equals(to)) return;
-		if (getAncestors(container, true)
+		if (container.getAncestors(this, true)
 			.map(FlowData::getId)
 			.anyMatch(to::equals)) return;
-		container.addData(this);
-
+		super.addToDataContainer(container);
+		container.addObserver(this);
 	}
+
 
 	@Override
 	public FlowComponent createController(
@@ -78,39 +79,23 @@ public class RelationshipFlowData extends FlowData {
 		return FlowDataSerializers.RELATIONSHIP;
 	}
 
-	public Stream<FlowData> getAncestors(FlowDataContainer container, boolean recursive) {
-		return SFMUtil.getRecursiveStream(
-			(current, next, results) -> container.getData(RelationshipFlowData.class)
-				.filter(rel -> rel.to.equals(current.getId()))
-				.map(rel -> container.getData(rel.to))
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.forEach(v -> {
-					if (recursive) next.accept(v);
-					results.accept(v);
-				}),
-			this
-		);
-	}
-
-	public Stream<FlowData> getDescendants(FlowDataContainer container, boolean recursive) {
-		return SFMUtil.getRecursiveStream(
-			(current, next, results) -> container.getData(RelationshipFlowData.class)
-				.filter(rel -> rel.from.equals(current.getId()))
-				.map(rel -> container.getData(rel.from))
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.forEach(v -> {
-					if (recursive) next.accept(v);
-					results.accept(v);
-				}),
-			this
-		);
-	}
-
 	@Override
 	public int hashCode() {
 		return Objects.hash(from, to);
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		if (arg instanceof FlowDataContainerChange && o instanceof BasicFlowDataContainer) {
+			FlowDataContainerChange change = (FlowDataContainerChange) arg;
+			BasicFlowDataContainer container = ((BasicFlowDataContainer) o);
+			if (change.CHANGE == ChangeType.REMOVED) {
+				if (change.DATA.getId().equals(from) || change.DATA.getId().equals(to)) {
+					container.remove(getId());
+					o.deleteObserver(this);
+				}
+			}
+		}
 	}
 
 	public static class FlowRelationshipDataSerializer extends
@@ -151,7 +136,6 @@ public class RelationshipFlowData extends FlowData {
 			buf.writeString(data.getId().toString());
 			buf.writeString(data.from.toString());
 			buf.writeString(data.to.toString());
-
 		}
 	}
 }

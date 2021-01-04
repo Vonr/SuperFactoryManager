@@ -1,11 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.common.flow.data.core;
+package ca.teamdman.sfm.common.flow.core;
 
-public interface FlowDataHolder {
+import ca.teamdman.sfm.common.flow.data.FlowData;
 
-	FlowData getData();
-
-	void onDataChanged();
+public interface FlowDataHolder<T extends FlowData> {
+	T getData();
+	void setData(T data);
 }

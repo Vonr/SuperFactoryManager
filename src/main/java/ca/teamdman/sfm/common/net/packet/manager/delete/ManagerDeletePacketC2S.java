@@ -45,7 +45,7 @@ public class ManagerDeletePacketC2S extends C2SManagerPacket {
 				"C2S received, deleting element with id {}",
 				msg.ELEMENT_ID
 			);
-			manager.getFlowDataContainer().removeData(msg.ELEMENT_ID);
+			manager.getFlowDataContainer().remove(msg.ELEMENT_ID);
 			manager.markAndNotify();
 			manager.sendPacketToListeners(new ManagerDeletePacketS2C(
 				msg.WINDOW_ID,

@@ -9,9 +9,8 @@ import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBO
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.block.ICable;
-import ca.teamdman.sfm.common.flow.data.core.BasicFlowDataContainer;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer;
+import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import java.util.HashSet;
@@ -33,7 +32,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ManagerTileEntity extends TileEntity implements ITickableTileEntity {
 
-	private final FlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
+	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 
 	public ManagerTileEntity() {
@@ -56,7 +55,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 		UUID dataId,
 		Consumer<FlowData> consumer, Runnable changeNotifier
 	) {
-		getFlowDataContainer().getData(dataId)
+		getFlowDataContainer().get(dataId)
 			.ifPresent(data -> {
 				consumer.accept(data);
 				markAndNotify();
@@ -64,7 +63,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			});
 	}
 
-	public FlowDataContainer getFlowDataContainer() {
+	public BasicFlowDataContainer getFlowDataContainer() {
 		return FLOW_DATA_CONTAINER;
 	}
 
@@ -105,9 +104,9 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			SFMUtil.getMarker(getClass()),
 			"Loading nbt on {}, replacing {} entries",
 			world == null ? "null world" : world.isRemote ? "client" : "server",
-			(int) getFlowDataContainer().getData().count()
+			getFlowDataContainer().size()
 		);
-		getFlowDataContainer().clearData();
+		getFlowDataContainer().clear();
 		getFlowDataContainer().deserializeNBT(
 			compound.getList("flow_data_list", NBT.TAG_COMPOUND)
 		);
@@ -120,7 +119,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			SFMUtil.getMarker(getClass()),
 			"Saving NBT on {}, writing {} entries",
 			world == null ? "null world" : world.isRemote ? "client" : "server",
-			(int) getFlowDataContainer().getData().count()
+			getFlowDataContainer().size()
 		);
 		CompoundNBT c = new CompoundNBT();
 		c.put("flow_data_list", getFlowDataContainer().serializeNBT());

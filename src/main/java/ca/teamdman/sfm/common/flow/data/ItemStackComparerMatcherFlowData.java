@@ -1,9 +1,7 @@
-package ca.teamdman.sfm.common.flow.data.impl;
+package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataSerializer;
-import ca.teamdman.sfm.common.flow.data.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.Collection;
 import java.util.Collections;

@@ -11,19 +11,21 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.RelationshipController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.LineNodeFlowData;
-import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
+import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
-import java.util.UUID;
 import net.minecraft.client.gui.screen.Screen;
 
-public class FlowRelationship extends FlowComponent {
+public class FlowRelationship extends FlowComponent implements
+	FlowDataHolder<RelationshipFlowData> {
 
 	public static final Colour3f COLOUR = new Colour3f(0.4f, 0.4f, 0.4f);
 	public final ManagerFlowController CONTROLLER;
-	public RelationshipFlowData data;
+	private RelationshipFlowData data;
 
 	public FlowRelationship(
 		ManagerFlowController CONTROLLER,
@@ -45,15 +47,16 @@ public class FlowRelationship extends FlowComponent {
 		if (!rel.isPresent()) {
 			return false;
 		}
-		CONTROLLER.SCREEN.sendFlowDataToServer(
-			new LineNodeFlowData(
-				UUID.randomUUID(),
-				new Position(
-					mx - ButtonBackground.LINE_NODE.WIDTH / 2,
-					my - ButtonBackground.LINE_NODE.HEIGHT / 2
-				)
+		PacketHandler.INSTANCE.sendToServer(new ManagerCreateLineNodePacketC2S(
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
+			rel.get().data.from,
+			rel.get().data.to,
+			new Position(
+				mx - ButtonBackground.LINE_NODE.WIDTH / 2,
+				my - ButtonBackground.LINE_NODE.HEIGHT / 2
 			)
-		);
+		));
 		return true;
 	}
 
@@ -123,6 +126,16 @@ public class FlowRelationship extends FlowComponent {
 	@Override
 	public int getZIndex() {
 		return super.getZIndex() - 200;
+	}
+
+	@Override
+	public RelationshipFlowData getData() {
+		return data;
+	}
+
+	@Override
+	public void setData(RelationshipFlowData data) {
+		this.data = data;
 	}
 
 	public static class FlowRelationshipPositionPair {

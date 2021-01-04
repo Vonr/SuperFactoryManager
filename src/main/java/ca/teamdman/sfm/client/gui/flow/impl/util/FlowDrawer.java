@@ -8,7 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.common.config.Config.Client;
-import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.util.math.MathHelper;

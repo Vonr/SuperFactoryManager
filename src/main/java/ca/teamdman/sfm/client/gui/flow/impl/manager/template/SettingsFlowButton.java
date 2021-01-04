@@ -9,7 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.core.Position;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.util.text.ITextComponent;

@@ -5,7 +5,8 @@ package ca.teamdman.sfm.common.net.packet.manager.put;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.FlowUtils;
+import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
 import java.util.UUID;
@@ -17,8 +18,10 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 	private final Position ELEMENT_POSITION;
 	private final UUID FROM_ID, TO_ID;
 
-	public ManagerCreateLineNodePacketC2S(int WINDOW_ID, BlockPos TILE_POSITION, UUID from, UUID to,
-		Position POSITION) {
+	public ManagerCreateLineNodePacketC2S(
+		int WINDOW_ID, BlockPos TILE_POSITION, UUID from, UUID to,
+		Position POSITION
+	) {
 		super(WINDOW_ID, TILE_POSITION);
 		this.ELEMENT_POSITION = POSITION;
 		this.FROM_ID = from;
@@ -28,16 +31,20 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 	public static class Handler extends C2SHandler<ManagerCreateLineNodePacketC2S> {
 
 		@Override
-		public void finishEncode(ManagerCreateLineNodePacketC2S msg,
-			PacketBuffer buf) {
+		public void finishEncode(
+			ManagerCreateLineNodePacketC2S msg,
+			PacketBuffer buf
+		) {
 			SFMUtil.writeUUID(msg.FROM_ID, buf);
 			SFMUtil.writeUUID(msg.TO_ID, buf);
 			buf.writeLong(msg.ELEMENT_POSITION.toLong());
 		}
 
 		@Override
-		public ManagerCreateLineNodePacketC2S finishDecode(int windowId, BlockPos tilePos,
-			PacketBuffer buf) {
+		public ManagerCreateLineNodePacketC2S finishDecode(
+			int windowId, BlockPos tilePos,
+			PacketBuffer buf
+		) {
 			return new ManagerCreateLineNodePacketC2S(
 				windowId,
 				tilePos,
@@ -63,6 +70,16 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 				nodeId,
 				fromToNodeId,
 				toToNodeId
+			);
+
+			FlowUtils.insertLineNode(
+				manager.getFlowDataContainer(),
+				msg.FROM_ID,
+				msg.TO_ID,
+				nodeId,
+				fromToNodeId,
+				toToNodeId,
+				msg.ELEMENT_POSITION
 			);
 
 			manager.sendPacketToListeners(

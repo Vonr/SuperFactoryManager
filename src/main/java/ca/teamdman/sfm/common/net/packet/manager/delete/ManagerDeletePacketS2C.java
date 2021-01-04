@@ -46,7 +46,7 @@ public class ManagerDeletePacketS2C extends S2CManagerPacket {
 				"S2C received, deleting element with id {}",
 				msg.ELEMENT_ID
 			);
-			screen.removeData(msg.ELEMENT_ID);
+			screen.getFlowDataContainer().remove(msg.ELEMENT_ID);
 		}
 	}
 }

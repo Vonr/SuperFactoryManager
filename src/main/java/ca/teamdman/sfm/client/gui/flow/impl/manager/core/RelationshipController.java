@@ -6,10 +6,10 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowRelationship;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.RelationshipFlowData;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,7 +34,7 @@ public class RelationshipController extends FlowComponent {
 	}
 
 	public Stream<RelationshipFlowData> getFlowRelationshipDatas() {
-		return CONTROLLER.SCREEN.getData()
+		return CONTROLLER.SCREEN.getFlowDataContainer().stream()
 			.filter(data -> data instanceof RelationshipFlowData)
 			.map(data -> ((RelationshipFlowData) data));
 	}

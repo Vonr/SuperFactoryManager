@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.core;
 
-import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -25,6 +25,7 @@ import org.lwjgl.opengl.GL11;
 /**
  * Credit to VSWE for lots of the rendering scaling tech
  */
+@SuppressWarnings("deprecation")
 public abstract class BaseScreen extends Screen {
 
 	public static final Colour3f DEFAULT_LINE_COLOUR = new Colour3f(0.4f, 0.4f, 0.4f);

@@ -12,7 +12,7 @@ import static ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST.BUTTON_TEXT_NO
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.HashSet;
 import java.util.Optional;

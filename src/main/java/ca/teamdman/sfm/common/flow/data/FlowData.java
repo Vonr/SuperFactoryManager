@@ -1,9 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.common.flow.data.core;
+package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraftforge.api.distmarker.Dist;
@@ -34,13 +35,10 @@ public abstract class FlowData {
 	}
 
 	/**
-	 * TODO move custom relationship flow logic here in override
-	 * TODO move custom line node flow logic here in override
-	 * TODO replace container add usage with this method usage
 	 * @param container
 	 */
-	public void addToDataContainer(FlowDataContainer container) {
-		container.addData(this);
+	public void addToDataContainer(BasicFlowDataContainer container) {
+		container.put(this);
 	}
 
 	public UUID getId() {

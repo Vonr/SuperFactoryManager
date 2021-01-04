@@ -11,13 +11,12 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.util.AssociatedRulesDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.core.RuleContainer;
-import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.impl.TileInputFlowData;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.RuleContainer;
+import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.TileInputFlowData;
+import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
@@ -27,19 +26,19 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FlowInputButton extends FlowContainer implements IFlowDeletable,
-	IFlowCloneable, FlowDataHolder, RuleContainer {
+	IFlowCloneable, FlowDataHolder<TileInputFlowData>, RuleContainer {
 
-	private final TileInputFlowData DATA;
 	private final AssociatedRulesDrawer DRAWER;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowIconButton BUTTON;
+	private TileInputFlowData data;
 	private boolean open = false;
 
 	public FlowInputButton(
 		ManagerFlowController controller,
 		TileInputFlowData data
 	) {
-		this.DATA = data;
+		this.data = data;
 		this.CONTROLLER = controller;
 		this.BUTTON = new MyFlowIconButton(
 			ButtonLabel.INPUT,
@@ -54,20 +53,17 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		DRAWER.setVisible(false);
 		DRAWER.setEnabled(false);
 		DRAWER.setDraggable(false);
-		controller.SCREEN.addChangeListener(null, this::onDataChanged);
+		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
+			this,
+			TileInputFlowData.class
+		));
 	}
+
 
 	@Override
 	public Position snapToEdge(Position outside) {
 		return BUTTON.snapToEdge(outside);
 	}
-
-	public void onDataChanged(FlowData data, ChangeType changeType) {
-		if (data instanceof TileEntityItemStackRuleFlowData) {
-			DRAWER.rebuildSelectionDrawer();
-		}
-	}
-
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
@@ -75,7 +71,7 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 			new TileInputFlowData(
 				UUID.randomUUID(),
 				new Position(x, y),
-				DATA.tileEntityRules
+				data.tileEntityRules
 			)
 		);
 	}
@@ -85,32 +81,33 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 		PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
 			CONTROLLER.SCREEN.getContainer().windowId,
 			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			DATA.getId()
+			data.getId()
 		));
 	}
 
 	@Override
-	public FlowData getData() {
-		return DATA;
+	public TileInputFlowData getData() {
+		return data;
 	}
 
 	@Override
-	public void onDataChanged() {
-		BUTTON.getPosition().setXY(DATA.getPosition());
+	public void setData(TileInputFlowData data) {
+		this.data = data;
+		BUTTON.getPosition().setXY(this.data.getPosition());
 		DRAWER.rebuildChildrenDrawer();
 	}
 
 	@Override
 	public List<UUID> getRules() {
-		return DATA.tileEntityRules;
+		return data.tileEntityRules;
 	}
 
 	@Override
 	public void setRules(List<UUID> rules) {
 		CONTROLLER.SCREEN.sendFlowDataToServer(
 			new TileInputFlowData(
-				DATA.getId(),
-				DATA.getPosition(),
+				data.getId(),
+				data.getPosition(),
 				rules
 			)
 		);
@@ -144,7 +141,7 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 			PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
 				CONTROLLER.SCREEN.getContainer().windowId,
 				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-				DATA.getId(),
+				data.getId(),
 				getPosition()
 			));
 		}
@@ -158,8 +155,8 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 
 		@Override
 		public List<TileEntityItemStackRuleFlowData> getChildrenRules() {
-			return CONTROLLER.SCREEN.getData(TileEntityItemStackRuleFlowData.class)
-				.filter(d -> DATA.tileEntityRules.contains(d.getId()))
+			return CONTROLLER.SCREEN.getFlowDataContainer().get(TileEntityItemStackRuleFlowData.class)
+				.filter(d -> data.tileEntityRules.contains(d.getId()))
 				.collect(Collectors.toList());
 		}
 
@@ -170,7 +167,7 @@ public class FlowInputButton extends FlowContainer implements IFlowDeletable,
 
 		@Override
 		public List<TileEntityItemStackRuleFlowData> getSelectableRules() {
-			return CONTROLLER.SCREEN.getData(TileEntityItemStackRuleFlowData.class)
+			return CONTROLLER.SCREEN.getFlowDataContainer().get(TileEntityItemStackRuleFlowData.class)
 				.collect(Collectors.toList());
 		}
 	}

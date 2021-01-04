@@ -13,12 +13,17 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.common.config.Config.Client;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData.FilterMode;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData.FilterMode;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
+import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,7 +34,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 
-public abstract class AssociatedRulesDrawer extends FlowContainer {
+public abstract class AssociatedRulesDrawer extends FlowContainer implements Observer {
 
 	private final ManagerFlowController CONTROLLER;
 	private final FlowDrawer CHILDREN_RULES_DRAWER;
@@ -67,12 +72,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		rebuildSelectionDrawer();
 	}
 
-	public abstract List<TileEntityItemStackRuleFlowData> getChildrenRules();
-
-	public abstract void setChildrenRules(List<UUID> rules);
-
-	public abstract List<TileEntityItemStackRuleFlowData> getSelectableRules();
-
 	public void rebuildChildrenDrawer() {
 		CHILDREN_RULES_DRAWER.getChildren().clear();
 		CHILDREN_RULES_DRAWER.addChild(new EditChildrenButton());
@@ -103,31 +102,50 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 		SELECTION_RULES_DRAWER.update();
 	}
 
-	private class ChildRulesDrawerItem extends FlowItemStack {
+	public abstract List<TileEntityItemStackRuleFlowData> getChildrenRules();
 
-		public TileEntityItemStackRuleFlowData DATA;
+	public abstract List<TileEntityItemStackRuleFlowData> getSelectableRules();
+
+	public abstract void setChildrenRules(List<UUID> rules);
+
+	@Override
+	public void update(Observable o, Object arg) {
+		if (arg instanceof FlowDataContainerChange) {
+			FlowDataContainerChange change = ((FlowDataContainerChange) arg);
+			if (change.DATA instanceof TileEntityItemStackRuleFlowData) {
+				rebuildSelectionDrawer();
+			}
+		}
+	}
+
+	private class ChildRulesDrawerItem extends FlowItemStack implements FlowDataHolder<TileEntityItemStackRuleFlowData> {
+
+		public TileEntityItemStackRuleFlowData data;
 
 		public ChildRulesDrawerItem(
 			TileEntityItemStackRuleFlowData data
 		) {
 			super(data.getIcon(), new Position());
-			this.DATA = data;
 			setDraggable(false);
-			refreshSelection();
-			CONTROLLER.SCREEN.addChangeListener(DATA.getId(), (d, t) -> this.refreshSelection());
+			setData(data);
+			CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
+				this,
+				TileEntityItemStackRuleFlowData.class
+			));
+		}
+
+
+		private void refreshSelection() {
+			setSelected(CONTROLLER.findFirstChild(data.getId())
+				.filter(FlowComponent::isVisible)
+				.isPresent());
 		}
 
 		@Override
 		public List<? extends ITextProperties> getTooltip() {
 			ArrayList<ITextComponent> list = new ArrayList<>();
-			list.add(new StringTextComponent(DATA.name));
+			list.add(new StringTextComponent(data.name));
 			return list;
-		}
-
-		private void refreshSelection() {
-			setSelected(CONTROLLER.findFirstChild(DATA.getId())
-				.filter(FlowComponent::isVisible)
-				.isPresent());
 		}
 
 		@Override
@@ -144,10 +162,21 @@ public abstract class AssociatedRulesDrawer extends FlowContainer {
 					.filter(c -> c instanceof ChildRulesDrawerItem && c != this)
 					.forEach(c -> ((ChildRulesDrawerItem) c).setSelected(false));
 			}
-			CONTROLLER.findFirstChild(DATA.getId()).ifPresent(comp -> {
+			CONTROLLER.findFirstChild(data.getId()).ifPresent(comp -> {
 				comp.setVisible(isSelected());
 				comp.setEnabled(isSelected());
 			});
+		}
+
+		@Override
+		public TileEntityItemStackRuleFlowData getData() {
+			return data;
+		}
+
+		@Override
+		public void setData(TileEntityItemStackRuleFlowData data) {
+			this.data = data;
+			refreshSelection();
 		}
 	}
 

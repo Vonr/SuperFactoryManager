@@ -6,9 +6,10 @@ package ca.teamdman.sfm.common.net.packet.manager.patch;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataContainer.ChangeType;
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
@@ -52,12 +53,15 @@ public class ManagerPositionPacketS2C extends S2CManagerPacket {
 				msg.ELEMENT_POSITION,
 				msg.ELEMENT_ID
 			);
-			screen.getData(msg.ELEMENT_ID)
+			screen.getFlowDataContainer().get(msg.ELEMENT_ID)
 				.filter(data -> data instanceof PositionHolder)
 				.ifPresent(data -> {
 					((PositionHolder) data).getPosition().setXY(msg.ELEMENT_POSITION);
+					screen.getFlowDataContainer().notifyObservers(new FlowDataContainerChange(
+						data,
+						ChangeType.UPDATED
+					));
 				});
-			screen.notifyChanged(msg.ELEMENT_ID, ChangeType.UPDATED);
 		}
 	}
 }

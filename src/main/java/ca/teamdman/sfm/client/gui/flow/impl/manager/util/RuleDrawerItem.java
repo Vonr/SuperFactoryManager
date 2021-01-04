@@ -10,27 +10,27 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.common.config.Config.Client;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.data.core.Position;
-import ca.teamdman.sfm.common.flow.data.impl.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
 
-public class RuleDrawerItem extends FlowContainer implements FlowDataHolder {
+public class RuleDrawerItem extends FlowContainer implements
+	FlowDataHolder<TileEntityItemStackRuleFlowData> {
 
-	private final TileEntityItemStackRuleFlowData DATA;
 	private final FlowItemStack ICON;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowDrawer DRAWER;
+	private TileEntityItemStackRuleFlowData data;
 
-	public FlowItemStack getIcon() {
-		return ICON;
-	}
-
-	public RuleDrawerItem(FlowDrawer drawer, ManagerFlowController controller, TileEntityItemStackRuleFlowData rule) {
+	public RuleDrawerItem(
+		FlowDrawer drawer,
+		ManagerFlowController controller,
+		TileEntityItemStackRuleFlowData rule
+	) {
 		super(rule.position, new Size(FlowItemStack.ITEM_WIDTH + 4, FlowItemStack.ITEM_HEIGHT + 4));
 		this.DRAWER = drawer;
 		this.CONTROLLER = controller;
-		this.DATA = rule;
+		this.data = rule;
 		this.ICON = new FlowItemStack(rule.icon, new Position(2, 2)) {
 			@Override
 			public void onSelectionChanged() {
@@ -41,18 +41,22 @@ public class RuleDrawerItem extends FlowContainer implements FlowDataHolder {
 		DRAWER.update();
 	}
 
+	public void onClicked(boolean activate) {
+	}
 
-	@Override
-	public FlowData getData() {
-		return DATA;
+	public FlowItemStack getIcon() {
+		return ICON;
 	}
 
 	@Override
-	public void onDataChanged() {
-
+	public TileEntityItemStackRuleFlowData getData() {
+		return data;
 	}
 
-	public void onClicked(boolean activate) {}
+	@Override
+	public void setData(TileEntityItemStackRuleFlowData data) {
+		this.data = data;
+	}
 
 	public void openRule() {
 		if (!Client.allowMultipleRuleWindows) {
@@ -69,6 +73,6 @@ public class RuleDrawerItem extends FlowContainer implements FlowDataHolder {
 				.forEach(c -> ((RuleDrawerItem) c).ICON.setSelected(false));
 		}
 		ICON.setSelected(true);
-		CONTROLLER.findFirstChild(DATA.getId()).ifPresent(v -> v.setVisible(true));
+		CONTROLLER.findFirstChild(data.getId()).ifPresent(v -> v.setVisible(true));
 	}
 }

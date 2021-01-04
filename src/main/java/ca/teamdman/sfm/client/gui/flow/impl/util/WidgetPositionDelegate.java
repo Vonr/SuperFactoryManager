@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.gui.flow.impl.util;
 
-import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.core.Position;
 import net.minecraft.client.gui.widget.Widget;
 
 class WidgetPositionDelegate extends Position {

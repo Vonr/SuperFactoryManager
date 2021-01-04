@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.flow.data.core;
+package ca.teamdman.sfm.common.flow.core;
 
 import java.util.Collection;
 import javax.annotation.Nonnull;

@@ -14,7 +14,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowToggleBox;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.config.ConfigHelper;
 import ca.teamdman.sfm.common.config.ConfigHolder;
-import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.resources.I18n;
 

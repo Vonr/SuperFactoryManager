@@ -5,16 +5,16 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
-import ca.teamdman.sfm.common.flow.data.core.FlowData;
-import ca.teamdman.sfm.common.flow.data.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.data.impl.LineNodeFlowData;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
+import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 
-public class FlowLineNode extends FlowIconButton implements FlowDataHolder {
+public class FlowLineNode extends FlowIconButton implements FlowDataHolder<LineNodeFlowData> {
 
 	public final ManagerFlowController CONTROLLER;
-	public LineNodeFlowData data;
+	private LineNodeFlowData data;
 
 	public FlowLineNode(ManagerFlowController controller, LineNodeFlowData data) {
 		super(
@@ -25,17 +25,23 @@ public class FlowLineNode extends FlowIconButton implements FlowDataHolder {
 		);
 		this.data = data;
 		this.CONTROLLER = controller;
+		this.CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
+			this,
+			LineNodeFlowData.class
+		));
 	}
 
 	@Override
-	public FlowData getData() {
+	public LineNodeFlowData getData() {
 		return data;
 	}
 
 	@Override
-	public void onDataChanged() {
+	public void setData(LineNodeFlowData data) {
+		this.data = data;
 		getPosition().setXY(data.getPosition());
 	}
+
 
 	@Override
 	public void onDragFinished(int dx, int dy, int mx, int my) {

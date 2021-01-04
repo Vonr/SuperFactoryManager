@@ -6,8 +6,8 @@ package ca.teamdman.sfm.common.net.packet.manager.put;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.common.flow.data.FlowUtils;
-import ca.teamdman.sfm.common.flow.data.core.Position;
+import ca.teamdman.sfm.common.flow.FlowUtils;
+import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
@@ -72,7 +72,7 @@ public class ManagerCreateLineNodePacketS2C extends S2CManagerPacket {
 				msg.TO_TO_NODE_ID
 			);
 			FlowUtils.insertLineNode(
-				screen,
+				screen.getFlowDataContainer(),
 				msg.FROM_ID,
 				msg.TO_ID,
 				msg.NODE_ID,
