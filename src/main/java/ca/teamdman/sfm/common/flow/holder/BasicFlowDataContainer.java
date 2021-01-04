@@ -107,6 +107,14 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 		notifyObservers(new FlowDataContainerClosedEvent());
 	}
 
+	public void notifyChanged(FlowData data) {
+		setChanged();
+		notifyObservers(new FlowDataContainerChange(
+			data,
+			ChangeType.UPDATED
+		));
+	}
+
 	public boolean removeIf(Predicate<FlowData> pred) {
 		Set<FlowData> removed = DELEGATE.values().stream()
 			.filter(pred)

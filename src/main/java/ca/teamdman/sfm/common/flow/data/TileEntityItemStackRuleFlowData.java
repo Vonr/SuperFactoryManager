@@ -25,7 +25,6 @@ public class TileEntityItemStackRuleFlowData extends FlowData implements
 	public ItemStack icon;
 	public Position position;
 
-
 	public TileEntityItemStackRuleFlowData(
 		UUID uuid, String name, ItemStack icon, Position position, FilterMode filterMode
 	) {

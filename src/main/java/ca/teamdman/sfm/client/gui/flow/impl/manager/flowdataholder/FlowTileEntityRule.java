@@ -19,8 +19,6 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton.RadioGroup;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
-import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
-import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -168,10 +166,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 		public void onClicked(int mx, int my, int button) {
 			FlowTileEntityRule.this.setVisible(false);
 			FlowTileEntityRule.this.setEnabled(false);
-			CONTROLLER.SCREEN.getFlowDataContainer().notifyObservers(new FlowDataContainerChange(
-				data,
-				ChangeType.UPDATED
-			));
+			CONTROLLER.SCREEN.getFlowDataContainer().notifyChanged(data);
 		}
 
 		@Override

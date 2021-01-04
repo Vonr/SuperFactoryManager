@@ -68,6 +68,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		SELECTION_RULES_DRAWER.setDraggable(false);
 		addChild(SELECTION_RULES_DRAWER);
 
+		controller.SCREEN.getFlowDataContainer().addObserver(this);
 		rebuildChildrenDrawer();
 		rebuildSelectionDrawer();
 	}
