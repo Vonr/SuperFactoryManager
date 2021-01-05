@@ -12,8 +12,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.function.Consumer;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 
 /**
  * @see net.minecraft.client.gui.widget.TextFieldWidget
@@ -25,7 +23,7 @@ public class FlowTextArea extends FlowComponent {
 	private final TextFieldWidget delegate;
 	private String content;
 
-	public FlowTextArea(BaseScreen screen, String content, Position pos, Size size) {
+	public FlowTextArea(BaseScreen screen, String content, String placeholder, Position pos, Size size) {
 		super(new WidgetPositionDelegate(pos), new WidgetSizeDelegate(size));
 		this.content = content;
 		this.delegate = new PatchedTextFieldWidget(
@@ -34,7 +32,8 @@ public class FlowTextArea extends FlowComponent {
 			pos.getY(),
 			size.getWidth(),
 			size.getHeight(),
-			new StringTextComponent(content)
+			content,
+			placeholder
 		);
 		((WidgetPositionDelegate) getPosition()).setWidget(delegate);
 		((WidgetSizeDelegate) getSize()).setWidget(delegate);
@@ -55,13 +54,13 @@ public class FlowTextArea extends FlowComponent {
 	}
 
 	@Override
-	public void tick() {
-		delegate.tick();
+	public boolean charTyped(char codePoint, int modifiers, int mx, int my) {
+		return delegate.charTyped(codePoint, modifiers);
 	}
 
 	@Override
-	public boolean charTyped(char codePoint, int modifiers, int mx, int my) {
-		return delegate.charTyped(codePoint, modifiers);
+	public void tick() {
+		delegate.tick();
 	}
 
 	@Override
@@ -90,18 +89,22 @@ public class FlowTextArea extends FlowComponent {
 
 	private static class PatchedTextFieldWidget extends TextFieldWidget {
 
-		MatrixStack matrixStack;
-
+		private final String PLACEHOLDER_TEXT;
+		private MatrixStack matrixStack;
+		protected final FontRenderer FONT;
 		public PatchedTextFieldWidget(
-			FontRenderer p_i232260_1_,
-			int p_i232260_2_,
-			int p_i232260_3_,
-			int p_i232260_4_,
-			int p_i232260_5_,
-			ITextComponent p_i232260_6_
+			FontRenderer font,
+			int x,
+			int y,
+			int width,
+			int height,
+			String content,
+			String placeholderContent
 		) {
-			super(
-				p_i232260_1_, p_i232260_2_, p_i232260_3_, p_i232260_4_, p_i232260_5_, p_i232260_6_);
+			super(font, x, y, width, height, null);
+			setText(content);
+			this.FONT = font;
+			this.PLACEHOLDER_TEXT = placeholderContent;
 		}
 
 		@Override
@@ -113,6 +116,20 @@ public class FlowTextArea extends FlowComponent {
 		) {
 			this.matrixStack = matrixStack;
 			super.renderButton(matrixStack, mouseX, mouseY, partialTicks);
+		}
+
+		@Override
+		public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+			super.render(matrixStack, mouseX, mouseY, partialTicks);
+			if (!isFocused() && getText().length() == 0) {
+				FONT.drawStringWithShadow(
+					matrixStack,
+					PLACEHOLDER_TEXT,
+					this.x + 4,
+					this.y + (this.height - 8) / 2f,
+					7368816
+				);
+			}
 		}
 
 		@Override

@@ -22,6 +22,7 @@ public class FlowDrawer extends FlowContainer {
 	private final int MAX_ITEMS_PER_COLUMN;
 	private int itemMaxWidth;
 	private int itemMaxHeight;
+	private boolean shrinkToFit = true;
 	private int scroll = 0;
 
 	public FlowDrawer(Position pos, int maxItemsPerRow, int maxItemsPerColumn) {
@@ -46,6 +47,10 @@ public class FlowDrawer extends FlowContainer {
 		return MAX_ITEMS_PER_COLUMN;
 	}
 
+	public void setShrinkToFit(boolean value) {
+		this.shrinkToFit = value;
+	}
+
 	public void update() {
 		itemMaxWidth = -getChildren().stream() // negate result
 			.mapToInt(c -> -c.getSize().getWidth()) // negative so that the 'largest' is first
@@ -59,8 +64,12 @@ public class FlowDrawer extends FlowContainer {
 			.orElse(-32);
 
 		getSize().setSize(
-			(itemMaxWidth + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X,
-			(itemMaxHeight + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
+			shrinkToFit
+				? (itemMaxWidth + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X
+				: getMaxWidth(),
+			shrinkToFit
+				? (itemMaxHeight + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
+				: getMaxHeight()
 		);
 		AtomicInteger i = new AtomicInteger();
 		getChildren().forEach(c -> c.getPosition().setXY(

@@ -9,13 +9,33 @@ public class Size {
 
 	private int width, height;
 
+	public Size(Size copy) {
+		this(copy.getWidth(), copy.getHeight());
+	}
+
 	public Size(int width, int height) {
 		this.width = width;
 		this.height = height;
 	}
 
-	public Size(Size copy) {
-		this(copy.getWidth(), copy.getHeight());
+	public int getWidth() {
+		return this.width;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public int getHeight() {
+		return this.height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
+	}
+
+	public Size copy() {
+		return new Size(this);
 	}
 
 	public void setSize(int width, int height) {
@@ -54,7 +74,6 @@ public class Size {
 		};
 	}
 
-
 	/**
 	 * Create a new Size object that will match this height, but with a custom width
 	 * @param width Custom constant width
@@ -72,22 +91,6 @@ public class Size {
 				return Size.this.getHeight();
 			}
 		};
-	}
-
-	public int getWidth() {
-		return this.width;
-	}
-
-	public void setWidth(int width) {
-		this.width = width;
-	}
-
-	public int getHeight() {
-		return this.height;
-	}
-
-	public void setHeight(int height) {
-		this.height = height;
 	}
 
 	@Override

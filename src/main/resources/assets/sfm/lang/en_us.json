@@ -25,5 +25,7 @@
   "gui.sfm.flow.tooltip.settings_button.open": "Open settings",
   "gui.sfm.manager.tile_entity_rule.items.title": "Items",
   "gui.sfm.flow.tileentityrule.button.whitelist": "Whitelist",
-  "gui.sfm.flow.tileentityrule.button.blacklist": "Blacklist"
+  "gui.sfm.flow.tileentityrule.button.blacklist": "Blacklist",
+  "gui.sfm.flow.search.no_results_found": "No results found...",
+  "gui.sfm.flow.search.placeholder": "Search"
 }

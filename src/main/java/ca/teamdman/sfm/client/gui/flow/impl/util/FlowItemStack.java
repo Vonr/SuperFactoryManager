@@ -19,13 +19,14 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 	public static final int ITEM_HEIGHT = 16;
 	public static final int ITEM_TOTAL_HEIGHT = ITEM_HEIGHT + ITEM_PADDING_Y;
 	public static final int ITEM_TOTAL_WIDTH = ITEM_WIDTH + ITEM_PADDING_X;
+	public static final Size ITEM_TOTAL_SIZE = new Size(ITEM_WIDTH, ITEM_HEIGHT);
 	private ItemStack STACK;
 	private boolean selected;
 	private boolean selectable = true;
 	private boolean depressed = false;
 
 	public FlowItemStack(ItemStack stack, Position pos) {
-		super(pos, new Size(ITEM_TOTAL_WIDTH, ITEM_TOTAL_HEIGHT));
+		super(pos, ITEM_TOTAL_SIZE.copy());
 		setDraggable(false);
 		this.STACK = stack;
 	}

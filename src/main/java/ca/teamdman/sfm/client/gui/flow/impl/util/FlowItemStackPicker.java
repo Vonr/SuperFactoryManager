@@ -3,11 +3,15 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.util;
 
-import ca.teamdman.sfm.client.SearchUtil;
 import ca.teamdman.sfm.client.SearchUtil.Query;
+import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
+import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.core.Position;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.resources.I18n;
 
 public class FlowItemStackPicker extends FlowContainer {
 
@@ -32,25 +36,20 @@ public class FlowItemStackPicker extends FlowContainer {
 				SEARCH_TEXT_INPUT.getSize().setWidth(getSize().getWidth());
 			}
 		};
+		DRAWER.setShrinkToFit(false);
 		this.SEARCH_TEXT_INPUT = new FlowTextArea(
 			controller.SCREEN,
-			"Placeholder text?",
+			"",
+			I18n.format("gui.sfm.flow.search.placeholder"),
 			new Position(0, 0),
 			new Size(100, 20)
 		);
-		buildPlaceholderItemList();
 		addChild(DRAWER);
 		addChild(SEARCH_TEXT_INPUT);
 
 		this.QUERY = new Query();
 		SEARCH_TEXT_INPUT.setResponder(QUERY::start);
-	}
-
-	private void buildPlaceholderItemList() {
-		SearchUtil.getSearchableItems().stream()
-			.map(stack -> new FlowItemStack(stack, new Position()))
-			.forEach(DRAWER::addChild);
-		DRAWER.update();
+		QUERY.start("");
 	}
 
 	@Override
@@ -58,12 +57,16 @@ public class FlowItemStackPicker extends FlowContainer {
 		if (QUERY.getResults().size() != lastCount) {
 			lastCount = QUERY.getResults().size();
 			DRAWER.getChildren().clear();
-			QUERY.getResults().forEach(stack ->
-				DRAWER.addChild(new FlowItemStack(
-					stack,
-					new Position()
-				))
-			);
+			if (QUERY.getResults().size() == 0) {
+				DRAWER.addChild(new NoResultsFoundLabelFlowComponent());
+			} else {
+				QUERY.getResults().forEach(stack ->
+					DRAWER.addChild(new FlowItemStack(
+						stack,
+						new Position()
+					))
+				);
+			}
 			DRAWER.update();
 		}
 	}
@@ -73,4 +76,22 @@ public class FlowItemStackPicker extends FlowContainer {
 		return super.getZIndex() + 50;
 	}
 
+	private static class NoResultsFoundLabelFlowComponent extends FlowComponent {
+		public NoResultsFoundLabelFlowComponent() {
+			super(new Position(), FlowItemStack.ITEM_TOTAL_SIZE);
+		}
+
+		@Override
+		public void draw(
+			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+		) {
+			screen.drawString(
+				matrixStack,
+				I18n.format("gui.sfm.flow.search.no_results_found"),
+				5,
+				5,
+				CONST.TEXT_LIGHT
+			);
+		}
+	}
 }
