@@ -20,14 +20,15 @@ public class DeletionController extends FlowComponent {
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		// only check delete after all other event listeners
 		if (keyCode == GLFW.GLFW_KEY_DELETE) {
-			Optional<FlowComponent> elem = CONTROLLER.getElementUnderMouse(mx, my);
-			elem = elem.filter(c -> c instanceof FlowDataHolder);
-			elem.ifPresent(c -> PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
+			Optional<FlowDataHolder> elem = CONTROLLER.getElementUnderMouse(mx, my)
+				.filter(FlowDataHolder.class::isInstance)
+				.map(FlowDataHolder.class::cast);
+//				.filter(FlowDataHolder::isDeletable);
+			elem.ifPresent(holder -> PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
 				CONTROLLER.SCREEN.getContainer().windowId,
 				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-				((FlowDataHolder) c).getData().getId()
+				holder.getData().getId()
 			)));
 			return elem.isPresent();
 		}

@@ -22,11 +22,11 @@ public class FlowDataHolderObserver<T extends FlowData> implements Observer {
 	public void update(Observable o, Object arg) {
 		if (arg instanceof FlowDataContainerChange) {
 			FlowDataContainerChange change = (FlowDataContainerChange) arg;
-			if (change.CHANGE == ChangeType.REMOVED) {
-				o.deleteObserver(this);
-			} else {
-				if (CLAZZ.isInstance(change.DATA)) {
-					if (HOLDER.getData().getId().equals(change.DATA.getId())) {
+			if (CLAZZ.isInstance(change.DATA)) {
+				if (HOLDER.getData().getId().equals(change.DATA.getId())) {
+					if (change.CHANGE == ChangeType.REMOVED) {
+						o.deleteObserver(this);
+					} else if (change.CHANGE == ChangeType.UPDATED) {
 						HOLDER.setData(CLAZZ.cast(change.DATA));
 					}
 				}

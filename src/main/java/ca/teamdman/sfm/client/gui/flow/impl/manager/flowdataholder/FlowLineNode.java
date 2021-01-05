@@ -42,6 +42,11 @@ public class FlowLineNode extends FlowIconButton implements FlowDataHolder<LineN
 		getPosition().setXY(data.getPosition());
 	}
 
+	@Override
+	public boolean isDeletable() {
+		return true;
+	}
+
 
 	@Override
 	public void onDragFinished(int dx, int dy, int mx, int my) {

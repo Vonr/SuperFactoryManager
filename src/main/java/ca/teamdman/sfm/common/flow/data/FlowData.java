@@ -22,17 +22,14 @@ public abstract class FlowData {
 		this.uuid = UUID.randomUUID();
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof FlowData && ((FlowData) obj).getId().equals(getId());
-	}
-
-	/**
-	 * @param container
-	 */
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		container.put(this);
 	}
+
+	public void removeFromDataContainer(BasicFlowDataContainer container) {
+		container.remove(getId());
+	}
+
 
 	public UUID getId() {
 		return uuid;

@@ -8,4 +8,7 @@ import ca.teamdman.sfm.common.flow.data.FlowData;
 public interface FlowDataHolder<T extends FlowData> {
 	T getData();
 	void setData(T data);
+	default boolean isDeletable() {
+		return false;
+	}
 }

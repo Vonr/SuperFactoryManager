@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Observable;
+import java.util.Observer;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -79,6 +80,7 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 
 	public FlowData put(FlowData data) {
 		FlowData old = DELEGATE.put(data.getId(), data);
+		cleanupObserver(old);
 		setChanged();
 		notifyObservers(new FlowDataContainerChange(
 			data,
@@ -88,6 +90,17 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 		return old;
 	}
 
+	/**
+	 * Remove an object if it is observing this container
+	 *
+	 * @param o Object that may or may not be an observer. If not observer, no effect.
+	 */
+	public void cleanupObserver(Object o) {
+		if (o instanceof Observer) {
+			deleteObserver(((Observer) o));
+		}
+	}
+
 	public int size() {
 		return DELEGATE.size();
 	}
@@ -95,6 +108,7 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 	public FlowData remove(UUID key) {
 		FlowData data = DELEGATE.remove(key);
 		if (data != null) {
+			cleanupObserver(data);
 			setChanged();
 			notifyObservers(
 				new FlowDataContainerChange(data, FlowDataContainerChange.ChangeType.REMOVED));
@@ -121,6 +135,7 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 			.collect(Collectors.toSet());
 		boolean rtn = DELEGATE.entrySet().removeIf((entry) -> pred.test(entry.getValue()));
 		if (rtn) {
+			removed.forEach(this::cleanupObserver);
 			setChanged();
 			removed.forEach(data -> notifyObservers(new FlowDataContainerChange(
 				data,

@@ -8,15 +8,13 @@ import ca.teamdman.sfm.client.SearchUtil.Query;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.core.Position;
-import java.util.Collection;
-import java.util.Queue;
-import net.minecraft.item.ItemStack;
 
 public class FlowItemStackPicker extends FlowContainer {
 
 	private final FlowDrawer DRAWER;
 	private final FlowTextArea SEARCH_TEXT_INPUT;
-	private final MyQuery QUERY;
+	private final Query QUERY;
+	private int lastCount = -1;
 
 	public FlowItemStackPicker(
 		ManagerFlowController controller,
@@ -44,8 +42,8 @@ public class FlowItemStackPicker extends FlowContainer {
 		addChild(DRAWER);
 		addChild(SEARCH_TEXT_INPUT);
 
-		this.QUERY = new MyQuery();
-		SEARCH_TEXT_INPUT.setResponder(QUERY::updateQuery);
+		this.QUERY = new Query();
+		SEARCH_TEXT_INPUT.setResponder(QUERY::start);
 	}
 
 	private void buildPlaceholderItemList() {
@@ -57,9 +55,10 @@ public class FlowItemStackPicker extends FlowContainer {
 
 	@Override
 	public void tick() {
-		if (QUERY.checkResultsAvailable()) {
+		if (QUERY.getResults().size() != lastCount) {
+			lastCount = QUERY.getResults().size();
 			DRAWER.getChildren().clear();
-			QUERY.getAndSetLatest(null).forEach(stack ->
+			QUERY.getResults().forEach(stack ->
 				DRAWER.addChild(new FlowItemStack(
 					stack,
 					new Position()
@@ -74,27 +73,4 @@ public class FlowItemStackPicker extends FlowContainer {
 		return super.getZIndex() + 50;
 	}
 
-	private class MyQuery extends Query {
-
-		private Collection<ItemStack> latest = null;
-
-		public MyQuery() {
-			super("");
-		}
-
-		public boolean checkResultsAvailable() {
-			return latest != null;
-		}
-
-		@Override
-		public void onResultsUpdated(Queue<ItemStack> results) {
-			getAndSetLatest(results);
-		}
-
-		public synchronized Collection<ItemStack> getAndSetLatest(Collection<ItemStack> next) {
-			Collection<ItemStack> old = latest;
-			latest = next;
-			return old;
-		}
-	}
 }

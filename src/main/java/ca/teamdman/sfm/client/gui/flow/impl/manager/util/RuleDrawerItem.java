@@ -5,27 +5,27 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTileEntityRule;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackTileEntityRuleFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 
 public class RuleDrawerItem extends FlowContainer implements
-	FlowDataHolder<TileEntityItemStackRuleFlowData> {
+	FlowDataHolder<ItemStackTileEntityRuleFlowData> {
 
 	private final FlowItemStack ICON;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowDrawer DRAWER;
-	private TileEntityItemStackRuleFlowData data;
+	private ItemStackTileEntityRuleFlowData data;
 
 	public RuleDrawerItem(
 		FlowDrawer drawer,
 		ManagerFlowController controller,
-		TileEntityItemStackRuleFlowData rule
+		ItemStackTileEntityRuleFlowData rule
 	) {
 		super(rule.position, new Size(FlowItemStack.ITEM_WIDTH + 4, FlowItemStack.ITEM_HEIGHT + 4));
 		this.DRAWER = drawer;
@@ -49,20 +49,20 @@ public class RuleDrawerItem extends FlowContainer implements
 	}
 
 	@Override
-	public TileEntityItemStackRuleFlowData getData() {
+	public ItemStackTileEntityRuleFlowData getData() {
 		return data;
 	}
 
 	@Override
-	public void setData(TileEntityItemStackRuleFlowData data) {
+	public void setData(ItemStackTileEntityRuleFlowData data) {
 		this.data = data;
 	}
 
 	public void openRule() {
 		if (!Client.allowMultipleRuleWindows) {
 			CONTROLLER.getChildren().stream()
-				.filter(c -> c instanceof FlowTileEntityRule)
-				.map(c -> ((FlowTileEntityRule) c))
+				.filter(c -> c instanceof ItemStackTileEntityRuleFlowComponent)
+				.map(c -> ((ItemStackTileEntityRuleFlowComponent) c))
 				.forEach(c -> {
 					c.setVisible(false);
 					c.setEnabled(false);

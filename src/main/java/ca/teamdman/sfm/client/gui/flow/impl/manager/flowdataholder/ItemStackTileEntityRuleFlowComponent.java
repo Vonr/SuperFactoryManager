@@ -16,21 +16,23 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton.RadioGroup;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 
-public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<TileEntityItemStackRuleFlowData> {
+public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implements
+	FlowDataHolder<ItemStackTileEntityRuleFlowData> {
+
 	private final FlowItemStackPicker ICON_PICKER;
 	private final ManagerFlowController CONTROLLER;
-	private TileEntityItemStackRuleFlowData data;
+	private ItemStackTileEntityRuleFlowData data;
 	private String name = "Tile Entity Rule";
 
-	public FlowTileEntityRule(
-		ManagerFlowController controller, TileEntityItemStackRuleFlowData data
+	public ItemStackTileEntityRuleFlowComponent(
+		ManagerFlowController controller, ItemStackTileEntityRuleFlowData data
 	) {
 		super(data.getPosition(), new Size(200, 200));
 		this.CONTROLLER = controller;
@@ -53,7 +55,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 
 		this.ICON_PICKER = new FlowItemStackPicker(
 			CONTROLLER,
-			icon.getPosition().withOffset(icon.getSize().getWidth()+5, 0)
+			icon.getPosition().withOffset(icon.getSize().getWidth() + 5, 0)
 		);
 		ICON_PICKER.setVisible(false);
 		ICON_PICKER.setEnabled(false);
@@ -69,15 +71,15 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 		// White/blacklist
 		RadioGroup itemSelectionModeGroup = new RadioGroup();
 		addChild(new FlowRadioButton(
-			new Position(5,85),
-			new Size(35,12),
+			new Position(5, 85),
+			new Size(35, 12),
 			I18n.format("gui.sfm.flow.tileentityrule.button.whitelist"),
 			itemSelectionModeGroup
 		));
 
 		addChild(new FlowRadioButton(
-			new Position(45,85),
-			new Size(35,12),
+			new Position(45, 85),
+			new Size(35, 12),
 			I18n.format("gui.sfm.flow.tileentityrule.button.blacklist"),
 			itemSelectionModeGroup
 		));
@@ -131,12 +133,12 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 	}
 
 	@Override
-	public TileEntityItemStackRuleFlowData getData() {
+	public ItemStackTileEntityRuleFlowData getData() {
 		return data;
 	}
 
 	@Override
-	public void setData(TileEntityItemStackRuleFlowData data) {
+	public void setData(ItemStackTileEntityRuleFlowData data) {
 		this.data = data;
 		getPosition().setXY(data.getPosition());
 	}
@@ -167,8 +169,8 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			FlowTileEntityRule.this.setVisible(false);
-			FlowTileEntityRule.this.setEnabled(false);
+			ItemStackTileEntityRuleFlowComponent.this.setVisible(false);
+			ItemStackTileEntityRuleFlowComponent.this.setEnabled(false);
 			CONTROLLER.SCREEN.getFlowDataContainer().notifyChanged(data);
 		}
 
@@ -202,6 +204,7 @@ public class FlowTileEntityRule extends FlowContainer implements FlowDataHolder<
 	}
 
 	public class FlowIconItemStack extends FlowItemStack {
+
 		public FlowIconItemStack(
 			ItemStack stack,
 			Position pos

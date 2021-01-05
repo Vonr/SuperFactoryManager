@@ -7,7 +7,7 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTileEntityRule;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackTileEntityRuleFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
@@ -17,7 +17,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class TileEntityItemStackRuleFlowData extends FlowData implements
+public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	PositionHolder {
 
 	public FilterMode filterMode;
@@ -25,7 +25,7 @@ public class TileEntityItemStackRuleFlowData extends FlowData implements
 	public ItemStack icon;
 	public Position position;
 
-	public TileEntityItemStackRuleFlowData(
+	public ItemStackTileEntityRuleFlowData(
 		UUID uuid, String name, ItemStack icon, Position position, FilterMode filterMode
 	) {
 		super(uuid);
@@ -51,7 +51,7 @@ public class TileEntityItemStackRuleFlowData extends FlowData implements
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;
 		}
-		return new FlowTileEntityRule((ManagerFlowController) parent, this);
+		return new ItemStackTileEntityRuleFlowComponent((ManagerFlowController) parent, this);
 	}
 
 	@Override
@@ -59,21 +59,22 @@ public class TileEntityItemStackRuleFlowData extends FlowData implements
 		return FlowDataSerializers.TILE_ENTITY_RULE;
 	}
 
+
 	public enum FilterMode {
 		WHITELIST,
 		BLACKLIST
 	}
 
 	public static class FlowTileEntityRuleDataSerializer extends
-		FlowDataSerializer<TileEntityItemStackRuleFlowData> {
+		FlowDataSerializer<ItemStackTileEntityRuleFlowData> {
 
 		public FlowTileEntityRuleDataSerializer(ResourceLocation registryName) {
 			super(registryName);
 		}
 
 		@Override
-		public TileEntityItemStackRuleFlowData fromNBT(CompoundNBT tag) {
-			return new TileEntityItemStackRuleFlowData(
+		public ItemStackTileEntityRuleFlowData fromNBT(CompoundNBT tag) {
+			return new ItemStackTileEntityRuleFlowData(
 				UUID.fromString(tag.getString("uuid")),
 				tag.getString("name"),
 				ItemStack.read(tag.getCompound("icon")),
@@ -83,7 +84,7 @@ public class TileEntityItemStackRuleFlowData extends FlowData implements
 		}
 
 		@Override
-		public CompoundNBT toNBT(TileEntityItemStackRuleFlowData data) {
+		public CompoundNBT toNBT(ItemStackTileEntityRuleFlowData data) {
 			CompoundNBT tag = super.toNBT(data);
 			tag.put("pos", data.position.serializeNBT());
 			tag.putString("name", data.name);
@@ -93,8 +94,8 @@ public class TileEntityItemStackRuleFlowData extends FlowData implements
 		}
 
 		@Override
-		public TileEntityItemStackRuleFlowData fromBuffer(PacketBuffer buf) {
-			return new TileEntityItemStackRuleFlowData(
+		public ItemStackTileEntityRuleFlowData fromBuffer(PacketBuffer buf) {
+			return new ItemStackTileEntityRuleFlowData(
 				SFMUtil.readUUID(buf),
 				buf.readString(),
 				buf.readItemStack(),
@@ -104,7 +105,7 @@ public class TileEntityItemStackRuleFlowData extends FlowData implements
 		}
 
 		@Override
-		public void toBuffer(TileEntityItemStackRuleFlowData data, PacketBuffer buf) {
+		public void toBuffer(ItemStackTileEntityRuleFlowData data, PacketBuffer buf) {
 			buf.writeString(data.getId().toString());
 			buf.writeString(data.name);
 			buf.writeItemStack(data.icon);

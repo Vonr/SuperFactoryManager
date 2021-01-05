@@ -4,16 +4,14 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowDeletable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 
-public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, IFlowCloneable,
+public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 	FlowDataHolder<TimerTriggerFlowData> {
 
 	public final ManagerFlowController CONTROLLER;
@@ -49,12 +47,8 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowDeletable, 
 	}
 
 	@Override
-	public void delete() {
-		PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			data.getId()
-		));
+	public boolean isDeletable() {
+		return true;
 	}
 
 	@Override

@@ -7,7 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTileEntityRule;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackTileEntityRuleFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
@@ -16,8 +16,8 @@ import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
-import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.TileEntityItemStackRuleFlowData.FilterMode;
+import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData.FilterMode;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
@@ -56,11 +56,11 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 //			I18n.format("gui.sfm.associatedrulesdrawer.selection.label")
 		this.SELECTION_RULES_DRAWER = new FlowDrawer(
 			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(
-				CHILDREN_RULES_DRAWER.getMaxWidth() + 10,
-				0
+				() -> CHILDREN_RULES_DRAWER.getMaxWidth() + 10,
+				() -> 0
 			),
-5,
-7
+			5,
+			7
 		);
 		SELECTION_RULES_DRAWER.setVisible(false);
 		SELECTION_RULES_DRAWER.setEnabled(false);
@@ -125,9 +125,9 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		SELECTION_RULES_DRAWER.update();
 	}
 
-	public abstract List<TileEntityItemStackRuleFlowData> getChildrenRules();
+	public abstract List<ItemStackTileEntityRuleFlowData> getChildrenRules();
 
-	public abstract List<TileEntityItemStackRuleFlowData> getSelectableRules();
+	public abstract List<ItemStackTileEntityRuleFlowData> getSelectableRules();
 
 	public abstract void setChildrenRules(List<UUID> rules);
 
@@ -135,25 +135,26 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 	public void update(Observable o, Object arg) {
 		if (arg instanceof FlowDataContainerChange) {
 			FlowDataContainerChange change = ((FlowDataContainerChange) arg);
-			if (change.DATA instanceof TileEntityItemStackRuleFlowData) {
+			if (change.DATA instanceof ItemStackTileEntityRuleFlowData) {
 				rebuildSelectionDrawer();
 			}
 		}
 	}
 
-	private class ChildRulesDrawerItem extends FlowItemStack implements FlowDataHolder<TileEntityItemStackRuleFlowData> {
+	private class ChildRulesDrawerItem extends FlowItemStack implements
+		FlowDataHolder<ItemStackTileEntityRuleFlowData> {
 
-		public TileEntityItemStackRuleFlowData data;
+		public ItemStackTileEntityRuleFlowData data;
 
 		public ChildRulesDrawerItem(
-			TileEntityItemStackRuleFlowData data
+			ItemStackTileEntityRuleFlowData data
 		) {
 			super(data.getIcon(), new Position());
 			setDraggable(false);
 			setData(data);
 			CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 				this,
-				TileEntityItemStackRuleFlowData.class
+				ItemStackTileEntityRuleFlowData.class
 			));
 		}
 
@@ -175,8 +176,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		public void onSelectionChanged() {
 			if (!Client.allowMultipleRuleWindows) {
 				CONTROLLER.getChildren().stream()
-					.filter(c -> c instanceof FlowTileEntityRule)
-					.map(c -> ((FlowTileEntityRule) c))
+					.filter(c -> c instanceof ItemStackTileEntityRuleFlowComponent)
+					.map(c -> ((ItemStackTileEntityRuleFlowComponent) c))
 					.forEach(c -> {
 						c.setVisible(false);
 						c.setEnabled(false);
@@ -192,12 +193,12 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		}
 
 		@Override
-		public TileEntityItemStackRuleFlowData getData() {
+		public ItemStackTileEntityRuleFlowData getData() {
 			return data;
 		}
 
 		@Override
-		public void setData(TileEntityItemStackRuleFlowData data) {
+		public void setData(ItemStackTileEntityRuleFlowData data) {
 			this.data = data;
 			refreshSelection();
 		}
@@ -205,10 +206,10 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 
 	private class SelectionRulesDrawerItem extends FlowItemStack {
 
-		public TileEntityItemStackRuleFlowData DATA;
+		public ItemStackTileEntityRuleFlowData DATA;
 
 		public SelectionRulesDrawerItem(
-			TileEntityItemStackRuleFlowData data
+			ItemStackTileEntityRuleFlowData data
 		) {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
@@ -284,7 +285,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 			//todo: remove debug item icons, or put more effort into random rule icons
 			//todo: abstract onclicked???
 			CONTROLLER.SCREEN.sendFlowDataToServer(
-				new TileEntityItemStackRuleFlowData(
+				new ItemStackTileEntityRuleFlowData(
 					UUID.randomUUID(),
 					"New tile entity rule",
 					items[(int) (Math.random() * items.length)],

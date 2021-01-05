@@ -30,21 +30,6 @@ public class RelationshipFlowData extends FlowData implements Observer {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		if (!super.equals(o)) {
-			return false;
-		}
-		RelationshipFlowData that = (RelationshipFlowData) o;
-		return Objects.equals(from, that.from) && Objects.equals(to, that.to);
-	}
-
-	@Override
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		if (from == null || to == null) return;
 		if (from.equals(to)) return;
@@ -82,6 +67,8 @@ public class RelationshipFlowData extends FlowData implements Observer {
 			FlowDataContainerChange change = (FlowDataContainerChange) arg;
 			BasicFlowDataContainer container = ((BasicFlowDataContainer) o);
 			if (change.CHANGE == ChangeType.REMOVED) {
+
+				// Remove this when the things it touches get removed
 				if (change.DATA.getId().equals(from) || change.DATA.getId().equals(to)) {
 					container.remove(getId());
 					o.deleteObserver(this);

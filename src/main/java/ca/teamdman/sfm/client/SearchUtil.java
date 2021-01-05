@@ -101,13 +101,10 @@ public class SearchUtil {
 		return stacks;
 	}
 
-	private static void populateStressTest(List<ItemStack> list) {
-//		if (Launcher.INSTANCE.blackboard().get(Keys.of("fml.deobfuscatedEnvironment")).isPresent()) {
-		Iterator<ItemStack> iter = list.listIterator();
-		while (list.size() < 100000) {
-			list.add(iter.next());
-		}
-//		}
+	private static Comparator<ItemStack> getSearchPriorityComparator() {
+		return Comparator.comparingInt(SearchUtil::sortMinecraftFirst)
+			.thenComparingInt(SearchUtil::sortShorterNamesFirst)
+			.thenComparing(x -> x.getDisplayName().getString());
 	}
 
 	private static int sortMinecraftFirst(ItemStack in) {
@@ -119,10 +116,13 @@ public class SearchUtil {
 		return in.getDisplayName().getString().length();
 	}
 
-	private static Comparator<ItemStack> getSearchPriorityComparator() {
-		return Comparator.comparingInt(SearchUtil::sortMinecraftFirst)
-			.thenComparingInt(SearchUtil::sortShorterNamesFirst)
-			.thenComparing(x -> x.getDisplayName().getString());
+	private static void populateStressTest(List<ItemStack> list) {
+//		if (Launcher.INSTANCE.blackboard().get(Keys.of("fml.deobfuscatedEnvironment")).isPresent()) {
+		Iterator<ItemStack> iter = list.listIterator();
+		while (list.size() < 100000) {
+			list.add(iter.next());
+		}
+//		}
 	}
 
 	public static Multimap<ItemStack, String> getCache() {
@@ -131,26 +131,28 @@ public class SearchUtil {
 	}
 
 	public static class Query {
+
+		private final Queue<ItemStack> RESULTS = new ConcurrentLinkedQueue<>();
 		private boolean running;
-		private Queue<ItemStack> results = new ConcurrentLinkedQueue<>();
-		private String query;
 		private Thread background;
 
-		public Query(String query) {
-			this.query = query;
+		/**
+		 * Get thread-safe queue of search results. This object is updated in real-time as the
+		 * search progresses.
+		 *
+		 * @return Search results
+		 */
+		public Queue<ItemStack> getResults() {
+			return RESULTS;
 		}
 
 		/**
-		 * Updates the search query and restarts the search
+		 * Clear the results, cancels previous searches, and starts a new search.
 		 *
-		 * @param query Search text
+		 * @param search Search text/pattern to be used
 		 */
-		public void updateQuery(String query) {
-			this.query = query;
-			start();
-		}
-
-		public void start() {
+		public void start(String search) {
+			// Terminate previous searches prematurely
 			if (background != null) {
 				stop();
 				try {
@@ -159,43 +161,40 @@ public class SearchUtil {
 
 				}
 			}
-			results.clear();
+
+			// Clear previous results
+			RESULTS.clear();
+
+			// Start new search
 			running = true;
-			background = new Thread(this::gatherResults);
+			background = new Thread(() -> {
+				Pattern pattern = getPattern(search);
+				for (Entry<ItemStack, Collection<String>> entry : getCache().asMap().entrySet()) {
+					if (!running) { // Premature thread exit condition
+						return;
+					}
+					if (entry.getValue().stream().anyMatch(v -> pattern.matcher(v).find())) {
+						RESULTS.add(entry.getKey());
+					}
+				}
+			});
 			background.start();
-		}
-
-		public Pattern getPattern() {
-			Pattern basicPattern = Pattern.compile(Pattern.quote(query), Pattern.CASE_INSENSITIVE);
-			if (!Client.enableRegexSearch) {
-				return basicPattern;
-			}
-			try {
-				return Pattern.compile(query, Pattern.CASE_INSENSITIVE);
-			} catch (PatternSyntaxException e) {
-				return basicPattern;
-			}
-		}
-
-		public void gatherResults() {
-			Pattern pattern = getPattern();
-			for (Entry<ItemStack, Collection<String>> entry : getCache().asMap().entrySet()) {
-				if (!running) {
-					return;
-				}
-				if (entry.getValue().stream().anyMatch(v -> pattern.matcher(v).find())) {
-					results.add(entry.getKey());
-					onResultsUpdated(results);
-				}
-			}
-		}
-
-		public void onResultsUpdated(Queue<ItemStack> results) {
-
 		}
 
 		public void stop() {
 			this.running = false;
+		}
+
+		private Pattern getPattern(String search) {
+			Pattern basicPattern = Pattern.compile(Pattern.quote(search), Pattern.CASE_INSENSITIVE);
+			if (!Client.enableRegexSearch) {
+				return basicPattern;
+			}
+			try {
+				return Pattern.compile(search, Pattern.CASE_INSENSITIVE);
+			} catch (PatternSyntaxException e) {
+				return basicPattern;
+			}
 		}
 	}
 }

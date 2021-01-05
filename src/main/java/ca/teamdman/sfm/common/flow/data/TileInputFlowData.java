@@ -9,8 +9,13 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowInputButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -22,7 +27,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class TileInputFlowData extends FlowData implements PositionHolder {
+public class TileInputFlowData extends FlowData implements PositionHolder, Observer {
 
 	public Position position;
 	public List<UUID> tileEntityRules;
@@ -44,8 +49,29 @@ public class TileInputFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
+	public void addToDataContainer(BasicFlowDataContainer container) {
+		super.addToDataContainer(container);
+		container.addObserver(this);
+	}
+
+	@Override
 	public FlowDataSerializer getSerializer() {
 		return FlowDataSerializers.INPUT;
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		if (arg instanceof FlowDataContainerChange && o instanceof BasicFlowDataContainer) {
+			FlowDataContainerChange change = (FlowDataContainerChange) arg;
+			BasicFlowDataContainer container = (BasicFlowDataContainer) o;
+			if (change.CHANGE == ChangeType.REMOVED) {
+				if (tileEntityRules.remove(change.DATA.getId())) {
+					// If the deleted item was a rule associated with this item
+					// then it gets removed and we notify that we have updated
+					container.notifyChanged(this);
+				}
+			}
+		}
 	}
 
 	@Override
