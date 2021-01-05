@@ -10,7 +10,10 @@ import ca.teamdman.sfm.client.gui.flow.core.ISelectable;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.List;
+import net.minecraft.client.util.ITooltipFlag.TooltipFlags;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.ITextProperties;
 
 public class FlowItemStack extends FlowButton implements ISelectable {
 	public static final int ITEM_PADDING_X = 4;
@@ -41,6 +44,11 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 
 	public ItemStack getItemStack() {
 		return STACK;
+	}
+
+	@Override
+	public List<? extends ITextProperties> getTooltip() {
+		return getItemStack().getTooltip(null, TooltipFlags.ADVANCED);
 	}
 
 	@Override

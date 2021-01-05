@@ -63,6 +63,7 @@ public class FlowDrawer extends FlowContainer {
 			.findFirst()
 			.orElse(-32);
 
+		fixScroll();
 		getSize().setSize(
 			shrinkToFit
 				? (itemMaxWidth + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X
@@ -137,7 +138,26 @@ public class FlowDrawer extends FlowContainer {
 			getSize().getWidth() - 4,
 			getSize().getHeight() - 4
 		);
-		super.draw(screen, matrixStack, mx, my, deltaTime);
+
+		matrixStack.push();
+		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
+		for (FlowComponent c1 : getChildren()) {
+			if (c1.isVisible()
+				&& c1.getPosition().getY() > -c1.getSize().getHeight() // not above bounds
+				&& c1.getPosition().getY() < getMaxHeight() // not below bounds
+			) {
+				c1.draw(
+					screen,
+					matrixStack,
+					mx - getPosition().getX(),
+					my - getPosition().getY(),
+					deltaTime
+				);
+			}
+		}
+		matrixStack.pop();
+		drawTooltip(screen, matrixStack, mx, my, deltaTime);
+
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
 		screen.drawBorder(
@@ -168,13 +188,11 @@ public class FlowDrawer extends FlowContainer {
 
 	public void scrollDown() {
 		scroll += 7;
-		fixScroll();
 		update();
 	}
 
 	public void scrollUp() {
 		scroll -= 7;
-		fixScroll();
 		update();
 	}
 

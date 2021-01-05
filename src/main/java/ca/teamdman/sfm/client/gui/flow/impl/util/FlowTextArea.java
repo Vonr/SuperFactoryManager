@@ -12,6 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.function.Consumer;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * @see net.minecraft.client.gui.widget.TextFieldWidget
@@ -65,7 +66,12 @@ public class FlowTextArea extends FlowComponent {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		return delegate.mouseClicked(mx, my, button);
+		if (isInBounds(mx, my) && button == GLFW.GLFW_MOUSE_BUTTON_2) {
+			delegate.setText("");
+			return true;
+		} else {
+			return delegate.mouseClicked(mx, my, button);
+		}
 	}
 
 	@Override
