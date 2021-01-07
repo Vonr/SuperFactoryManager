@@ -136,6 +136,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		if (arg instanceof FlowDataContainerChange) {
 			FlowDataContainerChange change = ((FlowDataContainerChange) arg);
 			if (change.DATA instanceof ItemStackTileEntityRuleFlowData) {
+				rebuildChildrenDrawer();
 				rebuildSelectionDrawer();
 			}
 		}
