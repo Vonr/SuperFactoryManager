@@ -12,8 +12,9 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.item.ItemStack;
 
-public class FlowItemStackPicker extends FlowContainer {
+public abstract class FlowItemStackPicker extends FlowContainer {
 
 	private final FlowDrawer DRAWER;
 	private final FlowTextArea SEARCH_TEXT_INPUT;
@@ -64,12 +65,19 @@ public class FlowItemStackPicker extends FlowContainer {
 					DRAWER.addChild(new FlowItemStack(
 						stack,
 						new Position()
-					))
+					) {
+						@Override
+						public void onClicked(int mx, int my, int button) {
+							onItemStackChanged(stack);
+						}
+					})
 				);
 			}
 			DRAWER.update();
 		}
 	}
+
+	public abstract void onItemStackChanged(ItemStack stack);
 
 	@Override
 	public int getZIndex() {

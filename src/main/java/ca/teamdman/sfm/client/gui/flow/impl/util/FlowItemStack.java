@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextProperties;
 
 public class FlowItemStack extends FlowButton implements ISelectable {
+
 	public static final int ITEM_PADDING_X = 4;
 	public static final int ITEM_PADDING_Y = 4;
 	public static final int ITEM_WIDTH = 16;
@@ -34,43 +35,10 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 		this.STACK = stack;
 	}
 
-	public boolean isSelectable() {
-		return selectable;
-	}
-
-	public void setSelectable(boolean selectable) {
-		this.selectable = selectable;
-	}
-
-	public ItemStack getItemStack() {
-		return STACK;
-	}
-
-	@Override
-	public List<? extends ITextProperties> getTooltip() {
-		return getItemStack().getTooltip(null, TooltipFlags.ADVANCED);
-	}
-
-	@Override
-	public void onSelectionChanged() {
-
-	}
-
 	@Override
 	public void onClicked(int mx, int my, int button) {
 		toggleSelected();
 		onSelectionChanged();
-	}
-
-	protected void drawBackground(BaseScreen screen, MatrixStack matrixStack, Colour3f colour) {
-		screen.drawRect(
-			matrixStack,
-			getPosition().getX(),
-			getPosition().getY(),
-			ITEM_TOTAL_WIDTH,
-			ITEM_TOTAL_HEIGHT,
-			colour
-		);
 	}
 
 	@Override
@@ -92,6 +60,30 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 	}
 
 	@Override
+	public List<? extends ITextProperties> getTooltip() {
+		return getItemStack().getTooltip(null, TooltipFlags.ADVANCED);
+	}
+
+	public ItemStack getItemStack() {
+		return STACK;
+	}
+
+	public void setItemStack(ItemStack stack) {
+		this.STACK = stack;
+	}
+
+	protected void drawBackground(BaseScreen screen, MatrixStack matrixStack, Colour3f colour) {
+		screen.drawRect(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			ITEM_TOTAL_WIDTH,
+			ITEM_TOTAL_HEIGHT,
+			colour
+		);
+	}
+
+	@Override
 	public boolean isSelected() {
 		return this.selected;
 	}
@@ -101,5 +93,18 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 		if (isSelectable()) {
 			this.selected = value;
 		}
+	}
+
+	public boolean isSelectable() {
+		return selectable;
+	}
+
+	public void setSelectable(boolean selectable) {
+		this.selectable = selectable;
+	}
+
+	@Override
+	public void onSelectionChanged() {
+
 	}
 }
