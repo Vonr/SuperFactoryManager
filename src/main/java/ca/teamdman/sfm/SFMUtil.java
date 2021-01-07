@@ -7,16 +7,22 @@ import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IWorldPosCallable;
@@ -35,16 +41,6 @@ public class SFMUtil {
 	 * The length of a UUID once stringified
 	 */
 	public static final int UUID_STRING_LENGTH = 36;
-
-	/**
-	 * Reads a UUID from a packet buffer Will throw an error if unable to pop a string from the
-	 * buffer Will throw an error if the string is malformed
-	 *
-	 * @return UUID
-	 */
-	public static UUID readUUID(PacketBuffer buf) {
-		return UUID.fromString(buf.readString(UUID_STRING_LENGTH));
-	}
 
 	/**
 	 * Writes a UUID to a buffer
@@ -189,9 +185,10 @@ public class SFMUtil {
 	 * Gets a stream using a self-feeding mapping function. Prevents the re-traversal of elements
 	 * that have been visited before.
 	 *
-	 * @param operator Consumes queue elements to build the result set and append the next queue elements
-	 * @param first  Initial value, not checked against the filter
-	 * @param <T>    Type that the mapper consumes and produces
+	 * @param operator Consumes queue elements to build the result set and append the next queue
+	 *                 elements
+	 * @param first    Initial value, not checked against the filter
+	 * @param <T>      Type that the mapper consumes and produces
 	 * @return Stream result after termination of the recursive mapping process
 	 */
 	public static <T> Stream<T> getRecursiveStream(
@@ -214,17 +211,12 @@ public class SFMUtil {
 		return builder.build();
 	}
 
-	public interface RecursiveBuilder<T> {
-		void accept(T next, Consumer<T> nextQueue, Consumer<T> resultBuilder);
-	}
-
 	/**
-	 * Gets shortest distance between a point and a line segment
-	 * https://stackoverflow.com/a/6853926/11141271
+	 * Gets shortest distance between a point and a line segment https://stackoverflow.com/a/6853926/11141271
 	 * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
 	 *
-	 * @param x point x
-	 * @param y point y
+	 * @param x  point x
+	 * @param y  point y
 	 * @param x1 line start x
 	 * @param y1 line start y
 	 * @param x2 line end x
@@ -243,19 +235,19 @@ public class SFMUtil {
 		int len_sq = C * C + D * D;
 		double param = -1;
 		if (len_sq != 0) //in case of 0 length line
+		{
 			param = dot / (double) len_sq;
+		}
 
 		double xx, yy;
 
 		if (param < 0) {
 			xx = x1;
 			yy = y1;
-		}
-		else if (param > 1) {
+		} else if (param > 1) {
 			xx = x2;
 			yy = y2;
-		}
-		else {
+		} else {
 			xx = x1 + param * C;
 			yy = y1 + param * D;
 		}
@@ -263,5 +255,45 @@ public class SFMUtil {
 		double dx = x - xx;
 		double dy = y - yy;
 		return Math.sqrt(dx * dx + dy * dy);
+	}
+
+	public static ListNBT serializeUUIDList(List<UUID> ids) {
+		return ids.stream()
+			.map(UUID::toString)
+			.map(StringNBT::valueOf)
+			.collect(ListNBT::new, ListNBT::add, ListNBT::addAll);
+	}
+
+	public static List<UUID> deserializeUUIDList(ListNBT nbt) {
+		return nbt.stream()
+			.map(INBT::getString)
+			.map(UUID::fromString)
+			.collect(Collectors.toList());
+	}
+
+	public static void serializeUUIDList(List<UUID> ids, PacketBuffer buf) {
+		buf.writeInt(ids.size());
+		ids.forEach(id -> buf.writeString(id.toString()));
+	}
+
+	public static List<UUID> deserializeUUIDList(PacketBuffer buf) {
+		return IntStream.range(0, buf.readInt())
+			.mapToObj(__ -> SFMUtil.readUUID(buf))
+			.collect(Collectors.toList());
+	}
+
+	/**
+	 * Reads a UUID from a packet buffer Will throw an error if unable to pop a string from the
+	 * buffer Will throw an error if the string is malformed
+	 *
+	 * @return UUID
+	 */
+	public static UUID readUUID(PacketBuffer buf) {
+		return UUID.fromString(buf.readString(UUID_STRING_LENGTH));
+	}
+
+	public interface RecursiveBuilder<T> {
+
+		void accept(T next, Consumer<T> nextQueue, Consumer<T> resultBuilder);
 	}
 }
