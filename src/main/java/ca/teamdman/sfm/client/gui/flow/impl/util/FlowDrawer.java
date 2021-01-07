@@ -85,10 +85,7 @@ public class FlowDrawer extends FlowContainer {
 			0,
 			Math.max(
 				0,
-				(
-					(int) Math.ceil(getChildren().size() / (float) getItemsPerRow())
-						- getItemsPerColumn()
-				) * (itemMaxHeight + ITEM_MARGIN_Y)
+				getWrappedY(getChildren().size() - getItemsPerRow() * (getItemsPerColumn()-2))
 			)
 		);
 	}
@@ -111,6 +108,8 @@ public class FlowDrawer extends FlowContainer {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
+		if (scroll > 0)
+		System.out.println(scroll);
 		screen.clearRect(
 			matrixStack,
 			getPosition().getX(),
