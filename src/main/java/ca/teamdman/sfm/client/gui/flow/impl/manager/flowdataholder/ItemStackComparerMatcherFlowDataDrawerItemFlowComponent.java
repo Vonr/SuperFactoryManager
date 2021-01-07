@@ -22,11 +22,16 @@ public class ItemStackComparerMatcherFlowDataDrawerItemFlowComponent extends
 	private final TextAreaFlowComponent QUANTITY_INPUT;
 	private ItemStackComparerMatcherFlowData data;
 
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() + 120;
+	}
+
 	public ItemStackComparerMatcherFlowDataDrawerItemFlowComponent(
 		ManagerFlowController CONTROLLER,
 		ItemStackComparerMatcherFlowData data
 	) {
-		super(new Position(0, 0), new Size(100,100));
+		super(new Position(0, 0), new Size(100,24));
 		this.data = data;
 
 		// Quantity input box
@@ -74,10 +79,20 @@ public class ItemStackComparerMatcherFlowDataDrawerItemFlowComponent extends
 			this,
 			ItemStackComparerMatcherFlowData.class
 		));
+
+		setEnabled(false);
+		setVisible(false);
 	}
 
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
+		screen.clearRect(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			getSize().getWidth(),
+			getSize().getHeight()
+		);
 		screen.drawRect(
 			matrixStack,
 			getPosition().getX(),

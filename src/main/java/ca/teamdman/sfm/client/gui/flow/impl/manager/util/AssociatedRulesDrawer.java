@@ -175,7 +175,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 
 		@Override
 		public void onSelectionChanged() {
-			if (!Client.allowMultipleRuleWindows) {
+			if (!Client.allowMultipleRuleWindows && isSelected()) {
 				CONTROLLER.getChildren().stream()
 					.filter(c -> c instanceof ItemStackTileEntityRuleFlowComponent)
 					.map(c -> ((ItemStackTileEntityRuleFlowComponent) c))

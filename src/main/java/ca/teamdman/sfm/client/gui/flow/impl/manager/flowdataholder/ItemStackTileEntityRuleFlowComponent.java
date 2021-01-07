@@ -16,6 +16,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton.RadioGroup;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -248,6 +249,32 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 					.append(((IFormattableTextComponent) rtn.get(0)))
 			);
 			return rtn;
+		}
+
+		@Override
+		public void onSelectionChanged() {
+			if (!Client.allowMultipleRuleWindows && isSelected()) {
+				CONTROLLER.getChildren().stream()
+					.filter(c -> c instanceof FlowDataHolder)
+					.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemStackMatcher)
+					.forEach(c -> {
+						c.setVisible(false);
+						c.setEnabled(false);
+					});
+				MATCHER_DRAWER.getChildren().stream()
+					.filter(c -> c instanceof MatcherDrawerItem && c != this)
+					.forEach(c -> ((MatcherDrawerItem) c).setSelected(false));
+			}
+			CONTROLLER.findFirstChild(dataId).ifPresent(comp -> {
+				comp.setVisible(isSelected());
+				comp.setEnabled(isSelected());
+				comp.setPosition(
+					ItemStackTileEntityRuleFlowComponent.this.getPosition()
+						.withOffset(MATCHER_DRAWER.getPosition())
+						.withOffset(getPosition())
+						.withOffset(getSize().getWidth() + 5, 0)
+				);
+			});
 		}
 	}
 

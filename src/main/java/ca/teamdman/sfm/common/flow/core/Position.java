@@ -118,6 +118,15 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	}
 
 	/**
+	 * Returns a new position offset from this position by {@code other} amount
+	 * @param other Offset amount
+	 * @return Offset position
+	 */
+	public Position withOffset(Position other) {
+		return new Position(getX() + other.getX(), getY() + other.getY());
+	}
+
+	/**
 	 * Returns a new position for the result of vector substitution
 	 *
 	 * @param pos operand
