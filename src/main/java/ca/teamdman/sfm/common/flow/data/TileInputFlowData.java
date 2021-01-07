@@ -20,7 +20,6 @@ import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.Constants.NBT;
 
 public class TileInputFlowData extends FlowData implements PositionHolder, Observer {
 
@@ -85,7 +84,7 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 			return new TileInputFlowData(
 				UUID.fromString(tag.getString("uuid")),
 				new Position(tag.getCompound("pos")),
-				SFMUtil.deserializeUUIDList(tag.getList("ters", NBT.TAG_STRING))
+				SFMUtil.deserializeUUIDList(tag, "ters")
 			);
 		}
 

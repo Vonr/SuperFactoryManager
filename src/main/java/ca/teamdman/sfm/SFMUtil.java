@@ -20,6 +20,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
@@ -31,6 +32,7 @@ import net.minecraft.world.IWorldReader;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.NetworkEvent;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -264,8 +266,8 @@ public class SFMUtil {
 			.collect(ListNBT::new, ListNBT::add, ListNBT::addAll);
 	}
 
-	public static List<UUID> deserializeUUIDList(ListNBT nbt) {
-		return nbt.stream()
+	public static List<UUID> deserializeUUIDList(CompoundNBT tag, String key) {
+		return tag.getList(key, NBT.TAG_STRING).stream()
 			.map(INBT::getString)
 			.map(UUID::fromString)
 			.collect(Collectors.toList());

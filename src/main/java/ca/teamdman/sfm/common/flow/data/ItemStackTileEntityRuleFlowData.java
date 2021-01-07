@@ -11,6 +11,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackTile
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import java.util.List;
 import java.util.UUID;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -24,15 +25,23 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public String name;
 	public ItemStack icon;
 	public Position position;
+	public List<UUID> matcherIds;
 
 	public ItemStackTileEntityRuleFlowData(
-		UUID uuid, String name, ItemStack icon, Position position, FilterMode filterMode
+
+		UUID uuid,
+		String name,
+		ItemStack icon,
+		Position position,
+		FilterMode filterMode,
+		List<UUID> matcherIds
 	) {
 		super(uuid);
 		this.name = name;
 		this.icon = icon;
 		this.position = position;
 		this.filterMode = filterMode;
+		this.matcherIds = matcherIds;
 	}
 
 	public ItemStack getIcon() {
@@ -79,7 +88,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 				tag.getString("name"),
 				ItemStack.read(tag.getCompound("icon")),
 				new Position(tag.getCompound("pos")),
-				FilterMode.valueOf(tag.getString("filterMode"))
+				FilterMode.valueOf(tag.getString("filterMode")),
+				SFMUtil.deserializeUUIDList(tag, "matchers")
 			);
 		}
 
@@ -90,6 +100,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 			tag.putString("name", data.name);
 			tag.put("icon", data.icon.serializeNBT());
 			tag.putString("filterMode", data.filterMode.name());
+			tag.put("matchers", SFMUtil.serializeUUIDList(data.matcherIds));
 			return tag;
 		}
 
@@ -100,7 +111,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 				buf.readString(),
 				buf.readItemStack(),
 				Position.fromLong(buf.readLong()),
-				FilterMode.valueOf(buf.readString())
+				FilterMode.valueOf(buf.readString()),
+				SFMUtil.deserializeUUIDList(buf)
 			);
 		}
 
@@ -111,6 +123,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 			buf.writeItemStack(data.icon);
 			buf.writeLong(data.position.toLong());
 			buf.writeString(data.filterMode.name());
+			SFMUtil.serializeUUIDList(data.matcherIds, buf);
 		}
 	}
 }
