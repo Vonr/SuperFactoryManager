@@ -20,8 +20,8 @@ public class FlowDrawer extends FlowContainer {
 	private static final int ITEM_MARGIN_Y = 4;
 	private final int MAX_ITEMS_PER_ROW;
 	private final int MAX_ITEMS_PER_COLUMN;
-	private int itemMaxWidth;
-	private int itemMaxHeight;
+	private int maxItemWidth;
+	private int maxItemHeight;
 	private boolean shrinkToFit = true;
 	private int scroll = 0;
 
@@ -32,7 +32,7 @@ public class FlowDrawer extends FlowContainer {
 	}
 
 	public int getMaxWidth() {
-		return (itemMaxWidth + ITEM_MARGIN_X) * getMaxItemsPerRow() + PADDING_X;
+		return (maxItemWidth + ITEM_MARGIN_X) * getMaxItemsPerRow() + PADDING_X;
 	}
 
 	public int getMaxItemsPerRow() {
@@ -44,12 +44,12 @@ public class FlowDrawer extends FlowContainer {
 	}
 
 	public void update() {
-		itemMaxWidth = -getChildren().stream() // negate result
+		maxItemWidth = -getChildren().stream() // negate result
 			.mapToInt(c -> -c.getSize().getWidth()) // negative so that the 'largest' is first
 			.sorted()
 			.findFirst()
 			.orElse(-32);
-		itemMaxHeight = -getChildren().stream()
+		maxItemHeight = -getChildren().stream()
 			.mapToInt(c -> -c.getSize().getHeight())
 			.sorted()
 			.findFirst()
@@ -58,10 +58,10 @@ public class FlowDrawer extends FlowContainer {
 		fixScroll();
 		getSize().setSize(
 			shrinkToFit
-				? (itemMaxWidth + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X
+				? (maxItemWidth + ITEM_MARGIN_X) * getItemsPerRow() + PADDING_X
 				: getMaxWidth(),
 			shrinkToFit
-				? (itemMaxHeight + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
+				? (maxItemHeight + ITEM_MARGIN_Y) * getItemsPerColumn() + PADDING_Y
 				: getMaxHeight()
 		);
 		AtomicInteger i = new AtomicInteger();
@@ -77,11 +77,10 @@ public class FlowDrawer extends FlowContainer {
 			0,
 			Math.max(
 				0,
-				getWrappedY(
-					(getChildren().size() + getChildren().size() % getMaxItemsPerRow())
-						+ getItemsPerRow()
-						- (getMaxItemsPerColumn() - 1) * getMaxItemsPerRow()
-				)
+				(
+					(int) Math.ceil(getChildren().size() / (float) getItemsPerRow())
+						- getItemsPerColumn()
+				) * (maxItemHeight + ITEM_MARGIN_Y)
 			)
 		);
 	}
@@ -181,7 +180,7 @@ public class FlowDrawer extends FlowContainer {
 	}
 
 	public int getMaxHeight() {
-		return (itemMaxHeight + ITEM_MARGIN_Y) * getMaxItemsPerColumn() + PADDING_Y;
+		return (maxItemHeight + ITEM_MARGIN_Y) * getMaxItemsPerColumn() + PADDING_Y;
 	}
 
 	public int getMaxItemsPerColumn() {
@@ -212,7 +211,7 @@ public class FlowDrawer extends FlowContainer {
 
 	public int getWrappedX(int index) {
 		return getItemColumn(index)
-			* (itemMaxWidth + ITEM_MARGIN_X)
+			* (maxItemWidth + ITEM_MARGIN_X)
 			+ ITEM_MARGIN_X / 2
 			+ PADDING_X / 2;
 	}
@@ -227,7 +226,7 @@ public class FlowDrawer extends FlowContainer {
 
 	public int getWrappedY(int index) {
 		return getItemRow(index)
-			* (itemMaxHeight + ITEM_MARGIN_Y)
+			* (maxItemHeight + ITEM_MARGIN_Y)
 			+ ITEM_MARGIN_Y / 2
 			+ PADDING_Y / 2;
 	}
