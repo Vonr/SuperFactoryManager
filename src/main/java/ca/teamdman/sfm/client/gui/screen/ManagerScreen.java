@@ -52,7 +52,7 @@ public class ManagerScreen extends ControllerScreen<ManagerFlowController> imple
 		return getContainer().getSource().getFlowDataContainer();
 	}
 
-	public void sendFlowDataToServer(FlowData data) {
+	public void sendFlowDataToServer(FlowData... data) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerFlowDataPacketC2S(
 			CONTROLLER.SCREEN.getContainer().windowId,
 			CONTROLLER.SCREEN.getContainer().getSource().getPos(),

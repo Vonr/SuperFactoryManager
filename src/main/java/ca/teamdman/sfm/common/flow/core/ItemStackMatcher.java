@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.flow.core;
 
-import java.util.Collection;
+import java.util.List;
 import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 
@@ -10,5 +10,5 @@ public interface ItemStackMatcher {
 
 	int getQuantity();
 
-	Collection<ItemStack> getPreview();
+	List<ItemStack> getPreview();
 }

@@ -9,31 +9,44 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStackPicker;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowMinusButton;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton.RadioGroup;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData.FilterMode;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
 
 public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implements
 	FlowDataHolder<ItemStackTileEntityRuleFlowData> {
 
+	public final ManagerFlowController CONTROLLER;
 	private final FlowItemStackPicker ICON_PICKER;
-	private final ManagerFlowController CONTROLLER;
-	private final FlowItemStack ICON;
+	private final ItemStackFlowComponent ICON;
 	private final FlowRadioButton WHITELIST_BUTTON;
 	private final FlowRadioButton BLACKLIST_BUTTON;
 	private final RadioGroup ITEM_SELECTION_MODE_GROUP;
+	private final FlowDrawer MATCHER_DRAWER;
 	private ItemStackTileEntityRuleFlowData data;
 	private String name = "Tile Entity Rule";
 
@@ -44,12 +57,14 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		this.CONTROLLER = controller;
 		this.data = data;
 
+		//region toolbar
 		addChild(new MinimizeButton(
 			new Position(180, 5),
 			new Size(10, 10)
 		));
+		//endregion
 
-		// Icon
+		//region icon
 		addChild(new SectionHeader(
 			new Position(5, 25),
 			new Size(35, 12),
@@ -72,8 +87,9 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		ICON_PICKER.setVisible(false);
 		ICON_PICKER.setEnabled(false);
 		addChild(ICON_PICKER);
+		//endregion
 
-		// Items
+		//region items
 		addChild(new SectionHeader(
 			new Position(5, 70),
 			new Size(35, 12),
@@ -81,7 +97,6 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		));
 
 		this.ITEM_SELECTION_MODE_GROUP = new RadioGroup();
-		// White/blacklist
 		WHITELIST_BUTTON = new FlowRadioButton(
 			new Position(5, 85),
 			new Size(35, 12),
@@ -96,16 +111,48 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 			I18n.format("gui.sfm.flow.tileentityrule.button.blacklist"),
 			ITEM_SELECTION_MODE_GROUP
 		);
+		ITEM_SELECTION_MODE_GROUP.setSelected(
+			data.filterMode == FilterMode.WHITELIST
+				? WHITELIST_BUTTON
+				: BLACKLIST_BUTTON);
 		addChild(BLACKLIST_BUTTON);
 
-		// Item drawer
+		MATCHER_DRAWER = new FlowDrawer(new Position(5, 105), 5, 3);
+		MATCHER_DRAWER.setShrinkToFit(false);
+		rebuildMatcherDrawerChildren();
+		addChild(MATCHER_DRAWER);
 
+		addChild(
+			new AddMatcherButton(new Position(5, getSize().getHeight() - 21), new Size(16, 16)));
+		//endregion
+
+		//region default behaviour
+		// Hide by default
 		setVisible(false);
 		setEnabled(false);
+
+		// Add change listener
 		CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			this,
 			ItemStackTileEntityRuleFlowData.class
 		));
+		//endregion
+	}
+
+	public void rebuildMatcherDrawerChildren() {
+		MATCHER_DRAWER.getChildren().clear();
+		data.matcherIds.stream()
+			.map(id -> CONTROLLER.SCREEN.getFlowDataContainer().get(id))
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.filter(data -> data instanceof ItemStackMatcher)
+			.map(data -> new MatcherDrawerItem(
+				data.getId(),
+				((ItemStackMatcher) data).getPreview(),
+				((ItemStackMatcher) data).getQuantity()
+			))
+			.forEach(MATCHER_DRAWER::addChild);
+		MATCHER_DRAWER.update();
 	}
 
 	@Override
@@ -165,6 +212,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 				? WHITELIST_BUTTON
 				: BLACKLIST_BUTTON
 		);
+		rebuildMatcherDrawerChildren();
 	}
 
 	@Override
@@ -180,6 +228,48 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 			data.getId(),
 			this.getPosition()
 		));
+	}
+
+	private class MatcherDrawerItem extends ItemStackFlowComponent {
+		private int quantity;
+		private UUID dataId;
+		public MatcherDrawerItem(UUID dataId, List<ItemStack> preview, int quantity) {
+			super(preview.get(0), new Position());
+			this.quantity = quantity;
+			this.dataId = dataId;
+		}
+
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			List<ITextProperties> rtn = (List<ITextProperties>) super.getTooltip();
+			rtn.set(
+				0,
+				new StringTextComponent(quantity + "x ")
+					.append(((IFormattableTextComponent) rtn.get(0)))
+			);
+			return rtn;
+		}
+	}
+
+	public class AddMatcherButton extends FlowPlusButton {
+
+		public AddMatcherButton(
+			Position pos,
+			Size size
+		) {
+			super(pos, size, CONST.SELECTED);
+		}
+
+		@Override
+		public void onClicked(int mx, int my, int button) {
+			FlowData matcher = new ItemStackComparerMatcherFlowData(
+				UUID.randomUUID(),
+				new ItemStack(Blocks.STONE),
+				0
+			);
+			data.matcherIds.add(matcher.getId());
+			CONTROLLER.SCREEN.sendFlowDataToServer(matcher, data);
+		}
 	}
 
 	public class MinimizeButton extends FlowMinusButton {
@@ -227,7 +317,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		}
 	}
 
-	public class FlowIconItemStack extends FlowItemStack {
+	public class FlowIconItemStack extends ItemStackFlowComponent {
 
 		public FlowIconItemStack(
 			ItemStack stack,

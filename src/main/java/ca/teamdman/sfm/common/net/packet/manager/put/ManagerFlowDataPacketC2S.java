@@ -5,13 +5,14 @@ import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import java.util.stream.IntStream;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 
 public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
-	private final FlowData DATA;
+	private final FlowData[] DATA;
 	public ManagerFlowDataPacketC2S(
-		int windowId, BlockPos pos, FlowData data
+		int windowId, BlockPos pos, FlowData... data
 	) {
 		super(windowId, pos);
 		this.DATA = data;
@@ -23,12 +24,15 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 		public void finishEncode(
 			ManagerFlowDataPacketC2S msg, PacketBuffer buf
 		) {
-			FlowDataSerializer serializer = msg.DATA.getSerializer();
-			buf.writeString(serializer.getRegistryName().toString());
-			serializer.toBuffer(
-				msg.DATA,
-				buf
-			);
+			buf.writeInt(msg.DATA.length);
+			for (FlowData datum : msg.DATA) {
+				FlowDataSerializer serializer = datum.getSerializer();
+				buf.writeString(serializer.getRegistryName().toString());
+				serializer.toBuffer(
+					datum,
+					buf
+				);
+			}
 		}
 
 		@Override
@@ -38,7 +42,12 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 			return new ManagerFlowDataPacketC2S(
 				windowId,
 				tilePos,
-				FlowDataSerializer.getSerializer(buf.readString()).get().fromBuffer(buf)
+				IntStream.range(0, buf.readInt())
+					.mapToObj(__ -> FlowDataSerializer
+						.getSerializer(buf.readString())
+						.get()
+						.fromBuffer(buf))
+					.toArray(FlowData[]::new)
 			);
 		}
 
@@ -46,8 +55,11 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 		public void handleDetailed(
 			ManagerFlowDataPacketC2S msg, ManagerTileEntity manager
 		) {
-			SFM.LOGGER.debug("C2S received, FlowData {}", msg.DATA);
-			msg.DATA.addToDataContainer(manager.getFlowDataContainer());
+			SFM.LOGGER.debug("C2S received, FlowData x {}", msg.DATA.length);
+			for (FlowData datum : msg.DATA) {
+				datum.addToDataContainer(manager.getFlowDataContainer());
+			}
+
 			manager.sendPacketToListeners(
 				new ManagerFlowDataPacketS2C(
 					msg.WINDOW_ID,

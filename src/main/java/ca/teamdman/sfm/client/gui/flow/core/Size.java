@@ -43,6 +43,11 @@ public class Size {
 		this.height = height;
 	}
 
+	public void setSize(Size other) {
+		this.width = other.getWidth();
+		this.height = other.getHeight();
+	}
+
 	/**
 	 * Checks if a coordinate is contained in this element
 	 *

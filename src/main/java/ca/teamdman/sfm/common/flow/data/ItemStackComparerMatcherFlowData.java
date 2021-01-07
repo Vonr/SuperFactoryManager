@@ -1,10 +1,13 @@
 package ca.teamdman.sfm.common.flow.data;
 
+import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackComparerMatcherFlowDataDrawerItemFlowComponent;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
@@ -25,6 +28,12 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 
 	@Override
 	public FlowComponent createController(FlowComponent parent) {
+		if (parent instanceof ManagerFlowController) {
+			return new ItemStackComparerMatcherFlowDataDrawerItemFlowComponent(
+				((ManagerFlowController) parent),
+				this
+			);
+		}
 		return null;
 	}
 
@@ -45,7 +54,7 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 	}
 
 	@Override
-	public Collection<ItemStack> getPreview() {
+	public List<ItemStack> getPreview() {
 		return Collections.singletonList(stack);
 	}
 
@@ -75,12 +84,18 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 
 		@Override
 		public ItemStackComparerMatcherFlowData fromBuffer(PacketBuffer buf) {
-			return null;
+			return new ItemStackComparerMatcherFlowData(
+				SFMUtil.readUUID(buf),
+				buf.readItemStack(),
+				buf.readInt()
+			);
 		}
 
 		@Override
 		public void toBuffer(ItemStackComparerMatcherFlowData data, PacketBuffer buf) {
-
+			buf.writeString(data.getId().toString());
+			buf.writeItemStack(data.stack);
+			buf.writeInt(data.quantity);
 		}
 	}
 }

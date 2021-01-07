@@ -3,12 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
-import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackTileEntityRuleFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -17,7 +16,7 @@ import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 public class RuleDrawerItem extends FlowContainer implements
 	FlowDataHolder<ItemStackTileEntityRuleFlowData> {
 
-	private final FlowItemStack ICON;
+	private final ItemStackFlowComponent ICON;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowDrawer DRAWER;
 	private ItemStackTileEntityRuleFlowData data;
@@ -27,11 +26,11 @@ public class RuleDrawerItem extends FlowContainer implements
 		ManagerFlowController controller,
 		ItemStackTileEntityRuleFlowData rule
 	) {
-		super(rule.position, new Size(FlowItemStack.ITEM_WIDTH + 4, FlowItemStack.ITEM_HEIGHT + 4));
+		super(rule.position, ItemStackFlowComponent.DEFAULT_SIZE.copy());
 		this.DRAWER = drawer;
 		this.CONTROLLER = controller;
 		this.data = rule;
-		this.ICON = new FlowItemStack(rule.icon, new Position(2, 2)) {
+		this.ICON = new ItemStackFlowComponent(rule.icon, new Position(2, 2)) {
 			@Override
 			public void onSelectionChanged() {
 				RuleDrawerItem.this.onClicked(isSelected());
@@ -44,7 +43,7 @@ public class RuleDrawerItem extends FlowContainer implements
 	public void onClicked(boolean activate) {
 	}
 
-	public FlowItemStack getIcon() {
+	public ItemStackFlowComponent getIcon() {
 		return ICON;
 	}
 

@@ -139,6 +139,16 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 	}
 
 	@Override
+	public String toString() {
+		return "FlowComponent{" +
+			"visible=" + visible +
+			", enabled=" + enabled +
+			", position=" + position +
+			", size=" + size +
+			'}';
+	}
+
+	@Override
 	public Size getSize() {
 		return size;
 	}

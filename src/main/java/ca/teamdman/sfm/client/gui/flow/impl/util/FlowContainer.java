@@ -99,7 +99,9 @@ public abstract class FlowContainer extends FlowComponent {
 	}
 
 	public void addChild(FlowComponent c) {
-		this.children.add(c);
+		if (c != null) {
+			this.children.add(c);
+		}
 	}
 
 	public boolean removeChild(FlowComponent c) {

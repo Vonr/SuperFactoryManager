@@ -15,22 +15,15 @@ import net.minecraft.client.util.ITooltipFlag.TooltipFlags;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextProperties;
 
-public class FlowItemStack extends FlowButton implements ISelectable {
-
-	public static final int ITEM_PADDING_X = 4;
-	public static final int ITEM_PADDING_Y = 4;
-	public static final int ITEM_WIDTH = 16;
-	public static final int ITEM_HEIGHT = 16;
-	public static final int ITEM_TOTAL_HEIGHT = ITEM_HEIGHT + ITEM_PADDING_Y;
-	public static final int ITEM_TOTAL_WIDTH = ITEM_WIDTH + ITEM_PADDING_X;
-	public static final Size ITEM_TOTAL_SIZE = new Size(ITEM_WIDTH, ITEM_HEIGHT);
+public class ItemStackFlowComponent extends FlowButton implements ISelectable {
+	public static final Size DEFAULT_SIZE = new Size(20, 20);
 	private ItemStack STACK;
 	private boolean selected;
 	private boolean selectable = true;
 	private boolean depressed = false;
 
-	public FlowItemStack(ItemStack stack, Position pos) {
-		super(pos, ITEM_TOTAL_SIZE.copy());
+	public ItemStackFlowComponent(ItemStack stack, Position pos) {
+		super(pos, DEFAULT_SIZE.copy());
 		setDraggable(false);
 		this.STACK = stack;
 	}
@@ -53,8 +46,8 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 		screen.drawItemStack(
 			matrixStack,
 			STACK,
-			getPosition().getX() + ITEM_PADDING_X / 2,
-			getPosition().getY() + ITEM_PADDING_Y / 2
+			getPosition().getX() + 2,
+			getPosition().getY() + 2
 		);
 		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
@@ -77,8 +70,8 @@ public class FlowItemStack extends FlowButton implements ISelectable {
 			matrixStack,
 			getPosition().getX(),
 			getPosition().getY(),
-			ITEM_TOTAL_WIDTH,
-			ITEM_TOTAL_HEIGHT,
+			getSize().getWidth(),
+			getSize().getHeight(),
 			colour
 		);
 	}

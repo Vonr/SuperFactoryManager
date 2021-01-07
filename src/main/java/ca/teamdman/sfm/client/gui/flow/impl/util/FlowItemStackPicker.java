@@ -17,7 +17,7 @@ import net.minecraft.item.ItemStack;
 public abstract class FlowItemStackPicker extends FlowContainer {
 
 	private final FlowDrawer DRAWER;
-	private final FlowTextArea SEARCH_TEXT_INPUT;
+	private final TextAreaFlowComponent SEARCH_TEXT_INPUT;
 	private final Query QUERY;
 	private int lastCount = -1;
 
@@ -38,7 +38,7 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 			}
 		};
 		DRAWER.setShrinkToFit(false);
-		this.SEARCH_TEXT_INPUT = new FlowTextArea(
+		this.SEARCH_TEXT_INPUT = new TextAreaFlowComponent(
 			controller.SCREEN,
 			"",
 			I18n.format("gui.sfm.flow.search.placeholder"),
@@ -62,7 +62,7 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 				DRAWER.addChild(new NoResultsFoundLabelFlowComponent());
 			} else {
 				QUERY.getResults().forEach(stack ->
-					DRAWER.addChild(new FlowItemStack(
+					DRAWER.addChild(new ItemStackFlowComponent(
 						stack,
 						new Position()
 					) {
@@ -86,7 +86,7 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 
 	private static class NoResultsFoundLabelFlowComponent extends FlowComponent {
 		public NoResultsFoundLabelFlowComponent() {
-			super(new Position(), FlowItemStack.ITEM_TOTAL_SIZE);
+			super(new Position(), ItemStackFlowComponent.DEFAULT_SIZE);
 		}
 
 		@Override

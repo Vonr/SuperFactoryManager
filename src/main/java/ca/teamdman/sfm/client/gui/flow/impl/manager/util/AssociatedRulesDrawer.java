@@ -5,13 +5,12 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackTileEntityRuleFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStack;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -21,6 +20,7 @@ import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData.FilterMo
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -142,7 +142,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		}
 	}
 
-	private class ChildRulesDrawerItem extends FlowItemStack implements
+	private class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 		FlowDataHolder<ItemStackTileEntityRuleFlowData> {
 
 		public ItemStackTileEntityRuleFlowData data;
@@ -205,7 +205,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		}
 	}
 
-	private class SelectionRulesDrawerItem extends FlowItemStack {
+	private class SelectionRulesDrawerItem extends ItemStackFlowComponent {
 
 		public ItemStackTileEntityRuleFlowData DATA;
 
@@ -245,7 +245,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		public EditChildrenButton() {
 			super(
 				new Position(),
-				new Size(FlowItemStack.ITEM_TOTAL_WIDTH, FlowItemStack.ITEM_TOTAL_HEIGHT),
+				ItemStackFlowComponent.DEFAULT_SIZE.copy(),
 				CONST.SELECTED
 			);
 			setDraggable(false);
@@ -275,7 +275,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		public AddRuleButton() {
 			super(
 				new Position(),
-				new Size(FlowItemStack.ITEM_TOTAL_WIDTH, FlowItemStack.ITEM_TOTAL_HEIGHT),
+				ItemStackFlowComponent.DEFAULT_SIZE.copy(),
 				CONST.SELECTED
 			);
 			setDraggable(false);
@@ -291,7 +291,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 					"New tile entity rule",
 					items[(int) (Math.random() * items.length)],
 					new Position(0, 0),
-					FilterMode.WHITELIST
+					FilterMode.WHITELIST,
+					Collections.emptyList()
 				)
 			);
 		}

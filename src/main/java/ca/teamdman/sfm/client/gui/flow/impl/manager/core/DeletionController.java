@@ -23,8 +23,8 @@ public class DeletionController extends FlowComponent {
 		if (keyCode == GLFW.GLFW_KEY_DELETE) {
 			Optional<FlowDataHolder> elem = CONTROLLER.getElementUnderMouse(mx, my)
 				.filter(FlowDataHolder.class::isInstance)
-				.map(FlowDataHolder.class::cast);
-//				.filter(FlowDataHolder::isDeletable);
+				.map(FlowDataHolder.class::cast)
+				.filter(FlowDataHolder::isDeletable);
 			elem.ifPresent(holder -> PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
 				CONTROLLER.SCREEN.getContainer().windowId,
 				CONTROLLER.SCREEN.getContainer().getSource().getPos(),

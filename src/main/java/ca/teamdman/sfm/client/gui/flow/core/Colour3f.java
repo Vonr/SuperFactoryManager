@@ -51,6 +51,7 @@ public class Colour3f {
 		public static final Colour3f SCREEN_BACKGROUND = new Colour3f(0.78f, 0.78f, 0.78f);
 		public static final Colour3f SELECTED = new Colour3f(0.4f, 0.8f, 0.4f);
 		public static final Colour3f TEXT_LIGHT = new Colour3f(0.8f, 0.8f, 0.8f);
+		public static final Colour3f TEXT_DARK = new Colour3f(0x020202);
 		public static final Colour3f TEXT_NORMAL = new Colour3f(0.4f, 0.4f, 0.4f);
 		public static final Colour3f WHITE = new Colour3f(0xFFFFFF);
 		public static final Colour3f TEXT_DEBUG = new Colour3f(0x2222BB);

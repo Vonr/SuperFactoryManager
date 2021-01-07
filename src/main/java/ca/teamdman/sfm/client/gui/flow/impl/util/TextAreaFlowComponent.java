@@ -19,12 +19,19 @@ import org.lwjgl.glfw.GLFW;
  * @see net.minecraft.client.gui.fonts.TextInputUtil
  * @see net.minecraft.util.text.TextFormatting
  */
-public class FlowTextArea extends FlowComponent {
+public class TextAreaFlowComponent extends FlowComponent {
 
 	private final TextFieldWidget delegate;
+	private boolean debounce = false;
 	private String content;
 
-	public FlowTextArea(BaseScreen screen, String content, String placeholder, Position pos, Size size) {
+	public TextAreaFlowComponent(
+		BaseScreen screen,
+		String content,
+		String placeholder,
+		Position pos,
+		Size size
+	) {
 		super(new WidgetPositionDelegate(pos), new WidgetSizeDelegate(size));
 		this.content = content;
 		this.delegate = new PatchedTextFieldWidget(
@@ -40,8 +47,18 @@ public class FlowTextArea extends FlowComponent {
 		((WidgetSizeDelegate) getSize()).setWidget(delegate);
 	}
 
+	public void setContent(String content) {
+		debounce = true;
+		delegate.setText(content);
+		debounce = false;
+	}
+
 	public void setResponder(Consumer<String> responder) {
-		delegate.setResponder(responder);
+		delegate.setResponder(s -> {
+			if (!debounce) {
+				responder.accept(s);
+			}
+		});
 	}
 
 	@Override
@@ -95,9 +112,10 @@ public class FlowTextArea extends FlowComponent {
 
 	private static class PatchedTextFieldWidget extends TextFieldWidget {
 
+		protected final FontRenderer FONT;
 		private final String PLACEHOLDER_TEXT;
 		private MatrixStack matrixStack;
-		protected final FontRenderer FONT;
+
 		public PatchedTextFieldWidget(
 			FontRenderer font,
 			int x,
@@ -125,6 +143,14 @@ public class FlowTextArea extends FlowComponent {
 		}
 
 		@Override
+		protected void drawSelectionBox(int startX, int startY, int endX, int endY) {
+			RenderSystem.pushMatrix();
+			RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
+			super.drawSelectionBox(startX, startY, endX, endY);
+			RenderSystem.popMatrix();
+		}
+
+		@Override
 		public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 			super.render(matrixStack, mouseX, mouseY, partialTicks);
 			if (!isFocused() && getText().length() == 0) {
@@ -136,14 +162,6 @@ public class FlowTextArea extends FlowComponent {
 					7368816
 				);
 			}
-		}
-
-		@Override
-		protected void drawSelectionBox(int startX, int startY, int endX, int endY) {
-			RenderSystem.pushMatrix();
-			RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
-			super.drawSelectionBox(startX, startY, endX, endY);
-			RenderSystem.popMatrix();
 		}
 	}
 }

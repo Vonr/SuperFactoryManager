@@ -43,7 +43,7 @@ public class FlowDataSerializerRegistrar {
 			new FlowTimerTriggerDataSerializer(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
 			new FlowTileEntityRuleDataSerializer(new ResourceLocation(SFM.MOD_ID, "tile_entity_rule")),
 			new ItemStackComparerMatcherFlowDataSerializer(
-				new ResourceLocation(SFM.MOD_ID, "itemstack_comparer_matcher"))
+				new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher"))
 		);
 	}
 

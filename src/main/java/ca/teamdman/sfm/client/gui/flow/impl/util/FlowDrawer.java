@@ -39,14 +39,6 @@ public class FlowDrawer extends FlowContainer {
 		return MAX_ITEMS_PER_ROW;
 	}
 
-	public int getMaxHeight() {
-		return (itemMaxHeight + ITEM_MARGIN_Y) * getMaxItemsPerColumn() + PADDING_Y;
-	}
-
-	public int getMaxItemsPerColumn() {
-		return MAX_ITEMS_PER_COLUMN;
-	}
-
 	public void setShrinkToFit(boolean value) {
 		this.shrinkToFit = value;
 	}
@@ -85,7 +77,11 @@ public class FlowDrawer extends FlowContainer {
 			0,
 			Math.max(
 				0,
-				getWrappedY(getChildren().size() - getItemsPerRow() * (getItemsPerColumn()-2))
+				getWrappedY(
+					(getChildren().size() + getChildren().size() % getMaxItemsPerRow())
+						+ getItemsPerRow()
+						- (getMaxItemsPerColumn() - 1) * getMaxItemsPerRow()
+				)
 			)
 		);
 	}
@@ -108,8 +104,6 @@ public class FlowDrawer extends FlowContainer {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		if (scroll > 0)
-		System.out.println(scroll);
 		screen.clearRect(
 			matrixStack,
 			getPosition().getX(),
@@ -169,6 +163,7 @@ public class FlowDrawer extends FlowContainer {
 			CONST.PANEL_BORDER
 		);
 
+		// Draw tooltips without the clipping zone
 		matrixStack.push();
 		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
 		for (FlowComponent c : getChildren()) {
@@ -183,6 +178,14 @@ public class FlowDrawer extends FlowContainer {
 			}
 		}
 		matrixStack.pop();
+	}
+
+	public int getMaxHeight() {
+		return (itemMaxHeight + ITEM_MARGIN_Y) * getMaxItemsPerColumn() + PADDING_Y;
+	}
+
+	public int getMaxItemsPerColumn() {
+		return MAX_ITEMS_PER_COLUMN;
 	}
 
 	public void scrollDown() {
@@ -209,7 +212,7 @@ public class FlowDrawer extends FlowContainer {
 
 	public int getWrappedX(int index) {
 		return getItemColumn(index)
-			* (FlowItemStack.ITEM_TOTAL_WIDTH + ITEM_MARGIN_X)
+			* (itemMaxWidth + ITEM_MARGIN_X)
 			+ ITEM_MARGIN_X / 2
 			+ PADDING_X / 2;
 	}
@@ -224,7 +227,7 @@ public class FlowDrawer extends FlowContainer {
 
 	public int getWrappedY(int index) {
 		return getItemRow(index)
-			* (FlowItemStack.ITEM_TOTAL_HEIGHT + ITEM_MARGIN_Y)
+			* (itemMaxHeight + ITEM_MARGIN_Y)
 			+ ITEM_MARGIN_Y / 2
 			+ PADDING_Y / 2;
 	}
