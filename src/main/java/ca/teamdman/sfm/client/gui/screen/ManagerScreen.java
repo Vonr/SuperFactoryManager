@@ -5,7 +5,7 @@ package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMUtil;
-import ca.teamdman.sfm.client.gui.flow.core.ControllerScreen;
+import ca.teamdman.sfm.client.gui.flow.core.ComponentScreen;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.data.FlowData;
@@ -16,7 +16,7 @@ import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.text.ITextComponent;
 
-public class ManagerScreen extends ControllerScreen<ManagerFlowController> implements
+public class ManagerScreen extends ComponentScreen<ManagerFlowController> implements
 	IHasContainer<ManagerContainer> {
 	private final ManagerFlowController CONTROLLER;
 	private final ManagerContainer CONTAINER;
@@ -40,11 +40,11 @@ public class ManagerScreen extends ControllerScreen<ManagerFlowController> imple
 			"Loading {} data entries from tile",
 			CONTAINER.getSource().getFlowDataContainer().size()
 		);
-		getController().rebuildChildren();
+		getComponent().rebuildChildren();
 	}
 
 	@Override
-	public ManagerFlowController getController() {
+	public ManagerFlowController getComponent() {
 		return CONTROLLER;
 	}
 

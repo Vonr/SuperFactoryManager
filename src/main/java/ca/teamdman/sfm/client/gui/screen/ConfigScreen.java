@@ -3,11 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.screen;
 
-import ca.teamdman.sfm.client.gui.flow.core.ControllerScreen;
+import ca.teamdman.sfm.client.gui.flow.core.ComponentScreen;
 import ca.teamdman.sfm.client.gui.flow.impl.config.ConfigComponent;
 import net.minecraft.util.text.ITextComponent;
 
-public class ConfigScreen extends ControllerScreen<ConfigComponent> {
+public class ConfigScreen extends ComponentScreen<ConfigComponent> {
 
 	public ConfigComponent CONTROLLER;
 
@@ -21,7 +21,7 @@ public class ConfigScreen extends ControllerScreen<ConfigComponent> {
 	}
 
 	@Override
-	public ConfigComponent getController() {
+	public ConfigComponent getComponent() {
 		return CONTROLLER;
 	}
 }
