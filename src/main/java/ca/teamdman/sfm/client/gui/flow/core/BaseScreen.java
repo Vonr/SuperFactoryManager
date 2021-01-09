@@ -70,74 +70,12 @@ public abstract class BaseScreen extends Screen {
 		return scaledHeight;
 	}
 
-	public int getLatestMouseX() {
-		return latestMouseX;
-	}
-
-	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		return super.keyPressed(keyCode, scanCode, modifiers)
-			|| keyPressedScaled(keyCode, scanCode, modifiers, getLatestMouseX(), getLatestMouseY());
-	}
-
-	public boolean keyPressedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		return false;
-	}
-
-	@Override
-	public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-		return super.keyReleased(keyCode, scanCode, modifiers)
-			|| keyReleasedScaled(
-			keyCode, scanCode, modifiers, getLatestMouseX(), getLatestMouseY());
-	}
-
-	public boolean keyReleasedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		return false;
-	}
-
-	public int getLatestMouseY() {
-		return latestMouseY;
-	}
-
-	public FontRenderer getFontRenderer() {
-		return this.font != null ? this.font : Minecraft.getInstance().fontRenderer;
-	}
-
 	public ItemRenderer getItemRenderer() {
 		return this.itemRenderer;
 	}
 
-	/**
-	 * Draws a string to the screen
-	 */
-	public void drawString(
-		MatrixStack matrixStack, String str, int x,
-		int y, float scale, Colour3f colour
-	) {
-		matrixStack.push();
-		matrixStack.scale(scale, scale, 1F);
-		getFontRenderer().drawString(matrixStack, str, (int) ((x) / scale), (int) ((y) / scale), colour.toInt());
-		matrixStack.pop();
-	}
-
-	public void drawString(MatrixStack matrixStack, String str, int x, int y, Colour3f colour) {
-		drawString(matrixStack, str, x, y, 1, colour);
-	}
-
 	public void drawCenteredString(MatrixStack matrixStack, String str, int x, int y, Colour3f colour) {
 		drawCenteredString(matrixStack, str, x, y, 1, colour);
-	}
-
-	public void drawCenteredString(MatrixStack matrixStack, String str, FlowComponent component, float scale, Colour3f colour) {
-		drawCenteredString(
-			matrixStack,
-			str,
-			component.getPosition().getX() + component.getSize().getWidth() / 2,
-			component.getPosition().getY() + (component.getSize().getHeight() - (int) (8 * scale)) / 2,
-			scale,
-			colour
-		);
-		//this.x + this.width / 2, this.y + (this.height - 8) / 2
 	}
 
 	public void drawCenteredString(MatrixStack matrixStack, String str, int x, int y, float scale, Colour3f colour) {
@@ -153,31 +91,20 @@ public abstract class BaseScreen extends Screen {
 		matrixStack.pop();
 	}
 
-	@Override
-	public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
-		return mouseScrolledScaled(
-			scaleX(mouseX),
-			scaleY(mouseY),
-			scroll
+	public FontRenderer getFontRenderer() {
+		return this.font != null ? this.font : Minecraft.getInstance().fontRenderer;
+	}
+
+	public void drawCenteredString(MatrixStack matrixStack, String str, FlowComponent component, float scale, Colour3f colour) {
+		drawCenteredString(
+			matrixStack,
+			str,
+			component.getPosition().getX() + component.getSize().getWidth() / 2,
+			component.getPosition().getY() + (component.getSize().getHeight() - (int) (8 * scale)) / 2,
+			scale,
+			colour
 		);
-	}
-
-	@Override
-	public boolean charTyped(char codePoint, int modifiers) {
-		return charTypedScaled(
-			codePoint,
-			modifiers,
-			scaleX(getLatestMouseX()),
-			scaleY(getLatestMouseY())
-		);
-	}
-
-	public boolean charTypedScaled(char codePoint, int modifiers, int mx, int my) {
-		return false;
-	}
-
-	public boolean mouseScrolledScaled(int mx, int my, double scroll) {
-		return false;
+		//this.x + this.width / 2, this.y + (this.height - 8) / 2
 	}
 
 	/**
@@ -195,6 +122,10 @@ public abstract class BaseScreen extends Screen {
 			y,
 			colour
 		);
+	}
+
+	public void drawString(MatrixStack matrixStack, String str, int x, int y, Colour3f colour) {
+		drawString(matrixStack, str, x, y, 1, colour);
 	}
 
 	/**
@@ -216,17 +147,16 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
-	 * Gets the ratio from screen to local.
-	 *
-	 * @return Scaling factor
+	 * Draws a string to the screen
 	 */
-	public double getScale() {
-		double xFactor = (width * 0.9F) / this.scaledWidth;
-		double yFactor = (height * 0.9F) / this.scaledHeight;
-		double mult = Math.min(xFactor, yFactor);
-		mult = Math.min(1, mult);
-		mult = Math.floor(mult * 1000) / 1000F;
-		return mult;
+	public void drawString(
+		MatrixStack matrixStack, String str, int x,
+		int y, float scale, Colour3f colour
+	) {
+		matrixStack.push();
+		matrixStack.scale(scale, scale, 1F);
+		getFontRenderer().drawString(matrixStack, str, (int) ((x) / scale), (int) ((y) / scale), colour.toInt());
+		matrixStack.pop();
 	}
 
 	@Override
@@ -251,9 +181,94 @@ public abstract class BaseScreen extends Screen {
 		return false;
 	}
 
+	@Override
+	public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
+		int mx = scaleX(x);
+		int my = scaleY(y);
+		int dmx = scaleX(dx);
+		int dmy = scaleY(dy);
+		return onMouseDraggedScaled(mx, my, button, dmx, dmy);
+	}
 
 	@Override
-	public boolean isPauseScreen() {
+	public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
+		return mouseScrolledScaled(
+			scaleX(mouseX),
+			scaleY(mouseY),
+			scroll
+		);
+	}
+
+	@Override
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+		return super.keyReleased(keyCode, scanCode, modifiers)
+			|| keyReleasedScaled(
+			keyCode, scanCode, modifiers, getLatestMouseX(), getLatestMouseY());
+	}
+
+	public boolean keyReleasedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		return false;
+	}
+
+	@Override
+	public boolean charTyped(char codePoint, int modifiers) {
+		return charTypedScaled(
+			codePoint,
+			modifiers,
+			scaleX(getLatestMouseX()),
+			scaleY(getLatestMouseY())
+		);
+	}
+
+	public boolean charTypedScaled(char codePoint, int modifiers, int mx, int my) {
+		return false;
+	}
+
+	public boolean mouseScrolledScaled(int mx, int my, double scroll) {
+		return false;
+	}
+
+	/**
+	 * Converts a screen X value to a local one.
+	 *
+	 * @param x Screen value
+	 * @return Local value
+	 */
+	public int scaleX(double x) {
+		double scale = getScale();
+		x /= scale;
+		x -= (this.width - this.scaledWidth * scale) / (2 * scale);
+		return (int) x;
+	}
+
+	/**
+	 * Converts a screen Y value to a local one.
+	 *
+	 * @param y Screen value
+	 * @return Local value
+	 */
+	public int scaleY(double y) {
+		double scale = getScale();
+		y /= scale;
+		y -= (this.height - this.scaledHeight * scale) / (2 * scale);
+		return (int) y;
+	}
+
+	/**
+	 * Gets the ratio from screen to local.
+	 *
+	 * @return Scaling factor
+	 */
+	public double getScale() {
+		double xFactor = (width * 0.9F) / this.scaledWidth;
+		double yFactor = (height * 0.9F) / this.scaledHeight;
+		double mult = Math.min(xFactor, yFactor);
+		mult = Math.min(1, mult);
+		mult = Math.floor(mult * 1000) / 1000F;
+		return mult;
+	}
+
+	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
 		return false;
 	}
 
@@ -338,6 +353,24 @@ public abstract class BaseScreen extends Screen {
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
 
+	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		return super.keyPressed(keyCode, scanCode, modifiers)
+			|| keyPressedScaled(keyCode, scanCode, modifiers, getLatestMouseX(), getLatestMouseY());
+	}
+
+	public boolean keyPressedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		return false;
+	}
+
+	public int getLatestMouseX() {
+		return latestMouseX;
+	}
+
+	public int getLatestMouseY() {
+		return latestMouseY;
+	}
+
 	/**
 	 * Initializes content, centers GUI on screen
 	 */
@@ -348,17 +381,38 @@ public abstract class BaseScreen extends Screen {
 		this.guiTop = (this.height - this.scaledHeight) / 2;
 	}
 
+	@Override
+	public boolean isPauseScreen() {
+		return false;
+	}
+
 	/**
-	 * Converts a screen X value to a local one.
+	 * Sets GL state to fit the current scale ratio.
 	 *
-	 * @param x Screen value
-	 * @return Local value
+	 * @param matrixStack
 	 */
-	public int scaleX(double x) {
-		double scale = getScale();
-		x /= scale;
-		x -= (this.width - this.scaledWidth * scale) / (2 * scale);
-		return (int) x;
+	public void startScaling(MatrixStack matrixStack) {
+		float scale = (float) getScale();
+		matrixStack.push();
+		matrixStack.translate(this.width / 2F, this.height / 2F, 0.0F);
+		matrixStack.scale(scale, scale, 1);
+//		matrixStack.translate(-guiLeft, -guiTop, 0.0F);
+		matrixStack.translate(-this.scaledWidth / 2F, -this.scaledHeight / 2F, 0.0F);
+	}
+
+	public void drawScaled(
+		MatrixStack matrixStack, int mouseX,
+		int mouseY, float partialTicks
+	) {
+	}
+
+	/**
+	 * Reverts GL state to normal scaling.
+	 *
+	 * @param matrixStack
+	 */
+	public void stopScaling(MatrixStack matrixStack) {
+		matrixStack.pop();
 	}
 
 	/**
@@ -383,6 +437,51 @@ public abstract class BaseScreen extends Screen {
 		drawRect(matrixStack, x + width - thickness, y, thickness, height, colour);
 	}
 
+	public void drawRect(
+		MatrixStack matrixStack,
+		int x,
+		int y,
+		int width,
+		int height,
+		Colour3f colour
+	) {
+		drawQuad(matrixStack,
+			x, y,
+			x, y + height,
+			x + width, y + height,
+			x + width, y,
+			colour
+		);
+	}
+
+	public void drawQuad(
+		MatrixStack matrixStack, int ax, int ay, int bx, int by, int cx, int cy,
+		int dx, int dy, Colour3f colour
+	) {
+		Matrix4f m = matrixStack.getLast().getMatrix();
+		matrixStack.push();
+		RenderSystem.disableTexture();
+		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+		bufferBuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+		bufferBuilder.pos(m, ax, ay, 0)
+			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, bx, by, 0)
+			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, cx, cy, 0)
+			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
+			.endVertex();
+		bufferBuilder.pos(m, dx, dy, 0)
+			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
+			.endVertex();
+		bufferBuilder.finishDrawing();
+		WorldVertexBufferUploader.draw(bufferBuilder);
+		RenderSystem.enableTexture();
+//		RenderSystem.disableBlend();
+		matrixStack.pop();
+	}
+
 	/**
 	 * Converts a local x value into a screen one.
 	 *
@@ -394,6 +493,44 @@ public abstract class BaseScreen extends Screen {
 		x += (this.width - this.scaledWidth * scale) / (2 * scale);
 		x *= scale;
 		return x;
+	}
+
+	/**
+	 * Converts a local Y value into a screen one.
+	 *
+	 * @param y Local value
+	 * @return Screen value
+	 */
+	public double unscaleY(double y) {
+		double scale = getScale();
+		y += (this.height - this.scaledHeight * scale) / (2 * scale);
+		y *= scale;
+		return y;
+	}
+
+	/**
+	 * Draws a scaled version of the item
+	 */
+	public void drawItemStack(MatrixStack matrixStack, ItemStack stack, int x, int y) {
+		RenderSystem.pushMatrix();
+		// Minecraft ItemStack renderer does not currently use MatrixStack
+		// Therefore, we must manually apply our current stack to the RenderSystem.
+		RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
+		Minecraft.getInstance().getItemRenderer().zLevel = -100;
+		Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(
+			stack,
+			x,
+			y
+		);
+		Minecraft.getInstance().getItemRenderer().zLevel = 0;
+		RenderSystem.popMatrix();
+	}
+
+	public void clearRect(MatrixStack matrixStack, int x, int y, int width, int height) {
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+		scissorRect(matrixStack, x, y, width, height);
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 	}
 
 	/**
@@ -436,71 +573,6 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
-	 * Converts a screen Y value to a local one.
-	 *
-	 * @param y Screen value
-	 * @return Local value
-	 */
-	public int scaleY(double y) {
-		double scale = getScale();
-		y /= scale;
-		y -= (this.height - this.scaledHeight * scale) / (2 * scale);
-		return (int) y;
-	}
-
-	/**
-	 * Converts a local Y value into a screen one.
-	 *
-	 * @param y Local value
-	 * @return Screen value
-	 */
-	public double unscaleY(double y) {
-		double scale = getScale();
-		y += (this.height - this.scaledHeight * scale) / (2 * scale);
-		y *= scale;
-		return y;
-	}
-
-	/**
-	 * Draws a scaled version of the item
-	 */
-	public void drawItemStack(MatrixStack matrixStack, ItemStack stack, int x, int y) {
-		RenderSystem.pushMatrix();
-		// Minecraft ItemStack renderer does not currently use MatrixStack
-		// Therefore, we must manually apply our current stack to the RenderSystem.
-		RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
-		Minecraft.getInstance().getItemRenderer().zLevel = -100;
-		Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(
-			stack,
-			x,
-			y
-		);
-		Minecraft.getInstance().getItemRenderer().zLevel = 0;
-		RenderSystem.popMatrix();
-	}
-
-	public void clearRect(MatrixStack matrixStack, int x, int y, int width, int height) {
-		GL11.glEnable(GL11.GL_SCISSOR_TEST);
-		scissorRect(matrixStack, x, y, width, height);
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		GL11.glDisable(GL11.GL_SCISSOR_TEST);
-	}
-
-	/**
-	 * Sets GL state to fit the current scale ratio.
-	 *
-	 * @param matrixStack
-	 */
-	public void startScaling(MatrixStack matrixStack) {
-		float scale = (float) getScale();
-		matrixStack.push();
-		matrixStack.translate(this.width / 2F, this.height / 2F, 0.0F);
-		matrixStack.scale(scale, scale, 1);
-//		matrixStack.translate(-guiLeft, -guiTop, 0.0F);
-		matrixStack.translate(-this.scaledWidth / 2F, -this.scaledHeight / 2F, 0.0F);
-	}
-
-	/**
 	 * Sets the global GL state to fit the current scale ratio.
 	 */
 	public void startScaling() {
@@ -512,16 +584,6 @@ public abstract class BaseScreen extends Screen {
 		RenderSystem.translatef(-this.scaledWidth / 2F, -this.scaledHeight / 2F, 0.0F);
 	}
 
-
-	/**
-	 * Reverts GL state to normal scaling.
-	 *
-	 * @param matrixStack
-	 */
-	public void stopScaling(MatrixStack matrixStack) {
-		matrixStack.pop();
-	}
-
 	/**
 	 * Reverts global GL state to normal scaling.
 	 */
@@ -529,76 +591,8 @@ public abstract class BaseScreen extends Screen {
 		RenderSystem.popMatrix();
 	}
 
-	@Override
-	public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
-		int mx = scaleX(x);
-		int my = scaleY(y);
-		int dmx = scaleX(dx);
-		int dmy = scaleY(dy);
-		return onMouseDraggedScaled(mx, my, button, dmx, dmy);
-	}
-
-	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
-		return false;
-	}
-
-	public void drawScaled(
-		MatrixStack matrixStack, int mouseX,
-		int mouseY, float partialTicks
-	) {
-	}
-
 	public void drawLine(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
 		drawLine(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);
-	}
-
-	public void drawArrow(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
-		drawArrow(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);
-	}
-
-	public void drawQuad(
-		MatrixStack matrixStack, int ax, int ay, int bx, int by, int cx, int cy,
-		int dx, int dy, Colour3f colour
-	) {
-		Matrix4f m = matrixStack.getLast().getMatrix();
-		matrixStack.push();
-		RenderSystem.disableTexture();
-		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-		bufferBuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-		bufferBuilder.pos(m, ax, ay, 0)
-			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
-			.endVertex();
-		bufferBuilder.pos(m, bx, by, 0)
-			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
-			.endVertex();
-		bufferBuilder.pos(m, cx, cy, 0)
-			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
-			.endVertex();
-		bufferBuilder.pos(m, dx, dy, 0)
-			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
-			.endVertex();
-		bufferBuilder.finishDrawing();
-		WorldVertexBufferUploader.draw(bufferBuilder);
-		RenderSystem.enableTexture();
-//		RenderSystem.disableBlend();
-		matrixStack.pop();
-	}
-
-	public void drawRect(
-		MatrixStack matrixStack,
-		int x,
-		int y,
-		int width,
-		int height,
-		Colour3f colour
-	) {
-		drawQuad(matrixStack,
-			x, y,
-			x, y + height,
-			x + width, y + height,
-			x + width, y,
-			colour
-		);
 	}
 
 	public void drawLine(MatrixStack matrixStack, int x1, int y1, int x2, int y2, Colour3f colour) {
@@ -623,6 +617,10 @@ public abstract class BaseScreen extends Screen {
 			x1 + dy, y1 - dx,
 			colour
 		);
+	}
+
+	public void drawArrow(MatrixStack matrixStack, Position from, Position to, Colour3f colour) {
+		drawArrow(matrixStack, from.getX(), from.getY(), to.getX(), to.getY(), colour);
 	}
 
 	public void drawArrow(
