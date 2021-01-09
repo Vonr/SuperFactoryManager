@@ -40,7 +40,7 @@ public class FlowToggleBox extends FlowButton {
 		int checkMargin = 2;
 		Colour3f colour = isChecked()
 			? CONST.SELECTED
-			: isInBounds(mx, my) ? CONST.HIGHLIGHT : null;
+			: isHovering() ? CONST.HIGHLIGHT : null;
 		if (colour != null) {
 			screen.drawRect(
 				matrixStack,
@@ -52,7 +52,7 @@ public class FlowToggleBox extends FlowButton {
 			);
 		}
 
-		drawTooltip(screen, matrixStack, mx, my, deltaTime);
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	public boolean isChecked() {

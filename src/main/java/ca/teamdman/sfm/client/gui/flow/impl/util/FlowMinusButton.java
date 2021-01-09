@@ -29,7 +29,7 @@ public abstract class FlowMinusButton extends FlowButton {
 		int h = getSize().getHeight();
 		int thickness = 2;
 		int margin = 2;
-		if (isInBounds(mx, my)) {
+		if (isHovering()) {
 			// highlight
 			screen.drawRect(
 				matrixStack,
@@ -49,6 +49,6 @@ public abstract class FlowMinusButton extends FlowButton {
 			thickness,
 			COLOUR
 		);
-		super.drawTooltip(screen, matrixStack, mx, my, deltaTime);
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 }

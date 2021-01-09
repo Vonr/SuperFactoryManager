@@ -29,7 +29,7 @@ public abstract class FlowPlusButton extends FlowButton {
 		int h = getSize().getHeight();
 		int thickness = 4;
 		int margin = 2;
-		if (isInBounds(mx, my)) {
+		if (isHovering()) {
 			// highlight
 			screen.drawRect(
 				matrixStack,

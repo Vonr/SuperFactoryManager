@@ -51,7 +51,6 @@ public class FlowRadioButton extends FlowButton {
 
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		boolean hover = isInBounds(mx, my);
 		screen.drawRect(
 			matrixStack,
 			getPosition().getX(),
@@ -59,8 +58,8 @@ public class FlowRadioButton extends FlowButton {
 			getSize().getWidth(),
 			getSize().getHeight(),
 			isSelected()
-				? (hover ? BUTTON_BACKGROUND_SELECTED_HOVER : BUTTON_BACKGROUND_SELECTED)
-				: (hover ? BUTTON_BACKGROUND_NORMAL_HOVER : BUTTON_BACKGROUND_NORMAL)
+				? (isHovering() ? BUTTON_BACKGROUND_SELECTED_HOVER : BUTTON_BACKGROUND_SELECTED)
+				: (isHovering() ? BUTTON_BACKGROUND_NORMAL_HOVER : BUTTON_BACKGROUND_NORMAL)
 		);
 
 		screen.drawBorder(
@@ -71,8 +70,8 @@ public class FlowRadioButton extends FlowButton {
 			getSize().getHeight(),
 			1,
 			isSelected()
-				? (hover ? BUTTON_BORDER_SELECTED_HOVER : BUTTON_BORDER_SELECTED)
-				: (hover ? BUTTON_BORDER_NORMAL_HOVER : BUTTON_BORDER_NORMAL)
+				? (isHovering() ? BUTTON_BORDER_SELECTED_HOVER : BUTTON_BORDER_SELECTED)
+				: (isHovering() ? BUTTON_BORDER_NORMAL_HOVER : BUTTON_BORDER_NORMAL)
 		);
 
 		screen.drawCenteredString(

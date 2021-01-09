@@ -24,6 +24,7 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 	private boolean enabled = true;
 	private boolean draggable = true;
 	private boolean isDragging = false;
+	private boolean isHovering = false;
 	private Position position;
 	private Size size;
 
@@ -44,6 +45,24 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		return getPosition().withOffset(getSize().getWidth() / 2, getSize().getHeight() / 2);
 	}
 
+	@Override
+	public Position getPosition() {
+		return position;
+	}
+
+	public void setPosition(Position position) {
+		this.position = position;
+	}
+
+	@Override
+	public Size getSize() {
+		return size;
+	}
+
+	public void setSize(Size size) {
+		this.size = size;
+	}
+
 	public boolean mousePressed(int mx, int my, int button) {
 		if (canStartDrag() && isInBounds(mx, my)) {
 			isDragging = true;
@@ -54,6 +73,22 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		// Consume click event if mouse is over background
 		// we don't want elements occluded by this one to detect events
 		return isInBounds(mx, my);
+	}
+
+	public boolean canStartDrag() {
+		return isDraggable() && Screen.hasAltDown();
+	}
+
+	public boolean isInBounds(int mx, int my) {
+		return getSize().contains(getPosition(), mx, my);
+	}
+
+	public boolean isDraggable() {
+		return draggable;
+	}
+
+	public void setDraggable(boolean draggable) {
+		this.draggable = draggable;
 	}
 
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
@@ -80,6 +115,10 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		}
 	}
 
+	public void onDrag(int dx, int dy, int mx, int my) {
+
+	}
+
 	public boolean mouseReleased(int mx, int my, int button) {
 		if (isDragging) {
 			isDragging = false;
@@ -97,37 +136,8 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		}
 	}
 
-	public void onDrag(int dx, int dy, int mx, int my) {
-
-	}
-
 	public void onDragFinished(int dx, int dy, int mx, int my) {
 
-	}
-
-	public boolean isVisible() {
-		return this.visible;
-	}
-
-	public void setVisible(boolean value) {
-		this.visible = value;
-	}
-
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	@Override
-	public Position getPosition() {
-		return position;
-	}
-
-	public void setPosition(Position position) {
-		this.position = position;
 	}
 
 	@Override
@@ -140,23 +150,10 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 			'}';
 	}
 
-	@Override
-	public Size getSize() {
-		return size;
-	}
-
-	public void setSize(Size size) {
-		this.size = size;
-	}
-
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		drawTooltip(screen, matrixStack, mx, my, deltaTime);
-	}
-
-	public boolean isTooltipEnabled(int mx, int my) {
-		return isInBounds(mx, my);
 	}
 
 	public void drawTooltip(
@@ -176,8 +173,19 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		}
 	}
 
+	public boolean isTooltipEnabled(int mx, int my) {
+		return isHovering(); // && isInBounds(mx, my);
+	}
+
 	public List<? extends ITextProperties> getTooltip() {
 		return new ArrayList<ITextComponent>();
+	}
+
+	/**
+	 * @return true if {@code this} is the top-most element with the mouse over top of it
+	 */
+	public boolean isHovering() {
+		return isHovering;
 	}
 
 	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
@@ -188,20 +196,25 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 			: Optional.empty();
 	}
 
-	public boolean isDraggable() {
-		return draggable;
+	public boolean isVisible() {
+		return this.visible;
 	}
 
-	public void setDraggable(boolean draggable) {
-		this.draggable = draggable;
+	public void setVisible(boolean value) {
+		this.visible = value;
 	}
 
-	public boolean canStartDrag() {
-		return isDraggable() && Screen.hasAltDown();
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	/**
 	 * Key press handler
+	 *
 	 * @return consume event
 	 */
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
@@ -210,6 +223,7 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 
 	/**
 	 * Key press handler
+	 *
 	 * @return consume event
 	 */
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
@@ -218,8 +232,9 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 
 	/**
 	 * Mouse scroll handler
-	 * @param mx Scaled mouse X coordinate
-	 * @param my Scaled mouse Y coordinate
+	 *
+	 * @param mx     Scaled mouse X coordinate
+	 * @param my     Scaled mouse Y coordinate
 	 * @param scroll Scroll amount
 	 * @return consume event
 	 */
@@ -229,10 +244,11 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 
 	/**
 	 * Keyboard character typed
+	 *
 	 * @param codePoint Key typed
 	 * @param modifiers modifiers?
-	 * @param mx Scaled mouse X coordinate
-	 * @param my Scaled mouse Y coordinate
+	 * @param mx        Scaled mouse X coordinate
+	 * @param my        Scaled mouse Y coordinate
 	 * @return consume event
 	 */
 	public boolean charTyped(char codePoint, int modifiers, int mx, int my) {
@@ -242,10 +258,7 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 	/**
 	 * Fired every screen tick
 	 */
-	public void tick() {}
-
-	public boolean isInBounds(int mx, int my) {
-		return getSize().contains(getPosition(), mx, my);
+	public void tick() {
 	}
 
 	public Position snapToEdge(Position outside) {
@@ -284,5 +297,10 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 
+	}
+
+	public boolean mouseMoved(int mx, int my, boolean consumed) {
+		isHovering = !consumed && isInBounds(mx, my);
+		return isHovering;
 	}
 }

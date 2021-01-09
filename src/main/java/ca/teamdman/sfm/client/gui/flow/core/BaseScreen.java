@@ -182,6 +182,17 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	@Override
+	public void mouseMoved(double xPos, double mouseY) {
+		int mx = scaleX(xPos);
+		int my = scaleY(mouseY);
+		mouseMovedScaled(mx, my);
+	}
+
+	public boolean mouseMovedScaled(int mx, int my) {
+		return false;
+	}
+
+	@Override
 	public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
 		int mx = scaleX(x);
 		int my = scaleY(y);

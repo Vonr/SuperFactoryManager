@@ -148,7 +148,6 @@ public class FlowDrawer extends FlowContainer {
 			}
 		}
 		matrixStack.pop();
-		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
@@ -177,6 +176,8 @@ public class FlowDrawer extends FlowContainer {
 			}
 		}
 		matrixStack.pop();
+
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	public int getMaxHeight() {

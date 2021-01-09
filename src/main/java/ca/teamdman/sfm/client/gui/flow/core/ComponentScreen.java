@@ -40,6 +40,11 @@ public abstract class ComponentScreen<T extends FlowComponent> extends BaseScree
 	}
 
 	@Override
+	public boolean mouseMovedScaled(int mx, int my) {
+		return getComponent().mouseMoved(mx, my, false);
+	}
+
+	@Override
 	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
 		return getComponent().mouseDragged(mx, my, button, dmx, dmy);
 	}

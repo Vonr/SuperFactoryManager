@@ -40,7 +40,7 @@ public class ItemStackFlowComponent extends FlowButton implements ISelectable {
 	) {
 		if (selected) {
 			drawBackground(screen, matrixStack, CONST.SELECTED);
-		} else if (isInBounds(mx, my)) {
+		} else if (isHovering()) {
 			drawBackground(screen, matrixStack, CONST.HIGHLIGHT);
 		}
 		screen.drawItemStack(
@@ -49,7 +49,7 @@ public class ItemStackFlowComponent extends FlowButton implements ISelectable {
 			getPosition().getX() + 2,
 			getPosition().getY() + 2
 		);
-		drawTooltip(screen, matrixStack, mx, my, deltaTime);
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	@Override

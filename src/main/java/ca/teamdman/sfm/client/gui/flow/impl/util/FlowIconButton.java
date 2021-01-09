@@ -84,13 +84,13 @@ public abstract class FlowIconButton extends FlowButton {
 
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		if (isInBounds(mx, my) || clicking) {
+		if (isHovering() || clicking) {
 			DEPRESSED_BACKGROUND.drawAt(screen, matrixStack, getPosition());
 		} else {
 			NORMAL_BACKGROUND.drawAt(screen, matrixStack, getPosition());
 		}
 		ICON.drawAt(screen, matrixStack, getPosition().getX() + 4, getPosition().getY() + 4);
-		drawTooltip(screen, matrixStack, mx, my, deltaTime);
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	public enum ButtonBackground {
