@@ -5,6 +5,8 @@ package ca.teamdman.sfm.client.gui.flow.core;
 
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.core.SizeHolder;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +16,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 
-public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
-	FlowViewHolder {
+public class FlowComponent implements PositionHolder, SizeHolder {
 
 	private final Position dragStart = new Position();
 	private final Position dragOffset = new Position();
@@ -39,12 +40,10 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 		this.size = size;
 	}
 
-	@Override
 	public Position getCentroid() {
 		return getPosition().withOffset(getSize().getWidth() / 2, getSize().getHeight() / 2);
 	}
 
-	@Override
 	public boolean mousePressed(int mx, int my, int button) {
 		if (canStartDrag() && isInBounds(mx, my)) {
 			isDragging = true;
@@ -57,7 +56,6 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 		return isInBounds(mx, my);
 	}
 
-	@Override
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
 		if (isDragging) {
 			int newX = mx - dragOffset.getX();
@@ -82,7 +80,6 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 		}
 	}
 
-	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
 		if (isDragging) {
 			isDragging = false;
@@ -125,11 +122,6 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 	}
 
 	@Override
-	public IFlowView getView() {
-		return this;
-	}
-
-	@Override
 	public Position getPosition() {
 		return position;
 	}
@@ -157,7 +149,6 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 		this.size = size;
 	}
 
-	@Override
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
@@ -207,5 +198,91 @@ public class FlowComponent implements IFlowController, IFlowTangible, IFlowView,
 
 	public boolean canStartDrag() {
 		return isDraggable() && Screen.hasAltDown();
+	}
+
+	/**
+	 * Key press handler
+	 * @return consume event
+	 */
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		return false;
+	}
+
+	/**
+	 * Key press handler
+	 * @return consume event
+	 */
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		return false;
+	}
+
+	/**
+	 * Mouse scroll handler
+	 * @param mx Scaled mouse X coordinate
+	 * @param my Scaled mouse Y coordinate
+	 * @param scroll Scroll amount
+	 * @return consume event
+	 */
+	public boolean mouseScrolled(int mx, int my, double scroll) {
+		return false;
+	}
+
+	/**
+	 * Keyboard character typed
+	 * @param codePoint Key typed
+	 * @param modifiers modifiers?
+	 * @param mx Scaled mouse X coordinate
+	 * @param my Scaled mouse Y coordinate
+	 * @return consume event
+	 */
+	public boolean charTyped(char codePoint, int modifiers, int mx, int my) {
+		return false;
+	}
+
+	/**
+	 * Fired every screen tick
+	 */
+	public void tick() {}
+
+	public boolean isInBounds(int mx, int my) {
+		return getSize().contains(getPosition(), mx, my);
+	}
+
+	public Position snapToEdge(Position outside) {
+		return new Position(
+			MathHelper.clamp(
+				outside.getX(),
+				getPosition().getX(),
+				getPosition().getX() + getSize().getWidth()
+			),
+			MathHelper.clamp(
+				outside.getY(),
+				getPosition().getY(),
+				getPosition().getY() + getSize().getHeight()
+			)
+		);
+	}
+
+	/**
+	 * Used to determine order of rendering. Lower number means rendered earlier, i.e., on bottom
+	 * Default layer is 0
+	 *
+	 * @return Render layer
+	 */
+	public int getZIndex() {
+		return 0;
+	}
+
+	/**
+	 * Fired each render tick
+	 *
+	 * @param mx        Scaled mouse x coordinate
+	 * @param my        Scaled mouse y coordinate
+	 * @param deltaTime Time elapsed since last draw
+	 */
+	public void drawGhost(
+		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+	) {
+
 	}
 }

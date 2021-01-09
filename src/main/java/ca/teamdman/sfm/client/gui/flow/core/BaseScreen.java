@@ -128,7 +128,7 @@ public abstract class BaseScreen extends Screen {
 		drawCenteredString(matrixStack, str, x, y, 1, colour);
 	}
 
-	public void drawCenteredString(MatrixStack matrixStack, String str, IFlowTangible component, float scale, Colour3f colour) {
+	public void drawCenteredString(MatrixStack matrixStack, String str, FlowComponent component, float scale, Colour3f colour) {
 		drawCenteredString(
 			matrixStack,
 			str,

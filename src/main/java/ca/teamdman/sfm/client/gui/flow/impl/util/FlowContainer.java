@@ -5,7 +5,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowView;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -26,7 +25,7 @@ public abstract class FlowContainer extends FlowComponent {
 		@Override
 		public boolean add(FlowComponent o) {
 			boolean rtn = super.add(o);
-			this.sort(Comparator.comparingInt(IFlowView::getZIndex));
+			this.sort(Comparator.comparingInt(FlowComponent::getZIndex));
 			return rtn;
 		}
 	};
