@@ -177,7 +177,7 @@ public class FlowDrawer extends FlowContainer {
 		}
 		matrixStack.pop();
 
-		super.draw(screen, matrixStack, mx, my, deltaTime);
+		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	public int getMaxHeight() {
