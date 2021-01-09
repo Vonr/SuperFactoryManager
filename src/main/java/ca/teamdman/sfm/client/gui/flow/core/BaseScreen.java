@@ -140,10 +140,6 @@ public abstract class BaseScreen extends Screen {
 		//this.x + this.width / 2, this.y + (this.height - 8) / 2
 	}
 
-	@SuppressWarnings("SuspiciousNameCombination")
-	// Forge mappings has a bad name for x,y,color params.
-	// Update should fix later. Current date: 2021-01-02
-	// Once warning is unused, should be removed.
 	public void drawCenteredString(MatrixStack matrixStack, String str, int x, int y, float scale, Colour3f colour) {
 		matrixStack.push();
 		matrixStack.scale(scale, scale, 1f);

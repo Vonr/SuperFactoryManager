@@ -3,8 +3,7 @@ package ca.teamdman.sfm.client.gui.flow.core;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.util.text.ITextComponent;
 
-public abstract class ComponentScreen<T extends FlowComponent> extends
-	BaseScreen {
+public abstract class ComponentScreen<T extends FlowComponent> extends BaseScreen {
 
 	public ComponentScreen(
 		ITextComponent titleIn,
