@@ -595,6 +595,9 @@ public abstract class BaseScreen extends Screen {
 		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);
 	}
 
+	/**
+	 * Disable scissor test, resume previous state
+	 */
 	public void endScissor() {
 		// Disable scissoring
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
