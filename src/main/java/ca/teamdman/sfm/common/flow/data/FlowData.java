@@ -5,6 +5,8 @@ package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraftforge.api.distmarker.Dist;
@@ -45,6 +47,10 @@ public abstract class FlowData {
 	public abstract FlowComponent createController(
 		FlowComponent parent
 	);
+
+	public Set<Class<? extends FlowData>> getDependencies() {
+		return Collections.emptySet();
+	}
 
 	public abstract <T extends FlowData> FlowDataSerializer<T> getSerializer();
 }

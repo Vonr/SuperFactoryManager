@@ -7,11 +7,13 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackTileEntityRuleFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule.ItemStackTileEntityRuleFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import com.google.common.collect.ImmutableSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -72,6 +74,12 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public enum FilterMode {
 		WHITELIST,
 		BLACKLIST
+	}
+
+
+	@Override
+	public Set<Class<? extends FlowData>> getDependencies() {
+		return ImmutableSet.of(ItemStackComparerMatcherFlowData.class);
 	}
 
 	public static class FlowTileEntityRuleDataSerializer extends

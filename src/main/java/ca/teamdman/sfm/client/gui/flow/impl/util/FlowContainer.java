@@ -21,6 +21,12 @@ import java.util.stream.Stream.Builder;
 
 public abstract class FlowContainer extends FlowComponent {
 
+	@Override
+	public String toString() {
+		return "FlowContainer{" +
+			"#children=" + children.size() +
+			'}';
+	}
 
 	private final ArrayList<FlowComponent> children = new ArrayList<FlowComponent>() {
 		@Override
@@ -58,8 +64,10 @@ public abstract class FlowContainer extends FlowComponent {
 	}
 
 	public Optional<FlowComponent> findFirstChild(UUID id) {
-		return getChildren().stream().filter(c -> c instanceof FlowDataHolder
-			&& ((FlowDataHolder) c).getData().getId().equals(id)).findFirst();
+		return getChildren().stream()
+			.filter(c -> c instanceof FlowDataHolder
+				&& ((FlowDataHolder) c).getData().getId().equals(id))
+			.findFirst();
 	}
 
 	public ArrayList<FlowComponent> getChildren() {
@@ -134,6 +142,31 @@ public abstract class FlowContainer extends FlowComponent {
 		}
 		matrixStack.pop();
 		super.draw(screen, matrixStack, mx, my, deltaTime);
+	}
+
+	@Override
+	public void drawTooltip(
+		BaseScreen screen,
+		MatrixStack matrixStack,
+		int mx,
+		int my,
+		float deltaTime
+	) {
+//		matrixStack.push();
+//		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
+//		for (FlowComponent c : getChildren()) {
+//			if (c.isVisible()) {
+//				c.drawTooltip(
+//					screen,
+//					matrixStack,
+//					mx - getPosition().getX(),
+//					my - getPosition().getY(),
+//					deltaTime
+//				);
+//			}
+//		}
+//		matrixStack.pop();
+		super.drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	@Override

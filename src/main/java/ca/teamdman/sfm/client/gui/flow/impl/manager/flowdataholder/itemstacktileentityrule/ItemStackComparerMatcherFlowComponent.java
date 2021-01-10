@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -14,7 +14,7 @@ import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-public class ItemStackComparerMatcherFlowDataDrawerItemFlowComponent extends
+public class ItemStackComparerMatcherFlowComponent extends
 	FlowContainer implements
 	FlowDataHolder<ItemStackComparerMatcherFlowData> {
 
@@ -27,16 +27,19 @@ public class ItemStackComparerMatcherFlowDataDrawerItemFlowComponent extends
 		return super.getZIndex() + 120;
 	}
 
-	public ItemStackComparerMatcherFlowDataDrawerItemFlowComponent(
-		ManagerFlowController CONTROLLER,
+	public ItemStackComparerMatcherFlowComponent(
+		ManagerFlowController parent,
 		ItemStackComparerMatcherFlowData data
 	) {
-		super(new Position(0, 0), new Size(100,24));
+		super(
+			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 0),
+			new Size(100,24)
+		);
 		this.data = data;
 
 		// Quantity input box
 		this.QUANTITY_INPUT = new TextAreaFlowComponent(
-			CONTROLLER.SCREEN,
+			parent.SCREEN,
 			Integer.toString(data.quantity),
 			"#",
 			new Position(4, 4),
@@ -47,7 +50,7 @@ public class ItemStackComparerMatcherFlowDataDrawerItemFlowComponent extends
 				int nextVal = Integer.parseInt(next);
 				if (nextVal != data.quantity) {
 					data.quantity = nextVal;
-					CONTROLLER.SCREEN.sendFlowDataToServer(data);
+					parent.SCREEN.sendFlowDataToServer(data);
 				}
 			} catch (NumberFormatException ignored) {
 			}
@@ -75,11 +78,12 @@ public class ItemStackComparerMatcherFlowDataDrawerItemFlowComponent extends
 		addChild(STACK);
 
 		// Add change listener
-		CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
+		parent.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			this,
 			ItemStackComparerMatcherFlowData.class
 		));
 
+		setDraggable(false);
 		setEnabled(false);
 		setVisible(false);
 	}

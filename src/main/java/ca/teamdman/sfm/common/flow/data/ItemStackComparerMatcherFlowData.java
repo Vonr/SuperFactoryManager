@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackComparerMatcherFlowDataDrawerItemFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule.ItemStackComparerMatcherFlowComponent;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import java.util.Collections;
@@ -29,7 +29,7 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 	@Override
 	public FlowComponent createController(FlowComponent parent) {
 		if (parent instanceof ManagerFlowController) {
-			return new ItemStackComparerMatcherFlowDataDrawerItemFlowComponent(
+			return new ItemStackComparerMatcherFlowComponent(
 				((ManagerFlowController) parent),
 				this
 			);

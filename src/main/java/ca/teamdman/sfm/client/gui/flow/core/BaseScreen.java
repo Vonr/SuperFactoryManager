@@ -538,9 +538,16 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	public void clearRect(MatrixStack matrixStack, int x, int y, int width, int height) {
-		GL11.glEnable(GL11.GL_SCISSOR_TEST);
-		scissorRect(matrixStack, x, y, width, height);
+		beginScissor(matrixStack, x, y, width, height);
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		endScissor();
+	}
+
+	public void pauseScissor() {
+		// Store previous state
+		GL11.glPushAttrib(GL11.GL_SCISSOR_TEST);
+
+		// Disable scissoring
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 	}
 
@@ -554,9 +561,14 @@ public abstract class BaseScreen extends Screen {
 	 * @param width       Scaled width
 	 * @param height      Scaled height
 	 */
-	public void scissorRect(
+	public void beginScissor(
 		MatrixStack matrixStack, int left, int top, int width, int height
 	) {
+		// Store current scissor state
+		GL11.glPushAttrib(GL11.GL_SCISSOR_TEST);
+		// Enable flag
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+
 		// Grab current transform from the matrixStack
 		// Includes our current scale and border accommodation
 		Matrix4f mat = matrixStack.getLast().getMatrix().copy();
@@ -581,6 +593,13 @@ public abstract class BaseScreen extends Screen {
 
 		// Apply actual cropping
 		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);
+	}
+
+	public void endScissor() {
+		// Disable scissoring
+		GL11.glDisable(GL11.GL_SCISSOR_TEST);
+		// Restore previous scissor state
+		GL11.glPopAttrib();
 	}
 
 	/**

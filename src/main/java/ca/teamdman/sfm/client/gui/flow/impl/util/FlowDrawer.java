@@ -10,7 +10,6 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.util.math.MathHelper;
-import org.lwjgl.opengl.GL11;
 
 public class FlowDrawer extends FlowContainer {
 
@@ -122,8 +121,7 @@ public class FlowDrawer extends FlowContainer {
 
 		// Enable clipping for drawer contents
 		// +2 -4 for border padding
-		GL11.glEnable(GL11.GL_SCISSOR_TEST);
-		screen.scissorRect(
+		screen.beginScissor(
 			matrixStack,
 			getPosition().getX() + 2,
 			getPosition().getY() + 2,
@@ -149,7 +147,7 @@ public class FlowDrawer extends FlowContainer {
 		}
 		matrixStack.pop();
 
-		GL11.glDisable(GL11.GL_SCISSOR_TEST);
+		screen.endScissor();
 
 		screen.drawBorder(
 			matrixStack,
@@ -160,22 +158,6 @@ public class FlowDrawer extends FlowContainer {
 			2,
 			CONST.PANEL_BORDER
 		);
-
-		// Draw tooltips without the clipping zone
-		matrixStack.push();
-		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
-		for (FlowComponent c : getChildren()) {
-			if (c.isVisible()) {
-				c.drawTooltip(
-					screen,
-					matrixStack,
-					mx - getPosition().getX(),
-					my - getPosition().getY(),
-					deltaTime
-				);
-			}
-		}
-		matrixStack.pop();
 
 		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}

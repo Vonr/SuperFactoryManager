@@ -79,6 +79,20 @@ public class Position implements INBTSerializable<CompoundNBT> {
 		};
 	}
 
+	public Position withConstantOffset(Position other) {
+		return new Position() {
+			@Override
+			public int getX() {
+				return Position.this.getX() + other.getX();
+			}
+
+			@Override
+			public int getY() {
+				return Position.this.getY() + other.getY();
+			}
+		};
+	}
+
 	public Position withConstantOffset(Supplier<Integer> x, Supplier<Integer> y) {
 		return new Position() {
 			@Override

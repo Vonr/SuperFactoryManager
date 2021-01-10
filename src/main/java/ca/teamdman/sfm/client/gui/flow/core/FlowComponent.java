@@ -160,6 +160,8 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		if (isTooltipEnabled(mx, my)) {
+
+			screen.pauseScissor(); // Disable scissoring when drawing tooltip
 			net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(
 				matrixStack,
 				getTooltip(),
@@ -170,6 +172,7 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 				-1,
 				screen.getFontRenderer()
 			);
+			screen.endScissor();
 		}
 	}
 

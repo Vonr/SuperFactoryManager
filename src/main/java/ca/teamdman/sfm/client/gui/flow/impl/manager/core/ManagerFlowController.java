@@ -14,13 +14,22 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerClosedEvent;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.Stream.Builder;
 
 public class ManagerFlowController extends FlowContainer implements Observer {
 
@@ -45,10 +54,55 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 		addChild(new InputSpawnerFlowButton(this));
 		addChild(new OutputSpawnerFlowButton(this));
 		addChild(new FlowTimerTriggerSpawnerButton(this));
-		SCREEN.getFlowDataContainer().stream()
+
+		getDataSortedByDependencies()
 			.map(data -> data.createController(this))
 			.filter(Objects::nonNull)
 			.forEach(this::addChild);
+	}
+
+	/**
+	 * Uses Kahn's algorithm to do a topological sort Used to ensure that data controllers are built
+	 * in proper order during first load of GUI
+	 *
+	 * https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
+	 *
+	 * @return Sorted FlowData list
+	 */
+	private Stream<FlowData> getDataSortedByDependencies() {
+		Builder<FlowData> result = Stream.builder();
+		HashMap<FlowData, Set<Class<? extends FlowData>>> dependencies =
+			SCREEN.getFlowDataContainer().stream()
+				.collect(
+					HashMap::new,
+					(map, data) -> map.put(data, new HashSet<>(data.getDependencies())),
+					HashMap::putAll
+				);
+
+		ArrayDeque<FlowData> remaining = SCREEN.getFlowDataContainer().stream()
+			.filter(data -> data.getDependencies().size() == 0)
+			.collect(ArrayDeque::new, ArrayDeque::add, ArrayDeque::addAll);
+
+		while (!remaining.isEmpty()) {
+			FlowData n = remaining.pop();
+			result.add(n);
+			Iterator<Entry<FlowData, Set<Class<? extends FlowData>>>> iter = dependencies
+				.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<FlowData, Set<Class<? extends FlowData>>> entry = iter.next();
+				entry.getValue().remove(n.getClass());
+				if (entry.getValue().size() == 0) {
+					remaining.add(entry.getKey());
+					iter.remove();
+				}
+			}
+		}
+
+		if (dependencies.size() > 0) {
+			throw new IllegalArgumentException("Circular FlowData dependency chain detected");
+		}
+
+		return result.build();
 	}
 
 	@Override

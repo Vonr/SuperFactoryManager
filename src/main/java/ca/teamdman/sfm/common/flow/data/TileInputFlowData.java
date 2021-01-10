@@ -13,9 +13,11 @@ import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -40,6 +42,11 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 			return null;
 		}
 		return new FlowInputButton((ManagerFlowController) parent, this);
+	}
+
+	@Override
+	public Set<Class<? extends FlowData>> getDependencies() {
+		return ImmutableSet.of(ItemStackTileEntityRuleFlowData.class);
 	}
 
 	@Override
