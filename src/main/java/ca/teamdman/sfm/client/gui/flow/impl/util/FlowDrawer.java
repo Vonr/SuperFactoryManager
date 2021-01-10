@@ -98,6 +98,11 @@ public class FlowDrawer extends FlowContainer {
 		}
 	}
 
+	public boolean isChildVisible(FlowComponent comp) {
+		return comp.getPosition().getY() > -comp.getSize().getHeight() // not above bounds
+			&& comp.getPosition().getY() < getMaxHeight(); // not below bounds
+	}
+
 	@Override
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
@@ -131,12 +136,9 @@ public class FlowDrawer extends FlowContainer {
 
 		matrixStack.push();
 		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
-		for (FlowComponent c1 : getChildren()) {
-			if (c1.isVisible()
-				&& c1.getPosition().getY() > -c1.getSize().getHeight() // not above bounds
-				&& c1.getPosition().getY() < getMaxHeight() // not below bounds
-			) {
-				c1.draw(
+		for (FlowComponent comp : getChildren()) {
+			if (comp.isVisible() && isChildVisible(comp)) {
+				comp.draw(
 					screen,
 					matrixStack,
 					mx - getPosition().getX(),
