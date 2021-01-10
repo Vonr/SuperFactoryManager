@@ -62,8 +62,10 @@ public class IconComponent extends FlowContainer {
 	private class MyPicker extends FlowItemStackPicker {
 
 		public MyPicker() {
-			super(PARENT.CONTROLLER, IconComponent.this.getPosition()
-				.withOffset(IconComponent.this.getSize().getWidth() + 5, 0));
+			super(
+				PARENT.CONTROLLER,
+				new Position(BUTTON.getSize().getWidth() + 5,0)
+			);
 		}
 
 		@Override
