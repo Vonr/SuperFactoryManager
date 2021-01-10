@@ -21,7 +21,7 @@ public class RelationshipController extends FlowComponent {
 	public final ManagerFlowController CONTROLLER;
 	private final Position fromPos = new Position();
 	private final Position toPos = new Position();
-	private FlowDataHolder from;
+	private FlowDataHolder<?> from;
 	private boolean isDragging = false;
 
 	public RelationshipController(ManagerFlowController CONTROLLER) {
@@ -35,7 +35,7 @@ public class RelationshipController extends FlowComponent {
 
 	public Stream<RelationshipFlowData> getFlowRelationshipDatas() {
 		return CONTROLLER.SCREEN.getFlowDataContainer().stream()
-			.filter(data -> data instanceof RelationshipFlowData)
+			.filter(RelationshipFlowData.class::isInstance)
 			.map(data -> ((RelationshipFlowData) data));
 	}
 
@@ -51,10 +51,11 @@ public class RelationshipController extends FlowComponent {
 			return false;
 		}
 		Optional<FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my)
-			.filter(c -> c instanceof FlowDataHolder);
+			.filter(c -> c instanceof FlowDataHolder)
+			.filter(c -> ((FlowDataHolder<?>) c).getData().isValidRelationshipTarget());
 		hit.ifPresent(c -> {
 			isDragging = true;
-			from = ((FlowDataHolder) c);
+			from = ((FlowDataHolder<?>) c);
 			fromPos.setXY(c.getCentroid());
 			toPos.setXY(mx, my);
 		});
@@ -69,7 +70,8 @@ public class RelationshipController extends FlowComponent {
 		CONTROLLER.getElementUnderMouse(mx, my)
 			.filter(c -> c instanceof FlowDataHolder)
 			.filter(c -> !c.equals(from))
-			.map(c -> ((FlowDataHolder) c).getData())
+			.map(c -> ((FlowDataHolder<?>) c).getData())
+			.filter(FlowData::isValidRelationshipTarget)
 			.map(FlowData::getId)
 			.ifPresent(to -> createRelationship(from.getData().getId(), to));
 		isDragging = false;
@@ -95,8 +97,9 @@ public class RelationshipController extends FlowComponent {
 		}
 		toPos.setXY(mx, my);
 		CONTROLLER.getElementUnderMouse(mx, my)
-			.filter(c -> c instanceof FlowDataHolder)
+			.filter(FlowDataHolder.class::isInstance)
 			.filter(c -> !c.equals(from))
+			.filter(c -> ((FlowDataHolder<?>) c).getData().isValidRelationshipTarget())
 			.map(x -> x.snapToEdge(fromPos))
 			.ifPresent(toPos::setXY);
 		return true;

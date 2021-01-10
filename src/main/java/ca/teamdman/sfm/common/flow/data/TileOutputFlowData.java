@@ -34,6 +34,11 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
+	public boolean isValidRelationshipTarget() {
+		return true;
+	}
+
+	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {

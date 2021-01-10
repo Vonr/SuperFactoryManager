@@ -36,6 +36,11 @@ public class LineNodeFlowData extends FlowData implements PositionHolder, Observ
 	}
 
 	@Override
+	public boolean isValidRelationshipTarget() {
+		return true;
+	}
+
+	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {

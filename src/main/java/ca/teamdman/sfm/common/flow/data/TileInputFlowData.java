@@ -56,6 +56,11 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 	}
 
 	@Override
+	public boolean isValidRelationshipTarget() {
+		return true;
+	}
+
+	@Override
 	public FlowDataSerializer getSerializer() {
 		return FlowDataSerializers.INPUT;
 	}

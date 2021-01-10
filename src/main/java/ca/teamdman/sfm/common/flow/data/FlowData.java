@@ -32,6 +32,10 @@ public abstract class FlowData {
 		container.remove(getId());
 	}
 
+	public boolean isValidRelationshipTarget() {
+		return false;
+	}
+
 
 	public UUID getId() {
 		return uuid;
