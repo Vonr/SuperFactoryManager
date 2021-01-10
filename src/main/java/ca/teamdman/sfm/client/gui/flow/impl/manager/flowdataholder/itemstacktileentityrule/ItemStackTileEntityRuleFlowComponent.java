@@ -69,7 +69,18 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 			I18n.format("gui.sfm.manager.tile_entity_rule.items.title")
 		));
 
-		this.ITEM_SELECTION_MODE_GROUP = new RadioGroup();
+		this.ITEM_SELECTION_MODE_GROUP = new RadioGroup() {
+			@Override
+			public void onSelectionChanged(FlowRadioButton member) {
+				FilterMode next = member == WHITELIST_BUTTON
+					? FilterMode.WHITELIST
+					: FilterMode.BLACKLIST;
+				if (data.filterMode != next) {
+					data.filterMode = next;
+					CONTROLLER.SCREEN.sendFlowDataToServer(data);
+				}
+			}
+		};
 		WHITELIST_BUTTON = new FlowRadioButton(
 			new Position(5, 85),
 			new Size(35, 12),
