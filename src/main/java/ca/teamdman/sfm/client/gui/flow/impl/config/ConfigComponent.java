@@ -26,7 +26,6 @@ public class ConfigComponent extends FlowContainer {
 		super(new Position(0, 0), new Size(512, 256));
 		this.SCREEN = screen;
 		addChild(new FlowBackground());
-		setDraggable(false);
 
 		addChild(new FlowHeader(
 			new Position(10, 10),

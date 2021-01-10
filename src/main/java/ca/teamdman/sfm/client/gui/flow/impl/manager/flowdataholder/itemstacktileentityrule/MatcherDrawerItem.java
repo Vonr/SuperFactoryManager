@@ -30,9 +30,9 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		this.ICON = new DisplayIcon(delegate.getData().getPreview().get(0), new Position());
 		this.DELEGATE = delegate;
 		DELEGATE.setPosition(parent.getPosition()
-				.withConstantOffset(parent.MATCHER_DRAWER.getPosition())
-				.withConstantOffset(getPosition())
-				.withConstantOffset(getSize().getWidth() + 5, 0));
+			.withConstantOffset(parent.MATCHER_DRAWER.getPosition())
+			.withConstantOffset(getPosition())
+			.withConstantOffset(getSize().getWidth() + 5, 0));
 		addChild(ICON);
 	}
 
@@ -40,6 +40,27 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 
 		public DisplayIcon(ItemStack stack, Position pos) {
 			super(stack, pos);
+		}
+
+		@Override
+		public boolean isInBounds(int mx, int my) {
+			// Undo mouse coordinate localization before checking if in the bounds of parent
+			// We want to make sure that objects scrolled out of view are not capturing mouse actions
+			return PARENT.MATCHER_DRAWER.isInBounds(
+				mx + (
+					MatcherDrawerItem.this.getPosition().getX()
+						+ PARENT.MATCHER_DRAWER.getPosition().getX()
+				),
+				my + (
+					MatcherDrawerItem.this.getPosition().getY()
+						+ PARENT.MATCHER_DRAWER.getPosition().getY()
+				)
+			) && super.isInBounds(mx, my);
+		}
+
+		@Override
+		public boolean isTooltipEnabled(int mx, int my) {
+			return !open && super.isTooltipEnabled(mx, my);
 		}
 
 		@Override
@@ -51,11 +72,6 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 					.append(((IFormattableTextComponent) rtn.get(0)))
 			);
 			return rtn;
-		}
-
-		@Override
-		public boolean isTooltipEnabled(int mx, int my) {
-			return !open && super.isTooltipEnabled(mx, my);
 		}
 
 		@Override

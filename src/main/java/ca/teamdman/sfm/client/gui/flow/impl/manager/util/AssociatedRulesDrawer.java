@@ -50,7 +50,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 			5,
 			7
 		);
-		CHILDREN_RULES_DRAWER.setDraggable(false);
 		addChild(CHILDREN_RULES_DRAWER);
 
 //			I18n.format("gui.sfm.associatedrulesdrawer.selection.label")
@@ -64,7 +63,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		);
 		SELECTION_RULES_DRAWER.setVisible(false);
 		SELECTION_RULES_DRAWER.setEnabled(false);
-		SELECTION_RULES_DRAWER.setDraggable(false);
 		addChild(SELECTION_RULES_DRAWER);
 
 		controller.SCREEN.getFlowDataContainer().addObserver(this);
@@ -151,7 +149,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 			ItemStackTileEntityRuleFlowData data
 		) {
 			super(data.getIcon(), new Position());
-			setDraggable(false);
 			setData(data);
 			CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 				this,
@@ -214,7 +211,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 		) {
 			super(data.getIcon(), new Position());
 			this.DATA = data;
-			setDraggable(false);
 		}
 
 		@Override
@@ -248,7 +244,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 				ItemStackFlowComponent.DEFAULT_SIZE.copy(),
 				CONST.SELECTED
 			);
-			setDraggable(false);
 		}
 
 		@Override
@@ -278,7 +273,6 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 				ItemStackFlowComponent.DEFAULT_SIZE.copy(),
 				CONST.SELECTED
 			);
-			setDraggable(false);
 		}
 
 		@Override

@@ -29,6 +29,7 @@ public class FlowLineNode extends FlowIconButton implements FlowDataHolder<LineN
 			this,
 			LineNodeFlowData.class
 		));
+		setDraggable(true);
 	}
 
 	@Override

@@ -23,7 +23,6 @@ public class InputSpawnerFlowButton extends FlowIconButton {
 		ManagerFlowController managerFlowController
 	) {
 		super(ButtonLabel.ADD_INPUT, new Position(25, 50));
-		setDraggable(false);
 		this.managerFlowController = managerFlowController;
 	}
 

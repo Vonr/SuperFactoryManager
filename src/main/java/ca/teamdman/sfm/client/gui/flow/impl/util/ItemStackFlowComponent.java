@@ -24,7 +24,6 @@ public class ItemStackFlowComponent extends FlowButton implements ISelectable {
 
 	public ItemStackFlowComponent(ItemStack stack, Position pos) {
 		super(pos, DEFAULT_SIZE.copy());
-		setDraggable(false);
 		this.STACK = stack;
 	}
 

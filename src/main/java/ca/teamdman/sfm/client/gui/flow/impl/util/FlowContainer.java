@@ -41,7 +41,6 @@ public abstract class FlowContainer extends FlowComponent {
 	 * Containers with no area are not draggable
 	 */
 	public FlowContainer() {
-		setDraggable(false);
 	}
 
 	/**
@@ -49,7 +48,6 @@ public abstract class FlowContainer extends FlowComponent {
 	 */
 	public FlowContainer(Position pos) {
 		this(pos, new Size(0, 0));
-		setDraggable(false);
 	}
 
 	public FlowContainer(

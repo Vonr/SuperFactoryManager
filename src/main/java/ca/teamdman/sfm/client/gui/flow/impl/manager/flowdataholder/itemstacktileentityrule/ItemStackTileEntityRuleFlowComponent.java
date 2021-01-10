@@ -121,6 +121,8 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 			ItemStackTileEntityRuleFlowData.class
 		));
 		//endregion
+
+		setDraggable(true);
 	}
 
 	public void rebuildMatcherDrawerChildren() {

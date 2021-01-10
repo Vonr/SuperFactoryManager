@@ -83,7 +83,6 @@ public class ItemStackComparerMatcherFlowComponent extends
 			ItemStackComparerMatcherFlowData.class
 		));
 
-		setDraggable(false);
 		setEnabled(false);
 		setVisible(false);
 	}

@@ -16,7 +16,6 @@ public class FlowToggleBox extends FlowButton {
 
 	public FlowToggleBox(Position pos, Size size) {
 		super(pos, size);
-		setDraggable(false);
 	}
 
 	public FlowToggleBox(Position pos, Size size, boolean checked) {

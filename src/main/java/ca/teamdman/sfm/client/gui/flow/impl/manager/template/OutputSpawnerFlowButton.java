@@ -23,7 +23,6 @@ public class OutputSpawnerFlowButton extends FlowIconButton {
 		ManagerFlowController managerFlowController
 	) {
 		super(ButtonLabel.ADD_OUTPUT, new Position(25, 75));
-		setDraggable(false);
 		this.managerFlowController = managerFlowController;
 	}
 

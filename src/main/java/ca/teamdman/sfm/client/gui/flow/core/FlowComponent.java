@@ -22,7 +22,7 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 	private final Position dragOffset = new Position();
 	private boolean visible = true;
 	private boolean enabled = true;
-	private boolean draggable = true;
+	private boolean draggable = false;
 	private boolean isDragging = false;
 	private boolean isHovering = false;
 	private Position position;

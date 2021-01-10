@@ -22,7 +22,6 @@ public class FlowTimerTriggerSpawnerButton extends FlowIconButton {
 		ManagerFlowController managerFlowController
 	) {
 		super(ButtonLabel.ADD_TIMER_TRIGGER, new Position(25, 25));
-		setDraggable(false);
 		this.managerFlowController = managerFlowController;
 	}
 

@@ -33,7 +33,6 @@ public class FlowRadioButton extends FlowButton {
 		group.addMember(this);
 		this.TEXT = text;
 		this.GROUP = group;
-		setDraggable(false);
 	}
 
 	public boolean isSelected() {

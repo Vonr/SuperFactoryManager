@@ -50,7 +50,7 @@ public class FlowOutputButton extends FlowContainer implements
 		addChild(DRAWER);
 		DRAWER.setVisible(false);
 		DRAWER.setEnabled(false);
-		DRAWER.setDraggable(false);
+		BUTTON.setDraggable(true);
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			this,
 			TileOutputFlowData.class

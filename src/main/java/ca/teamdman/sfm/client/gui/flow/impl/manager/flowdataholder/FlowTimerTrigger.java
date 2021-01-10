@@ -21,6 +21,7 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 		super(ButtonLabel.TRIGGER, data.getPosition().copy());
 		this.CONTROLLER = controller;
 		this.data = data;
+		setDraggable(true);
 	}
 
 	@Override
