@@ -6,6 +6,8 @@ package ca.teamdman.sfm.client.gui.flow.core;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
@@ -33,6 +35,7 @@ public abstract class BaseScreen extends Screen {
 		0.94509804f
 	);
 	final int zLevel = 0;
+	private final Deque<ScissorInfo> SCISSOR_STACK = new ArrayDeque<>();
 	protected int guiLeft;
 	protected int guiTop;
 	protected int scaledWidth;
@@ -74,18 +77,31 @@ public abstract class BaseScreen extends Screen {
 		return this.itemRenderer;
 	}
 
-	public void drawCenteredString(MatrixStack matrixStack, String str, int x, int y, Colour3f colour) {
+	public void drawCenteredString(
+		MatrixStack matrixStack,
+		String str,
+		int x,
+		int y,
+		Colour3f colour
+	) {
 		drawCenteredString(matrixStack, str, x, y, 1, colour);
 	}
 
-	public void drawCenteredString(MatrixStack matrixStack, String str, int x, int y, float scale, Colour3f colour) {
+	public void drawCenteredString(
+		MatrixStack matrixStack,
+		String str,
+		int x,
+		int y,
+		float scale,
+		Colour3f colour
+	) {
 		matrixStack.push();
 		matrixStack.scale(scale, scale, 1f);
 		getFontRenderer().drawString(
 			matrixStack,
 			str,
-			(float)((int) (x/scale) - getFontRenderer().getStringWidth(str) / 2),
-			(float) (int) (y/scale),
+			(float) ((int) (x / scale) - getFontRenderer().getStringWidth(str) / 2),
+			(float) (int) (y / scale),
 			colour.toInt()
 		);
 		matrixStack.pop();
@@ -95,12 +111,19 @@ public abstract class BaseScreen extends Screen {
 		return this.font != null ? this.font : Minecraft.getInstance().fontRenderer;
 	}
 
-	public void drawCenteredString(MatrixStack matrixStack, String str, FlowComponent component, float scale, Colour3f colour) {
+	public void drawCenteredString(
+		MatrixStack matrixStack,
+		String str,
+		FlowComponent component,
+		float scale,
+		Colour3f colour
+	) {
 		drawCenteredString(
 			matrixStack,
 			str,
 			component.getPosition().getX() + component.getSize().getWidth() / 2,
-			component.getPosition().getY() + (component.getSize().getHeight() - (int) (8 * scale)) / 2,
+			component.getPosition().getY()
+				+ (component.getSize().getHeight() - (int) (8 * scale)) / 2,
 			scale,
 			colour
 		);
@@ -147,6 +170,20 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	/**
+	 * Gets the ratio from screen to local.
+	 *
+	 * @return Scaling factor
+	 */
+	public double getScale() {
+		double xFactor = (width * 0.9F) / this.scaledWidth;
+		double yFactor = (height * 0.9F) / this.scaledHeight;
+		double mult = Math.min(xFactor, yFactor);
+		mult = Math.min(1, mult);
+		mult = Math.floor(mult * 1000) / 1000F;
+		return mult;
+	}
+
+	/**
 	 * Draws a string to the screen
 	 */
 	public void drawString(
@@ -155,7 +192,8 @@ public abstract class BaseScreen extends Screen {
 	) {
 		matrixStack.push();
 		matrixStack.scale(scale, scale, 1F);
-		getFontRenderer().drawString(matrixStack, str, (int) ((x) / scale), (int) ((y) / scale), colour.toInt());
+		getFontRenderer()
+			.drawString(matrixStack, str, (int) ((x) / scale), (int) ((y) / scale), colour.toInt());
 		matrixStack.pop();
 	}
 
@@ -166,10 +204,6 @@ public abstract class BaseScreen extends Screen {
 		return mouseClickedScaled(mx, my, button);
 	}
 
-	public boolean mouseClickedScaled(int mx, int my, int button) {
-		return false;
-	}
-
 	@Override
 	public boolean mouseReleased(double x, double y, int button) {
 		int mx = scaleX(x);
@@ -178,17 +212,6 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	public boolean mouseReleasedScaled(int mx, int my, int button) {
-		return false;
-	}
-
-	@Override
-	public void mouseMoved(double xPos, double mouseY) {
-		int mx = scaleX(xPos);
-		int my = scaleY(mouseY);
-		mouseMovedScaled(mx, my);
-	}
-
-	public boolean mouseMovedScaled(int mx, int my) {
 		return false;
 	}
 
@@ -221,6 +244,14 @@ public abstract class BaseScreen extends Screen {
 		return false;
 	}
 
+	public int getLatestMouseX() {
+		return latestMouseX;
+	}
+
+	public int getLatestMouseY() {
+		return latestMouseY;
+	}
+
 	@Override
 	public boolean charTyped(char codePoint, int modifiers) {
 		return charTypedScaled(
@@ -236,6 +267,10 @@ public abstract class BaseScreen extends Screen {
 	}
 
 	public boolean mouseScrolledScaled(int mx, int my, double scroll) {
+		return false;
+	}
+
+	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
 		return false;
 	}
 
@@ -265,21 +300,18 @@ public abstract class BaseScreen extends Screen {
 		return (int) y;
 	}
 
-	/**
-	 * Gets the ratio from screen to local.
-	 *
-	 * @return Scaling factor
-	 */
-	public double getScale() {
-		double xFactor = (width * 0.9F) / this.scaledWidth;
-		double yFactor = (height * 0.9F) / this.scaledHeight;
-		double mult = Math.min(xFactor, yFactor);
-		mult = Math.min(1, mult);
-		mult = Math.floor(mult * 1000) / 1000F;
-		return mult;
+	public boolean mouseClickedScaled(int mx, int my, int button) {
+		return false;
 	}
 
-	public boolean onMouseDraggedScaled(int mx, int my, int button, int dmx, int dmy) {
+	@Override
+	public void mouseMoved(double xPos, double mouseY) {
+		int mx = scaleX(xPos);
+		int my = scaleY(mouseY);
+		mouseMovedScaled(mx, my);
+	}
+
+	public boolean mouseMovedScaled(int mx, int my) {
 		return false;
 	}
 
@@ -372,14 +404,6 @@ public abstract class BaseScreen extends Screen {
 
 	public boolean keyPressedScaled(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		return false;
-	}
-
-	public int getLatestMouseX() {
-		return latestMouseX;
-	}
-
-	public int getLatestMouseY() {
-		return latestMouseY;
 	}
 
 	/**
@@ -543,14 +567,6 @@ public abstract class BaseScreen extends Screen {
 		endScissor();
 	}
 
-	public void pauseScissor() {
-		// Store previous state
-		GL11.glPushAttrib(GL11.GL_SCISSOR_TEST);
-
-		// Disable scissoring
-		GL11.glDisable(GL11.GL_SCISSOR_TEST);
-	}
-
 	/**
 	 * Scissors from the top left corner Has some rounding issues, might be off by a pixel in either
 	 * direction/size
@@ -564,8 +580,6 @@ public abstract class BaseScreen extends Screen {
 	public void beginScissor(
 		MatrixStack matrixStack, int left, int top, int width, int height
 	) {
-		// Store current scissor state
-		GL11.glPushAttrib(GL11.GL_SCISSOR_TEST);
 		// Enable flag
 		GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
@@ -593,18 +607,37 @@ public abstract class BaseScreen extends Screen {
 
 		// Apply actual cropping
 		GL11.glScissor(scissorLeft, scissorBottom, scissorWidth, scissorHeight);
+		SCISSOR_STACK.push(new ScissorInfo(
+			scissorLeft,
+			scissorBottom,
+			scissorWidth,
+			scissorHeight
+		));
 	}
 
 	/**
 	 * Disable scissor test, resume previous state
 	 */
 	public void endScissor() {
-		// Disable scissoring
-		GL11.glDisable(GL11.GL_SCISSOR_TEST);
-		// Restore previous scissor state
-		GL11.glPopAttrib();
+		SCISSOR_STACK.pop();
+		if (SCISSOR_STACK.isEmpty()) {
+			GL11.glDisable(GL11.GL_SCISSOR_TEST);
+		} else {
+			resumeScissor();
+		}
 	}
 
+	public void pauseScissor() {
+		GL11.glDisable(GL11.GL_SCISSOR_TEST);
+	}
+
+	public void resumeScissor() {
+		ScissorInfo info = SCISSOR_STACK.peek();
+		if (info != null) {
+			GL11.glEnable(GL11.GL_SCISSOR_TEST);
+			GL11.glScissor(info.X, info.Y, info.WIDTH, info.HEIGHT);
+		}
+	}
 	/**
 	 * Sets the global GL state to fit the current scale ratio.
 	 */
