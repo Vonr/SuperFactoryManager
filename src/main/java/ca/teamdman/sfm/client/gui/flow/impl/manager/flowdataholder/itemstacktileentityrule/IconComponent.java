@@ -54,6 +54,11 @@ public class IconComponent extends FlowContainer {
 		}
 	}
 
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() + 10;
+	}
+
 	private class MyPicker extends FlowItemStackPicker {
 
 		public MyPicker() {
