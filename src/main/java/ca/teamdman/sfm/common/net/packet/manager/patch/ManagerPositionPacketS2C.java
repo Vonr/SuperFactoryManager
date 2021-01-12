@@ -4,13 +4,13 @@
 package ca.teamdman.sfm.common.net.packet.manager.patch;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 

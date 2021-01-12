@@ -1,11 +1,11 @@
 package ca.teamdman.sfm.common.flow.holder;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;

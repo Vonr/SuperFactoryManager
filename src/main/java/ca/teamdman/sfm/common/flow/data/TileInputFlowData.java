@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.flow.data;
 
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowInputButton;
@@ -13,6 +12,8 @@ import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import java.util.Observable;
@@ -26,12 +27,23 @@ import net.minecraft.util.ResourceLocation;
 public class TileInputFlowData extends FlowData implements PositionHolder, Observer {
 
 	public Position position;
-	public List<UUID> tileEntityRules;
+	public UUIDList tileEntityRules;
 
 	public TileInputFlowData(UUID uuid, Position position, List<UUID> ters) {
 		super(uuid);
 		this.position = position;
-		this.tileEntityRules = ters;
+		this.tileEntityRules = new UUIDList(ters);
+	}
+
+	@Override
+	public void addToDataContainer(BasicFlowDataContainer container) {
+		super.addToDataContainer(container);
+		container.addObserver(this);
+	}
+
+	@Override
+	public boolean isValidRelationshipTarget() {
+		return true;
 	}
 
 	@Override
@@ -47,17 +59,6 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 	@Override
 	public Set<Class<? extends FlowData>> getDependencies() {
 		return ImmutableSet.of(ItemStackTileEntityRuleFlowData.class);
-	}
-
-	@Override
-	public void addToDataContainer(BasicFlowDataContainer container) {
-		super.addToDataContainer(container);
-		container.addObserver(this);
-	}
-
-	@Override
-	public boolean isValidRelationshipTarget() {
-		return true;
 	}
 
 	@Override
@@ -96,7 +97,7 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 			return new TileInputFlowData(
 				UUID.fromString(tag.getString("uuid")),
 				new Position(tag.getCompound("pos")),
-				SFMUtil.deserializeUUIDList(tag, "ters")
+				new UUIDList(tag, "ters")
 			);
 		}
 
@@ -104,7 +105,7 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 		public CompoundNBT toNBT(TileInputFlowData data) {
 			CompoundNBT tag = super.toNBT(data);
 			tag.put("pos", data.position.serializeNBT());
-			tag.put("ters", SFMUtil.serializeUUIDList(data.tileEntityRules));
+			tag.put("ters", data.tileEntityRules.serialize());
 			return tag;
 		}
 
@@ -113,7 +114,7 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 			return new TileInputFlowData(
 				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong()),
-				SFMUtil.deserializeUUIDList(buf)
+				new UUIDList(buf)
 			);
 		}
 
@@ -121,7 +122,7 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 		public void toBuffer(TileInputFlowData data, PacketBuffer buf) {
 			buf.writeString(data.getId().toString());
 			buf.writeLong(data.position.toLong());
-			SFMUtil.serializeUUIDList(data.tileEntityRules, buf);
+			data.tileEntityRules.serialize(buf);
 		}
 	}
 }

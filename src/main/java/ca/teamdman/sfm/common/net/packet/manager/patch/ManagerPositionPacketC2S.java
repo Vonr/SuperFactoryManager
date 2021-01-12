@@ -4,11 +4,11 @@
 package ca.teamdman.sfm.common.net.packet.manager.patch;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;

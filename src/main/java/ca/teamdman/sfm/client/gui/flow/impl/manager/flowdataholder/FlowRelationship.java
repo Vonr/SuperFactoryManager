@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
@@ -15,6 +14,7 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketC2S;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import net.minecraft.client.gui.screen.Screen;

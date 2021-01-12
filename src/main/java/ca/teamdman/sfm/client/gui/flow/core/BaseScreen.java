@@ -311,6 +311,9 @@ public abstract class BaseScreen extends Screen {
 		mouseMovedScaled(mx, my);
 	}
 
+	/**
+	 * TODO: wtf is the difference between moved and dragged???
+	 */
 	public boolean mouseMovedScaled(int mx, int my) {
 		return false;
 	}

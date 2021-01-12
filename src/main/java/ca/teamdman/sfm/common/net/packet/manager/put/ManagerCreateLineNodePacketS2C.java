@@ -4,11 +4,11 @@
 package ca.teamdman.sfm.common.net.packet.manager.put;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.FlowUtils;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 

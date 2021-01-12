@@ -4,8 +4,8 @@
 package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.config.Config.Client;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;

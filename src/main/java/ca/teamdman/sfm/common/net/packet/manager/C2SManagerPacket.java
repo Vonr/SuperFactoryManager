@@ -3,10 +3,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.net.packet.manager;
 
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.function.Supplier;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;

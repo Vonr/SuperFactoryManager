@@ -7,12 +7,12 @@ import static net.minecraftforge.common.util.Constants.BlockFlags.BLOCK_UPDATE;
 import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBORS;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.block.ICable;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.UUID;

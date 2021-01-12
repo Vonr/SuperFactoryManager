@@ -1,29 +1,22 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm;
+package ca.teamdman.sfm.common.util;
 
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IWorldPosCallable;
@@ -32,7 +25,6 @@ import net.minecraft.world.IWorldReader;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.NetworkEvent;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -257,31 +249,6 @@ public class SFMUtil {
 		double dx = x - xx;
 		double dy = y - yy;
 		return Math.sqrt(dx * dx + dy * dy);
-	}
-
-	public static ListNBT serializeUUIDList(List<UUID> ids) {
-		return ids.stream()
-			.map(UUID::toString)
-			.map(StringNBT::valueOf)
-			.collect(ListNBT::new, ListNBT::add, ListNBT::addAll);
-	}
-
-	public static List<UUID> deserializeUUIDList(CompoundNBT tag, String key) {
-		return tag.getList(key, NBT.TAG_STRING).stream()
-			.map(INBT::getString)
-			.map(UUID::fromString)
-			.collect(Collectors.toList());
-	}
-
-	public static void serializeUUIDList(List<UUID> ids, PacketBuffer buf) {
-		buf.writeInt(ids.size());
-		ids.forEach(id -> buf.writeString(id.toString()));
-	}
-
-	public static List<UUID> deserializeUUIDList(PacketBuffer buf) {
-		return IntStream.range(0, buf.readInt())
-			.mapToObj(__ -> SFMUtil.readUUID(buf))
-			.collect(Collectors.toList());
 	}
 
 	/**

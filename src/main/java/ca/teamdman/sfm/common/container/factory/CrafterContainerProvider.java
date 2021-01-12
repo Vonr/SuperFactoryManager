@@ -3,9 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.container.factory;
 
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.container.CrafterContainer;
 import ca.teamdman.sfm.common.tile.CrafterTileEntity;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import javax.annotation.Nullable;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;

@@ -3,10 +3,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.block;
 
-import ca.teamdman.sfm.SFMUtil;
 import ca.teamdman.sfm.common.container.factory.ManagerContainerProvider;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
