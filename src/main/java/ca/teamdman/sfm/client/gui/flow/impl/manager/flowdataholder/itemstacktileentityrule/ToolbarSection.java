@@ -17,7 +17,7 @@ public class ToolbarSection extends FlowContainer {
 
 		addChild(new MinimizeButton(
 			PARENT,
-			new Position(180, 5),
+			new Position(200, 5),
 			new Size(10, 10)
 		));
 	}

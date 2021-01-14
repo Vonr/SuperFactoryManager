@@ -30,7 +30,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 	public ItemStackTileEntityRuleFlowComponent(
 		ManagerFlowController controller, ItemStackTileEntityRuleFlowData data
 	) {
-		super(data.getPosition(), new Size(200, 200));
+		super(data.getPosition(), new Size(215, 170));
 		this.CONTROLLER = controller;
 		this.data = data;
 
@@ -46,7 +46,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		ITEMS_SECTION = new ItemsSection(this, new Position(5, 70));
 		addChild(ITEMS_SECTION);
 
-		TILES_SECTION = new TilesSection(this, new Position(120, 70));
+		TILES_SECTION = new TilesSection(this, new Position(110, 70));
 		addChild(TILES_SECTION);
 
 		// Hide by default
@@ -72,7 +72,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 			getPosition().getX(),
 			getPosition().getY(),
 			getSize().getWidth(),
-			getSize().getWidth()
+			getSize().getHeight()
 		);
 
 		screen.drawRect(
