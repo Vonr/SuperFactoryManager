@@ -28,5 +28,6 @@
   "gui.sfm.flow.tileentityrule.button.blacklist": "Blacklist",
   "gui.sfm.flow.search.no_results_found": "No results found...",
   "gui.sfm.flow.search.placeholder": "Search",
-  "gui.sfm.manager.tile_entity_rule.tiles.title": "Tiles"
+  "gui.sfm.manager.tile_entity_rule.tiles.title": "Tiles",
+  "gui.sfm.manager.tile_entity_rule.filter.title": "Filter"
 }

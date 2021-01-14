@@ -23,6 +23,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 	private final TilesSection TILES_SECTION;
 	private final ItemsSection ITEMS_SECTION;
 	private final IconSection ICON_SECTION;
+	private final FilterSection FILTER_SECTION;
 	private final ToolbarSection TOOLBAR_SECTION;
 	private ItemStackTileEntityRuleFlowData data;
 
@@ -39,11 +40,14 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		ICON_SECTION = new IconSection(this, new Position(5, 25));
 		addChild(ICON_SECTION);
 
-		TILES_SECTION = new TilesSection(this, new Position(50, 25));
-		addChild(TILES_SECTION);
+		FILTER_SECTION = new FilterSection(this, new Position(45, 25));
+		addChild(FILTER_SECTION);
 
 		ITEMS_SECTION = new ItemsSection(this, new Position(5, 70));
 		addChild(ITEMS_SECTION);
+
+		TILES_SECTION = new TilesSection(this, new Position(120, 70));
+		addChild(TILES_SECTION);
 
 		// Hide by default
 		setVisible(false);
@@ -103,6 +107,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		this.data = data;
 		getPosition().setXY(data.getPosition());
 		ICON_SECTION.onDataChanged(data);
+		FILTER_SECTION.onDataChanged(data);
 		ITEMS_SECTION.onDataChanged(data);
 		TILES_SECTION.onDataChanged(data);
 	}
