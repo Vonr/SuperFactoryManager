@@ -71,6 +71,9 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 	private Stream<FlowData> getDataSortedByDependencies() {
 		Builder<FlowData> result = Stream.builder();
 
+		// Only classes present in the datalist are relevant.
+		// Topological sort just used to ensure things added in correct order.
+		// "Missing" dependencies is fine, since they can't be added out of order.
 		Set<Class<? extends FlowData>> present = SCREEN.getFlowDataContainer().stream()
 			.map(FlowData::getClass)
 			.collect(Collectors.toSet());
