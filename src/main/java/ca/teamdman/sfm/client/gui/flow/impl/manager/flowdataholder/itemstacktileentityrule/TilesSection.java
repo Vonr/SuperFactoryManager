@@ -15,6 +15,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.lwjgl.glfw.GLFW;
 
 class TilesSection extends FlowContainer {
 
@@ -96,7 +97,10 @@ class TilesSection extends FlowContainer {
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			super.onClicked(mx, my, button);
+			if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
+				PARENT.getData().tilePositions.remove(POS);
+				PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
+			}
 		}
 	}
 
