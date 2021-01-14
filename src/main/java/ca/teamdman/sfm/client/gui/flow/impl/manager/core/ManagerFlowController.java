@@ -20,7 +20,6 @@ import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContain
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerClosedEvent;
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -71,16 +70,26 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 	 */
 	private Stream<FlowData> getDataSortedByDependencies() {
 		Builder<FlowData> result = Stream.builder();
+
+		Set<Class<? extends FlowData>> present = SCREEN.getFlowDataContainer().stream()
+			.map(FlowData::getClass)
+			.collect(Collectors.toSet());
+
 		HashMap<FlowData, Set<Class<? extends FlowData>>> dependencies =
 			SCREEN.getFlowDataContainer().stream()
 				.collect(
 					HashMap::new,
-					(map, data) -> map.put(data, new HashSet<>(data.getDependencies())),
+					(map, data) -> map.put(
+						data,
+						data.getDependencies().stream()
+							.filter(present::contains)
+							.collect(Collectors.toSet())
+					),
 					HashMap::putAll
 				);
 
 		ArrayDeque<FlowData> remaining = SCREEN.getFlowDataContainer().stream()
-			.filter(data -> data.getDependencies().size() == 0)
+			.filter(data -> data.getDependencies().stream().noneMatch(present::contains))
 			.collect(ArrayDeque::new, ArrayDeque::add, ArrayDeque::addAll);
 
 		while (!remaining.isEmpty()) {
