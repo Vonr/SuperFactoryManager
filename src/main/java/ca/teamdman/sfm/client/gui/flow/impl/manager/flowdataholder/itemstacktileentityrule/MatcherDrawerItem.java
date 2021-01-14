@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
+import org.lwjgl.glfw.GLFW;
 
 class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemStackMatcher>> extends
 	FlowContainer {
@@ -33,7 +34,7 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 				super.setXY(x, y);
 				if (
 					ICON.isSelected()
-					&& !PARENT.DRAWER.isChildVisible(MatcherDrawerItem.this)
+						&& !PARENT.DRAWER.isChildVisible(MatcherDrawerItem.this)
 				) {
 					ICON.setSelected(false);
 					ICON.onSelectionChanged();
@@ -76,6 +77,16 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		@Override
 		public boolean isTooltipEnabled(int mx, int my) {
 			return !ICON.isSelected() && super.isTooltipEnabled(mx, my);
+		}
+
+		@Override
+		public void onClicked(int mx, int my, int button) {
+			if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
+				super.onClicked(mx, my, button);
+			} else if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
+				PARENT.PARENT.CONTROLLER.SCREEN
+					.sendFlowDataDeleteToServer(DELEGATE.getData().getId());
+			}
 		}
 
 		@Override

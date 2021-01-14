@@ -9,12 +9,16 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule.ItemStackTileEntityRuleFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
+import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.BlockPosList;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.item.ItemStack;
@@ -24,7 +28,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
 public class ItemStackTileEntityRuleFlowData extends FlowData implements
-	PositionHolder {
+	PositionHolder, Observer {
 
 	public FilterMode filterMode;
 	public String name;
@@ -32,6 +36,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public Position position;
 	public UUIDList matcherIds;
 	public BlockPosList tilePositions;
+	private final FlowDataRemovedObserver OBSERVER;
 
 	public ItemStackTileEntityRuleFlowData(
 		UUID uuid,
@@ -49,6 +54,10 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		this.filterMode = filterMode;
 		this.matcherIds = new UUIDList(matcherIds);
 		this.tilePositions = new BlockPosList(tilePositions);
+		this.OBSERVER = new FlowDataRemovedObserver(
+			this,
+			data -> this.matcherIds.remove(data.getId())
+		);
 	}
 
 	public ItemStack getIcon() {
@@ -58,6 +67,12 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	@Override
 	public Position getPosition() {
 		return position;
+	}
+
+	@Override
+	public void addToDataContainer(BasicFlowDataContainer container) {
+		super.addToDataContainer(container);
+		container.addObserver(this);
 	}
 
 	@Override
@@ -71,20 +86,23 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	}
 
 	@Override
+	public Set<Class<? extends FlowData>> getDependencies() {
+		return ImmutableSet.of(ItemStackComparerMatcherFlowData.class);
+	}
+
+	@Override
 	public FlowDataSerializer getSerializer() {
 		return FlowDataSerializers.TILE_ENTITY_RULE;
 	}
 
+	@Override
+	public void update(Observable o, Object arg) {
+		OBSERVER.update(o, arg);
+	}
 
 	public enum FilterMode {
 		WHITELIST,
 		BLACKLIST
-	}
-
-
-	@Override
-	public Set<Class<? extends FlowData>> getDependencies() {
-		return ImmutableSet.of(ItemStackComparerMatcherFlowData.class);
 	}
 
 	public static class FlowTileEntityRuleDataSerializer extends

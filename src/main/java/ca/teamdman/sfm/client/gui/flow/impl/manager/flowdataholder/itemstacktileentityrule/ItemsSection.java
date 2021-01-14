@@ -46,6 +46,7 @@ class ItemsSection extends FlowContainer {
 			PARENT.getData(),
 			new Position(5, getSize().getHeight() - 21)
 		));
+
 		PARENT.getData().matcherIds.stream()
 			.map(PARENT.CONTROLLER::findFirstChild)
 			.filter(Optional::isPresent)
