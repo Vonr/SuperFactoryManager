@@ -28,4 +28,9 @@ class IconSection extends FlowContainer {
 	public void onDataChanged(ItemStackTileEntityRuleFlowData data) {
 		ICON.BUTTON.setItemStack(data.icon);
 	}
+
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() + 10;
+	}
 }

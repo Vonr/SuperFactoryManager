@@ -18,11 +18,10 @@ public abstract class FlowBlockPosPicker extends FlowContainer {
 	) {
 		super(pos);
 		this.DRAWER = new FlowDrawer(
-			new Position(0, 20),
+			new Position(0, 0),
 			5,
 			7
 		);
-		DRAWER.setShrinkToFit(false);
 		addChild(DRAWER);
 	}
 

@@ -52,6 +52,7 @@ class FilterSection extends FlowContainer {
 			ITEM_SELECTION_MODE_GROUP
 		);
 		addChild(BLACKLIST_BUTTON);
+		onDataChanged(PARENT.getData());
 	}
 
 

@@ -9,6 +9,8 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import java.util.stream.Collectors;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -30,17 +32,19 @@ class TilesSection extends FlowContainer {
 			I18n.format("gui.sfm.manager.tile_entity_rule.tiles.title")
 		));
 
-		DRAWER = new FlowDrawer(new Position(0, 16), 4, 2);
+		DRAWER = new FlowDrawer(new Position(0, 16), 4, 3);
 		DRAWER.setShrinkToFit(false);
 		addChild(DRAWER);
 
 		PICKER = new FlowBlockPosPicker(
-			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 15, 15)
+			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth()+ 5, 15)
 		) {
 			@Override
 			public void onPicked(BlockPos pos) {
 				PARENT.getData().tilePositions.add(pos);
 				PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
+				setVisible(false);
+				setEnabled(false);
 			}
 		};
 		PICKER.setVisible(false);
@@ -53,13 +57,27 @@ class TilesSection extends FlowContainer {
 	public void rebuildChildren() {
 		DRAWER.getChildren().clear();
 		DRAWER.addChild(new AddButton());
-		World world = PARENT.CONTROLLER.SCREEN.getContainer().getSource().getWorld();
+
+		ManagerTileEntity tile = PARENT.CONTROLLER.SCREEN.getContainer().getSource();
+		World world = tile.getWorld();
+
 		if (world == null) {
 			return;
 		}
+
 		PARENT.getData().tilePositions.stream()
 			.map(pos -> new Entry(pos, new ItemStack(world.getBlockState(pos).getBlock().asItem())))
 			.forEach(DRAWER::addChild);
+
+		PICKER.setContents(
+			tile.getCableNeighbours()
+				.filter(p -> !PARENT.getData().tilePositions.contains(p))
+				.filter(p -> !world.isAirBlock(p))
+				.filter(p -> world.getTileEntity(p) != null)
+				.collect(Collectors.toList()),
+			world
+		);
+
 		DRAWER.update();
 	}
 
