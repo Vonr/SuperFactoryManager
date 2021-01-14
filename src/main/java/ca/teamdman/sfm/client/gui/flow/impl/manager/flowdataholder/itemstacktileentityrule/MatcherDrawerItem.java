@@ -46,6 +46,7 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		this.DELEGATE = delegate;
 		DELEGATE.setPosition(parent.getPosition()
 			.withConstantOffset(parent.DRAWER.getPosition())
+			.withConstantOffset(parent.PARENT.getPosition())
 			.withConstantOffset(getPosition())
 			.withConstantOffset(getSize().getWidth() + 5, 0));
 		addChild(ICON);
