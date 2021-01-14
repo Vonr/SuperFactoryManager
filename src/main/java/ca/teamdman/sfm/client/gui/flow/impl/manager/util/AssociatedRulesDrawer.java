@@ -242,7 +242,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 			super(
 				new Position(),
 				ItemStackFlowComponent.DEFAULT_SIZE.copy(),
-				CONST.SELECTED
+				CONST.ADD_BUTTON
 			);
 		}
 
@@ -271,7 +271,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 			super(
 				new Position(),
 				ItemStackFlowComponent.DEFAULT_SIZE.copy(),
-				CONST.SELECTED
+				CONST.ADD_BUTTON
 			);
 		}
 
@@ -286,6 +286,7 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 					items[(int) (Math.random() * items.length)],
 					new Position(0, 0),
 					FilterMode.WHITELIST,
+					Collections.emptyList(),
 					Collections.emptyList()
 				)
 			);

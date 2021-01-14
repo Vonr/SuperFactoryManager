@@ -40,6 +40,7 @@ public class Colour3f {
 		public static final Colour3f BUTTON_BACKGROUND_SELECTED_HOVER = new Colour3f(0x6666cc);
 		public static final Colour3f BUTTON_BORDER_SELECTED_HOVER = new Colour3f(0x6060c0);
 		public static final Colour3f BUTTON_TEXT_NORMAL = new Colour3f(0x44546a);
+		public static final Colour3f ADD_BUTTON = new Colour3f(0.4f, 0.8f, 0.4f);
 		public static final Colour3f CHECKBOX_BACKGROUND = new Colour3f(0.3f, 0.3f, 0.3f);
 		public static final Colour3f GREEN = new Colour3f(0x00FF00);
 		public static final Colour3f HIGHLIGHT = new Colour3f(0.4f, 0.4f, 0.8f);

@@ -10,6 +10,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktile
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import ca.teamdman.sfm.common.util.BlockPosList;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
@@ -20,6 +21,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 
 public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	PositionHolder {
@@ -29,15 +31,16 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public ItemStack icon;
 	public Position position;
 	public UUIDList matcherIds;
+	public BlockPosList tilePositions;
 
 	public ItemStackTileEntityRuleFlowData(
-
 		UUID uuid,
 		String name,
 		ItemStack icon,
 		Position position,
 		FilterMode filterMode,
-		List<UUID> matcherIds
+		List<UUID> matcherIds,
+		List<BlockPos> tilePositions
 	) {
 		super(uuid);
 		this.name = name;
@@ -45,6 +48,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		this.position = position;
 		this.filterMode = filterMode;
 		this.matcherIds = new UUIDList(matcherIds);
+		this.tilePositions = new BlockPosList(tilePositions);
 	}
 
 	public ItemStack getIcon() {
@@ -98,7 +102,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 				ItemStack.read(tag.getCompound("icon")),
 				new Position(tag.getCompound("pos")),
 				FilterMode.valueOf(tag.getString("filterMode")),
-				new UUIDList(tag, "matchers")
+				new UUIDList(tag, "matchers"),
+				new BlockPosList(tag, "tiles")
 			);
 		}
 
@@ -110,6 +115,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 			tag.put("icon", data.icon.serializeNBT());
 			tag.putString("filterMode", data.filterMode.name());
 			tag.put("matchers", data.matcherIds.serialize());
+			tag.put("tiles", data.tilePositions.serialize());
 			return tag;
 		}
 
@@ -121,7 +127,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 				buf.readItemStack(),
 				Position.fromLong(buf.readLong()),
 				FilterMode.valueOf(buf.readString()),
-				new UUIDList(buf)
+				new UUIDList(buf),
+				new BlockPosList(buf)
 			);
 		}
 
@@ -133,6 +140,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 			buf.writeLong(data.position.toLong());
 			buf.writeString(data.filterMode.name());
 			data.matcherIds.serialize(buf);
+			data.tilePositions.serialize(buf);
 		}
 	}
 }

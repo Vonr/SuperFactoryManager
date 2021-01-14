@@ -9,7 +9,7 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.item.ItemStack;
 
-public class IconComponent extends FlowContainer {
+class IconComponent extends FlowContainer {
 
 	private final ItemStackTileEntityRuleFlowComponent PARENT;
 	private final FlowItemStackPicker PICKER;

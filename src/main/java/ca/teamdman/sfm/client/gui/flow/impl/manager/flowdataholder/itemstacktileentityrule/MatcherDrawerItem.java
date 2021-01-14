@@ -18,10 +18,10 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 
 	private final T DELEGATE;
 	private final DisplayIcon ICON;
-	private final ItemStackTileEntityRuleFlowComponent PARENT;
+	private final ItemsSection PARENT;
 
 	public MatcherDrawerItem(
-		ItemStackTileEntityRuleFlowComponent parent,
+		ItemsSection parent,
 		T delegate
 	) {
 		super(new Position(), ItemStackFlowComponent.DEFAULT_SIZE);
@@ -33,7 +33,7 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 				super.setXY(x, y);
 				if (
 					ICON.isSelected()
-					&& !PARENT.MATCHER_DRAWER.isChildVisible(MatcherDrawerItem.this)
+					&& !PARENT.DRAWER.isChildVisible(MatcherDrawerItem.this)
 				) {
 					ICON.setSelected(false);
 					ICON.onSelectionChanged();
@@ -44,7 +44,7 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		this.ICON = new DisplayIcon(delegate.getData().getPreview().get(0), new Position());
 		this.DELEGATE = delegate;
 		DELEGATE.setPosition(parent.getPosition()
-			.withConstantOffset(parent.MATCHER_DRAWER.getPosition())
+			.withConstantOffset(parent.DRAWER.getPosition())
 			.withConstantOffset(getPosition())
 			.withConstantOffset(getSize().getWidth() + 5, 0));
 		addChild(ICON);
@@ -61,14 +61,14 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		public boolean isInBounds(int mx, int my) {
 			// Undo mouse coordinate localization before checking if in the bounds of parent
 			// We want to make sure that objects scrolled out of view are not capturing mouse actions
-			return PARENT.MATCHER_DRAWER.isInBounds(
+			return PARENT.DRAWER.isInBounds(
 				mx + (
 					MatcherDrawerItem.this.getPosition().getX()
-						+ PARENT.MATCHER_DRAWER.getPosition().getX()
+						+ PARENT.DRAWER.getPosition().getX()
 				),
 				my + (
 					MatcherDrawerItem.this.getPosition().getY()
-						+ PARENT.MATCHER_DRAWER.getPosition().getY()
+						+ PARENT.DRAWER.getPosition().getY()
 				)
 			) && super.isInBounds(mx, my);
 		}
@@ -92,14 +92,14 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		@Override
 		public void onSelectionChanged() {
 			if (!Client.allowMultipleRuleWindows && isSelected()) {
-				PARENT.CONTROLLER.getChildren().stream()
+				PARENT.PARENT.CONTROLLER.getChildren().stream()
 					.filter(c -> c instanceof FlowDataHolder)
 					.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemStackMatcher)
 					.forEach(c -> {
 						c.setVisible(false);
 						c.setEnabled(false);
 					});
-				PARENT.MATCHER_DRAWER.getChildren().stream()
+				PARENT.DRAWER.getChildren().stream()
 					.filter(c -> c instanceof MatcherDrawerItem && c != MatcherDrawerItem.this)
 					.forEach(c -> ((MatcherDrawerItem<?>) c).ICON.setSelected(false));
 			}

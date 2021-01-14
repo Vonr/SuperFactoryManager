@@ -34,18 +34,21 @@ public class Size {
 		this.height = height;
 	}
 
+	public Size toImmutable() {
+		return new ImmutableSize(this);
+	}
+
 	public Size copy() {
 		return new Size(this);
 	}
 
-	public void setSize(int width, int height) {
-		this.width = width;
-		this.height = height;
+	public void setSize(Size other) {
+		setSize(other.getWidth(), other.getHeight());
 	}
 
-	public void setSize(Size other) {
-		this.width = other.getWidth();
-		this.height = other.getHeight();
+	public void setSize(int width, int height) {
+		setWidth(width);
+		setHeight(height);
 	}
 
 	/**
@@ -56,17 +59,19 @@ public class Size {
 	 * @return true if coordinate is contained in this element's area, false otherwise
 	 */
 	public boolean contains(Position myPosition, int x, int y) {
-		return x >= myPosition.getX() && x <= myPosition.getX() + getWidth() && y >= myPosition.getY()
+		return x >= myPosition.getX() && x <= myPosition.getX() + getWidth() && y >= myPosition
+			.getY()
 			&& y <= myPosition.getY() + getHeight();
 	}
 
 	/**
 	 * Create a new Size object that will match this width, but with a custom height
+	 *
 	 * @param height Custom constant height
 	 * @return Size delegate
 	 */
 	public Size withConstantHeight(int height) {
-		return new Size(0,0) {
+		return new Size(0, 0) {
 			@Override
 			public int getWidth() {
 				return Size.this.getWidth();
@@ -81,11 +86,12 @@ public class Size {
 
 	/**
 	 * Create a new Size object that will match this height, but with a custom width
+	 *
 	 * @param width Custom constant width
 	 * @return Size delegate
 	 */
 	public Size withConstantWidth(int width) {
-		return new Size(0,0) {
+		return new Size(0, 0) {
 			@Override
 			public int getWidth() {
 				return width;
@@ -98,8 +104,33 @@ public class Size {
 		};
 	}
 
+	public Size toMutable() {
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return "Size[" + getWidth() + ", " + getHeight() + ']';
+	}
+
+	public static class ImmutableSize extends Size {
+		public ImmutableSize(Size copy) {
+			super(copy);
+		}
+
+		@Override
+		public void setWidth(int width) {
+			super.setWidth(width);
+		}
+
+		@Override
+		public void setHeight(int height) {
+			super.setHeight(height);
+		}
+
+		@Override
+		public Size toMutable() {
+			return new Size(this);
+		}
 	}
 }

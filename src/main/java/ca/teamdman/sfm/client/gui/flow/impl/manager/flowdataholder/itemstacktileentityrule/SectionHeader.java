@@ -7,7 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-public class SectionHeader extends FlowComponent {
+class SectionHeader extends FlowComponent {
 
 	private final String CONTENT;
 

@@ -12,7 +12,7 @@ import java.util.UUID;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 
-public class AddMatcherButton extends FlowPlusButton {
+class AddMatcherButton extends FlowPlusButton {
 
 	private ManagerFlowController CONTROLLER;
 	private ItemStackTileEntityRuleFlowData data;
@@ -21,7 +21,7 @@ public class AddMatcherButton extends FlowPlusButton {
 		ManagerFlowController CONTROLLER, ItemStackTileEntityRuleFlowData data,
 		Position pos
 	) {
-		super(pos, ItemStackFlowComponent.DEFAULT_SIZE, CONST.SELECTED);
+		super(pos, ItemStackFlowComponent.DEFAULT_SIZE, CONST.ADD_BUTTON);
 		this.CONTROLLER = CONTROLLER;
 		this.data = data;
 	}

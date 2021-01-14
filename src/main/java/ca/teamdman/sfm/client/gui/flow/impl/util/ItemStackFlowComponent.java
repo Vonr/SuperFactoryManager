@@ -16,7 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextProperties;
 
 public class ItemStackFlowComponent extends FlowButton implements ISelectable {
-	public static final Size DEFAULT_SIZE = new Size(20, 20);
+	public static final Size DEFAULT_SIZE = new Size(20, 20).toImmutable();
 	private ItemStack STACK;
 	private boolean selected;
 	private boolean selectable = true;

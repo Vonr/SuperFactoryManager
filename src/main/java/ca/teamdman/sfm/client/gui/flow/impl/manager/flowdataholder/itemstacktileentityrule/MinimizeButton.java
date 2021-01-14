@@ -7,7 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowMinusButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-public class MinimizeButton extends FlowMinusButton {
+class MinimizeButton extends FlowMinusButton {
 
 	private ItemStackTileEntityRuleFlowComponent itemStackTileEntityRuleFlowComponent;
 
