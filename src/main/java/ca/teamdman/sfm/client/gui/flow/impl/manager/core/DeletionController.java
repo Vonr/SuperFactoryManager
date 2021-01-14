@@ -5,9 +5,9 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
+import ca.teamdman.sfm.common.flow.data.FlowData;
 import java.util.Optional;
+import java.util.UUID;
 import org.lwjgl.glfw.GLFW;
 
 public class DeletionController extends FlowComponent {
@@ -21,15 +21,13 @@ public class DeletionController extends FlowComponent {
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		if (keyCode == GLFW.GLFW_KEY_DELETE) {
-			Optional<FlowDataHolder> elem = CONTROLLER.getElementUnderMouse(mx, my)
+			Optional<UUID> elem = CONTROLLER.getElementUnderMouse(mx, my)
 				.filter(FlowDataHolder.class::isInstance)
 				.map(FlowDataHolder.class::cast)
-				.filter(FlowDataHolder::isDeletable);
-			elem.ifPresent(holder -> PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
-				CONTROLLER.SCREEN.getContainer().windowId,
-				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-				holder.getData().getId()
-			)));
+				.filter(FlowDataHolder::isDeletable)
+				.map(FlowDataHolder::getData)
+				.map(FlowData::getId);
+			elem.ifPresent(CONTROLLER.SCREEN::sendFlowDataDeleteToServer);
 			return elem.isPresent();
 		}
 		return false;

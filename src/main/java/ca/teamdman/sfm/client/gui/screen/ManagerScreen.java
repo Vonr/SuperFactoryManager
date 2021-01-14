@@ -10,8 +10,10 @@ import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
 import ca.teamdman.sfm.common.util.SFMUtil;
+import java.util.UUID;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.text.ITextComponent;
@@ -63,5 +65,13 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 	@Override
 	public ManagerContainer getContainer() {
 		return CONTAINER;
+	}
+
+	public void sendFlowDataDeleteToServer(UUID id) {
+		PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
+			CONTROLLER.SCREEN.getContainer().windowId,
+			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
+			id
+		));
 	}
 }
