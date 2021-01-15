@@ -90,6 +90,7 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 					),
 					HashMap::putAll
 				);
+		dependencies.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 
 		ArrayDeque<FlowData> remaining = SCREEN.getFlowDataContainer().stream()
 			.filter(data -> data.getDependencies().stream().noneMatch(present::contains))
