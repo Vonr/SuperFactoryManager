@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstackmatcher;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -9,14 +9,14 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.item.ItemStack;
 
-class IconComponent extends FlowContainer {
+class ComparerMatcherIconComponent extends FlowContainer {
 
-	private final ItemStackTileEntityRuleFlowComponent PARENT;
+	private final ItemStackComparerMatcherFlowComponent PARENT;
 	private final FlowItemStackPicker PICKER;
 	protected final ItemStackFlowComponent BUTTON;
 
-	public IconComponent(
-		ItemStackTileEntityRuleFlowComponent parent,
+	public ComparerMatcherIconComponent(
+		ItemStackComparerMatcherFlowComponent parent,
 		Position pos
 	) {
 		super(pos);
@@ -32,7 +32,7 @@ class IconComponent extends FlowContainer {
 	private class MyButton extends ItemStackFlowComponent {
 
 		public MyButton() {
-			super(PARENT.getData().icon, new Position());
+			super(PARENT.getData().stack, new Position());
 		}
 
 		@Override
@@ -58,15 +58,15 @@ class IconComponent extends FlowContainer {
 
 		public MyPicker() {
 			super(
-				PARENT.CONTROLLER,
+				PARENT.PARENT,
 				new Position(BUTTON.getSize().getWidth() + 5,0)
 			);
 		}
 
 		@Override
 		public void onItemStackChanged(ItemStack stack) {
-			PARENT.getData().icon = stack;
-			PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
+			PARENT.getData().stack = stack;
+			PARENT.PARENT.SCREEN.sendFlowDataToServer(PARENT.getData());
 		}
 	}
 }

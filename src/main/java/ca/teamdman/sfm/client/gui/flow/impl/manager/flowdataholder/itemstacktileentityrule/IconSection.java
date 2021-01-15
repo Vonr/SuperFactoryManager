@@ -9,7 +9,7 @@ import net.minecraft.client.resources.I18n;
 class IconSection extends FlowContainer {
 
 	private ItemStackTileEntityRuleFlowComponent PARENT;
-	private final IconComponent ICON;
+	private final RuleIconComponent ICON;
 
 	public IconSection(ItemStackTileEntityRuleFlowComponent parent,Position pos) {
 		super(pos);
@@ -21,7 +21,7 @@ class IconSection extends FlowContainer {
 			I18n.format("gui.sfm.manager.tile_entity_rule.icon.title")
 		));
 
-		this.ICON = new IconComponent(PARENT, new Position(0, 15));
+		this.ICON = new RuleIconComponent(PARENT, new Position(0, 15));
 		addChild(ICON);
 	}
 

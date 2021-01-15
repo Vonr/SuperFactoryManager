@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstackmatcher;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -18,14 +18,10 @@ public class ItemStackComparerMatcherFlowComponent extends
 	FlowContainer implements
 	FlowDataHolder<ItemStackComparerMatcherFlowData> {
 
-	private final ItemStackFlowComponent STACK;
+	protected final ManagerFlowController PARENT;
+	private final ComparerMatcherIconComponent ICON;
 	private final TextAreaFlowComponent QUANTITY_INPUT;
 	private ItemStackComparerMatcherFlowData data;
-
-	@Override
-	public int getZIndex() {
-		return super.getZIndex() + 120;
-	}
 
 	public ItemStackComparerMatcherFlowComponent(
 		ManagerFlowController parent,
@@ -35,6 +31,7 @@ public class ItemStackComparerMatcherFlowComponent extends
 			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 0),
 			new Size(100,24)
 		);
+		PARENT = parent;
 		this.data = data;
 
 		// Quantity input box
@@ -74,8 +71,9 @@ public class ItemStackComparerMatcherFlowComponent extends
 		});
 
 		// Display itemstack
-		this.STACK = new ItemStackFlowComponent(data.stack, new Position(54, 2));
-		addChild(STACK);
+//		this.ICON = new ItemStackFlowComponent(data.stack, new Position(54, 2));
+		this.ICON = new ComparerMatcherIconComponent(this, new Position(54, 2));
+		addChild(ICON);
 
 		// Add change listener
 		parent.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
@@ -85,6 +83,11 @@ public class ItemStackComparerMatcherFlowComponent extends
 
 		setEnabled(false);
 		setVisible(false);
+	}
+
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() + 120;
 	}
 
 	@Override
@@ -115,7 +118,7 @@ public class ItemStackComparerMatcherFlowComponent extends
 	@Override
 	public void setData(ItemStackComparerMatcherFlowData data) {
 		this.data = data;
-		STACK.setItemStack(data.stack);
+		ICON.BUTTON.setItemStack(data.stack);
 		QUANTITY_INPUT.setContent(Integer.toString(data.quantity));
 	}
 }

@@ -26,6 +26,9 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		T delegate
 	) {
 		super(new Position(), ItemStackFlowComponent.DEFAULT_SIZE);
+		this.PARENT = parent;
+		this.DELEGATE = delegate;
+
 		// When we scroll out of view, hide the delegate
 		setPosition(new Position() {
 			//Specifically override the method the drawer uses to update position
@@ -41,22 +44,23 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 				}
 			}
 		});
-		this.PARENT = parent;
-		this.ICON = new DisplayIcon(delegate.getData().getPreview().get(0), new Position());
-		this.DELEGATE = delegate;
+
+		this.ICON = new DisplayIcon();
 		DELEGATE.setPosition(parent.getPosition()
 			.withConstantOffset(parent.DRAWER.getPosition())
 			.withConstantOffset(parent.PARENT.getPosition())
 			.withConstantOffset(getPosition())
 			.withConstantOffset(getSize().getWidth() + 5, 0));
+		ICON.setSelected(DELEGATE.isVisible());
 		addChild(ICON);
 	}
 
 
 	private class DisplayIcon extends ItemStackFlowComponent {
-
-		public DisplayIcon(ItemStack stack, Position pos) {
-			super(stack, pos);
+		private int tick = 0;
+		public DisplayIcon() {
+			super(ItemStack.EMPTY, new Position());
+			setNextIcon();
 		}
 
 		@Override
@@ -78,6 +82,20 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		@Override
 		public boolean isTooltipEnabled(int mx, int my) {
 			return !ICON.isSelected() && super.isTooltipEnabled(mx, my);
+		}
+
+		@Override
+		public void tick() {
+			tick++;
+			if (tick%10==0) {
+				setNextIcon();
+			}
+		}
+
+		private void setNextIcon() {
+			List<ItemStack> opt = DELEGATE.getData().getPreview();
+			if (opt.size() == 0) return;
+			setItemStack(opt.get((tick/10)%opt.size()));
 		}
 
 		@Override

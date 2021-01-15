@@ -25,7 +25,6 @@ class ItemsSection extends FlowContainer {
 			I18n.format("gui.sfm.manager.tile_entity_rule.items.title")
 		));
 
-
 		DRAWER = new FlowDrawer(new Position(0, 16), 4, 3);
 		DRAWER.setShrinkToFit(false);
 		addChild(DRAWER);
@@ -56,5 +55,10 @@ class ItemsSection extends FlowContainer {
 			.map(c -> new MatcherDrawerItem(this, c))
 			.forEach(DRAWER::addChild);
 		DRAWER.update();
+	}
+
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() + 5;
 	}
 }
