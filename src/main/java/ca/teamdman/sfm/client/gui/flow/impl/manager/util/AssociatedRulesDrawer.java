@@ -19,6 +19,7 @@ import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData.FilterMode;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
+import ca.teamdman.sfm.common.util.SlotsRule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -290,7 +291,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 					FilterMode.WHITELIST,
 					Collections.emptyList(),
 					Collections.emptyList(),
-					EnumSet.allOf(Direction.class)
+					EnumSet.allOf(Direction.class),
+					new SlotsRule("")
 				)
 			);
 		}

@@ -4,6 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.TextAreaFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.client.resources.I18n;
@@ -14,6 +15,7 @@ import net.minecraft.util.text.TextFormatting;
 public class SlotsSection extends FlowContainer {
 
 	private final ItemStackTileEntityRuleFlowComponent PARENT;
+	private final TextAreaFlowComponent INPUT;
 
 	public SlotsSection(
 		ItemStackTileEntityRuleFlowComponent PARENT,
@@ -44,12 +46,24 @@ public class SlotsSection extends FlowContainer {
 			}
 		});
 
-		addChild(new TextAreaFlowComponent(
+		INPUT = new TextAreaFlowComponent(
 			PARENT.CONTROLLER.SCREEN,
 			"",
 			"",
 			new Position(0, 15),
-			new Size(70,10)
-		));
+			new Size(70, 10)
+		);
+		INPUT.setResponder(next -> {
+			if (!next.equals(PARENT.getData().slots.getDefinition())) {
+				PARENT.getData().slots.setDefinition(next);
+				PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
+			}
+		});
+		addChild(INPUT);
+		onDataChanged(PARENT.getData());
+	}
+
+	public void onDataChanged(ItemStackTileEntityRuleFlowData data) {
+		INPUT.setContent(data.slots.getDefinition());
 	}
 }

@@ -118,6 +118,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		FILTER_SECTION.onDataChanged(data);
 		ITEMS_SECTION.onDataChanged(data);
 		TILES_SECTION.onDataChanged(data);
+		SLOTS_SECTION.onDataChanged(data);
 	}
 
 	@Override

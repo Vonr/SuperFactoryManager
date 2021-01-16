@@ -15,6 +15,7 @@ import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSeri
 import ca.teamdman.sfm.common.util.BlockPosList;
 import ca.teamdman.sfm.common.util.EnumSetSerializationHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.SlotsRule;
 import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
 import java.util.EnumSet;
@@ -40,6 +41,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public UUIDList matcherIds;
 	public BlockPosList tilePositions;
 	public EnumSet<Direction> faces;
+	public SlotsRule slots;
 	private final FlowDataRemovedObserver OBSERVER;
 
 	public ItemStackTileEntityRuleFlowData(
@@ -50,7 +52,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		FilterMode filterMode,
 		List<UUID> matcherIds,
 		List<BlockPos> tilePositions,
-		EnumSet<Direction> faces
+		EnumSet<Direction> faces,
+		SlotsRule slots
 	) {
 		super(uuid);
 		this.name = name;
@@ -60,6 +63,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		this.matcherIds = new UUIDList(matcherIds);
 		this.tilePositions = new BlockPosList(tilePositions);
 		this.faces = faces;
+		this.slots = slots;
 		this.OBSERVER = new FlowDataRemovedObserver(
 			this,
 			data -> this.matcherIds.remove(data.getId())
@@ -128,7 +132,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 				FilterMode.valueOf(tag.getString("filterMode")),
 				new UUIDList(tag, "matchers"),
 				new BlockPosList(tag, "tiles"),
-				EnumSetSerializationHelper.deserialize(tag, "faces", Direction::valueOf)
+				EnumSetSerializationHelper.deserialize(tag, "faces", Direction::valueOf),
+				new SlotsRule(tag.getString("slots"))
 			);
 		}
 
@@ -142,6 +147,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 			tag.put("matchers", data.matcherIds.serialize());
 			tag.put("tiles", data.tilePositions.serialize());
 			tag.put("faces", EnumSetSerializationHelper.serialize(data.faces));
+			tag.putString("slots", data.slots.getDefinition());
 			return tag;
 		}
 
@@ -155,7 +161,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 				FilterMode.valueOf(buf.readString()),
 				new UUIDList(buf),
 				new BlockPosList(buf),
-				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf)
+				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf),
+				new SlotsRule(buf.readString())
 			);
 		}
 
@@ -169,6 +176,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 			data.matcherIds.serialize(buf);
 			data.tilePositions.serialize(buf);
 			EnumSetSerializationHelper.serialize(data.faces, buf);
+			buf.writeString(data.slots.getDefinition());
 		}
 	}
 }
