@@ -2,8 +2,8 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktil
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowRadioButton.RadioGroup;
+import ca.teamdman.sfm.client.gui.flow.impl.util.RadioFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.util.RadioFlowButton.RadioGroup;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData.FilterMode;
@@ -12,8 +12,8 @@ import net.minecraft.client.resources.I18n;
 class FilterSection extends FlowContainer {
 
 	private final RadioGroup ITEM_SELECTION_MODE_GROUP;
-	private final FlowRadioButton WHITELIST_BUTTON;
-	private final FlowRadioButton BLACKLIST_BUTTON;
+	private final RadioFlowButton WHITELIST_BUTTON;
+	private final RadioFlowButton BLACKLIST_BUTTON;
 	private ItemStackTileEntityRuleFlowComponent PARENT;
 
 	public FilterSection(ItemStackTileEntityRuleFlowComponent parent, Position pos) {
@@ -27,7 +27,7 @@ class FilterSection extends FlowContainer {
 		));
 		this.ITEM_SELECTION_MODE_GROUP = new RadioGroup() {
 			@Override
-			public void onSelectionChanged(FlowRadioButton member) {
+			public void onSelectionChanged(RadioFlowButton member) {
 				FilterMode next = member == WHITELIST_BUTTON
 					? FilterMode.WHITELIST
 					: FilterMode.BLACKLIST;
@@ -37,7 +37,7 @@ class FilterSection extends FlowContainer {
 				}
 			}
 		};
-		WHITELIST_BUTTON = new FlowRadioButton(
+		WHITELIST_BUTTON = new RadioFlowButton(
 			new Position(0, 15),
 			new Size(35, 12),
 			I18n.format("gui.sfm.flow.tileentityrule.button.whitelist"),
@@ -45,7 +45,7 @@ class FilterSection extends FlowContainer {
 		);
 		addChild(WHITELIST_BUTTON);
 
-		BLACKLIST_BUTTON = new FlowRadioButton(
+		BLACKLIST_BUTTON = new RadioFlowButton(
 			new Position(0, 30),
 			new Size(35, 12),
 			I18n.format("gui.sfm.flow.tileentityrule.button.blacklist"),

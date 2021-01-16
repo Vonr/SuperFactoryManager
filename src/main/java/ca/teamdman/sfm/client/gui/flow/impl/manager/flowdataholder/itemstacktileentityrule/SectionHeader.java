@@ -14,7 +14,7 @@ class SectionHeader extends FlowComponent {
 	public SectionHeader(Position pos, Size size, String CONTENT) {
 		super(pos, size);
 		this.CONTENT = CONTENT;
-		setEnabled(false);
+//		setEnabled(false);
 	}
 
 	@Override
@@ -40,5 +40,6 @@ class SectionHeader extends FlowComponent {
 			1,
 			CONST.TEXT_LIGHT
 		);
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 }

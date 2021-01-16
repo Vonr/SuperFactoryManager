@@ -14,25 +14,19 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.HashSet;
-import java.util.Optional;
 
-public class FlowRadioButton extends FlowButton {
+public class SelectableFlowButton extends FlowButton {
 
-	private final RadioGroup GROUP;
-	private final String TEXT;
+	protected final String TEXT;
 	private boolean selected = false;
 
-	public FlowRadioButton(
+	public SelectableFlowButton(
 		Position pos,
 		Size size,
-		String text,
-		RadioGroup group
+		String text
 	) {
 		super(pos, size);
-		group.addMember(this);
 		this.TEXT = text;
-		this.GROUP = group;
 	}
 
 	public boolean isSelected() {
@@ -45,7 +39,12 @@ public class FlowRadioButton extends FlowButton {
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		GROUP.setSelected(this);
+		setSelected(!isSelected());
+		onSelectionChanged();
+	}
+
+	public void onSelectionChanged() {
+
 	}
 
 	@Override
@@ -80,32 +79,5 @@ public class FlowRadioButton extends FlowButton {
 			0.7f,
 			BUTTON_TEXT_NORMAL
 		);
-	}
-
-	/**
-	 * Only one member can be selected at once. Members store their selected property.
-	 */
-	public static class RadioGroup {
-
-		private final HashSet<FlowRadioButton> MEMBERS = new HashSet<>();
-
-		public void addMember(FlowRadioButton member) {
-			MEMBERS.add(member);
-		}
-
-		public Optional<FlowRadioButton> getSelected() {
-			return MEMBERS.stream().filter(FlowRadioButton::isSelected).findFirst();
-		}
-
-		public void setSelected(FlowRadioButton member) {
-			for (FlowRadioButton button : MEMBERS) {
-				button.setSelected(member.equals(button));
-			}
-			onSelectionChanged(member);
-		}
-
-		public void onSelectionChanged(FlowRadioButton member) {
-
-		}
 	}
 }

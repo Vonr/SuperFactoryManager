@@ -25,6 +25,8 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 	private final IconSection ICON_SECTION;
 	private final FilterSection FILTER_SECTION;
 	private final ToolbarSection TOOLBAR_SECTION;
+	private final FacesSection FACES_SECTION;
+	private final SlotsSection SLOTS_SECTION;
 	private ItemStackTileEntityRuleFlowData data;
 
 	public ItemStackTileEntityRuleFlowComponent(
@@ -43,10 +45,16 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		FILTER_SECTION = new FilterSection(this, new Position(45, 25));
 		addChild(FILTER_SECTION);
 
-		ITEMS_SECTION = new ItemsSection(this, new Position(5, 70));
+		FACES_SECTION = new FacesSection(this, new Position(85, 25));
+		addChild(FACES_SECTION);
+
+		SLOTS_SECTION = new SlotsSection(this, new Position(125, 25));
+		addChild(SLOTS_SECTION);
+
+		ITEMS_SECTION = new ItemsSection(this, new Position(5, 73));
 		addChild(ITEMS_SECTION);
 
-		TILES_SECTION = new TilesSection(this, new Position(110, 70));
+		TILES_SECTION = new TilesSection(this, new Position(110, 73));
 		addChild(TILES_SECTION);
 
 		// Hide by default

@@ -29,5 +29,7 @@
   "gui.sfm.flow.search.no_results_found": "No results found...",
   "gui.sfm.flow.search.placeholder": "Search",
   "gui.sfm.manager.tile_entity_rule.tiles.title": "Tiles",
-  "gui.sfm.manager.tile_entity_rule.filter.title": "Filter"
+  "gui.sfm.manager.tile_entity_rule.filter.title": "Filter",
+  "gui.sfm.manager.tile_entity_rule.faces.title": "Faces",
+  "gui.sfm.manager.tile_entity_rule.slots.title": "Slots"
 }

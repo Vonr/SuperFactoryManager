@@ -21,6 +21,7 @@ import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContain
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -29,6 +30,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Direction;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
@@ -287,7 +289,8 @@ public abstract class AssociatedRulesDrawer extends FlowContainer implements Obs
 					new Position(0, 0),
 					FilterMode.WHITELIST,
 					Collections.emptyList(),
-					Collections.emptyList()
+					Collections.emptyList(),
+					EnumSet.allOf(Direction.class)
 				)
 			);
 		}
