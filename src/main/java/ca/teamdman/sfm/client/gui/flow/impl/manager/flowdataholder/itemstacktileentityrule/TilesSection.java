@@ -9,10 +9,11 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
-import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import java.util.stream.Collectors;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.lwjgl.glfw.GLFW;
@@ -71,10 +72,8 @@ class TilesSection extends FlowContainer {
 			.forEach(DRAWER::addChild);
 
 		PICKER.setContents(
-			tile.getCableNeighbours()
-				.filter(p -> !PARENT.getData().tilePositions.contains(p))
-				.filter(p -> !world.isAirBlock(p))
-				.filter(p -> world.getTileEntity(p) != null)
+			tile.getCableTiles()
+				.map(TileEntity::getPos)
 				.collect(Collectors.toList()),
 			world
 		);
