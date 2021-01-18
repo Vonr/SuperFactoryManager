@@ -5,7 +5,7 @@ package ca.teamdman.sfm.common.net.packet.manager;
 
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.net.packet.IContainerTilePacket;
-import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.function.Supplier;
 import net.minecraft.network.PacketBuffer;

@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.common.container.factory;
 
 import ca.teamdman.sfm.common.container.ManagerContainer;
-import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import javax.annotation.Nullable;
 import net.minecraft.entity.player.PlayerEntity;

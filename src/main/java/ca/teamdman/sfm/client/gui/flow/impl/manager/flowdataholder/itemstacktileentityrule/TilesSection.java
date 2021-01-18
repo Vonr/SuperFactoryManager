@@ -72,7 +72,7 @@ class TilesSection extends FlowContainer {
 			.forEach(DRAWER::addChild);
 
 		PICKER.setContents(
-			tile.getCableTiles()
+			tile.getCableConnectionHandler().getCachedTiles()
 				.map(TileEntity::getPos)
 				.collect(Collectors.toList()),
 			world

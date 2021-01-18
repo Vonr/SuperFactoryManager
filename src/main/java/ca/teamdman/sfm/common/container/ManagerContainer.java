@@ -5,7 +5,7 @@ package ca.teamdman.sfm.common.container;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
-import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;

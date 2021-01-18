@@ -1,39 +1,36 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.common.tile;
+package ca.teamdman.sfm.common.tile.manager;
 
 import static net.minecraftforge.common.util.Constants.BlockFlags.BLOCK_UPDATE;
 import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBORS;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.block.ICable;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ManagerTileEntity extends TileEntity implements ITickableTileEntity {
 
+	private final CableConnectionHandler CABLE_CONNECTION_HANDLER;
 	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
+	private final FlowExecutor EXECUTOR;
 
 	public ManagerTileEntity() {
 		this(TileEntityRegistrar.Tiles.MANAGER);
@@ -41,6 +38,8 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 
 	public ManagerTileEntity(final TileEntityType<?> type) {
 		super(type);
+		EXECUTOR = new FlowExecutor(this);
+		CABLE_CONNECTION_HANDLER = new CableConnectionHandler(this);
 	}
 
 	public void addContainerListener(ServerPlayerEntity player) {
@@ -112,7 +111,6 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 		);
 	}
 
-
 	@Override
 	public CompoundNBT serializeNBT() {
 		SFM.LOGGER.debug(
@@ -134,43 +132,13 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 	}
 
 
-	public Stream<TileEntity> getCableTiles() {
-		if (world == null) {
-			return Stream.empty();
-		}
-		return getCableNeighbours()
-			.distinct()
-			.map(pos -> world.getTileEntity(pos))
-			.filter(Objects::nonNull);
-	}
-
-	public Stream<BlockPos> getCableNeighbours() {
-		return SFMUtil.getRecursiveStream((current, next, results) -> {
-			for (Direction d : Direction.values()) {
-				BlockPos offset = current.offset(d);
-				if (isCable(offset)) {
-					next.accept(offset);
-				} else {
-					results.accept(offset);
-				}
-			}
-		}, getPos());
-	}
-
-	public boolean isCable(BlockPos pos) {
-		if (world == null || pos == null) {
-			return false;
-		}
-		BlockState state = world.getBlockState(pos);
-		Block block = state.getBlock();
-		if (block instanceof ICable) {
-			return ((ICable) block).isCableEnabled(state, world, pos);
-		}
-		return false;
-	}
-
 	@Override
 	public void tick() {
+		CABLE_CONNECTION_HANDLER.tick();
+		EXECUTOR.tick();
+	}
 
+	public CableConnectionHandler getCableConnectionHandler() {
+		return CABLE_CONNECTION_HANDLER;
 	}
 }

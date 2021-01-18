@@ -4,7 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
-import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import java.util.stream.IntStream;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;

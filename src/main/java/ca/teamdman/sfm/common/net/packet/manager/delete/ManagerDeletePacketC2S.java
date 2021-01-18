@@ -5,7 +5,7 @@ package ca.teamdman.sfm.common.net.packet.manager.delete;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
-import ca.teamdman.sfm.common.tile.ManagerTileEntity;
+import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;

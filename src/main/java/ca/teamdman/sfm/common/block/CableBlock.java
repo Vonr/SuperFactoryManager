@@ -3,20 +3,44 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.block;
 
+import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReader;
+import net.minecraft.world.World;
 
 public class CableBlock extends Block implements ICable {
+
 	public CableBlock(final Properties props) {
 		super(props);
 	}
 
+
 	@Override
-	public boolean isValidPosition(
-		BlockState state, IWorldReader worldIn, BlockPos pos
+	public void onBlockAdded(
+		BlockState state, World worldIn, BlockPos pos, BlockState oldState, boolean isMoving
 	) {
-		return super.isValidPosition(state, worldIn, pos);
+		super.onBlockAdded(state, worldIn, pos, oldState, isMoving);
+		CableNetworkManager.getOrRegisterNetwork(worldIn, pos);
+		SFM.LOGGER.debug(
+			SFMUtil.getMarker(getClass()),
+			"{} networks now",
+			CableNetworkManager.size()
+		);
+	}
+
+	@Override
+	public void onReplaced(
+		BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving
+	) {
+		super.onReplaced(state, worldIn, pos, newState, isMoving);
+		CableNetworkManager.unregister(worldIn, pos);
+		SFM.LOGGER.debug(
+			SFMUtil.getMarker(getClass()),
+			"{} networks now",
+			CableNetworkManager.size()
+		);
 	}
 }
