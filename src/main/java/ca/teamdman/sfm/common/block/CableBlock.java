@@ -17,6 +17,19 @@ public class CableBlock extends Block implements ICable {
 		super(props);
 	}
 
+	@Override
+	public void neighborChanged(
+		BlockState state,
+		World worldIn,
+		BlockPos pos,
+		Block blockIn,
+		BlockPos fromPos,
+		boolean isMoving
+	) {
+		CableNetworkManager.getOrRegisterNetwork(worldIn, pos).ifPresent(network -> {
+			network.rebuildInventories(pos);
+		});
+	}
 
 	@Override
 	public void onBlockAdded(

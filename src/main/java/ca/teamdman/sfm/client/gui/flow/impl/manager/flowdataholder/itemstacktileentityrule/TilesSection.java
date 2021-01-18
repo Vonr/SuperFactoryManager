@@ -7,6 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
@@ -16,6 +17,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.items.CapabilityItemHandler;
 import org.lwjgl.glfw.GLFW;
 
 class TilesSection extends FlowContainer {
@@ -39,7 +41,7 @@ class TilesSection extends FlowContainer {
 		addChild(DRAWER);
 
 		PICKER = new FlowBlockPosPicker(
-			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth()+ 5, 15)
+			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 15)
 		) {
 			@Override
 			public void onPicked(BlockPos pos) {
@@ -71,12 +73,15 @@ class TilesSection extends FlowContainer {
 			.map(pos -> new Entry(pos, new ItemStack(world.getBlockState(pos).getBlock().asItem())))
 			.forEach(DRAWER::addChild);
 
-		PICKER.setContents(
-			tile.getCableConnectionHandler().getCachedTiles()
-				.map(TileEntity::getPos)
-				.collect(Collectors.toList()),
-			world
-		);
+		CableNetworkManager.getOrRegisterNetwork(world, tile.getPos()).ifPresent(network -> {
+			PICKER.setContents(
+				network.getInventories().stream()
+					.filter(t -> t.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).isPresent())
+					.map(TileEntity::getPos)
+					.collect(Collectors.toList()),
+				world
+			);
+		});
 
 		DRAWER.update();
 	}

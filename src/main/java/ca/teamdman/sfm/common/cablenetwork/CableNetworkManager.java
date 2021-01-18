@@ -15,6 +15,24 @@ import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+/**
+ * Helper class to memorize the relevant chains of inventory cables.
+ *
+ * Rather than looking up the connected cable blocks for each manager each tick,
+ * this class aims to keep track of the chains instead.
+ * Adding or removing cable blocks that invoke the relevant methods for this class
+ * will help build the network.
+ *
+ * Adding cables can do one of:
+ * - append to existing network
+ * - cause two existing networks to join
+ * - create a new network
+ *
+ * Removing cables can:
+ * - Remove it from the network
+ * - Remove the network if it was the only member
+ * - Cause a network to split into other networks if it was a "bridge" block
+ */
 public class CableNetworkManager {
 
 	private static final Multimap<RegistryKey<World>, CableNetwork> NETWORKS = ArrayListMultimap

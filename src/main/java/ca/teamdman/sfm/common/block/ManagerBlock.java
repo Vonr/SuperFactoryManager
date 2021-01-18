@@ -8,7 +8,6 @@ import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import javax.annotation.Nullable;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -21,7 +20,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
-public class ManagerBlock extends Block implements ICable {
+public class ManagerBlock extends CableBlock {
 
 	public ManagerBlock(final Properties props) {
 		super(props);
@@ -29,8 +28,10 @@ public class ManagerBlock extends Block implements ICable {
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos,
-		PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+	public ActionResultType onBlockActivated(
+		BlockState state, World world, BlockPos pos,
+		PlayerEntity player, Hand handIn, BlockRayTraceResult hit
+	) {
 		if (!world.isRemote && handIn == Hand.MAIN_HAND) {
 			new ManagerContainerProvider(IWorldPosCallable.of(world, pos)).openGui(player);
 		}
@@ -38,13 +39,16 @@ public class ManagerBlock extends Block implements ICable {
 	}
 
 	@Override
-	public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state,
-		PlayerEntity player) {
+	public void onBlockHarvested(
+		World worldIn, BlockPos pos, BlockState state,
+		PlayerEntity player
+	) {
 		super.onBlockHarvested(worldIn, pos, state, player);
 
 		SFMUtil.getServerTile(IWorldPosCallable.of(worldIn, pos), ManagerTileEntity.class)
 			.ifPresent(manager -> {
-				for (ServerPlayerEntity p : manager.getContainerListeners().toArray(ServerPlayerEntity[]::new)) {
+				for (ServerPlayerEntity p : manager.getContainerListeners()
+					.toArray(ServerPlayerEntity[]::new)) {
 					p.closeScreen();
 				}
 			});

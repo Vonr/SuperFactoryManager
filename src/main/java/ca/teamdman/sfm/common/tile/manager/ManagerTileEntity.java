@@ -27,7 +27,6 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ManagerTileEntity extends TileEntity implements ITickableTileEntity {
 
-	private final CableConnectionHandler CABLE_CONNECTION_HANDLER;
 	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 	private final FlowExecutor EXECUTOR;
@@ -39,7 +38,6 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 	public ManagerTileEntity(final TileEntityType<?> type) {
 		super(type);
 		EXECUTOR = new FlowExecutor(this);
-		CABLE_CONNECTION_HANDLER = new CableConnectionHandler(this);
 	}
 
 	public void addContainerListener(ServerPlayerEntity player) {
@@ -134,11 +132,6 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 
 	@Override
 	public void tick() {
-		CABLE_CONNECTION_HANDLER.tick();
 		EXECUTOR.tick();
-	}
-
-	public CableConnectionHandler getCableConnectionHandler() {
-		return CABLE_CONNECTION_HANDLER;
 	}
 }

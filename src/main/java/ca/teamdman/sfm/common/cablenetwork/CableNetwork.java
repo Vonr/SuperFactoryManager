@@ -34,7 +34,6 @@ public class CableNetwork {
 	}
 
 
-
 	public void rebuildInventories(BlockPos pos) {
 		Arrays.stream(Direction.values())
 			.map(pos::offset)
@@ -47,8 +46,23 @@ public class CableNetwork {
 	}
 
 	/**
-	 * If the position is a bridge, splits the network and returns the part that is removed
-	 * Assumes the bridge position is still a member
+	 * Cables should only join the network if they would be touching a cable already in the network
+	 *
+	 * @param pos Candidate cable position
+	 * @return {@code true} if adjacent to cable in network
+	 */
+	public boolean containsNeighbour(BlockPos pos) {
+		for (Direction direction : Direction.values()) {
+			if (CABLES.contains(pos.offset(direction))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * If the position is a bridge, splits the network and returns the part that is removed Assumes
+	 * the bridge position is still a member
 	 *
 	 * @param pos Cable bridge position
 	 * @return List of positions that need to become new networks
@@ -92,6 +106,14 @@ public class CableNetwork {
 		return CABLES.contains(pos);
 	}
 
+	public boolean removeCable(BlockPos pos) {
+		boolean wasMember = CABLES.remove(pos);
+		if (wasMember) {
+			rebuildInventories(pos);
+		}
+		return wasMember;
+	}
+
 	public int size() {
 		return CABLES.size();
 	}
@@ -106,31 +128,8 @@ public class CableNetwork {
 		INVENTORIES.putAll(other.INVENTORIES);
 	}
 
-	public boolean removeCable(BlockPos pos) {
-		boolean wasMember = CABLES.remove(pos);
-		if (wasMember) {
-			rebuildInventories(pos);
-		}
-		return wasMember;
-	}
-
 	public boolean isEmpty() {
 		return CABLES.isEmpty();
-	}
-
-	/**
-	 * Cables should only join the network if they would be touching a cable already in the network
-	 *
-	 * @param pos Candidate cable position
-	 * @return {@code true} if adjacent to cable in network
-	 */
-	public boolean containsNeighbour(BlockPos pos) {
-		for (Direction direction : Direction.values()) {
-			if (CABLES.contains(pos.offset(direction))) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public Collection<TileEntity> getInventories() {
