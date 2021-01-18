@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
@@ -72,6 +73,10 @@ public class CableNetworkManager {
 				});
 			}
 		}
+	}
+
+	public static Optional<CableNetwork> getOrRegisterNetwork(TileEntity tile) {
+		return getOrRegisterNetwork(tile.getWorld(), tile.getPos());
 	}
 
 	/**

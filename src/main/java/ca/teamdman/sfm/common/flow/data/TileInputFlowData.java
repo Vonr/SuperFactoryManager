@@ -6,19 +6,25 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowInputButton;
+import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import ca.teamdman.sfm.common.tile.manager.ItemStackInputCandidate;
+import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -37,6 +43,14 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 			this,
 			data -> this.tileEntityRules.remove(data.getId())
 		);
+	}
+
+	public Optional<List<ItemStackInputCandidate>> getCandidate(ManagerTileEntity tile) {
+		CableNetworkManager.getOrRegisterNetwork(tile.getWorld(), tile.getPos())
+			.map(network -> {
+				List<ItemStack> available = new ArrayList<>();
+
+			});
 	}
 
 	@Override
