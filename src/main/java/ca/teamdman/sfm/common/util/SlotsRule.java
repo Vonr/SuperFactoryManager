@@ -26,7 +26,7 @@ public class SlotsRule {
 
 	public IntStream getSlots(int maxSlot) {
 		if (definition.length() == 0) {
-			return IntStream.empty();
+			return IntStream.range(0, maxSlot);
 		}
 		return Arrays.stream(definition.split(","))
 			.flatMapToInt(rule -> evaluateRule(rule, maxSlot))
@@ -42,7 +42,7 @@ public class SlotsRule {
 				// range of slots, e.g., "5-12"
 				int lowerBound = Integer.parseInt(matcher.group("start"));
 				int upperBound = Integer.parseInt(matcher.group("end"));
-				return IntStream.rangeClosed(lowerBound, upperBound);
+				return IntStream.range(lowerBound, upperBound);
 			}
 
 			matcher = LOWER_BOUND.matcher(rule);

@@ -7,40 +7,38 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule.ItemStackTileEntityRuleFlowComponent;
-import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
-import ca.teamdman.sfm.common.tile.manager.ItemStackInputCandidate;
-import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.BlockPosList;
 import ca.teamdman.sfm.common.util.EnumSetSerializationHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfm.common.util.SlotsRule;
 import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	PositionHolder, Observer {
@@ -81,58 +79,40 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		);
 	}
 
-	public List<ItemStackInputCandidate> getInput(ManagerTileEntity tile) {
-		List<ItemStackInputCandidate> rtn = new ArrayList<>();
-		if (tile.getWorld() == null) {
-			return rtn;
+	/**
+	 * @return maximum amount allowed through according to this rule
+	 */
+	public int getAllowedQuantity(BasicFlowDataContainer container, ItemStack stack) {
+		Stream<ItemStackMatcher> matchers = matcherIds.stream()
+			.map(id -> container.get(id,ItemStackMatcher.class))
+			.filter(Optional::isPresent)
+			.map(Optional::get);
+		if (filterMode == FilterMode.WHITELIST) {
+			return matchers
+				.filter(m -> m.matches(stack))
+				.mapToInt(ItemStackMatcher::getQuantity)
+				.max()
+				.orElse(0);
+		} else /*if (filterMode == FilterMode.BLACKLIST)*/ {
+			return matchers.noneMatch(m -> m.matches(stack)) ? Integer.MAX_VALUE : 0;
 		}
-		CableNetworkManager.getOrRegisterNetwork(tile).ifPresent(network -> {
-			List<TileEntity> tiles = tilePositions.stream()
-				.filter(network::contains)
-				.map(tpos -> tile.getWorld().getTileEntity(tpos))
-				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
-
-			List<ItemStackMatcher> matchers = matcherIds.stream()
-				.map(id -> tile.getFlowDataContainer().get(id,ItemStackMatcher.class))
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.collect(Collectors.toList());
-
-			List<SlotItemStack> items = tiles.stream()
-				.flatMap(t -> faces.stream()
-					.map(face -> t.getCapability(
-						CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,
-						face
-					))
-				.filter(LazyOptional::isPresent)
-				.map(LazyOptional::resolve)
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.flatMap(cap -> this.slots.getSlots(cap.getSlots())
-					.mapToObj(slot -> new ItemStackInputCandidate(
-						() -> cap.getStackInSlot(slot),
-						i -> cap.extractItem(slot, i, false)
-					)))
-				.filter(sis -> keep(sis, matchers))
-				.collect(Collectors.toList());
-
-			return items.stream()
-				.map(sis -> new ItemStackInputCandidate(
-					() -> items.stream().map(sis -> sis.STACK).collect(Collectors.toList()),
-					() -> items.stream().map(sis -> )
-				))
-				.collect(Collectors.toList());
-		});
-		return rtn;
 	}
 
-	public boolean keep(SlotItemStack item, List<ItemStackMatcher> matchers) {
-		if (filterMode == FilterMode.WHITELIST) {
-			return matchers.stream().anyMatch(m -> m.matches(item.STACK));
-		} else /*if (filterMode == FilterMode.BLACKLIST)*/ {
-			return matchers.stream().noneMatch(m -> m.matches(item.STACK));
-		}
+	public List<IItemHandler> getItemHandlers(World world, CableNetwork network) {
+		return tilePositions.stream()
+			.map(network::getInventory)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.flatMap(tile -> faces.stream()
+				.map(face -> tile.getCapability(
+					CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,
+					face
+				)))
+			.filter(LazyOptional::isPresent)
+			.map(LazyOptional::resolve)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.collect(Collectors.toList());
 	}
 
 	public ItemStack getIcon() {
@@ -178,16 +158,6 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public enum FilterMode {
 		WHITELIST,
 		BLACKLIST
-	}
-
-	private static class SlotItemStack {
-		private final int SLOT;
-		private final ItemStack STACK;
-
-		public SlotItemStack(int slot, ItemStack stack) {
-			this.SLOT = slot;
-			this.STACK = stack;
-		}
 	}
 
 	public static class FlowTileEntityRuleDataSerializer extends

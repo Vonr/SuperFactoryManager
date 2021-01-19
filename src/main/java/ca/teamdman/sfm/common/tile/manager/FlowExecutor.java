@@ -1,9 +1,6 @@
 package ca.teamdman.sfm.common.tile.manager;
 
-import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
-import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -34,14 +31,6 @@ public class FlowExecutor {
 			List<ExecutionFrame> next = frame.step();
 			FRAMES.addAll(next);
 		}
-			CableNetworkManager.getOrRegisterNetwork(world, TILE.getPos())
-				.ifPresent(network -> {
-					SFM.LOGGER.debug(
-						SFMUtil.getMarker(FlowExecutor.class),
-						"Manager found {} tiles",
-						network.getInventories().size()
-					);
-				});
 	}
 
 }

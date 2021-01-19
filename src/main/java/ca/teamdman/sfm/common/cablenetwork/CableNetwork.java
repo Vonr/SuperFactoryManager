@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.minecraft.tileentity.TileEntity;
@@ -104,6 +105,10 @@ public class CableNetwork {
 
 	public boolean contains(BlockPos pos) {
 		return CABLES.contains(pos);
+	}
+
+	public Optional<TileEntity> getInventory(BlockPos pos) {
+		return Optional.ofNullable(INVENTORIES.get(pos));
 	}
 
 	public boolean removeCable(BlockPos pos) {
