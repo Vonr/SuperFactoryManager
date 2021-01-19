@@ -52,7 +52,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public BlockPosList tilePositions;
 	public EnumSet<Direction> faces;
 	public SlotsRule slots;
-	public transient boolean open = false;
+	public boolean open;
+
 
 	public ItemStackTileEntityRuleFlowData(
 		UUID uuid,
@@ -63,7 +64,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		List<UUID> matcherIds,
 		List<BlockPos> tilePositions,
 		EnumSet<Direction> faces,
-		SlotsRule slots
+		SlotsRule slots,
+		boolean open
 	) {
 		super(uuid);
 		this.name = name;
@@ -74,6 +76,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		this.tilePositions = new BlockPosList(tilePositions);
 		this.faces = faces;
 		this.slots = slots;
+		this.open = open;
 		this.OBSERVER = new FlowDataRemovedObserver(
 			this,
 			data -> this.matcherIds.remove(data.getId())
@@ -179,7 +182,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 				new UUIDList(tag, "matchers"),
 				new BlockPosList(tag, "tiles"),
 				EnumSetSerializationHelper.deserialize(tag, "faces", Direction::valueOf),
-				new SlotsRule(tag.getString("slots"))
+				new SlotsRule(tag.getString("slots")),
+				tag.getBoolean("open")
 			);
 		}
 
@@ -194,6 +198,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 			tag.put("tiles", data.tilePositions.serialize());
 			tag.put("faces", EnumSetSerializationHelper.serialize(data.faces));
 			tag.putString("slots", data.slots.getDefinition());
+			tag.putBoolean("open", data.open);
 			return tag;
 		}
 
@@ -208,7 +213,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 				new UUIDList(buf),
 				new BlockPosList(buf),
 				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf),
-				new SlotsRule(buf.readString())
+				new SlotsRule(buf.readString()),
+				buf.readBoolean()
 			);
 		}
 
@@ -223,6 +229,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 			data.tilePositions.serialize(buf);
 			EnumSetSerializationHelper.serialize(data.faces, buf);
 			buf.writeString(data.slots.getDefinition());
+			buf.writeBoolean(data.open);
 		}
 	}
 }

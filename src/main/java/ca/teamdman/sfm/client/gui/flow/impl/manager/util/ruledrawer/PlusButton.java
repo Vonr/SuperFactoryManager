@@ -77,7 +77,8 @@ class PlusButton extends FlowPlusButton {
 				Collections.emptyList(),
 				Collections.emptyList(),
 				EnumSet.allOf(Direction.class),
-				new SlotsRule("")
+				new SlotsRule(""),
+				true
 			);
 			if (PARENT.isGlobalOpen) {
 				// If global drawer is open, just create new rule
