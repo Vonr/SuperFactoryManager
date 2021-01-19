@@ -6,13 +6,12 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.util.AssociatedRulesDrawer;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer.ItemStackTileEntityRuleDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.core.RuleContainer;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.TileOutputFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
@@ -24,13 +23,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FlowOutputButton extends FlowContainer implements
-	IFlowCloneable, FlowDataHolder<TileOutputFlowData>, RuleContainer {
+	IFlowCloneable, FlowDataHolder<TileOutputFlowData> {
 
-	private final AssociatedRulesDrawer DRAWER;
+	private final ItemStackTileEntityRuleDrawer DRAWER;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowIconButton BUTTON;
 	private TileOutputFlowData data;
-	private boolean open = false;
 
 	public FlowOutputButton(
 		ManagerFlowController controller,
@@ -38,31 +36,25 @@ public class FlowOutputButton extends FlowContainer implements
 	) {
 		this.data = data;
 		this.CONTROLLER = controller;
+
 		this.BUTTON = new MyFlowIconButton(
 			ButtonLabel.OUTPUT,
 			data.getPosition().copy()
 		);
-		this.DRAWER = new MyAssociatedRulesDrawer(
+		BUTTON.setDraggable(true);
+		addChild(BUTTON);
+
+		this.DRAWER = new MyItemStackTileEntityRuleDrawer(
 			controller,
 			BUTTON.getPosition().withConstantOffset(25, 0)
 		);
-		addChild(BUTTON);
 		addChild(DRAWER);
-		DRAWER.setVisible(false);
-		DRAWER.setEnabled(false);
-		BUTTON.setDraggable(true);
+
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			this,
 			TileOutputFlowData.class
 		));
 	}
-
-
-	@Override
-	public Position snapToEdge(Position outside) {
-		return BUTTON.snapToEdge(outside);
-	}
-
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
@@ -93,24 +85,13 @@ public class FlowOutputButton extends FlowContainer implements
 	}
 
 	@Override
-	public List<UUID> getRules() {
-		return data.tileEntityRules;
-	}
-
-	@Override
-	public void setRules(List<UUID> rules) {
-		CONTROLLER.SCREEN.sendFlowDataToServer(
-			new TileOutputFlowData(
-				data.getId(),
-				data.getPosition(),
-				rules
-			)
-		);
-	}
-
-	@Override
 	public Position getCentroid() {
 		return BUTTON.getCentroid();
+	}
+
+	@Override
+	public Position snapToEdge(Position outside) {
+		return BUTTON.snapToEdge(outside);
 	}
 
 	@Override
@@ -126,9 +107,8 @@ public class FlowOutputButton extends FlowContainer implements
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			open = !open;
-			DRAWER.setVisible(open);
-			DRAWER.setEnabled(open);
+			DRAWER.setVisible(!DRAWER.isVisible());
+			DRAWER.setEnabled(DRAWER.isVisible());
 		}
 
 		@Override
@@ -142,27 +122,35 @@ public class FlowOutputButton extends FlowContainer implements
 		}
 	}
 
-	private class MyAssociatedRulesDrawer extends AssociatedRulesDrawer {
+	private class MyItemStackTileEntityRuleDrawer extends ItemStackTileEntityRuleDrawer {
 
-		public MyAssociatedRulesDrawer(ManagerFlowController controller, Position pos) {
+		public MyItemStackTileEntityRuleDrawer(ManagerFlowController controller, Position pos) {
 			super(controller, pos);
 		}
 
 		@Override
 		public List<ItemStackTileEntityRuleFlowData> getChildrenRules() {
-			return CONTROLLER.SCREEN.getFlowDataContainer().get(ItemStackTileEntityRuleFlowData.class)
+			return CONTROLLER.SCREEN.getFlowDataContainer()
+				.get(ItemStackTileEntityRuleFlowData.class)
 				.filter(d -> data.tileEntityRules.contains(d.getId()))
 				.collect(Collectors.toList());
 		}
 
 		@Override
 		public void setChildrenRules(List<UUID> rules) {
-			setRules(rules);
+			CONTROLLER.SCREEN.sendFlowDataToServer(
+				new TileOutputFlowData(
+					data.getId(),
+					data.getPosition(),
+					rules
+				)
+			);
 		}
 
 		@Override
 		public List<ItemStackTileEntityRuleFlowData> getSelectableRules() {
-			return CONTROLLER.SCREEN.getFlowDataContainer().get(ItemStackTileEntityRuleFlowData.class)
+			return CONTROLLER.SCREEN.getFlowDataContainer()
+				.get(ItemStackTileEntityRuleFlowData.class)
 				.collect(Collectors.toList());
 		}
 	}

@@ -52,6 +52,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public BlockPosList tilePositions;
 	public EnumSet<Direction> faces;
 	public SlotsRule slots;
+	public transient boolean open = false;
 
 	public ItemStackTileEntityRuleFlowData(
 		UUID uuid,

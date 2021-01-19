@@ -6,13 +6,12 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.util.AssociatedRulesDrawer;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer.ItemStackTileEntityRuleDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.core.RuleContainer;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.TileInputFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
@@ -24,13 +23,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FlowInputButton extends FlowContainer implements
-	IFlowCloneable, FlowDataHolder<TileInputFlowData>, RuleContainer {
+	IFlowCloneable, FlowDataHolder<TileInputFlowData> {
 
-	private final AssociatedRulesDrawer DRAWER;
+	private final ItemStackTileEntityRuleDrawer DRAWER;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowIconButton BUTTON;
 	private TileInputFlowData data;
-	private boolean open = false;
 
 	public FlowInputButton(
 		ManagerFlowController controller,
@@ -38,29 +36,24 @@ public class FlowInputButton extends FlowContainer implements
 	) {
 		this.data = data;
 		this.CONTROLLER = controller;
+
 		this.BUTTON = new MyFlowIconButton(
 			ButtonLabel.INPUT,
 			data.getPosition().copy()
 		);
-		this.DRAWER = new MyAssociatedRulesDrawer(
+		BUTTON.setDraggable(true);
+		addChild(BUTTON);
+
+		this.DRAWER = new MyItemStackTileEntityRuleDrawer(
 			controller,
 			BUTTON.getPosition().withConstantOffset(25, 0)
 		);
-		addChild(BUTTON);
 		addChild(DRAWER);
-		DRAWER.setVisible(false);
-		DRAWER.setEnabled(false);
-		BUTTON.setDraggable(true);
+
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			this,
 			TileInputFlowData.class
 		));
-	}
-
-
-	@Override
-	public Position snapToEdge(Position outside) {
-		return BUTTON.snapToEdge(outside);
 	}
 
 	@Override
@@ -92,24 +85,13 @@ public class FlowInputButton extends FlowContainer implements
 	}
 
 	@Override
-	public List<UUID> getRules() {
-		return data.tileEntityRules;
-	}
-
-	@Override
-	public void setRules(List<UUID> rules) {
-		CONTROLLER.SCREEN.sendFlowDataToServer(
-			new TileInputFlowData(
-				data.getId(),
-				data.getPosition(),
-				rules
-			)
-		);
-	}
-
-	@Override
 	public Position getCentroid() {
 		return BUTTON.getCentroid();
+	}
+
+	@Override
+	public Position snapToEdge(Position outside) {
+		return BUTTON.snapToEdge(outside);
 	}
 
 	@Override
@@ -125,9 +107,8 @@ public class FlowInputButton extends FlowContainer implements
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			open = !open;
-			DRAWER.setVisible(open);
-			DRAWER.setEnabled(open);
+			DRAWER.setVisible(!DRAWER.isVisible());
+			DRAWER.setEnabled(DRAWER.isVisible());
 		}
 
 		@Override
@@ -141,9 +122,9 @@ public class FlowInputButton extends FlowContainer implements
 		}
 	}
 
-	private class MyAssociatedRulesDrawer extends AssociatedRulesDrawer {
+	private class MyItemStackTileEntityRuleDrawer extends ItemStackTileEntityRuleDrawer {
 
-		public MyAssociatedRulesDrawer(ManagerFlowController controller, Position pos) {
+		public MyItemStackTileEntityRuleDrawer(ManagerFlowController controller, Position pos) {
 			super(controller, pos);
 		}
 
@@ -157,7 +138,13 @@ public class FlowInputButton extends FlowContainer implements
 
 		@Override
 		public void setChildrenRules(List<UUID> rules) {
-			setRules(rules);
+			CONTROLLER.SCREEN.sendFlowDataToServer(
+				new TileInputFlowData(
+					data.getId(),
+					data.getPosition(),
+					rules
+				)
+			);
 		}
 
 		@Override
