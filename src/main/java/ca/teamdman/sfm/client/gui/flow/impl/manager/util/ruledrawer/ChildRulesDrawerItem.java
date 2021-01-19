@@ -10,6 +10,7 @@ import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
@@ -43,9 +44,15 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 			super.onClicked(mx, my, button);
 		} else if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
 			// right click, remove item from list
-			List<UUID> next = PARENT.getChildrenRuleIds();
-			next.remove(data.getId());
-			PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getDataWithNewChildren(next));
+			if (Screen.hasShiftDown()) {
+				// delete globally
+				PARENT.CONTROLLER.SCREEN.sendFlowDataDeleteToServer(data.getId());
+			} else {
+				// only unassociate
+				List<UUID> next = PARENT.getChildrenRuleIds();
+				next.remove(data.getId());
+				PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getDataWithNewChildren(next));
+			}
 		}
 	}
 

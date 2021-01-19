@@ -11,6 +11,7 @@ import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import org.lwjgl.glfw.GLFW;
 
 class GlobalRulesDrawerItem extends ItemStackFlowComponent {
 
@@ -26,6 +27,16 @@ class GlobalRulesDrawerItem extends ItemStackFlowComponent {
 		PARENT = parent;
 	}
 
+
+	@Override
+	public void onClicked(int mx, int my, int button) {
+		if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
+			super.onClicked(mx, my, button);
+		} else if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
+			// right click, remove item globally
+			PARENT.CONTROLLER.SCREEN.sendFlowDataDeleteToServer(DATA.getId());
+		}
+	}
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
 		ArrayList<ITextComponent> list = new ArrayList<>();
