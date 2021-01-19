@@ -82,6 +82,7 @@ public class ExecutionFrame {
 				IN:
 				for (int inSlot : inRule.slots.getSlots(inHandler.getSlots()).toArray()) {
 					ItemStack stack = inHandler.getStackInSlot(inSlot);
+					if (stack.isEmpty()) continue;
 					int allowedToExtract = inRule.getAllowedQuantity(dataContainer, stack);
 					int allowedToInsert = outRule.getAllowedQuantity(dataContainer, stack);
 					int remaining = Math.max(0, Math.min(allowedToExtract, allowedToInsert));
