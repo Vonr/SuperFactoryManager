@@ -44,7 +44,11 @@ public class RadioFlowButton extends SelectableFlowButton {
 
 		public void setSelected(RadioFlowButton member) {
 			for (RadioFlowButton button : MEMBERS) {
-				if (!member.equals(button)) {
+				if (member.equals(button)) {
+					if (!member.isSelected()) {
+						member.setSelected(true);
+					}
+				} else {
 					button.setSelected(false);
 				}
 			}
