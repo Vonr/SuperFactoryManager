@@ -202,8 +202,8 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		return this.visible;
 	}
 
-	public void setVisible(boolean value) {
-		this.visible = value;
+	public void setVisible(boolean visible) {
+		this.visible = visible;
 	}
 
 	public boolean isEnabled() {

@@ -50,6 +50,16 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 	}
 
 	@Override
+	public boolean isSelected() {
+		return data.open;
+	}
+
+	@Override
+	public void setSelected(boolean value) {
+		data.open = value;
+	}
+
+	@Override
 	public List<? extends ITextProperties> getTooltip() {
 		ArrayList<ITextComponent> list = new ArrayList<>();
 		list.add(new StringTextComponent(data.name));
@@ -67,18 +77,9 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 			PARENT.CONTROLLER.getChildren().stream()
 				.filter(c -> c instanceof ItemStackTileEntityRuleFlowComponent)
 				.map(c -> ((ItemStackTileEntityRuleFlowComponent) c))
-				.forEach(c -> {
-					c.setVisible(false);
-					c.setEnabled(false);
-				});
-			PARENT.getChildren().stream()
-				.filter(c -> c instanceof ChildRulesDrawerItem && c != this)
-				.forEach(c -> ((ChildRulesDrawerItem) c).setSelected(false));
+				.filter(c -> c.getData() != data)
+				.forEach(c -> c.getData().open = false);
 		}
-		PARENT.CONTROLLER.findFirstChild(data.getId()).ifPresent(comp -> {
-			comp.setVisible(isSelected());
-			comp.setEnabled(isSelected());
-		});
 	}
 
 	@Override

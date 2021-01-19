@@ -18,6 +18,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 
 class PlusButton extends FlowPlusButton {
@@ -45,8 +47,15 @@ class PlusButton extends FlowPlusButton {
 
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
-		List<TranslationTextComponent> rtn = new ArrayList<>();
-		rtn.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.addbutton.hint"));
+		List<ITextProperties> rtn = new ArrayList<>();
+		if (PARENT.isGlobalOpen) {
+			rtn.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.addbutton.label_global"));
+		} else {
+			rtn.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.addbutton.label"));
+			rtn.add(new StringTextComponent(""));
+			rtn.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.addbutton.hint")
+				.mergeStyle(TextFormatting.GRAY));
+		}
 		return rtn;
 	}
 

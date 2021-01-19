@@ -9,7 +9,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 
 class MinimizeButton extends FlowMinusButton {
 
-	private ItemStackTileEntityRuleFlowComponent itemStackTileEntityRuleFlowComponent;
+	private final ItemStackTileEntityRuleFlowComponent PARENT;
 
 	public MinimizeButton(
 		ItemStackTileEntityRuleFlowComponent itemStackTileEntityRuleFlowComponent,
@@ -17,15 +17,12 @@ class MinimizeButton extends FlowMinusButton {
 		Size size
 	) {
 		super(pos, size, CONST.MINIMIZE);
-		this.itemStackTileEntityRuleFlowComponent = itemStackTileEntityRuleFlowComponent;
+		this.PARENT = itemStackTileEntityRuleFlowComponent;
 	}
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		itemStackTileEntityRuleFlowComponent.setVisible(false);
-		itemStackTileEntityRuleFlowComponent.setEnabled(false);
-		itemStackTileEntityRuleFlowComponent.CONTROLLER.SCREEN.getFlowDataContainer().notifyChanged(
-			itemStackTileEntityRuleFlowComponent.getData());
+		PARENT.getData().open = false;
 	}
 
 	@Override

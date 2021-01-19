@@ -70,6 +70,25 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		setDraggable(true);
 	}
 
+	@Override
+	public boolean isVisible() {
+		return data.open;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return data.open;
+	}
+
+	@Override
+	public void setVisible(boolean visible) {
+		data.open = visible;
+	}
+
+	@Override
+	public void setEnabled(boolean enabled) {
+		data.open = enabled;
+	}
 
 	@Override
 	public void draw(

@@ -31,8 +31,6 @@ class GlobalRulesDrawerItem extends ItemStackFlowComponent {
 		ArrayList<ITextComponent> list = new ArrayList<>();
 		list.add(new StringTextComponent(DATA.name));
 		list.add(new StringTextComponent(""));
-		list.add(new TranslationTextComponent( "gui.sfm.associatedrulesdrawer.selection.pick_hint")
-				.mergeStyle(TextFormatting.GRAY));
 		list.add(new TranslationTextComponent( "gui.sfm.associatedrulesdrawer.selection.remove_hint")
 				.mergeStyle(TextFormatting.GRAY));
 		return list;

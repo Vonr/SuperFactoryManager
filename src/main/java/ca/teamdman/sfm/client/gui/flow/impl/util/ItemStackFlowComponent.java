@@ -37,7 +37,7 @@ public class ItemStackFlowComponent extends FlowButton implements ISelectable {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		if (selected) {
+		if (isSelected()) {
 			drawBackground(screen, matrixStack, CONST.SELECTED);
 		} else if (isHovering()) {
 			drawBackground(screen, matrixStack, CONST.HIGHLIGHT);
