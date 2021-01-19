@@ -58,5 +58,6 @@ public abstract class FlowPlusButton extends FlowButton {
 			thickness,
 			COLOUR
 		);
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 }

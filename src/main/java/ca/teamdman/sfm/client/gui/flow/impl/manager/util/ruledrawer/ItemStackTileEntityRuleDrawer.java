@@ -3,126 +3,131 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer;
 
+import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
+import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import net.minecraft.client.resources.I18n;
 
 public abstract class ItemStackTileEntityRuleDrawer extends FlowContainer implements Observer {
 
-	private final ManagerFlowController CONTROLLER;
-	private final FlowDrawer CHILDREN_RULES_DRAWER;
-	private final FlowDrawer SELECTION_RULES_DRAWER;
+	protected final PlusButton PLUS_BUTTON;
+	protected final ManagerFlowController CONTROLLER;
+	protected final FlowDrawer DRAWER;
+	protected boolean isGlobalOpen = false;
+	protected String drawerLabel = I18n.format("gui.sfm.associatedrulesdrawer.children.label");
 
 	public ItemStackTileEntityRuleDrawer(ManagerFlowController controller, Position pos) {
 		super(pos);
 
 		this.CONTROLLER = controller;
-
-//			I18n.format("gui.sfm.associatedrulesdrawer.children.label")
-		this.CHILDREN_RULES_DRAWER = new FlowDrawer(
+		this.PLUS_BUTTON = new PlusButton(this);
+		this.DRAWER = new FlowDrawer(
 			new Position(),
 			5,
 			7
 		);
-		addChild(CHILDREN_RULES_DRAWER);
-
-//			I18n.format("gui.sfm.associatedrulesdrawer.selection.label")
-		this.SELECTION_RULES_DRAWER = new FlowDrawer(
-			CHILDREN_RULES_DRAWER.getPosition().withConstantOffset(
-				() -> CHILDREN_RULES_DRAWER.getMaxWidth() + 10,
-				() -> 0
-			),
-			5,
-			7
-		);
-		SELECTION_RULES_DRAWER.setVisible(false);
-		SELECTION_RULES_DRAWER.setEnabled(false);
+		addChild(DRAWER);
 
 		setVisible(false);
 		setEnabled(false);
-		addChild(SELECTION_RULES_DRAWER);
-
+		rebuildDrawer();
 		controller.SCREEN.getFlowDataContainer().addObserver(this);
-		rebuildChildrenDrawer();
-		rebuildSelectionDrawer();
 	}
 
-	/*
-	TODO: label drawing
+	public void rebuildDrawer() {
+		if (isGlobalOpen) {
+			rebuildGlobalDrawer();
+			drawerLabel = I18n.format("gui.sfm.associatedrulesdrawer.selection.label");
+		} else {
+			rebuildChildrenDrawer();
+			drawerLabel = I18n.format("gui.sfm.associatedrulesdrawer.children.label");
+		}
+	}
 
+	private void rebuildGlobalDrawer() {
+		DRAWER.getChildren().clear();
+		DRAWER.addChild(PLUS_BUTTON);
+
+		CONTROLLER.SCREEN.getFlowDataContainer()
+			.get(ItemStackTileEntityRuleFlowData.class)
+			.collect(Collectors.toList()).stream()
+			.map(rule -> new GlobalRulesDrawerItem(rule, this))
+			.forEach(DRAWER::addChild);
+
+		// Ensure children rules are selected in the global rule drawer
+		List<UUID> selected = getChildrenRuleIds();
+		DRAWER.getChildren().stream()
+			.filter(c -> c instanceof GlobalRulesDrawerItem)
+			.map(c -> ((GlobalRulesDrawerItem) c))
+			.filter(c -> selected.contains(c.DATA.getId()))
+			.forEach(c -> c.setSelected(true));
+
+		DRAWER.update();
+	}
+
+	private void rebuildChildrenDrawer() {
+		DRAWER.getChildren().clear();
+		DRAWER.addChild(PLUS_BUTTON);
+		getChildrenRules().stream()
+			.map(rule -> new ChildRulesDrawerItem(this, rule))
+			.forEach(DRAWER::addChild);
+		DRAWER.update();
+	}
+
+	public abstract List<ItemStackTileEntityRuleFlowData> getChildrenRules();
+
+	protected List<UUID> getChildrenRuleIds() {
+		return getChildrenRules().stream()
+			.map(FlowData::getId)
+			.collect(Collectors.toList());
+	}
+
+	public abstract FlowData getDataWithNewChildren(List<UUID> rules);
+
+	@Override
+	public void draw(
+		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+	) {
 		if (Client.showRuleDrawerLabels) {
 			int labelHeight = 15;
 			screen.drawRect(
 				matrixStack,
 				getPosition().getX(),
-				getPosition().getY()-labelHeight,
-				getMaxWidth(),
+				getPosition().getY() - labelHeight,
+				DRAWER.getMaxWidth(),
 				labelHeight,
 				CONST.PANEL_BORDER
 			);
 			screen.drawString(
 				matrixStack,
-				LABEL_TEXT,
+				drawerLabel,
 				getPosition().getX() + 5,
 				getPosition().getY() - labelHeight + 4,
 				CONST.TEXT_LIGHT
 			);
 		}
-	 */
-
-	public void rebuildChildrenDrawer() {
-		CHILDREN_RULES_DRAWER.getChildren().clear();
-		CHILDREN_RULES_DRAWER.addChild(new EditChildrenButton(SELECTION_RULES_DRAWER));
-		getChildrenRules().stream()
-			.map(rule -> new ChildRulesDrawerItem(rule, CONTROLLER, CHILDREN_RULES_DRAWER))
-			.forEach(CHILDREN_RULES_DRAWER::addChild);
-		CHILDREN_RULES_DRAWER.update();
+		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
-
-	public void rebuildSelectionDrawer() {
-		SELECTION_RULES_DRAWER.getChildren().clear();
-		SELECTION_RULES_DRAWER.addChild(new AddRuleButton(CONTROLLER));
-
-		getSelectableRules().stream()
-			.map(rule -> new SelectionRulesDrawerItem(rule, this))
-			.forEach(SELECTION_RULES_DRAWER::addChild);
-
-		// Ensure children rules are selected in the global rule drawer
-		Set<UUID> selected = getChildrenRules().stream()
-			.map(FlowData::getId)
-			.collect(Collectors.toSet());
-		SELECTION_RULES_DRAWER.getChildren().stream()
-			.filter(c -> c instanceof SelectionRulesDrawerItem)
-			.map(c -> ((SelectionRulesDrawerItem) c))
-			.filter(c -> selected.contains(c.DATA.getId()))
-			.forEach(c -> c.setSelected(true));
-
-		SELECTION_RULES_DRAWER.update();
-	}
-
-	public abstract List<ItemStackTileEntityRuleFlowData> getChildrenRules();
-
-	public abstract List<ItemStackTileEntityRuleFlowData> getSelectableRules();
-
-	public abstract void setChildrenRules(List<UUID> rules);
 
 	@Override
 	public void update(Observable o, Object arg) {
 		if (arg instanceof FlowDataContainerChange) {
 			FlowDataContainerChange change = ((FlowDataContainerChange) arg);
 			if (change.DATA instanceof ItemStackTileEntityRuleFlowData) {
-				rebuildChildrenDrawer();
-				rebuildSelectionDrawer();
+				rebuildDrawer();
 			}
 		}
 	}

@@ -19,7 +19,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implements
 	FlowDataHolder<ItemStackTileEntityRuleFlowData> {
 
-	protected final ManagerFlowController CONTROLLER;
+	public final ManagerFlowController CONTROLLER;
 	private final TilesSection TILES_SECTION;
 	private final ItemsSection ITEMS_SECTION;
 	private final IconSection ICON_SECTION;

@@ -12,6 +12,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.TileInputFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
@@ -76,7 +77,7 @@ public class FlowInputButton extends FlowContainer implements
 	public void setData(TileInputFlowData data) {
 		this.data = data;
 		BUTTON.getPosition().setXY(this.data.getPosition());
-		DRAWER.rebuildChildrenDrawer();
+		DRAWER.rebuildDrawer();
 	}
 
 	@Override
@@ -137,21 +138,12 @@ public class FlowInputButton extends FlowContainer implements
 		}
 
 		@Override
-		public void setChildrenRules(List<UUID> rules) {
-			CONTROLLER.SCREEN.sendFlowDataToServer(
-				new TileInputFlowData(
-					data.getId(),
-					data.getPosition(),
-					rules
-				)
+		public FlowData getDataWithNewChildren(List<UUID> rules) {
+			return new TileInputFlowData(
+				data.getId(),
+				data.getPosition(),
+				rules
 			);
-		}
-
-		@Override
-		public List<ItemStackTileEntityRuleFlowData> getSelectableRules() {
-			return CONTROLLER.SCREEN.getFlowDataContainer()
-				.get(ItemStackTileEntityRuleFlowData.class)
-				.collect(Collectors.toList());
 		}
 	}
 }
