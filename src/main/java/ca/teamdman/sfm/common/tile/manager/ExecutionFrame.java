@@ -23,8 +23,6 @@ import net.minecraftforge.items.IItemHandler;
 public class ExecutionFrame {
 
 	private final List<ItemStackTileEntityRuleFlowData> INPUTS = new ArrayList<>();
-	//todo: track matcher 'usage'
-	// e.g., if transfered 2 stone already, don't transfer 2 more in diff slots
 	private final ManagerTileEntity TILE;
 	private final FlowData CURRENT;
 	private final ExecutionState STATE;
