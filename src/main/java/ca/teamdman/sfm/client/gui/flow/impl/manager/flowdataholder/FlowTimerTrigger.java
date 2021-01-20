@@ -7,9 +7,11 @@ import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
+import java.util.UUID;
 
 public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 	FlowDataHolder<TimerTriggerFlowData> {
@@ -37,14 +39,13 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
-		//todo: switch to timertrigger flowdata
-//		PacketHandler.INSTANCE.sendToServer(new ManagerFlowInputDataPacketC2S(
-//			CONTROLLER.SCREEN.getContainer().windowId,
-//			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-//			UUID.randomUUID(),
-//			new Position(x, y),
-//			Collections.emptyList()
-//		));
+		CONTROLLER.SCREEN.sendFlowDataToServer(
+			new TimerTriggerFlowData(
+				UUID.randomUUID(),
+				new Position(x, y),
+				data.interval
+			)
+		);
 	}
 
 	@Override
