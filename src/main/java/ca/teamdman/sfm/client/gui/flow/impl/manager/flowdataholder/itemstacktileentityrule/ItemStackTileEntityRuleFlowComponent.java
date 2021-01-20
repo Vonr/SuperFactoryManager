@@ -76,6 +76,20 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 	}
 
 	@Override
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		// When E is pressed, close window if mouse is hovering
+		if (isVisible()
+			&& isHovering()
+			&& CONTROLLER.SCREEN.getMinecraft().gameSettings.keyBindInventory.matchesKey(keyCode, scanCode)
+		) {
+			setVisible(false);
+			setEnabled(false);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
 	public boolean isEnabled() {
 		return data.open;
 	}

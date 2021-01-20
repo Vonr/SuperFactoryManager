@@ -135,4 +135,17 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 			o.deleteObserver(this);
 		}
 	}
+
+	@Override
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) return true;
+
+		// if "inventory" key pressed, and the event wasn't consumed, close gui
+		if (SCREEN.getMinecraft().gameSettings.keyBindInventory.matchesKey(keyCode, scanCode)) {
+			SCREEN.closeScreen();
+			return true;
+		}
+
+		return false;
+	}
 }
