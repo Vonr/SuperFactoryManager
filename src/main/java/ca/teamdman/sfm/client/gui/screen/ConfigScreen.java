@@ -9,6 +9,9 @@ import net.minecraft.util.text.ITextComponent;
 
 public class ConfigScreen extends ComponentScreen<ConfigComponent> {
 
+	//TODO: add option to hide reminder text on manager screen
+	//TODO: add option to prevent closing entire manager with "E"
+
 	public ConfigComponent CONTROLLER;
 
 	public ConfigScreen(
