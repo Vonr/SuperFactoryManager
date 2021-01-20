@@ -14,12 +14,14 @@ import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import ca.teamdman.sfm.common.tile.manager.ExecutionState;
 import ca.teamdman.sfm.common.util.BlockPosList;
 import ca.teamdman.sfm.common.util.EnumSetSerializationHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfm.common.util.SlotsRule;
 import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Observable;
@@ -28,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -86,20 +87,13 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	/**
 	 * @return maximum amount allowed through according to this rule
 	 */
-	public int getAllowedQuantity(BasicFlowDataContainer container, ItemStack stack) {
-		Stream<ItemStackMatcher> matchers = matcherIds.stream()
-			.map(id -> container.get(id,ItemStackMatcher.class))
+	public Optional<ItemStackMatcher> getBestMatcher(BasicFlowDataContainer container, ItemStack stack, ExecutionState state) {
+		return matcherIds.stream()
+			.map(id -> container.get(id, ItemStackMatcher.class))
 			.filter(Optional::isPresent)
-			.map(Optional::get);
-		if (filterMode == FilterMode.WHITELIST) {
-			return matchers
-				.filter(m -> m.matches(stack))
-				.mapToInt(ItemStackMatcher::getQuantity)
-				.max()
-				.orElse(0);
-		} else /*if (filterMode == FilterMode.BLACKLIST)*/ {
-			return matchers.noneMatch(m -> m.matches(stack)) ? Integer.MAX_VALUE : 0;
-		}
+			.map(Optional::get)
+			.filter(m -> m.matches(stack))
+			.max(Comparator.comparingInt(m -> state.getRemainingQuantity(this, m))); // Most remaining first
 	}
 
 	public List<IItemHandler> getItemHandlers(World world, CableNetwork network) {
