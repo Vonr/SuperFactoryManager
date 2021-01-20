@@ -17,6 +17,8 @@ import net.minecraft.util.ResourceLocation;
 
 public class ItemStackComparerMatcherFlowData extends FlowData implements ItemStackMatcher {
 
+	//TODO: bind "open" boolean property to visibility, ensure dialog closes when parent closes
+
 	public ItemStack stack;
 	public int quantity;
 
