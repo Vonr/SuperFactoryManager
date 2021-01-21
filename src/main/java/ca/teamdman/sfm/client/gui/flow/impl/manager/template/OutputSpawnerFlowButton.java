@@ -37,7 +37,7 @@ public class OutputSpawnerFlowButton extends FlowIconButton {
 	public void onClicked(int mx, int my, int button) {
 		managerFlowController.SCREEN.sendFlowDataToServer(new TileOutputFlowData(
 			UUID.randomUUID(),
-			new Position(0, 0),
+			getPosition().withOffset(getSize().getWidth() + 10, 0),
 			Collections.emptyList()
 		));
 	}

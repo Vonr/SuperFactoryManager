@@ -37,7 +37,7 @@ public class FlowTimerTriggerSpawnerButton extends FlowIconButton {
 		managerFlowController.SCREEN.sendFlowDataToServer(
 			new TimerTriggerFlowData(
 				UUID.randomUUID(),
-				new Position(50,50),
+				getPosition().withOffset(getSize().getWidth() + 10, 0),
 				20
 			)
 		);
