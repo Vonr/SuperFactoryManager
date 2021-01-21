@@ -78,6 +78,7 @@ class TilesSection extends FlowContainer {
 				network.getInventories().stream()
 					.filter(t -> t.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).isPresent())
 					.map(TileEntity::getPos)
+					.filter(pos -> !PARENT.getData().tilePositions.contains(pos))
 					.collect(Collectors.toList()),
 				world
 			);
