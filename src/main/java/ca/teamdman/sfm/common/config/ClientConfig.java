@@ -11,6 +11,8 @@ public final class ClientConfig {
 	public final ForgeConfigSpec.BooleanValue showRuleDrawerLabels;
 	public final ForgeConfigSpec.BooleanValue allowElementsOutOfBounds;
 	public final ForgeConfigSpec.BooleanValue enableRegexSearch;
+	public final ForgeConfigSpec.BooleanValue hideManagerInstructions;
+	public final ForgeConfigSpec.BooleanValue preventClosingManagerWithInventoryButton;
 
 
 	ClientConfig(final ForgeConfigSpec.Builder builder) {
@@ -30,6 +32,14 @@ public final class ClientConfig {
 		enableRegexSearch = builder
 			.comment("Use regular expressions when matching items during search queries")
 			.define("enableRegexSearch", true);
+
+		hideManagerInstructions = builder
+			.comment("Hide the reminder text on the manager background")
+			.define("hideManagerInstructions", false);
+
+		preventClosingManagerWithInventoryButton = builder
+			.comment("Prevent closing the manager gui with the inventory button")
+			.define("preventClosingManagerWithInventoryButton", true);
 		builder.pop();
 	}
 }

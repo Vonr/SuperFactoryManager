@@ -144,6 +144,50 @@ public class ConfigComponent extends FlowContainer {
 				);
 			}
 		});
+
+		row += rowHeight;
+		addChild(new FlowPanel(10, row, 300, 14));
+		addChild(new FlowLabel(
+			new Position(30, row + 4),
+			new Size(0, 0),
+			I18n.format("gui.sfm.config.hideManagerInstructions")
+		));
+		addChild(new FlowToggleBox(
+			new Position(12, row + 2),
+			new Size(10, 10),
+			Client.hideManagerInstructions
+		) {
+			@Override
+			public void onChecked(boolean checked) {
+				ConfigHelper.setValueAndSave(
+					ConfigHelper.clientConfig,
+					ConfigHolder.CLIENT.hideManagerInstructions,
+					checked
+				);
+			}
+		});
+
+		row += rowHeight;
+		addChild(new FlowPanel(10, row, 300, 14));
+		addChild(new FlowLabel(
+			new Position(30, row + 4),
+			new Size(0, 0),
+			I18n.format("gui.sfm.config.preventClosingManagerWithInventoryButton")
+		));
+		addChild(new FlowToggleBox(
+			new Position(12, row + 2),
+			new Size(10, 10),
+			Client.preventClosingManagerWithInventoryButton
+		) {
+			@Override
+			public void onChecked(boolean checked) {
+				ConfigHelper.setValueAndSave(
+					ConfigHelper.clientConfig,
+					ConfigHolder.CLIENT.preventClosingManagerWithInventoryButton,
+					checked
+				);
+			}
+		});
 	}
 
 	private static class FlowLabel extends FlowComponent {

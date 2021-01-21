@@ -10,6 +10,8 @@ public class Config {
 		public static boolean alwaysSnapMovementToGrid;
 		public static boolean allowElementsOutOfBounds;
 		public static boolean enableRegexSearch;
+		public static boolean hideManagerInstructions;
+		public static boolean preventClosingManagerWithInventoryButton;
 	}
 
 	public static class Common {

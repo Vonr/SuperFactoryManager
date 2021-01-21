@@ -7,6 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.resources.I18n;
@@ -22,6 +23,7 @@ public class FlowInstructions extends FlowComponent {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
+		if (Client.hideManagerInstructions) return;
 		matrixStack.push();
 		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
 		screen.drawRightAlignedString(

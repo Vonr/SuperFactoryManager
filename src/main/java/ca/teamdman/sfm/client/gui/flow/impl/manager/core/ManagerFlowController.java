@@ -12,6 +12,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.template.SettingsFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
@@ -141,7 +142,10 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) return true;
 
 		// if "inventory" key pressed, and the event wasn't consumed, close gui
-		if (SCREEN.getMinecraft().gameSettings.keyBindInventory.matchesKey(keyCode, scanCode)) {
+		if (
+			!Client.preventClosingManagerWithInventoryButton
+			&& SCREEN.getMinecraft().gameSettings.keyBindInventory.matchesKey(keyCode, scanCode)
+		) {
 			SCREEN.closeScreen();
 			return true;
 		}

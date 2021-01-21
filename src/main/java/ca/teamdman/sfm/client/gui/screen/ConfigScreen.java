@@ -8,9 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.config.ConfigComponent;
 import net.minecraft.util.text.ITextComponent;
 
 public class ConfigScreen extends ComponentScreen<ConfigComponent> {
-
-	//TODO: add option to hide reminder text on manager screen
-	//TODO: add option to prevent closing entire manager with "E"
+	//TODO: rename clone to [clone by reference], add [clone by value]
 
 	public ConfigComponent CONTROLLER;
 

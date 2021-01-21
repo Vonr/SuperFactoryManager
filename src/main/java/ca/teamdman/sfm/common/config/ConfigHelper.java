@@ -69,5 +69,7 @@ public final class ConfigHelper {
 		Client.alwaysSnapMovementToGrid = ConfigHolder.CLIENT.alwaysSnapMovementToGrid.get();
 		Client.allowElementsOutOfBounds = ConfigHolder.CLIENT.allowElementsOutOfBounds.get();
 		Client.enableRegexSearch = ConfigHolder.CLIENT.enableRegexSearch.get();
+		Client.hideManagerInstructions = ConfigHolder.CLIENT.hideManagerInstructions.get();
+		Client.preventClosingManagerWithInventoryButton = ConfigHolder.CLIENT.preventClosingManagerWithInventoryButton.get();
 	}
 }
