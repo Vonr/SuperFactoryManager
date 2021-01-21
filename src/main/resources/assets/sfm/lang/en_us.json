@@ -36,6 +36,8 @@
   "gui.sfm.manager.tile_entity_rule.items.title": "Items",
   "gui.sfm.manager.tile_entity_rule.slots.title": "Slots",
   "gui.sfm.manager.tile_entity_rule.tiles.title": "Tiles",
+  "gui.sfm.manager.tile_entity_rule.minimize_button.hint1": "Close dialog",
+  "gui.sfm.manager.tile_entity_rule.minimize_button.hint2": "or press [%s] while hovering",
   "itemGroup.sfm": "Super Factory Manager",
   "mod.name": "Super Factory Manager",
   "gui.sfm.config.hideManagerInstructions": "Hide manager instructions",
