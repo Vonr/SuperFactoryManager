@@ -30,6 +30,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
 	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 	private final FlowExecutor EXECUTOR;
+	private final int NBT_VERSION = 1;
 
 	public ManagerTileEntity() {
 		this(TileEntityRegistrar.Tiles.MANAGER);
@@ -103,10 +104,19 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			world == null ? "null world" : world.isRemote ? "client" : "server",
 			getFlowDataContainer().size()
 		);
-		getFlowDataContainer().clear();
-		getFlowDataContainer().deserializeNBT(
-			compound.getList("flow_data_list", NBT.TAG_COMPOUND)
-		);
+		int version = compound.getInt("version");
+		if (version == 1) {
+			getFlowDataContainer().clear();
+			getFlowDataContainer().deserializeNBT(
+				compound.getList("flow_data_list", NBT.TAG_COMPOUND)
+			);
+		} else {
+			SFM.LOGGER.warn(
+				SFMUtil.getMarker(getClass()),
+				"Unknown version [{}] deserializing manager NBT",
+				version
+			);
+		}
 	}
 
 	@Override
@@ -118,6 +128,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			getFlowDataContainer().size()
 		);
 		CompoundNBT c = new CompoundNBT();
+		c.putInt("version", NBT_VERSION);
 		c.put("flow_data_list", getFlowDataContainer().serializeNBT());
 		return c;
 	}

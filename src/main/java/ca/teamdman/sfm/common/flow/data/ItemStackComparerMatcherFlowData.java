@@ -21,11 +21,14 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 
 	public ItemStack stack;
 	public int quantity;
+	public boolean open;
 
-	public ItemStackComparerMatcherFlowData(UUID uuid, ItemStack stack, int quantity) {
+
+	public ItemStackComparerMatcherFlowData(UUID uuid, ItemStack stack, int quantity, boolean open) {
 		super(uuid);
 		this.stack = stack;
 		this.quantity = quantity;
+		this.open = open;
 	}
 
 	@Override
@@ -72,7 +75,9 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 			return new ItemStackComparerMatcherFlowData(
 				UUID.fromString(tag.getString("uuid")),
 				ItemStack.read(tag.getCompound("stack")),
-				tag.getInt("quantity")
+				tag.getInt("quantity"),
+				tag.getBoolean("open")
+
 			);
 		}
 
@@ -81,6 +86,7 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 			CompoundNBT tag = super.toNBT(data);
 			tag.putInt("quantity", data.quantity);
 			tag.put("stack", data.stack.serializeNBT());
+			tag.putBoolean("open", data.open);
 			return tag;
 		}
 
@@ -89,7 +95,9 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 			return new ItemStackComparerMatcherFlowData(
 				SFMUtil.readUUID(buf),
 				buf.readItemStack(),
-				buf.readInt()
+				buf.readInt(),
+				buf.readBoolean()
+
 			);
 		}
 
@@ -98,6 +106,7 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 			buf.writeString(data.getId().toString());
 			buf.writeItemStack(data.stack);
 			buf.writeInt(data.quantity);
+			buf.writeBoolean(data.open);
 		}
 	}
 }

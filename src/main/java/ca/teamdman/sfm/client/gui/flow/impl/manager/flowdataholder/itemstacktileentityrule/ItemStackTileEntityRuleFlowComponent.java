@@ -57,10 +57,6 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		TILES_SECTION = new TilesSection(this, new Position(110, 73));
 		addChild(TILES_SECTION);
 
-		// Hide by default
-		setVisible(false);
-		setEnabled(false);
-
 		// Add change listener
 		CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			this,
@@ -68,40 +64,6 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 		));
 
 		setDraggable(true);
-	}
-
-	@Override
-	public boolean isVisible() {
-		return data.open;
-	}
-
-	@Override
-	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		// When E is pressed, close window if mouse is hovering
-		if (isVisible()
-			&& isHovering()
-			&& CONTROLLER.SCREEN.getMinecraft().gameSettings.keyBindInventory.matchesKey(keyCode, scanCode)
-		) {
-			setVisible(false);
-			setEnabled(false);
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return data.open;
-	}
-
-	@Override
-	public void setVisible(boolean visible) {
-		data.open = visible;
-	}
-
-	@Override
-	public void setEnabled(boolean enabled) {
-		data.open = enabled;
 	}
 
 	@Override
@@ -139,6 +101,21 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 	}
 
 	@Override
+	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		// When E is pressed, close window if mouse is hovering
+		if (isVisible()
+			&& isHovering()
+			&& CONTROLLER.SCREEN.getMinecraft().gameSettings.keyBindInventory
+			.matchesKey(keyCode, scanCode)
+		) {
+			setVisible(false);
+			setEnabled(false);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
 	public ItemStackTileEntityRuleFlowData getData() {
 		return data;
 	}
@@ -162,6 +139,29 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 			data.getId(),
 			this.getPosition()
 		));
+	}
+
+	@Override
+	public boolean isVisible() {
+		return data.open;
+	}
+
+	@Override
+	public void setVisible(boolean visible) {
+		if (data.open != visible) {
+			data.open = visible;
+			CONTROLLER.SCREEN.sendFlowDataToServer(data);
+		}
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return isVisible();
+	}
+
+	@Override
+	public void setEnabled(boolean enabled) {
+		setVisible(enabled);
 	}
 
 	@Override

@@ -64,6 +64,7 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 	@Override
 	public void setSelected(boolean value) {
 		data.open = value;
+		PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(data);
 	}
 
 	@Override
@@ -85,7 +86,10 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 				.filter(c -> c instanceof ItemStackTileEntityRuleFlowComponent)
 				.map(c -> ((ItemStackTileEntityRuleFlowComponent) c))
 				.filter(c -> c.getData() != data)
-				.forEach(c -> c.getData().open = false);
+				.forEach(c -> {
+					c.setVisible(false);
+					c.setEnabled(false);
+				});
 		}
 	}
 
@@ -97,6 +101,5 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 	@Override
 	public void setData(ItemStackTileEntityRuleFlowData data) {
 		this.data = data;
-		setSelected(this.data.open);
 	}
 }

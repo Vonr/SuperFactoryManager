@@ -31,7 +31,8 @@ class AddMatcherButton extends FlowPlusButton {
 		FlowData matcher = new ItemStackComparerMatcherFlowData(
 			UUID.randomUUID(),
 			new ItemStack(Blocks.STONE),
-			0
+			0,
+			false
 		);
 		data.matcherIds.add(matcher.getId());
 		CONTROLLER.SCREEN.sendFlowDataToServer(matcher, data);

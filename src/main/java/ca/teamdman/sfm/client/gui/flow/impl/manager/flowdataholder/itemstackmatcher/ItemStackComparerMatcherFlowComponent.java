@@ -29,7 +29,7 @@ public class ItemStackComparerMatcherFlowComponent extends
 	) {
 		super(
 			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 0),
-			new Size(100,24)
+			new Size(100, 24)
 		);
 		PARENT = parent;
 		this.data = data;
@@ -80,14 +80,6 @@ public class ItemStackComparerMatcherFlowComponent extends
 			this,
 			ItemStackComparerMatcherFlowData.class
 		));
-
-		setEnabled(false);
-		setVisible(false);
-	}
-
-	@Override
-	public int getZIndex() {
-		return super.getZIndex() + 120;
 	}
 
 	@Override
@@ -113,6 +105,9 @@ public class ItemStackComparerMatcherFlowComponent extends
 	@Override
 	public ItemStackComparerMatcherFlowData getData() {
 		return data;
+	}	@Override
+	public boolean isVisible() {
+		return data.open;
 	}
 
 	@Override
@@ -121,4 +116,28 @@ public class ItemStackComparerMatcherFlowComponent extends
 		ICON.BUTTON.setItemStack(data.stack);
 		QUANTITY_INPUT.setContent(Integer.toString(data.quantity));
 	}
+
+	@Override
+	public boolean isEnabled() {
+		return isVisible();
+	}
+
+	@Override
+	public void setVisible(boolean visible) {
+		if (data.open != visible) {
+			data.open = visible;
+			PARENT.SCREEN.sendFlowDataToServer(data);
+		}
+	}
+
+	@Override
+	public void setEnabled(boolean enabled) {
+		setVisible(enabled);
+	}
+
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() + 120;
+	}
+
 }

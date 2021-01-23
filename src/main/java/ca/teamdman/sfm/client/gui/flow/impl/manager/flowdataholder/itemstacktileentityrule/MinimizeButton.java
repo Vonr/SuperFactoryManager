@@ -28,6 +28,7 @@ class MinimizeButton extends FlowMinusButton {
 	@Override
 	public void onClicked(int mx, int my, int button) {
 		PARENT.getData().open = false;
+		PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
 	}
 
 	@Override
