@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client;
 
+import ca.teamdman.sfm.client.gui.screen.ConfigScreen;
 import ca.teamdman.sfm.common.CommonProxy;
 import ca.teamdman.sfm.common.net.packet.IWindowIdProvider;
 import java.util.Arrays;
@@ -14,6 +15,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.fml.ExtensionPoint;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ClientProxy extends CommonProxy {
@@ -34,5 +38,17 @@ public class ClientProxy extends CommonProxy {
 			return Optional.empty();
 		//noinspection unchecked
 		return Optional.of((T) Minecraft.getInstance().currentScreen);
+	}
+
+	@Override
+	public void registerConfigScreen() {
+		ModLoadingContext.get().registerExtensionPoint(
+			ExtensionPoint.CONFIGGUIFACTORY,
+			() -> (mc, screen) -> new ConfigScreen(
+				new TranslationTextComponent("gui.sfm.config.title"),
+				512,
+				256
+			)
+		);
 	}
 }

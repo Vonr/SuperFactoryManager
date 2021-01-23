@@ -5,14 +5,11 @@ package ca.teamdman.sfm;
 
 
 import ca.teamdman.sfm.client.ClientProxy;
-import ca.teamdman.sfm.client.gui.screen.ConfigScreen;
 import ca.teamdman.sfm.common.CommonProxy;
 import ca.teamdman.sfm.common.config.ConfigHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -39,16 +36,6 @@ public class SFM {
 		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigHolder.CLIENT_SPEC);
 
 		bus.addListener(this::onSetup);
-
-		ModLoadingContext.get().registerExtensionPoint(
-			ExtensionPoint.CONFIGGUIFACTORY,
-			() -> (mc, screen) -> new ConfigScreen(
-				new TranslationTextComponent("gui.sfm.config.title"),
-				512,
-				256
-			)
-		);
-
 	}
 
 	private void onSetup(FMLCommonSetupEvent e) {

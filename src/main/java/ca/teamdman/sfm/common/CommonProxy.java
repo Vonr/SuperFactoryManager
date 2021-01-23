@@ -18,4 +18,6 @@ public class CommonProxy {
 
 	public void fillItemGroup(ItemGroup group, Item[] items) {
 	}
+
+	public void registerConfigScreen() {}
 }
