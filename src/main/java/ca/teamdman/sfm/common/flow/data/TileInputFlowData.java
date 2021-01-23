@@ -114,7 +114,7 @@ public class TileInputFlowData extends FlowData implements PositionHolder, Obser
 
 		@Override
 		public void toBuffer(TileInputFlowData data, PacketBuffer buf) {
-			buf.writeString(data.getId().toString());
+			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
 			data.tileEntityRules.serialize(buf);
 		}

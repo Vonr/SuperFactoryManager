@@ -27,7 +27,7 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 			buf.writeInt(msg.DATA.length);
 			for (FlowData datum : msg.DATA) {
 				FlowDataSerializer serializer = datum.getSerializer();
-				buf.writeString(serializer.getRegistryName().toString());
+				buf.writeString(serializer.getRegistryName().toString(), 128);
 				serializer.toBuffer(
 					datum,
 					buf
@@ -44,7 +44,7 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 				tilePos,
 				IntStream.range(0, buf.readInt())
 					.mapToObj(__ -> FlowDataSerializer
-						.getSerializer(buf.readString())
+						.getSerializer(buf.readString(128))
 						.get()
 						.fromBuffer(buf))
 					.toArray(FlowData[]::new)

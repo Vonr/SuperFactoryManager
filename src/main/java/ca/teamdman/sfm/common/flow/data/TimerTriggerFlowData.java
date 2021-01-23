@@ -86,7 +86,7 @@ public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 
 		@Override
 		public void toBuffer(TimerTriggerFlowData data, PacketBuffer buf) {
-			buf.writeString(data.getId().toString());
+			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
 			buf.writeInt(data.interval);
 		}

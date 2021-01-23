@@ -39,6 +39,6 @@ public class UUIDList extends ArrayList<UUID> {
 
 	public void serialize(PacketBuffer buf) {
 		buf.writeInt(size());
-		forEach(id -> buf.writeString(id.toString()));
+		forEach(id -> SFMUtil.writeUUID(id, buf));
 	}
 }

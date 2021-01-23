@@ -103,7 +103,7 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 
 		@Override
 		public void toBuffer(ItemStackComparerMatcherFlowData data, PacketBuffer buf) {
-			buf.writeString(data.getId().toString());
+			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeItemStack(data.stack);
 			buf.writeInt(data.quantity);
 			buf.writeBoolean(data.open);

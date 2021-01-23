@@ -100,10 +100,10 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 
 		@Override
 		public void toBuffer(TileOutputFlowData data, PacketBuffer buf) {
-			buf.writeString(data.getId().toString());
+			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
 			buf.writeInt(data.tileEntityRules.size());
-			data.tileEntityRules.forEach(id -> buf.writeString(id.toString()));
+			data.tileEntityRules.forEach(id -> SFMUtil.writeUUID(id, buf));
 		}
 	}
 }

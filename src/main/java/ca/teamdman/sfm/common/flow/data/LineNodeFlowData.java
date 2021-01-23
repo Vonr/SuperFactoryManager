@@ -110,7 +110,7 @@ public class LineNodeFlowData extends FlowData implements PositionHolder, Observ
 
 		@Override
 		public void toBuffer(LineNodeFlowData data, PacketBuffer buf) {
-			buf.writeString(data.getId().toString());
+			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
 		}
 	}

@@ -112,9 +112,9 @@ public class RelationshipFlowData extends FlowData implements Observer {
 
 		@Override
 		public void toBuffer(RelationshipFlowData data, PacketBuffer buf) {
-			buf.writeString(data.getId().toString());
-			buf.writeString(data.from.toString());
-			buf.writeString(data.to.toString());
+			SFMUtil.writeUUID(data.getId(), buf);
+			SFMUtil.writeUUID(data.from, buf);
+			SFMUtil.writeUUID(data.to, buf);
 		}
 	}
 }

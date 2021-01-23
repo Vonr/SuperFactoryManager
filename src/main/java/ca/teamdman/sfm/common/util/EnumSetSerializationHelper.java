@@ -37,7 +37,7 @@ public class EnumSetSerializationHelper {
 		buf.writeInt(set.size());
 		set.stream()
 			.map(Enum::name)
-			.forEach(buf::writeString);
+			.forEach(name -> buf.writeString(name, 128));
 	}
 
 	public static <T extends Enum<T>> EnumSet<T> deserialize(
@@ -46,7 +46,7 @@ public class EnumSetSerializationHelper {
 	) {
 		return EnumSet.copyOf(
 			IntStream.range(0, buf.readInt())
-				.mapToObj(__ -> buf.readString())
+				.mapToObj(__ -> buf.readString(128))
 				.map(resolver)
 				.collect(Collectors.toList())
 		);

@@ -43,7 +43,7 @@ import net.minecraftforge.items.IItemHandler;
 
 public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	PositionHolder, Observer {
-
+	public static final int MAX_NAME_LENGTH = 256;
 	private final FlowDataRemovedObserver OBSERVER;
 	public FilterMode filterMode;
 	public String name;
@@ -200,29 +200,29 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		public ItemStackTileEntityRuleFlowData fromBuffer(PacketBuffer buf) {
 			return new ItemStackTileEntityRuleFlowData(
 				SFMUtil.readUUID(buf),
-				buf.readString(),
+				buf.readString(MAX_NAME_LENGTH),
 				buf.readItemStack(),
 				Position.fromLong(buf.readLong()),
-				FilterMode.valueOf(buf.readString()),
+				FilterMode.valueOf(buf.readString(16)),
 				new UUIDList(buf),
 				new BlockPosList(buf),
 				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf),
-				new SlotsRule(buf.readString()),
+				new SlotsRule(buf.readString(32)),
 				buf.readBoolean()
 			);
 		}
 
 		@Override
 		public void toBuffer(ItemStackTileEntityRuleFlowData data, PacketBuffer buf) {
-			buf.writeString(data.getId().toString());
-			buf.writeString(data.name);
+			SFMUtil.writeUUID(data.getId(), buf);
+			buf.writeString(data.name, MAX_NAME_LENGTH);
 			buf.writeItemStack(data.icon);
 			buf.writeLong(data.position.toLong());
-			buf.writeString(data.filterMode.name());
+			buf.writeString(data.filterMode.name(), 16);
 			data.matcherIds.serialize(buf);
 			data.tilePositions.serialize(buf);
 			EnumSetSerializationHelper.serialize(data.faces, buf);
-			buf.writeString(data.slots.getDefinition());
+			buf.writeString(data.slots.getDefinition(), 32);
 			buf.writeBoolean(data.open);
 		}
 	}
