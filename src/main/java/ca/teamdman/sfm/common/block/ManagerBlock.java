@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.block;
 
-import ca.teamdman.sfm.common.container.factory.ManagerContainerProvider;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -19,6 +19,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkHooks;
 
 public class ManagerBlock extends CableBlock {
 
@@ -33,7 +34,11 @@ public class ManagerBlock extends CableBlock {
 		PlayerEntity player, Hand handIn, BlockRayTraceResult hit
 	) {
 		if (!world.isRemote && handIn == Hand.MAIN_HAND) {
-			new ManagerContainerProvider(IWorldPosCallable.of(world, pos)).openGui(player);
+			SFMUtil.getServerTile(IWorldPosCallable.of(world, pos), ManagerTileEntity.class)
+				.ifPresent(tile -> NetworkHooks.openGui((ServerPlayerEntity) player, tile, data -> {
+					data.writeBlockPos(tile.getPos());
+					ManagerContainer.writeData(tile, data);
+				}));
 		}
 		return ActionResultType.CONSUME;
 	}
@@ -46,12 +51,7 @@ public class ManagerBlock extends CableBlock {
 		super.onBlockHarvested(worldIn, pos, state, player);
 
 		SFMUtil.getServerTile(IWorldPosCallable.of(worldIn, pos), ManagerTileEntity.class)
-			.ifPresent(manager -> {
-				for (ServerPlayerEntity p : manager.getContainerListeners()
-					.toArray(ServerPlayerEntity[]::new)) {
-					p.closeScreen();
-				}
-			});
+			.ifPresent(ManagerTileEntity::closeGuiForAllListeners);
 	}
 
 	@Override

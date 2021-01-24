@@ -10,8 +10,6 @@ import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket.S2CHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketS2C;
-import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
-import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
@@ -53,13 +51,6 @@ public class PacketHandler {
 	@SuppressWarnings("UnusedAssignment")
 	public static void setup() {
 		int i = 0;
-		register(i++,
-			ManagerPositionPacketC2S.class,
-			new ManagerPositionPacketC2S.Handler());
-
-		register(i++,
-			ManagerPositionPacketS2C.class,
-			new ManagerPositionPacketS2C.Handler());
 
 		register(i++,
 			ManagerCreateLineNodePacketC2S.class,

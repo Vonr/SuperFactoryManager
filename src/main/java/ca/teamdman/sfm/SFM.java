@@ -5,14 +5,20 @@ package ca.teamdman.sfm;
 
 
 import ca.teamdman.sfm.client.ClientProxy;
-import ca.teamdman.sfm.common.CommonProxy;
+import ca.teamdman.sfm.client.gui.screen.CrafterScreen;
+import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.common.Proxy;
+import ca.teamdman.sfm.common.ServerProxy;
 import ca.teamdman.sfm.common.config.ConfigHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
+import net.minecraft.client.gui.ScreenManager;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
@@ -25,8 +31,8 @@ public class SFM {
 	public static final Logger LOGGER = LogManager.getLogger();
 	public static final String MOD_ID = "sfm";
 	public static final String MOD_NAME = "Super Factory Manager";
-	public static final CommonProxy PROXY = DistExecutor
-		.runForDist(() -> ClientProxy::new, () -> CommonProxy::new);
+	public static final Proxy PROXY = DistExecutor
+		.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
 
 	public SFM() {
 		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -35,10 +41,20 @@ public class SFM {
 		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ConfigHolder.SERVER_SPEC);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigHolder.CLIENT_SPEC);
 
-		bus.addListener(this::onSetup);
+		bus.addListener(this::onCommonSetup);
+		bus.addListener(this::onClientSetup);
+
+		ContainerRegistrar.CONTAINER_TYPES.register(bus);
+
+		PROXY.registerScreens();
 	}
 
-	private void onSetup(FMLCommonSetupEvent e) {
+	private void onCommonSetup(FMLCommonSetupEvent e) {
 		PacketHandler.setup();
+	}
+
+	public void onClientSetup(FMLClientSetupEvent e) {
+		ScreenManager.registerFactory(ContainerRegistrar.MANAGER.get(), ManagerScreen::new);
+		ScreenManager.registerFactory(ContainerRegistrar.CRAFTER.get(), CrafterScreen::new);
 	}
 }

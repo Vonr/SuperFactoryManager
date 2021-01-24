@@ -7,30 +7,44 @@ import static net.minecraftforge.common.util.Constants.BlockFlags.BLOCK_UPDATE;
 import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBORS;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import ca.teamdman.sfm.common.util.SFMUtil;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ManagerTileEntity extends TileEntity implements ITickableTileEntity {
+public class ManagerTileEntity extends TileEntity implements ITickableTileEntity,
+	INamedContainerProvider {
 
 	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
-	private final HashSet<ServerPlayerEntity> CONTAINER_LISTENERS = new HashSet<>();
 	private final FlowExecutor EXECUTOR;
 	private final int NBT_VERSION = 1;
+	private final Set<ServerPlayerEntity> CONTAINER_LISTENERS = Collections
+		.newSetFromMap(new WeakHashMap<>());
+
 
 	public ManagerTileEntity() {
 		this(TileEntityRegistrar.Tiles.MANAGER);
@@ -39,6 +53,18 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 	public ManagerTileEntity(final TileEntityType<?> type) {
 		super(type);
 		EXECUTOR = new FlowExecutor(this);
+	}
+
+	@Nullable
+	@Override
+	public Container createMenu(int windowId, PlayerInventory playerInv, PlayerEntity player) {
+		ManagerContainer managerContainer = new ManagerContainer(windowId, this, false);
+		return managerContainer;
+	}
+
+	@Override
+	public ITextComponent getDisplayName() {
+		return new TranslationTextComponent("container.sfm.manager");
 	}
 
 	public void addContainerListener(ServerPlayerEntity player) {
@@ -79,15 +105,27 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 	}
 
 	public <MSG> void sendPacketToListeners(MSG packet) {
-		getContainerListeners().forEach(player ->
+		getContainerListeners().forEach(player -> {
+			SFM.LOGGER.debug(
+				SFMUtil.getMarker(getClass()),
+				"Sending packet to player {}",
+				player
+			);
 			PacketHandler.INSTANCE.send(
 				PacketDistributor.PLAYER.with(() -> player),
 				packet
-			));
+			);
+		});
 	}
 
 	public Stream<ServerPlayerEntity> getContainerListeners() {
 		return CONTAINER_LISTENERS.stream();
+	}
+
+	public void closeGuiForAllListeners() {
+		// get non-weak reference to all items in the list to avoid CMEs
+		Set<ServerPlayerEntity> players = getContainerListeners().collect(Collectors.toSet());
+		players.forEach(ServerPlayerEntity::closeScreen);
 	}
 
 	@Override

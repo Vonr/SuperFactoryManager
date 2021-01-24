@@ -3,12 +3,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.block;
 
-import ca.teamdman.sfm.common.container.factory.CrafterContainerProvider;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
+import ca.teamdman.sfm.common.tile.CrafterTileEntity;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
@@ -17,17 +19,31 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkHooks;
 
-public class CrafterBlock extends Block   {
+public class CrafterBlock extends Block {
+
 	public CrafterBlock(final Properties props) {
 		super(props);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-		if (!world.isRemote && handIn == Hand.MAIN_HAND)
-			new CrafterContainerProvider(IWorldPosCallable.of(world, pos)).openGui(player);
+	public ActionResultType onBlockActivated(
+		BlockState state,
+		World world,
+		BlockPos pos,
+		PlayerEntity player,
+		Hand handIn,
+		BlockRayTraceResult hit
+	) {
+		if (!world.isRemote && handIn == Hand.MAIN_HAND) {
+			SFMUtil.getServerTile(IWorldPosCallable.of(world, pos), CrafterTileEntity.class)
+				.ifPresent(tile -> NetworkHooks.openGui((ServerPlayerEntity) player, tile, data -> {
+					data.writeBlockPos(tile.getPos());
+				}));
+		}
+
 		return ActionResultType.CONSUME;
 	}
 

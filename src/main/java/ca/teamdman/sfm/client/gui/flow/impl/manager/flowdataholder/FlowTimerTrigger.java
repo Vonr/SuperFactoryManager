@@ -9,8 +9,6 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import java.util.UUID;
 
 public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
@@ -55,12 +53,8 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 
 	@Override
 	public void onDragFinished(int dx, int dy, int mx, int my) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			data.getId(),
-			this.getPosition()
-		));
+		data.position = getPosition();
+		CONTROLLER.SCREEN.sendFlowDataToServer(data);
 	}
 
 	@Override

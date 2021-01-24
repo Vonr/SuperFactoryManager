@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.client.gui.screen.ConfigScreen;
-import ca.teamdman.sfm.common.CommonProxy;
+import ca.teamdman.sfm.common.Proxy;
 import ca.teamdman.sfm.common.net.packet.IWindowIdProvider;
 import java.util.Arrays;
 import java.util.Optional;
@@ -20,7 +20,27 @@ import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class ClientProxy extends CommonProxy {
+public class ClientProxy implements Proxy {
+
+	@Override
+	public <T extends Screen> Optional<T> getScreenFromPacket(
+		IWindowIdProvider packet,
+		Supplier<NetworkEvent.Context> ctx,
+		Class<T> screenClass
+	) {
+		if (packet.getWindowId() == 0) {
+			return Optional.empty();
+		}
+		if (packet.getWindowId() != Minecraft.getInstance().player.openContainer.windowId) {
+			return Optional.empty();
+		}
+		if (!screenClass.isInstance(Minecraft.getInstance().currentScreen)) {
+			return Optional.empty();
+		}
+		//noinspection unchecked
+		return Optional.of((T) Minecraft.getInstance().currentScreen);
+	}
+
 	@Override
 	public void fillItemGroup(ItemGroup group, Item[] items) {
 		group.fill(Arrays.stream(items)
@@ -29,19 +49,7 @@ public class ClientProxy extends CommonProxy {
 	}
 
 	@Override
-	public <T extends Screen> Optional<T> getScreenFromPacket(IWindowIdProvider packet, Supplier<NetworkEvent.Context> ctx, Class<T> screenClass) {
-		if (packet.getWindowId() == 0)
-			return Optional.empty();
-		if (packet.getWindowId() != Minecraft.getInstance().player.openContainer.windowId)
-			return Optional.empty();
-		if (!screenClass.isInstance(Minecraft.getInstance().currentScreen))
-			return Optional.empty();
-		//noinspection unchecked
-		return Optional.of((T) Minecraft.getInstance().currentScreen);
-	}
-
-	@Override
-	public void registerConfigScreen() {
+	public void registerScreens() {
 		ModLoadingContext.get().registerExtensionPoint(
 			ExtensionPoint.CONFIGGUIFACTORY,
 			() -> (mc, screen) -> new ConfigScreen(
@@ -51,4 +59,5 @@ public class ClientProxy extends CommonProxy {
 			)
 		);
 	}
+
 }

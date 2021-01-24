@@ -12,8 +12,6 @@ import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implements
@@ -133,12 +131,8 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 
 	@Override
 	public void onDragFinished(int dx, int dy, int mx, int my) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			data.getId(),
-			this.getPosition()
-		));
+		data.position = getPosition();
+		CONTROLLER.SCREEN.sendFlowDataToServer(data);
 	}
 
 	@Override

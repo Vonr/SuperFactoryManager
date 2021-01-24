@@ -3,11 +3,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.tile;
 
+import ca.teamdman.sfm.common.container.CrafterContainer;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.CraftResultInventory;
 import net.minecraft.inventory.CraftingInventory;
@@ -15,6 +17,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.IRecipeHolder;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.item.crafting.IRecipe;
@@ -23,6 +26,8 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -32,12 +37,17 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.RangedWrapper;
 
-public class CrafterTileEntity extends TileEntity implements ICapabilityProvider, IRecipeHolder {
-	private final LazyOptional<ItemStackHandler>       inventoryCapabilityExternal       = LazyOptional.of(() -> this.inventory);
-	private final LazyOptional<IItemHandlerModifiable> inventoryInputCapabilityExternal  = LazyOptional.of(() -> new RangedWrapper(this.inventory, 0, 10));
-	private final LazyOptional<IItemHandlerModifiable> inventoryOutputCapabilityExternal = LazyOptional.of(() -> new RangedWrapper(this.inventory, 10, 11));
-	private       boolean                              debounce                          = false;
-	public final  ItemStackHandler                     inventory                         = new ItemStackHandler(10) {
+public class CrafterTileEntity extends TileEntity implements ICapabilityProvider, IRecipeHolder,
+	INamedContainerProvider {
+
+	private final LazyOptional<ItemStackHandler> inventoryCapabilityExternal = LazyOptional
+		.of(() -> this.inventory);
+	private final LazyOptional<IItemHandlerModifiable> inventoryInputCapabilityExternal = LazyOptional
+		.of(() -> new RangedWrapper(this.inventory, 0, 10));
+	private final LazyOptional<IItemHandlerModifiable> inventoryOutputCapabilityExternal = LazyOptional
+		.of(() -> new RangedWrapper(this.inventory, 10, 11));
+	private boolean debounce = false;
+	public final ItemStackHandler inventory = new ItemStackHandler(10) {
 		@Override
 		protected void onContentsChanged(int slot) {
 			super.onContentsChanged(slot);
@@ -54,7 +64,7 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 			}
 		}
 	};
-	private       IRecipe<?>                           recipe;
+	private IRecipe<?> recipe;
 
 
 	public CrafterTileEntity() {
@@ -69,8 +79,9 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 	@Override
 	public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
 		if (cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-			if (side == null)
+			if (side == null) {
 				return inventoryCapabilityExternal.cast();
+			}
 			switch (side) {
 				case DOWN:
 					return inventoryOutputCapabilityExternal.cast();
@@ -107,14 +118,20 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 		//		this.identifyRecipe();
 	}
 
-	private void identifyRecipe(World world, PlayerEntity player, CraftingInventory inv, CraftResultInventory result) {
+	private void identifyRecipe(
+		World world,
+		PlayerEntity player,
+		CraftingInventory inv,
+		CraftResultInventory result
+	) {
 		if (world != null && !world.isRemote) {
 			ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
 			@SuppressWarnings("ConstantConditions")
-			ItemStack stack = serverPlayer.getServer().getRecipeManager().getRecipe(IRecipeType.CRAFTING, inv, world)
-					.filter(r -> result.canUseRecipe(world, serverPlayer, r))
-					.map(r -> r.getCraftingResult(inv))
-					.orElse(ItemStack.EMPTY);
+			ItemStack stack = serverPlayer.getServer().getRecipeManager()
+				.getRecipe(IRecipeType.CRAFTING, inv, world)
+				.filter(r -> result.canUseRecipe(world, serverPlayer, r))
+				.map(r -> r.getCraftingResult(inv))
+				.orElse(ItemStack.EMPTY);
 			result.setInventorySlotContents(0, stack);
 		}
 	}
@@ -138,13 +155,27 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 				return false;
 			}
 		}, 3, 3);
-		for (int i = 0; i < 9; i++)
+		for (int i = 0; i < 9; i++) {
 			guh.setInventorySlotContents(i, inventory.getStackInSlot(i));
-		List<ICraftingRecipe> recipes = world.getRecipeManager().getRecipes(IRecipeType.CRAFTING, guh, world);
-		if (recipes.size() > 0)
+		}
+		List<ICraftingRecipe> recipes = world.getRecipeManager()
+			.getRecipes(IRecipeType.CRAFTING, guh, world);
+		if (recipes.size() > 0) {
 			inventory.setStackInSlot(9, recipes.get(0).getRecipeOutput().copy());
-		else
+		} else {
 			inventory.setStackInSlot(9, ItemStack.EMPTY);
+		}
+	}
+
+	@Override
+	public ITextComponent getDisplayName() {
+		return new TranslationTextComponent("container.sfm.crafter");
+	}
+
+	@Nullable
+	@Override
+	public Container createMenu(int windowId, PlayerInventory playerInv, PlayerEntity player) {
+		return new CrafterContainer(windowId, playerInv, this);
 	}
 
 	@Override

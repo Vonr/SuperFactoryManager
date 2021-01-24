@@ -5,7 +5,6 @@ package ca.teamdman.sfm.client.gui.flow.core;
 
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.core.SizeHolder;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.ArrayList;
@@ -16,7 +15,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 
-public class FlowComponent implements PositionHolder, SizeHolder {
+public class FlowComponent implements SizeHolder {
 
 	private final Position dragStart = new Position();
 	private final Position dragOffset = new Position();
@@ -45,7 +44,6 @@ public class FlowComponent implements PositionHolder, SizeHolder {
 		return getPosition().withOffset(getSize().getWidth() / 2, getSize().getHeight() / 2);
 	}
 
-	@Override
 	public Position getPosition() {
 		return position;
 	}

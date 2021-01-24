@@ -16,8 +16,6 @@ import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.TileOutputFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
-import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.net.packet.manager.patch.ManagerPositionPacketC2S;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -114,12 +112,8 @@ public class FlowOutputButton extends FlowContainer implements
 
 		@Override
 		public void onDragFinished(int dx, int dy, int mx, int my) {
-			PacketHandler.INSTANCE.sendToServer(new ManagerPositionPacketC2S(
-				CONTROLLER.SCREEN.getContainer().windowId,
-				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-				data.getId(),
-				getPosition()
-			));
+			data.position = getPosition();
+			CONTROLLER.SCREEN.sendFlowDataToServer(data);
 		}
 	}
 

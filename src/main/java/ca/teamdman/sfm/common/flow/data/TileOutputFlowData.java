@@ -7,7 +7,6 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowOutputButton;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.List;
@@ -22,7 +21,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class TileOutputFlowData extends FlowData implements PositionHolder {
+public class TileOutputFlowData extends FlowData {
 
 	public Position position;
 	public List<UUID> tileEntityRules;
@@ -53,7 +52,6 @@ public class TileOutputFlowData extends FlowData implements PositionHolder {
 		return FlowDataSerializers.OUTPUT;
 	}
 
-	@Override
 	public Position getPosition() {
 		return position;
 	}
