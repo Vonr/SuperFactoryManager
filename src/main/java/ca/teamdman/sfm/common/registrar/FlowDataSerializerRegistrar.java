@@ -4,6 +4,7 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData.ItemStackComparerMatcherFlowDataSerializer;
@@ -43,7 +44,8 @@ public class FlowDataSerializerRegistrar {
 			new FlowTimerTriggerDataSerializer(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
 			new FlowTileEntityRuleDataSerializer(new ResourceLocation(SFM.MOD_ID, "tile_entity_rule")),
 			new ItemStackComparerMatcherFlowDataSerializer(
-				new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher"))
+				new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher")),
+			new CursorFlowData.CursorFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "cursor"))
 		);
 	}
 
@@ -68,6 +70,7 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;
 		public static final FlowDataSerializer<ItemStackTileEntityRuleFlowData> TILE_ENTITY_RULE = WAITING;
 		public static final FlowDataSerializer<ItemStackComparerMatcherFlowData> ITEM_STACK_COMPARER_MATCHER = WAITING;
+		public static final FlowDataSerializer<CursorFlowData> CURSOR = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

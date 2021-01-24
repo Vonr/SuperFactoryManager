@@ -27,6 +27,10 @@ public class FlowComponent implements SizeHolder {
 	private Position position;
 	private Size size;
 
+	public FlowComponent() {
+		this(new Position(), new Size(0,0));
+	}
+
 	public FlowComponent(Position pos, Size size) {
 		this.position = pos;
 		this.size = size;

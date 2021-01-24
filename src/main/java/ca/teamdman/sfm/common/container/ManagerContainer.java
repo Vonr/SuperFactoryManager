@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.container;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -20,11 +19,6 @@ public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 
 	public ManagerContainer(int windowId, ManagerTileEntity tile, boolean isRemote) {
 		super(ContainerRegistrar.MANAGER.get(), windowId, tile, isRemote);
-		SFM.LOGGER.debug(
-			SFMUtil.getMarker(getClass()),
-			"Creating container on {} side",
-			isRemote ? "client" : "server"
-		);
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 

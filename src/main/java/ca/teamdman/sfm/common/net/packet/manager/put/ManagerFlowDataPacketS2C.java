@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.common.net.packet.manager.put;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
@@ -51,7 +50,6 @@ public class ManagerFlowDataPacketS2C extends S2CManagerPacket {
 		public void handleDetailed(
 			ManagerScreen screen, ManagerFlowDataPacketS2C msg
 		) {
-			SFM.LOGGER.debug("S2C received, FlowData x {}", msg.DATA.length);
 			for (FlowData datum : msg.DATA) {
 				datum.addToDataContainer(screen.getFlowDataContainer());
 			}

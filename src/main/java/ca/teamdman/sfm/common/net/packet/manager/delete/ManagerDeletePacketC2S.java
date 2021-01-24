@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.net.packet.manager.delete;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -40,11 +39,6 @@ public class ManagerDeletePacketC2S extends C2SManagerPacket {
 
 		@Override
 		public void handleDetailed(ManagerDeletePacketC2S msg, ManagerTileEntity manager) {
-			SFM.LOGGER.debug(
-				SFMUtil.getMarker(getClass()),
-				"C2S received, deleting element with id {}",
-				msg.ELEMENT_ID
-			);
 			manager.getFlowDataContainer().remove(msg.ELEMENT_ID);
 			manager.markAndNotify();
 			manager.sendPacketToListeners(new ManagerDeletePacketS2C(

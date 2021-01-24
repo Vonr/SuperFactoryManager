@@ -9,6 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
+import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.UUID;
 
 public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
@@ -22,6 +23,11 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 		this.CONTROLLER = controller;
 		this.data = data;
 		setDraggable(true);
+
+		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
+			this,
+			TimerTriggerFlowData.class
+		));
 	}
 
 	@Override

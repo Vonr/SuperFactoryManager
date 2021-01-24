@@ -4,7 +4,7 @@ import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
-import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerClosedEvent;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerClosedClientEvent;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -31,7 +31,7 @@ public class FlowDataHolderObserver<T extends FlowData> implements Observer {
 					}
 				}
 			}
-		} else if (arg instanceof FlowDataContainerClosedEvent) {
+		} else if (arg instanceof FlowDataContainerClosedClientEvent) {
 			o.deleteObserver(this);
 		}
 	}

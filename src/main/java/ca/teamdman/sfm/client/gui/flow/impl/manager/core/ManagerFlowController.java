@@ -15,10 +15,11 @@ import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
-import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerClosedEvent;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerClosedClientEvent;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 
 public class ManagerFlowController extends FlowContainer implements Observer {
 
@@ -37,9 +39,27 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
-		rebuildChildren();
 		SearchUtil.buildCacheInBackground();
 		screen.getFlowDataContainer().addObserver(this);
+		rebuildChildren();
+	}
+
+	/**
+	 * Creates a CursorFlowData to display this client's cursor to other players.
+	 * This data object is cleaned up server side when the player closes the container.
+	 */
+	public void createPlayerCursor() {
+		ClientPlayerEntity localPlayer = SCREEN.getMinecraft().player;
+		SCREEN.getFlowDataContainer().get(localPlayer.getUniqueID(), CursorFlowData.class)
+			.orElseGet(() -> {
+				CursorFlowData next = new CursorFlowData(
+					localPlayer.getUniqueID(),
+					localPlayer.getScoreboardName(),
+					new Position()
+				);
+				SCREEN.sendFlowDataToServer(next);
+				return next;
+			});
 	}
 
 	public void rebuildChildren() {
@@ -64,7 +84,7 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 	/**
 	 * Uses Kahn's algorithm to do a topological sort Used to ensure that data controllers are built
 	 * in proper order during first load of GUI
-	 *
+	 * <p>
 	 * https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
 	 *
 	 * @return Sorted FlowData list
@@ -132,19 +152,21 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 			} else if (change.CHANGE == ChangeType.ADDED) {
 				addChild(change.DATA.createController(this));
 			}
-		} else if (arg instanceof FlowDataContainerClosedEvent) {
+		} else if (arg instanceof FlowDataContainerClosedClientEvent) {
 			o.deleteObserver(this);
 		}
 	}
 
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) return true;
+		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) {
+			return true;
+		}
 
 		// if "inventory" key pressed, and the event wasn't consumed, close gui
 		if (
 			!Client.preventClosingManagerWithInventoryButton
-			&& SCREEN.getMinecraft().gameSettings.keyBindInventory.matchesKey(keyCode, scanCode)
+				&& SCREEN.getMinecraft().gameSettings.keyBindInventory.matchesKey(keyCode, scanCode)
 		) {
 			SCREEN.closeScreen();
 			return true;

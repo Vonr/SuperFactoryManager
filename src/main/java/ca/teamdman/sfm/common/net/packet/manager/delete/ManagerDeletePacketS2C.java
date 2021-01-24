@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.net.packet.manager.delete;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -41,11 +40,6 @@ public class ManagerDeletePacketS2C extends S2CManagerPacket {
 			ManagerScreen screen,
 			ManagerDeletePacketS2C msg
 		) {
-			SFM.LOGGER.debug(
-				SFMUtil.getMarker(getClass()),
-				"S2C received, deleting element with id {}",
-				msg.ELEMENT_ID
-			);
 			screen.getFlowDataContainer().remove(msg.ELEMENT_ID);
 		}
 	}

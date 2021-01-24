@@ -1,8 +1,6 @@
 package ca.teamdman.sfm.common.tile.manager;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
-import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -29,13 +27,6 @@ public class FlowExecutor {
 			.filter(t -> tick % t.interval == 0)
 			.map(t -> new ExecutionFrame(TILE, t, state))
 			.forEach(FRAMES::add);
-
-		if (!FRAMES.isEmpty()) {
-			SFM.LOGGER.debug(
-				SFMUtil.getMarker(getClass()),
-				"Executing trigger"
-			);
-		}
 
 		while (!FRAMES.isEmpty()) {
 			ExecutionFrame frame = FRAMES.pop();

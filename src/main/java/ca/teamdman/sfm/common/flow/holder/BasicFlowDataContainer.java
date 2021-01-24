@@ -118,7 +118,7 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 
 	public void notifyGuiClosed() {
 		setChanged();
-		notifyObservers(new FlowDataContainerClosedEvent());
+		notifyObservers(new FlowDataContainerClosedClientEvent());
 	}
 
 	public void notifyChanged(FlowData data) {
@@ -214,7 +214,7 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 		}
 	}
 
-	public static class FlowDataContainerClosedEvent {
+	public static class FlowDataContainerClosedClientEvent {
 
 	}
 }

@@ -63,6 +63,12 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 	}
 
 	@Override
+	protected void init() {
+		super.init();
+		CONTROLLER.createPlayerCursor();
+	}
+
+	@Override
 	public ManagerContainer getContainer() {
 		return CONTAINER;
 	}

@@ -8,7 +8,7 @@ import static net.minecraftforge.common.util.Constants.BlockFlags.NOTIFY_NEIGHBO
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.ManagerContainer;
-import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -69,26 +68,31 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 
 	public void addContainerListener(ServerPlayerEntity player) {
 		CONTAINER_LISTENERS.add(player);
+		pruneCursors();
 	}
 
-	public void removeContainerListener(ServerPlayerEntity player) {
-		CONTAINER_LISTENERS.remove(player);
+	/**
+	 * Remove any CursorFlowData instances that don't belong to a listener
+	 */
+	public void pruneCursors() {
+		Set<UUID> listeners = getContainerListeners()
+			.map(ServerPlayerEntity::getUniqueID)
+			.collect(Collectors.toSet());
+		getFlowDataContainer().removeIf(data ->
+			data instanceof CursorFlowData && !listeners.contains(data.getId()));
 	}
 
-	public void mutateManagerData(
-		UUID dataId,
-		Consumer<FlowData> consumer, Runnable changeNotifier
-	) {
-		getFlowDataContainer().get(dataId)
-			.ifPresent(data -> {
-				consumer.accept(data);
-				markAndNotify();
-				changeNotifier.run();
-			});
+	public Stream<ServerPlayerEntity> getContainerListeners() {
+		return CONTAINER_LISTENERS.stream();
 	}
 
 	public BasicFlowDataContainer getFlowDataContainer() {
 		return FLOW_DATA_CONTAINER;
+	}
+
+	public void removeContainerListener(ServerPlayerEntity player) {
+		CONTAINER_LISTENERS.remove(player);
+		pruneCursors();
 	}
 
 	public void markAndNotify() {
@@ -106,20 +110,11 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 
 	public <MSG> void sendPacketToListeners(MSG packet) {
 		getContainerListeners().forEach(player -> {
-			SFM.LOGGER.debug(
-				SFMUtil.getMarker(getClass()),
-				"Sending packet to player {}",
-				player
-			);
 			PacketHandler.INSTANCE.send(
 				PacketDistributor.PLAYER.with(() -> player),
 				packet
 			);
 		});
-	}
-
-	public Stream<ServerPlayerEntity> getContainerListeners() {
-		return CONTAINER_LISTENERS.stream();
 	}
 
 	public void closeGuiForAllListeners() {
@@ -159,6 +154,8 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 
 	@Override
 	public CompoundNBT serializeNBT() {
+		pruneCursors();
+
 		SFM.LOGGER.debug(
 			SFMUtil.getMarker(getClass()),
 			"Saving NBT on {}, writing {} entries",

@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.net.packet.manager.put;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.FlowUtils;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
@@ -62,15 +61,6 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 			UUID nodeId = UUID.randomUUID();
 			UUID fromToNodeId = UUID.randomUUID();
 			UUID toToNodeId = UUID.randomUUID();
-			SFM.LOGGER.debug(
-				SFMUtil.getMarker(getClass()),
-				"C2S received, creating relationship from {} to {}, node id {}, rel ids {} and {}",
-				msg.FROM_ID,
-				msg.TO_ID,
-				nodeId,
-				fromToNodeId,
-				toToNodeId
-			);
 
 			FlowUtils.insertLineNode(
 				manager.getFlowDataContainer(),

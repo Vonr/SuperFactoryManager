@@ -31,7 +31,7 @@ public class FlowDataRemovedObserver implements Observer {
 				}
 			}
 		}
-//		else if (arg instanceof FlowDataContainerClosedEvent) {
+//		else if (arg instanceof FlowDataContainerClosedClientEvent) {
 //			o.deleteObserver(this);
 //		}
 	}

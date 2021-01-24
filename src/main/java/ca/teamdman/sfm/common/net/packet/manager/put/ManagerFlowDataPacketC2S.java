@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.common.net.packet.manager.put;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
@@ -55,7 +54,6 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 		public void handleDetailed(
 			ManagerFlowDataPacketC2S msg, ManagerTileEntity manager
 		) {
-			SFM.LOGGER.debug("C2S received, FlowData x {}", msg.DATA.length);
 			for (FlowData datum : msg.DATA) {
 				datum.addToDataContainer(manager.getFlowDataContainer());
 			}
