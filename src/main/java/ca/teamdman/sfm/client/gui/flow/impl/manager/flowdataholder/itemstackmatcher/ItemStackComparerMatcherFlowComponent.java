@@ -55,7 +55,7 @@ public class ItemStackComparerMatcherFlowComponent extends
 		addChild(QUANTITY_INPUT);
 
 		// "x" separator
-		addChild(new FlowComponent(45, 8, 0, 0) {
+		addChild(new FlowComponent(new Position(45, 8), new Size(0, 0)) {
 			@Override
 			public void draw(
 				BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime

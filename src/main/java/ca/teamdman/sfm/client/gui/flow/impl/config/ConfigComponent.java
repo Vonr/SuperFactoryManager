@@ -239,7 +239,7 @@ public class ConfigComponent extends FlowContainer {
 	private static class FlowPanel extends FlowComponent {
 
 		public FlowPanel(int x, int y, int width, int height) {
-			super(x, y, width, height);
+			super(new Position(x, y), new Size(width, height));
 		}
 
 		@Override
