@@ -68,6 +68,11 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 					) {
 						@Override
 						public void onClicked(int mx, int my, int button) {
+							// hide after picking
+							setVisible(false);
+							setEnabled(false);
+
+							// invoke callback
 							onItemStackChanged(stack);
 						}
 					})
