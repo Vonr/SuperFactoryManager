@@ -50,7 +50,6 @@ public class ManagerFlowDataPacketS2C extends S2CManagerPacket {
 		public void handleDetailed(
 			ManagerScreen screen, ManagerFlowDataPacketS2C msg
 		) {
-			System.out.println("Got a " + msg.getClass().getSimpleName());
 			for (FlowData datum : msg.DATA) {
 				datum.addToDataContainer(screen.getFlowDataContainer());
 			}
