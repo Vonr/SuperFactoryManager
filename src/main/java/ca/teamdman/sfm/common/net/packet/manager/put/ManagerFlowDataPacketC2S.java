@@ -58,9 +58,9 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 				datum.addToDataContainer(manager.getFlowDataContainer());
 			}
 
-			manager.sendPacketToListeners(
+			manager.sendPacketToListeners(windowId ->
 				new ManagerFlowDataPacketS2C(
-					msg.WINDOW_ID,
+					windowId,
 					msg.DATA
 				)
 			);

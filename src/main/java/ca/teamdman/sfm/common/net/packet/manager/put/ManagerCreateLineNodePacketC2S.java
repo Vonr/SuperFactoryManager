@@ -72,9 +72,9 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 				msg.ELEMENT_POSITION
 			);
 
-			manager.sendPacketToListeners(
+			manager.sendPacketToListeners(windowId ->
 				new ManagerCreateLineNodePacketS2C(
-					msg.WINDOW_ID,
+					windowId,
 					msg.FROM_ID,
 					msg.TO_ID,
 					nodeId,

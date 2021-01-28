@@ -13,10 +13,13 @@ import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
 import ca.teamdman.sfm.common.util.SFMUtil;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -41,8 +44,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
 	private final FlowExecutor EXECUTOR;
 	private final int NBT_VERSION = 1;
-	private final Set<ServerPlayerEntity> CONTAINER_LISTENERS = Collections
-		.newSetFromMap(new WeakHashMap<>());
+	private final Map<ServerPlayerEntity, Integer> CONTAINER_LISTENERS = new WeakHashMap<>();
 
 
 	public ManagerTileEntity() {
@@ -66,8 +68,8 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 		return new TranslationTextComponent("container.sfm.manager");
 	}
 
-	public void addContainerListener(ServerPlayerEntity player) {
-		CONTAINER_LISTENERS.add(player);
+	public void addContainerListener(ServerPlayerEntity player, int windowId) {
+		CONTAINER_LISTENERS.put(player, windowId);
 		pruneCursors();
 	}
 
@@ -76,14 +78,17 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 	 */
 	public void pruneCursors() {
 		Set<UUID> listeners = getContainerListeners()
+			.map(Entry::getKey)
 			.map(ServerPlayerEntity::getUniqueID)
 			.collect(Collectors.toSet());
 		getFlowDataContainer().removeIf(data ->
 			data instanceof CursorFlowData && !listeners.contains(data.getId()));
 	}
 
-	public Stream<ServerPlayerEntity> getContainerListeners() {
-		return CONTAINER_LISTENERS.stream();
+
+	public Stream<Entry<ServerPlayerEntity, Integer>> getContainerListeners() {
+		// get non-weak reference to all items in the list to avoid CMEs
+		return new ArrayList<>(CONTAINER_LISTENERS.entrySet()).stream();
 	}
 
 	public BasicFlowDataContainer getFlowDataContainer() {
@@ -108,19 +113,19 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 		);
 	}
 
-	public <MSG> void sendPacketToListeners(MSG packet) {
-		getContainerListeners().forEach(player -> {
-			PacketHandler.INSTANCE.send(
-				PacketDistributor.PLAYER.with(() -> player),
-				packet
-			);
-		});
+	public <MSG> void sendPacketToListeners(Function<Integer, MSG> packetFunc) {
+		getContainerListeners()
+			.forEach(entry -> {
+				ServerPlayerEntity player = entry.getKey();
+				MSG packet = packetFunc.apply(entry.getValue());
+				PacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(()->player), packet);
+			});
 	}
 
 	public void closeGuiForAllListeners() {
-		// get non-weak reference to all items in the list to avoid CMEs
-		Set<ServerPlayerEntity> players = getContainerListeners().collect(Collectors.toSet());
-		players.forEach(ServerPlayerEntity::closeScreen);
+		getContainerListeners()
+			.map(Entry::getKey)
+			.forEach(ServerPlayerEntity::closeScreen);
 	}
 
 	@Override

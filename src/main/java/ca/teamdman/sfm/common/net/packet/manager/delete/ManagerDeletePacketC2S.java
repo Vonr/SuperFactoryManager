@@ -11,6 +11,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 
 public class ManagerDeletePacketC2S extends C2SManagerPacket {
+
 	private final UUID ELEMENT_ID;
 
 	public ManagerDeletePacketC2S(int windowId, BlockPos pos, UUID elementId) {
@@ -23,13 +24,16 @@ public class ManagerDeletePacketC2S extends C2SManagerPacket {
 		@Override
 		public void finishEncode(
 			ManagerDeletePacketC2S msg,
-			PacketBuffer buf) {
+			PacketBuffer buf
+		) {
 			SFMUtil.writeUUID(msg.ELEMENT_ID, buf);
 		}
 
 		@Override
-		public ManagerDeletePacketC2S finishDecode(int windowId, BlockPos tilePos,
-			PacketBuffer buf) {
+		public ManagerDeletePacketC2S finishDecode(
+			int windowId, BlockPos tilePos,
+			PacketBuffer buf
+		) {
 			return new ManagerDeletePacketC2S(
 				windowId,
 				tilePos,
@@ -41,9 +45,9 @@ public class ManagerDeletePacketC2S extends C2SManagerPacket {
 		public void handleDetailed(ManagerDeletePacketC2S msg, ManagerTileEntity manager) {
 			manager.getFlowDataContainer().remove(msg.ELEMENT_ID);
 			manager.markAndNotify();
-			manager.sendPacketToListeners(new ManagerDeletePacketS2C(
-				msg.WINDOW_ID,
-				msg.ELEMENT_ID));
+			manager.sendPacketToListeners(
+				windowId -> new ManagerDeletePacketS2C(windowId, msg.ELEMENT_ID)
+			);
 		}
 	}
 }

@@ -46,7 +46,7 @@ public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 	@SubscribeEvent
 	public void onContainerOpen(PlayerContainerEvent.Open e) {
 		if (!IS_REMOTE) {
-			getSource().addContainerListener((ServerPlayerEntity) e.getPlayer());
+			getSource().addContainerListener((ServerPlayerEntity) e.getPlayer(), e.getContainer().windowId);
 		}
 	}
 
