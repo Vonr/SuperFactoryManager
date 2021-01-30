@@ -20,6 +20,10 @@ public class CloneController extends FlowComponent {
 		this.CONTROLLER = CONTROLLER;
 	}
 
+	public void setCloning(FlowComponent comp) {
+		cloning = comp;
+	}
+
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
 		if (!Screen.hasControlDown()) {

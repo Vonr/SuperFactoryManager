@@ -17,17 +17,16 @@ public class FlowDrawer extends FlowContainer {
 	private static final int PADDING_Y = 4;
 	private static final int ITEM_MARGIN_X = 4;
 	private static final int ITEM_MARGIN_Y = 4;
-	private final int MAX_ITEMS_PER_ROW;
-	private final int MAX_ITEMS_PER_COLUMN;
+	private int maxItemsPerRow;
+	private int maxItemsPerColumn;
 	private int maxItemWidth;
 	private int maxItemHeight;
 	private boolean shrinkToFit = true;
 	private int scroll = 0;
-
 	public FlowDrawer(Position pos, int maxItemsPerRow, int maxItemsPerColumn) {
 		super(pos);
-		this.MAX_ITEMS_PER_ROW = maxItemsPerRow;
-		this.MAX_ITEMS_PER_COLUMN = maxItemsPerColumn;
+		this.maxItemsPerRow = maxItemsPerRow;
+		this.maxItemsPerColumn = maxItemsPerColumn;
 	}
 
 	public int getMaxWidth() {
@@ -35,7 +34,11 @@ public class FlowDrawer extends FlowContainer {
 	}
 
 	public int getMaxItemsPerRow() {
-		return MAX_ITEMS_PER_ROW;
+		return maxItemsPerRow;
+	}
+
+	public void setMaxItemsPerRow(int maxItemsPerRow) {
+		this.maxItemsPerRow = maxItemsPerRow;
 	}
 
 	public void setShrinkToFit(boolean value) {
@@ -82,25 +85,6 @@ public class FlowDrawer extends FlowContainer {
 				) * (maxItemHeight + ITEM_MARGIN_Y)
 			)
 		);
-	}
-
-	@Override
-	public boolean mouseScrolled(int mx, int my, double scroll) {
-		if (isInBounds(mx, my)) {
-			if (scroll > 0) {
-				scrollUp();
-			} else {
-				scrollDown();
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public boolean isChildVisible(FlowComponent comp) {
-		return comp.getPosition().getY() > -comp.getSize().getHeight() // not above bounds
-			&& comp.getPosition().getY() < getMaxHeight(); // not below bounds
 	}
 
 	@Override
@@ -164,12 +148,35 @@ public class FlowDrawer extends FlowContainer {
 		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
+	@Override
+	public boolean mouseScrolled(int mx, int my, double scroll) {
+		if (isInBounds(mx, my)) {
+			if (scroll > 0) {
+				scrollUp();
+			} else {
+				scrollDown();
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public boolean isChildVisible(FlowComponent comp) {
+		return comp.getPosition().getY() > -comp.getSize().getHeight() // not above bounds
+			&& comp.getPosition().getY() < getMaxHeight(); // not below bounds
+	}
+
 	public int getMaxHeight() {
 		return (maxItemHeight + ITEM_MARGIN_Y) * getMaxItemsPerColumn() + PADDING_Y;
 	}
 
 	public int getMaxItemsPerColumn() {
-		return MAX_ITEMS_PER_COLUMN;
+		return maxItemsPerColumn;
+	}
+
+	public void setMaxItemsPerColumn(int maxItemsPerColumn) {
+		this.maxItemsPerColumn = maxItemsPerColumn;
 	}
 
 	public void scrollDown() {

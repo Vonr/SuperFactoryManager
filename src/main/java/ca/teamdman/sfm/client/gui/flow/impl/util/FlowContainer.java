@@ -61,6 +61,13 @@ public abstract class FlowContainer extends FlowComponent {
 		return findFirstChild(data.getId());
 	}
 
+	public <T> Optional<T> findFirstChild(Class<T> clazz) {
+		return getChildren().stream()
+			.filter(clazz::isInstance)
+			.map(clazz::cast)
+			.findFirst();
+	}
+
 	public Optional<FlowComponent> findFirstChild(UUID id) {
 		return getChildren().stream()
 			.filter(c -> c instanceof FlowDataHolder

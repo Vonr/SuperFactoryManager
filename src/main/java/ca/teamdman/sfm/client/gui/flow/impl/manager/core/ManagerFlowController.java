@@ -5,9 +5,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.SearchUtil;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.template.FlowInstructions;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.template.FlowTimerTriggerSpawnerButton;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.template.InputSpawnerFlowButton;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.template.OutputSpawnerFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.FlowToolbox;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.template.SettingsFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
@@ -36,12 +34,30 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 public class ManagerFlowController extends FlowContainer implements Observer {
 
 	public final ManagerScreen SCREEN;
+	private boolean clicking = false;
 
 	public ManagerFlowController(ManagerScreen screen) {
 		this.SCREEN = screen;
 		SearchUtil.buildCacheInBackground();
 		screen.getFlowDataContainer().addObserver(this);
 		rebuildChildren();
+	}
+
+	@Override
+	public boolean mousePressed(int mx, int my, int button) {
+		return super.mousePressed(mx, my, button) || (clicking = isInBounds(mx, my));
+	}
+
+	@Override
+	public boolean mouseReleased(int mx, int my, int button) {
+		boolean wasClicking = clicking;
+		clicking = false;
+		if (super.mouseReleased(mx, my, button)) return true;
+		if (wasClicking) {
+			this.findFirstChild(FlowToolbox.class).ifPresent(FlowToolbox::setChildrenToDefault);
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -71,9 +87,7 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 		addChild(new DeletionController(this));
 		addChild(new RelationshipController(this));
 		addChild(new SettingsFlowButton(SCREEN));
-		addChild(new InputSpawnerFlowButton(this));
-		addChild(new OutputSpawnerFlowButton(this));
-		addChild(new FlowTimerTriggerSpawnerButton(this));
+		addChild(new FlowToolbox(this));
 
 		getDataSortedByDependencies()
 			.map(data -> data.createController(this))

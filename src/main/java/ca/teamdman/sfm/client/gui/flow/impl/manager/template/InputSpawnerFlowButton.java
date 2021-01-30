@@ -3,7 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.CloneController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowInputButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TileInputFlowData;
@@ -17,13 +19,13 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class InputSpawnerFlowButton extends FlowIconButton {
 
-	private final ManagerFlowController managerFlowController;
+	private final ManagerFlowController CONTROLLER;
 
 	public InputSpawnerFlowButton(
-		ManagerFlowController managerFlowController
+		ManagerFlowController controller
 	) {
 		super(ButtonLabel.ADD_INPUT, new Position(25, 50));
-		this.managerFlowController = managerFlowController;
+		this.CONTROLLER = controller;
 	}
 
 	@Override
@@ -34,11 +36,30 @@ public class InputSpawnerFlowButton extends FlowIconButton {
 	}
 
 	@Override
+	public boolean mousePressed(int mx, int my, int button) {
+		boolean rtn = super.mousePressed(mx, my, button);
+		if (clicking) {
+			clicking=false;
+			CONTROLLER.findFirstChild(CloneController.class).ifPresent(cloner -> {
+				TileInputFlowData data = new TileInputFlowData(
+					UUID.randomUUID(),
+					new Position(),
+					Collections.emptyList()
+				);
+				FlowInputButton comp = new FlowInputButton(CONTROLLER, data);
+				cloner.setCloning(comp);
+			});
+			return true;
+		}
+		return false;
+	}
+
+	@Override
 	public void onClicked(int mx, int my, int button) {
-		managerFlowController.SCREEN.sendFlowDataToServer(new TileInputFlowData(
-			UUID.randomUUID(),
-			getPosition().withOffset(getSize().getWidth() + 10, 0),
-			Collections.emptyList()
-		));
+//		managerFlowController.SCREEN.sendFlowDataToServer(new TileInputFlowData(
+//			UUID.randomUUID(),
+//			getPosition().withOffset(getSize().getWidth() + 10, 0),
+//			Collections.emptyList()
+//		));
 	}
 }
