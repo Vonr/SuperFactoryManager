@@ -64,10 +64,9 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 
 	@Override
 	public void setSelected(boolean value) {
-		data.open = value;
 		List<FlowData> changes = new ArrayList<>();
 		changes.add(data);
-		if (!Client.allowMultipleRuleWindows && isSelected()) {
+		if (!Client.allowMultipleRuleWindows && value) {
 			AtomicReference<Position> pos = new AtomicReference<>(data.position);
 			PARENT.CONTROLLER.SCREEN.getFlowDataContainer()
 				.get(ItemStackTileEntityRuleFlowData.class)
@@ -80,6 +79,7 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 				});
 			data.position.setXY(pos.get()); // position opening window to match previously open
 		}
+		data.open = value; // only open after position adjusted if only one window open allowed
 		PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(changes.toArray(new FlowData[0]));
 	}
 
