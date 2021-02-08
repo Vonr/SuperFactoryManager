@@ -3,7 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.CloneController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowOutputButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TileOutputFlowData;
@@ -17,13 +19,13 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class OutputSpawnerFlowButton extends FlowIconButton {
 
-	private final ManagerFlowController managerFlowController;
+	private final ManagerFlowController CONTROLLER;
 
 	public OutputSpawnerFlowButton(
-		ManagerFlowController managerFlowController
+		ManagerFlowController controller
 	) {
 		super(ButtonLabel.ADD_OUTPUT, new Position(25, 75));
-		this.managerFlowController = managerFlowController;
+		this.CONTROLLER = controller;
 	}
 
 	@Override
@@ -34,11 +36,26 @@ public class OutputSpawnerFlowButton extends FlowIconButton {
 	}
 
 	@Override
+	public boolean mousePressed(int mx, int my, int button) {
+		// override mousePressed instead of onClicked because of custom hover logic
+		boolean rtn = super.mousePressed(mx, my, button);
+		if (clicking) {
+			clicking=false;
+			CONTROLLER.findFirstChild(CloneController.class).ifPresent(cloner -> {
+				TileOutputFlowData data = new TileOutputFlowData(
+					UUID.randomUUID(),
+					getPosition().withOffset(getSize().getWidth() + 10, 0),
+					Collections.emptyList()
+				);
+				FlowOutputButton comp = new FlowOutputButton(CONTROLLER, data);
+				cloner.setCloning(comp);
+			});
+			return true;
+		}
+		return rtn;
+	}
+
+	@Override
 	public void onClicked(int mx, int my, int button) {
-		managerFlowController.SCREEN.sendFlowDataToServer(new TileOutputFlowData(
-			UUID.randomUUID(),
-			getPosition().withOffset(getSize().getWidth() + 10, 0),
-			Collections.emptyList()
-		));
 	}
 }

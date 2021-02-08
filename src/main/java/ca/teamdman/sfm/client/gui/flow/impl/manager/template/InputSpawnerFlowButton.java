@@ -37,6 +37,7 @@ public class InputSpawnerFlowButton extends FlowIconButton {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
+		// override mousePressed instead of onClicked because of custom hover logic
 		boolean rtn = super.mousePressed(mx, my, button);
 		if (clicking) {
 			clicking=false;
@@ -51,15 +52,10 @@ public class InputSpawnerFlowButton extends FlowIconButton {
 			});
 			return true;
 		}
-		return false;
+		return rtn;
 	}
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-//		managerFlowController.SCREEN.sendFlowDataToServer(new TileInputFlowData(
-//			UUID.randomUUID(),
-//			getPosition().withOffset(getSize().getWidth() + 10, 0),
-//			Collections.emptyList()
-//		));
 	}
 }

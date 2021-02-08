@@ -3,7 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.CloneController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTimerTrigger;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
@@ -16,13 +18,13 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class FlowTimerTriggerSpawnerButton extends FlowIconButton {
 
-	private final ManagerFlowController managerFlowController;
+	private final ManagerFlowController CONTROLLER;
 
 	public FlowTimerTriggerSpawnerButton(
-		ManagerFlowController managerFlowController
+		ManagerFlowController controller
 	) {
 		super(ButtonLabel.ADD_TIMER_TRIGGER, new Position(25, 25));
-		this.managerFlowController = managerFlowController;
+		this.CONTROLLER = controller;
 	}
 
 	@Override
@@ -33,13 +35,26 @@ public class FlowTimerTriggerSpawnerButton extends FlowIconButton {
 	}
 
 	@Override
+	public boolean mousePressed(int mx, int my, int button) {
+		// override mousePressed instead of onClicked because of custom hover logic
+		boolean rtn = super.mousePressed(mx, my, button);
+		if (clicking) {
+			clicking=false;
+			CONTROLLER.findFirstChild(CloneController.class).ifPresent(cloner -> {
+				TimerTriggerFlowData data = new TimerTriggerFlowData(
+					UUID.randomUUID(),
+					getPosition().withOffset(getSize().getWidth() + 10, 0),
+					20
+				);
+				FlowTimerTrigger comp = new FlowTimerTrigger(CONTROLLER, data);
+				cloner.setCloning(comp);
+			});
+			return true;
+		}
+		return rtn;
+	}
+
+	@Override
 	public void onClicked(int mx, int my, int button) {
-		managerFlowController.SCREEN.sendFlowDataToServer(
-			new TimerTriggerFlowData(
-				UUID.randomUUID(),
-				getPosition().withOffset(getSize().getWidth() + 10, 0),
-				20
-			)
-		);
 	}
 }
