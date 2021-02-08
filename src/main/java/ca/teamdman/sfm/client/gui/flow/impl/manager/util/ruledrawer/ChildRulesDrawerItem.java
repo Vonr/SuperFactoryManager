@@ -1,15 +1,16 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer;
 
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule.ItemStackTileEntityRuleFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
@@ -41,7 +42,7 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 	@Override
 	public void onClicked(int mx, int my, int button) {
 		if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
-			super.onClicked(mx, my, button);
+			toggleSelected();
 		} else if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
 			// right click, remove item from list
 			if (Screen.hasShiftDown()) {
@@ -64,7 +65,22 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 	@Override
 	public void setSelected(boolean value) {
 		data.open = value;
-		PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(data);
+		List<FlowData> changes = new ArrayList<>();
+		changes.add(data);
+		if (!Client.allowMultipleRuleWindows && isSelected()) {
+			AtomicReference<Position> pos = new AtomicReference<>(data.position);
+			PARENT.CONTROLLER.SCREEN.getFlowDataContainer()
+				.get(ItemStackTileEntityRuleFlowData.class)
+				.filter(d -> !d.equals(data))
+				.filter(d -> d.open)
+				.forEach(d -> {
+					pos.set(d.position); // track open window position
+					d.open = false; // close it
+					changes.add(d); // mark as changed
+				});
+			data.position.setXY(pos.get()); // position opening window to match previously open
+		}
+		PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(changes.toArray(new FlowData[0]));
 	}
 
 	@Override
@@ -77,20 +93,6 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 		list.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.children.remove_hint2")
 			.mergeStyle(TextFormatting.GRAY));
 		return list;
-	}
-
-	@Override
-	public void onSelectionChanged() {
-		if (!Client.allowMultipleRuleWindows && isSelected()) {
-			PARENT.CONTROLLER.getChildren().stream()
-				.filter(c -> c instanceof ItemStackTileEntityRuleFlowComponent)
-				.map(c -> ((ItemStackTileEntityRuleFlowComponent) c))
-				.filter(c -> c.getData() != data)
-				.forEach(c -> {
-					c.setVisible(false);
-					c.setEnabled(false);
-				});
-		}
 	}
 
 	@Override
