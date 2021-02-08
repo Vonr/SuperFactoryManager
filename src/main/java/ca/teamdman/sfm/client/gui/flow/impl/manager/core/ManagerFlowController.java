@@ -33,6 +33,9 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 
 public class ManagerFlowController extends FlowContainer implements Observer {
 
+	//todo: button to bring all windows inside bounds of the screen
+	// prevents someone from dragging the toolbox off screen
+
 	public final ManagerScreen SCREEN;
 	private boolean clicking = false;
 
