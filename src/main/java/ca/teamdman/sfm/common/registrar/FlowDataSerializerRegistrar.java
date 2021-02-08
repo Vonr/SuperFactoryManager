@@ -5,6 +5,7 @@ package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
+import ca.teamdman.sfm.common.flow.data.CursorFlowData.CursorFlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData.ItemStackComparerMatcherFlowDataSerializer;
@@ -20,6 +21,8 @@ import ca.teamdman.sfm.common.flow.data.TileOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.TileOutputFlowData.FlowOutputDataSerializer;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData.FlowTimerTriggerDataSerializer;
+import ca.teamdman.sfm.common.flow.data.ToolboxFlowData;
+import ca.teamdman.sfm.common.flow.data.ToolboxFlowData.ToolboxFlowDataSerializer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
@@ -43,9 +46,9 @@ public class FlowDataSerializerRegistrar {
 			new LineNodeFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "line_node")),
 			new FlowTimerTriggerDataSerializer(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
 			new FlowTileEntityRuleDataSerializer(new ResourceLocation(SFM.MOD_ID, "tile_entity_rule")),
-			new ItemStackComparerMatcherFlowDataSerializer(
-				new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher")),
-			new CursorFlowData.CursorFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "cursor"))
+			new ItemStackComparerMatcherFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher")),
+			new CursorFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "cursor")),
+			new ToolboxFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "toolbox"))
 		);
 	}
 
@@ -71,6 +74,7 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<ItemStackTileEntityRuleFlowData> TILE_ENTITY_RULE = WAITING;
 		public static final FlowDataSerializer<ItemStackComparerMatcherFlowData> ITEM_STACK_COMPARER_MATCHER = WAITING;
 		public static final FlowDataSerializer<CursorFlowData> CURSOR = WAITING;
+		public static final FlowDataSerializer<ToolboxFlowData> TOOLBOX = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

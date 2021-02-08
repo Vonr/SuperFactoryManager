@@ -1,25 +1,32 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.FlowTimerTriggerSpawnerButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.InputSpawnerFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.OutputSpawnerFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.ToolboxFlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Collection;
 import net.minecraft.client.resources.I18n;
 
-public class FlowToolbox extends FlowContainer {
+public class FlowToolbox extends FlowContainer implements FlowDataHolder<ToolboxFlowData> {
 
 	private final ManagerFlowController CONTROLLER;
 	private final FlowDrawer DRAWER;
+	private ToolboxFlowData data;
 	private String title;
 
-	public FlowToolbox(ManagerFlowController controller) {
-		super(new Position(0, 0), new Size(100, 30));
+	public FlowToolbox(ManagerFlowController controller, ToolboxFlowData data) {
+		super(data.getPosition(), new Size(100, 30));
+		this.data = data;
 		CONTROLLER = controller;
 
 		title = I18n.format("gui.sfm.toolbox.title.default");
@@ -33,9 +40,9 @@ public class FlowToolbox extends FlowContainer {
 
 	public void setChildrenToDefault() {
 		DRAWER.getChildren().clear();
+		DRAWER.addChild(new FlowTimerTriggerSpawnerButton(CONTROLLER));
 		DRAWER.addChild(new InputSpawnerFlowButton(CONTROLLER));
 		DRAWER.addChild(new OutputSpawnerFlowButton(CONTROLLER));
-		DRAWER.addChild(new FlowTimerTriggerSpawnerButton(CONTROLLER));
 		DRAWER.setMaxItemsPerRow(4);
 		DRAWER.setMaxItemsPerColumn(1);
 		DRAWER.update();
@@ -85,5 +92,21 @@ public class FlowToolbox extends FlowContainer {
 	@Override
 	public int getZIndex() {
 		return super.getZIndex() + 250;
+	}
+
+	@Override
+	public ToolboxFlowData getData() {
+		return data;
+	}
+
+	@Override
+	public void setData(ToolboxFlowData data) {
+		this.data = data;
+		setPosition(data.getPosition());
+	}
+
+	@Override
+	public void onDragFinished(int dx, int dy, int mx, int my) {
+		CONTROLLER.SCREEN.sendFlowDataToServer(data);
 	}
 }

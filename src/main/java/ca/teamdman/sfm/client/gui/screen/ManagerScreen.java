@@ -65,7 +65,7 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 	@Override
 	protected void init() {
 		super.init();
-		CONTROLLER.createPlayerCursor();
+		CONTROLLER.init();
 	}
 
 	@Override
