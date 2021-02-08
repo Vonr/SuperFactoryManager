@@ -102,6 +102,9 @@ public abstract class FlowContainer extends FlowComponent {
 	 * Adds the children to a stream in reversed order. Higher z index means that the elements
 	 * render later Rendering later means they render 'on top'. Clicking an element that is on to of
 	 * another expects the top element to consume click first.
+	 *
+	 * {@code children} keeps children sorted in according to z-index, increasing
+	 * so iterating it backwards will get them in decreasing order
 	 */
 	public Stream<FlowComponent> getEnabledChildrenControllers() {
 		Builder<FlowComponent> builder = Stream.builder();
@@ -109,7 +112,10 @@ public abstract class FlowContainer extends FlowComponent {
 		while (iter.hasPrevious()) {
 			builder.add(iter.previous());
 		}
-		return builder.build().filter(FlowComponent::isEnabled);
+		return builder.build()
+			.filter(FlowComponent::isEnabled);
+			// we don't filter on visibility {@code .filter(FlowComponent::isVisible);}
+			//some stuff like FlowCursor is not visible but needs events
 	}
 
 	@Override
@@ -236,10 +242,11 @@ public abstract class FlowContainer extends FlowComponent {
 		int pmx = mx - getPosition().getX();
 		int pmy = my - getPosition().getY();
 		AtomicBoolean cons = new AtomicBoolean(consumed);
-		getEnabledChildrenControllers().forEach(c ->
-			// Once true, keep consumed
-			// Bitwise since we want side-effect of mouseMoved disabling isHovered when occluded
-			cons.set(cons.get() | c.mouseMoved(pmx, pmy, cons.get())));
+		getEnabledChildrenControllers().forEach(c -> {
+			boolean cons_ = c.mouseMoved(pmx, pmy, cons.get());
+			if (!cons.get()) cons.set(cons_); // keep true, but allow update from false to true
+			//  we want side-effect of mouseMoved disabling isHovered when occluded
+		});
 
 		return cons.get() || super.mouseMoved(mx, my, false);
 	}

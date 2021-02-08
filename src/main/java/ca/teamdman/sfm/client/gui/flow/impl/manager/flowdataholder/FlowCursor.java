@@ -92,7 +92,7 @@ public class FlowCursor extends FlowComponent implements FlowDataHolder<CursorFl
 			CONTROLLER.SCREEN.sendFlowDataToServer(data);
 			debounce = 2; // don't spam packets!
 		}
-		return super.mouseMoved(mx, my, consumed);
+		return super.mouseMoved(mx, my, consumed) && isVisible(); // only consume event if visible
 	}
 
 	public boolean belongsToLocalPlayer() {
@@ -113,4 +113,5 @@ public class FlowCursor extends FlowComponent implements FlowDataHolder<CursorFl
 		this.data = data;
 		getPosition().setXY(data.position);
 	}
+
 }
