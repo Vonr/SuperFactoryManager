@@ -22,8 +22,8 @@ public class FlowComponent implements SizeHolder {
 	private boolean visible = true;
 	private boolean enabled = true;
 	private boolean draggable = false;
-	private boolean isDragging = false;
-	private boolean isHovering = false;
+	private boolean dragging = false;
+	private boolean hovering = false;
 	private Position position;
 	private Size size;
 
@@ -59,7 +59,7 @@ public class FlowComponent implements SizeHolder {
 
 	public boolean mousePressed(int mx, int my, int button) {
 		if (canStartDrag() && isInBounds(mx, my)) {
-			isDragging = true;
+			dragging = true;
 			dragStart.setXY(mx, my);
 			dragOffset.setXY(mx - getPosition().getX(), my - getPosition().getY());
 			return true;
@@ -86,7 +86,7 @@ public class FlowComponent implements SizeHolder {
 	}
 
 	public boolean mouseDragged(int mx, int my, int button, int dmx, int dmy) {
-		if (isDragging) {
+		if (dragging) {
 			int newX = mx - dragOffset.getX();
 			int newY = my - dragOffset.getY();
 
@@ -114,8 +114,8 @@ public class FlowComponent implements SizeHolder {
 	}
 
 	public boolean mouseReleased(int mx, int my, int button) {
-		if (isDragging) {
-			isDragging = false;
+		if (dragging) {
+			dragging = false;
 			if (!dragStart.equals(getPosition())) {
 				onDragFinished(
 					getPosition().getX() - dragStart.getX(),
@@ -181,7 +181,7 @@ public class FlowComponent implements SizeHolder {
 	 * @return true if {@code this} is the top-most element with the mouse over top of it
 	 */
 	public boolean isHovering() {
-		return isHovering;
+		return hovering;
 	}
 
 	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
@@ -296,7 +296,7 @@ public class FlowComponent implements SizeHolder {
 	}
 
 	public boolean mouseMoved(int mx, int my, boolean consumed) {
-		isHovering = !consumed && isInBounds(mx, my);
-		return isHovering;
+		hovering = !consumed && isInBounds(mx, my);
+		return hovering;
 	}
 }
