@@ -55,7 +55,7 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 
 	@Override
 	public int getQuantity() {
-		return quantity;
+		return quantity == 0 ? Integer.MAX_VALUE : quantity;
 	}
 
 	@Override
