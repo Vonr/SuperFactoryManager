@@ -11,4 +11,10 @@ public interface ItemStackMatcher {
 	int getQuantity();
 
 	List<ItemStack> getPreview();
+
+	default String getDisplayQuantity() {
+		return getQuantity() == 0 || getQuantity() == Integer.MAX_VALUE
+			? "∞" // ∞
+			: Integer.toString(getQuantity());
+	}
 }

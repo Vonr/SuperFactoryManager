@@ -53,6 +53,7 @@ public class SlotsSection extends FlowContainer {
 			new Position(0, 15),
 			new Size(70, 10)
 		);
+		INPUT.setValidator(PARENT.getData().slots::isValidDefinition);
 		INPUT.setResponder(next -> {
 			if (!next.equals(PARENT.getData().slots.getDefinition())) {
 				PARENT.getData().slots.setDefinition(next);

@@ -13,6 +13,7 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.Objects;
 
 public class ItemStackComparerMatcherFlowComponent extends
 	FlowContainer implements
@@ -37,11 +38,17 @@ public class ItemStackComparerMatcherFlowComponent extends
 		// Quantity input box
 		this.QUANTITY_INPUT = new TextAreaFlowComponent(
 			parent.SCREEN,
-			Integer.toString(data.quantity),
+			data.getDisplayQuantity(),
 			"#",
 			new Position(4, 4),
 			new Size(38, 16)
-		);
+		){
+			@Override
+			public void clear() {
+				delegate.setText("0");
+			}
+		};
+		QUANTITY_INPUT.setValidator(next -> Objects.nonNull(next) && next.matches("\\d*"));
 		QUANTITY_INPUT.setResponder(next -> {
 			try {
 				int nextVal = Integer.parseInt(next);

@@ -24,6 +24,10 @@ public class SlotsRule {
 		this.definition = definition.replaceAll("[^\\d, \\-+]", "");
 	}
 
+	public boolean isValidDefinition(String definition) {
+		return definition.matches("[\\d, \\-+]*");
+	}
+
 	public IntStream getSlots(int maxSlot) {
 		if (definition.length() == 0) {
 			return IntStream.range(0, maxSlot);

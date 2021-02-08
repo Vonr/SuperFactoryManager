@@ -10,6 +10,7 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import org.lwjgl.glfw.GLFW;
@@ -21,7 +22,7 @@ import org.lwjgl.glfw.GLFW;
  */
 public class TextAreaFlowComponent extends FlowComponent {
 
-	private final TextFieldWidget delegate;
+	protected final TextFieldWidget delegate;
 	private boolean debounce = false;
 	private String content;
 
@@ -51,6 +52,14 @@ public class TextAreaFlowComponent extends FlowComponent {
 		debounce = true;
 		delegate.setText(content);
 		debounce = false;
+	}
+
+	public String getContent() {
+		return delegate.getText();
+	}
+
+	public void setValidator(Predicate<String> validator) {
+		delegate.setValidator(validator);
 	}
 
 	public void setResponder(Consumer<String> responder) {
@@ -84,11 +93,15 @@ public class TextAreaFlowComponent extends FlowComponent {
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
 		if (isInBounds(mx, my) && button == GLFW.GLFW_MOUSE_BUTTON_2) {
-			delegate.setText("");
+			clear();
 			return true;
 		} else {
 			return delegate.mouseClicked(mx, my, button);
 		}
+	}
+
+	public void clear() {
+		delegate.setText("");
 	}
 
 	@Override
