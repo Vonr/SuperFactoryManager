@@ -6,7 +6,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
-import ca.teamdman.sfm.client.gui.flow.core.ISelectable;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -15,7 +14,7 @@ import net.minecraft.client.util.ITooltipFlag.TooltipFlags;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextProperties;
 
-public class ItemStackFlowComponent extends FlowButton implements ISelectable {
+public class ItemStackFlowComponent extends FlowButton {
 	public static final Size DEFAULT_SIZE = new Size(20, 20).toImmutable();
 	private ItemStack STACK;
 	private boolean selected;
@@ -75,12 +74,10 @@ public class ItemStackFlowComponent extends FlowButton implements ISelectable {
 		);
 	}
 
-	@Override
 	public boolean isSelected() {
 		return this.selected;
 	}
 
-	@Override
 	public void setSelected(boolean value) {
 		if (isSelectable()) {
 			this.selected = value;
@@ -95,8 +92,11 @@ public class ItemStackFlowComponent extends FlowButton implements ISelectable {
 		this.selectable = selectable;
 	}
 
-	@Override
 	public void onSelectionChanged() {
 
+	}
+
+	public void toggleSelected() {
+		setSelected(!isSelected());
 	}
 }
