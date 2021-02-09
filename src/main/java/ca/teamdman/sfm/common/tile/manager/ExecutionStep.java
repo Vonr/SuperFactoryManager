@@ -20,14 +20,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 
-public class ExecutionFrame {
+public class ExecutionStep {
 
 	private final List<ItemStackTileEntityRuleFlowData> INPUTS = new ArrayList<>();
 	private final ManagerTileEntity TILE;
 	private final FlowData CURRENT;
 	private final ExecutionState STATE;
 
-	public ExecutionFrame(
+	public ExecutionStep(
 		ManagerTileEntity tile,
 		FlowData current,
 		ExecutionState state
@@ -37,7 +37,7 @@ public class ExecutionFrame {
 		this.STATE = state;
 	}
 
-	public List<ExecutionFrame> step() {
+	public List<ExecutionStep> step() {
 		BasicFlowDataContainer container = TILE.getFlowDataContainer();
 		if (CURRENT instanceof TileInputFlowData) {
 			((TileInputFlowData) CURRENT).tileEntityRules.stream()
@@ -166,8 +166,8 @@ public class ExecutionFrame {
 	 *
 	 * @return New execution frame with a snapshot of the inputs
 	 */
-	public ExecutionFrame fork(FlowData next) {
-		ExecutionFrame other = new ExecutionFrame(TILE, next, STATE);
+	public ExecutionStep fork(FlowData next) {
+		ExecutionStep other = new ExecutionStep(TILE, next, STATE);
 		other.INPUTS.addAll(INPUTS);
 		return other;
 	}

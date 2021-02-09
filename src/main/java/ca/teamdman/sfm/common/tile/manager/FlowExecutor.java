@@ -9,7 +9,7 @@ import net.minecraft.world.World;
 public class FlowExecutor {
 
 	private final ManagerTileEntity TILE;
-	private final Deque<ExecutionFrame> FRAMES = new ArrayDeque<>();
+	private final Deque<ExecutionStep> FRAMES = new ArrayDeque<>();
 	private int tick = 0;
 
 	public FlowExecutor(ManagerTileEntity TILE) {
@@ -25,12 +25,12 @@ public class FlowExecutor {
 		ExecutionState state = new ExecutionState();
 		TILE.getFlowDataContainer().get(TimerTriggerFlowData.class)
 			.filter(t -> tick % t.interval == 0)
-			.map(t -> new ExecutionFrame(TILE, t, state))
+			.map(t -> new ExecutionStep(TILE, t, state))
 			.forEach(FRAMES::add);
 
 		while (!FRAMES.isEmpty()) {
-			ExecutionFrame frame = FRAMES.pop();
-			List<ExecutionFrame> next = frame.step();
+			ExecutionStep frame = FRAMES.pop();
+			List<ExecutionStep> next = frame.step();
 			FRAMES.addAll(next);
 		}
 	}
