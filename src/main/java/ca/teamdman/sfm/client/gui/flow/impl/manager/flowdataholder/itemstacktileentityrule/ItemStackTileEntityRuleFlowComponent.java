@@ -146,6 +146,13 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 			data.open = visible;
 			CONTROLLER.SCREEN.sendFlowDataToServer(data);
 		}
+		if (!visible) {
+			// when hiding self, hide all matchers as well
+			CONTROLLER.getChildren().stream()
+				.filter(FlowDataHolder.class::isInstance)
+				.filter(c -> data.matcherIds.contains(((FlowDataHolder<?>) c).getData().getId()))
+				.forEach(c -> c.setVisible(false));
+		}
 	}
 
 	@Override
