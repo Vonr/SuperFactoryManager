@@ -1,28 +1,37 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.timertrigger;
 
+import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
+import java.util.Optional;
 import java.util.UUID;
 
-public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
+public class TimerTriggerFlowComponent extends FlowContainer implements IFlowCloneable,
 	FlowDataHolder<TimerTriggerFlowData> {
 
-	public final ManagerFlowController CONTROLLER;
-	private TimerTriggerFlowData data;
+	final ManagerFlowController CONTROLLER;
+	final Button BUTTON;
+	final EditWindow WINDOW;
+	TimerTriggerFlowData data;
 
-	public FlowTimerTrigger(ManagerFlowController controller, TimerTriggerFlowData data) {
-		super(ButtonLabel.TRIGGER, data.getPosition().copy());
-		this.CONTROLLER = controller;
+	public TimerTriggerFlowComponent(ManagerFlowController controller, TimerTriggerFlowData data) {
+		super();
 		this.data = data;
-		setDraggable(true);
+		this.CONTROLLER = controller;
+
+		this.BUTTON = new Button(this);
+		addChild(BUTTON);
+
+		this.WINDOW = new EditWindow(this);
+		addChild(WINDOW);
 
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			this,
@@ -38,7 +47,25 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 	@Override
 	public void setData(TimerTriggerFlowData data) {
 		this.data = data;
-		getPosition().setXY(data.getPosition());
+		BUTTON.onDataChanged();
+		WINDOW.onDataChanged();
+	}
+
+	@Override
+	public Position getCentroid() {
+		return BUTTON.getCentroid();
+	}
+
+	@Override
+	public Position snapToEdge(Position outside) {
+		return BUTTON.snapToEdge(outside);
+	}
+
+	@Override
+	public Optional<FlowComponent> getElementUnderMouse(
+		int mx, int my
+	) {
+		return super.getElementUnderMouse(mx, my).map(__ -> this);
 	}
 
 	@Override
@@ -47,7 +74,8 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 			new TimerTriggerFlowData(
 				UUID.randomUUID(),
 				new Position(x, y),
-				data.interval
+				data.interval,
+				false
 			)
 		);
 	}
@@ -55,16 +83,5 @@ public class FlowTimerTrigger extends FlowIconButton implements IFlowCloneable,
 	@Override
 	public boolean isDeletable() {
 		return true;
-	}
-
-	@Override
-	public void onDragFinished(int dx, int dy, int mx, int my) {
-		data.position = getPosition();
-		CONTROLLER.SCREEN.sendFlowDataToServer(data);
-	}
-
-	@Override
-	public void onClicked(int mx, int my, int button) {
-
 	}
 }

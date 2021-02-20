@@ -5,7 +5,7 @@ package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTimerTrigger;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.timertrigger.TimerTriggerFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -18,11 +18,13 @@ public class TimerTriggerFlowData extends FlowData {
 
 	public Position position;
 	public int interval;
+	public boolean open;
 
-	public TimerTriggerFlowData(UUID uuid, Position position, int interval) {
+	public TimerTriggerFlowData(UUID uuid, Position position, int interval, boolean open) {
 		super(uuid);
 		this.position = position;
-		this.interval = interval;
+		this.interval = Math.max(20, interval); // enforce minimum 20 ticks
+		this.open = open;
 	}
 
 	@Override
@@ -37,7 +39,7 @@ public class TimerTriggerFlowData extends FlowData {
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;
 		}
-		return new FlowTimerTrigger((ManagerFlowController) parent, this);
+		return new TimerTriggerFlowComponent((ManagerFlowController) parent, this);
 	}
 
 	@Override
@@ -61,7 +63,8 @@ public class TimerTriggerFlowData extends FlowData {
 			return new TimerTriggerFlowData(
 				UUID.fromString(tag.getString("uuid")),
 				new Position(tag.getCompound("pos")),
-				tag.getInt("interval")
+				tag.getInt("interval"),
+				tag.getBoolean("open")
 			);
 		}
 
@@ -70,6 +73,7 @@ public class TimerTriggerFlowData extends FlowData {
 			CompoundNBT tag = super.toNBT(data);
 			tag.put("pos", data.position.serializeNBT());
 			tag.putInt("interval", data.interval);
+			tag.putBoolean("open", data.open);
 			return tag;
 		}
 
@@ -78,7 +82,8 @@ public class TimerTriggerFlowData extends FlowData {
 			return new TimerTriggerFlowData(
 				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong()),
-				buf.readInt()
+				buf.readInt(),
+				buf.readBoolean()
 			);
 		}
 
@@ -87,6 +92,7 @@ public class TimerTriggerFlowData extends FlowData {
 			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
 			buf.writeInt(data.interval);
+			buf.writeBoolean(data.open);
 		}
 	}
 }

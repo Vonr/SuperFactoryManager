@@ -5,7 +5,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.CloneController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowTimerTrigger;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.timertrigger.TimerTriggerFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
@@ -44,9 +44,10 @@ public class FlowTimerTriggerSpawnerButton extends FlowIconButton {
 				TimerTriggerFlowData data = new TimerTriggerFlowData(
 					UUID.randomUUID(),
 					getPosition().withOffset(getSize().getWidth() + 10, 0),
-					20
+					20,
+					false
 				);
-				FlowTimerTrigger comp = new FlowTimerTrigger(CONTROLLER, data);
+				TimerTriggerFlowComponent comp = new TimerTriggerFlowComponent(CONTROLLER, data);
 				cloner.setCloning(comp);
 			});
 			return true;

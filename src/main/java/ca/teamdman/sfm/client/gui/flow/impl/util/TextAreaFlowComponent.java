@@ -120,6 +120,13 @@ public class TextAreaFlowComponent extends FlowComponent {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
+		screen.clearRect(
+			matrixStack,
+			getPosition().getX(),
+			getPosition().getY(),
+			getSize().getWidth(),
+			getSize().getHeight()
+		);
 		delegate.render(matrixStack, mx, my, deltaTime);
 	}
 

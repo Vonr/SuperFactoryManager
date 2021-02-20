@@ -42,5 +42,7 @@
   "itemGroup.sfm": "Super Factory Manager",
   "mod.name": "Super Factory Manager",
   "gui.sfm.config.hideManagerInstructions": "Hide manager instructions",
-  "gui.sfm.config.preventClosingManagerWithInventoryButton": "Prevent closing manager with the Inventory key"
+  "gui.sfm.config.preventClosingManagerWithInventoryButton": "Prevent closing manager with the Inventory key",
+  "gui.sfm.flow.timer_trigger.label": "Execution interval",
+  "gui.sfm.flow.timer_trigger.ticks": "ticks"
 }

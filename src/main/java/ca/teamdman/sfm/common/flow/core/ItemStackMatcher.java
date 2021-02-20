@@ -14,7 +14,7 @@ public interface ItemStackMatcher {
 
 	default String getDisplayQuantity() {
 		return getQuantity() == 0 || getQuantity() == Integer.MAX_VALUE
-			? "Inf" // ∞
+			? "\u221E" // ∞ \u221E
 			: Integer.toString(getQuantity());
 	}
 }
