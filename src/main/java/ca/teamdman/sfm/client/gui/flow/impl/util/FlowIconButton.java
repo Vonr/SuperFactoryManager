@@ -120,6 +120,8 @@ public abstract class FlowIconButton extends FlowButton {
 		ADD_OUTPUT(0, 42, 14, 14),
 		TRIGGER(0, 56, 14, 14),
 		SETTINGS(0, 84, 14, 14),
+		COMPARER_MATCHER(0,98,14,14),
+		MODID_MATCHER(0,112,14,14),
 		NONE(0, 0, 0, 0);
 
 		public static final ResourceLocation SPRITE_SHEET = new ResourceLocation(

@@ -3,7 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.util;
 
-import ca.teamdman.sfm.client.SearchUtil.Query;
+import ca.teamdman.sfm.client.SearchUtil;
+import ca.teamdman.sfm.client.SearchUtil.SearchResults;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
@@ -11,6 +12,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.Comparator;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 
@@ -18,8 +20,13 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 
 	private final FlowDrawer DRAWER;
 	private final TextAreaFlowComponent SEARCH_TEXT_INPUT;
-	private final Query QUERY;
-	private int lastCount = -1;
+	private SearchResults searchResults;
+	private static final Comparator<FlowComponent> RESULT_COMPARATOR = Comparator.comparing(
+		c -> c instanceof ItemStackFlowComponent
+			? ((ItemStackFlowComponent) c).getStack()
+			: ItemStack.EMPTY,
+		SearchUtil.SEARCH_RESULT_COMPARATOR
+	);
 
 	public FlowItemStackPicker(
 		ManagerFlowController controller,
@@ -48,36 +55,34 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 		addChild(DRAWER);
 		addChild(SEARCH_TEXT_INPUT);
 
-		this.QUERY = new Query();
-		SEARCH_TEXT_INPUT.setResponder(QUERY::start);
-		QUERY.start("");
+		SEARCH_TEXT_INPUT.setResponder(text -> {
+			if (searchResults != null) {
+				searchResults.cancel();
+			}
+			DRAWER.getChildren().clear();
+			searchResults = SearchUtil.search(text);
+		});
 	}
 
 	@Override
 	public void tick() {
-		if (QUERY.getResults().size() != lastCount) {
-			lastCount = QUERY.getResults().size();
-			DRAWER.getChildren().clear();
-			if (QUERY.getResults().size() == 0) {
-				DRAWER.addChild(new NoResultsFoundLabelFlowComponent());
-			} else {
-				QUERY.getResults().forEach(stack ->
-					DRAWER.addChild(new ItemStackFlowComponent(
-						stack,
-						new Position()
-					) {
-						@Override
-						public void onClicked(int mx, int my, int button) {
-							// hide after picking
-							setVisible(false);
-							setEnabled(false);
+		if (searchResults == null) return;
 
-							// invoke callback
-							onItemStackChanged(stack);
-						}
-					})
-				);
-			}
+		int previous = DRAWER.getChildren().size();
+
+		// populate latest search results
+		searchResults.streamLatestResults()
+			.map(SearchResultStack::new)
+			.forEach(DRAWER::addChild);
+
+		// if search finished and no results, display so to user
+		if (DRAWER.getChildren().size() == 0 && searchResults.isFinished()) {
+			DRAWER.addChild(new NoResultsFoundLabelFlowComponent());
+		}
+
+		// update drawer if contents changed
+		if (DRAWER.getChildren().size() != previous) {
+			DRAWER.getChildren().sort(RESULT_COMPARATOR);
 			DRAWER.update();
 		}
 	}
@@ -105,6 +110,26 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 				5,
 				CONST.TEXT_LIGHT
 			);
+		}
+	}
+
+	private class SearchResultStack extends ItemStackFlowComponent {
+
+		private final ItemStack stack;
+
+		public SearchResultStack(ItemStack stack) {
+			super(stack, new Position());
+			this.stack = stack;
+		}
+
+		@Override
+		public void onClicked(int mx, int my, int button) {
+			// hide after picking
+			setVisible(false);
+			setEnabled(false);
+
+			// invoke callback
+			onItemStackChanged(stack);
 		}
 	}
 }

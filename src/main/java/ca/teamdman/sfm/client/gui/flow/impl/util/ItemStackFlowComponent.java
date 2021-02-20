@@ -26,6 +26,10 @@ public class ItemStackFlowComponent extends FlowButton {
 		this.STACK = stack;
 	}
 
+	public ItemStack getStack() {
+		return STACK;
+	}
+
 	@Override
 	public void onClicked(int mx, int my, int button) {
 		toggleSelected();
