@@ -9,6 +9,8 @@ import ca.teamdman.sfm.common.flow.data.CursorFlowData.CursorFlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData.ItemStackComparerMatcherFlowDataSerializer;
+import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData.ItemStackModIdMatcherFlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData.FlowTileEntityRuleDataSerializer;
 import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
@@ -47,6 +49,7 @@ public class FlowDataSerializerRegistrar {
 			new FlowTimerTriggerDataSerializer(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
 			new FlowTileEntityRuleDataSerializer(new ResourceLocation(SFM.MOD_ID, "tile_entity_rule")),
 			new ItemStackComparerMatcherFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher")),
+			new ItemStackModIdMatcherFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "item_stack_mod_id_matcher")),
 			new CursorFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "cursor")),
 			new ToolboxFlowDataSerializer(new ResourceLocation(SFM.MOD_ID, "toolbox"))
 		);
@@ -73,6 +76,7 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;
 		public static final FlowDataSerializer<ItemStackTileEntityRuleFlowData> TILE_ENTITY_RULE = WAITING;
 		public static final FlowDataSerializer<ItemStackComparerMatcherFlowData> ITEM_STACK_COMPARER_MATCHER = WAITING;
+		public static final FlowDataSerializer<ItemStackModIdMatcherFlowData> ITEM_STACK_MOD_ID_MATCHER = WAITING;
 		public static final FlowDataSerializer<CursorFlowData> CURSOR = WAITING;
 		public static final FlowDataSerializer<ToolboxFlowData> TOOLBOX = WAITING;
 	}

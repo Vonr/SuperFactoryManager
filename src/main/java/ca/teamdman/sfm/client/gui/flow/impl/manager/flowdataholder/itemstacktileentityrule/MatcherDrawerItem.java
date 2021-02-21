@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.glfw.GLFW;
 
 class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemStackMatcher>> extends
@@ -111,10 +112,13 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 		@Override
 		public List<? extends ITextProperties> getTooltip() {
 			List<ITextProperties> rtn = (List<ITextProperties>) super.getTooltip();
-			rtn.set(
-				0,
+			rtn.set(0,
 				new StringTextComponent(DELEGATE.getData().getDisplayQuantity() + " x ")
 					.append(((IFormattableTextComponent) rtn.get(0)))
+			);
+			rtn.add(1,
+				new StringTextComponent(DELEGATE.getData().getMatcherDisplayName())
+					.mergeStyle(TextFormatting.GRAY)
 			);
 			return rtn;
 		}

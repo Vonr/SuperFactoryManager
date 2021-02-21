@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
-import ca.teamdman.sfm.client.SearchUtil;
+import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowToolbox;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.template.FlowInstructions;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.template.SettingsFlowButton;
@@ -39,11 +39,10 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 	// prevents someone from dragging the toolbox off screen
 
 	public final ManagerScreen SCREEN;
-	private boolean clicking = false;
 
 	public ManagerFlowController(ManagerScreen screen) {
+		super(new Position(), new Size(screen.getScaledWidth(), screen.getScaledHeight()));
 		this.SCREEN = screen;
-		SearchUtil.buildCacheInBackground();
 		screen.getFlowDataContainer().addObserver(this);
 		rebuildChildren();
 	}
@@ -124,20 +123,21 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		return super.mousePressed(mx, my, button) || (clicking = isInBounds(mx, my));
+		return super.mousePressed(mx, my, button);
 	}
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
-		boolean wasClicking = clicking;
-		clicking = false;
 		if (super.mouseReleased(mx, my, button)) {
 			return true;
 		}
-		if (wasClicking) {
+
+		// reset toolbox when clicking "background"
+		if (isInBounds(mx, my)) {
 			this.findFirstChild(FlowToolbox.class).ifPresent(FlowToolbox::setChildrenToDefault);
 			return true;
 		}
+
 		return false;
 	}
 

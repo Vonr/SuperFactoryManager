@@ -10,6 +10,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
@@ -83,9 +84,9 @@ class AddItemStackMatcherButton extends FlowPlusButton {
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			FlowData matcher = new ItemStackComparerMatcherFlowData(
+			FlowData matcher = new ItemStackModIdMatcherFlowData(
 				UUID.randomUUID(),
-				new ItemStack(Blocks.STONE),
+				"minecraft",
 				0,
 				false
 			);

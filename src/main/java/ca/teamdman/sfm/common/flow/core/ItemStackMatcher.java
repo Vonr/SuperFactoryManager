@@ -17,4 +17,10 @@ public interface ItemStackMatcher {
 			? "\u221E" // ∞ \u221E
 			: Integer.toString(getQuantity());
 	}
+
+
+	/**
+	 * @return the name of the matcher
+	 */
+	String getMatcherDisplayName();
 }

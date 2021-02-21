@@ -76,7 +76,7 @@ class EditWindow extends FlowContainer {
 			getSize().getWidth(),
 			getSize().getHeight(),
 			1,
-			CONST.PANEL_BACKGROUND_DARK
+			CONST.PANEL_BORDER
 		);
 
 		screen.drawString(
