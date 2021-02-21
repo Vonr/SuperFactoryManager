@@ -156,6 +156,31 @@ public abstract class FlowContainer extends FlowComponent {
 	}
 
 	@Override
+	public void drawTooltip(
+		BaseScreen screen,
+		MatrixStack matrixStack,
+		int mx,
+		int my,
+		float deltaTime
+	) {
+		matrixStack.push();
+		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
+		for (FlowComponent c : getChildren()) {
+			if (c.isVisible()) {
+				c.drawTooltip(
+					screen,
+					matrixStack,
+					mx - getPosition().getX(),
+					my - getPosition().getY(),
+					deltaTime
+				);
+			}
+		}
+		matrixStack.pop();
+		super.drawTooltip(screen, matrixStack, mx, my, deltaTime);
+	}
+
+	@Override
 	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
 		Optional<FlowComponent> rtn = children.stream()
 			.filter(FlowComponent::isVisible)

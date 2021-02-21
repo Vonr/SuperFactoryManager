@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector4f;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 
@@ -144,24 +146,45 @@ public class FlowComponent implements SizeHolder {
 			'}';
 	}
 
+	/**
+	 * Draw the content of this component
+	 */
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
+	/**
+	 * Draw the tooltip for this component.
+	 * Called after {@code draw} so that tooltip is on top
+	 */
 	public void drawTooltip(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		if (isTooltipEnabled(mx, my)) {
-			screen.pauseScissor(); // Disable scissoring when drawing tooltip
+			// Disable scissoring when drawing tooltip
+			screen.pauseScissor();
+
+			// get current transformation matrix
+			Matrix4f mat = matrixStack.getLast().getMatrix().copy();
+
+			// get vector representing pos to draw
+			Vector4f pos = new Vector4f(mx, my, 0, 1);
+
+			// move pos from matstack-space to screen-space
+			// (to account for current transformation)
+//			mat.invert();
+			pos.transform(mat);
+
+			// draw tooltip
 			net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(
-				matrixStack,
+				new MatrixStack(),
 				getTooltip(),
-				mx,
-				my,
-				screen.scaledWidth,
-				screen.scaledHeight,
+				(int) pos.getX(),
+				(int) pos.getY(),
+				screen.width,
+				screen.height,
 				-1,
 				screen.getFontRenderer()
 			);

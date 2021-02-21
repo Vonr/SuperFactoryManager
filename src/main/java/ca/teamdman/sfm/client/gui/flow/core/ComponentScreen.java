@@ -17,6 +17,7 @@ public abstract class ComponentScreen<T extends FlowComponent> extends BaseScree
 	public void drawScaled(MatrixStack matrixStack, int mx, int my, float partialTicks) {
 		super.drawScaled(matrixStack, mx, my, partialTicks);
 		getComponent().draw(this, matrixStack, mx, my, partialTicks);
+		getComponent().drawTooltip(this, matrixStack, mx, my, partialTicks);
 	}
 
 	@Override
