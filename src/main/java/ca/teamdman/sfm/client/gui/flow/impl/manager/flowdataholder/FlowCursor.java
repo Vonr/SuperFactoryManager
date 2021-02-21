@@ -42,9 +42,14 @@ public class FlowCursor extends FlowComponent implements FlowDataHolder<CursorFl
 	}
 
 	@Override
-	public void draw(
-		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+	public void drawTooltip(
+		BaseScreen screen,
+		MatrixStack matrixStack,
+		int mx,
+		int my,
+		float deltaTime
 	) {
+		// draw during tooltip step to ensure on-top
 		screen.drawRect(
 			matrixStack,
 			getPosition().getX(),
@@ -53,7 +58,8 @@ public class FlowCursor extends FlowComponent implements FlowDataHolder<CursorFl
 			getSize().getHeight(),
 			CONST.CURSOR
 		);
-		super.draw(screen, matrixStack, mx, my, deltaTime);
+
+		super.drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	@Override
