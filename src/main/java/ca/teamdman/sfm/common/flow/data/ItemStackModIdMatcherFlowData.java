@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.client.ItemStackSearchIndexer;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstackmodidmatcher.itemstackcomparermatcher.ItemStackModIdMatcherFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemStackModIdMatcherFlowComponent;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
