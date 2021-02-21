@@ -7,6 +7,9 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public abstract class FlowBlockPosPicker extends FlowContainer {
@@ -47,6 +50,16 @@ public abstract class FlowBlockPosPicker extends FlowContainer {
 		public Entry(BlockPos pos, ItemStack stack) {
 			super(stack, new Position());
 			this.POS = pos;
+		}
+
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			List<ITextProperties> rtn = (List<ITextProperties>) super.getTooltip();
+			rtn.add(1,
+				new StringTextComponent(POS.toString())
+					.mergeStyle(TextFormatting.GRAY)
+			);
+			return rtn;
 		}
 
 		@Override

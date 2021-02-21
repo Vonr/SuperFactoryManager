@@ -11,11 +11,15 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
+import java.util.List;
 import java.util.stream.Collectors;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.items.CapabilityItemHandler;
 import org.lwjgl.glfw.GLFW;
@@ -98,6 +102,16 @@ class TilesSection extends FlowContainer {
 		public Entry(BlockPos pos, ItemStack stack) {
 			super(stack, new Position());
 			this.POS = pos;
+		}
+
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			List<ITextProperties> rtn = (List<ITextProperties>) super.getTooltip();
+			rtn.add(1,
+				new StringTextComponent(POS.toString())
+					.mergeStyle(TextFormatting.GRAY)
+			);
+			return rtn;
 		}
 
 		@Override
