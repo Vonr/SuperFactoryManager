@@ -152,7 +152,6 @@ public class FlowComponent implements SizeHolder {
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		drawTooltip(screen, matrixStack, mx, my, deltaTime);
 	}
 
 	/**
