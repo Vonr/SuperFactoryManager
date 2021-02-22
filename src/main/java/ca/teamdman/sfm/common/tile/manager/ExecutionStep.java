@@ -6,6 +6,8 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.flow.data.AdvancedTileInputFlowData;
 import ca.teamdman.sfm.common.flow.data.AdvancedTileOutputFlowData;
+import ca.teamdman.sfm.common.flow.data.BasicTileInputFlowData;
+import ca.teamdman.sfm.common.flow.data.BasicTileOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -45,6 +48,9 @@ public class ExecutionStep {
 				.filter(Optional::isPresent)
 				.map(Optional::get)
 				.forEach(INPUTS::add);
+		} else if (CURRENT instanceof BasicTileInputFlowData) {
+			UUID ruleId = ((BasicTileInputFlowData) CURRENT).tileEntityRule;
+			container.get(ruleId, ItemStackTileEntityRuleFlowData.class).ifPresent(INPUTS::add);
 		} else if (CURRENT instanceof AdvancedTileOutputFlowData) {
 			CableNetworkManager.getOrRegisterNetwork(TILE)
 				.ifPresent(network ->
@@ -53,6 +59,11 @@ public class ExecutionStep {
 						.filter(Optional::isPresent)
 						.map(Optional::get)
 						.forEach(rule -> satisfyOutput(network, rule)));
+		} else if (CURRENT instanceof BasicTileOutputFlowData) {
+			UUID ruleId = ((BasicTileOutputFlowData) CURRENT).tileEntityRule;
+			CableNetworkManager.getOrRegisterNetwork(TILE).ifPresent(network ->
+				container.get(ruleId, ItemStackTileEntityRuleFlowData.class)
+					.ifPresent(rule -> satisfyOutput(network, rule)));
 
 		}
 		return container.get(RelationshipFlowData.class)
@@ -85,23 +96,30 @@ public class ExecutionStep {
 					ItemStack stack = inHandler.getStackInSlot(inSlot);
 
 					// go to next slot if empty
-					if (stack.isEmpty()) continue;
+					if (stack.isEmpty()) {
+						continue;
+					}
 
 					// get the matchers that determine how much of the item is allowed to move
 					// transfer can be throttled input and output at the same time
-					ItemStackMatcher inMatcher = inRule.getBestMatcher(dataContainer, stack, STATE).orElse(null);
-					ItemStackMatcher outMatcher = outRule.getBestMatcher(dataContainer, stack, STATE).orElse(null);
+					ItemStackMatcher inMatcher = inRule.getBestMatcher(dataContainer, stack, STATE)
+						.orElse(null);
+					ItemStackMatcher outMatcher = outRule
+						.getBestMatcher(dataContainer, stack, STATE).orElse(null);
 
 					// get the amount allowed to be moved, noting whitelist/blacklist
 					int allowedToExtract = STATE.getRemainingQuantity(inRule, inMatcher);
 					int allowedToInsert = STATE.getRemainingQuantity(outRule, outMatcher);
 
 					// if none allowed to move for this slot's stack, skip
-					if (allowedToExtract == 0 || allowedToInsert == 0) continue;
+					if (allowedToExtract == 0 || allowedToInsert == 0) {
+						continue;
+					}
 
 					// determine the maximum amount allowed to move
 					// move the minimum of the input and output quantities
-					int remainingQuantity = Math.max(0, Math.min(allowedToExtract, allowedToInsert));
+					int remainingQuantity = Math
+						.max(0, Math.min(allowedToExtract, allowedToInsert));
 
 					// if we are no longer able to distribute the input stack, end operation
 					// causes partial movement, e.g.:
@@ -115,16 +133,21 @@ public class ExecutionStep {
 						for (IItemHandler outHandler : outHandlers) {
 
 							// for each slot in destination that is permitted by output rule
-							for (int outSlot : outRule.slots.getSlots(outHandler.getSlots()).toArray()) {
+							for (int outSlot : outRule.slots.getSlots(outHandler.getSlots())
+								.toArray()) {
 
 								// get stack simulating extraction
-								ItemStack extracted = inHandler.extractItem(inSlot, remainingQuantity, true);
+								ItemStack extracted = inHandler
+									.extractItem(inSlot, remainingQuantity, true);
 
 								// if can't extract anything, skip to the next input slot
-								if (extracted.isEmpty()) continue IN_SLOT;
+								if (extracted.isEmpty()) {
+									continue IN_SLOT;
+								}
 
 								// get leftovers simulating insertion
-								ItemStack leftoverStack = outHandler.insertItem(outSlot, extracted, true);
+								ItemStack leftoverStack = outHandler
+									.insertItem(outSlot, extracted, true);
 
 								// calculate difference based on what we will extract vs what we will insert
 								int toTransfer = extracted.getCount() - leftoverStack.getCount();
