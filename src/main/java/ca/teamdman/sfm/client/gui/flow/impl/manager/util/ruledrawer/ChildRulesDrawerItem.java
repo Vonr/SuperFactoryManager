@@ -1,16 +1,13 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer;
 
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
-import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
@@ -63,23 +60,8 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 
 	@Override
 	public void setSelected(boolean value) {
-		List<FlowData> changes = new ArrayList<>();
-		changes.add(data);
-		if (!Client.allowMultipleRuleWindows && value) {
-			AtomicReference<Position> pos = new AtomicReference<>(data.position);
-			PARENT.CONTROLLER.SCREEN.getFlowDataContainer()
-				.get(ItemStackTileEntityRuleFlowData.class)
-				.filter(d -> !d.equals(data))
-				.filter(d -> d.open)
-				.forEach(d -> {
-					pos.set(d.position); // track open window position
-					d.open = false; // close it
-					changes.add(d); // mark as changed
-				});
-			data.position.setXY(pos.get()); // position opening window to match previously open
-		}
-		data.open = value; // only open after position adjusted if only one window open allowed
-		PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(changes.toArray(new FlowData[0]));
+		PARENT.CONTROLLER.findFirstChild(data.getId())
+			.ifPresent(c -> c.setVisible(value));
 	}
 
 	@Override
