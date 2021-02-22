@@ -62,6 +62,7 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 			DRAWER.getChildren().clear();
 			searchResults = SearchUtil.search(text);
 		});
+		searchResults = SearchUtil.search("");
 	}
 
 	@Override
