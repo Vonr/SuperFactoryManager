@@ -5,15 +5,13 @@ package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowInputButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.BasicTileInputFlowButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
-import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
@@ -22,19 +20,20 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class TileInputFlowData extends FlowData implements Observer {
+public class BasicTileInputFlowData extends FlowData implements Observer {
 
 	public Position position;
-	public UUIDList tileEntityRules;
+	public UUID tileEntityRule;
 	private final FlowDataRemovedObserver OBSERVER;
 
-	public TileInputFlowData(UUID uuid, Position position, List<UUID> ters) {
+	public BasicTileInputFlowData(UUID uuid, Position position, UUID tileEntityRule) {
 		super(uuid);
 		this.position = position;
-		this.tileEntityRules = new UUIDList(ters);
+		this.tileEntityRule = tileEntityRule;
 		OBSERVER = new FlowDataRemovedObserver(
 			this,
-			data -> this.tileEntityRules.remove(data.getId())
+			data -> data.getId().equals(tileEntityRule),
+			c -> c.remove(getId()) // remove this if rule gets deleted
 		);
 	}
 
@@ -58,10 +57,16 @@ public class TileInputFlowData extends FlowData implements Observer {
 	public FlowComponent createController(
 		FlowComponent parent
 	) {
-		if (!(parent instanceof ManagerFlowController)) {
-			return null;
+		if (parent instanceof ManagerFlowController) {
+			return new BasicTileInputFlowButton(
+				(ManagerFlowController) parent,
+				this,
+				((ManagerFlowController) parent).SCREEN.getFlowDataContainer()
+					.get(tileEntityRule, ItemStackTileEntityRuleFlowData.class)
+					.orElseGet(ItemStackTileEntityRuleFlowData::new)
+			);
 		}
-		return new FlowInputButton((ManagerFlowController) parent, this);
+		return null;
 	}
 
 	@Override
@@ -71,50 +76,50 @@ public class TileInputFlowData extends FlowData implements Observer {
 
 	@Override
 	public FlowDataSerializer getSerializer() {
-		return FlowDataSerializers.INPUT;
+		return FlowDataSerializers.BASIC_INPUT;
 	}
 
 	public Position getPosition() {
 		return position;
 	}
 
-	public static class FlowInputDataSerializer extends FlowDataSerializer<TileInputFlowData> {
+	public static class Serializer extends FlowDataSerializer<BasicTileInputFlowData> {
 
-		public FlowInputDataSerializer(ResourceLocation key) {
+		public Serializer(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public TileInputFlowData fromNBT(CompoundNBT tag) {
-			return new TileInputFlowData(
+		public BasicTileInputFlowData fromNBT(CompoundNBT tag) {
+			return new BasicTileInputFlowData(
 				UUID.fromString(tag.getString("uuid")),
 				new Position(tag.getCompound("pos")),
-				new UUIDList(tag, "ters")
+				UUID.fromString(tag.getString("tileEntityRule"))
 			);
 		}
 
 		@Override
-		public CompoundNBT toNBT(TileInputFlowData data) {
+		public CompoundNBT toNBT(BasicTileInputFlowData data) {
 			CompoundNBT tag = super.toNBT(data);
 			tag.put("pos", data.position.serializeNBT());
-			tag.put("ters", data.tileEntityRules.serialize());
+			tag.putString("tileEntityRule", data.tileEntityRule.toString());
 			return tag;
 		}
 
 		@Override
-		public TileInputFlowData fromBuffer(PacketBuffer buf) {
-			return new TileInputFlowData(
+		public BasicTileInputFlowData fromBuffer(PacketBuffer buf) {
+			return new BasicTileInputFlowData(
 				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong()),
-				new UUIDList(buf)
+				SFMUtil.readUUID(buf)
 			);
 		}
 
 		@Override
-		public void toBuffer(TileInputFlowData data, PacketBuffer buf) {
+		public void toBuffer(BasicTileInputFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
-			data.tileEntityRules.serialize(buf);
+			SFMUtil.writeUUID(data.tileEntityRule, buf);
 		}
 	}
 }

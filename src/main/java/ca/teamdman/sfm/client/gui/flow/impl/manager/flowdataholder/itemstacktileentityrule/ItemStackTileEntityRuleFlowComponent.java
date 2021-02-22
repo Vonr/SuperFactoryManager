@@ -57,8 +57,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 
 		// Add change listener
 		CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			ItemStackTileEntityRuleFlowData.class
+			ItemStackTileEntityRuleFlowData.class, this
 		));
 
 		setDraggable(true);

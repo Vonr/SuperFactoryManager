@@ -4,11 +4,11 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.flow.data.AdvancedTileInputFlowData;
+import ca.teamdman.sfm.common.flow.data.AdvancedTileOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
-import ca.teamdman.sfm.common.flow.data.TileInputFlowData;
-import ca.teamdman.sfm.common.flow.data.TileOutputFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.ArrayList;
@@ -39,16 +39,16 @@ public class ExecutionStep {
 
 	public List<ExecutionStep> step() {
 		BasicFlowDataContainer container = TILE.getFlowDataContainer();
-		if (CURRENT instanceof TileInputFlowData) {
-			((TileInputFlowData) CURRENT).tileEntityRules.stream()
+		if (CURRENT instanceof AdvancedTileInputFlowData) {
+			((AdvancedTileInputFlowData) CURRENT).tileEntityRules.stream()
 				.map(id -> container.get(id, ItemStackTileEntityRuleFlowData.class))
 				.filter(Optional::isPresent)
 				.map(Optional::get)
 				.forEach(INPUTS::add);
-		} else if (CURRENT instanceof TileOutputFlowData) {
+		} else if (CURRENT instanceof AdvancedTileOutputFlowData) {
 			CableNetworkManager.getOrRegisterNetwork(TILE)
 				.ifPresent(network ->
-					((TileOutputFlowData) CURRENT).tileEntityRules.stream()
+					((AdvancedTileOutputFlowData) CURRENT).tileEntityRules.stream()
 						.map(id -> container.get(id, ItemStackTileEntityRuleFlowData.class))
 						.filter(Optional::isPresent)
 						.map(Optional::get)

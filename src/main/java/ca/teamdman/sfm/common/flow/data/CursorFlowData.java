@@ -37,10 +37,10 @@ public class CursorFlowData extends FlowData {
 		return FlowDataSerializers.CURSOR;
 	}
 
-	public static class CursorFlowDataSerializer extends
+	public static class Serializer extends
 		FlowDataSerializer<CursorFlowData> {
 
-		public CursorFlowDataSerializer(ResourceLocation key) {
+		public Serializer(ResourceLocation key) {
 			super(key);
 		}
 

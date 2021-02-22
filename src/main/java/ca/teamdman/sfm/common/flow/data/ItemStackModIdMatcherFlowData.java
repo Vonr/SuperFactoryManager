@@ -78,10 +78,10 @@ public class ItemStackModIdMatcherFlowData extends FlowData implements ItemStack
 		return I18n.format("gui.sfm.flow.tooltip.item_stack_mod_id_matcher");
 	}
 
-	public static class ItemStackModIdMatcherFlowDataSerializer extends
+	public static class Serializer extends
 		FlowDataSerializer<ItemStackModIdMatcherFlowData> {
 
-		public ItemStackModIdMatcherFlowDataSerializer(ResourceLocation registryName) {
+		public Serializer(ResourceLocation registryName) {
 			super(registryName);
 		}
 

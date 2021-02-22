@@ -77,10 +77,10 @@ public class RelationshipFlowData extends FlowData implements Observer {
 		}
 	}
 
-	public static class FlowRelationshipDataSerializer extends
+	public static class Serializer extends
 		FlowDataSerializer<RelationshipFlowData> {
 
-		public FlowRelationshipDataSerializer(ResourceLocation registryName) {
+		public Serializer(ResourceLocation registryName) {
 			super(registryName);
 		}
 

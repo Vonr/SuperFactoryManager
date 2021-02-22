@@ -24,8 +24,7 @@ public class FlowLineNode extends FlowIconButton implements FlowDataHolder<LineN
 		this.data = data;
 		this.CONTROLLER = controller;
 		this.CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			LineNodeFlowData.class
+			LineNodeFlowData.class, this
 		));
 		setDraggable(true);
 	}

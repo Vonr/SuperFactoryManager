@@ -5,10 +5,10 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.CloneController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowOutputButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.AdvancedTileOutputFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.TileOutputFlowData;
+import ca.teamdman.sfm.common.flow.data.AdvancedTileOutputFlowData;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,11 +17,11 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class OutputSpawnerFlowButton extends FlowIconButton {
+public class AdvancedOutputSpawnerFlowButton extends FlowIconButton {
 
 	private final ManagerFlowController CONTROLLER;
 
-	public OutputSpawnerFlowButton(
+	public AdvancedOutputSpawnerFlowButton(
 		ManagerFlowController controller
 	) {
 		super(ButtonLabel.ADD_OUTPUT, new Position(25, 75));
@@ -31,7 +31,7 @@ public class OutputSpawnerFlowButton extends FlowIconButton {
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
 		List<ITextComponent> list = new ArrayList<>();
-		list.add(new TranslationTextComponent("gui.sfm.flow.tooltip.output_spawner"));
+		list.add(new TranslationTextComponent("gui.sfm.flow.tooltip.basic_output_spawner"));
 		return list;
 	}
 
@@ -42,12 +42,12 @@ public class OutputSpawnerFlowButton extends FlowIconButton {
 		if (clicking) {
 			clicking=false;
 			CONTROLLER.findFirstChild(CloneController.class).ifPresent(cloner -> {
-				TileOutputFlowData data = new TileOutputFlowData(
+				AdvancedTileOutputFlowData data = new AdvancedTileOutputFlowData(
 					UUID.randomUUID(),
 					getPosition().withOffset(getSize().getWidth() + 10, 0),
 					Collections.emptyList()
 				);
-				FlowOutputButton comp = new FlowOutputButton(CONTROLLER, data);
+				AdvancedTileOutputFlowButton comp = new AdvancedTileOutputFlowButton(CONTROLLER, data);
 				cloner.setCloning(comp);
 			});
 			return true;

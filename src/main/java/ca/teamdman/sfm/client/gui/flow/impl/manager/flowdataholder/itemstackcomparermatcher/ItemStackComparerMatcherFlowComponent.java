@@ -84,8 +84,7 @@ public class ItemStackComparerMatcherFlowComponent extends
 
 		// Add change listener
 		parent.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			ItemStackComparerMatcherFlowData.class
+			ItemStackComparerMatcherFlowData.class, this
 		));
 	}
 

@@ -12,26 +12,26 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.AdvancedTileInputFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.TileInputFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class FlowInputButton extends FlowContainer implements
-	IFlowCloneable, FlowDataHolder<TileInputFlowData> {
+public class AdvancedTileInputFlowButton extends FlowContainer implements
+	IFlowCloneable, FlowDataHolder<AdvancedTileInputFlowData> {
 
 	private final ItemStackTileEntityRuleDrawer DRAWER;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowIconButton BUTTON;
-	private TileInputFlowData data;
+	private AdvancedTileInputFlowData data;
 
-	public FlowInputButton(
+	public AdvancedTileInputFlowButton(
 		ManagerFlowController controller,
-		TileInputFlowData data
+		AdvancedTileInputFlowData data
 	) {
 		this.data = data;
 		this.CONTROLLER = controller;
@@ -50,15 +50,14 @@ public class FlowInputButton extends FlowContainer implements
 		addChild(DRAWER);
 
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			TileInputFlowData.class
+			AdvancedTileInputFlowData.class, this
 		));
 	}
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
 		CONTROLLER.SCREEN.sendFlowDataToServer(
-			new TileInputFlowData(
+			new AdvancedTileInputFlowData(
 				UUID.randomUUID(),
 				new Position(x, y),
 				data.tileEntityRules
@@ -67,12 +66,12 @@ public class FlowInputButton extends FlowContainer implements
 	}
 
 	@Override
-	public TileInputFlowData getData() {
+	public AdvancedTileInputFlowData getData() {
 		return data;
 	}
 
 	@Override
-	public void setData(TileInputFlowData data) {
+	public void setData(AdvancedTileInputFlowData data) {
 		this.data = data;
 		BUTTON.getPosition().setXY(this.data.getPosition());
 		DRAWER.rebuildDrawer();
@@ -106,8 +105,7 @@ public class FlowInputButton extends FlowContainer implements
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			DRAWER.setVisible(!DRAWER.isVisible());
-			DRAWER.setEnabled(DRAWER.isVisible());
+			DRAWER.toggleVisibilityAndEnabled();
 		}
 
 		@Override
@@ -133,7 +131,7 @@ public class FlowInputButton extends FlowContainer implements
 
 		@Override
 		public FlowData getDataWithNewChildren(List<UUID> rules) {
-			return new TileInputFlowData(
+			return new AdvancedTileInputFlowData(
 				data.getId(),
 				data.getPosition(),
 				rules

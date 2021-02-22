@@ -7,15 +7,28 @@ import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContain
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerClosedClientEvent;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class FlowDataHolderObserver<T extends FlowData> implements Observer {
 
-	private final FlowDataHolder<T> HOLDER;
 	private final Class<T> CLAZZ;
+	private final Predicate<T> CHECK;
+	private final Consumer<T> ACTION;
 
-	public FlowDataHolderObserver(FlowDataHolder<T> holder, Class<T> clazz) {
-		this.HOLDER = holder;
+	public FlowDataHolderObserver(Class<T> clazz, Predicate<T> check, Consumer<T> action) {
 		this.CLAZZ = clazz;
+		this.CHECK = check;
+		this.ACTION = action;
+	}
+
+	public FlowDataHolderObserver(Class<T> clazz, FlowDataHolder<T> holder) {
+		// default behaviour - call setData
+		this(
+			clazz,
+			data -> holder.getData().getId().equals(data.getId()),
+			holder::setData
+		);
 	}
 
 	@Override
@@ -23,11 +36,12 @@ public class FlowDataHolderObserver<T extends FlowData> implements Observer {
 		if (arg instanceof FlowDataContainerChange) {
 			FlowDataContainerChange change = (FlowDataContainerChange) arg;
 			if (CLAZZ.isInstance(change.DATA)) {
-				if (HOLDER.getData().getId().equals(change.DATA.getId())) {
+				T data = CLAZZ.cast(change.DATA);
+				if (CHECK.test(data)) {
 					if (change.CHANGE == ChangeType.REMOVED) {
 						o.deleteObserver(this);
 					} else if (change.CHANGE == ChangeType.UPDATED) {
-						HOLDER.setData(CLAZZ.cast(change.DATA));
+						ACTION.accept(data);
 					}
 				}
 			}

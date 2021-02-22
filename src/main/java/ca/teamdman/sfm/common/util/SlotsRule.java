@@ -16,12 +16,20 @@ public class SlotsRule {
 		setDefinition(definition);
 	}
 
+	public SlotsRule(SlotsRule other) {
+		this(other.definition);
+	}
+
 	public String getDefinition() {
 		return definition;
 	}
 
 	public void setDefinition(String definition) {
 		this.definition = definition.replaceAll("[^\\d, \\-+]", "");
+	}
+
+	public SlotsRule copy() {
+		return new SlotsRule(this);
 	}
 
 	public boolean isValidDefinition(String definition) {

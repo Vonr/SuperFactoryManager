@@ -34,8 +34,7 @@ class ChildRulesDrawerItem extends ItemStackFlowComponent implements
 		this.data = data;
 		setData(data);
 		PARENT.CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			ItemStackTileEntityRuleFlowData.class
+			ItemStackTileEntityRuleFlowData.class, this
 		));
 	}
 

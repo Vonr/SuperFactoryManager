@@ -6,76 +6,73 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer.ItemStackTileEntityRuleDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.BasicTileInputFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.TileOutputFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-public class FlowOutputButton extends FlowContainer implements
-	IFlowCloneable, FlowDataHolder<TileOutputFlowData> {
+public class BasicTileInputFlowButton extends FlowContainer implements
+	IFlowCloneable, FlowDataHolder<BasicTileInputFlowData> {
 
-	private final ItemStackTileEntityRuleDrawer DRAWER;
 	private final ManagerFlowController CONTROLLER;
 	private final FlowIconButton BUTTON;
-	private TileOutputFlowData data;
+	private ItemStackTileEntityRuleFlowData ruleData;
+	private BasicTileInputFlowData buttonData;
 
-	public FlowOutputButton(
+	public BasicTileInputFlowButton(
 		ManagerFlowController controller,
-		TileOutputFlowData data
+		BasicTileInputFlowData buttonData,
+		ItemStackTileEntityRuleFlowData ruleData
 	) {
-		this.data = data;
+		this.buttonData = buttonData;
+		this.ruleData = ruleData;
 		this.CONTROLLER = controller;
 
 		this.BUTTON = new MyFlowIconButton(
-			ButtonLabel.OUTPUT,
-			data.getPosition().copy()
+			ButtonLabel.INPUT,
+			buttonData.getPosition().copy()
 		);
 		BUTTON.setDraggable(true);
 		addChild(BUTTON);
 
-		this.DRAWER = new MyItemStackTileEntityRuleDrawer(
-			controller,
-			BUTTON.getPosition().withConstantOffset(25, 0)
-		);
-		addChild(DRAWER);
-
+		controller.SCREEN.getFlowDataContainer()
+			.addObserver(new FlowDataHolderObserver<>(BasicTileInputFlowData.class, this));
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			TileOutputFlowData.class
+			ItemStackTileEntityRuleFlowData.class,
+			data -> data.getId().equals(ruleData.getId()),
+			data -> this.ruleData = data
 		));
 	}
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
+		FlowData newRule = ruleData.copyWithNewId();
 		CONTROLLER.SCREEN.sendFlowDataToServer(
-			new TileOutputFlowData(
+			newRule,
+			new BasicTileInputFlowData(
 				UUID.randomUUID(),
 				new Position(x, y),
-				data.tileEntityRules
+				newRule.getId()
 			)
 		);
 	}
 
 	@Override
-	public TileOutputFlowData getData() {
-		return data;
+	public BasicTileInputFlowData getData() {
+		return buttonData;
 	}
 
 	@Override
-	public void setData(TileOutputFlowData data) {
-		this.data = data;
-		BUTTON.getPosition().setXY(this.data.getPosition());
-		DRAWER.rebuildDrawer();
+	public void setData(BasicTileInputFlowData data) {
+		this.buttonData = data;
+		BUTTON.getPosition().setXY(this.buttonData.getPosition());
 	}
 
 	@Override
@@ -106,38 +103,19 @@ public class FlowOutputButton extends FlowContainer implements
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			DRAWER.setVisible(!DRAWER.isVisible());
-			DRAWER.setEnabled(DRAWER.isVisible());
+			CONTROLLER.findFirstChild(buttonData.tileEntityRule)
+				.ifPresent(FlowComponent::toggleVisibilityAndEnabled);
 		}
 
 		@Override
 		public void onDragFinished(int dx, int dy, int mx, int my) {
-			data.position = getPosition();
-			CONTROLLER.SCREEN.sendFlowDataToServer(data);
-		}
-	}
-
-	private class MyItemStackTileEntityRuleDrawer extends ItemStackTileEntityRuleDrawer {
-
-		public MyItemStackTileEntityRuleDrawer(ManagerFlowController controller, Position pos) {
-			super(controller, pos);
+			buttonData.position = getPosition();
+			CONTROLLER.SCREEN.sendFlowDataToServer(buttonData);
 		}
 
 		@Override
-		public List<ItemStackTileEntityRuleFlowData> getChildrenRules() {
-			return CONTROLLER.SCREEN.getFlowDataContainer()
-				.get(ItemStackTileEntityRuleFlowData.class)
-				.filter(d -> data.tileEntityRules.contains(d.getId()))
-				.collect(Collectors.toList());
-		}
-
-		@Override
-		public FlowData getDataWithNewChildren(List<UUID> rules) {
-			return new TileOutputFlowData(
-				data.getId(),
-				data.getPosition(),
-				rules
-			);
+		protected boolean isDepressed() {
+			return super.isDepressed() || ruleData.open;
 		}
 	}
 }

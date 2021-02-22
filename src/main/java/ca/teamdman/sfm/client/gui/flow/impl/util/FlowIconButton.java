@@ -82,9 +82,13 @@ public abstract class FlowIconButton extends FlowButton {
 		return new FlowSprite(sheet, left, top, width, height);
 	}
 
+	protected boolean isDepressed() {
+		return isHovering() || clicking;
+	}
+
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		if (isHovering() || clicking) {
+		if (isDepressed()) {
 			DEPRESSED_BACKGROUND.drawAt(screen, matrixStack, getPosition());
 		} else {
 			NORMAL_BACKGROUND.drawAt(screen, matrixStack, getPosition());

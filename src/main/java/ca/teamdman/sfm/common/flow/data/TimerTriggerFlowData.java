@@ -51,10 +51,10 @@ public class TimerTriggerFlowData extends FlowData {
 		return position;
 	}
 
-	public static class FlowTimerTriggerDataSerializer extends
+	public static class Serializer extends
 		FlowDataSerializer<TimerTriggerFlowData> {
 
-		public FlowTimerTriggerDataSerializer(ResourceLocation key) {
+		public Serializer(ResourceLocation key) {
 			super(key);
 		}
 

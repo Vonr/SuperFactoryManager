@@ -5,9 +5,10 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.AdvancedInputSpawnerFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.AdvancedOutputSpawnerFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.BasicInputSpawnerFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.template.FlowTimerTriggerSpawnerButton;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.template.InputSpawnerFlowButton;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.template.OutputSpawnerFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
@@ -41,8 +42,9 @@ public class FlowToolbox extends FlowContainer implements FlowDataHolder<Toolbox
 	public void setChildrenToDefault() {
 		DRAWER.getChildren().clear();
 		DRAWER.addChild(new FlowTimerTriggerSpawnerButton(CONTROLLER));
-		DRAWER.addChild(new InputSpawnerFlowButton(CONTROLLER));
-		DRAWER.addChild(new OutputSpawnerFlowButton(CONTROLLER));
+		DRAWER.addChild(new BasicInputSpawnerFlowButton(CONTROLLER));
+		DRAWER.addChild(new AdvancedInputSpawnerFlowButton(CONTROLLER));
+		DRAWER.addChild(new AdvancedOutputSpawnerFlowButton(CONTROLLER));
 		DRAWER.setMaxItemsPerRow(4);
 		DRAWER.setMaxItemsPerColumn(1);
 		DRAWER.update();

@@ -131,8 +131,7 @@ class TilesSection extends FlowContainer {
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			PICKER.setVisible(!PICKER.isVisible());
-			PICKER.setEnabled(PICKER.isVisible());
+			PICKER.toggleVisibilityAndEnabled();
 		}
 	}
 }

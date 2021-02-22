@@ -34,8 +34,7 @@ public class TimerTriggerFlowComponent extends FlowContainer implements IFlowClo
 		addChild(WINDOW);
 
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			TimerTriggerFlowData.class
+			TimerTriggerFlowData.class, this
 		));
 	}
 

@@ -103,8 +103,7 @@ public class ItemStackModIdMatcherFlowComponent extends
 
 		// Add change listener
 		parent.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			ItemStackModIdMatcherFlowData.class
+			ItemStackModIdMatcherFlowData.class, this
 		));
 	}
 

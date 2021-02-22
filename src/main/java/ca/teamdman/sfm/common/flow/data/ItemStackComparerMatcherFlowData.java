@@ -67,10 +67,10 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 		return I18n.format("gui.sfm.flow.tooltip.item_stack_comparer_matcher");
 	}
 
-	public static class ItemStackComparerMatcherFlowDataSerializer extends
+	public static class Serializer extends
 		FlowDataSerializer<ItemStackComparerMatcherFlowData> {
 
-		public ItemStackComparerMatcherFlowDataSerializer(ResourceLocation registryName) {
+		public Serializer(ResourceLocation registryName) {
 			super(registryName);
 		}
 

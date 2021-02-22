@@ -222,6 +222,11 @@ public class FlowComponent implements SizeHolder {
 		this.visible = visible;
 	}
 
+	public void toggleVisibilityAndEnabled() {
+		setVisible(!isVisible());
+		setEnabled(isVisible());
+	}
+
 	public boolean isEnabled() {
 		return enabled;
 	}

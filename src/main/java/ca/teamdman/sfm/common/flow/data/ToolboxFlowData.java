@@ -48,10 +48,10 @@ public class ToolboxFlowData extends FlowData {
 		return position;
 	}
 
-	public static class ToolboxFlowDataSerializer extends
+	public static class Serializer extends
 		ca.teamdman.sfm.common.flow.data.FlowDataSerializer<ToolboxFlowData> {
 
-		public ToolboxFlowDataSerializer(ResourceLocation key) {
+		public Serializer(ResourceLocation key) {
 			super(key);
 		}
 

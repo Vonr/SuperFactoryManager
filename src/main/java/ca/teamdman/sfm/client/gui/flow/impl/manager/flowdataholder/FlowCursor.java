@@ -31,8 +31,7 @@ public class FlowCursor extends FlowComponent implements FlowDataHolder<CursorFl
 		this.CONTROLLER = CONTROLLER;
 		this.data = data;
 		CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			this,
-			CursorFlowData.class
+			CursorFlowData.class, this
 		));
 	}
 
