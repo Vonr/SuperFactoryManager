@@ -18,8 +18,12 @@ import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
 
 public class BasicTileOutputFlowButton extends FlowContainer implements
 	IFlowCloneable, FlowDataHolder<BasicTileOutputFlowData> {
@@ -55,6 +59,11 @@ public class BasicTileOutputFlowButton extends FlowContainer implements
 		));
 	}
 
+	public void setRuleData(ItemStackTileEntityRuleFlowData data) {
+		this.ruleData = data;
+		this.BUTTON.reloadFromRuleData();
+	}
+
 	@Override
 	public void cloneWithPosition(int x, int y) {
 		FlowData newRule = ruleData.copyWithNewId();
@@ -66,11 +75,6 @@ public class BasicTileOutputFlowButton extends FlowContainer implements
 				newRule.getId()
 			)
 		);
-	}
-
-	public void setRuleData(ItemStackTileEntityRuleFlowData data) {
-		this.ruleData = data;
-		this.BUTTON.reloadFromRuleData();
 	}
 
 	@Override
@@ -123,10 +127,11 @@ public class BasicTileOutputFlowButton extends FlowContainer implements
 		}
 
 		@Override
-		protected boolean isDepressed() {
-			return super.isDepressed() || ruleData.open;
+		public List<? extends ITextProperties> getTooltip() {
+			List<ITextProperties> rtn = new ArrayList<>();
+			rtn.add(new StringTextComponent(ruleData.name));
+			return rtn;
 		}
-
 
 		public void reloadFromRuleData() {
 			if (ruleData.getIcon().isEmpty()) {
@@ -148,10 +153,15 @@ public class BasicTileOutputFlowButton extends FlowContainer implements
 				screen.drawItemStack(
 					matrixStack,
 					ruleData.getIcon(),
-					getPosition().getX()+3,
-					getPosition().getY()+3
+					getPosition().getX() + 3,
+					getPosition().getY() + 3
 				);
 			}
+		}
+
+		@Override
+		protected boolean isDepressed() {
+			return super.isDepressed() || ruleData.open;
 		}
 
 		@Override
@@ -164,8 +174,8 @@ public class BasicTileOutputFlowButton extends FlowContainer implements
 				screen.drawItemStack(
 					matrixStack,
 					ruleData.getIcon(),
-					getPosition().getX()+3,
-					getPosition().getY()+3
+					getPosition().getX() + 3,
+					getPosition().getY() + 3
 				);
 			}
 		}

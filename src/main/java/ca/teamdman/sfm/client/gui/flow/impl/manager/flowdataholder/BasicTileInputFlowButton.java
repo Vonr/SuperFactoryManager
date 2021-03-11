@@ -18,8 +18,12 @@ import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
 
 public class BasicTileInputFlowButton extends FlowContainer implements
 	IFlowCloneable, FlowDataHolder<BasicTileInputFlowData> {
@@ -55,6 +59,11 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		));
 	}
 
+	public void setRuleData(ItemStackTileEntityRuleFlowData data) {
+		this.ruleData = data;
+		this.BUTTON.reloadFromRuleData();
+	}
+
 	@Override
 	public void cloneWithPosition(int x, int y) {
 		FlowData newRule = ruleData.copyWithNewId();
@@ -77,11 +86,6 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 	public void setData(BasicTileInputFlowData data) {
 		this.buttonData = data;
 		BUTTON.getPosition().setXY(this.buttonData.getPosition());
-	}
-
-	public void setRuleData(ItemStackTileEntityRuleFlowData data) {
-		this.ruleData = data;
-		this.BUTTON.reloadFromRuleData();
 	}
 
 	@Override
@@ -111,6 +115,13 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		}
 
 		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			List<ITextProperties> rtn = new ArrayList<>();
+			rtn.add(new StringTextComponent(ruleData.name));
+			return rtn;
+		}
+
+		@Override
 		public void onClicked(int mx, int my, int button) {
 			CONTROLLER.findFirstChild(buttonData.tileEntityRule)
 				.ifPresent(FlowComponent::toggleVisibilityAndEnabled);
@@ -120,11 +131,6 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		public void onDragFinished(int dx, int dy, int mx, int my) {
 			buttonData.position = getPosition();
 			CONTROLLER.SCREEN.sendFlowDataToServer(buttonData);
-		}
-
-		@Override
-		protected boolean isDepressed() {
-			return super.isDepressed() || ruleData.open;
 		}
 
 		public void reloadFromRuleData() {
@@ -147,10 +153,15 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 				screen.drawItemStack(
 					matrixStack,
 					ruleData.getIcon(),
-					getPosition().getX()+3,
-					getPosition().getY()+3
+					getPosition().getX() + 3,
+					getPosition().getY() + 3
 				);
 			}
+		}
+
+		@Override
+		protected boolean isDepressed() {
+			return super.isDepressed() || ruleData.open;
 		}
 
 		@Override
@@ -163,8 +174,8 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 				screen.drawItemStack(
 					matrixStack,
 					ruleData.getIcon(),
-					getPosition().getX()+3,
-					getPosition().getY()+3
+					getPosition().getX() + 3,
+					getPosition().getY() + 3
 				);
 			}
 		}
