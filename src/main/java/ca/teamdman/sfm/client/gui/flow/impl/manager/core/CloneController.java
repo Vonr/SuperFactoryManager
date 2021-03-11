@@ -6,7 +6,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import net.minecraft.client.gui.screen.Screen;
@@ -67,7 +67,7 @@ public class CloneController extends FlowComponent {
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		ButtonBackground background = ButtonBackground.NORMAL;
-		BaseScreen.bindTexture(ButtonBackground.SPRITE_SHEET);
+		BaseScreen.bindTexture(background.SPRITE_SHEET);
 		screen.drawTextureWithRGBA(
 			matrixStack,
 			mx,

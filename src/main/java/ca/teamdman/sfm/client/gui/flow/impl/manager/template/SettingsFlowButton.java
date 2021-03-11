@@ -4,10 +4,10 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 
 import ca.teamdman.sfm.client.gui.flow.impl.config.ConfigComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.core.Position;
 import java.util.ArrayList;

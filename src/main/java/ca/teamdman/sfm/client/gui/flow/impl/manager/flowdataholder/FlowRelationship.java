@@ -8,7 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.RelationshipController;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonBackground;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;

@@ -4,6 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowToolbox;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;

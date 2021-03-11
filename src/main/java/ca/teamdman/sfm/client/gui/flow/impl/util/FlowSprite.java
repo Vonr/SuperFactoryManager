@@ -12,6 +12,18 @@ public class FlowSprite {
 
 	public final int LEFT, TOP, WIDTH, HEIGHT;
 	public final ResourceLocation SHEET;
+	public static final FlowSprite EMPTY = new FlowSprite(null, 0,0,0,0) {
+
+		@Override
+		public void drawAt(BaseScreen screen, MatrixStack matrixStack, int x, int y) {
+
+		}
+
+		@Override
+		public void drawGhostAt(BaseScreen screen, MatrixStack matrixStack, int x, int y) {
+
+		}
+	};
 
 	/**
 	 * @param sheet  Sprite sheet to be bound for render

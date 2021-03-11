@@ -6,6 +6,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.CloneController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.AdvancedTileInputFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.AdvancedTileInputFlowData;

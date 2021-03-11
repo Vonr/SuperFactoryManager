@@ -3,18 +3,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.util;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.util.ResourceLocation;
 
 public abstract class FlowIconButton extends FlowButton {
 
-	public final FlowSprite NORMAL_BACKGROUND;
-	public final FlowSprite DEPRESSED_BACKGROUND;
-	public final FlowSprite ICON;
+	protected FlowSprite NORMAL_BACKGROUND;
+	protected FlowSprite DEPRESSED_BACKGROUND;
+	protected FlowSprite LABEL;
 
 	public FlowIconButton(
 		ButtonBackground normalBackground,
@@ -23,27 +21,9 @@ public abstract class FlowIconButton extends FlowButton {
 		Position pos
 	) {
 		super(pos, new Size(normalBackground.WIDTH, normalBackground.HEIGHT));
-		this.NORMAL_BACKGROUND = createBackground(
-			ButtonBackground.SPRITE_SHEET,
-			normalBackground.LEFT,
-			normalBackground.TOP,
-			normalBackground.WIDTH,
-			normalBackground.HEIGHT
-		);
-		this.DEPRESSED_BACKGROUND = createBackground(
-			ButtonBackground.SPRITE_SHEET,
-			depressedBackground.LEFT,
-			depressedBackground.TOP,
-			depressedBackground.WIDTH,
-			depressedBackground.HEIGHT
-		);
-		this.ICON = createLabel(
-			ButtonLabel.SPRITE_SHEET,
-			label.LEFT,
-			label.TOP,
-			label.WIDTH,
-			label.HEIGHT
-		);
+		this.NORMAL_BACKGROUND = normalBackground.SPRITE;
+		this.DEPRESSED_BACKGROUND = depressedBackground.SPRITE;
+		this.LABEL = label.SPRITE;
 	}
 
 	public FlowIconButton(ButtonLabel type, Position pos) {
@@ -59,27 +39,7 @@ public abstract class FlowIconButton extends FlowButton {
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		NORMAL_BACKGROUND.drawGhostAt(screen, matrixStack, mx, my);
-		ICON.drawGhostAt(screen, matrixStack, mx + 4, my + 4);
-	}
-
-	public FlowSprite createBackground(
-		ResourceLocation sheet,
-		int left,
-		int top,
-		int width,
-		int height
-	) {
-		return new FlowSprite(sheet, left, top, width, height);
-	}
-
-	public FlowSprite createLabel(
-		ResourceLocation sheet,
-		int left,
-		int top,
-		int width,
-		int height
-	) {
-		return new FlowSprite(sheet, left, top, width, height);
+		LABEL.drawGhostAt(screen, matrixStack, mx + 4, my + 4);
 	}
 
 	protected boolean isDepressed() {
@@ -93,52 +53,8 @@ public abstract class FlowIconButton extends FlowButton {
 		} else {
 			NORMAL_BACKGROUND.drawAt(screen, matrixStack, getPosition());
 		}
-		ICON.drawAt(screen, matrixStack, getPosition().getX() + 4, getPosition().getY() + 4);
+		LABEL.drawAt(screen, matrixStack, getPosition().getX() + 4, getPosition().getY() + 4);
 		super.draw(screen, matrixStack, mx, my, deltaTime);
 	}
 
-	public enum ButtonBackground {
-		NORMAL(14, 0, 22, 22),
-		DEPRESSED(14, 22, 22, 22),
-		LINE_NODE(36, 0, 8, 8);
-
-		public static final ResourceLocation SPRITE_SHEET = new ResourceLocation(
-			SFM.MOD_ID,
-			"textures/gui/sprites.png"
-		);
-		public final int LEFT, TOP, WIDTH, HEIGHT;
-
-		ButtonBackground(int left, int top, int width, int height) {
-			this.LEFT = left;
-			this.TOP = top;
-			this.WIDTH = width;
-			this.HEIGHT = height;
-		}
-	}
-
-	public enum ButtonLabel {
-		INPUT(0, 0, 14, 14),
-		OUTPUT(0, 14, 14, 14),
-		ADD_INPUT(0, 28, 14, 14),
-		ADD_TIMER_TRIGGER(0, 70, 14, 14),
-		ADD_OUTPUT(0, 42, 14, 14),
-		TRIGGER(0, 56, 14, 14),
-		SETTINGS(0, 84, 14, 14),
-		COMPARER_MATCHER(0,98,14,14),
-		MODID_MATCHER(0,112,14,14),
-		NONE(0, 0, 0, 0);
-
-		public static final ResourceLocation SPRITE_SHEET = new ResourceLocation(
-			SFM.MOD_ID,
-			"textures/gui/sprites.png"
-		);
-		public final int LEFT, TOP, WIDTH, HEIGHT;
-
-		ButtonLabel(int left, int top, int width, int height) {
-			this.LEFT = left;
-			this.TOP = top;
-			this.WIDTH = width;
-			this.HEIGHT = height;
-		}
-	}
 }
