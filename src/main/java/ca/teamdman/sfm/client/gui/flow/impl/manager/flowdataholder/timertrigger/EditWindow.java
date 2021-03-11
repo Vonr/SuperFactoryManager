@@ -39,7 +39,7 @@ class EditWindow extends FlowContainer {
 		INPUT.setResponder(next -> {
 			try {
 				int nextVal = Integer.parseInt(next);
-				if (nextVal != parent.data.interval && nextVal > 20) {
+				if (nextVal != parent.data.interval && nextVal >= 20) {
 					// todo: add warning about minimum interval being 20
 					// todo: add server config for minimum manager tick interval
 					parent.data.interval = nextVal;
