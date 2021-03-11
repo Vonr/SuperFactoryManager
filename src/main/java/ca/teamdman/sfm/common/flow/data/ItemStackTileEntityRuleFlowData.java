@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -59,7 +60,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public ItemStackTileEntityRuleFlowData() {
 		this(
 			UUID.randomUUID(),
-			"New tile entity rule",
+			I18n.format("gui.sfm.flow.placeholder.default_rule_name"),
 			ItemStack.EMPTY,
 			new Position(0, 0),
 			FilterMode.WHITELIST,

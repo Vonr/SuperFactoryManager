@@ -1,39 +1,39 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
 
-import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
+import ca.teamdman.sfm.client.gui.flow.impl.util.TextAreaFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.resources.I18n;
 
 public class ToolbarSection extends FlowContainer {
 
 	private ItemStackTileEntityRuleFlowComponent PARENT;
+	private TextAreaFlowComponent TITLE;
 
 	public ToolbarSection(ItemStackTileEntityRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
+
+		TITLE = new TextAreaFlowComponent(
+			parent.CONTROLLER.SCREEN,
+			parent.getData().name,
+			I18n.format("gui.sfm.flow.placeholder.default_rule_name"),
+			new Position(5,2),
+			new Size(160, 12)
+		);
+		TITLE.setResponder(name -> {
+			if (name == null || name.equals(PARENT.getData().name)) return;
+			if (name.isEmpty()) name = I18n.format("gui.sfm.flow.placeholder.default_rule_name");
+			PARENT.getData().name = name;
+			PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
+		});
+		addChild(TITLE);
 
 		addChild(new MinimizeButton(
 			PARENT,
 			new Position(200, 5),
 			new Size(10, 10)
 		));
-	}
-
-	@Override
-	public void draw(
-		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
-	) {
-		super.draw(screen, matrixStack, mx, my, deltaTime);
-
-		screen.drawString(
-			matrixStack,
-			PARENT.getData().name,
-			getPosition().getX() + 5,
-			getPosition().getY() + 5,
-			CONST.TEXT_LIGHT
-		);
 	}
 }
