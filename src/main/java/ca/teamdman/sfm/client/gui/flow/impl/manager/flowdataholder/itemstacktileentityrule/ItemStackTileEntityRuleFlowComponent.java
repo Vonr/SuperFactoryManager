@@ -103,6 +103,8 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) return true;
+
 		// When E is pressed, close window if mouse is hovering
 		if (isVisible()
 			&& isHovering()

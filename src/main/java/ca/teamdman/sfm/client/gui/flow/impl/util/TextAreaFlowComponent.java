@@ -72,17 +72,20 @@ public class TextAreaFlowComponent extends FlowComponent {
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		return delegate.keyPressed(keyCode, scanCode, modifiers);
+		delegate.keyPressed(keyCode, scanCode, modifiers);
+		return delegate.canWrite();
 	}
 
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
+		delegate.keyReleased(keyCode, scanCode, modifiers);
 		return delegate.canWrite();
 	}
 
 	@Override
 	public boolean charTyped(char codePoint, int modifiers, int mx, int my) {
-		return delegate.charTyped(codePoint, modifiers);
+		delegate.charTyped(codePoint, modifiers);
+		return delegate.canWrite();
 	}
 
 	@Override
