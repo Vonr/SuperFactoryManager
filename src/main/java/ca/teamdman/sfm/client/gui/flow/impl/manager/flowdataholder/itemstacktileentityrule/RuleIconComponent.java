@@ -7,7 +7,12 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStackPicker;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.TranslationTextComponent;
+import org.lwjgl.glfw.GLFW;
 
 class RuleIconComponent extends FlowContainer {
 
@@ -37,8 +42,20 @@ class RuleIconComponent extends FlowContainer {
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			PICKER.toggleVisibilityAndEnabled();
+			if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
+				PICKER.toggleVisibilityAndEnabled();
+			} else if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
+				PICKER.onItemStackChanged(ItemStack.EMPTY);
+			}
 		}
+
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			List<ITextProperties> rtn = new ArrayList<>();
+			rtn.add(new TranslationTextComponent("gui.sfm.flow.tooltip.right_click_to_clear"));
+			return rtn;
+		}
+
 
 		@Override
 		public void draw(

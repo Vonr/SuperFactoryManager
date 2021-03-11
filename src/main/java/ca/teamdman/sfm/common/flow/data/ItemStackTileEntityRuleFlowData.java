@@ -30,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -45,17 +44,7 @@ import net.minecraftforge.items.IItemHandler;
 public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	Observer {
 	public static final int MAX_NAME_LENGTH = 256;
-	//todo: remove debug item icons, or put more effort into random rule icons
-	private static final ItemStack[] DEFAULT_ICONS = {
-		new ItemStack(Blocks.BEACON),
-		new ItemStack(Blocks.STONE),
-		new ItemStack(Blocks.SAND),
-		new ItemStack(Blocks.SANDSTONE),
-		new ItemStack(Blocks.TURTLE_EGG),
-		new ItemStack(Blocks.DRAGON_EGG),
-		new ItemStack(Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE),
-		new ItemStack(Blocks.CREEPER_HEAD),
-	};
+
 	private final FlowDataRemovedObserver OBSERVER;
 	public FilterMode filterMode;
 	public String name;
@@ -71,7 +60,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		this(
 			UUID.randomUUID(),
 			"New tile entity rule",
-			DEFAULT_ICONS[(int) (Math.random() * DEFAULT_ICONS.length)],
+			ItemStack.EMPTY,
 			new Position(0, 0),
 			FilterMode.WHITELIST,
 			Collections.emptyList(),

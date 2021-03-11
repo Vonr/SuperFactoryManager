@@ -3,18 +3,21 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
+import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton.ButtonLabel;
+import ca.teamdman.sfm.client.gui.flow.impl.util.FlowSprite;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.BasicTileInputFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,7 +25,7 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 	IFlowCloneable, FlowDataHolder<BasicTileInputFlowData> {
 
 	private final ManagerFlowController CONTROLLER;
-	private final FlowIconButton BUTTON;
+	private final MyFlowIconButton BUTTON;
 	private ItemStackTileEntityRuleFlowData ruleData;
 	private BasicTileInputFlowData buttonData;
 
@@ -40,6 +43,7 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 			buttonData.getPosition().copy()
 		);
 		BUTTON.setDraggable(true);
+		BUTTON.reloadFromRuleData();
 		addChild(BUTTON);
 
 		controller.SCREEN.getFlowDataContainer()
@@ -47,7 +51,7 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			ItemStackTileEntityRuleFlowData.class,
 			data -> data.getId().equals(ruleData.getId()),
-			data -> this.ruleData = data
+			this::setRuleData
 		));
 	}
 
@@ -73,6 +77,11 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 	public void setData(BasicTileInputFlowData data) {
 		this.buttonData = data;
 		BUTTON.getPosition().setXY(this.buttonData.getPosition());
+	}
+
+	public void setRuleData(ItemStackTileEntityRuleFlowData data) {
+		this.ruleData = data;
+		this.BUTTON.reloadFromRuleData();
 	}
 
 	@Override
@@ -116,6 +125,48 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		@Override
 		protected boolean isDepressed() {
 			return super.isDepressed() || ruleData.open;
+		}
+
+		public void reloadFromRuleData() {
+			if (ruleData.getIcon().isEmpty()) {
+				// no custom icon, use default label
+				LABEL = ButtonLabel.INPUT.SPRITE;
+			} else {
+				// custom icon, hide the default label
+				LABEL = FlowSprite.EMPTY;
+			}
+		}
+
+		@Override
+		public void drawGhost(
+			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+		) {
+			super.drawGhost(screen, matrixStack, mx, my, deltaTime);
+			if (LABEL == FlowSprite.EMPTY) {
+				// custom icon is set, draw custom stack
+				screen.drawItemStack(
+					matrixStack,
+					ruleData.getIcon(),
+					getPosition().getX()+3,
+					getPosition().getY()+3
+				);
+			}
+		}
+
+		@Override
+		public void draw(
+			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+		) {
+			super.draw(screen, matrixStack, mx, my, deltaTime);
+			if (LABEL == FlowSprite.EMPTY) {
+				// custom icon is set, draw custom stack
+				screen.drawItemStack(
+					matrixStack,
+					ruleData.getIcon(),
+					getPosition().getX()+3,
+					getPosition().getY()+3
+				);
+			}
 		}
 	}
 }

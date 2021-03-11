@@ -22,6 +22,7 @@
   "gui.sfm.toolbox.add_modid_matcher": "ModId Matcher",
   "gui.sfm.flow.tooltip.item_stack_comparer_matcher": "Comparer Matcher",
   "gui.sfm.flow.tooltip.item_stack_mod_id_matcher": "ModId Matcher",
+  "gui.sfm.flow.tooltip.right_click_to_clear": "Right click to clear",
   "gui.sfm.flow.search.no_results_found": "No results found...",
   "gui.sfm.flow.search.placeholder": "Search",
   "gui.sfm.flow.tileentityrule.button.blacklist": "Blacklist",
