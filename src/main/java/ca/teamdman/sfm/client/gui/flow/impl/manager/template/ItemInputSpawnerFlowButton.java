@@ -33,7 +33,7 @@ public class ItemInputSpawnerFlowButton extends FlowIconButton {
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
 		List<ITextComponent> list = new ArrayList<>();
-		list.add(new TranslationTextComponent("gui.sfm.flow.tooltip.basic_input_spawner"));
+		list.add(new TranslationTextComponent("gui.sfm.flow.tooltip.item_input_spawner"));
 		return list;
 	}
 
