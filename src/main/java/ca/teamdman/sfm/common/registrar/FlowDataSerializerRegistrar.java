@@ -4,8 +4,6 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.flow.data.AdvancedTileInputFlowData;
-import ca.teamdman.sfm.common.flow.data.AdvancedTileOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.BasicTileInputFlowData;
 import ca.teamdman.sfm.common.flow.data.BasicTileOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
@@ -35,10 +33,6 @@ public class FlowDataSerializerRegistrar {
 	@SubscribeEvent
 	public static void onRegister(final RegistryEvent.Register<FlowDataSerializer<?>> e) {
 		e.getRegistry().registerAll(
-			new AdvancedTileInputFlowData
-				.Serializer(new ResourceLocation(SFM.MOD_ID, "advanced_input")),
-			new AdvancedTileOutputFlowData
-				.Serializer(new ResourceLocation(SFM.MOD_ID, "advanced_output")),
 			new RelationshipFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "relationship")),
 			new LineNodeFlowData
@@ -74,10 +68,7 @@ public class FlowDataSerializerRegistrar {
 
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataSerializers {
-
-		public static final FlowDataSerializer<AdvancedTileInputFlowData> ADVANCED_INPUT = WAITING;
 		public static final FlowDataSerializer<BasicTileInputFlowData> BASIC_INPUT = WAITING;
-		public static final FlowDataSerializer<AdvancedTileOutputFlowData> ADVANCED_OUTPUT = WAITING;
 		public static final FlowDataSerializer<BasicTileOutputFlowData> BASIC_OUTPUT = WAITING;
 		public static final FlowDataSerializer<RelationshipFlowData> RELATIONSHIP = WAITING;
 		public static final FlowDataSerializer<LineNodeFlowData> LINE_NODE = WAITING;
