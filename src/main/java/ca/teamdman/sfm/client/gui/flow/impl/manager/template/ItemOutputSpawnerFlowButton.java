@@ -6,11 +6,11 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.CloneController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.BasicTileOutputFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemOutputFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.BasicTileOutputFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +19,11 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class BasicOutputSpawnerFlowButton extends FlowIconButton {
+public class ItemOutputSpawnerFlowButton extends FlowIconButton {
 
 	private final ManagerFlowController CONTROLLER;
 
-	public BasicOutputSpawnerFlowButton(
+	public ItemOutputSpawnerFlowButton(
 		ManagerFlowController controller
 	) {
 		super(ButtonLabel.ADD_OUTPUT, new Position());
@@ -48,14 +48,14 @@ public class BasicOutputSpawnerFlowButton extends FlowIconButton {
 				ItemStackTileEntityRuleFlowData ruleData = new ItemStackTileEntityRuleFlowData();
 
 				// create button data
-				BasicTileOutputFlowData buttonData = new BasicTileOutputFlowData(
+				ItemOutputFlowData buttonData = new ItemOutputFlowData(
 					UUID.randomUUID(),
 					new Position(),
 					ruleData.getId()
 				);
 
 				// create rule button component
-				FlowComponent comp = new BasicTileOutputFlowButton(CONTROLLER, buttonData, ruleData);
+				FlowComponent comp = new ItemOutputFlowButton(CONTROLLER, buttonData, ruleData);
 
 				// set component as cloning
 				cloner.setCloning(comp);

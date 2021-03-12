@@ -4,10 +4,10 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.flow.data.BasicTileInputFlowData;
-import ca.teamdman.sfm.common.flow.data.BasicTileOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
+import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
@@ -48,9 +48,9 @@ public class FlowDataSerializerRegistrar {
 			new CursorFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "cursor")),
 			new Serializer(new ResourceLocation(SFM.MOD_ID, "toolbox")),
-			new BasicTileInputFlowData
+			new ItemInputFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "basic_input")),
-			new BasicTileOutputFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "basic_output"))
+			new ItemOutputFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "basic_output"))
 		);
 	}
 
@@ -68,8 +68,8 @@ public class FlowDataSerializerRegistrar {
 
 	@ObjectHolder(SFM.MOD_ID)
 	public static final class FlowDataSerializers {
-		public static final FlowDataSerializer<BasicTileInputFlowData> BASIC_INPUT = WAITING;
-		public static final FlowDataSerializer<BasicTileOutputFlowData> BASIC_OUTPUT = WAITING;
+		public static final FlowDataSerializer<ItemInputFlowData> BASIC_INPUT = WAITING;
+		public static final FlowDataSerializer<ItemOutputFlowData> BASIC_OUTPUT = WAITING;
 		public static final FlowDataSerializer<RelationshipFlowData> RELATIONSHIP = WAITING;
 		public static final FlowDataSerializer<LineNodeFlowData> LINE_NODE = WAITING;
 		public static final FlowDataSerializer<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;

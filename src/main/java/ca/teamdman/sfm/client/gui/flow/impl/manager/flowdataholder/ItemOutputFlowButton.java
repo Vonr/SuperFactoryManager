@@ -13,8 +13,8 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowSprite;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.BasicTileInputFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -25,17 +25,17 @@ import java.util.UUID;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 
-public class BasicTileInputFlowButton extends FlowContainer implements
-	IFlowCloneable, FlowDataHolder<BasicTileInputFlowData> {
+public class ItemOutputFlowButton extends FlowContainer implements
+	IFlowCloneable, FlowDataHolder<ItemOutputFlowData> {
 
 	private final ManagerFlowController CONTROLLER;
 	private final MyFlowIconButton BUTTON;
 	private ItemStackTileEntityRuleFlowData ruleData;
-	private BasicTileInputFlowData buttonData;
+	private ItemOutputFlowData buttonData;
 
-	public BasicTileInputFlowButton(
+	public ItemOutputFlowButton(
 		ManagerFlowController controller,
-		BasicTileInputFlowData buttonData,
+		ItemOutputFlowData buttonData,
 		ItemStackTileEntityRuleFlowData ruleData
 	) {
 		this.buttonData = buttonData;
@@ -43,7 +43,7 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		this.CONTROLLER = controller;
 
 		this.BUTTON = new MyFlowIconButton(
-			ButtonLabel.INPUT,
+			ButtonLabel.OUTPUT,
 			buttonData.getPosition().copy()
 		);
 		BUTTON.setDraggable(true);
@@ -51,7 +51,7 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		addChild(BUTTON);
 
 		controller.SCREEN.getFlowDataContainer()
-			.addObserver(new FlowDataHolderObserver<>(BasicTileInputFlowData.class, this));
+			.addObserver(new FlowDataHolderObserver<>(ItemOutputFlowData.class, this));
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			ItemStackTileEntityRuleFlowData.class,
 			data -> data.getId().equals(ruleData.getId()),
@@ -69,7 +69,7 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		FlowData newRule = ruleData.copyWithNewId();
 		CONTROLLER.SCREEN.sendFlowDataToServer(
 			newRule,
-			new BasicTileInputFlowData(
+			new ItemOutputFlowData(
 				UUID.randomUUID(),
 				new Position(x, y),
 				newRule.getId()
@@ -78,12 +78,12 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 	}
 
 	@Override
-	public BasicTileInputFlowData getData() {
+	public ItemOutputFlowData getData() {
 		return buttonData;
 	}
 
 	@Override
-	public void setData(BasicTileInputFlowData data) {
+	public void setData(ItemOutputFlowData data) {
 		this.buttonData = data;
 		BUTTON.getPosition().setXY(this.buttonData.getPosition());
 	}
@@ -115,13 +115,6 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 		}
 
 		@Override
-		public List<? extends ITextProperties> getTooltip() {
-			List<ITextProperties> rtn = new ArrayList<>();
-			rtn.add(new StringTextComponent(ruleData.name));
-			return rtn;
-		}
-
-		@Override
 		public void onClicked(int mx, int my, int button) {
 			CONTROLLER.findFirstChild(buttonData.tileEntityRule)
 				.ifPresent(FlowComponent::toggleVisibilityAndEnabled);
@@ -133,10 +126,17 @@ public class BasicTileInputFlowButton extends FlowContainer implements
 			CONTROLLER.SCREEN.sendFlowDataToServer(buttonData);
 		}
 
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			List<ITextProperties> rtn = new ArrayList<>();
+			rtn.add(new StringTextComponent(ruleData.name));
+			return rtn;
+		}
+
 		public void reloadFromRuleData() {
 			if (ruleData.getIcon().isEmpty()) {
 				// no custom icon, use default label
-				LABEL = ButtonLabel.INPUT.SPRITE;
+				LABEL = ButtonLabel.OUTPUT.SPRITE;
 			} else {
 				// custom icon, hide the default label
 				LABEL = FlowSprite.EMPTY;

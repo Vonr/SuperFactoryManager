@@ -4,9 +4,9 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
-import ca.teamdman.sfm.common.flow.data.BasicTileInputFlowData;
-import ca.teamdman.sfm.common.flow.data.BasicTileOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
@@ -40,11 +40,11 @@ public class ExecutionStep {
 
 	public List<ExecutionStep> step() {
 		BasicFlowDataContainer container = TILE.getFlowDataContainer();
-		if (CURRENT instanceof BasicTileInputFlowData) {
-			UUID ruleId = ((BasicTileInputFlowData) CURRENT).tileEntityRule;
+		if (CURRENT instanceof ItemInputFlowData) {
+			UUID ruleId = ((ItemInputFlowData) CURRENT).tileEntityRule;
 			container.get(ruleId, ItemStackTileEntityRuleFlowData.class).ifPresent(INPUTS::add);
-		} else if (CURRENT instanceof BasicTileOutputFlowData) {
-			UUID ruleId = ((BasicTileOutputFlowData) CURRENT).tileEntityRule;
+		} else if (CURRENT instanceof ItemOutputFlowData) {
+			UUID ruleId = ((ItemOutputFlowData) CURRENT).tileEntityRule;
 			CableNetworkManager.getOrRegisterNetwork(TILE).ifPresent(network ->
 				container.get(ruleId, ItemStackTileEntityRuleFlowData.class)
 					.ifPresent(rule -> satisfyOutput(network, rule)));
