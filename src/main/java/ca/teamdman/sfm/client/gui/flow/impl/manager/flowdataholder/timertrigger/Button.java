@@ -24,6 +24,12 @@ class Button extends FlowIconButton {
 		PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.data);
 	}
 
+	@Override
+	protected boolean isDepressed() {
+		return super.isDepressed() || PARENT.data.open;
+	}
+
+
 	public void onDataChanged() {
 		getPosition().setXY(PARENT.data.getPosition());
 	}
