@@ -56,7 +56,6 @@ public class CloneController extends FlowComponent {
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
 		if (cloning != null) {
-//			((IFlowCloneable) cloning).cloneWithPosition(mx, my);
 			List<FlowData> newData = new ArrayList<>();
 			FlowData data = ((FlowDataHolder<?>) cloning).getData().duplicate(
 				container,
