@@ -96,8 +96,10 @@ public class ItemModMatcherFlowComponent extends
 			Objects.nonNull(next)
 				&& ResourceLocation.isResouceNameValid(next.toLowerCase(Locale.ROOT)+":"));
 		MOD_ID_INPUT.setResponder(next -> {
-			data.modId = next.toLowerCase(Locale.ROOT);
-			parent.SCREEN.sendFlowDataToServer(data);
+			if (!next.equals(data.modId)) {
+				data.modId = next.toLowerCase(Locale.ROOT);
+				parent.SCREEN.sendFlowDataToServer(data);
+			}
 		});
 		addChild(MOD_ID_INPUT);
 
