@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstackcomparermatcher;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itempickermatcher;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -9,14 +9,14 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.item.ItemStack;
 
-class ComparerMatcherIconComponent extends FlowContainer {
+class StackIconButton extends FlowContainer {
 
-	private final ItemStackComparerMatcherFlowComponent PARENT;
+	private final ItemPickerMatcherFlowComponent PARENT;
 	private final FlowItemStackPicker PICKER;
 	protected final ItemStackFlowComponent BUTTON;
 
-	public ComparerMatcherIconComponent(
-		ItemStackComparerMatcherFlowComponent parent,
+	public StackIconButton(
+		ItemPickerMatcherFlowComponent parent,
 		Position pos
 	) {
 		super(pos);

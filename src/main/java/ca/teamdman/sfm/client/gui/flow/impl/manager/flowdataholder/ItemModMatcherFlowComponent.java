@@ -10,25 +10,25 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.TextAreaFlowComponent;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemModMatcherFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Locale;
 import java.util.Objects;
 import net.minecraft.util.ResourceLocation;
 
-public class ItemStackModIdMatcherFlowComponent extends
+public class ItemModMatcherFlowComponent extends
 	FlowContainer implements
-	FlowDataHolder<ItemStackModIdMatcherFlowData> {
+	FlowDataHolder<ItemModMatcherFlowData> {
 
 	protected final ManagerFlowController PARENT;
 	private final TextAreaFlowComponent QUANTITY_INPUT;
 	private final TextAreaFlowComponent MOD_ID_INPUT;
-	private ItemStackModIdMatcherFlowData data;
+	private ItemModMatcherFlowData data;
 
-	public ItemStackModIdMatcherFlowComponent(
+	public ItemModMatcherFlowComponent(
 		ManagerFlowController parent,
-		ItemStackModIdMatcherFlowData data
+		ItemModMatcherFlowData data
 	) {
 		super(
 			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 0),
@@ -103,7 +103,7 @@ public class ItemStackModIdMatcherFlowComponent extends
 
 		// Add change listener
 		parent.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			ItemStackModIdMatcherFlowData.class, this
+			ItemModMatcherFlowData.class, this
 		));
 	}
 
@@ -137,7 +137,7 @@ public class ItemStackModIdMatcherFlowComponent extends
 	}
 
 	@Override
-	public ItemStackModIdMatcherFlowData getData() {
+	public ItemModMatcherFlowData getData() {
 		return data;
 	}	@Override
 	public boolean isVisible() {
@@ -145,7 +145,7 @@ public class ItemStackModIdMatcherFlowComponent extends
 	}
 
 	@Override
-	public void setData(ItemStackModIdMatcherFlowData data) {
+	public void setData(ItemModMatcherFlowData data) {
 		this.data = data;
 		QUANTITY_INPUT.setContent(Integer.toString(data.quantity));
 		MOD_ID_INPUT.setContent(data.modId);

@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstackcomparermatcher;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itempickermatcher;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -10,23 +10,23 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.TextAreaFlowComponent;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemPickerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Objects;
 
-public class ItemStackComparerMatcherFlowComponent extends
+public class ItemPickerMatcherFlowComponent extends
 	FlowContainer implements
-	FlowDataHolder<ItemStackComparerMatcherFlowData> {
+	FlowDataHolder<ItemPickerMatcherFlowData> {
 
 	protected final ManagerFlowController PARENT;
-	private final ComparerMatcherIconComponent ICON;
+	private final StackIconButton ICON;
 	private final TextAreaFlowComponent QUANTITY_INPUT;
-	private ItemStackComparerMatcherFlowData data;
+	private ItemPickerMatcherFlowData data;
 
-	public ItemStackComparerMatcherFlowComponent(
+	public ItemPickerMatcherFlowComponent(
 		ManagerFlowController parent,
-		ItemStackComparerMatcherFlowData data
+		ItemPickerMatcherFlowData data
 	) {
 		super(
 			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 0),
@@ -79,12 +79,12 @@ public class ItemStackComparerMatcherFlowComponent extends
 
 		// Display itemstack
 //		this.ICON = new ItemStackFlowComponent(data.stack, new Position(54, 2));
-		this.ICON = new ComparerMatcherIconComponent(this, new Position(54, 2));
+		this.ICON = new StackIconButton(this, new Position(54, 2));
 		addChild(ICON);
 
 		// Add change listener
 		parent.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			ItemStackComparerMatcherFlowData.class, this
+			ItemPickerMatcherFlowData.class, this
 		));
 	}
 
@@ -109,7 +109,7 @@ public class ItemStackComparerMatcherFlowComponent extends
 	}
 
 	@Override
-	public ItemStackComparerMatcherFlowData getData() {
+	public ItemPickerMatcherFlowData getData() {
 		return data;
 	}	@Override
 	public boolean isVisible() {
@@ -117,7 +117,7 @@ public class ItemStackComparerMatcherFlowComponent extends
 	}
 
 	@Override
-	public void setData(ItemStackComparerMatcherFlowData data) {
+	public void setData(ItemPickerMatcherFlowData data) {
 		this.data = data;
 		ICON.BUTTON.setItemStack(data.stack);
 		QUANTITY_INPUT.setContent(Integer.toString(data.quantity));

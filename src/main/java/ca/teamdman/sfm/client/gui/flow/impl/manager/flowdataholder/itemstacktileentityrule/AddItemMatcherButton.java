@@ -10,9 +10,9 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.ItemModMatcherFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemPickerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 
-class AddItemStackMatcherButton extends FlowPlusButton {
+class AddItemMatcherButton extends FlowPlusButton {
 
 	private ManagerFlowController CONTROLLER;
 	private ItemRuleFlowData data;
@@ -31,7 +31,7 @@ class AddItemStackMatcherButton extends FlowPlusButton {
 		new AddModIdMatcher()
 	);
 
-	public AddItemStackMatcherButton(
+	public AddItemMatcherButton(
 		ManagerFlowController CONTROLLER, ItemRuleFlowData data,
 		Position pos
 	) {
@@ -60,7 +60,7 @@ class AddItemStackMatcherButton extends FlowPlusButton {
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			FlowData matcher = new ItemStackComparerMatcherFlowData(
+			FlowData matcher = new ItemPickerMatcherFlowData(
 				UUID.randomUUID(),
 				new ItemStack(Blocks.STONE),
 				0,
@@ -85,7 +85,7 @@ class AddItemStackMatcherButton extends FlowPlusButton {
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			FlowData matcher = new ItemStackModIdMatcherFlowData(
+			FlowData matcher = new ItemModMatcherFlowData(
 				UUID.randomUUID(),
 				"minecraft",
 				0,

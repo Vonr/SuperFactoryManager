@@ -7,10 +7,10 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemModMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemPickerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
@@ -41,9 +41,9 @@ public class FlowDataSerializerRegistrar {
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
 			new ItemRuleFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_entity_rule")),
-			new ItemStackComparerMatcherFlowData
+			new ItemPickerMatcherFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher")),
-			new ItemStackModIdMatcherFlowData
+			new ItemModMatcherFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_stack_mod_id_matcher")),
 			new CursorFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "cursor")),
@@ -74,8 +74,8 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<LineNodeFlowData> LINE_NODE = WAITING;
 		public static final FlowDataSerializer<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;
 		public static final FlowDataSerializer<ItemRuleFlowData> TILE_ENTITY_RULE = WAITING;
-		public static final FlowDataSerializer<ItemStackComparerMatcherFlowData> ITEM_STACK_COMPARER_MATCHER = WAITING;
-		public static final FlowDataSerializer<ItemStackModIdMatcherFlowData> ITEM_STACK_MOD_ID_MATCHER = WAITING;
+		public static final FlowDataSerializer<ItemPickerMatcherFlowData> ITEM_STACK_COMPARER_MATCHER = WAITING;
+		public static final FlowDataSerializer<ItemModMatcherFlowData> ITEM_STACK_MOD_ID_MATCHER = WAITING;
 		public static final FlowDataSerializer<CursorFlowData> CURSOR = WAITING;
 		public static final FlowDataSerializer<ToolboxFlowData> TOOLBOX = WAITING;
 	}

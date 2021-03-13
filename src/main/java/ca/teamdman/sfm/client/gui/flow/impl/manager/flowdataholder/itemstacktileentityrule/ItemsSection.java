@@ -40,7 +40,7 @@ class ItemsSection extends FlowContainer {
 
 	public void rebuildChildren() {
 		DRAWER.getChildren().clear();
-		DRAWER.addChild(new AddItemStackMatcherButton(
+		DRAWER.addChild(new AddItemMatcherButton(
 			PARENT.CONTROLLER,
 			PARENT.getData(),
 			new Position(5, getSize().getHeight() - 21)

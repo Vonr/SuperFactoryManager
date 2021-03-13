@@ -19,7 +19,7 @@
   "gui.sfm.config.title": "Super Factory Manager Configuration",
   "gui.sfm.toolbox.title.default" : "Toolbox",
   "gui.sfm.toolbox.add_itemstackcomparer_matcher": "ItemStack Comparison Matcher",
-  "gui.sfm.toolbox.add_modid_matcher": "ModId Matcher",
+  "gui.sfm.toolbox.add_modid_matcher": "Mod Matcher",
   "gui.sfm.flow.tooltip.item_stack_comparer_matcher": "Comparer Matcher",
   "gui.sfm.flow.tooltip.item_stack_mod_id_matcher": "ModId Matcher",
   "gui.sfm.flow.tooltip.timer_interval": "Trigger every %d ticks (%f seconds)",
