@@ -9,7 +9,10 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.timertrigger.
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -20,11 +23,27 @@ public class TimerTriggerFlowData extends FlowData {
 	public int interval;
 	public boolean open;
 
+	public TimerTriggerFlowData(TimerTriggerFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.position.copy(),
+			other.interval,
+			other.open
+		);
+	}
+
 	public TimerTriggerFlowData(UUID uuid, Position position, int interval, boolean open) {
 		super(uuid);
 		this.position = position;
 		this.interval = Math.max(20, interval); // enforce minimum 20 ticks
 		this.open = open;
+	}
+
+	@Override
+	public TimerTriggerFlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+	) {
+		return new TimerTriggerFlowData(this);
 	}
 
 	@Override

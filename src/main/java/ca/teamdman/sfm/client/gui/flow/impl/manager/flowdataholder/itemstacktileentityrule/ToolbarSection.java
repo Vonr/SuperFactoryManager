@@ -19,7 +19,7 @@ public class ToolbarSection extends FlowContainer {
 			parent.CONTROLLER.SCREEN,
 			parent.getData().name,
 			I18n.format("gui.sfm.flow.placeholder.default_rule_name"),
-			new Position(5,2),
+			new Position(1,1),
 			new Size(160, 12)
 		);
 		TITLE.setResponder(name -> {
@@ -32,7 +32,7 @@ public class ToolbarSection extends FlowContainer {
 
 		addChild(new MinimizeButton(
 			PARENT,
-			new Position(200, 5),
+			new Position(195, 1),
 			new Size(10, 10)
 		));
 	}

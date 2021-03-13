@@ -13,6 +13,7 @@ import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
 import ca.teamdman.sfm.common.util.SFMUtil;
+import java.util.Collection;
 import java.util.UUID;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.entity.player.PlayerInventory;
@@ -60,6 +61,10 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
 			data
 		));
+	}
+
+	public void sendFlowDataToServer(Collection<FlowData> data) {
+		sendFlowDataToServer(data.toArray(new FlowData[0]));
 	}
 
 	@Override

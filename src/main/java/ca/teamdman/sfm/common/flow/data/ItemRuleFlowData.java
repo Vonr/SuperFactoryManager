@@ -29,6 +29,8 @@ import java.util.Observer;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -42,8 +44,9 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class ItemStackTileEntityRuleFlowData extends FlowData implements
+public class ItemRuleFlowData extends FlowData implements
 	Observer {
+
 	public static final int MAX_NAME_LENGTH = 256;
 
 	private final FlowDataRemovedObserver OBSERVER;
@@ -57,7 +60,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	public SlotsRule slots;
 	public boolean open;
 
-	public ItemStackTileEntityRuleFlowData() {
+	public ItemRuleFlowData() {
 		this(
 			UUID.randomUUID(),
 			I18n.format("gui.sfm.flow.placeholder.default_rule_name"),
@@ -72,29 +75,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		);
 	}
 
-	public ItemStackTileEntityRuleFlowData copyWithNewId() {
-		return new ItemStackTileEntityRuleFlowData(this);
-	}
-
-	/**
-	 * Copy this rule, but with a new ID
-	 */
-	public ItemStackTileEntityRuleFlowData(ItemStackTileEntityRuleFlowData other) {
-		this(
-			UUID.randomUUID(),
-			other.name,
-			other.icon.copy(),
-			other.position.copy(),
-			other.filterMode,
-			new UUIDList(other.matcherIds),
-			new BlockPosList(other.tilePositions),
-			EnumSet.copyOf(other.faces),
-			other.slots.copy(),
-			other.open
-		);
-	}
-
-	public ItemStackTileEntityRuleFlowData(
+	public ItemRuleFlowData(
 		UUID uuid,
 		String name,
 		ItemStack icon,
@@ -123,15 +104,38 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	}
 
 	/**
+	 * Copy this rule, but with a new ID
+	 */
+	public ItemRuleFlowData(ItemRuleFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.name,
+			other.icon.copy(),
+			other.position.copy(),
+			other.filterMode,
+			new UUIDList(other.matcherIds),
+			new BlockPosList(other.tilePositions),
+			EnumSet.copyOf(other.faces),
+			other.slots.copy(),
+			other.open
+		);
+	}
+
+	/**
 	 * @return maximum amount allowed through according to this rule
 	 */
-	public Optional<ItemStackMatcher> getBestMatcher(BasicFlowDataContainer container, ItemStack stack, ExecutionState state) {
+	public Optional<ItemStackMatcher> getBestMatcher(
+		BasicFlowDataContainer container,
+		ItemStack stack,
+		ExecutionState state
+	) {
 		return matcherIds.stream()
 			.map(id -> container.get(id, ItemStackMatcher.class))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.filter(m -> m.matches(stack))
-			.max(Comparator.comparingInt(m -> state.getRemainingQuantity(this, m))); // Most remaining first
+			.max(Comparator
+				.comparingInt(m -> state.getRemainingQuantity(this, m))); // Most remaining first
 	}
 
 	public List<IItemHandler> getItemHandlers(World world, CableNetwork network) {
@@ -166,6 +170,26 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	}
 
 	@Override
+	public ItemRuleFlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+	) {
+		ItemRuleFlowData newRule = new ItemRuleFlowData(this);
+		dependencyTracker.accept(newRule);
+
+		newRule.matcherIds.clear();
+		matcherIds.stream()
+			.map(lookupFn)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.map(data -> data.duplicate(lookupFn, dependencyTracker)) // copy matcher data
+			.peek(dependencyTracker) // add new matcher to dependency tracker
+			.map(FlowData::getId)
+			.forEach(newRule.matcherIds::add); // add matcher to rule id list
+
+		return newRule;
+	}
+
+	@Override
 	public FlowComponent createController(
 		FlowComponent parent
 	) {
@@ -196,15 +220,15 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 	}
 
 	public static class Serializer extends
-		FlowDataSerializer<ItemStackTileEntityRuleFlowData> {
+		FlowDataSerializer<ItemRuleFlowData> {
 
 		public Serializer(ResourceLocation registryName) {
 			super(registryName);
 		}
 
 		@Override
-		public ItemStackTileEntityRuleFlowData fromNBT(CompoundNBT tag) {
-			return new ItemStackTileEntityRuleFlowData(
+		public ItemRuleFlowData fromNBT(CompoundNBT tag) {
+			return new ItemRuleFlowData(
 				UUID.fromString(tag.getString("uuid")),
 				tag.getString("name"),
 				ItemStack.read(tag.getCompound("icon")),
@@ -219,7 +243,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		}
 
 		@Override
-		public CompoundNBT toNBT(ItemStackTileEntityRuleFlowData data) {
+		public CompoundNBT toNBT(ItemRuleFlowData data) {
 			CompoundNBT tag = super.toNBT(data);
 			tag.put("pos", data.position.serializeNBT());
 			tag.putString("name", data.name);
@@ -234,8 +258,8 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		}
 
 		@Override
-		public ItemStackTileEntityRuleFlowData fromBuffer(PacketBuffer buf) {
-			return new ItemStackTileEntityRuleFlowData(
+		public ItemRuleFlowData fromBuffer(PacketBuffer buf) {
+			return new ItemRuleFlowData(
 				SFMUtil.readUUID(buf),
 				buf.readString(MAX_NAME_LENGTH),
 				buf.readItemStack(),
@@ -250,7 +274,7 @@ public class ItemStackTileEntityRuleFlowData extends FlowData implements
 		}
 
 		@Override
-		public void toBuffer(ItemStackTileEntityRuleFlowData data, PacketBuffer buf) {
+		public void toBuffer(ItemRuleFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeString(data.name, MAX_NAME_LENGTH);
 			buf.writeItemStack(data.icon);

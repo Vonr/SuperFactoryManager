@@ -8,7 +8,10 @@ import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSeri
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.annotation.Nonnull;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -23,11 +26,32 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 	public boolean open;
 
 
-	public ItemStackComparerMatcherFlowData(UUID uuid, ItemStack stack, int quantity, boolean open) {
+	public ItemStackComparerMatcherFlowData(ItemStackComparerMatcherFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.stack.copy(),
+			other.quantity,
+			other.open
+		);
+	}
+
+	public ItemStackComparerMatcherFlowData(
+		UUID uuid,
+		ItemStack stack,
+		int quantity,
+		boolean open
+	) {
 		super(uuid);
 		this.stack = stack;
 		this.quantity = quantity;
 		this.open = open;
+	}
+
+	@Override
+	public ItemStackComparerMatcherFlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+	) {
+		return new ItemStackComparerMatcherFlowData(this);
 	}
 
 	@Override

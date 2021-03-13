@@ -14,7 +14,10 @@ import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -22,6 +25,14 @@ import net.minecraft.util.ResourceLocation;
 public class RelationshipFlowData extends FlowData implements Observer {
 
 	public UUID from, to;
+
+	public RelationshipFlowData(RelationshipFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.from,
+			other.to
+		);
+	}
 
 	public RelationshipFlowData(UUID uuid, UUID from, UUID to) {
 		super(uuid);
@@ -31,13 +42,26 @@ public class RelationshipFlowData extends FlowData implements Observer {
 
 	@Override
 	public void addToDataContainer(BasicFlowDataContainer container) {
-		if (from == null || to == null) return;
-		if (from.equals(to)) return;
+		if (from == null || to == null) {
+			return;
+		}
+		if (from.equals(to)) {
+			return;
+		}
 		if (container.getAncestors(this, true)
 			.map(FlowData::getId)
-			.anyMatch(to::equals)) return;
+			.anyMatch(to::equals)) {
+			return;
+		}
 		super.addToDataContainer(container);
 		container.addObserver(this);
+	}
+
+	@Override
+	public RelationshipFlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+	) {
+		return new RelationshipFlowData(this);
 	}
 
 

@@ -15,13 +15,12 @@ import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 
@@ -30,13 +29,13 @@ public class ItemInputFlowButton extends FlowContainer implements
 
 	private final ManagerFlowController CONTROLLER;
 	private final MyFlowIconButton BUTTON;
-	private ItemStackTileEntityRuleFlowData ruleData;
+	private ItemRuleFlowData ruleData;
 	private ItemInputFlowData buttonData;
 
 	public ItemInputFlowButton(
 		ManagerFlowController controller,
 		ItemInputFlowData buttonData,
-		ItemStackTileEntityRuleFlowData ruleData
+		ItemRuleFlowData ruleData
 	) {
 		this.buttonData = buttonData;
 		this.ruleData = ruleData;
@@ -53,28 +52,27 @@ public class ItemInputFlowButton extends FlowContainer implements
 		controller.SCREEN.getFlowDataContainer()
 			.addObserver(new FlowDataHolderObserver<>(ItemInputFlowData.class, this));
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			ItemStackTileEntityRuleFlowData.class,
+			ItemRuleFlowData.class,
 			data -> data.getId().equals(ruleData.getId()),
 			this::setRuleData
 		));
 	}
 
-	public void setRuleData(ItemStackTileEntityRuleFlowData data) {
+	public void setRuleData(ItemRuleFlowData data) {
 		this.ruleData = data;
 		this.BUTTON.reloadFromRuleData();
 	}
 
 	@Override
 	public void cloneWithPosition(int x, int y) {
-		FlowData newRule = ruleData.copyWithNewId();
-		CONTROLLER.SCREEN.sendFlowDataToServer(
-			newRule,
-			new ItemInputFlowData(
-				UUID.randomUUID(),
-				new Position(x, y),
-				newRule.getId()
-			)
+		List<FlowData> newData = new ArrayList<>();
+		ItemInputFlowData newInput = getData().duplicate(
+			CONTROLLER.SCREEN.getFlowDataContainer()::get,
+			newData::add
 		);
+		newData.add(newInput);
+		newInput.position.setXY(x, y);
+		CONTROLLER.SCREEN.sendFlowDataToServer(newData);
 	}
 
 	@Override

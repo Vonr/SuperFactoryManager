@@ -8,9 +8,9 @@ import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
@@ -39,7 +39,7 @@ public class FlowDataSerializerRegistrar {
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "line_node")),
 			new TimerTriggerFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
-			new ItemStackTileEntityRuleFlowData
+			new ItemRuleFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_entity_rule")),
 			new ItemStackComparerMatcherFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher")),
@@ -73,7 +73,7 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<RelationshipFlowData> RELATIONSHIP = WAITING;
 		public static final FlowDataSerializer<LineNodeFlowData> LINE_NODE = WAITING;
 		public static final FlowDataSerializer<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;
-		public static final FlowDataSerializer<ItemStackTileEntityRuleFlowData> TILE_ENTITY_RULE = WAITING;
+		public static final FlowDataSerializer<ItemRuleFlowData> TILE_ENTITY_RULE = WAITING;
 		public static final FlowDataSerializer<ItemStackComparerMatcherFlowData> ITEM_STACK_COMPARER_MATCHER = WAITING;
 		public static final FlowDataSerializer<ItemStackModIdMatcherFlowData> ITEM_STACK_MOD_ID_MATCHER = WAITING;
 		public static final FlowDataSerializer<CursorFlowData> CURSOR = WAITING;

@@ -12,14 +12,14 @@ import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.HashSet;
 import java.util.Set;
 
 public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implements
-	FlowDataHolder<ItemStackTileEntityRuleFlowData> {
+	FlowDataHolder<ItemRuleFlowData> {
 
 	public final ManagerFlowController CONTROLLER;
 	private final TilesSection TILES_SECTION;
@@ -29,16 +29,16 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 	private final ToolbarSection TOOLBAR_SECTION;
 	private final FacesSection FACES_SECTION;
 	private final SlotsSection SLOTS_SECTION;
-	private ItemStackTileEntityRuleFlowData data;
+	private ItemRuleFlowData data;
 
 	public ItemStackTileEntityRuleFlowComponent(
-		ManagerFlowController controller, ItemStackTileEntityRuleFlowData data
+		ManagerFlowController controller, ItemRuleFlowData data
 	) {
 		super(data.getPosition(), new Size(215, 170));
 		this.CONTROLLER = controller;
 		this.data = data;
 
-		TOOLBAR_SECTION = new ToolbarSection(this, new Position(0, 5));
+		TOOLBAR_SECTION = new ToolbarSection(this, new Position(5, 5));
 		addChild(TOOLBAR_SECTION);
 
 		ICON_SECTION = new IconSection(this, new Position(5, 25));
@@ -61,7 +61,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 
 		// Add change listener
 		CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			ItemStackTileEntityRuleFlowData.class, this
+			ItemRuleFlowData.class, this
 		));
 
 		setDraggable(true);
@@ -119,12 +119,12 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 	}
 
 	@Override
-	public ItemStackTileEntityRuleFlowData getData() {
+	public ItemRuleFlowData getData() {
 		return data;
 	}
 
 	@Override
-	public void setData(ItemStackTileEntityRuleFlowData data) {
+	public void setData(ItemRuleFlowData data) {
 		this.data = data;
 		getPosition().setXY(data.getPosition());
 		ICON_SECTION.onDataChanged(data);
@@ -157,7 +157,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 				// when becoming visible, check if any other windows already open
 				// if so, use their position and close them
 				CONTROLLER.SCREEN.getFlowDataContainer()
-					.get(ItemStackTileEntityRuleFlowData.class)
+					.get(ItemRuleFlowData.class)
 					.filter(d -> !d.equals(getData()))
 					.filter(d -> d.open)
 					.forEach(d -> {
@@ -176,7 +176,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 				.forEach(c -> c.setVisible(false));
 		}
 		if (changed.size() > 0) {
-			CONTROLLER.SCREEN.sendFlowDataToServer(changed.toArray(new FlowData[0]));
+			CONTROLLER.SCREEN.sendFlowDataToServer(changed);
 		}
 	}
 

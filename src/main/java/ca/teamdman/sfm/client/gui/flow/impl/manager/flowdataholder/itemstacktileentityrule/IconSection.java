@@ -3,7 +3,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktil
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import net.minecraft.client.resources.I18n;
 
 class IconSection extends FlowContainer {
@@ -25,7 +25,7 @@ class IconSection extends FlowContainer {
 		addChild(ICON);
 	}
 
-	public void onDataChanged(ItemStackTileEntityRuleFlowData data) {
+	public void onDataChanged(ItemRuleFlowData data) {
 		ICON.BUTTON.setItemStack(data.icon);
 	}
 

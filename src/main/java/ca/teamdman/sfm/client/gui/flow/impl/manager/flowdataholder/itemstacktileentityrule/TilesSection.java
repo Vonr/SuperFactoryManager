@@ -9,7 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -91,7 +91,7 @@ class TilesSection extends FlowContainer {
 		DRAWER.update();
 	}
 
-	public void onDataChanged(ItemStackTileEntityRuleFlowData data) {
+	public void onDataChanged(ItemRuleFlowData data) {
 		rebuildChildren();
 	}
 

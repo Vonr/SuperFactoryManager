@@ -11,7 +11,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +45,7 @@ public class ItemOutputSpawnerFlowButton extends FlowIconButton {
 			clicking = false;
 			CONTROLLER.findFirstChild(CloneController.class).ifPresent(cloner -> {
 				// create default rule data
-				ItemStackTileEntityRuleFlowData ruleData = new ItemStackTileEntityRuleFlowData();
+				ItemRuleFlowData ruleData = new ItemRuleFlowData();
 
 				// create button data
 				ItemOutputFlowData buttonData = new ItemOutputFlowData(

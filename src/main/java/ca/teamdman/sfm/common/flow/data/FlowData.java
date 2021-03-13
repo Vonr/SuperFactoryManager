@@ -6,8 +6,11 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -31,6 +34,15 @@ public abstract class FlowData {
 	public void removeFromDataContainer(BasicFlowDataContainer container) {
 		container.remove(getId());
 	}
+
+	/**
+	 * Copy this flow data, and all its dependencies, assigning new IDs to anything with an ID.
+	 * @return Duplicate of this FlowData
+	 */
+	public abstract FlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn,
+		Consumer<FlowData> dependencyTracker
+	);
 
 	public boolean isValidRelationshipTarget() {
 		return false;

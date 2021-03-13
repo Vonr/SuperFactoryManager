@@ -14,17 +14,28 @@ import ca.teamdman.sfm.common.util.SFMUtil;
 import com.google.common.collect.ImmutableSet;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
 public class ItemOutputFlowData extends FlowData implements Observer {
 
+	private final FlowDataRemovedObserver OBSERVER;
 	public Position position;
 	public UUID tileEntityRule;
-	private final FlowDataRemovedObserver OBSERVER;
+
+	public ItemOutputFlowData(ItemOutputFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.position.copy(),
+			other.tileEntityRule
+		);
+	}
 
 	public ItemOutputFlowData(UUID uuid, Position position, UUID tileEntityRule) {
 		super(uuid);
@@ -44,8 +55,16 @@ public class ItemOutputFlowData extends FlowData implements Observer {
 	}
 
 	@Override
-	public void update(Observable o, Object arg) {
-		OBSERVER.update(o, arg);
+	public ItemOutputFlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+	) {
+		ItemOutputFlowData newOutput = new ItemOutputFlowData(this);
+		lookupFn.apply(newOutput.tileEntityRule).ifPresent(data -> {
+			FlowData newData = data.duplicate(lookupFn, dependencyTracker);
+			dependencyTracker.accept(newData);
+			newOutput.tileEntityRule = newData.getId();
+		});
+		return newOutput;
 	}
 
 	@Override
@@ -62,8 +81,8 @@ public class ItemOutputFlowData extends FlowData implements Observer {
 				(ManagerFlowController) parent,
 				this,
 				((ManagerFlowController) parent).SCREEN.getFlowDataContainer()
-					.get(tileEntityRule, ItemStackTileEntityRuleFlowData.class)
-					.orElseGet(ItemStackTileEntityRuleFlowData::new)
+					.get(tileEntityRule, ItemRuleFlowData.class)
+					.orElseGet(ItemRuleFlowData::new)
 			);
 		}
 		return null;
@@ -71,12 +90,17 @@ public class ItemOutputFlowData extends FlowData implements Observer {
 
 	@Override
 	public Set<Class<? extends FlowData>> getDependencies() {
-		return ImmutableSet.of(ItemStackTileEntityRuleFlowData.class);
+		return ImmutableSet.of(ItemRuleFlowData.class);
 	}
 
 	@Override
 	public FlowDataSerializer getSerializer() {
 		return FlowDataSerializers.BASIC_OUTPUT;
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		OBSERVER.update(o, arg);
 	}
 
 	public Position getPosition() {

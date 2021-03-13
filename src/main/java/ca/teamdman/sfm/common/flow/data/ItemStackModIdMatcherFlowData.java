@@ -8,7 +8,10 @@ import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import net.minecraft.client.resources.I18n;
@@ -19,17 +22,33 @@ import net.minecraft.util.ResourceLocation;
 
 public class ItemStackModIdMatcherFlowData extends FlowData implements ItemStackMatcher {
 
-	private List<ItemStack> preview;
 	public String modId;
 	public int quantity;
 	public boolean open;
+	private List<ItemStack> preview;
 
+
+	public ItemStackModIdMatcherFlowData(ItemStackModIdMatcherFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.modId,
+			other.quantity,
+			other.open
+		);
+	}
 
 	public ItemStackModIdMatcherFlowData(UUID uuid, String modId, int quantity, boolean open) {
 		super(uuid);
 		this.modId = modId;
 		this.quantity = quantity;
 		this.open = open;
+	}
+
+	@Override
+	public ItemStackModIdMatcherFlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+	) {
+		return new ItemStackModIdMatcherFlowData(this);
 	}
 
 	@Override
@@ -46,36 +65,6 @@ public class ItemStackModIdMatcherFlowData extends FlowData implements ItemStack
 	@Override
 	public FlowDataSerializer getSerializer() {
 		return FlowDataSerializers.ITEM_STACK_MOD_ID_MATCHER;
-	}
-
-
-	@Override
-	public boolean matches(@Nonnull ItemStack stack) {
-		return stack.getItem().getRegistryName().getNamespace().equals(modId);
-	}
-
-	@Override
-	public int getQuantity() {
-		return quantity == 0 ? Integer.MAX_VALUE : quantity;
-	}
-
-
-	@Override
-	public List<ItemStack> getPreview() {
-		if (preview == null) {
-			// only fetch preview when not on server
-			return preview = ItemStackSearchIndexer.getSearchableItems()
-				.filter(this::matches)
-				.limit(100)
-				.collect(Collectors.toList());
-		} else {
-			return preview;
-		}
-	}
-
-	@Override
-	public String getMatcherDisplayName() {
-		return I18n.format("gui.sfm.flow.tooltip.item_stack_mod_id_matcher");
 	}
 
 	public static class Serializer extends
@@ -123,4 +112,35 @@ public class ItemStackModIdMatcherFlowData extends FlowData implements ItemStack
 			buf.writeBoolean(data.open);
 		}
 	}
+
+	@Override
+	public boolean matches(@Nonnull ItemStack stack) {
+		return stack.getItem().getRegistryName().getNamespace().equals(modId);
+	}
+
+	@Override
+	public int getQuantity() {
+		return quantity == 0 ? Integer.MAX_VALUE : quantity;
+	}
+
+
+	@Override
+	public List<ItemStack> getPreview() {
+		if (preview == null) {
+			// only fetch preview when not on server
+			return preview = ItemStackSearchIndexer.getSearchableItems()
+				.filter(this::matches)
+				.limit(100)
+				.collect(Collectors.toList());
+		} else {
+			return preview;
+		}
+	}
+
+	@Override
+	public String getMatcherDisplayName() {
+		return I18n.format("gui.sfm.flow.tooltip.item_stack_mod_id_matcher");
+	}
+
+
 }

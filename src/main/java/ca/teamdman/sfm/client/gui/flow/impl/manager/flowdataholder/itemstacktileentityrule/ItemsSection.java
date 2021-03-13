@@ -6,7 +6,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import java.util.Optional;
 import net.minecraft.client.resources.I18n;
 
@@ -33,7 +33,7 @@ class ItemsSection extends FlowContainer {
 	}
 
 	public void onDataChanged(
-		ItemStackTileEntityRuleFlowData data
+		ItemRuleFlowData data
 	) {
 		rebuildChildren();
 	}

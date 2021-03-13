@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.common.tile.manager;
 
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData.FilterMode;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData.FilterMode;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -12,7 +12,7 @@ public class ExecutionState {
 	private final Map<ItemStackMatcher, Integer> USAGE_HISTORY = new Object2IntOpenHashMap<>();
 
 	public int getRemainingQuantity(
-		ItemStackTileEntityRuleFlowData rule,
+		ItemRuleFlowData rule,
 		@Nullable ItemStackMatcher matcher
 	) {
 		if (rule.filterMode == FilterMode.WHITELIST) {

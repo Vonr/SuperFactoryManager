@@ -10,7 +10,10 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -18,6 +21,13 @@ import net.minecraft.util.ResourceLocation;
 public class ToolboxFlowData extends FlowData {
 
 	public Position position;
+
+	public ToolboxFlowData(ToolboxFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.position.copy()
+		);
+	}
 
 	public ToolboxFlowData(UUID uuid, Position position) {
 		super(uuid);
@@ -27,6 +37,13 @@ public class ToolboxFlowData extends FlowData {
 	@Override
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		super.addToDataContainer(container);
+	}
+
+	@Override
+	public ToolboxFlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+	) {
+		return new ToolboxFlowData(this);
 	}
 
 	@Override

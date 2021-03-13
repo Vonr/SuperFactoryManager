@@ -14,7 +14,10 @@ import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSeri
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -22,6 +25,13 @@ import net.minecraft.util.ResourceLocation;
 public class LineNodeFlowData extends FlowData implements Observer {
 
 	public Position position;
+
+	public LineNodeFlowData(LineNodeFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.position.copy()
+		);
+	}
 
 	public LineNodeFlowData(UUID uuid, Position position) {
 		super(uuid);
@@ -32,6 +42,13 @@ public class LineNodeFlowData extends FlowData implements Observer {
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		super.addToDataContainer(container);
 		container.addObserver(this);
+	}
+
+	@Override
+	public LineNodeFlowData duplicate(
+		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+	) {
+		return new LineNodeFlowData(this);
 	}
 
 	@Override

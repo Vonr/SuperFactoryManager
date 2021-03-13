@@ -5,8 +5,8 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.RadioFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.RadioFlowButton.RadioGroup;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData.FilterMode;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData.FilterMode;
 import net.minecraft.client.resources.I18n;
 
 class FilterSection extends FlowContainer {
@@ -57,7 +57,7 @@ class FilterSection extends FlowContainer {
 
 
 	public void onDataChanged(
-		ItemStackTileEntityRuleFlowData data
+		ItemRuleFlowData data
 	) {
 		ITEM_SELECTION_MODE_GROUP.setSelected(
 			data.filterMode == FilterMode.WHITELIST

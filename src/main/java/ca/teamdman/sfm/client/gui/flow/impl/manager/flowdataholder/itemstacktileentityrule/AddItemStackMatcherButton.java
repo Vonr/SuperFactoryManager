@@ -10,9 +10,9 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackComparerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemStackModIdMatcherFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,14 +25,14 @@ import net.minecraft.util.text.TranslationTextComponent;
 class AddItemStackMatcherButton extends FlowPlusButton {
 
 	private ManagerFlowController CONTROLLER;
-	private ItemStackTileEntityRuleFlowData data;
+	private ItemRuleFlowData data;
 	private final List<FlowComponent> TOOLBOX_BUTTONS = Lists.newArrayList(
 		new AddItemStackComparerMatcherToolboxButton(),
 		new AddModIdMatcher()
 	);
 
 	public AddItemStackMatcherButton(
-		ManagerFlowController CONTROLLER, ItemStackTileEntityRuleFlowData data,
+		ManagerFlowController CONTROLLER, ItemRuleFlowData data,
 		Position pos
 	) {
 		super(pos, ItemStackFlowComponent.DEFAULT_SIZE, CONST.ADD_BUTTON);

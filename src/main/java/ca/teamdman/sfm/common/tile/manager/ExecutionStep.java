@@ -7,7 +7,7 @@ import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemStackTileEntityRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -23,7 +23,7 @@ import net.minecraftforge.items.IItemHandler;
 
 public class ExecutionStep {
 
-	private final List<ItemStackTileEntityRuleFlowData> INPUTS = new ArrayList<>();
+	private final List<ItemRuleFlowData> INPUTS = new ArrayList<>();
 	private final ManagerTileEntity TILE;
 	private final FlowData CURRENT;
 	private final ExecutionState STATE;
@@ -42,11 +42,11 @@ public class ExecutionStep {
 		BasicFlowDataContainer container = TILE.getFlowDataContainer();
 		if (CURRENT instanceof ItemInputFlowData) {
 			UUID ruleId = ((ItemInputFlowData) CURRENT).tileEntityRule;
-			container.get(ruleId, ItemStackTileEntityRuleFlowData.class).ifPresent(INPUTS::add);
+			container.get(ruleId, ItemRuleFlowData.class).ifPresent(INPUTS::add);
 		} else if (CURRENT instanceof ItemOutputFlowData) {
 			UUID ruleId = ((ItemOutputFlowData) CURRENT).tileEntityRule;
 			CableNetworkManager.getOrRegisterNetwork(TILE).ifPresent(network ->
-				container.get(ruleId, ItemStackTileEntityRuleFlowData.class)
+				container.get(ruleId, ItemRuleFlowData.class)
 					.ifPresent(rule -> satisfyOutput(network, rule)));
 
 		}
@@ -60,14 +60,14 @@ public class ExecutionStep {
 			.collect(Collectors.toList());
 	}
 
-	private void satisfyOutput(CableNetwork network, ItemStackTileEntityRuleFlowData outRule) {
+	private void satisfyOutput(CableNetwork network, ItemRuleFlowData outRule) {
 		BasicFlowDataContainer dataContainer = TILE.getFlowDataContainer();
 		World world = TILE.getWorld();
 		Objects.requireNonNull(world);
 		List<IItemHandler> outHandlers = outRule.getItemHandlers(world, network);
 
 		// for each input rule hit so far during flow execution
-		for (ItemStackTileEntityRuleFlowData inRule : INPUTS) {
+		for (ItemRuleFlowData inRule : INPUTS) {
 
 			// for each tile defined in the input rule
 			for (IItemHandler inHandler : inRule.getItemHandlers(world, network)) {
