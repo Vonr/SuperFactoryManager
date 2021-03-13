@@ -5,7 +5,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
@@ -13,7 +12,6 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowSprite;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
@@ -25,7 +23,7 @@ import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 
 public class ItemInputFlowButton extends FlowContainer implements
-	IFlowCloneable, FlowDataHolder<ItemInputFlowData> {
+	FlowDataHolder<ItemInputFlowData> {
 
 	private final ManagerFlowController CONTROLLER;
 	private final MyFlowIconButton BUTTON;
@@ -64,18 +62,6 @@ public class ItemInputFlowButton extends FlowContainer implements
 	}
 
 	@Override
-	public void cloneWithPosition(int x, int y) {
-		List<FlowData> newData = new ArrayList<>();
-		ItemInputFlowData newInput = getData().duplicate(
-			CONTROLLER.SCREEN.getFlowDataContainer(),
-			newData::add
-		);
-		newData.add(newInput);
-		newInput.position.setXY(x, y);
-		CONTROLLER.SCREEN.sendFlowDataToServer(newData);
-	}
-
-	@Override
 	public ItemInputFlowData getData() {
 		return buttonData;
 	}
@@ -88,6 +74,11 @@ public class ItemInputFlowButton extends FlowContainer implements
 
 	@Override
 	public boolean isDeletable() {
+		return true;
+	}
+
+	@Override
+	public boolean isCloneable() {
 		return true;
 	}
 
@@ -113,13 +104,6 @@ public class ItemInputFlowButton extends FlowContainer implements
 		}
 
 		@Override
-		public List<? extends ITextProperties> getTooltip() {
-			List<ITextProperties> rtn = new ArrayList<>();
-			rtn.add(new StringTextComponent(ruleData.name));
-			return rtn;
-		}
-
-		@Override
 		public void onClicked(int mx, int my, int button) {
 			CONTROLLER.findFirstChild(buttonData.tileEntityRule)
 				.ifPresent(FlowComponent::toggleVisibilityAndEnabled);
@@ -129,6 +113,13 @@ public class ItemInputFlowButton extends FlowContainer implements
 		public void onDragFinished(int dx, int dy, int mx, int my) {
 			buttonData.position = getPosition();
 			CONTROLLER.SCREEN.sendFlowDataToServer(buttonData);
+		}
+
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			List<ITextProperties> rtn = new ArrayList<>();
+			rtn.add(new StringTextComponent(ruleData.name));
+			return rtn;
 		}
 
 		public void reloadFromRuleData() {

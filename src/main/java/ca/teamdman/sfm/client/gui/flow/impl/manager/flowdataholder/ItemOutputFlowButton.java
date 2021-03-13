@@ -5,7 +5,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
@@ -13,7 +12,6 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowSprite;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
@@ -25,7 +23,7 @@ import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 
 public class ItemOutputFlowButton extends FlowContainer implements
-	IFlowCloneable, FlowDataHolder<ItemOutputFlowData> {
+	FlowDataHolder<ItemOutputFlowData> {
 
 	private final ManagerFlowController CONTROLLER;
 	private final MyFlowIconButton BUTTON;
@@ -64,18 +62,6 @@ public class ItemOutputFlowButton extends FlowContainer implements
 	}
 
 	@Override
-	public void cloneWithPosition(int x, int y) {
-		List<FlowData> newData = new ArrayList<>();
-		ItemOutputFlowData newOutput = getData().duplicate(
-			CONTROLLER.SCREEN.getFlowDataContainer(),
-			newData::add
-		);
-		newData.add(newOutput);
-		newOutput.position.setXY(x, y);
-		CONTROLLER.SCREEN.sendFlowDataToServer(newData);
-	}
-
-	@Override
 	public ItemOutputFlowData getData() {
 		return buttonData;
 	}
@@ -88,6 +74,11 @@ public class ItemOutputFlowButton extends FlowContainer implements
 
 	@Override
 	public boolean isDeletable() {
+		return true;
+	}
+
+	@Override
+	public boolean isCloneable() {
 		return true;
 	}
 

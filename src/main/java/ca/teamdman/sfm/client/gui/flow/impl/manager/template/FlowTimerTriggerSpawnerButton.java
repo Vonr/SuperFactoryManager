@@ -49,7 +49,7 @@ public class FlowTimerTriggerSpawnerButton extends FlowIconButton {
 					false
 				);
 				TimerTriggerFlowComponent comp = new TimerTriggerFlowComponent(CONTROLLER, data);
-				cloner.setCloning(comp);
+				cloner.startCloning(comp, null);
 			});
 			return true;
 		}

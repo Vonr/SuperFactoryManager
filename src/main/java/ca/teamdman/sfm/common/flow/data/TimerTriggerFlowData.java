@@ -7,6 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.timertrigger.TimerTriggerFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -16,7 +17,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class TimerTriggerFlowData extends FlowData {
+public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 
 	public Position position;
 	public int interval;
@@ -65,6 +66,7 @@ public class TimerTriggerFlowData extends FlowData {
 		return FlowDataSerializers.TIMER_TRIGGER;
 	}
 
+	@Override
 	public Position getPosition() {
 		return position;
 	}

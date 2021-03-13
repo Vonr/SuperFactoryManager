@@ -11,4 +11,5 @@ public interface FlowDataHolder<T extends FlowData> {
 	default boolean isDeletable() {
 		return false;
 	}
+	default boolean isCloneable() { return false; }
 }

@@ -12,6 +12,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -44,8 +45,11 @@ public class ItemInputSpawnerFlowButton extends FlowIconButton {
 		if (clicking) {
 			clicking = false;
 			CONTROLLER.findFirstChild(CloneController.class).ifPresent(cloner -> {
+				BasicFlowDataContainer container = new BasicFlowDataContainer();
+
 				// create default rule data
 				ItemRuleFlowData ruleData = new ItemRuleFlowData();
+				container.put(ruleData);
 
 				// create button data
 				ItemInputFlowData buttonData = new ItemInputFlowData(
@@ -58,7 +62,7 @@ public class ItemInputSpawnerFlowButton extends FlowIconButton {
 				FlowComponent comp = new ItemInputFlowButton(CONTROLLER, buttonData, ruleData);
 
 				// set component as cloning
-				cloner.setCloning(comp);
+				cloner.startCloning(comp, container);
 			});
 			return true;
 		}

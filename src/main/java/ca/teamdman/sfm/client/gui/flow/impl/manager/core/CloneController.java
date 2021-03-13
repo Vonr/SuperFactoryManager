@@ -5,23 +5,42 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.screen.Screen;
 
 public class CloneController extends FlowComponent {
 
 	public final ManagerFlowController CONTROLLER;
 	private FlowComponent cloning = null;
+	private BasicFlowDataContainer container = null;
 
 	public CloneController(ManagerFlowController CONTROLLER) {
 		this.CONTROLLER = CONTROLLER;
 	}
 
-	public void setCloning(FlowComponent comp) {
-		cloning = comp;
+	/**
+	 * Start cloning a component
+	 * @param comp
+	 * @param container container to lookup component dependencies
+	 * @return true if successfully started cloning
+	 */
+	public boolean startCloning(
+		FlowComponent comp,
+		BasicFlowDataContainer container
+	) {
+		if (comp instanceof FlowDataHolder && ((FlowDataHolder<?>) comp).isCloneable()) {
+			cloning = comp;
+			this.container = container;
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -29,16 +48,25 @@ public class CloneController extends FlowComponent {
 		if (!Screen.hasControlDown()) {
 			return false;
 		}
-		Optional<FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my)
-			.filter(c -> c instanceof IFlowCloneable);
-		hit.ifPresent(c -> cloning = c);
-		return hit.isPresent();
+		return CONTROLLER.getElementUnderMouse(mx, my)
+			.map(hit -> startCloning(hit, CONTROLLER.SCREEN.getFlowDataContainer()))
+			.orElse(false);
 	}
 
 	@Override
 	public boolean mouseReleased(int mx, int my, int button) {
 		if (cloning != null) {
-			((IFlowCloneable) cloning).cloneWithPosition(mx, my);
+//			((IFlowCloneable) cloning).cloneWithPosition(mx, my);
+			List<FlowData> newData = new ArrayList<>();
+			FlowData data = ((FlowDataHolder<?>) cloning).getData().duplicate(
+				container,
+				newData::add
+			);
+			newData.add(data);
+			if (data instanceof PositionHolder) {
+				((PositionHolder) data).getPosition().setXY(mx, my);
+			}
+			CONTROLLER.SCREEN.sendFlowDataToServer(newData);
 			cloning = null;
 			return true;
 		}

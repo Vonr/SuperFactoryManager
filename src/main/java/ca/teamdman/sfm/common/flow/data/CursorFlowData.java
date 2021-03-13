@@ -4,6 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowCursor;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -14,16 +15,10 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class CursorFlowData extends FlowData {
+public class CursorFlowData extends FlowData implements PositionHolder {
 
 	public String playerName;
 	public Position position;
-
-	public CursorFlowData(UUID uuid, String playerName, Position position) {
-		super(uuid);
-		this.playerName = playerName;
-		this.position = position;
-	}
 
 	public CursorFlowData(CursorFlowData other) {
 		this(
@@ -31,6 +26,12 @@ public class CursorFlowData extends FlowData {
 			other.playerName,
 			other.position.copy()
 		);
+	}
+
+	public CursorFlowData(UUID uuid, String playerName, Position position) {
+		super(uuid);
+		this.playerName = playerName;
+		this.position = position;
 	}
 
 	@Override
@@ -52,6 +53,11 @@ public class CursorFlowData extends FlowData {
 	@Override
 	public FlowDataSerializer getSerializer() {
 		return FlowDataSerializers.CURSOR;
+	}
+
+	@Override
+	public Position getPosition() {
+		return position;
 	}
 
 	public static class Serializer extends

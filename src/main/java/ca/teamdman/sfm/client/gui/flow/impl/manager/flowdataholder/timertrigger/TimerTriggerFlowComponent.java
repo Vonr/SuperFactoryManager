@@ -4,7 +4,6 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.timertrigger;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.core.IFlowCloneable;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
@@ -14,11 +13,10 @@ import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class TimerTriggerFlowComponent extends FlowContainer implements IFlowCloneable,
+public class TimerTriggerFlowComponent extends FlowContainer implements
 	FlowDataHolder<TimerTriggerFlowData> {
 
 	final ManagerFlowController CONTROLLER;
@@ -66,6 +64,16 @@ public class TimerTriggerFlowComponent extends FlowContainer implements IFlowClo
 	}
 
 	@Override
+	public boolean isDeletable() {
+		return true;
+	}
+
+	@Override
+	public boolean isCloneable() {
+		return true;
+	}
+
+	@Override
 	public Position getCentroid() {
 		return BUTTON.getCentroid();
 	}
@@ -82,20 +90,4 @@ public class TimerTriggerFlowComponent extends FlowContainer implements IFlowClo
 		return super.getElementUnderMouse(mx, my).map(__ -> this);
 	}
 
-	@Override
-	public void cloneWithPosition(int x, int y) {
-		CONTROLLER.SCREEN.sendFlowDataToServer(
-			new TimerTriggerFlowData(
-				UUID.randomUUID(),
-				new Position(x, y),
-				data.interval,
-				false
-			)
-		);
-	}
-
-	@Override
-	public boolean isDeletable() {
-		return true;
-	}
 }

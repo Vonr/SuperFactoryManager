@@ -7,6 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowToolbox;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -16,7 +17,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class ToolboxFlowData extends FlowData {
+public class ToolboxFlowData extends FlowData implements PositionHolder {
 
 	public Position position;
 
@@ -59,6 +60,7 @@ public class ToolboxFlowData extends FlowData {
 		return FlowDataSerializers.TOOLBOX;
 	}
 
+	@Override
 	public Position getPosition() {
 		return position;
 	}

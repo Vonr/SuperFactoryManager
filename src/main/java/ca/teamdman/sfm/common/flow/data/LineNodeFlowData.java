@@ -7,6 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowLineNode;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
@@ -20,7 +21,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class LineNodeFlowData extends FlowData implements Observer {
+public class LineNodeFlowData extends FlowData implements Observer, PositionHolder {
 
 	public Position position;
 
@@ -69,6 +70,7 @@ public class LineNodeFlowData extends FlowData implements Observer {
 		return FlowDataSerializers.LINE_NODE;
 	}
 
+	@Override
 	public Position getPosition() {
 		return position;
 	}
