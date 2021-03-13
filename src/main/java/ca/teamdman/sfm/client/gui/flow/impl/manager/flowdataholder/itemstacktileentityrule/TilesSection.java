@@ -27,10 +27,10 @@ import org.lwjgl.glfw.GLFW;
 class TilesSection extends FlowContainer {
 
 	private final FlowDrawer DRAWER;
-	private final ItemStackTileEntityRuleFlowComponent PARENT;
+	private final ItemRuleFlowComponent PARENT;
 	private final FlowBlockPosPicker PICKER;
 
-	public TilesSection(ItemStackTileEntityRuleFlowComponent parent, Position pos) {
+	public TilesSection(ItemRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 

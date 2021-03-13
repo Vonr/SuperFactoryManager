@@ -14,9 +14,9 @@ class FilterSection extends FlowContainer {
 	private final RadioGroup ITEM_SELECTION_MODE_GROUP;
 	private final RadioFlowButton WHITELIST_BUTTON;
 	private final RadioFlowButton BLACKLIST_BUTTON;
-	private ItemStackTileEntityRuleFlowComponent PARENT;
+	private ItemRuleFlowComponent PARENT;
 
-	public FilterSection(ItemStackTileEntityRuleFlowComponent parent, Position pos) {
+	public FilterSection(ItemRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 

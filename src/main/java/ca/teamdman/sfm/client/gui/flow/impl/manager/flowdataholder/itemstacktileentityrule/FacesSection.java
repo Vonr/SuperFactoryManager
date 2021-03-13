@@ -10,7 +10,7 @@ import net.minecraft.util.Direction;
 
 public class FacesSection extends FlowContainer {
 
-	private final ItemStackTileEntityRuleFlowComponent PARENT;
+	private final ItemRuleFlowComponent PARENT;
 
 	private final FaceFlowButton NORTH;
 	private final FaceFlowButton EAST;
@@ -19,7 +19,7 @@ public class FacesSection extends FlowContainer {
 	private final FaceFlowButton UP;
 	private final FaceFlowButton DOWN;
 
-	public FacesSection(ItemStackTileEntityRuleFlowComponent parent, Position pos) {
+	public FacesSection(ItemRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 

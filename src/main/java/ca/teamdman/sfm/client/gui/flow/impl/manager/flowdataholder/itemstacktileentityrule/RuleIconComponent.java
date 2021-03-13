@@ -16,12 +16,12 @@ import org.lwjgl.glfw.GLFW;
 
 class RuleIconComponent extends FlowContainer {
 
-	private final ItemStackTileEntityRuleFlowComponent PARENT;
+	private final ItemRuleFlowComponent PARENT;
 	private final FlowItemStackPicker PICKER;
 	protected final ItemStackFlowComponent BUTTON;
 
 	public RuleIconComponent(
-		ItemStackTileEntityRuleFlowComponent parent,
+		ItemRuleFlowComponent parent,
 		Position pos
 	) {
 		super(pos);

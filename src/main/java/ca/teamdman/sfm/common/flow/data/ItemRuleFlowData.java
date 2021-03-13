@@ -6,7 +6,7 @@ package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule.ItemStackTileEntityRuleFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule.ItemRuleFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -198,7 +198,7 @@ public class ItemRuleFlowData extends FlowData implements
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;
 		}
-		return new ItemStackTileEntityRuleFlowComponent((ManagerFlowController) parent, this);
+		return new ItemRuleFlowComponent((ManagerFlowController) parent, this);
 	}
 
 	@Override

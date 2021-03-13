@@ -14,11 +14,11 @@ import net.minecraft.util.text.TextFormatting;
 
 public class SlotsSection extends FlowContainer {
 
-	private final ItemStackTileEntityRuleFlowComponent PARENT;
+	private final ItemRuleFlowComponent PARENT;
 	private final TextAreaFlowComponent INPUT;
 
 	public SlotsSection(
-		ItemStackTileEntityRuleFlowComponent PARENT,
+		ItemRuleFlowComponent PARENT,
 		Position pos
 	) {
 		super(pos);

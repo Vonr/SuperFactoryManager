@@ -8,10 +8,10 @@ import net.minecraft.client.resources.I18n;
 
 class IconSection extends FlowContainer {
 
-	private ItemStackTileEntityRuleFlowComponent PARENT;
+	private ItemRuleFlowComponent PARENT;
 	private final RuleIconComponent ICON;
 
-	public IconSection(ItemStackTileEntityRuleFlowComponent parent,Position pos) {
+	public IconSection(ItemRuleFlowComponent parent,Position pos) {
 		super(pos);
 		PARENT = parent;
 

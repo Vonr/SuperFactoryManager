@@ -8,10 +8,10 @@ import net.minecraft.client.resources.I18n;
 
 public class ToolbarSection extends FlowContainer {
 
-	private ItemStackTileEntityRuleFlowComponent PARENT;
+	private ItemRuleFlowComponent PARENT;
 	private TextAreaFlowComponent TITLE;
 
-	public ToolbarSection(ItemStackTileEntityRuleFlowComponent parent, Position pos) {
+	public ToolbarSection(ItemRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 

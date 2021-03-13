@@ -18,7 +18,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implements
+public class ItemRuleFlowComponent extends FlowContainer implements
 	FlowDataHolder<ItemRuleFlowData> {
 
 	public final ManagerFlowController CONTROLLER;
@@ -31,7 +31,7 @@ public class ItemStackTileEntityRuleFlowComponent extends FlowContainer implemen
 	private final SlotsSection SLOTS_SECTION;
 	private ItemRuleFlowData data;
 
-	public ItemStackTileEntityRuleFlowComponent(
+	public ItemRuleFlowComponent(
 		ManagerFlowController controller, ItemRuleFlowData data
 	) {
 		super(data.getPosition(), new Size(215, 170));

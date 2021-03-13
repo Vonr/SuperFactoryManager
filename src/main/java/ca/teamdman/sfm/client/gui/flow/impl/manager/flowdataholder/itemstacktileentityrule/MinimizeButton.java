@@ -14,15 +14,15 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 class MinimizeButton extends FlowMinusButton {
 
-	private final ItemStackTileEntityRuleFlowComponent PARENT;
+	private final ItemRuleFlowComponent PARENT;
 
 	public MinimizeButton(
-		ItemStackTileEntityRuleFlowComponent itemStackTileEntityRuleFlowComponent,
+		ItemRuleFlowComponent rule,
 		Position pos,
 		Size size
 	) {
 		super(pos, size, CONST.MINIMIZE);
-		this.PARENT = itemStackTileEntityRuleFlowComponent;
+		this.PARENT = rule;
 	}
 
 	@Override

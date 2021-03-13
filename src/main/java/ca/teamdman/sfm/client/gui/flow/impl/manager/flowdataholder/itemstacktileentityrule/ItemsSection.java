@@ -13,9 +13,9 @@ import net.minecraft.client.resources.I18n;
 class ItemsSection extends FlowContainer {
 
 	protected final FlowDrawer DRAWER;
-	protected ItemStackTileEntityRuleFlowComponent PARENT;
+	protected ItemRuleFlowComponent PARENT;
 
-	public ItemsSection(ItemStackTileEntityRuleFlowComponent parent, Position pos) {
+	public ItemsSection(ItemRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 
