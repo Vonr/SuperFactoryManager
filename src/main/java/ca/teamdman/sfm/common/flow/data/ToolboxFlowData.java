@@ -10,10 +10,8 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -41,7 +39,7 @@ public class ToolboxFlowData extends FlowData {
 
 	@Override
 	public ToolboxFlowData duplicate(
-		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
 		return new ToolboxFlowData(this);
 	}

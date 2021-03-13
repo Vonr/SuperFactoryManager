@@ -4,14 +4,13 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstackcomparermatcher.ItemStackComparerMatcherFlowComponent;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import javax.annotation.Nonnull;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -49,7 +48,7 @@ public class ItemStackComparerMatcherFlowData extends FlowData implements ItemSt
 
 	@Override
 	public ItemStackComparerMatcherFlowData duplicate(
-		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
 		return new ItemStackComparerMatcherFlowData(this);
 	}

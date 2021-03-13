@@ -14,10 +14,8 @@ import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -59,7 +57,7 @@ public class RelationshipFlowData extends FlowData implements Observer {
 
 	@Override
 	public RelationshipFlowData duplicate(
-		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
 		return new RelationshipFlowData(this);
 	}

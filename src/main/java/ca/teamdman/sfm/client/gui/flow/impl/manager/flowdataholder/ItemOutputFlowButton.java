@@ -67,7 +67,7 @@ public class ItemOutputFlowButton extends FlowContainer implements
 	public void cloneWithPosition(int x, int y) {
 		List<FlowData> newData = new ArrayList<>();
 		ItemOutputFlowData newOutput = getData().duplicate(
-			CONTROLLER.SCREEN.getFlowDataContainer()::get,
+			CONTROLLER.SCREEN.getFlowDataContainer(),
 			newData::add
 		);
 		newData.add(newOutput);

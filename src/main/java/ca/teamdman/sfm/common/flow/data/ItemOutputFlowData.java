@@ -14,11 +14,9 @@ import ca.teamdman.sfm.common.util.SFMUtil;
 import com.google.common.collect.ImmutableSet;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -56,11 +54,11 @@ public class ItemOutputFlowData extends FlowData implements Observer {
 
 	@Override
 	public ItemOutputFlowData duplicate(
-		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
 		ItemOutputFlowData newOutput = new ItemOutputFlowData(this);
-		lookupFn.apply(newOutput.tileEntityRule).ifPresent(data -> {
-			FlowData newData = data.duplicate(lookupFn, dependencyTracker);
+		container.get(newOutput.tileEntityRule, ItemRuleFlowData.class).ifPresent(data -> {
+			FlowData newData = data.duplicate(container, dependencyTracker);
 			dependencyTracker.accept(newData);
 			newOutput.tileEntityRule = newData.getId();
 		});

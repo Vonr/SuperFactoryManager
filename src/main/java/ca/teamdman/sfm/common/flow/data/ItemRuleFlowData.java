@@ -30,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -171,17 +170,18 @@ public class ItemRuleFlowData extends FlowData implements
 
 	@Override
 	public ItemRuleFlowData duplicate(
-		Function<UUID, Optional<FlowData>> lookupFn, Consumer<FlowData> dependencyTracker
+		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
 		ItemRuleFlowData newRule = new ItemRuleFlowData(this);
 		dependencyTracker.accept(newRule);
 
 		newRule.matcherIds.clear();
 		matcherIds.stream()
-			.map(lookupFn)
+			.map(container::get)
 			.filter(Optional::isPresent)
 			.map(Optional::get)
-			.map(data -> data.duplicate(lookupFn, dependencyTracker)) // copy matcher data
+			.filter(ItemStackMatcher.class::isInstance)
+			.map(data -> data.duplicate(container, dependencyTracker)) // copy matcher data
 			.peek(dependencyTracker) // add new matcher to dependency tracker
 			.map(FlowData::getId)
 			.forEach(newRule.matcherIds::add); // add matcher to rule id list
