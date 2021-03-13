@@ -103,7 +103,9 @@ public class ItemRuleFlowComponent extends FlowContainer implements
 
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
-		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) return true;
+		if (super.keyReleased(keyCode, scanCode, modifiers, mx, my)) {
+			return true;
+		}
 
 		// When E is pressed, close window if mouse is hovering
 		if (isVisible()
@@ -168,12 +170,6 @@ public class ItemRuleFlowComponent extends FlowContainer implements
 						changed.add(d);
 					});
 			}
-		} else {
-			// when hiding self, hide all matchers as well
-			CONTROLLER.getChildren().stream()
-				.filter(FlowDataHolder.class::isInstance)
-				.filter(c -> data.matcherIds.contains(((FlowDataHolder<?>) c).getData().getId()))
-				.forEach(c -> c.setVisible(false));
 		}
 		if (changed.size() > 0) {
 			CONTROLLER.SCREEN.sendFlowDataToServer(changed);

@@ -5,6 +5,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itempickermatcher.ItemPickerMatcherFlowComponent;
 import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
+import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.Collections;
@@ -44,6 +45,16 @@ public class ItemPickerMatcherFlowData extends FlowData implements ItemStackMatc
 		this.stack = stack;
 		this.quantity = quantity;
 		this.open = open;
+	}
+
+	@Override
+	public void addToDataContainer(BasicFlowDataContainer container) {
+		super.addToDataContainer(container);
+		container.addObserver(new FlowDataHolderObserver<>(
+			ItemRuleFlowData.class,
+			data -> data.matcherIds.contains(getId()),
+			data -> this.open &= data.open // only keep this open if holder is also open
+		));
 	}
 
 	@Override
