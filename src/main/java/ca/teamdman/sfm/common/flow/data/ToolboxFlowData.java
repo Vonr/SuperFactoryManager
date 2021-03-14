@@ -56,7 +56,7 @@ public class ToolboxFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public ca.teamdman.sfm.common.flow.data.FlowDataSerializer getSerializer() {
+	public FlowDataSerializer<ToolboxFlowData> getSerializer() {
 		return FlowDataSerializers.TOOLBOX;
 	}
 

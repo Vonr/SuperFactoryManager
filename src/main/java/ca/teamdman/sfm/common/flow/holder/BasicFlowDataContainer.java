@@ -166,7 +166,7 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 	@Override
 	public ListNBT serializeNBT() {
 		ListNBT list = new ListNBT();
-		stream().forEach(d -> list.add(d.getSerializer().toNBT(d)));
+		stream().forEach(d -> list.add(((FlowDataSerializer<FlowData>) d.getSerializer()).toNBT(d)));
 		return list;
 	}
 

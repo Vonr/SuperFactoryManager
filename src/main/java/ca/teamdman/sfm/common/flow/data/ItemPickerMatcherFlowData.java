@@ -76,8 +76,8 @@ public class ItemPickerMatcherFlowData extends FlowData implements ItemMatcher {
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
-		return FlowDataSerializers.ITEM_STACK_COMPARER_MATCHER;
+	public FlowDataSerializer<ItemPickerMatcherFlowData> getSerializer() {
+		return FlowDataSerializers.ITEM_PICKER_MATCHER;
 	}
 
 

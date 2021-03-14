@@ -51,5 +51,6 @@
   "gui.sfm.config.hideManagerInstructions": "Hide manager instructions",
   "gui.sfm.config.preventClosingManagerWithInventoryButton": "Prevent closing manager with the Inventory key",
   "gui.sfm.flow.timer_trigger.label": "Execution interval",
-  "gui.sfm.flow.timer_trigger.ticks": "ticks"
+  "gui.sfm.flow.timer_trigger.ticks": "ticks",
+  "gui.sfm.flow.tooltip.tile_position_matcher": "Position Matcher"
 }

@@ -66,5 +66,5 @@ public abstract class FlowData {
 		return Collections.emptySet();
 	}
 
-	public abstract <T extends FlowData> FlowDataSerializer<T> getSerializer();
+	public abstract FlowDataSerializer<?> getSerializer();
 }

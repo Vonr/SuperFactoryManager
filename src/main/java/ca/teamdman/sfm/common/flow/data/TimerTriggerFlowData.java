@@ -62,7 +62,7 @@ public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
+	public FlowDataSerializer<TimerTriggerFlowData> getSerializer() {
 		return FlowDataSerializers.TIMER_TRIGGER;
 	}
 

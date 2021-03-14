@@ -73,8 +73,8 @@ public class ItemModMatcherFlowData extends FlowData implements ItemMatcher {
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
-		return FlowDataSerializers.ITEM_STACK_MOD_ID_MATCHER;
+	public FlowDataSerializer<ItemModMatcherFlowData> getSerializer() {
+		return FlowDataSerializers.ITEM_MOD_MATCHER;
 	}
 
 	public static class Serializer extends

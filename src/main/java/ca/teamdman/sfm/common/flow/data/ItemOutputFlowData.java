@@ -93,7 +93,7 @@ public class ItemOutputFlowData extends FlowData implements Observer, PositionHo
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
+	public FlowDataSerializer<ItemOutputFlowData> getSerializer() {
 		return FlowDataSerializers.BASIC_OUTPUT;
 	}
 

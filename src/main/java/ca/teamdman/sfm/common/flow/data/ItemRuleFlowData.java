@@ -225,8 +225,8 @@ public class ItemRuleFlowData extends FlowData implements
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
-		return FlowDataSerializers.TILE_ENTITY_RULE;
+	public FlowDataSerializer<ItemRuleFlowData> getSerializer() {
+		return FlowDataSerializers.ITEM_RULE;
 	}
 
 	@Override

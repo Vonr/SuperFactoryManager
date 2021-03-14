@@ -74,7 +74,7 @@ public class RelationshipFlowData extends FlowData implements Observer {
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
+	public FlowDataSerializer<RelationshipFlowData> getSerializer() {
 		return FlowDataSerializers.RELATIONSHIP;
 	}
 

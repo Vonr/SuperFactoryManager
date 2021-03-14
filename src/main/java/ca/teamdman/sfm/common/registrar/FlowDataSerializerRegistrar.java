@@ -13,6 +13,7 @@ import ca.teamdman.sfm.common.flow.data.ItemPickerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
+import ca.teamdman.sfm.common.flow.data.TilePositionMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.flow.data.ToolboxFlowData;
 import ca.teamdman.sfm.common.flow.data.ToolboxFlowData.Serializer;
@@ -40,17 +41,18 @@ public class FlowDataSerializerRegistrar {
 			new TimerTriggerFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
 			new ItemRuleFlowData
-				.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_entity_rule")),
+				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_rule")),
 			new ItemPickerMatcherFlowData
-				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_stack_comparer_matcher")),
+				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_picker_matcher")),
 			new ItemModMatcherFlowData
-				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_stack_mod_id_matcher")),
+				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_mod_matcher")),
 			new CursorFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "cursor")),
 			new Serializer(new ResourceLocation(SFM.MOD_ID, "toolbox")),
 			new ItemInputFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "basic_input")),
-			new ItemOutputFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "basic_output"))
+			new ItemOutputFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "basic_output")),
+			new TilePositionMatcherFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_position_matcher"))
 		);
 	}
 
@@ -73,11 +75,12 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<RelationshipFlowData> RELATIONSHIP = WAITING;
 		public static final FlowDataSerializer<LineNodeFlowData> LINE_NODE = WAITING;
 		public static final FlowDataSerializer<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;
-		public static final FlowDataSerializer<ItemRuleFlowData> TILE_ENTITY_RULE = WAITING;
-		public static final FlowDataSerializer<ItemPickerMatcherFlowData> ITEM_STACK_COMPARER_MATCHER = WAITING;
-		public static final FlowDataSerializer<ItemModMatcherFlowData> ITEM_STACK_MOD_ID_MATCHER = WAITING;
+		public static final FlowDataSerializer<ItemRuleFlowData> ITEM_RULE = WAITING;
+		public static final FlowDataSerializer<ItemPickerMatcherFlowData> ITEM_PICKER_MATCHER = WAITING;
+		public static final FlowDataSerializer<ItemModMatcherFlowData> ITEM_MOD_MATCHER = WAITING;
 		public static final FlowDataSerializer<CursorFlowData> CURSOR = WAITING;
 		public static final FlowDataSerializer<ToolboxFlowData> TOOLBOX = WAITING;
+		public static final FlowDataSerializer<TilePositionMatcherFlowData> TILE_POSITION_MATCHER = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

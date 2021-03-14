@@ -51,7 +51,7 @@ public class CursorFlowData extends FlowData implements PositionHolder {
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
+	public FlowDataSerializer<CursorFlowData> getSerializer() {
 		return FlowDataSerializers.CURSOR;
 	}
 

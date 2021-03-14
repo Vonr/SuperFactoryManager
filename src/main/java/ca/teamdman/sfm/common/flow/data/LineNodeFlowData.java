@@ -66,7 +66,7 @@ public class LineNodeFlowData extends FlowData implements Observer, PositionHold
 	}
 
 	@Override
-	public FlowDataSerializer getSerializer() {
+	public FlowDataSerializer<LineNodeFlowData> getSerializer() {
 		return FlowDataSerializers.LINE_NODE;
 	}
 
