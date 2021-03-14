@@ -15,6 +15,7 @@ import ca.teamdman.sfm.common.flow.data.ItemPickerMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.block.Blocks;
@@ -53,9 +54,9 @@ class AddItemMatcherButton extends FlowPlusButton {
 
 		@Override
 		public List<? extends ITextProperties> getTooltip() {
-			List<ITextProperties> rtn = new ArrayList<>();
-			rtn.add(new TranslationTextComponent("gui.sfm.toolbox.add_itemstackcomparer_matcher"));
-			return rtn;
+			return Collections.singletonList(
+				new TranslationTextComponent("gui.sfm.toolbox.add_itemstackcomparer_matcher")
+			);
 		}
 
 		@Override
@@ -66,7 +67,7 @@ class AddItemMatcherButton extends FlowPlusButton {
 				0,
 				false
 			);
-			data.matcherIds.add(matcher.getId());
+			data.itemMatcherIds.add(matcher.getId());
 			CONTROLLER.SCREEN.sendFlowDataToServer(matcher, data);
 		}
 	}
@@ -91,7 +92,7 @@ class AddItemMatcherButton extends FlowPlusButton {
 				0,
 				false
 			);
-			data.matcherIds.add(matcher.getId());
+			data.itemMatcherIds.add(matcher.getId());
 			CONTROLLER.SCREEN.sendFlowDataToServer(matcher, data);
 		}
 	}

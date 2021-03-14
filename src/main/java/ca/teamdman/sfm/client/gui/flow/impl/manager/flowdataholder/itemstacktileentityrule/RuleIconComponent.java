@@ -7,7 +7,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStackPicker;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextProperties;
@@ -51,9 +51,7 @@ class RuleIconComponent extends FlowContainer {
 
 		@Override
 		public List<? extends ITextProperties> getTooltip() {
-			List<ITextProperties> rtn = new ArrayList<>();
-			rtn.add(new TranslationTextComponent("gui.sfm.flow.tooltip.right_click_to_clear"));
-			return rtn;
+			return Collections.singletonList(new TranslationTextComponent("gui.sfm.flow.tooltip.right_click_to_clear"));
 		}
 
 

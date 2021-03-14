@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.tile.manager;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
@@ -86,10 +86,10 @@ public class ExecutionStep {
 
 					// get the matchers that determine how much of the item is allowed to move
 					// transfer can be throttled input and output at the same time
-					ItemStackMatcher inMatcher = inRule.getBestMatcher(dataContainer, stack, STATE)
+					ItemMatcher inMatcher = inRule.getBestItemMatcher(dataContainer, stack, STATE)
 						.orElse(null);
-					ItemStackMatcher outMatcher = outRule
-						.getBestMatcher(dataContainer, stack, STATE).orElse(null);
+					ItemMatcher outMatcher = outRule
+						.getBestItemMatcher(dataContainer, stack, STATE).orElse(null);
 
 					// get the amount allowed to be moved, noting whitelist/blacklist
 					int allowedToExtract = STATE.getRemainingQuantity(inRule, inMatcher);

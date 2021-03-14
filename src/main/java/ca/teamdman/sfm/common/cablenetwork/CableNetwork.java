@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -139,6 +140,10 @@ public class CableNetwork {
 
 	public Collection<TileEntity> getInventories() {
 		return INVENTORIES.values();
+	}
+
+	public ItemStack getPreview(BlockPos pos) {
+		return new ItemStack(WORLD.getBlockState(pos).getBlock().asItem());
 	}
 
 	public Set<BlockPos> getCables() {

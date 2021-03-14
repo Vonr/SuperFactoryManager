@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.tile.manager;
 
-import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData.FilterMode;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -9,11 +9,11 @@ import javax.annotation.Nullable;
 
 public class ExecutionState {
 
-	private final Map<ItemStackMatcher, Integer> USAGE_HISTORY = new Object2IntOpenHashMap<>();
+	private final Map<ItemMatcher, Integer> USAGE_HISTORY = new Object2IntOpenHashMap<>();
 
 	public int getRemainingQuantity(
 		ItemRuleFlowData rule,
-		@Nullable ItemStackMatcher matcher
+		@Nullable ItemMatcher matcher
 	) {
 		if (rule.filterMode == FilterMode.WHITELIST) {
 			if (matcher == null) {
@@ -32,7 +32,7 @@ public class ExecutionState {
 		return 0;
 	}
 
-	public void recordUsage(@Nullable ItemStackMatcher matcher, int amount) {
+	public void recordUsage(@Nullable ItemMatcher matcher, int amount) {
 		if (matcher != null) {
 			USAGE_HISTORY.merge(matcher, amount, Integer::sum);
 		}

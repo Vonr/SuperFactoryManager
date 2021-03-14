@@ -10,7 +10,7 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -63,9 +63,7 @@ public class FlowCursor extends FlowComponent implements FlowDataHolder<CursorFl
 
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
-		List<ITextProperties> rtn = new ArrayList<>();
-		rtn.add(new StringTextComponent(data.playerName));
-		return rtn;
+		return Collections.singletonList(new StringTextComponent(data.playerName));
 	}
 
 	@Override

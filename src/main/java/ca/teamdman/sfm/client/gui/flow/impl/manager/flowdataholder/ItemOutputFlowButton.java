@@ -16,7 +16,7 @@ import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.util.text.ITextProperties;
@@ -117,9 +117,7 @@ public class ItemOutputFlowButton extends FlowContainer implements
 
 		@Override
 		public List<? extends ITextProperties> getTooltip() {
-			List<ITextProperties> rtn = new ArrayList<>();
-			rtn.add(new StringTextComponent(ruleData.name));
-			return rtn;
+			return Collections.singletonList(new StringTextComponent(ruleData.name));
 		}
 
 		public void reloadFromRuleData() {

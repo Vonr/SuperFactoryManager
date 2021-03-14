@@ -4,6 +4,7 @@
 package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.common.flow.core.Position;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -54,7 +55,7 @@ public abstract class FlowBlockPosPicker extends FlowContainer {
 
 		@Override
 		public List<? extends ITextProperties> getTooltip() {
-			List<ITextProperties> rtn = (List<ITextProperties>) super.getTooltip();
+			List<ITextProperties> rtn = new ArrayList<>(super.getTooltip());
 			rtn.add(1,
 				new StringTextComponent(POS.toString())
 					.mergeStyle(TextFormatting.GRAY)

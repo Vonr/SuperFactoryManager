@@ -8,9 +8,10 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule.ItemRuleFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
-import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.core.TileMatcher;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
@@ -21,6 +22,7 @@ import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfm.common.util.SlotsRule;
 import ca.teamdman.sfm.common.util.UUIDList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -54,8 +56,9 @@ public class ItemRuleFlowData extends FlowData implements
 	public String name;
 	public ItemStack icon;
 	public Position position;
-	public UUIDList matcherIds;
+	public UUIDList itemMatcherIds;
 	public BlockPosList tilePositions;
+	public UUIDList tileMatcherIds;
 	public EnumSet<Direction> faces;
 	public SlotsRule slots;
 	public boolean open;
@@ -71,7 +74,8 @@ public class ItemRuleFlowData extends FlowData implements
 			Collections.emptyList(),
 			EnumSet.allOf(Direction.class),
 			new SlotsRule(""),
-			false
+			false,
+			Collections.emptyList()
 		);
 	}
 
@@ -81,26 +85,28 @@ public class ItemRuleFlowData extends FlowData implements
 		ItemStack icon,
 		Position position,
 		FilterMode filterMode,
-		List<UUID> matcherIds,
-		List<BlockPos> tilePositions,
+		Collection<UUID> itemMatcherIds,
+		Collection<BlockPos> tilePositions,
 		EnumSet<Direction> faces,
 		SlotsRule slots,
-		boolean open
+		boolean open,
+		Collection<UUID> tileMatcherIds
 	) {
 		super(uuid);
 		this.name = name;
 		this.icon = icon;
 		this.position = position;
 		this.filterMode = filterMode;
-		this.matcherIds = new UUIDList(matcherIds);
+		this.itemMatcherIds = new UUIDList(itemMatcherIds);
 		this.tilePositions = new BlockPosList(tilePositions);
 		this.faces = faces;
 		this.slots = slots;
 		this.open = open;
 		this.OBSERVER = new FlowDataRemovedObserver(
 			this,
-			data -> this.matcherIds.remove(data.getId())
+			data -> this.itemMatcherIds.remove(data.getId())
 		);
+		this.tileMatcherIds = new UUIDList(tileMatcherIds);
 	}
 
 	/**
@@ -113,24 +119,25 @@ public class ItemRuleFlowData extends FlowData implements
 			other.icon.copy(),
 			other.position.copy(),
 			other.filterMode,
-			new UUIDList(other.matcherIds),
+			new UUIDList(other.itemMatcherIds),
 			new BlockPosList(other.tilePositions),
 			EnumSet.copyOf(other.faces),
 			other.slots.copy(),
-			other.open
+			other.open,
+			other.tileMatcherIds
 		);
 	}
 
 	/**
 	 * @return maximum amount allowed through according to this rule
 	 */
-	public Optional<ItemStackMatcher> getBestMatcher(
+	public Optional<ItemMatcher> getBestItemMatcher(
 		BasicFlowDataContainer container,
 		ItemStack stack,
 		ExecutionState state
 	) {
-		return matcherIds.stream()
-			.map(id -> container.get(id, ItemStackMatcher.class))
+		return itemMatcherIds.stream()
+			.map(id -> container.get(id, ItemMatcher.class))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.filter(m -> m.matches(stack))
@@ -177,16 +184,27 @@ public class ItemRuleFlowData extends FlowData implements
 		ItemRuleFlowData newRule = new ItemRuleFlowData(this);
 		dependencyTracker.accept(newRule);
 
-		newRule.matcherIds.clear();
-		matcherIds.stream()
+		newRule.itemMatcherIds.clear();
+		itemMatcherIds.stream()
 			.map(container::get)
 			.filter(Optional::isPresent)
 			.map(Optional::get)
-			.filter(ItemStackMatcher.class::isInstance)
+			.filter(ItemMatcher.class::isInstance)
 			.map(data -> data.duplicate(container, dependencyTracker)) // copy matcher data
 			.peek(dependencyTracker) // add new matcher to dependency tracker
 			.map(FlowData::getId)
-			.forEach(newRule.matcherIds::add); // add matcher to rule id list
+			.forEach(newRule.itemMatcherIds::add); // add matcher to rule id list
+
+		newRule.tileMatcherIds.clear();
+		tileMatcherIds.stream()
+			.map(container::get)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.filter(TileMatcher.class::isInstance)
+			.map(data -> data.duplicate(container, dependencyTracker))
+			.peek(dependencyTracker)
+			.map(FlowData::getId)
+			.forEach(newRule.tileMatcherIds::add);
 
 		return newRule;
 	}
@@ -236,11 +254,12 @@ public class ItemRuleFlowData extends FlowData implements
 				ItemStack.read(tag.getCompound("icon")),
 				new Position(tag.getCompound("pos")),
 				FilterMode.valueOf(tag.getString("filterMode")),
-				new UUIDList(tag, "matchers"),
+				new UUIDList(tag, "itemMatchers"),
 				new BlockPosList(tag, "tiles"),
 				EnumSetSerializationHelper.deserialize(tag, "faces", Direction::valueOf),
 				new SlotsRule(tag.getString("slots")),
-				tag.getBoolean("open")
+				tag.getBoolean("open"),
+				new UUIDList(tag, "tileMatchers")
 			);
 		}
 
@@ -251,11 +270,12 @@ public class ItemRuleFlowData extends FlowData implements
 			tag.putString("name", data.name);
 			tag.put("icon", data.icon.serializeNBT());
 			tag.putString("filterMode", data.filterMode.name());
-			tag.put("matchers", data.matcherIds.serialize());
+			tag.put("itemMatchers", data.itemMatcherIds.serialize());
 			tag.put("tiles", data.tilePositions.serialize());
 			tag.put("faces", EnumSetSerializationHelper.serialize(data.faces));
 			tag.putString("slots", data.slots.getDefinition());
 			tag.putBoolean("open", data.open);
+			tag.put("tileMatchers", data.tileMatcherIds.serialize());
 			return tag;
 		}
 
@@ -271,7 +291,8 @@ public class ItemRuleFlowData extends FlowData implements
 				new BlockPosList(buf),
 				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf),
 				new SlotsRule(buf.readString(32)),
-				buf.readBoolean()
+				buf.readBoolean(),
+				new UUIDList(buf)
 			);
 		}
 
@@ -282,11 +303,12 @@ public class ItemRuleFlowData extends FlowData implements
 			buf.writeItemStack(data.icon);
 			buf.writeLong(data.position.toLong());
 			buf.writeString(data.filterMode.name(), 16);
-			data.matcherIds.serialize(buf);
+			data.itemMatcherIds.serialize(buf);
 			data.tilePositions.serialize(buf);
 			EnumSetSerializationHelper.serialize(data.faces, buf);
 			buf.writeString(data.slots.getDefinition(), 32);
 			buf.writeBoolean(data.open);
+			data.tileMatcherIds.serialize(buf);
 		}
 	}
 }

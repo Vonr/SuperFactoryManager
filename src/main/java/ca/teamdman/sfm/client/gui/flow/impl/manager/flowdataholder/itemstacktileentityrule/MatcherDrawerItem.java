@@ -5,8 +5,9 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.IFormattableTextComponent;
@@ -15,7 +16,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.glfw.GLFW;
 
-class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemStackMatcher>> extends
+class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemMatcher>> extends
 	FlowContainer {
 
 	private final T DELEGATE;
@@ -111,7 +112,7 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 
 		@Override
 		public List<? extends ITextProperties> getTooltip() {
-			List<ITextProperties> rtn = (List<ITextProperties>) super.getTooltip();
+			List<ITextProperties> rtn = new ArrayList<>(super.getTooltip());
 			rtn.set(0,
 				new StringTextComponent(DELEGATE.getData().getDisplayQuantity() + " x ")
 					.append(((IFormattableTextComponent) rtn.get(0)))
@@ -128,7 +129,7 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemS
 			if (!Client.allowMultipleRuleWindows && isSelected()) {
 				PARENT.PARENT.CONTROLLER.getChildren().stream()
 					.filter(c -> c instanceof FlowDataHolder)
-					.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemStackMatcher)
+					.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemMatcher)
 					.forEach(c -> {
 						c.setVisible(false);
 						c.setEnabled(false);

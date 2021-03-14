@@ -10,7 +10,7 @@ import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.util.text.ITextProperties;
@@ -32,13 +32,11 @@ public class TimerTriggerFlowComponent extends FlowContainer implements
 		this.BUTTON = new Button(this){
 			@Override
 			public List<? extends ITextProperties> getTooltip() {
-				List<ITextProperties> rtn = new ArrayList<>();
-				rtn.add(new TranslationTextComponent(
+				return Collections.singletonList(new TranslationTextComponent(
 					"gui.sfm.flow.tooltip.timer_interval",
 					TimerTriggerFlowComponent.this.data.interval,
-					TimerTriggerFlowComponent.this.data.interval/20.0
+					TimerTriggerFlowComponent.this.data.interval / 20.0
 				));
-				return rtn;
 			}
 		};
 		addChild(BUTTON);

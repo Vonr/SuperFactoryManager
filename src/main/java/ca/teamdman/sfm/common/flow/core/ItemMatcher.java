@@ -4,7 +4,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 
-public interface ItemStackMatcher {
+public interface ItemMatcher {
 
 	boolean matches(@Nonnull ItemStack stack);
 

@@ -11,6 +11,7 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import net.minecraft.client.resources.I18n;
@@ -106,7 +107,7 @@ class TilesSection extends FlowContainer {
 
 		@Override
 		public List<? extends ITextProperties> getTooltip() {
-			List<ITextProperties> rtn = (List<ITextProperties>) super.getTooltip();
+			List<ITextProperties> rtn = new ArrayList<>(super.getTooltip());
 			rtn.add(1,
 				new StringTextComponent(POS.toString())
 					.mergeStyle(TextFormatting.GRAY)

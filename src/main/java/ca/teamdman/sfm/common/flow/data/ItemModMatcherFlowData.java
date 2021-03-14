@@ -4,7 +4,7 @@ import ca.teamdman.sfm.client.ItemStackSearchIndexer;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemModMatcherFlowComponent;
-import ca.teamdman.sfm.common.flow.core.ItemStackMatcher;
+import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
@@ -20,7 +20,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class ItemModMatcherFlowData extends FlowData implements ItemStackMatcher {
+public class ItemModMatcherFlowData extends FlowData implements ItemMatcher {
 
 	public String modId;
 	public int quantity;
@@ -56,7 +56,7 @@ public class ItemModMatcherFlowData extends FlowData implements ItemStackMatcher
 		super.addToDataContainer(container);
 		container.addObserver(new FlowDataHolderObserver<>(
 			ItemRuleFlowData.class,
-			data -> data.matcherIds.contains(getId()),
+			data -> data.itemMatcherIds.contains(getId()),
 			data -> this.open &= data.open // only keep this open if holder is also open
 		));
 	}

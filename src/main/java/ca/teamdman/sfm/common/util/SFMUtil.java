@@ -265,5 +265,4 @@ public class SFMUtil {
 
 		void accept(T next, Consumer<T> nextQueue, Consumer<T> resultBuilder);
 	}
-
 }
