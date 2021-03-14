@@ -64,13 +64,13 @@ public class ExecutionStep {
 		BasicFlowDataContainer dataContainer = TILE.getFlowDataContainer();
 		World world = TILE.getWorld();
 		Objects.requireNonNull(world);
-		List<IItemHandler> outHandlers = outRule.getItemHandlers(world, network);
+		List<IItemHandler> outHandlers = outRule.getItemHandlers(dataContainer, network);
 
 		// for each input rule hit so far during flow execution
 		for (ItemRuleFlowData inRule : INPUTS) {
 
 			// for each tile defined in the input rule
-			for (IItemHandler inHandler : inRule.getItemHandlers(world, network)) {
+			for (IItemHandler inHandler : inRule.getItemHandlers(dataContainer, network)) {
 
 				// for each slot defined in the input rule
 				IN_SLOT:

@@ -52,7 +52,7 @@ class ItemsSection extends FlowContainer {
 			.map(Optional::get)
 			.filter(FlowDataHolder.class::isInstance)
 			.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemMatcher)
-			.map(c -> new MatcherDrawerItem(this, c))
+			.map(c -> new ItemMatcherDrawerItem(this, c))
 			.forEach(DRAWER::addChild);
 		DRAWER.update();
 	}

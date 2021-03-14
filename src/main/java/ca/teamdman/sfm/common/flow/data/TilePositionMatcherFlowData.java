@@ -71,6 +71,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		return FlowDataSerializers.TILE_POSITION_MATCHER;
 	}
 
+
 	public static class Serializer extends FlowDataSerializer<TilePositionMatcherFlowData> {
 
 		public Serializer(ResourceLocation registryName) {

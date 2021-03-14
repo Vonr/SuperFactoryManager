@@ -16,14 +16,14 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.glfw.GLFW;
 
-class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemMatcher>> extends
+class ItemMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemMatcher>> extends
 	FlowContainer {
 
 	private final T DELEGATE;
 	private final DisplayIcon ICON;
 	private final ItemsSection PARENT;
 
-	public MatcherDrawerItem(
+	public ItemMatcherDrawerItem(
 		ItemsSection parent,
 		T delegate
 	) {
@@ -39,7 +39,7 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemM
 				super.setXY(x, y);
 				if (
 					ICON.isSelected()
-						&& !PARENT.DRAWER.isChildVisible(MatcherDrawerItem.this)
+						&& !PARENT.DRAWER.isChildVisible(ItemMatcherDrawerItem.this)
 				) {
 					ICON.setSelected(false);
 					ICON.onSelectionChanged();
@@ -71,11 +71,11 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemM
 			// We want to make sure that objects scrolled out of view are not capturing mouse actions
 			return PARENT.DRAWER.isInBounds(
 				mx + (
-					MatcherDrawerItem.this.getPosition().getX()
+					ItemMatcherDrawerItem.this.getPosition().getX()
 						+ PARENT.DRAWER.getPosition().getX()
 				),
 				my + (
-					MatcherDrawerItem.this.getPosition().getY()
+					ItemMatcherDrawerItem.this.getPosition().getY()
 						+ PARENT.DRAWER.getPosition().getY()
 				)
 			) && super.isInBounds(mx, my);
@@ -135,8 +135,8 @@ class MatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemM
 						c.setEnabled(false);
 					});
 				PARENT.DRAWER.getChildren().stream()
-					.filter(c -> c instanceof MatcherDrawerItem && c != MatcherDrawerItem.this)
-					.forEach(c -> ((MatcherDrawerItem<?>) c).ICON.setSelected(false));
+					.filter(c -> c instanceof ItemMatcherDrawerItem && c != ItemMatcherDrawerItem.this)
+					.forEach(c -> ((ItemMatcherDrawerItem<?>) c).ICON.setSelected(false));
 			}
 			DELEGATE.setVisible(isSelected());
 			DELEGATE.setEnabled(isSelected());

@@ -1,9 +1,12 @@
 package ca.teamdman.sfm.common.util;
 
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -40,5 +43,12 @@ public class UUIDList extends ArrayList<UUID> {
 	public void serialize(PacketBuffer buf) {
 		buf.writeInt(size());
 		forEach(id -> SFMUtil.writeUUID(id, buf));
+	}
+
+	public <T> Stream<T> lookup(BasicFlowDataContainer container, Class<T> type) {
+		return stream()
+			.map(id -> container.get(id, type))
+			.filter(Optional::isPresent)
+			.map(Optional::get);
 	}
 }
