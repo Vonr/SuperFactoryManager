@@ -89,6 +89,7 @@ public class CableNetworkManager {
 		}
 
 		Optional<CableNetwork> existing = NETWORKS.get(world.getDimensionKey()).stream()
+			.filter(net -> net.isRemote() == world.isRemote())
 			.filter(net -> net.contains(cablePos))
 			.findFirst();
 		if (existing.isPresent()) {

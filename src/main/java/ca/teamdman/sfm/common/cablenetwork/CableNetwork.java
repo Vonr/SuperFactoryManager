@@ -138,6 +138,10 @@ public class CableNetwork {
 		return CABLES.isEmpty();
 	}
 
+	public boolean isRemote() {
+		return WORLD.isRemote();
+	}
+
 	public Collection<TileEntity> getInventories() {
 		return INVENTORIES.values();
 	}

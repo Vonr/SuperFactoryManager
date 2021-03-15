@@ -13,12 +13,10 @@ import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 
 public class ExecutionStep {
@@ -62,8 +60,6 @@ public class ExecutionStep {
 
 	private void satisfyOutput(CableNetwork network, ItemRuleFlowData outRule) {
 		BasicFlowDataContainer dataContainer = TILE.getFlowDataContainer();
-		World world = TILE.getWorld();
-		Objects.requireNonNull(world);
 		List<IItemHandler> outHandlers = outRule.getItemHandlers(dataContainer, network);
 
 		// for each input rule hit so far during flow execution
