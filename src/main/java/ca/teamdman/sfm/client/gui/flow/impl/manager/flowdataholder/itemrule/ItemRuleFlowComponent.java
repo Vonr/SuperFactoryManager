@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -113,8 +113,7 @@ public class ItemRuleFlowComponent extends FlowContainer implements
 			&& CONTROLLER.SCREEN.getMinecraft().gameSettings.keyBindInventory
 			.matchesKey(keyCode, scanCode)
 		) {
-			setVisible(false);
-			setEnabled(false);
+			setVisibleAndEnabled(false);
 			return true;
 		}
 		return false;

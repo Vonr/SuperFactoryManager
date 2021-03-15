@@ -1,36 +1,43 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBlockPosPicker;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.tilematcherspawner.TileMatcherSpawnerDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.TilePositionMatcherFlowData;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.items.CapabilityItemHandler;
 
 class TilesSection extends FlowContainer {
 
-	private final FlowDrawer DRAWER;
-	private final ItemRuleFlowComponent PARENT;
-	private final FlowBlockPosPicker PICKER;
+	protected final FlowDrawer DRAWER;
+	protected final ItemRuleFlowComponent PARENT;
+	private final TileMatcherSpawnerDrawer ADDER;
 
 	public TilesSection(ItemRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
+
+		ADDER = new TileMatcherSpawnerDrawer(
+			PARENT,
+			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 15)
+		);
+		ADDER.setVisibleAndEnabled(false);
+		addChild(ADDER);
 
 		addChild(new SectionHeader(
 			new Position(0, 0),
@@ -41,25 +48,6 @@ class TilesSection extends FlowContainer {
 		DRAWER = new FlowDrawer(new Position(0, 16), 4, 3);
 		DRAWER.setShrinkToFit(false);
 		addChild(DRAWER);
-
-		PICKER = new FlowBlockPosPicker(
-			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 15)
-		) {
-			@Override
-			public void onPicked(BlockPos pos) {
-				TilePositionMatcherFlowData matcher = new TilePositionMatcherFlowData(
-					UUID.randomUUID(),
-					pos
-				);
-				PARENT.getData().tileMatcherIds.add(matcher.getId());
-				PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(matcher, PARENT.getData());
-				setVisible(false);
-				setEnabled(false);
-			}
-		};
-		PICKER.setVisible(false);
-		PICKER.setEnabled(false);
-		addChild(PICKER);
 
 		rebuildChildren();
 	}
@@ -76,25 +64,14 @@ class TilesSection extends FlowContainer {
 		}
 
 		CableNetworkManager.getOrRegisterNetwork(world, tile.getPos()).ifPresent(network -> {
-			Set<BlockPos> existing = new HashSet<>();
-
-			PARENT.getData().tileMatcherIds.lookup(
-				PARENT.CONTROLLER.SCREEN.getFlowDataContainer(),
-				TilePositionMatcherFlowData.class
-			)
-				.peek(data -> existing.add(data.position))
-				.map(data -> new TileMatcherDrawerItem<>(PARENT, data, network))
+			PARENT.getData().tileMatcherIds.stream()
+				.map(PARENT.CONTROLLER::findFirstChild)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.filter(FlowDataHolder.class::isInstance)
+				.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemMatcher)
+				.map(c -> new TileMatcherDrawerItem(this, c, network))
 				.forEach(DRAWER::addChild);
-
-			// populate picker with remaining positions
-			PICKER.setContents(
-				network.getInventories().stream()
-					.filter(t -> t.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).isPresent())
-					.map(TileEntity::getPos)
-					.filter(pos -> !existing.contains(pos))
-					.collect(Collectors.toList()),
-				world
-			);
 		});
 
 		DRAWER.update();
@@ -112,7 +89,16 @@ class TilesSection extends FlowContainer {
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			PICKER.toggleVisibilityAndEnabled();
+			ADDER.toggleVisibilityAndEnabled();
+		}
+
+		@Override
+		public List<? extends ITextProperties> getTooltip() {
+			return Arrays.asList(
+				new TranslationTextComponent("gui.sfm.flow.tooltip.add_tile_matcher_1"),
+				new TranslationTextComponent("gui.sfm.flow.tooltip.add_tile_matcher_2")
+					.mergeStyle(TextFormatting.GRAY)
+			);
 		}
 	}
 }

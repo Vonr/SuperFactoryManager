@@ -33,6 +33,8 @@
   "gui.sfm.flow.tooltip.item_output_spawner": "Create new item output",
   "gui.sfm.flow.tooltip.settings_button.close": "Close settings",
   "gui.sfm.flow.tooltip.settings_button.open": "Open settings",
+  "gui.sfm.flow.tooltip.add_tile_matcher_1": "Add tile matcher",
+  "gui.sfm.flow.tooltip.add_tile_matcher_2": "hold shift to add many",
   "gui.sfm.flow.tooltip.trigger_spawner": "Create new trigger",
   "gui.sfm.manager.legend.chain": "Chain: [Shift+Drag]",
   "gui.sfm.manager.legend.clone": "Clone: [Ctrl+Drag]",
@@ -52,5 +54,6 @@
   "gui.sfm.config.preventClosingManagerWithInventoryButton": "Prevent closing manager with the Inventory key",
   "gui.sfm.flow.timer_trigger.label": "Execution interval",
   "gui.sfm.flow.timer_trigger.ticks": "ticks",
-  "gui.sfm.flow.tooltip.tile_position_matcher": "Position Matcher"
+  "gui.sfm.flow.tooltip.tile_position_matcher": "Position Matcher",
+  "gui.sfm.flow.tooltip.block_pos": "x=%d, y=%d, z=%d"
 }

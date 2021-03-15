@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
@@ -49,7 +49,7 @@ class AddItemMatcherButton extends FlowPlusButton {
 
 	private class AddItemStackComparerMatcherToolboxButton extends FlowIconButton {
 		public AddItemStackComparerMatcherToolboxButton() {
-			super(ButtonLabel.COMPARER_MATCHER);
+			super(ButtonLabel.PICKER_MATCHER);
 		}
 
 		@Override

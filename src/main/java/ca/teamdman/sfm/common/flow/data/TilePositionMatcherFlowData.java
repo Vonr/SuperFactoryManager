@@ -1,11 +1,14 @@
 package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.tilepositionmatcher.TilePositionMatcherFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.TileMatcher;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -21,19 +24,24 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 
 public class TilePositionMatcherFlowData extends FlowData implements TileMatcher {
 
 	public BlockPos position;
+	public boolean open;
 
 	public TilePositionMatcherFlowData(TilePositionMatcherFlowData other) {
 		this(
 			UUID.randomUUID(),
-			other.position
+			other.position,
+			false
 		);
 	}
 
-	public TilePositionMatcherFlowData(UUID uuid, BlockPos position) {
+	public TilePositionMatcherFlowData(UUID uuid, BlockPos position, boolean open) {
 		super(uuid);
 		this.position = position;
 	}
@@ -49,8 +57,24 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 	}
 
 	@Override
-	public String getMatcherDisplayName() {
-		return I18n.format("gui.sfm.flow.tooltip.tile_position_matcher");
+	public List<? extends ITextProperties> getTooltip(List<? extends ITextProperties> normal) {
+		List<ITextProperties> rtn = new ArrayList<>(normal);
+		rtn.add(
+			1,
+			new StringTextComponent(I18n.format("gui.sfm.flow.tooltip.tile_position_matcher"))
+				.mergeStyle(TextFormatting.GRAY)
+		);
+		rtn.add(
+			2,
+			new StringTextComponent(I18n.format(
+				"gui.sfm.flow.tooltip.block_pos",
+				position.getX(),
+				position.getY(),
+				position.getZ()
+			))
+				.mergeStyle(TextFormatting.GRAY)
+		);
+		return rtn;
 	}
 
 	@Override
@@ -63,12 +87,28 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 	@Nullable
 	@Override
 	public FlowComponent createController(FlowComponent parent) {
+		if (parent instanceof ManagerFlowController) {
+			return new TilePositionMatcherFlowComponent(
+				((ManagerFlowController) parent),
+				this
+			);
+		}
 		return null;
 	}
 
 	@Override
 	public FlowDataSerializer<TilePositionMatcherFlowData> getSerializer() {
 		return FlowDataSerializers.TILE_POSITION_MATCHER;
+	}
+
+	@Override
+	public boolean isVisible() {
+		return open;
+	}
+
+	@Override
+	public void setVisibility(boolean open) {
+		this.open = open;
 	}
 
 
@@ -82,7 +122,8 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		public TilePositionMatcherFlowData fromNBT(CompoundNBT tag) {
 			return new TilePositionMatcherFlowData(
 				UUID.fromString(tag.getString("uuid")),
-				NBTUtil.readBlockPos(tag.getCompound("pos"))
+				NBTUtil.readBlockPos(tag.getCompound("pos")),
+				tag.getBoolean("open")
 			);
 		}
 
@@ -90,6 +131,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		public CompoundNBT toNBT(TilePositionMatcherFlowData data) {
 			CompoundNBT tag = super.toNBT(data);
 			tag.put("pos", NBTUtil.writeBlockPos(data.position));
+			tag.putBoolean("open", data.open);
 			return tag;
 		}
 
@@ -97,7 +139,8 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		public TilePositionMatcherFlowData fromBuffer(PacketBuffer buf) {
 			return new TilePositionMatcherFlowData(
 				SFMUtil.readUUID(buf),
-				BlockPos.fromLong(buf.readLong())
+				BlockPos.fromLong(buf.readLong()),
+				buf.readBoolean()
 			);
 		}
 
@@ -105,6 +148,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		public void toBuffer(TilePositionMatcherFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
+			buf.writeBoolean(data.open);
 		}
 	}
 }

@@ -6,7 +6,8 @@ import net.minecraft.util.ResourceLocation;
 public enum ButtonBackground {
 	NORMAL(14, 0, 22, 22),
 	DEPRESSED(14, 22, 22, 22),
-	LINE_NODE(36, 0, 8, 8);
+	LINE_NODE(36, 0, 8, 8),
+	NONE(220, 220, 22, 22);
 
 	public final ResourceLocation SPRITE_SHEET = new ResourceLocation(
 		SFM.MOD_ID,

@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;

@@ -3,15 +3,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.util;
 
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.Position;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.items.CapabilityItemHandler;
 
 public abstract class FlowBlockPosPicker extends FlowContainer {
 
@@ -29,10 +33,17 @@ public abstract class FlowBlockPosPicker extends FlowContainer {
 		addChild(DRAWER);
 	}
 
-	public void setContents(List<BlockPos> list, World world) {
+	private ItemStack getPreview(World world, BlockPos pos) {
+		return new ItemStack(world.getBlockState(pos).getBlock().asItem());
+	}
+
+	public void rebuildFromNetwork(CableNetwork network, Predicate<BlockPos> excluder) {
 		DRAWER.getChildren().clear();
-		list.stream()
-			.map(pos -> new Entry(pos, new ItemStack(world.getBlockState(pos).getBlock().asItem())))
+		network.getInventories().stream()
+			.filter(t -> t.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).isPresent())
+			.map(TileEntity::getPos)
+			.filter(pos -> !excluder.test(pos))
+			.map(pos -> new Entry(pos, getPreview(network.getWorld(), pos)))
 			.forEach(DRAWER::addChild);
 		DRAWER.update();
 	}

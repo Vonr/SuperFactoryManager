@@ -41,8 +41,7 @@ public abstract class ItemStackTileEntityRuleDrawer extends FlowContainer implem
 		);
 		addChild(DRAWER);
 
-		setVisible(false);
-		setEnabled(false);
+		setVisibleAndEnabled(false);
 		rebuildDrawer();
 		controller.SCREEN.getFlowDataContainer().addObserver(this);
 	}

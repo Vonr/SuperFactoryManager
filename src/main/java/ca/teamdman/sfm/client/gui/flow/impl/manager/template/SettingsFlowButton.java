@@ -24,8 +24,7 @@ public class SettingsFlowButton extends FlowContainer {
 
 	public SettingsFlowButton(ManagerScreen screen) {
 		CONFIG_COMPONENT = new ConfigComponent(screen);
-		CONFIG_COMPONENT.setVisible(false);
-		CONFIG_COMPONENT.setEnabled(false);
+		CONFIG_COMPONENT.setVisibleAndEnabled(false);
 		addChild(CONFIG_COMPONENT);
 
 		addChild(new FlowIconButton(

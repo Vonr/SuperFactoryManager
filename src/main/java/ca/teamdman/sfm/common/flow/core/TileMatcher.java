@@ -5,15 +5,13 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.text.ITextProperties;
 
-public interface TileMatcher {
+public interface TileMatcher extends VisibilityHolder{
 
 	boolean matches(@Nonnull TileEntity tile);
 
 	List<ItemStack> getPreview(CableNetwork network);
 
-	/**
-	 * @return the name of the matcher
-	 */
-	String getMatcherDisplayName();
+	List<? extends ITextProperties> getTooltip(List<? extends ITextProperties> normal);
 }

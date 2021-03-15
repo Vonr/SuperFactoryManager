@@ -23,8 +23,7 @@ class StackIconButton extends FlowContainer {
 		this.PARENT = parent;
 		this.BUTTON = new MyButton();
 		this.PICKER = new MyPicker();
-		PICKER.setVisible(false);
-		PICKER.setEnabled(false);
+		PICKER.setVisibleAndEnabled(false);
 		addChild(PICKER);
 		addChild(BUTTON);
 	}

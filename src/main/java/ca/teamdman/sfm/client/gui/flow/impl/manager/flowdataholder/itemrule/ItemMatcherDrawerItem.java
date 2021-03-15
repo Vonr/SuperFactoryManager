@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemstacktileentityrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
@@ -130,10 +130,9 @@ class ItemMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends I
 				PARENT.PARENT.CONTROLLER.getChildren().stream()
 					.filter(c -> c instanceof FlowDataHolder)
 					.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemMatcher)
-					.forEach(c -> {
-						c.setVisible(false);
-						c.setEnabled(false);
-					});
+					.filter(c -> c != this)
+					.forEach(c -> c.setVisibleAndEnabled(false));
+
 				PARENT.DRAWER.getChildren().stream()
 					.filter(c -> c instanceof ItemMatcherDrawerItem && c != ItemMatcherDrawerItem.this)
 					.forEach(c -> ((ItemMatcherDrawerItem<?>) c).ICON.setSelected(false));
