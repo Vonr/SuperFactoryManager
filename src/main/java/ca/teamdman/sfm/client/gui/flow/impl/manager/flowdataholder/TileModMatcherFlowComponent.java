@@ -30,7 +30,7 @@ public class TileModMatcherFlowComponent extends
 	) {
 		super(
 			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 0),
-			new Size(115, 24)
+			new Size(66, 24)
 		);
 		PARENT = parent;
 		this.data = data;

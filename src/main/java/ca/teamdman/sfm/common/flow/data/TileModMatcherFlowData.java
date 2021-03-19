@@ -81,14 +81,14 @@ public class TileModMatcherFlowData extends FlowData implements TileMatcher {
 
 	@Override
 	public boolean matches(@Nonnull TileEntity tile) {
-		return false;
+		return tile.getType().getRegistryName().getNamespace().equals(modId);
 	}
 
 	@Override
 	public List<ItemStack> getPreview(CableNetwork network) {
 		if (preview == null) {
 			return preview = network.getInventories().stream()
-				.filter(tile -> tile.getType().getRegistryName().getNamespace().equals(modId))
+				.filter(this::matches)
 				.map(TileEntity::getPos)
 				.map(network::getPreview)
 				.collect(Collectors.toList());
