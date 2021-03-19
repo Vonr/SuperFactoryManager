@@ -22,12 +22,14 @@ import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContain
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
@@ -77,10 +79,15 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 		// Only classes present in the datalist are relevant.
 		// Topological sort just used to ensure things added in correct order.
 		// "Missing" dependencies is fine, since they can't be added out of order.
-		Set<Class<? extends FlowData>> present = SCREEN.getFlowDataContainer().stream()
-			.map(FlowData::getClass)
-			.collect(Collectors.toSet());
+		List<FlowData> present = SCREEN.getFlowDataContainer().stream()
+			.collect(Collectors.toList());
 
+		Predicate<Class<?>> isPresent = dep -> present.stream().anyMatch(dep::isInstance);
+
+		Predicate<FlowData> hasDependencyPresent = data ->
+			data.getDependencies().stream().anyMatch(isPresent);
+
+		// Get the dependencies for each FlowData
 		HashMap<FlowData, Set<Class<?>>> dependencies =
 			SCREEN.getFlowDataContainer().stream()
 				.collect(
@@ -88,15 +95,17 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 					(map, data) -> map.put(
 						data,
 						data.getDependencies().stream()
-							.filter(present::contains)
+							.filter(isPresent)
 							.collect(Collectors.toSet())
 					),
 					HashMap::putAll
 				);
+		// Remove entries with no dependencies
 		dependencies.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 
+		// Start with data that have no present dependencies
 		ArrayDeque<FlowData> remaining = SCREEN.getFlowDataContainer().stream()
-			.filter(data -> data.getDependencies().stream().noneMatch(present::contains))
+			.filter(hasDependencyPresent.negate())
 			.collect(ArrayDeque::new, ArrayDeque::add, ArrayDeque::addAll);
 
 		while (!remaining.isEmpty()) {
@@ -106,7 +115,7 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 				.entrySet().iterator();
 			while (iter.hasNext()) {
 				Entry<FlowData, Set<Class<?>>> entry = iter.next();
-				entry.getValue().remove(n.getClass());
+				entry.getValue().removeIf(dep -> dep.isInstance(n));
 				if (entry.getValue().size() == 0) {
 					remaining.add(entry.getKey());
 					iter.remove();
