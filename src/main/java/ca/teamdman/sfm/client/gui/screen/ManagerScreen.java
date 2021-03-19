@@ -28,7 +28,6 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 		super(name, 512, 256);
 		this.CONTAINER = container;
 		this.CONTROLLER = new ManagerFlowController(this);
-		reloadFromManagerTileEntity();
 	}
 
 	@Override
