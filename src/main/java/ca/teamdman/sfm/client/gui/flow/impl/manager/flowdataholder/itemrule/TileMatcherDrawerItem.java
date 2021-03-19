@@ -19,11 +19,18 @@ class TileMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends T
 	private int tick = 0;
 	private TilesSection PARENT;
 
-	public TileMatcherDrawerItem(TilesSection parent, T data, CableNetwork network) {
+	public TileMatcherDrawerItem(TilesSection parent, T comp, CableNetwork network) {
 		super(ItemStack.EMPTY, new Position());
-		this.DELEGATE = data;
+		this.DELEGATE = comp;
 		this.PARENT = parent;
 		this.NETWORK = network;
+
+		DELEGATE.setPosition(parent.getPosition()
+			.withConstantOffset(parent.DRAWER.getPosition())
+			.withConstantOffset(parent.PARENT.getPosition())
+			.withConstantOffset(getPosition())
+			.withConstantOffset(getSize().getWidth() + 5, 0));
+
 		setNextIcon();
 	}
 

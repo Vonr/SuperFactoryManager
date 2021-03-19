@@ -7,10 +7,11 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.TileMatcher;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import java.util.Arrays;
@@ -63,18 +64,21 @@ class TilesSection extends FlowContainer {
 			return;
 		}
 
-		CableNetworkManager.getOrRegisterNetwork(world, tile.getPos()).ifPresent(network -> {
-			PARENT.getData().tileMatcherIds.stream()
-				.map(PARENT.CONTROLLER::findFirstChild)
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.filter(FlowDataHolder.class::isInstance)
-				.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemMatcher)
-				.map(c -> new TileMatcherDrawerItem(this, c, network))
-				.forEach(DRAWER::addChild);
-		});
+		CableNetworkManager.getOrRegisterNetwork(world, tile.getPos())
+			.ifPresent(this::getDrawerChildrenFromNetwork);
 
 		DRAWER.update();
+	}
+
+	private void getDrawerChildrenFromNetwork(CableNetwork network) {
+		PARENT.getData().tileMatcherIds.stream()
+			.map(PARENT.CONTROLLER::findFirstChild)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.filter(FlowDataHolder.class::isInstance)
+			.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof TileMatcher)
+			.map(c -> new TileMatcherDrawerItem(this, c, network))
+			.forEach(DRAWER::addChild);
 	}
 
 	public void onDataChanged(ItemRuleFlowData data) {

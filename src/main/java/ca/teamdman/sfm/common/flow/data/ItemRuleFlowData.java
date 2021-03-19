@@ -225,8 +225,8 @@ public class ItemRuleFlowData extends FlowData implements
 	}
 
 	@Override
-	public Set<Class<? extends FlowData>> getDependencies() {
-		return ImmutableSet.of(ItemPickerMatcherFlowData.class);
+	public Set<Class<?>> getDependencies() {
+		return ImmutableSet.of(ItemMatcher.class, TileMatcher.class);
 	}
 
 	@Override

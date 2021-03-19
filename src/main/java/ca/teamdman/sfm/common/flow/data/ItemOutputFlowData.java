@@ -88,7 +88,7 @@ public class ItemOutputFlowData extends FlowData implements Observer, PositionHo
 	}
 
 	@Override
-	public Set<Class<? extends FlowData>> getDependencies() {
+	public Set<Class<?>> getDependencies() {
 		return ImmutableSet.of(ItemRuleFlowData.class);
 	}
 

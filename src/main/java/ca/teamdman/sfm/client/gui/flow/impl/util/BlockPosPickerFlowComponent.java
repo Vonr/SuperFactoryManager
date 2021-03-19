@@ -17,11 +17,11 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.items.CapabilityItemHandler;
 
-public abstract class FlowBlockPosPicker extends FlowContainer {
+public abstract class BlockPosPickerFlowComponent extends FlowContainer {
 
 	private final FlowDrawer DRAWER;
 
-	public FlowBlockPosPicker(
+	public BlockPosPickerFlowComponent(
 		Position pos
 	) {
 		super(pos);

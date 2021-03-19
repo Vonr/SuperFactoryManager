@@ -81,7 +81,7 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 			.map(FlowData::getClass)
 			.collect(Collectors.toSet());
 
-		HashMap<FlowData, Set<Class<? extends FlowData>>> dependencies =
+		HashMap<FlowData, Set<Class<?>>> dependencies =
 			SCREEN.getFlowDataContainer().stream()
 				.collect(
 					HashMap::new,
@@ -102,10 +102,10 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 		while (!remaining.isEmpty()) {
 			FlowData n = remaining.pop();
 			result.add(n);
-			Iterator<Entry<FlowData, Set<Class<? extends FlowData>>>> iter = dependencies
+			Iterator<Entry<FlowData, Set<Class<?>>>> iter = dependencies
 				.entrySet().iterator();
 			while (iter.hasNext()) {
-				Entry<FlowData, Set<Class<? extends FlowData>>> entry = iter.next();
+				Entry<FlowData, Set<Class<?>>> entry = iter.next();
 				entry.getValue().remove(n.getClass());
 				if (entry.getValue().size() == 0) {
 					remaining.add(entry.getKey());

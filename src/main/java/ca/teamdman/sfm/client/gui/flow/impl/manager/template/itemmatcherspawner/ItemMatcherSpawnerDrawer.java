@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.template.tilematcherspawner;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.template.itemmatcherspawner;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule.ItemRuleFlowComponent;
@@ -6,14 +6,17 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-public class TileMatcherSpawnerDrawer extends FlowDrawer {
-
+public class ItemMatcherSpawnerDrawer extends FlowDrawer {
 	protected final ItemRuleFlowComponent PARENT;
 
-	public TileMatcherSpawnerDrawer(ItemRuleFlowComponent parent, Position pos) {
+	public ItemMatcherSpawnerDrawer(
+		ItemRuleFlowComponent PARENT,
+		Position pos
+	) {
 		super(pos, 3, 3);
-		PARENT = parent;
-		addChild(new TilePositionMatcherSpawnerButton(this));
+		this.PARENT = PARENT;
+		addChild(new ItemPickerMatcherSpawnerButton(this));
+		addChild(new ItemModIdMatcherSpawnerButton(this));
 		update();
 	}
 

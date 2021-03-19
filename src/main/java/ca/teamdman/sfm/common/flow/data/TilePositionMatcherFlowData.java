@@ -44,6 +44,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 	public TilePositionMatcherFlowData(UUID uuid, BlockPos position, boolean open) {
 		super(uuid);
 		this.position = position;
+		this.open = open;
 	}
 
 	@Override

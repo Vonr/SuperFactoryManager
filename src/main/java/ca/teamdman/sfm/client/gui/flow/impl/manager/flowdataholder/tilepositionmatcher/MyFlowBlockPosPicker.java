@@ -1,12 +1,12 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.tilepositionmatcher;
 
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.util.FlowBlockPosPicker;
+import ca.teamdman.sfm.client.gui.flow.impl.util.BlockPosPickerFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TilePositionMatcherFlowData;
 import net.minecraft.util.math.BlockPos;
 
-class MyFlowBlockPosPicker extends FlowBlockPosPicker {
+class MyFlowBlockPosPicker extends BlockPosPickerFlowComponent {
 
 	private final TilePositionMatcherFlowData data;
 	private final ManagerFlowController parent;

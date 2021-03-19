@@ -62,7 +62,7 @@ public abstract class FlowData {
 		FlowComponent parent
 	);
 
-	public Set<Class<? extends FlowData>> getDependencies() {
+	public Set<Class<?>> getDependencies() {
 		return Collections.emptySet();
 	}
 

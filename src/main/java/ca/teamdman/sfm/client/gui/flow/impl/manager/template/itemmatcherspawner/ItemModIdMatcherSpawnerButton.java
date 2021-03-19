@@ -1,45 +1,47 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.template.tilematcherspawner;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.template.itemmatcherspawner;
 
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
-import ca.teamdman.sfm.common.flow.data.TilePositionMatcherFlowData;
-import java.util.Collections;
+import ca.teamdman.sfm.common.flow.data.ItemModMatcherFlowData;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 
-class TilePositionMatcherSpawnerButton extends FlowIconButton {
+public class ItemModIdMatcherSpawnerButton extends FlowIconButton {
 
-	private final TileMatcherSpawnerDrawer PARENT;
+	private final ItemMatcherSpawnerDrawer PARENT;
 
-	public TilePositionMatcherSpawnerButton(TileMatcherSpawnerDrawer parent) {
+	public ItemModIdMatcherSpawnerButton(
+		ItemMatcherSpawnerDrawer PARENT
+	) {
 		super(
-			ButtonLabel.PICKER_MATCHER,
+			ButtonLabel.MODID_MATCHER,
 			new Position()
 		);
-		PARENT = parent;
+		this.PARENT = PARENT;
 	}
 
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
-		return Collections.singletonList(
-			new TranslationTextComponent("gui.sfm.toolbox.add_position_matcher")
-		);
+		List<ITextProperties> rtn = new ArrayList<>();
+		rtn.add(new TranslationTextComponent("gui.sfm.toolbox.add_modid_matcher"));
+		return rtn;
 	}
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		FlowData data = new TilePositionMatcherFlowData(
+		FlowData data = new ItemModMatcherFlowData(
 			UUID.randomUUID(),
-			BlockPos.ZERO,
+			"minecraft",
+			0,
 			false
 		);
-		PARENT.PARENT.getData().tileMatcherIds.add(data.getId());
+		PARENT.PARENT.getData().itemMatcherIds.add(data.getId());
 		PARENT.PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(
 			data,
 			PARENT.PARENT.getData()
