@@ -1,47 +1,44 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.template.itemmatcherspawner;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.template.tilematcherspawner;
 
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
-import ca.teamdman.sfm.common.flow.data.ItemModMatcherFlowData;
-import java.util.ArrayList;
+import ca.teamdman.sfm.common.flow.data.TileModMatcherFlowData;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class ItemModIdMatcherSpawnerButton extends FlowIconButton {
+class TileModMatcherSpawnerButton extends FlowIconButton {
 
-	private final ItemMatcherSpawnerDrawer PARENT;
+	private final TileMatcherSpawnerDrawer PARENT;
 
-	public ItemModIdMatcherSpawnerButton(
-		ItemMatcherSpawnerDrawer PARENT
-	) {
+	public TileModMatcherSpawnerButton(TileMatcherSpawnerDrawer parent) {
 		super(
 			ButtonLabel.MODID_MATCHER,
 			new Position()
 		);
-		this.PARENT = PARENT;
+		PARENT = parent;
 	}
 
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
-		List<ITextProperties> rtn = new ArrayList<>();
-		rtn.add(new TranslationTextComponent("gui.sfm.toolbox.add_modid_matcher"));
-		return rtn;
+		return Collections.singletonList(
+			new TranslationTextComponent("gui.sfm.toolbox.add_tile_mod_matcher")
+		);
 	}
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		FlowData data = new ItemModMatcherFlowData(
+		FlowData data = new TileModMatcherFlowData(
 			UUID.randomUUID(),
 			"minecraft",
-			0,
 			false
 		);
-		PARENT.PARENT.getData().itemMatcherIds.add(data.getId());
+		PARENT.PARENT.getData().tileMatcherIds.add(data.getId());
 		PARENT.PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(
 			data,
 			PARENT.PARENT.getData()

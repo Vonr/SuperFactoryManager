@@ -33,7 +33,8 @@
   "gui.sfm.flow.tooltip.item_output_spawner": "Create new item output",
   "gui.sfm.flow.tooltip.settings_button.close": "Close settings",
   "gui.sfm.flow.tooltip.settings_button.open": "Open settings",
-  "gui.sfm.toolbox.add_position_matcher": "Add position matcher",
+  "gui.sfm.toolbox.add_tile_position_matcher": "Add position matcher",
+  "gui.sfm.toolbox.add_tile_mod_matcher": "Add mod matcher",
   "gui.sfm.flow.tooltip.add_tile_matcher_1": "Add tile matcher",
   "gui.sfm.flow.tooltip.add_tile_matcher_2": "hold shift to add many",
   "gui.sfm.flow.tooltip.add_item_matcher_1": "Add item matcher",
@@ -58,5 +59,6 @@
   "gui.sfm.flow.timer_trigger.label": "Execution interval",
   "gui.sfm.flow.timer_trigger.ticks": "ticks",
   "gui.sfm.flow.tooltip.tile_position_matcher": "Position Matcher",
-  "gui.sfm.flow.tooltip.block_pos": "x=%d, y=%d, z=%d"
+  "gui.sfm.flow.tooltip.block_pos": "x=%d, y=%d, z=%d",
+  "gui.sfm.flow.tooltip.tile_mod_matcher": "Mod matcher"
 }

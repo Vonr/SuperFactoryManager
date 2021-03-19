@@ -45,13 +45,6 @@ public class ItemModMatcherFlowData extends FlowData implements ItemMatcher {
 	}
 
 	@Override
-	public ItemModMatcherFlowData duplicate(
-		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
-	) {
-		return new ItemModMatcherFlowData(this);
-	}
-
-	@Override
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		super.addToDataContainer(container);
 		container.addObserver(new FlowDataHolderObserver<>(
@@ -59,6 +52,13 @@ public class ItemModMatcherFlowData extends FlowData implements ItemMatcher {
 			data -> data.itemMatcherIds.contains(getId()),
 			data -> this.open &= data.open // only keep this open if holder is also open
 		));
+	}
+
+	@Override
+	public ItemModMatcherFlowData duplicate(
+		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
+	) {
+		return new ItemModMatcherFlowData(this);
 	}
 
 	@Override

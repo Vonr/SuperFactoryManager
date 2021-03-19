@@ -16,7 +16,7 @@ public class ItemMatcherSpawnerDrawer extends FlowDrawer {
 		super(pos, 3, 3);
 		this.PARENT = PARENT;
 		addChild(new ItemPickerMatcherSpawnerButton(this));
-		addChild(new ItemModIdMatcherSpawnerButton(this));
+		addChild(new ItemModMatcherSpawnerButton(this));
 		update();
 	}
 

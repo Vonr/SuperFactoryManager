@@ -14,6 +14,7 @@ public class TileMatcherSpawnerDrawer extends FlowDrawer {
 		super(pos, 3, 3);
 		PARENT = parent;
 		addChild(new TilePositionMatcherSpawnerButton(this));
+		addChild(new TileModMatcherSpawnerButton(this));
 		update();
 	}
 
