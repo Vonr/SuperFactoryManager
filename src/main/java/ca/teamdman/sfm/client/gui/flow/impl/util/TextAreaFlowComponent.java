@@ -155,17 +155,6 @@ public class TextAreaFlowComponent extends FlowComponent {
 		}
 
 		@Override
-		public void renderButton(
-			MatrixStack matrixStack,
-			int mouseX,
-			int mouseY,
-			float partialTicks
-		) {
-			this.matrixStack = matrixStack;
-			super.renderButton(matrixStack, mouseX, mouseY, partialTicks);
-		}
-
-		@Override
 		protected void drawSelectionBox(int startX, int startY, int endX, int endY) {
 			RenderSystem.pushMatrix();
 			RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
@@ -175,6 +164,7 @@ public class TextAreaFlowComponent extends FlowComponent {
 
 		@Override
 		public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+			this.matrixStack = matrixStack;
 			super.render(matrixStack, mouseX, mouseY, partialTicks);
 			if (!isFocused() && getText().length() == 0) {
 				FONT.drawStringWithShadow(

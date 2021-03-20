@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.minecraft.client.resources.I18n;
@@ -140,21 +141,24 @@ public class ItemRuleFlowData extends FlowData implements
 	}
 
 	public Stream<TileEntity> getTiles(BasicFlowDataContainer container, CableNetwork network) {
-		return tileMatcherIds.stream()
-			.map(id -> container.get(id, TilePositionMatcherFlowData.class))
+		List<TileMatcher> matchers = tileMatcherIds.stream()
+			.map(id -> container.get(id, TileMatcher.class))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
-			.map(data -> data.position)
-			.map(network::getInventory)
-			.filter(Optional::isPresent)
-			.map(Optional::get);
+			.collect(Collectors.toList());
+
+		Predicate<TileEntity> matches = tile -> matchers.stream()
+			.anyMatch(m -> m.matches(tile));
+
+		return network.getInventories().stream()
+			.filter(matches);
 	}
 
 	public List<IItemHandler> getItemHandlers(
 		BasicFlowDataContainer container,
 		CableNetwork network
 	) {
-		return getTiles(container, network)
+		return this.getTiles(container, network)
 			.flatMap(tile -> faces.stream()
 				.map(face -> tile.getCapability(
 					CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,

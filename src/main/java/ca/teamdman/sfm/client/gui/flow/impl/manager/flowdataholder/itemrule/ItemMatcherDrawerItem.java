@@ -115,7 +115,7 @@ class ItemMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends I
 			List<ITextProperties> rtn = new ArrayList<>(super.getTooltip());
 			rtn.set(0,
 				new StringTextComponent(DELEGATE.getData().getDisplayQuantity() + " x ")
-					.append(((IFormattableTextComponent) rtn.get(0)))
+					.appendSibling(((IFormattableTextComponent) rtn.get(0)))
 			);
 			rtn.add(1,
 				new StringTextComponent(DELEGATE.getData().getMatcherDisplayName())

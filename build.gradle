@@ -29,7 +29,7 @@ minecraft {
     // stable_#            Stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: 'snapshot', version: '20201028-1.16.3'
+    mappings channel: 'snapshot', version: '20210309-1.16.4'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
     
      accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -94,13 +94,19 @@ repositories {
         name "mezz maven"
         url "https://dvs1.progwml6.com/files/maven"
     }
+    maven {
+        url "https://www.cursemaven.com"
+    }
+//    flatDir name:"libs", dirs:"libs"
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.16.4-35.1.0'
+    minecraft 'net.minecraftforge:forge:1.16.4-35.1.37'
 
     compileOnly fg.deobf('mezz.jei:jei-1.16.4:7.6.1.71')
     runtimeOnly fg.deobf('mezz.jei:jei-1.16.4:7.6.1.71')
+
+    implementation fg.deobf("curse.maven:mekanism-268560:3183270")
 
 }
 
