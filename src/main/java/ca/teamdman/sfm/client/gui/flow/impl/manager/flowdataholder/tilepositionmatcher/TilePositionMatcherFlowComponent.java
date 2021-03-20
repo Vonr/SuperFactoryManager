@@ -11,13 +11,14 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TilePositionMatcherFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.util.math.BlockPos;
 
 public class TilePositionMatcherFlowComponent extends FlowContainer implements
 	FlowDataHolder<TilePositionMatcherFlowData> {
 
 	protected final ManagerFlowController PARENT;
 	protected final BlockPosPickerFlowComponent PICKER;
-
+	private final CoordinateInput X_INPUT, Y_INPUT, Z_INPUT;
 	private TilePositionMatcherFlowData data;
 
 	public TilePositionMatcherFlowComponent(
@@ -26,20 +27,61 @@ public class TilePositionMatcherFlowComponent extends FlowContainer implements
 	) {
 		super(
 			new Position(0, 0),
-			new Size(100, 26)
+			new Size(136, 26)
 		);
 		this.PARENT = parent;
 		this.data = data;
 
 		addChild(new PickerActivator(this, new Position(3, 3)));
 
-		PICKER = new MyFlowBlockPosPicker(data, parent, new Position(25,0));
+		PICKER = new MyFlowBlockPosPicker(data, parent, new Position(25, 0));
 		PICKER.setVisibleAndEnabled(false);
 		addChild(PICKER);
+
+		X_INPUT = new CoordinateInput(
+			this,
+			() -> getData().position.getX(),
+			n -> getData().position = new BlockPos(
+				n, getData().position.getY(), getData().position.getZ()
+			),
+			new Position(30, 4),
+			new Size(30, 17)
+		);
+		addChild(X_INPUT);
+		Y_INPUT = new CoordinateInput(
+			this,
+			() -> getData().position.getY(),
+			n -> getData().position = new BlockPos(
+				getData().position.getX(), n, getData().position.getZ()
+			),
+			new Position(65, 4),
+			new Size(30, 17)
+		);
+		addChild(Y_INPUT);
+		Z_INPUT = new CoordinateInput(
+			this,
+			() -> getData().position.getZ(),
+			n -> getData().position = new BlockPos(
+				getData().position.getX(), getData().position.getY(), n
+			),
+			new Position(100, 4),
+			new Size(30, 17)
+		);
+		addChild(Z_INPUT);
 
 		parent.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
 			TilePositionMatcherFlowData.class, this
 		));
+	}
+
+	@Override
+	public TilePositionMatcherFlowData getData() {
+		return data;
+	}
+
+	@Override
+	public void setData(TilePositionMatcherFlowData data) {
+		this.data = data;
 	}
 
 	@Override
@@ -71,16 +113,6 @@ public class TilePositionMatcherFlowComponent extends FlowContainer implements
 			CONST.PANEL_BACKGROUND_DARK
 		);
 		super.draw(screen, matrixStack, mx, my, deltaTime);
-	}
-
-	@Override
-	public TilePositionMatcherFlowData getData() {
-		return data;
-	}
-
-	@Override
-	public void setData(TilePositionMatcherFlowData data) {
-		this.data = data;
 	}
 
 	@Override
