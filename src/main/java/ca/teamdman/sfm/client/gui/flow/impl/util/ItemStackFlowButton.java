@@ -14,14 +14,14 @@ import net.minecraft.client.util.ITooltipFlag.TooltipFlags;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextProperties;
 
-public class ItemStackFlowComponent extends FlowButton {
+public class ItemStackFlowButton extends FlowButton {
 	public static final Size DEFAULT_SIZE = new Size(20, 20).toImmutable();
 	private ItemStack STACK;
 	private boolean selected;
 	private boolean selectable = true;
 	private boolean depressed = false;
 
-	public ItemStackFlowComponent(ItemStack stack, Position pos) {
+	public ItemStackFlowButton(ItemStack stack, Position pos) {
 		super(pos, DEFAULT_SIZE.copy());
 		this.STACK = stack;
 	}

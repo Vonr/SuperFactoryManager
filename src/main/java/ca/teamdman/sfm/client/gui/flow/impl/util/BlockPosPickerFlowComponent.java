@@ -31,18 +31,19 @@ public abstract class BlockPosPickerFlowComponent extends FlowContainer {
 			7
 		);
 		addChild(DRAWER);
+
 	}
 
 	private ItemStack getPreview(World world, BlockPos pos) {
 		return new ItemStack(world.getBlockState(pos).getBlock().asItem());
 	}
 
-	public void rebuildFromNetwork(CableNetwork network, Predicate<BlockPos> excluder) {
+	public void rebuildFromNetwork(CableNetwork network, Predicate<BlockPos> filter) {
 		DRAWER.getChildren().clear();
 		network.getInventories().stream()
 			.filter(t -> t.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).isPresent())
 			.map(TileEntity::getPos)
-			.filter(pos -> !excluder.test(pos))
+			.filter(filter)
 			.map(pos -> new Entry(pos, getPreview(network.getWorld(), pos)))
 			.forEach(DRAWER::addChild);
 		DRAWER.update();
@@ -55,7 +56,7 @@ public abstract class BlockPosPickerFlowComponent extends FlowContainer {
 		return super.getZIndex() + 50;
 	}
 
-	private class Entry extends ItemStackFlowComponent {
+	private class Entry extends ItemStackFlowButton {
 
 		public final BlockPos POS;
 

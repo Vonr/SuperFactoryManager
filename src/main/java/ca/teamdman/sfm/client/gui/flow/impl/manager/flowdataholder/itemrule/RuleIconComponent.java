@@ -4,7 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowItemStackPicker;
-import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Collections;
@@ -18,7 +18,7 @@ class RuleIconComponent extends FlowContainer {
 
 	private final ItemRuleFlowComponent PARENT;
 	private final FlowItemStackPicker PICKER;
-	protected final ItemStackFlowComponent BUTTON;
+	protected final ItemStackFlowButton BUTTON;
 
 	public RuleIconComponent(
 		ItemRuleFlowComponent parent,
@@ -33,7 +33,7 @@ class RuleIconComponent extends FlowContainer {
 		addChild(BUTTON);
 	}
 
-	private class MyButton extends ItemStackFlowComponent {
+	private class MyButton extends ItemStackFlowButton {
 
 		public MyButton() {
 			super(PARENT.getData().icon, new Position());

@@ -6,7 +6,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.template.tilematcherspawner.
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
-import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
@@ -35,7 +35,7 @@ class TilesSection extends FlowContainer {
 
 		ADDER = new TileMatcherSpawnerDrawer(
 			PARENT,
-			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 15)
+			new Position(ItemStackFlowButton.DEFAULT_SIZE.getWidth() + 5, 15)
 		);
 		ADDER.setVisibleAndEnabled(false);
 		addChild(ADDER);
@@ -88,7 +88,7 @@ class TilesSection extends FlowContainer {
 	private class AddButton extends FlowPlusButton {
 
 		public AddButton() {
-			super(new Position(), ItemStackFlowComponent.DEFAULT_SIZE, CONST.ADD_BUTTON);
+			super(new Position(), ItemStackFlowButton.DEFAULT_SIZE, CONST.ADD_BUTTON);
 		}
 
 		@Override

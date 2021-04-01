@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer;
 
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
-import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
@@ -23,7 +23,7 @@ class PlusButton extends FlowPlusButton {
 	public PlusButton(ItemStackTileEntityRuleDrawer parent) {
 		super(
 			new Position(),
-			ItemStackFlowComponent.DEFAULT_SIZE.copy(),
+			ItemStackFlowButton.DEFAULT_SIZE.copy(),
 			CONST.ADD_BUTTON
 		);
 		PARENT = parent;

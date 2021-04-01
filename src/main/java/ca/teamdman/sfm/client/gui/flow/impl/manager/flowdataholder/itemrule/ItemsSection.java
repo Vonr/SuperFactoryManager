@@ -6,7 +6,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.template.itemmatcherspawner.
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
-import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -37,7 +37,7 @@ class ItemsSection extends FlowContainer {
 
 		ADDER = new ItemMatcherSpawnerDrawer(
 			PARENT,
-			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 15)
+			new Position(ItemStackFlowButton.DEFAULT_SIZE.getWidth() + 5, 15)
 		);
 		ADDER.setVisibleAndEnabled(false);
 		addChild(ADDER);
@@ -81,7 +81,7 @@ class ItemsSection extends FlowContainer {
 		) {
 			super(
 				new Position(),
-				ItemStackFlowComponent.DEFAULT_SIZE,
+				ItemStackFlowButton.DEFAULT_SIZE,
 				CONST.ADD_BUTTON
 			);
 		}

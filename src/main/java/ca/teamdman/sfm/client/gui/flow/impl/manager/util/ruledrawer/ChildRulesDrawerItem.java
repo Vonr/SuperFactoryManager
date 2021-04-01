@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer;
 
-import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
@@ -16,7 +16,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import org.lwjgl.glfw.GLFW;
 
-class ChildRulesDrawerItem extends ItemStackFlowComponent implements
+class ChildRulesDrawerItem extends ItemStackFlowButton implements
 	FlowDataHolder<ItemRuleFlowData> {
 
 	private final ItemStackTileEntityRuleDrawer PARENT;

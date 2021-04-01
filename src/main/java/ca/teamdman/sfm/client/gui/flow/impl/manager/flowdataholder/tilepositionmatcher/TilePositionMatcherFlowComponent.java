@@ -4,7 +4,6 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.util.BlockPosPickerFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -17,8 +16,9 @@ public class TilePositionMatcherFlowComponent extends FlowContainer implements
 	FlowDataHolder<TilePositionMatcherFlowData> {
 
 	protected final ManagerFlowController PARENT;
-	protected final BlockPosPickerFlowComponent PICKER;
+	protected final Picker PICKER;
 	private final CoordinateInput X_INPUT, Y_INPUT, Z_INPUT;
+	private final Icon ICON;
 	private TilePositionMatcherFlowData data;
 
 	public TilePositionMatcherFlowComponent(
@@ -32,9 +32,10 @@ public class TilePositionMatcherFlowComponent extends FlowContainer implements
 		this.PARENT = parent;
 		this.data = data;
 
-		addChild(new PickerActivator(this, new Position(3, 3)));
+		ICON = new Icon(this, new Position(3, 3));
+		addChild(ICON);
 
-		PICKER = new MyFlowBlockPosPicker(data, parent, new Position(25, 0));
+		PICKER = new Picker(data, parent, new Position(25, 0));
 		PICKER.setVisibleAndEnabled(false);
 		addChild(PICKER);
 
@@ -82,6 +83,11 @@ public class TilePositionMatcherFlowComponent extends FlowContainer implements
 	@Override
 	public void setData(TilePositionMatcherFlowData data) {
 		this.data = data;
+		ICON.cycleItemStack();
+		PICKER.rebuildSuggestions();
+		X_INPUT.setContent(Integer.toString(data.position.getX()));
+		Y_INPUT.setContent(Integer.toString(data.position.getY()));
+		Z_INPUT.setContent(Integer.toString(data.position.getZ()));
 	}
 
 	@Override

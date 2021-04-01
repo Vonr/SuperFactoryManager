@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-public class CoordinateInput extends TextAreaFlowComponent {
+class CoordinateInput extends TextAreaFlowComponent {
 	public static Pattern p = Pattern.compile("^\\s*-?\\d*\\s*$");
 	public CoordinateInput(
 		TilePositionMatcherFlowComponent parent,

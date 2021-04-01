@@ -6,6 +6,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.tilepositionm
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.TileMatcher;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
+import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -32,6 +34,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 
 	public BlockPos position;
 	public boolean open;
+	private transient List<ItemStack> previewCache;
 
 	public TilePositionMatcherFlowData(TilePositionMatcherFlowData other) {
 		this(
@@ -54,7 +57,24 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 
 	@Override
 	public List<ItemStack> getPreview(CableNetwork network) {
-		return Collections.singletonList(network.getPreview(position));
+		if (previewCache == null) {
+			if (network.containsNeighbour(position)) {
+				previewCache = Collections.singletonList(network.getPreview(position));
+			} else {
+				previewCache = Collections.singletonList(new ItemStack(Blocks.BARRIER));
+			}
+		}
+		return previewCache;
+	}
+
+	@Override
+	public void addToDataContainer(BasicFlowDataContainer container) {
+		super.addToDataContainer(container);
+		container.addObserver(new FlowDataHolderObserver<>(
+			ItemRuleFlowData.class,
+			data -> data.tileMatcherIds.contains(getId()),
+			data -> this.open &= data.open // only keep this open if holder is also open
+		));
 	}
 
 	@Override

@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.ItemMatcher;
@@ -27,7 +27,7 @@ class ItemMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends I
 		ItemsSection parent,
 		T delegate
 	) {
-		super(new Position(), ItemStackFlowComponent.DEFAULT_SIZE);
+		super(new Position(), ItemStackFlowButton.DEFAULT_SIZE);
 		this.PARENT = parent;
 		this.DELEGATE = delegate;
 
@@ -58,7 +58,7 @@ class ItemMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends I
 	}
 
 
-	private class DisplayIcon extends ItemStackFlowComponent {
+	private class DisplayIcon extends ItemStackFlowButton {
 		private int tick = 0;
 		public DisplayIcon() {
 			super(ItemStack.EMPTY, new Position());

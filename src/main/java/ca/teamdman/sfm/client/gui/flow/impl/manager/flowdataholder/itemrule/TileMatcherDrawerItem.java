@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.CyclingItemStackFlowButton;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -12,15 +12,14 @@ import net.minecraft.util.text.ITextProperties;
 import org.lwjgl.glfw.GLFW;
 
 class TileMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends TileMatcher>> extends
-	ItemStackFlowComponent {
+	CyclingItemStackFlowButton {
 
 	public final T DELEGATE;
 	private final CableNetwork NETWORK;
-	private int tick = 0;
 	private TilesSection PARENT;
 
 	public TileMatcherDrawerItem(TilesSection parent, T comp, CableNetwork network) {
-		super(ItemStack.EMPTY, new Position());
+		super(new Position());
 		this.DELEGATE = comp;
 		this.PARENT = parent;
 		this.NETWORK = network;
@@ -31,15 +30,7 @@ class TileMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends T
 			.withConstantOffset(getPosition())
 			.withConstantOffset(getSize().getWidth() + 5, 0));
 
-		setNextIcon();
-	}
-
-	private void setNextIcon() {
-		List<ItemStack> items = DELEGATE.getData().getPreview(NETWORK);
-		if (items.size() == 0) {
-			return;
-		}
-		setItemStack(items.get((tick / 10) % items.size()));
+		cycleItemStack();
 	}
 
 	@Override
@@ -78,10 +69,7 @@ class TileMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends T
 	}
 
 	@Override
-	public void tick() {
-		tick++;
-		if (tick % 10 == 0) {
-			setNextIcon();
-		}
+	public List<ItemStack> getItemStacks() {
+		return DELEGATE.getData().getPreview(NETWORK);
 	}
 }

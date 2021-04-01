@@ -7,7 +7,7 @@ import ca.teamdman.sfm.common.flow.core.Position;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 
-public class FlowTileEntity extends ItemStackFlowComponent {
+public class FlowTileEntity extends ItemStackFlowButton {
 	public final TileEntity TILE;
 	public FlowTileEntity(TileEntity tile, Position pos) {
 		super(new ItemStack(tile.getBlockState().getBlock()), pos);

@@ -5,7 +5,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.TextAreaFlowComponent;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -29,7 +29,7 @@ public class TileModMatcherFlowComponent extends
 		TileModMatcherFlowData data
 	) {
 		super(
-			new Position(ItemStackFlowComponent.DEFAULT_SIZE.getWidth() + 5, 0),
+			new Position(ItemStackFlowButton.DEFAULT_SIZE.getWidth() + 5, 0),
 			new Size(66, 24)
 		);
 		PARENT = parent;

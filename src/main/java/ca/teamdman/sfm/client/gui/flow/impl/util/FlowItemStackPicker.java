@@ -22,8 +22,8 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 	private final TextAreaFlowComponent SEARCH_TEXT_INPUT;
 	private SearchResults searchResults;
 	private static final Comparator<FlowComponent> RESULT_COMPARATOR = Comparator.comparing(
-		c -> c instanceof ItemStackFlowComponent
-			? ((ItemStackFlowComponent) c).getStack()
+		c -> c instanceof ItemStackFlowButton
+			? ((ItemStackFlowButton) c).getStack()
 			: ItemStack.EMPTY,
 		SearchUtil.SEARCH_RESULT_COMPARATOR
 	);
@@ -97,7 +97,7 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 
 	private static class NoResultsFoundLabelFlowComponent extends FlowComponent {
 		public NoResultsFoundLabelFlowComponent() {
-			super(new Position(), ItemStackFlowComponent.DEFAULT_SIZE);
+			super(new Position(), ItemStackFlowButton.DEFAULT_SIZE);
 		}
 
 		@Override
@@ -114,7 +114,7 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 		}
 	}
 
-	private class SearchResultStack extends ItemStackFlowComponent {
+	private class SearchResultStack extends ItemStackFlowButton {
 
 		private final ItemStack stack;
 
