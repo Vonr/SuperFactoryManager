@@ -75,7 +75,7 @@ public class ToolboxFlowData extends FlowData implements PositionHolder {
 		@Override
 		public ToolboxFlowData fromNBT(CompoundNBT tag) {
 			return new ToolboxFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				new Position(tag.getCompound("pos"))
 			);
 		}

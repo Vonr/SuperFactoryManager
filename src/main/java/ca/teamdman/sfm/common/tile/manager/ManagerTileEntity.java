@@ -148,7 +148,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			getFlowDataContainer().deserializeNBT(
 				compound.getList("flow_data_list", NBT.TAG_COMPOUND)
 			);
-		} else {
+		} else if (version != 0) {
 			SFM.LOGGER.warn(
 				SFMUtil.getMarker(getClass()),
 				"Unknown version [{}] deserializing manager NBT",

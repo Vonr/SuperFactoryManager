@@ -81,7 +81,7 @@ public class TimerTriggerFlowData extends FlowData implements PositionHolder {
 		@Override
 		public TimerTriggerFlowData fromNBT(CompoundNBT tag) {
 			return new TimerTriggerFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				new Position(tag.getCompound("pos")),
 				tag.getInt("interval"),
 				tag.getBoolean("open")

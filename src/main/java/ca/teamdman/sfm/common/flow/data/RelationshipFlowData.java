@@ -109,7 +109,7 @@ public class RelationshipFlowData extends FlowData implements Observer {
 		@Override
 		public RelationshipFlowData fromNBT(CompoundNBT tag) {
 			return new RelationshipFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				UUID.fromString(tag.getString("from")),
 				UUID.fromString(tag.getString("to"))
 			);

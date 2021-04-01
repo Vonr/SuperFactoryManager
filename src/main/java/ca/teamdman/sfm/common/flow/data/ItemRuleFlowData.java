@@ -258,7 +258,7 @@ public class ItemRuleFlowData extends FlowData implements
 		@Override
 		public ItemRuleFlowData fromNBT(CompoundNBT tag) {
 			return new ItemRuleFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				tag.getString("name"),
 				ItemStack.read(tag.getCompound("icon")),
 				new Position(tag.getCompound("pos")),

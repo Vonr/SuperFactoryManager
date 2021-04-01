@@ -116,7 +116,7 @@ public class ItemInputFlowData extends FlowData implements Observer, PositionHol
 		@Override
 		public ItemInputFlowData fromNBT(CompoundNBT tag) {
 			return new ItemInputFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				new Position(tag.getCompound("pos")),
 				UUID.fromString(tag.getString("tileEntityRule"))
 			);

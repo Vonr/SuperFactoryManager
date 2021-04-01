@@ -142,7 +142,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		@Override
 		public TilePositionMatcherFlowData fromNBT(CompoundNBT tag) {
 			return new TilePositionMatcherFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				NBTUtil.readBlockPos(tag.getCompound("pos")),
 				tag.getBoolean("open")
 			);

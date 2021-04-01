@@ -103,7 +103,7 @@ public class LineNodeFlowData extends FlowData implements Observer, PositionHold
 		@Override
 		public LineNodeFlowData fromNBT(CompoundNBT tag) {
 			return new LineNodeFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				new Position(tag.getCompound("pos"))
 			);
 		}

@@ -133,7 +133,7 @@ public class TileModMatcherFlowData extends FlowData implements TileMatcher {
 		@Override
 		public TileModMatcherFlowData fromNBT(CompoundNBT tag) {
 			return new TileModMatcherFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				tag.getString("modId"),
 				tag.getBoolean("open")
 

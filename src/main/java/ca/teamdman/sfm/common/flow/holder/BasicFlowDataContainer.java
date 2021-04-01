@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.common.flow.holder;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
@@ -15,6 +14,7 @@ import java.util.Observer;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -174,14 +174,7 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 	public void deserializeNBT(ListNBT list) {
 		list.stream()
 			.map(c -> ((CompoundNBT) c))
-			.map(c -> {
-				Optional<FlowData> data = FlowDataSerializer.getSerializer(c)
-					.map(serializer -> serializer.fromNBT(c));
-				if (!data.isPresent()) {
-					SFM.LOGGER.warn("Could not find factory for {}", c);
-				}
-				return data;
-			})
+			.map((Function<CompoundNBT, Optional<FlowData>>) FlowDataSerializer::deserialize)
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.sorted(Comparator.comparing(a -> a instanceof RelationshipFlowData))

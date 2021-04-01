@@ -111,7 +111,7 @@ public class ItemPickerMatcherFlowData extends FlowData implements ItemMatcher {
 		@Override
 		public ItemPickerMatcherFlowData fromNBT(CompoundNBT tag) {
 			return new ItemPickerMatcherFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				ItemStack.read(tag.getCompound("stack")),
 				tag.getInt("quantity"),
 				tag.getBoolean("open")

@@ -87,7 +87,7 @@ public class ItemModMatcherFlowData extends FlowData implements ItemMatcher {
 		@Override
 		public ItemModMatcherFlowData fromNBT(CompoundNBT tag) {
 			return new ItemModMatcherFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				tag.getString("modId"),
 				tag.getInt("quantity"),
 				tag.getBoolean("open")

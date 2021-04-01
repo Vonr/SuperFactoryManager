@@ -70,7 +70,7 @@ public class CursorFlowData extends FlowData implements PositionHolder {
 		@Override
 		public CursorFlowData fromNBT(CompoundNBT tag) {
 			return new CursorFlowData(
-				UUID.fromString(tag.getString("uuid")),
+				getUUID(tag),
 				tag.getString("player"),
 				new Position(tag.getCompound("position"))
 			);
