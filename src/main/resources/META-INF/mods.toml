@@ -7,7 +7,7 @@ license="Mozilla Public Licence, v. 2.0"
 issueTrackerURL="https://github.com/TeamDman/SuperFactoryManager/issues"
 [[mods]]
   modId="sfm"
-  version="${version}"
+  version="${file.jarVersion}"
   displayName="Super Factory Manager"
   #updateJSONURL="http://myurl.me/"
   displayURL="https://www.curseforge.com/minecraft/mc-mods/super-factory-manager"
