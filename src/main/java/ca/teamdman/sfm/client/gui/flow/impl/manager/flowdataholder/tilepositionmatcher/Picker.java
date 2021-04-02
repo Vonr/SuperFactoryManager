@@ -32,7 +32,7 @@ class Picker extends BlockPosPickerFlowComponent {
 		// gather list of existing selected positions for this
 		BasicFlowDataContainer container = PARENT.SCREEN.getFlowDataContainer();
 		Set<BlockPos> ignore = container.get(ItemRuleFlowData.class)
-			.filter(data -> data.tileMatcherIds.contains(data.getId()))
+			.filter(data -> data.tileMatcherIds.contains(this.data.getId()))
 			.flatMap(data -> data.tileMatcherIds.stream())
 			.map(id -> container.get(id, TilePositionMatcherFlowData.class))
 			.filter(Optional::isPresent)
