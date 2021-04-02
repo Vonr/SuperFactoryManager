@@ -100,7 +100,8 @@ public class CableNetworkManager {
 
 			// Discover candidate networks
 			List<CableNetwork> candidates = NETWORKS.get(world.getDimensionKey()).stream()
-				.filter(network -> network.containsNeighbour(cablePos))
+				.filter(net -> net.getWorld().isRemote() == world.isRemote())
+				.filter(net -> net.containsNeighbour(cablePos))
 				.collect(Collectors.toList());
 
 			if (candidates.size() == 0) {
