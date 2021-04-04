@@ -16,6 +16,7 @@ import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.platform.GlStateManager;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -155,6 +156,7 @@ public class ItemOutputFlowButton extends FlowContainer implements
 		public void draw(
 			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 		) {
+			GlStateManager.color4f(1f,0.6f,0.4f,1f);
 			super.draw(screen, matrixStack, mx, my, deltaTime);
 			if (LABEL == FlowSprite.EMPTY) {
 				// custom icon is set, draw custom stack
