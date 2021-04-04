@@ -35,6 +35,17 @@ public class FlowRelationship extends FlowComponent implements
 	}
 
 	@Override
+	public boolean isDeletable() {
+		return true;
+	}
+
+	@Override
+	public Optional<FlowRelationship> getElementUnderMouse(int mx, int my) {
+		return CONTROLLER.findFirstChild(RelationshipController.class)
+			.flatMap(rc -> rc.getRelationshipUnderMouse(mx, my));
+	}
+
+	@Override
 	public boolean mousePressed(int mx, int my, int button) {
 		if (!Screen.hasControlDown()) {
 			return false;

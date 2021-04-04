@@ -206,7 +206,7 @@ public class FlowComponent implements SizeHolder {
 		return hovering;
 	}
 
-	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
+	public Optional<? extends FlowComponent> getElementUnderMouse(int mx, int my) {
 		return isVisible()
 			&& isEnabled()
 			&& isInBounds(mx, my)

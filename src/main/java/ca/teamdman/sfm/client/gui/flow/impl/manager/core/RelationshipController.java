@@ -33,10 +33,16 @@ public class RelationshipController extends FlowComponent {
 		return super.getZIndex() + 300;
 	}
 
-	public Stream<RelationshipFlowData> getFlowRelationshipDatas() {
+	public Stream<RelationshipFlowData> getFlowRelationshipData() {
 		return CONTROLLER.SCREEN.getFlowDataContainer().stream()
 			.filter(RelationshipFlowData.class::isInstance)
-			.map(data -> ((RelationshipFlowData) data));
+			.map(RelationshipFlowData.class::cast);
+	}
+
+	public Optional<FlowRelationship> getRelationshipUnderMouse(int mx, int my) {
+		return getFlowRelationships()
+			.filter(rel -> rel.isCloseTo(mx, my))
+			.findFirst();
 	}
 
 	public Stream<FlowRelationship> getFlowRelationships() {
@@ -50,7 +56,7 @@ public class RelationshipController extends FlowComponent {
 		if (!Screen.hasShiftDown()) {
 			return false;
 		}
-		Optional<FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my)
+		Optional<? extends FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my)
 			.filter(c -> c instanceof FlowDataHolder)
 			.filter(c -> ((FlowDataHolder<?>) c).getData().isValidRelationshipTarget());
 		hit.ifPresent(c -> {
