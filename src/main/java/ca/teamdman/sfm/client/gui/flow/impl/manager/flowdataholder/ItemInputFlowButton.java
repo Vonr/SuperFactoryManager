@@ -156,7 +156,9 @@ public class ItemInputFlowButton extends FlowContainer implements
 		public void draw(
 			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 		) {
-			GlStateManager.color4f(0.5f,0.5f,1f,1f);
+			if (LABEL == FlowSprite.EMPTY) {
+				GlStateManager.color4f(0.5f, 0.5f, 1f, 1f);
+			}
 			super.draw(screen, matrixStack, mx, my, deltaTime);
 			if (LABEL == FlowSprite.EMPTY) {
 				// custom icon is set, draw custom stack
