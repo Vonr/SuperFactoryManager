@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.flow.holder;
 
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
+import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -26,23 +27,30 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 
 	private final HashMap<UUID, FlowData> DELEGATE = new HashMap<>();
 
-	public Stream<FlowData> getDescendants(
-		FlowData start,
+	public Stream<UUID> getDescendants(
+		UUID start,
 		boolean recursive
 	) {
 		return SFMUtil.getRecursiveStream(
 			(current, next, results) -> stream()
 				.filter(RelationshipFlowData.class::isInstance)
-				.map(data -> (RelationshipFlowData) data)
-				.filter(rel -> rel.from.equals(current.getId()))
-				.map(rel -> get(rel.from))
+				.map(RelationshipFlowData.class::cast)
+				.filter(rel -> rel.from.equals(current))
+				.map(rel -> get(rel.to))
 				.filter(Optional::isPresent)
 				.map(Optional::get)
 				.forEach(v -> {
-					if (recursive) {
-						next.accept(v);
+					if (v instanceof LineNodeFlowData) {
+						// line nodes don't count as "recursive"
+						next.accept(v.getId());
+					} else {
+						// accept child
+						results.accept(v.getId());
+						if (recursive) {
+							// if recursive, grab child's children
+							next.accept(v.getId());
+						}
 					}
-					results.accept(v);
 				}),
 			start
 		);
@@ -56,23 +64,30 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 		return Optional.ofNullable(DELEGATE.get(id));
 	}
 
-	public Stream<FlowData> getAncestors(
-		FlowData start,
+	public Stream<UUID> getAncestors(
+		UUID start,
 		boolean recursive
 	) {
 		return SFMUtil.getRecursiveStream(
 			(current, next, results) -> stream()
 				.filter(RelationshipFlowData.class::isInstance)
-				.map(data -> (RelationshipFlowData) data)
-				.filter(rel -> rel.to.equals(current.getId()))
-				.map(rel -> get(rel.to))
+				.map(RelationshipFlowData.class::cast)
+				.filter(rel -> rel.to.equals(current))
+				.map(rel -> get(rel.from))
 				.filter(Optional::isPresent)
 				.map(Optional::get)
 				.forEach(v -> {
-					if (recursive) {
-						next.accept(v);
+					if (v instanceof LineNodeFlowData) {
+						// line nodes don't count as "recursive"
+						next.accept(v.getId());
+					} else {
+						// accept parent
+						results.accept(v.getId());
+						if (recursive) {
+							// if recursive, grab parent's parents
+							next.accept(v.getId());
+						}
 					}
-					results.accept(v);
 				}),
 			start
 		);
@@ -166,7 +181,8 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 	@Override
 	public ListNBT serializeNBT() {
 		ListNBT list = new ListNBT();
-		stream().forEach(d -> list.add(((FlowDataSerializer<FlowData>) d.getSerializer()).toNBT(d)));
+		stream()
+			.forEach(d -> list.add(((FlowDataSerializer<FlowData>) d.getSerializer()).toNBT(d)));
 		return list;
 	}
 

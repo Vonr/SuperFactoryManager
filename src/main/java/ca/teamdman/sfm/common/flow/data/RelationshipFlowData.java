@@ -41,18 +41,35 @@ public class RelationshipFlowData extends FlowData implements Observer {
 	@Override
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		if (from == null || to == null) {
+			// prevent malformed relationships
 			return;
 		}
 		if (from.equals(to)) {
+			// prevent self-loop relationships
 			return;
 		}
-		if (container.getAncestors(this, true)
-			.map(FlowData::getId)
-			.anyMatch(to::equals)) {
+		if (container.getDescendants(to, true).anyMatch(from::equals)) {
+			// prevent circular relationships
+			return;
+		}
+		if (container.getDescendants(from, false).anyMatch(to::equals)) {
+			// if this relationship exists, delete it instead of creating it
+			container.removeIf(data ->
+				data instanceof RelationshipFlowData
+					&& isSimilar(((RelationshipFlowData) data), container)
+			);
 			return;
 		}
 		super.addToDataContainer(container);
 		container.addObserver(this);
+	}
+
+	/**
+	 * @return {@code true} if {@code other} effectively joins the same elements as {@code this}.
+	 */
+	public boolean isSimilar(RelationshipFlowData other, BasicFlowDataContainer container) {
+		if (!other.from.equals(from)) return false;
+		return container.getDescendants(other.from, false).anyMatch(this.to::equals);
 	}
 
 	@Override

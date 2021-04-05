@@ -84,8 +84,8 @@ public class LineNodeFlowData extends FlowData implements Observer, PositionHold
 
 				// No next or previous item, so this node is orphaned and should be pruned
 				if (
-					!container.getAncestors(this, false).findAny().isPresent()
-						|| !container.getDescendants(this, false).findAny().isPresent()
+					!container.getAncestors(getId(), false).findAny().isPresent()
+						|| !container.getDescendants(getId(), false).findAny().isPresent()
 				) {
 					container.remove(getId());
 					o.deleteObserver(this);
