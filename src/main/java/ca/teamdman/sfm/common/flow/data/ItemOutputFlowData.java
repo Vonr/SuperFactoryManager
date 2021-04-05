@@ -54,6 +54,13 @@ public class ItemOutputFlowData extends FlowData implements Observer, PositionHo
 	}
 
 	@Override
+	public void removeFromDataContainer(BasicFlowDataContainer container) {
+		super.removeFromDataContainer(container);
+		container.get(tileEntityRule)
+			.ifPresent(data -> data.removeFromDataContainer(container));
+	}
+
+	@Override
 	public ItemOutputFlowData duplicate(
 		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {

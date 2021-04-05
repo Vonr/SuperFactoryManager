@@ -140,18 +140,14 @@ public class ItemRuleFlowData extends FlowData implements
 				.comparingInt(m -> state.getRemainingQuantity(this, m))); // Most remaining first
 	}
 
-	public Stream<TileEntity> getTiles(BasicFlowDataContainer container, CableNetwork network) {
-		List<TileMatcher> matchers = tileMatcherIds.stream()
-			.map(id -> container.get(id, TileMatcher.class))
+	@Override
+	public void removeFromDataContainer(BasicFlowDataContainer container) {
+		super.removeFromDataContainer(container);
+		Stream.concat(itemMatcherIds.stream(), tileMatcherIds.stream())
+			.map(container::get)
 			.filter(Optional::isPresent)
 			.map(Optional::get)
-			.collect(Collectors.toList());
-
-		Predicate<TileEntity> matches = tile -> matchers.stream()
-			.anyMatch(m -> m.matches(tile));
-
-		return network.getInventories().stream()
-			.filter(matches);
+			.forEach(data -> data.removeFromDataContainer(container));
 	}
 
 	public List<IItemHandler> getItemHandlers(
@@ -169,6 +165,20 @@ public class ItemRuleFlowData extends FlowData implements
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.collect(Collectors.toList());
+	}
+
+	public Stream<TileEntity> getTiles(BasicFlowDataContainer container, CableNetwork network) {
+		List<TileMatcher> matchers = tileMatcherIds.stream()
+			.map(id -> container.get(id, TileMatcher.class))
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.collect(Collectors.toList());
+
+		Predicate<TileEntity> matches = tile -> matchers.stream()
+			.anyMatch(m -> m.matches(tile));
+
+		return network.getInventories().stream()
+			.filter(matches);
 	}
 
 	public ItemStack getIcon() {

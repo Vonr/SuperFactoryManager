@@ -4,6 +4,7 @@
 package ca.teamdman.sfm.common.net.packet.manager.delete;
 
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
@@ -40,7 +41,9 @@ public class ManagerDeletePacketS2C extends S2CManagerPacket {
 			ManagerScreen screen,
 			ManagerDeletePacketS2C msg
 		) {
-			screen.getFlowDataContainer().remove(msg.ELEMENT_ID);
+			BasicFlowDataContainer container = screen.getFlowDataContainer();
+			container.get(msg.ELEMENT_ID)
+				.ifPresent(data -> data.removeFromDataContainer(container));
 		}
 	}
 }
