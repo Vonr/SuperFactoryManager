@@ -88,13 +88,6 @@ public class RelationshipController extends FlowComponent {
 		CONTROLLER.getElementsUnderMouse(mx, my)
 			.filter(FlowDataHolder.class::isInstance)
 			.filter(c -> !c.equals(from))
-			.map(x -> {
-				System.out.printf("Elem %s %s %s\n",
-				((FlowDataHolder) x).getClass().getName(),
-				((FlowDataHolder) x).getData().getClass().getName(),
-				((FlowDataHolder) x).toString());
-				return x;
-			})
 			.filter(c -> ((FlowDataHolder<?>) c).getData().isValidRelationshipTarget())
 			.map(x -> x.snapToEdge(fromPos))
 			.findFirst()
