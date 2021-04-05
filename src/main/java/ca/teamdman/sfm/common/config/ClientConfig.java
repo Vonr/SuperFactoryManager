@@ -6,6 +6,7 @@ package ca.teamdman.sfm.common.config;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class ClientConfig {
+
 	public final ForgeConfigSpec.BooleanValue allowMultipleRuleWindows;
 	public final ForgeConfigSpec.BooleanValue alwaysSnapMovementToGrid;
 	public final ForgeConfigSpec.BooleanValue showRuleDrawerLabels;
@@ -13,6 +14,7 @@ public final class ClientConfig {
 	public final ForgeConfigSpec.BooleanValue enableRegexSearch;
 	public final ForgeConfigSpec.BooleanValue hideManagerInstructions;
 	public final ForgeConfigSpec.BooleanValue preventClosingManagerWithInventoryButton;
+	public final ForgeConfigSpec.BooleanValue enableDebugMode;
 
 
 	ClientConfig(final ForgeConfigSpec.Builder builder) {
@@ -40,6 +42,11 @@ public final class ClientConfig {
 		preventClosingManagerWithInventoryButton = builder
 			.comment("Prevent closing the manager gui with the inventory button")
 			.define("preventClosingManagerWithInventoryButton", true);
+
+		enableDebugMode = builder
+			.comment("Enable display of debug information")
+			.define("enableDebugMode", false);
+
 		builder.pop();
 	}
 }

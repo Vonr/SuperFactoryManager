@@ -12,6 +12,7 @@ public class Config {
 		public static boolean enableRegexSearch;
 		public static boolean hideManagerInstructions;
 		public static boolean preventClosingManagerWithInventoryButton;
+		public static boolean enableDebugMode;
 	}
 
 	public static class Common {

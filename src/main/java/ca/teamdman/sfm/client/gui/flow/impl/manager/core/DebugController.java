@@ -6,6 +6,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.core;
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
@@ -32,7 +33,7 @@ public class DebugController extends FlowComponent {
 		int my,
 		float deltaTime
 	) {
-		if (Screen.hasControlDown() && Screen.hasAltDown()) {
+		if (Client.enableDebugMode && Screen.hasControlDown() && Screen.hasAltDown()) {
 			Optional<String> elem = CONTROLLER.getElementsUnderMouse(mx, my)
 				.filter(FlowDataHolder.class::isInstance)
 				.map(FlowDataHolder.class::cast)

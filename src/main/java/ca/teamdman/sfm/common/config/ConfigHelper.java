@@ -71,5 +71,6 @@ public final class ConfigHelper {
 		Client.enableRegexSearch = ConfigHolder.CLIENT.enableRegexSearch.get();
 		Client.hideManagerInstructions = ConfigHolder.CLIENT.hideManagerInstructions.get();
 		Client.preventClosingManagerWithInventoryButton = ConfigHolder.CLIENT.preventClosingManagerWithInventoryButton.get();
+		Client.enableDebugMode = ConfigHolder.CLIENT.enableDebugMode.get();
 	}
 }
