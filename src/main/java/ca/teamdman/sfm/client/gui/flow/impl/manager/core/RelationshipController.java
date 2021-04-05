@@ -13,7 +13,6 @@ import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 import net.minecraft.client.gui.screen.Screen;
 
 public class RelationshipController extends FlowComponent {
@@ -33,32 +32,15 @@ public class RelationshipController extends FlowComponent {
 		return super.getZIndex() + 300;
 	}
 
-	public Stream<RelationshipFlowData> getFlowRelationshipData() {
-		return CONTROLLER.SCREEN.getFlowDataContainer().stream()
-			.filter(RelationshipFlowData.class::isInstance)
-			.map(RelationshipFlowData.class::cast);
-	}
-
-	public Optional<FlowRelationship> getRelationshipUnderMouse(int mx, int my) {
-		return getFlowRelationships()
-			.filter(rel -> rel.isCloseTo(mx, my))
-			.findFirst();
-	}
-
-	public Stream<FlowRelationship> getFlowRelationships() {
-		return CONTROLLER.getChildren().stream()
-			.filter(c -> c instanceof FlowRelationship)
-			.map(c -> ((FlowRelationship) c));
-	}
-
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
 		if (!Screen.hasShiftDown()) {
 			return false;
 		}
-		Optional<? extends FlowComponent> hit = CONTROLLER.getElementUnderMouse(mx, my)
+		Optional<? extends FlowComponent> hit = CONTROLLER.getElementsUnderMouse(mx, my)
 			.filter(c -> c instanceof FlowDataHolder)
-			.filter(c -> ((FlowDataHolder<?>) c).getData().isValidRelationshipTarget());
+			.filter(c -> ((FlowDataHolder<?>) c).getData().isValidRelationshipTarget())
+			.findFirst();
 		hit.ifPresent(c -> {
 			isDragging = true;
 			from = ((FlowDataHolder<?>) c);
@@ -73,12 +55,13 @@ public class RelationshipController extends FlowComponent {
 		if (!isDragging) {
 			return false;
 		}
-		CONTROLLER.getElementUnderMouse(mx, my)
+		CONTROLLER.getElementsUnderMouse(mx, my)
 			.filter(c -> c instanceof FlowDataHolder)
 			.filter(c -> !c.equals(from))
 			.map(c -> ((FlowDataHolder<?>) c).getData())
 			.filter(FlowData::isValidRelationshipTarget)
 			.map(FlowData::getId)
+			.findFirst()
 			.ifPresent(to -> createRelationship(from.getData().getId(), to));
 		isDragging = false;
 		from = null;
@@ -102,11 +85,19 @@ public class RelationshipController extends FlowComponent {
 			return false;
 		}
 		toPos.setXY(mx, my);
-		CONTROLLER.getElementUnderMouse(mx, my)
+		CONTROLLER.getElementsUnderMouse(mx, my)
 			.filter(FlowDataHolder.class::isInstance)
 			.filter(c -> !c.equals(from))
+			.map(x -> {
+				System.out.printf("Elem %s %s %s\n",
+				((FlowDataHolder) x).getClass().getName(),
+				((FlowDataHolder) x).getData().getClass().getName(),
+				((FlowDataHolder) x).toString());
+				return x;
+			})
 			.filter(c -> ((FlowDataHolder<?>) c).getData().isValidRelationshipTarget())
 			.map(x -> x.snapToEdge(fromPos))
+			.findFirst()
 			.ifPresent(toPos::setXY);
 		return true;
 	}

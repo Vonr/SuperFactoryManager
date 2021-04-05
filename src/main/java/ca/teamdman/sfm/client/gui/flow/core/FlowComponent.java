@@ -9,7 +9,7 @@ import ca.teamdman.sfm.common.flow.core.SizeHolder;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Stream;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
@@ -206,12 +206,16 @@ public class FlowComponent implements SizeHolder {
 		return hovering;
 	}
 
-	public Optional<? extends FlowComponent> getElementUnderMouse(int mx, int my) {
+	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
+		return isElementUnderMouse(mx, my)
+			? Stream.of(this)
+			: Stream.empty();
+	}
+
+	public boolean isElementUnderMouse(int mx, int my) {
 		return isVisible()
 			&& isEnabled()
-			&& isInBounds(mx, my)
-			? Optional.of(this)
-			: Optional.empty();
+			&& isInBounds(mx, my);
 	}
 
 	public boolean isVisible() {

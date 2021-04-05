@@ -21,12 +21,13 @@ public class DeletionController extends FlowComponent {
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		if (keyCode == GLFW.GLFW_KEY_DELETE) {
-			Optional<UUID> elem = CONTROLLER.getElementUnderMouse(mx, my)
+			Optional<UUID> elem = CONTROLLER.getElementsUnderMouse(mx, my)
 				.filter(FlowDataHolder.class::isInstance)
 				.map(FlowDataHolder.class::cast)
 				.filter(FlowDataHolder::isDeletable)
 				.map(FlowDataHolder::getData)
-				.map(FlowData::getId);
+				.map(FlowData::getId)
+				.findFirst();
 			elem.ifPresent(CONTROLLER.SCREEN::sendFlowDataDeleteToServer);
 			return elem.isPresent();
 		}

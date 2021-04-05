@@ -19,7 +19,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Stream;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 
@@ -94,8 +94,8 @@ public class ItemInputFlowButton extends FlowContainer implements
 	}
 
 	@Override
-	public Optional<FlowComponent> getElementUnderMouse(int mx, int my) {
-		return super.getElementUnderMouse(mx, my).map(__ -> this);
+	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
+		return BUTTON.isElementUnderMouse(mx, my) ? Stream.of(this) : Stream.empty();
 	}
 
 	private class MyFlowIconButton extends FlowIconButton {

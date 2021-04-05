@@ -48,8 +48,9 @@ public class CloneController extends FlowComponent {
 		if (!Screen.hasControlDown()) {
 			return false;
 		}
-		return CONTROLLER.getElementUnderMouse(mx, my)
+		return CONTROLLER.getElementsUnderMouse(mx, my)
 			.map(hit -> startCloning(hit, CONTROLLER.SCREEN.getFlowDataContainer()))
+			.findFirst()
 			.orElse(false);
 	}
 

@@ -7,7 +7,6 @@ import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.core.RelationshipController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -17,6 +16,7 @@ import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacket
 import ca.teamdman.sfm.common.util.SFMUtil;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.Optional;
+import java.util.stream.Stream;
 import net.minecraft.client.gui.screen.Screen;
 
 public class FlowRelationship extends FlowComponent implements
@@ -40,9 +40,8 @@ public class FlowRelationship extends FlowComponent implements
 	}
 
 	@Override
-	public Optional<FlowRelationship> getElementUnderMouse(int mx, int my) {
-		return CONTROLLER.findFirstChild(RelationshipController.class)
-			.flatMap(rc -> rc.getRelationshipUnderMouse(mx, my));
+	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
+		return isCloseTo(mx, my) ? Stream.of(this) : Stream.empty();
 	}
 
 	@Override
@@ -50,8 +49,9 @@ public class FlowRelationship extends FlowComponent implements
 		if (!Screen.hasControlDown()) {
 			return false;
 		}
-		Optional<FlowRelationship> rel = new RelationshipController(CONTROLLER)
-			.getFlowRelationships()
+		Optional<FlowRelationship> rel = CONTROLLER.getChildren().stream()
+			.filter(FlowRelationship.class::isInstance)
+			.map(FlowRelationship.class::cast)
 			.filter(r -> r.isCloseTo(mx, my))
 			.findFirst();
 		if (!rel.isPresent()) {

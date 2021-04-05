@@ -12,7 +12,7 @@ import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Stream;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -82,10 +82,10 @@ public class TimerTriggerFlowComponent extends FlowContainer implements
 	}
 
 	@Override
-	public Optional<FlowComponent> getElementUnderMouse(
+	public Stream<? extends FlowComponent> getElementsUnderMouse(
 		int mx, int my
 	) {
-		return super.getElementUnderMouse(mx, my).map(__ -> this);
+		return BUTTON.isElementUnderMouse(mx, my) ? Stream.of(this) : Stream.empty();
 	}
 
 }

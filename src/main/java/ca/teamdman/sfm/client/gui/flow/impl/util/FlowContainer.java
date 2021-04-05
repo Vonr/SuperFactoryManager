@@ -21,13 +21,6 @@ import java.util.stream.Stream.Builder;
 
 public abstract class FlowContainer extends FlowComponent {
 
-	@Override
-	public String toString() {
-		return "FlowContainer{" +
-			"#children=" + children.size() +
-			'}';
-	}
-
 	private final ArrayList<FlowComponent> children = new ArrayList<FlowComponent>() {
 		@Override
 		public boolean add(FlowComponent o) {
@@ -61,13 +54,6 @@ public abstract class FlowContainer extends FlowComponent {
 		return findFirstChild(data.getId());
 	}
 
-	public <T> Optional<T> findFirstChild(Class<T> clazz) {
-		return getChildren().stream()
-			.filter(clazz::isInstance)
-			.map(clazz::cast)
-			.findFirst();
-	}
-
 	public Optional<FlowComponent> findFirstChild(UUID id) {
 		return getChildren().stream()
 			.filter(c -> c instanceof FlowDataHolder
@@ -77,6 +63,13 @@ public abstract class FlowContainer extends FlowComponent {
 
 	public ArrayList<FlowComponent> getChildren() {
 		return children;
+	}
+
+	public <T> Optional<T> findFirstChild(Class<T> clazz) {
+		return getChildren().stream()
+			.filter(clazz::isInstance)
+			.map(clazz::cast)
+			.findFirst();
 	}
 
 	public void addChild(FlowComponent c) {
@@ -102,9 +95,9 @@ public abstract class FlowContainer extends FlowComponent {
 	 * Adds the children to a stream in reversed order. Higher z index means that the elements
 	 * render later Rendering later means they render 'on top'. Clicking an element that is on to of
 	 * another expects the top element to consume click first.
-	 *
-	 * {@code children} keeps children sorted in according to z-index, increasing
-	 * so iterating it backwards will get them in decreasing order
+	 * <p>
+	 * {@code children} keeps children sorted in according to z-index, increasing so iterating it
+	 * backwards will get them in decreasing order
 	 */
 	public Stream<FlowComponent> getEnabledChildrenControllers() {
 		Builder<FlowComponent> builder = Stream.builder();
@@ -114,8 +107,8 @@ public abstract class FlowContainer extends FlowComponent {
 		}
 		return builder.build()
 			.filter(FlowComponent::isEnabled);
-			// we don't filter on visibility {@code .filter(FlowComponent::isVisible);}
-			//some stuff like FlowCursor is not visible but needs events
+		// we don't filter on visibility {@code .filter(FlowComponent::isVisible);}
+		//some stuff like FlowCursor is not visible but needs events
 	}
 
 	@Override
@@ -134,6 +127,13 @@ public abstract class FlowContainer extends FlowComponent {
 		return getEnabledChildrenControllers()
 			.anyMatch(c -> c.mouseReleased(pmx, pmy, button))
 			|| super.mouseReleased(mx, my, button);
+	}
+
+	@Override
+	public String toString() {
+		return "FlowContainer{" +
+			"#children=" + children.size() +
+			'}';
 	}
 
 	@Override
@@ -181,20 +181,12 @@ public abstract class FlowContainer extends FlowComponent {
 	}
 
 	@Override
-	public Optional<? extends FlowComponent> getElementUnderMouse(int mx, int my) {
-		Optional<? extends FlowComponent> rtn = children.stream()
-			.filter(FlowComponent::isVisible)
-			.map(c -> c.getElementUnderMouse(
+	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
+		return children.stream()
+			.flatMap(c -> c.getElementsUnderMouse(
 				mx + getPosition().getX(),
 				my + getPosition().getY()
-			))
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.findFirst();
-		if (rtn.isPresent()) {
-			return rtn;
-		}
-		return super.getElementUnderMouse(mx, my);
+			));
 	}
 
 	@Override
@@ -269,7 +261,9 @@ public abstract class FlowContainer extends FlowComponent {
 		AtomicBoolean cons = new AtomicBoolean(consumed);
 		getEnabledChildrenControllers().forEach(c -> {
 			boolean cons_ = c.mouseMoved(pmx, pmy, cons.get());
-			if (!cons.get()) cons.set(cons_); // keep true, but allow update from false to true
+			if (!cons.get()) {
+				cons.set(cons_); // keep true, but allow update from false to true
+			}
 			//  we want side-effect of mouseMoved disabling isHovered when occluded
 		});
 

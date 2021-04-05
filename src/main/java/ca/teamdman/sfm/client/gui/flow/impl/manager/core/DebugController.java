@@ -8,10 +8,13 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.data.FlowData;
+import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.resources.I18n;
 
 public class DebugController extends FlowComponent {
 
@@ -21,37 +24,46 @@ public class DebugController extends FlowComponent {
 		this.CONTROLLER = CONTROLLER;
 	}
 
-	public void drawId(BaseScreen screen, MatrixStack matrixStack, UUID id, int x, int y) {
+	@Override
+	public void drawTooltip(
+		BaseScreen screen,
+		MatrixStack matrixStack,
+		int mx,
+		int my,
+		float deltaTime
+	) {
+		if (Screen.hasControlDown() && Screen.hasAltDown()) {
+			Optional<String> elem = CONTROLLER.getElementsUnderMouse(mx, my)
+				.filter(FlowDataHolder.class::isInstance)
+				.map(FlowDataHolder.class::cast)
+				.map(FlowDataHolder::getData)
+				.sorted(Comparator.comparingInt(data -> data instanceof RelationshipFlowData ? 1 : 0))
+				.map(FlowData::getId)
+				.map(UUID::toString)
+				.findFirst();
+			if (elem.isPresent()) {
+				drawDebugInfo(screen, matrixStack, elem.get(), mx, my);
+			} else {
+				int count = CONTROLLER.SCREEN.getFlowDataContainer().size();
+				String info = I18n.format("gui.sfm.flow.tooltip.debug_data_count", count);
+				drawDebugInfo(screen, matrixStack, info, mx, my);
+			}
+		}
+	}
+
+
+	public void drawDebugInfo(BaseScreen screen, MatrixStack matrixStack, String id, int x, int y) {
 		String toDraw = id.toString();
 		int width = screen.getFontRenderer().getStringWidth(toDraw) + 2;
-		int yOffset = -25;
-		screen.drawRect(matrixStack, x - 1, y + yOffset - 1, width, 11, CONST.WHITE);
-		screen.drawString(matrixStack, toDraw, x, y + yOffset, CONST.TEXT_DEBUG);
+		int xOffset = 13;
+		int yOffset = 0;
+		screen.clearRect(matrixStack, x-1 + xOffset, y+yOffset-1, width, 11);
+		screen.drawRect(matrixStack, x - 1 + xOffset, y + yOffset - 1, width, 11, CONST.WHITE);
+		screen.drawString(matrixStack, toDraw, x + xOffset, y + yOffset, CONST.TEXT_DEBUG);
 	}
 
 	@Override
 	public int getZIndex() {
-		return super.getZIndex() + 300;
-	}
-
-	@Override
-	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
-		if (Screen.hasControlDown() && Screen.hasAltDown()) {
-			Optional<FlowData> check = CONTROLLER.getElementUnderMouse(mx, my)
-				.filter(c -> c instanceof FlowDataHolder)
-				.map(c -> ((FlowDataHolder) c).getData());
-
-			check.ifPresent(data -> drawId(screen, matrixStack, data.getId(), mx, my));
-
-			if (!check.isPresent()) {
-				new RelationshipController(CONTROLLER).getFlowRelationships()
-					.filter(r -> r.isCloseTo(mx, my))
-					.findFirst()
-					.ifPresent(rel -> {
-						drawId(screen, matrixStack, rel.getData().getId(), mx, my);
-						rel.draw(screen, matrixStack, CONST.HIGHLIGHT);
-					});
-			}
-		}
+		return super.getZIndex() + 600;
 	}
 }

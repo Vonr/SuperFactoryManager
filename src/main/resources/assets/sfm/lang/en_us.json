@@ -60,5 +60,6 @@
   "gui.sfm.flow.timer_trigger.ticks": "ticks",
   "gui.sfm.flow.tooltip.tile_position_matcher": "Position Matcher",
   "gui.sfm.flow.tooltip.block_pos": "x=%d, y=%d, z=%d",
-  "gui.sfm.flow.tooltip.tile_mod_matcher": "Mod matcher"
+  "gui.sfm.flow.tooltip.tile_mod_matcher": "Mod matcher",
+  "gui.sfm.flow.tooltip.debug_data_count": "There are %d FlowData saved"
 }
