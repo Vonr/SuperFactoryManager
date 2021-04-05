@@ -8,8 +8,6 @@ import ca.teamdman.sfm.client.gui.flow.impl.config.ConfigComponent;
 import net.minecraft.util.text.ITextComponent;
 
 public class ConfigScreen extends ComponentScreen<ConfigComponent> {
-	//TODO: rename clone to [clone by reference], add [clone by value]
-
 	public ConfigComponent CONTROLLER;
 
 	public ConfigScreen(
