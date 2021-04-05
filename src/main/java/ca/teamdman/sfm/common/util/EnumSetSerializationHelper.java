@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.util;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -42,13 +43,17 @@ public class EnumSetSerializationHelper {
 
 	public static <T extends Enum<T>> EnumSet<T> deserialize(
 		PacketBuffer buf,
-		Function<String, T> resolver
+		Function<String, T> resolver,
+		Class<T> type
 	) {
-		return EnumSet.copyOf(
-			IntStream.range(0, buf.readInt())
-				.mapToObj(__ -> buf.readString(128))
-				.map(resolver)
-				.collect(Collectors.toList())
-		);
+		List<T> vals = IntStream.range(0, buf.readInt())
+			.mapToObj(__ -> buf.readString(128))
+			.map(resolver)
+			.collect(Collectors.toList());
+		if (vals.isEmpty()) {
+			return EnumSet.noneOf(type);
+		} else {
+			return EnumSet.copyOf(vals);
+		}
 	}
 }

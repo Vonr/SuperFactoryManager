@@ -117,7 +117,8 @@ public class ItemRuleFlowData extends FlowData implements
 			other.position.copy(),
 			other.filterMode,
 			new UUIDList(other.itemMatcherIds),
-			other.tileMatcherIds, EnumSet.copyOf(other.faces),
+			new UUIDList(other.tileMatcherIds),
+			EnumSet.copyOf(other.faces),
 			other.slots.copy(),
 			other.open
 		);
@@ -306,7 +307,7 @@ public class ItemRuleFlowData extends FlowData implements
 				FilterMode.valueOf(buf.readString(16)),
 				new UUIDList(buf),
 				new UUIDList(buf),
-				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf),
+				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf, Direction.class),
 				new SlotsRule(buf.readString(32)),
 				buf.readBoolean()
 			);
