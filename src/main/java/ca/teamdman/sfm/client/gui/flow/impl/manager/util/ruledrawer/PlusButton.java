@@ -5,7 +5,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -51,7 +51,7 @@ class PlusButton extends FlowPlusButton {
 			PARENT.isGlobalOpen = !PARENT.isGlobalOpen;
 			PARENT.rebuildDrawer();
 		} else {
-			FlowData newRule = new ItemRuleFlowData();
+			FlowData newRule = new ItemMovementRuleFlowData();
 			if (PARENT.isGlobalOpen) {
 				// If global drawer is open, just create new rule
 				PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(newRule);

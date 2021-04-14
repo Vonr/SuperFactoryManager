@@ -6,11 +6,13 @@ package ca.teamdman.sfm.common.registrar;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
+import ca.teamdman.sfm.common.flow.data.ItemConditionFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemModMatcherFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemPickerMatcherFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.data.TileModMatcherFlowData;
@@ -41,8 +43,8 @@ public class FlowDataSerializerRegistrar {
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "line_node")),
 			new TimerTriggerFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "timer_trigger")),
-			new ItemRuleFlowData
-				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_rule")),
+			new ItemMovementRuleFlowData
+				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_movement_rule")),
 			new ItemPickerMatcherFlowData
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "item_picker_matcher")),
 			new ItemModMatcherFlowData
@@ -54,7 +56,9 @@ public class FlowDataSerializerRegistrar {
 				.Serializer(new ResourceLocation(SFM.MOD_ID, "basic_input")),
 			new ItemOutputFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "basic_output")),
 			new TilePositionMatcherFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_position_matcher")),
-			new TileModMatcherFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_mod_matcher"))
+			new TileModMatcherFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_mod_matcher")),
+			new ItemConditionRuleFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "item_condition_rule")),
+			new ItemConditionFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "item_condition"))
 		);
 	}
 
@@ -77,13 +81,15 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<RelationshipFlowData> RELATIONSHIP = WAITING;
 		public static final FlowDataSerializer<LineNodeFlowData> LINE_NODE = WAITING;
 		public static final FlowDataSerializer<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;
-		public static final FlowDataSerializer<ItemRuleFlowData> ITEM_RULE = WAITING;
+		public static final FlowDataSerializer<ItemMovementRuleFlowData> ITEM_MOVEMENT_RULE = WAITING;
 		public static final FlowDataSerializer<ItemPickerMatcherFlowData> ITEM_PICKER_MATCHER = WAITING;
 		public static final FlowDataSerializer<ItemModMatcherFlowData> ITEM_MOD_MATCHER = WAITING;
 		public static final FlowDataSerializer<TileModMatcherFlowData> TILE_MOD_MATCHER = WAITING;
 		public static final FlowDataSerializer<CursorFlowData> CURSOR = WAITING;
 		public static final FlowDataSerializer<ToolboxFlowData> TOOLBOX = WAITING;
 		public static final FlowDataSerializer<TilePositionMatcherFlowData> TILE_POSITION_MATCHER = WAITING;
+		public static final FlowDataSerializer<ItemConditionRuleFlowData> ITEM_CONDITION_RULE = WAITING;
+		public static final FlowDataSerializer<ItemConditionFlowData> ITEM_CONDITION = WAITING;
 	}
 
 	public static class FlowDataFactoryRegistry {

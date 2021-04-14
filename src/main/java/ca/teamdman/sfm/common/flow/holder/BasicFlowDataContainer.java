@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.flow.holder;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
@@ -15,16 +16,19 @@ import java.util.Observer;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.INBTSerializable;
 
-public class BasicFlowDataContainer extends Observable implements INBTSerializable<ListNBT> {
+public class BasicFlowDataContainer extends Observable implements INBTSerializable<CompoundNBT> {
 
+	public final int NBT_SCHEMA_VERSION = 2;
+	public final String NBT_SCHEMA_VERSION_KEY = "__version";
+	public final String NBT_SCHEMA_DATA_KEY = "__data";
 	private final HashMap<UUID, FlowData> DELEGATE = new HashMap<>();
 
 	public Stream<UUID> getDescendants(
@@ -179,22 +183,52 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 	}
 
 	@Override
-	public ListNBT serializeNBT() {
+	public CompoundNBT serializeNBT() {
+		CompoundNBT tag = new CompoundNBT();
+		tag.putInt(NBT_SCHEMA_VERSION_KEY, NBT_SCHEMA_VERSION);
 		ListNBT list = new ListNBT();
 		stream()
-			.forEach(d -> list.add(((FlowDataSerializer<FlowData>) d.getSerializer()).toNBT(d)));
-		return list;
+			.map(FlowData::serialize)
+			.forEach(list::add);
+		tag.put(NBT_SCHEMA_DATA_KEY, list);
+		return tag;
 	}
 
 	@Override
-	public void deserializeNBT(ListNBT list) {
-		list.stream()
+	public void deserializeNBT(CompoundNBT tag) {
+		upgradeToLatestSchema(tag);
+		if (tag.getInt(NBT_SCHEMA_VERSION_KEY) != NBT_SCHEMA_VERSION) {
+			throw new IllegalArgumentException("tag schema not latest after upgrading");
+		}
+
+		tag.getList(NBT_SCHEMA_DATA_KEY, NBT.TAG_COMPOUND).stream()
 			.map(c -> ((CompoundNBT) c))
-			.map((Function<CompoundNBT, Optional<FlowData>>) FlowDataSerializer::deserialize)
+			.map(FlowDataSerializer::deserialize)
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.sorted(Comparator.comparing(a -> a instanceof RelationshipFlowData))
 			.forEach(data -> data.addToDataContainer(this));
+	}
+
+	private void upgradeToLatestSchema(CompoundNBT tag) {
+		int version = tag.getInt(NBT_SCHEMA_VERSION_KEY);
+		if (version != NBT_SCHEMA_VERSION) {
+			SFM.LOGGER.debug(
+				SFMUtil.getMarker(getClass()),
+				"Updating schema from version {} to {}",
+				version,
+				NBT_SCHEMA_VERSION
+			);
+		}
+
+		switch (version) {
+			case 1:
+				tag.getList("__data", NBT.TAG_COMPOUND).stream()
+					.map(CompoundNBT.class::cast)
+					.filter(t -> t.getString("__type").equals("sfm:item_rule"))
+					.forEach(t -> t.putString("__type", "sfm:item_movement_rule"));
+				tag.putInt(NBT_SCHEMA_VERSION_KEY, 2);
+		}
 	}
 
 	public <T extends FlowData> Stream<T> get(Class<T> clazz) {

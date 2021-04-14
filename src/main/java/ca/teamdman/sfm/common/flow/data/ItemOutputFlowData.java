@@ -65,7 +65,7 @@ public class ItemOutputFlowData extends FlowData implements Observer, PositionHo
 		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
 		ItemOutputFlowData newOutput = new ItemOutputFlowData(this);
-		container.get(newOutput.tileEntityRule, ItemRuleFlowData.class).ifPresent(data -> {
+		container.get(newOutput.tileEntityRule, ItemMovementRuleFlowData.class).ifPresent(data -> {
 			FlowData newData = data.duplicate(container, dependencyTracker);
 			dependencyTracker.accept(newData);
 			newOutput.tileEntityRule = newData.getId();
@@ -87,8 +87,8 @@ public class ItemOutputFlowData extends FlowData implements Observer, PositionHo
 				(ManagerFlowController) parent,
 				this,
 				((ManagerFlowController) parent).SCREEN.getFlowDataContainer()
-					.get(tileEntityRule, ItemRuleFlowData.class)
-					.orElseGet(ItemRuleFlowData::new)
+					.get(tileEntityRule, ItemMovementRuleFlowData.class)
+					.orElseGet(ItemMovementRuleFlowData::new)
 			);
 		}
 		return null;
@@ -96,7 +96,7 @@ public class ItemOutputFlowData extends FlowData implements Observer, PositionHo
 
 	@Override
 	public Set<Class<?>> getDependencies() {
-		return ImmutableSet.of(ItemRuleFlowData.class);
+		return ImmutableSet.of(ItemMovementRuleFlowData.class);
 	}
 
 	@Override

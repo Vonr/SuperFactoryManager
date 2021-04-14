@@ -11,7 +11,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import java.util.List;
@@ -61,7 +61,7 @@ public abstract class ItemStackTileEntityRuleDrawer extends FlowContainer implem
 		DRAWER.addChild(PLUS_BUTTON);
 
 		CONTROLLER.SCREEN.getFlowDataContainer()
-			.get(ItemRuleFlowData.class)
+			.get(ItemMovementRuleFlowData.class)
 			.collect(Collectors.toList()).stream()
 			.map(rule -> new GlobalRulesDrawerItem(rule, this))
 			.forEach(DRAWER::addChild);
@@ -86,7 +86,7 @@ public abstract class ItemStackTileEntityRuleDrawer extends FlowContainer implem
 		DRAWER.update();
 	}
 
-	public abstract List<ItemRuleFlowData> getChildrenRules();
+	public abstract List<ItemMovementRuleFlowData> getChildrenRules();
 
 	protected List<UUID> getChildrenRuleIds() {
 		return getChildrenRules().stream()
@@ -125,7 +125,7 @@ public abstract class ItemStackTileEntityRuleDrawer extends FlowContainer implem
 	public void update(Observable o, Object arg) {
 		if (arg instanceof FlowDataContainerChange) {
 			FlowDataContainerChange change = ((FlowDataContainerChange) arg);
-			if (change.DATA instanceof ItemRuleFlowData) {
+			if (change.DATA instanceof ItemMovementRuleFlowData) {
 				rebuildDrawer();
 			}
 		}

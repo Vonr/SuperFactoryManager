@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.client.gui.flow.impl.manager.template;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.template.toolboxspawner;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.CloneController;
@@ -11,7 +11,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +48,7 @@ public class ItemInputSpawnerFlowButton extends FlowIconButton {
 				BasicFlowDataContainer container = new BasicFlowDataContainer();
 
 				// create default rule data
-				ItemRuleFlowData ruleData = new ItemRuleFlowData();
+				ItemMovementRuleFlowData ruleData = new ItemMovementRuleFlowData();
 				container.put(ruleData);
 
 				// create button data

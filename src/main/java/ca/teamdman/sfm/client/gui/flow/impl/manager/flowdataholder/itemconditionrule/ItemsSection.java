@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
@@ -10,7 +10,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -22,10 +22,10 @@ import net.minecraft.util.text.TranslationTextComponent;
 class ItemsSection extends FlowContainer {
 
 	protected final FlowDrawer DRAWER;
-	protected ItemRuleFlowComponent PARENT;
+	protected ItemConditionRuleFlowComponent PARENT;
 	private final ItemMatcherSpawnerDrawer ADDER;
 
-	public ItemsSection(ItemRuleFlowComponent parent, Position pos) {
+	public ItemsSection(ItemConditionRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 
@@ -36,7 +36,7 @@ class ItemsSection extends FlowContainer {
 		));
 
 		ADDER = new ItemMatcherSpawnerDrawer(
-			PARENT,
+			PARENT::addItemMatcher,
 			new Position(ItemStackFlowButton.DEFAULT_SIZE.getWidth() + 5, 15)
 		);
 		ADDER.setVisibleAndEnabled(false);
@@ -50,7 +50,7 @@ class ItemsSection extends FlowContainer {
 	}
 
 	public void onDataChanged(
-		ItemRuleFlowData data
+		ItemMovementRuleFlowData data
 	) {
 		rebuildChildren();
 	}

@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
@@ -12,7 +12,7 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.TileMatcher;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import java.util.Arrays;
 import java.util.List;
@@ -26,15 +26,15 @@ import net.minecraft.world.World;
 class TilesSection extends FlowContainer {
 
 	protected final FlowDrawer DRAWER;
-	protected final ItemRuleFlowComponent PARENT;
+	protected final ItemConditionRuleFlowComponent PARENT;
 	private final TileMatcherSpawnerDrawer ADDER;
 
-	public TilesSection(ItemRuleFlowComponent parent, Position pos) {
+	public TilesSection(ItemConditionRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 
 		ADDER = new TileMatcherSpawnerDrawer(
-			PARENT,
+			PARENT::addTileMatcher,
 			new Position(ItemStackFlowButton.DEFAULT_SIZE.getWidth() + 5, 15)
 		);
 		ADDER.setVisibleAndEnabled(false);
@@ -81,7 +81,7 @@ class TilesSection extends FlowContainer {
 			.forEach(DRAWER::addChild);
 	}
 
-	public void onDataChanged(ItemRuleFlowData data) {
+	public void onDataChanged(ItemMovementRuleFlowData data) {
 		rebuildChildren();
 	}
 

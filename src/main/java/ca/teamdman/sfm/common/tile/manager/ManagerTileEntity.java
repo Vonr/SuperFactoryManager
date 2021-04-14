@@ -30,6 +30,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -43,7 +44,9 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 
 	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
 	private final FlowExecutor EXECUTOR;
-	private final int NBT_VERSION = 1;
+	private final int NBT_SCHEMA_VERSION = 2;
+	private final String NBT_SCHEMA_VERSION_KEY = "__version";
+	private final String NBT_SCHEMA_DATA_KEY = "__data";
 	private final Map<ServerPlayerEntity, Integer> CONTAINER_LISTENERS = new WeakHashMap<>();
 
 
@@ -118,7 +121,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			.forEach(entry -> {
 				ServerPlayerEntity player = entry.getKey();
 				MSG packet = packetFunc.apply(entry.getValue());
-				PacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(()->player), packet);
+				PacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), packet);
 			});
 	}
 
@@ -131,29 +134,58 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 	@Override
 	public void read(BlockState state, CompoundNBT tag) {
 		super.read(state, tag);
-		deserializeNBT(tag.getCompound("data"));
+		if (tag.contains("data", NBT.TAG_COMPOUND)) {
+			// "data" not present on first load on client
+			deserializeNBT(tag.getCompound("data"));
+		}
 	}
 
 	@Override
-	public void deserializeNBT(CompoundNBT compound) {
+	public void deserializeNBT(CompoundNBT tag) {
+		// log debug info
 		SFM.LOGGER.debug(
 			SFMUtil.getMarker(getClass()),
 			"Loading nbt on {}, replacing {} entries",
 			world == null ? "null world" : world.isRemote ? "client" : "server",
 			getFlowDataContainer().size()
 		);
-		int version = compound.getInt("version");
-		if (version == 1) {
-			getFlowDataContainer().clear();
-			getFlowDataContainer().deserializeNBT(
-				compound.getList("flow_data_list", NBT.TAG_COMPOUND)
-			);
-		} else if (version != 0) {
-			SFM.LOGGER.warn(
+
+		// apply schema updates
+		upgradeSavedData(tag);
+		if (tag.getInt(NBT_SCHEMA_VERSION_KEY) != NBT_SCHEMA_VERSION) {
+			throw new IllegalArgumentException("tag not using latest schema after upgrade");
+		}
+
+		// load data
+		getFlowDataContainer().clear();
+		getFlowDataContainer().deserializeNBT(tag.getCompound(NBT_SCHEMA_DATA_KEY));
+	}
+
+	private void upgradeSavedData(CompoundNBT tag) {
+		if (tag.contains("version", NBT.TAG_INT)) {
+			tag.putInt(NBT_SCHEMA_VERSION_KEY, tag.getInt("version"));
+			tag.remove("version");
+		}
+
+		int version = tag.getInt(NBT_SCHEMA_VERSION_KEY);
+		if (version != NBT_SCHEMA_VERSION) {
+			SFM.LOGGER.debug(
 				SFMUtil.getMarker(getClass()),
-				"Unknown version [{}] deserializing manager NBT",
-				version
+				"Updating schema from version {} to {}",
+				version,
+				NBT_SCHEMA_VERSION
 			);
+		}
+
+		switch (version) {
+			case 1:
+				ListNBT data = tag.getList("flow_data_list", NBT.TAG_COMPOUND);
+				tag.remove("flow_data_list");
+				CompoundNBT dataHolder = new CompoundNBT();
+				dataHolder.putInt("__version", 1);
+				dataHolder.put("__data", data);
+				tag.put("__data", dataHolder);
+				tag.putInt(NBT_SCHEMA_VERSION_KEY, 2);
 		}
 	}
 
@@ -168,8 +200,8 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			getFlowDataContainer().size()
 		);
 		CompoundNBT c = new CompoundNBT();
-		c.putInt("version", NBT_VERSION);
-		c.put("flow_data_list", getFlowDataContainer().serializeNBT());
+		c.putInt(NBT_SCHEMA_VERSION_KEY, NBT_SCHEMA_VERSION);
+		c.put(NBT_SCHEMA_DATA_KEY, getFlowDataContainer().serializeNBT());
 		return c;
 	}
 

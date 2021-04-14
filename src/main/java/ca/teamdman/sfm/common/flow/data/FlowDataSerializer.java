@@ -20,7 +20,7 @@ public abstract class FlowDataSerializer<T extends FlowData> extends
 
 	public static final String NBT_SERIALIZER_REGISTRY_NAME_KEY = "__type";
 	public static final String NBT_SERIALIZER_SCHEMA_VERSION_KEY = "__version";
-	private static final String NBT_SERIALIZER_UUID_KEY = "__uuid";
+	public static final String NBT_SERIALIZER_UUID_KEY = "__uuid";
 	private static IForgeRegistry cached = null;
 
 	public FlowDataSerializer(ResourceLocation registryName) {

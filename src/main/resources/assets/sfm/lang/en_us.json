@@ -30,6 +30,7 @@
   "gui.sfm.flow.tileentityrule.button.blacklist": "Blacklist",
   "gui.sfm.flow.tileentityrule.button.whitelist": "Whitelist",
   "gui.sfm.flow.tooltip.item_input_spawner": "Create new item input",
+  "gui.sfm.flow.tooltip.item_condition_spawner": "Create new item condition",
   "gui.sfm.flow.tooltip.item_output_spawner": "Create new item output",
   "gui.sfm.flow.tooltip.settings_button.close": "Close settings",
   "gui.sfm.flow.tooltip.settings_button.open": "Open settings",

@@ -3,7 +3,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template.itemmatcherspawner
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemPickerMatcherFlowData;
 import java.util.Collections;
 import java.util.List;
@@ -37,17 +36,12 @@ public class ItemPickerMatcherSpawnerButton extends FlowIconButton {
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		FlowData data = new ItemPickerMatcherFlowData(
+		PARENT.add(new ItemPickerMatcherFlowData(
 			UUID.randomUUID(),
 			new ItemStack(Blocks.STONE),
 			0,
 			false
-		);
-		PARENT.PARENT.getData().itemMatcherIds.add(data.getId());
-		PARENT.PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(
-			data,
-			PARENT.PARENT.getData()
-		);
+		));
 		if (!Screen.hasShiftDown()) {
 			PARENT.setVisibleAndEnabled(false);
 		}

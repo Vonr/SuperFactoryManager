@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -33,8 +34,13 @@ public abstract class FlowData {
 		container.remove(getId());
 	}
 
+	public UUID getId() {
+		return uuid;
+	}
+
 	/**
 	 * Copy this flow data, and all its dependencies, assigning new IDs to anything with an ID.
+	 *
 	 * @return Duplicate of this FlowData
 	 */
 	public abstract FlowData duplicate(
@@ -44,11 +50,6 @@ public abstract class FlowData {
 
 	public boolean isValidRelationshipTarget() {
 		return false;
-	}
-
-
-	public UUID getId() {
-		return uuid;
 	}
 
 	@Override
@@ -64,6 +65,12 @@ public abstract class FlowData {
 
 	public Set<Class<?>> getDependencies() {
 		return Collections.emptySet();
+	}
+
+	public CompoundNBT serialize() {
+		FlowDataSerializer<FlowData> serializer = (FlowDataSerializer<FlowData>) getSerializer();
+		CompoundNBT tag = serializer.toNBT(this);
+		return tag;
 	}
 
 	public abstract FlowDataSerializer<?> getSerializer();

@@ -13,6 +13,7 @@ import net.minecraft.util.IWorldPosCallable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.network.NetworkHooks;
 
 
 public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
@@ -28,18 +29,27 @@ public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 			ManagerTileEntity.class
 		)
 			.map(tile -> {
-				ManagerContainer managerContainer = new ManagerContainer(windowId, tile, true);
-				managerContainer.readData(data);
-				return managerContainer;
+				ManagerContainer container = new ManagerContainer(windowId, tile, true);
+				container.readData(data);
+				return container;
 			})
 			.orElse(null);
 	}
 
-	public void readData(PacketBuffer data) {
+	public static void openGui(ServerPlayerEntity player, ManagerTileEntity tile) {
+		NetworkHooks.openGui(
+			player,
+			tile,
+			data -> writeData(tile, data)
+		);
+	}
+
+	private void readData(PacketBuffer data) {
 		getSource().deserializeNBT(data.readCompoundTag());
 	}
 
-	public static void writeData(ManagerTileEntity tile, PacketBuffer data) {
+	private static void writeData(ManagerTileEntity tile, PacketBuffer data) {
+		data.writeBlockPos(tile.getPos());
 		data.writeCompoundTag(tile.serializeNBT());
 	}
 

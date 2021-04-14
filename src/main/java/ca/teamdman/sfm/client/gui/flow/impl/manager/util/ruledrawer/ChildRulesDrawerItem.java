@@ -3,7 +3,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,21 +17,21 @@ import net.minecraft.util.text.TranslationTextComponent;
 import org.lwjgl.glfw.GLFW;
 
 class ChildRulesDrawerItem extends ItemStackFlowButton implements
-	FlowDataHolder<ItemRuleFlowData> {
+	FlowDataHolder<ItemMovementRuleFlowData> {
 
 	private final ItemStackTileEntityRuleDrawer PARENT;
-	private ItemRuleFlowData data;
+	private ItemMovementRuleFlowData data;
 
 	public ChildRulesDrawerItem(
 		ItemStackTileEntityRuleDrawer parent,
-		ItemRuleFlowData data
+		ItemMovementRuleFlowData data
 	) {
 		super(data.getIcon(), new Position());
 		PARENT = parent;
 		this.data = data;
 		setData(data);
 		PARENT.CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			ItemRuleFlowData.class, this
+			ItemMovementRuleFlowData.class, this
 		));
 	}
 
@@ -77,12 +77,12 @@ class ChildRulesDrawerItem extends ItemStackFlowButton implements
 	}
 
 	@Override
-	public ItemRuleFlowData getData() {
+	public ItemMovementRuleFlowData getData() {
 		return data;
 	}
 
 	@Override
-	public void setData(ItemRuleFlowData data) {
+	public void setData(ItemMovementRuleFlowData data) {
 		this.data = data;
 	}
 }

@@ -12,8 +12,8 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowSprite;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemConditionFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -23,25 +23,25 @@ import java.util.stream.Stream;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 
-public class ItemInputFlowButton extends FlowContainer implements
-	FlowDataHolder<ItemInputFlowData> {
+public class ItemConditionFlowButton extends FlowContainer implements
+	FlowDataHolder<ItemConditionFlowData> {
 
 	private final ManagerFlowController CONTROLLER;
 	private final MyFlowIconButton BUTTON;
-	private ItemMovementRuleFlowData ruleData;
-	private ItemInputFlowData buttonData;
+	private ItemConditionRuleFlowData ruleData;
+	private ItemConditionFlowData buttonData;
 
-	public ItemInputFlowButton(
+	public ItemConditionFlowButton(
 		ManagerFlowController controller,
-		ItemInputFlowData buttonData,
-		ItemMovementRuleFlowData ruleData
+		ItemConditionFlowData buttonData,
+		ItemConditionRuleFlowData ruleData
 	) {
 		this.buttonData = buttonData;
 		this.ruleData = ruleData;
 		this.CONTROLLER = controller;
 
 		this.BUTTON = new MyFlowIconButton(
-			ButtonLabel.INPUT,
+			ButtonLabel.CONDITIONAL,
 			buttonData.getPosition().copy()
 		);
 		BUTTON.setDraggable(true);
@@ -49,26 +49,26 @@ public class ItemInputFlowButton extends FlowContainer implements
 		addChild(BUTTON);
 
 		controller.SCREEN.getFlowDataContainer()
-			.addObserver(new FlowDataHolderObserver<>(ItemInputFlowData.class, this));
+			.addObserver(new FlowDataHolderObserver<>(ItemConditionFlowData.class, this));
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			ItemMovementRuleFlowData.class,
+			ItemConditionRuleFlowData.class,
 			data -> data.getId().equals(ruleData.getId()),
 			this::setRuleData
 		));
 	}
 
-	public void setRuleData(ItemMovementRuleFlowData data) {
+	public void setRuleData(ItemConditionRuleFlowData data) {
 		this.ruleData = data;
 		this.BUTTON.reloadFromRuleData();
 	}
 
 	@Override
-	public ItemInputFlowData getData() {
+	public ItemConditionFlowData getData() {
 		return buttonData;
 	}
 
 	@Override
-	public void setData(ItemInputFlowData data) {
+	public void setData(ItemConditionFlowData data) {
 		this.buttonData = data;
 		BUTTON.getPosition().setXY(this.buttonData.getPosition());
 	}
@@ -106,7 +106,7 @@ public class ItemInputFlowButton extends FlowContainer implements
 
 		@Override
 		public void onClicked(int mx, int my, int button) {
-			CONTROLLER.findFirstChild(buttonData.tileEntityRule)
+			CONTROLLER.findFirstChild(buttonData.rule)
 				.ifPresent(FlowComponent::toggleVisibilityAndEnabled);
 		}
 

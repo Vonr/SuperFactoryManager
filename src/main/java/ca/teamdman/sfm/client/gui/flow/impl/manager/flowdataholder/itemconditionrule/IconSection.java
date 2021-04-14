@@ -1,17 +1,17 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import net.minecraft.client.resources.I18n;
 
 class IconSection extends FlowContainer {
 
-	private ItemRuleFlowComponent PARENT;
+	private ItemConditionRuleFlowComponent PARENT;
 	private final RuleIconComponent ICON;
 
-	public IconSection(ItemRuleFlowComponent parent,Position pos) {
+	public IconSection(ItemConditionRuleFlowComponent parent,Position pos) {
 		super(pos);
 		PARENT = parent;
 
@@ -25,7 +25,7 @@ class IconSection extends FlowContainer {
 		addChild(ICON);
 	}
 
-	public void onDataChanged(ItemRuleFlowData data) {
+	public void onDataChanged(ItemMovementRuleFlowData data) {
 		ICON.BUTTON.setItemStack(data.icon);
 	}
 

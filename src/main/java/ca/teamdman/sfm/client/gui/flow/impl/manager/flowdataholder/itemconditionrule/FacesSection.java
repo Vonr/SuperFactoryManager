@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
@@ -10,7 +10,7 @@ import net.minecraft.util.Direction;
 
 public class FacesSection extends FlowContainer {
 
-	private final ItemRuleFlowComponent PARENT;
+	private final ItemConditionRuleFlowComponent PARENT;
 
 	private final FaceFlowButton NORTH;
 	private final FaceFlowButton EAST;
@@ -19,7 +19,7 @@ public class FacesSection extends FlowContainer {
 	private final FaceFlowButton UP;
 	private final FaceFlowButton DOWN;
 
-	public FacesSection(ItemRuleFlowComponent parent, Position pos) {
+	public FacesSection(ItemConditionRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 

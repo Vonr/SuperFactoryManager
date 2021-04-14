@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemmovementrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.CyclingItemStackFlowButton;

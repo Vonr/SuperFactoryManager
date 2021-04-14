@@ -3,7 +3,6 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template.itemmatcherspawner
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemModMatcherFlowData;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +14,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 public class ItemModMatcherSpawnerButton extends FlowIconButton {
 
 	private final ItemMatcherSpawnerDrawer PARENT;
+
 
 	public ItemModMatcherSpawnerButton(
 		ItemMatcherSpawnerDrawer PARENT
@@ -35,17 +35,12 @@ public class ItemModMatcherSpawnerButton extends FlowIconButton {
 
 	@Override
 	public void onClicked(int mx, int my, int button) {
-		FlowData data = new ItemModMatcherFlowData(
+		PARENT.add(new ItemModMatcherFlowData(
 			UUID.randomUUID(),
 			"minecraft",
 			0,
 			false
-		);
-		PARENT.PARENT.getData().itemMatcherIds.add(data.getId());
-		PARENT.PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(
-			data,
-			PARENT.PARENT.getData()
-		);
+		));
 		if (!Screen.hasShiftDown()) {
 			PARENT.setVisibleAndEnabled(false);
 		}

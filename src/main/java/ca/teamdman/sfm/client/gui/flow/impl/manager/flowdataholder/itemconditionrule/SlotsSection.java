@@ -1,10 +1,10 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.TextAreaFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.client.resources.I18n;
@@ -14,11 +14,11 @@ import net.minecraft.util.text.TextFormatting;
 
 public class SlotsSection extends FlowContainer {
 
-	private final ItemRuleFlowComponent PARENT;
+	private final ItemConditionRuleFlowComponent PARENT;
 	private final TextAreaFlowComponent INPUT;
 
 	public SlotsSection(
-		ItemRuleFlowComponent PARENT,
+		ItemConditionRuleFlowComponent PARENT,
 		Position pos
 	) {
 		super(pos);
@@ -64,7 +64,7 @@ public class SlotsSection extends FlowContainer {
 		onDataChanged(PARENT.getData());
 	}
 
-	public void onDataChanged(ItemRuleFlowData data) {
+	public void onDataChanged(ItemMovementRuleFlowData data) {
 		INPUT.setContent(data.slots.getDefinition());
 	}
 }

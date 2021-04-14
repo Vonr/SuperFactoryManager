@@ -50,7 +50,7 @@ public class TileModMatcherFlowData extends FlowData implements TileMatcher {
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		super.addToDataContainer(container);
 		container.addObserver(new FlowDataHolderObserver<>(
-			ItemRuleFlowData.class,
+			ItemMovementRuleFlowData.class,
 			data -> data.itemMatcherIds.contains(getId()),
 			data -> this.open &= data.open // only keep this open if holder is also open
 		));

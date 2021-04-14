@@ -1,18 +1,24 @@
 package ca.teamdman.sfm.client.gui.flow.impl.manager.template.tilematcherspawner;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule.ItemRuleFlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.core.TileMatcher;
+import ca.teamdman.sfm.common.flow.data.FlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import java.util.function.Consumer;
 
 public class TileMatcherSpawnerDrawer extends FlowDrawer {
 
-	protected final ItemRuleFlowComponent PARENT;
+	@SuppressWarnings("rawtypes")
+	private final Consumer ACTION;
 
-	public TileMatcherSpawnerDrawer(ItemRuleFlowComponent parent, Position pos) {
+	public <T extends FlowData & TileMatcher> TileMatcherSpawnerDrawer(
+		Consumer<T> action,
+		Position pos
+	) {
 		super(pos, 3, 3);
-		PARENT = parent;
+		ACTION = action;
 		addChild(new TilePositionMatcherSpawnerButton(this));
 		addChild(new TileModMatcherSpawnerButton(this));
 		update();
@@ -30,5 +36,10 @@ public class TileMatcherSpawnerDrawer extends FlowDrawer {
 		screen.pauseScissor();
 		super.draw(screen, matrixStack, mx, my, deltaTime);
 		screen.resumeScissor();
+	}
+
+	public <T extends FlowData & TileMatcher> void add(T matcher) {
+		//noinspection unchecked
+		ACTION.accept(matcher);
 	}
 }

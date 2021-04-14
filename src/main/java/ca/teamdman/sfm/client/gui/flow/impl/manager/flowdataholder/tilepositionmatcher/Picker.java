@@ -4,7 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.BlockPosPickerFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.TilePositionMatcherFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import java.util.Optional;
@@ -31,7 +31,7 @@ class Picker extends BlockPosPickerFlowComponent {
 	public void rebuildSuggestions() {
 		// gather list of existing selected positions for this
 		BasicFlowDataContainer container = PARENT.SCREEN.getFlowDataContainer();
-		Set<BlockPos> ignore = container.get(ItemRuleFlowData.class)
+		Set<BlockPos> ignore = container.get(ItemMovementRuleFlowData.class)
 			.filter(data -> data.tileMatcherIds.contains(this.data.getId()))
 			.flatMap(data -> data.tileMatcherIds.stream())
 			.map(id -> container.get(id, TilePositionMatcherFlowData.class))

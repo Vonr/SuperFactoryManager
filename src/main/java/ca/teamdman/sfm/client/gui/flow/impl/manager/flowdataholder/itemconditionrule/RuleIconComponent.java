@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -16,12 +16,12 @@ import org.lwjgl.glfw.GLFW;
 
 class RuleIconComponent extends FlowContainer {
 
-	private final ItemRuleFlowComponent PARENT;
+	private final ItemConditionRuleFlowComponent PARENT;
 	private final FlowItemStackPicker PICKER;
 	protected final ItemStackFlowButton BUTTON;
 
 	public RuleIconComponent(
-		ItemRuleFlowComponent parent,
+		ItemConditionRuleFlowComponent parent,
 		Position pos
 	) {
 		super(pos);

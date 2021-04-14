@@ -1,12 +1,12 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.RadioFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.RadioFlowButton.RadioGroup;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData.FilterMode;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData.FilterMode;
 import net.minecraft.client.resources.I18n;
 
 class FilterSection extends FlowContainer {
@@ -14,9 +14,9 @@ class FilterSection extends FlowContainer {
 	private final RadioGroup ITEM_SELECTION_MODE_GROUP;
 	private final RadioFlowButton WHITELIST_BUTTON;
 	private final RadioFlowButton BLACKLIST_BUTTON;
-	private ItemRuleFlowComponent PARENT;
+	private ItemConditionRuleFlowComponent PARENT;
 
-	public FilterSection(ItemRuleFlowComponent parent, Position pos) {
+	public FilterSection(ItemConditionRuleFlowComponent parent, Position pos) {
 		super(pos);
 		PARENT = parent;
 
@@ -57,7 +57,7 @@ class FilterSection extends FlowContainer {
 
 
 	public void onDataChanged(
-		ItemRuleFlowData data
+		ItemMovementRuleFlowData data
 	) {
 		ITEM_SELECTION_MODE_GROUP.setSelected(
 			data.filterMode == FilterMode.WHITELIST

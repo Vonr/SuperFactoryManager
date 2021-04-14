@@ -6,7 +6,7 @@ package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule.ItemRuleFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemmovementrule.ItemMovementRuleFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -46,7 +46,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class ItemRuleFlowData extends FlowData implements
+public class ItemMovementRuleFlowData extends FlowData implements
 	Observer, PositionHolder {
 
 	public static final int MAX_NAME_LENGTH = 256;
@@ -62,7 +62,7 @@ public class ItemRuleFlowData extends FlowData implements
 	public SlotsRule slots;
 	public boolean open;
 
-	public ItemRuleFlowData() {
+	public ItemMovementRuleFlowData() {
 		this(
 			UUID.randomUUID(),
 			I18n.format("gui.sfm.flow.placeholder.default_rule_name"),
@@ -77,7 +77,7 @@ public class ItemRuleFlowData extends FlowData implements
 		);
 	}
 
-	public ItemRuleFlowData(
+	public ItemMovementRuleFlowData(
 		UUID uuid,
 		String name,
 		ItemStack icon,
@@ -109,7 +109,7 @@ public class ItemRuleFlowData extends FlowData implements
 	/**
 	 * Copy this rule, but with a new ID
 	 */
-	public ItemRuleFlowData(ItemRuleFlowData other) {
+	public ItemMovementRuleFlowData(ItemMovementRuleFlowData other) {
 		this(
 			UUID.randomUUID(),
 			other.name,
@@ -198,10 +198,10 @@ public class ItemRuleFlowData extends FlowData implements
 	}
 
 	@Override
-	public ItemRuleFlowData duplicate(
+	public ItemMovementRuleFlowData duplicate(
 		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
-		ItemRuleFlowData newRule = new ItemRuleFlowData(this);
+		ItemMovementRuleFlowData newRule = new ItemMovementRuleFlowData(this);
 		dependencyTracker.accept(newRule);
 
 		newRule.itemMatcherIds.clear();
@@ -236,7 +236,7 @@ public class ItemRuleFlowData extends FlowData implements
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;
 		}
-		return new ItemRuleFlowComponent((ManagerFlowController) parent, this);
+		return new ItemMovementRuleFlowComponent((ManagerFlowController) parent, this);
 	}
 
 	@Override
@@ -245,8 +245,8 @@ public class ItemRuleFlowData extends FlowData implements
 	}
 
 	@Override
-	public FlowDataSerializer<ItemRuleFlowData> getSerializer() {
-		return FlowDataSerializers.ITEM_RULE;
+	public FlowDataSerializer<ItemMovementRuleFlowData> getSerializer() {
+		return FlowDataSerializers.ITEM_MOVEMENT_RULE;
 	}
 
 	@Override
@@ -260,15 +260,15 @@ public class ItemRuleFlowData extends FlowData implements
 	}
 
 	public static class Serializer extends
-		FlowDataSerializer<ItemRuleFlowData> {
+		FlowDataSerializer<ItemMovementRuleFlowData> {
 
 		public Serializer(ResourceLocation registryName) {
 			super(registryName);
 		}
 
 		@Override
-		public ItemRuleFlowData fromNBT(CompoundNBT tag) {
-			return new ItemRuleFlowData(
+		public ItemMovementRuleFlowData fromNBT(CompoundNBT tag) {
+			return new ItemMovementRuleFlowData(
 				getUUID(tag),
 				tag.getString("name"),
 				ItemStack.read(tag.getCompound("icon")),
@@ -283,23 +283,23 @@ public class ItemRuleFlowData extends FlowData implements
 		}
 
 		@Override
-		public CompoundNBT toNBT(ItemRuleFlowData data) {
+		public CompoundNBT toNBT(ItemMovementRuleFlowData data) {
 			CompoundNBT tag = super.toNBT(data);
-			tag.put("pos", data.position.serializeNBT());
 			tag.putString("name", data.name);
 			tag.put("icon", data.icon.serializeNBT());
+			tag.put("pos", data.position.serializeNBT());
 			tag.putString("filterMode", data.filterMode.name());
 			tag.put("itemMatchers", data.itemMatcherIds.serialize());
+			tag.put("tileMatchers", data.tileMatcherIds.serialize());
 			tag.put("faces", EnumSetSerializationHelper.serialize(data.faces));
 			tag.putString("slots", data.slots.getDefinition());
 			tag.putBoolean("open", data.open);
-			tag.put("tileMatchers", data.tileMatcherIds.serialize());
 			return tag;
 		}
 
 		@Override
-		public ItemRuleFlowData fromBuffer(PacketBuffer buf) {
-			return new ItemRuleFlowData(
+		public ItemMovementRuleFlowData fromBuffer(PacketBuffer buf) {
+			return new ItemMovementRuleFlowData(
 				SFMUtil.readUUID(buf),
 				buf.readString(MAX_NAME_LENGTH),
 				buf.readItemStack(),
@@ -314,7 +314,7 @@ public class ItemRuleFlowData extends FlowData implements
 		}
 
 		@Override
-		public void toBuffer(ItemRuleFlowData data, PacketBuffer buf) {
+		public void toBuffer(ItemMovementRuleFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeString(data.name, MAX_NAME_LENGTH);
 			buf.writeItemStack(data.icon);

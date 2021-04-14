@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.util.ruledrawer;
 
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -15,11 +15,11 @@ import org.lwjgl.glfw.GLFW;
 
 class GlobalRulesDrawerItem extends ItemStackFlowButton {
 
-	public ItemRuleFlowData DATA;
+	public ItemMovementRuleFlowData DATA;
 	private final ItemStackTileEntityRuleDrawer PARENT;
 
 	public GlobalRulesDrawerItem(
-		ItemRuleFlowData data,
+		ItemMovementRuleFlowData data,
 		ItemStackTileEntityRuleDrawer parent
 	) {
 		super(data.getIcon(), new Position());

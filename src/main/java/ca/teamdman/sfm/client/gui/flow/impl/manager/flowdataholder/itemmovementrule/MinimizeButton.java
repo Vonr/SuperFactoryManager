@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemrule;
+package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemmovementrule;
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
@@ -14,10 +14,10 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 class MinimizeButton extends FlowMinusButton {
 
-	private final ItemRuleFlowComponent PARENT;
+	private final ItemMovementRuleFlowComponent PARENT;
 
 	public MinimizeButton(
-		ItemRuleFlowComponent rule,
+		ItemMovementRuleFlowComponent rule,
 		Position pos,
 		Size size
 	) {

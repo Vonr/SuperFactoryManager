@@ -12,8 +12,8 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowSprite;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
-import ca.teamdman.sfm.common.flow.data.ItemRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -28,13 +28,13 @@ public class ItemOutputFlowButton extends FlowContainer implements
 
 	private final ManagerFlowController CONTROLLER;
 	private final MyFlowIconButton BUTTON;
-	private ItemRuleFlowData ruleData;
+	private ItemMovementRuleFlowData ruleData;
 	private ItemOutputFlowData buttonData;
 
 	public ItemOutputFlowButton(
 		ManagerFlowController controller,
 		ItemOutputFlowData buttonData,
-		ItemRuleFlowData ruleData
+		ItemMovementRuleFlowData ruleData
 	) {
 		this.buttonData = buttonData;
 		this.ruleData = ruleData;
@@ -51,13 +51,13 @@ public class ItemOutputFlowButton extends FlowContainer implements
 		controller.SCREEN.getFlowDataContainer()
 			.addObserver(new FlowDataHolderObserver<>(ItemOutputFlowData.class, this));
 		controller.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			ItemRuleFlowData.class,
+			ItemMovementRuleFlowData.class,
 			data -> data.getId().equals(ruleData.getId()),
 			this::setRuleData
 		));
 	}
 
-	public void setRuleData(ItemRuleFlowData data) {
+	public void setRuleData(ItemMovementRuleFlowData data) {
 		this.ruleData = data;
 		this.BUTTON.reloadFromRuleData();
 	}

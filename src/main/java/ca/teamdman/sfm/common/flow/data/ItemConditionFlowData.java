@@ -4,8 +4,6 @@
 package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemInputFlowButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
@@ -22,27 +20,27 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class ItemInputFlowData extends FlowData implements Observer, PositionHolder {
+public class ItemConditionFlowData extends FlowData implements Observer, PositionHolder {
 
 	private final FlowDataRemovedObserver OBSERVER;
 	public Position position;
-	public UUID tileEntityRule;
+	public UUID rule;
 
-	public ItemInputFlowData(ItemInputFlowData other) {
+	public ItemConditionFlowData(ItemConditionFlowData other) {
 		this(
 			UUID.randomUUID(),
 			other.position.copy(),
-			other.tileEntityRule
+			other.rule
 		);
 	}
 
-	public ItemInputFlowData(UUID uuid, Position position, UUID tileEntityRule) {
+	public ItemConditionFlowData(UUID uuid, Position position, UUID rule) {
 		super(uuid);
 		this.position = position;
-		this.tileEntityRule = tileEntityRule;
+		this.rule = rule;
 		OBSERVER = new FlowDataRemovedObserver(
 			this,
-			data -> data.getId().equals(tileEntityRule),
+			data -> data.getId().equals(rule),
 			c -> c.remove(getId()) // remove this if rule gets deleted
 		);
 	}
@@ -56,21 +54,22 @@ public class ItemInputFlowData extends FlowData implements Observer, PositionHol
 	@Override
 	public void removeFromDataContainer(BasicFlowDataContainer container) {
 		super.removeFromDataContainer(container);
-		container.get(tileEntityRule)
+		container.get(rule)
 			.ifPresent(data -> data.removeFromDataContainer(container));
 	}
 
 	@Override
-	public ItemInputFlowData duplicate(
+	public ItemConditionFlowData duplicate(
 		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
-		ItemInputFlowData newInput = new ItemInputFlowData(this);
-		container.get(newInput.tileEntityRule, ItemMovementRuleFlowData.class).ifPresent(data -> {
-			FlowData newData = data.duplicate(container, dependencyTracker);
-			dependencyTracker.accept(newData);
-			newInput.tileEntityRule = newData.getId();
-		});
-		return newInput;
+		ItemConditionFlowData dupe = new ItemConditionFlowData(this);
+		container.get(dupe.rule, ItemConditionRuleFlowData.class)
+			.ifPresent(data -> {
+				FlowData newRule = data.duplicate(container, dependencyTracker);
+				dependencyTracker.accept(newRule);
+				dupe.rule = newRule.getId();
+			});
+		return dupe;
 	}
 
 	@Override
@@ -82,15 +81,15 @@ public class ItemInputFlowData extends FlowData implements Observer, PositionHol
 	public FlowComponent createController(
 		FlowComponent parent
 	) {
-		if (parent instanceof ManagerFlowController) {
-			return new ItemInputFlowButton(
-				(ManagerFlowController) parent,
-				this,
-				((ManagerFlowController) parent).SCREEN.getFlowDataContainer()
-					.get(tileEntityRule, ItemMovementRuleFlowData.class)
-					.orElseGet(ItemMovementRuleFlowData::new)
-			);
-		}
+//		if (parent instanceof ManagerFlowController) {
+//			return new ItemOutputFlowButton(
+//				(ManagerFlowController) parent,
+//				this,
+//				((ManagerFlowController) parent).SCREEN.getFlowDataContainer()
+//					.get(rule, ItemMovementRuleFlowData.class)
+//					.orElseGet(ItemMovementRuleFlowData::new)
+//			);
+//		}
 		return null;
 	}
 
@@ -100,8 +99,8 @@ public class ItemInputFlowData extends FlowData implements Observer, PositionHol
 	}
 
 	@Override
-	public FlowDataSerializer<ItemInputFlowData> getSerializer() {
-		return FlowDataSerializers.BASIC_INPUT;
+	public FlowDataSerializer<ItemConditionFlowData> getSerializer() {
+		return FlowDataSerializers.ITEM_CONDITION;
 	}
 
 	@Override
@@ -114,15 +113,15 @@ public class ItemInputFlowData extends FlowData implements Observer, PositionHol
 		return position;
 	}
 
-	public static class Serializer extends FlowDataSerializer<ItemInputFlowData> {
+	public static class Serializer extends FlowDataSerializer<ItemConditionFlowData> {
 
 		public Serializer(ResourceLocation key) {
 			super(key);
 		}
 
 		@Override
-		public ItemInputFlowData fromNBT(CompoundNBT tag) {
-			return new ItemInputFlowData(
+		public ItemConditionFlowData fromNBT(CompoundNBT tag) {
+			return new ItemConditionFlowData(
 				getUUID(tag),
 				new Position(tag.getCompound("pos")),
 				UUID.fromString(tag.getString("tileEntityRule"))
@@ -130,16 +129,16 @@ public class ItemInputFlowData extends FlowData implements Observer, PositionHol
 		}
 
 		@Override
-		public CompoundNBT toNBT(ItemInputFlowData data) {
+		public CompoundNBT toNBT(ItemConditionFlowData data) {
 			CompoundNBT tag = super.toNBT(data);
 			tag.put("pos", data.position.serializeNBT());
-			tag.putString("tileEntityRule", data.tileEntityRule.toString());
+			tag.putString("tileEntityRule", data.rule.toString());
 			return tag;
 		}
 
 		@Override
-		public ItemInputFlowData fromBuffer(PacketBuffer buf) {
-			return new ItemInputFlowData(
+		public ItemConditionFlowData fromBuffer(PacketBuffer buf) {
+			return new ItemConditionFlowData(
 				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong()),
 				SFMUtil.readUUID(buf)
@@ -147,10 +146,10 @@ public class ItemInputFlowData extends FlowData implements Observer, PositionHol
 		}
 
 		@Override
-		public void toBuffer(ItemInputFlowData data, PacketBuffer buf) {
+		public void toBuffer(ItemConditionFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
-			SFMUtil.writeUUID(data.tileEntityRule, buf);
+			SFMUtil.writeUUID(data.rule, buf);
 		}
 	}
 }
