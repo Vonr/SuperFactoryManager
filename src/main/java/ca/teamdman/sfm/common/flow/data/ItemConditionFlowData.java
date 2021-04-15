@@ -4,6 +4,8 @@
 package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemConditionFlowButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
@@ -81,21 +83,21 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 	public FlowComponent createController(
 		FlowComponent parent
 	) {
-//		if (parent instanceof ManagerFlowController) {
-//			return new ItemOutputFlowButton(
-//				(ManagerFlowController) parent,
-//				this,
-//				((ManagerFlowController) parent).SCREEN.getFlowDataContainer()
-//					.get(rule, ItemMovementRuleFlowData.class)
-//					.orElseGet(ItemMovementRuleFlowData::new)
-//			);
-//		}
+		if (parent instanceof ManagerFlowController) {
+			return new ItemConditionFlowButton(
+				(ManagerFlowController) parent,
+				this,
+				((ManagerFlowController) parent).SCREEN.getFlowDataContainer()
+					.get(rule, ItemConditionRuleFlowData.class)
+					.orElseGet(ItemConditionRuleFlowData::new)
+			);
+		}
 		return null;
 	}
 
 	@Override
 	public Set<Class<?>> getDependencies() {
-		return ImmutableSet.of(ItemMovementRuleFlowData.class);
+		return ImmutableSet.of(ItemConditionRuleFlowData.class);
 	}
 
 	@Override

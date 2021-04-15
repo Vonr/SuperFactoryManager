@@ -6,7 +6,9 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.flow.core.ComponentScreen;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.container.ManagerContainer;
+import ca.teamdman.sfm.common.flow.core.FlowDialog;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
@@ -14,13 +16,17 @@ import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.text.ITextComponent;
 
 public class ManagerScreen extends ComponentScreen<ManagerFlowController> implements
 	IHasContainer<ManagerContainer> {
+
 	private final ManagerFlowController CONTROLLER;
 	private final ManagerContainer CONTAINER;
 
@@ -34,6 +40,15 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 	public void closeScreen() {
 		getFlowDataContainer().notifyGuiClosed();
 		super.closeScreen();
+	}
+
+	public BasicFlowDataContainer getFlowDataContainer() {
+		return getContainer().getSource().getFlowDataContainer();
+	}
+
+	@Override
+	public ManagerContainer getContainer() {
+		return CONTAINER;
 	}
 
 	public void reloadFromManagerTileEntity() {
@@ -50,31 +65,58 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 		return CONTROLLER;
 	}
 
-	public BasicFlowDataContainer getFlowDataContainer() {
-		return getContainer().getSource().getFlowDataContainer();
-	}
-
-	public void sendFlowDataToServer(FlowData... data) {
-		PacketHandler.INSTANCE.sendToServer(new ManagerFlowDataPacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
-			data
-		));
-	}
-
-	public void sendFlowDataToServer(Collection<FlowData> data) {
-		sendFlowDataToServer(data.toArray(new FlowData[0]));
-	}
-
 	@Override
 	protected void init() {
 		super.init();
 		CONTROLLER.init();
 	}
 
-	@Override
-	public ManagerContainer getContainer() {
-		return CONTAINER;
+	/**
+	 * Open a dialog, and close other dialogs if config set
+	 */
+	public <T extends FlowData & FlowDialog> void setDialogVisibility(T dialog, boolean visible) {
+		// track changed data
+		Set<FlowData> changed = new HashSet<>();
+
+		// only toggle if visibility changed
+		if (dialog.isOpen() != visible) {
+			dialog.setOpen(visible);
+			changed.add(dialog);
+		}
+
+		// hide other dialogs
+		if (visible && !Client.allowMultipleRuleWindows) {
+			getFlowDataContainer().stream()
+				.filter(((Predicate<FlowData>) dialog::equals).negate())
+				.filter(FlowDialog.class::isInstance)
+				.map(FlowDialog.class::cast)
+				// update opening position
+				.peek(other -> dialog.getPosition().setXY(other.getPosition()))
+				// hide
+				.peek(other -> other.setOpen(false))
+				.map(FlowData.class::cast)
+				// mark updated
+				.forEach(changed::add);
+		}
+
+		// distribute changes
+		CONTROLLER.SCREEN.sendFlowDataToServer(changed);
+	}
+
+	public void sendFlowDataToServer(Collection<FlowData> data) {
+		if (data.size() > 0) {
+			sendFlowDataToServer(data.toArray(new FlowData[0]));
+		}
+	}
+
+	public void sendFlowDataToServer(FlowData... data) {
+		if (data.length > 0) {
+			PacketHandler.INSTANCE.sendToServer(new ManagerFlowDataPacketC2S(
+				CONTROLLER.SCREEN.getContainer().windowId,
+				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
+				data
+			));
+		}
 	}
 
 	public void sendFlowDataDeleteToServer(UUID id) {

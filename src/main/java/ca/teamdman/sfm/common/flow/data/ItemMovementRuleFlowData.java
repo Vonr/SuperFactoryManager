@@ -8,6 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemmovementrule.ItemMovementRuleFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
+import ca.teamdman.sfm.common.flow.core.FlowDialog;
 import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
@@ -47,7 +48,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
 public class ItemMovementRuleFlowData extends FlowData implements
-	Observer, PositionHolder {
+	Observer, PositionHolder, FlowDialog {
 
 	public static final int MAX_NAME_LENGTH = 256;
 
@@ -252,6 +253,16 @@ public class ItemMovementRuleFlowData extends FlowData implements
 	@Override
 	public void update(Observable o, Object arg) {
 		OBSERVER.update(o, arg);
+	}
+
+	@Override
+	public boolean isOpen() {
+		return open;
+	}
+
+	@Override
+	public void setOpen(boolean value) {
+		open = value;
 	}
 
 	public enum FilterMode {

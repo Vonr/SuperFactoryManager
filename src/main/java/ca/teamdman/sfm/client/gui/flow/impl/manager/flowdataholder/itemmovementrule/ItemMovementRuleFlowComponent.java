@@ -8,7 +8,6 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
@@ -17,8 +16,6 @@ import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.HashSet;
-import java.util.Set;
 
 public class ItemMovementRuleFlowComponent extends FlowContainer implements
 	FlowDataHolder<ItemMovementRuleFlowData> {
@@ -134,31 +131,7 @@ public class ItemMovementRuleFlowComponent extends FlowContainer implements
 
 	@Override
 	public void setVisible(boolean visible) {
-		Set<FlowData> changed = new HashSet<>();
-		if (data.open != visible) {
-			data.open = visible;
-			changed.add(data);
-		}
-		if (visible) {
-			if (!Client.allowMultipleRuleWindows) {
-				// when becoming visible, check if any other windows already open
-				// if so, use their position and close them
-				CONTROLLER.SCREEN.getFlowDataContainer()
-					.get(ItemMovementRuleFlowData.class)
-					.filter(d -> !d.equals(getData()))
-					.filter(d -> d.open)
-					.forEach(d -> {
-						data.position.setXY(d.position);
-						changed.add(data);
-
-						d.open = false;
-						changed.add(d);
-					});
-			}
-		}
-		if (changed.size() > 0) {
-			CONTROLLER.SCREEN.sendFlowDataToServer(changed);
-		}
+		CONTROLLER.SCREEN.setDialogVisibility(data,visible);
 	}
 
 	@Override

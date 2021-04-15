@@ -8,33 +8,30 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.TileMatcher;
 import ca.teamdman.sfm.common.flow.data.FlowData;
-import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.util.HashSet;
-import java.util.Set;
 
 public class ItemConditionRuleFlowComponent extends FlowContainer implements
-	FlowDataHolder<ItemMovementRuleFlowData> {
+	FlowDataHolder<ItemConditionRuleFlowData> {
 
 	public final ManagerFlowController CONTROLLER;
 	private final TilesSection TILES_SECTION;
 	private final ItemsSection ITEMS_SECTION;
 	private final IconSection ICON_SECTION;
-	private final FilterSection FILTER_SECTION;
+//	private final FilterSection FILTER_SECTION;
 	private final ToolbarSection TOOLBAR_SECTION;
 	private final FacesSection FACES_SECTION;
 	private final SlotsSection SLOTS_SECTION;
-	private ItemMovementRuleFlowData data;
+	private ItemConditionRuleFlowData data;
 
 	public ItemConditionRuleFlowComponent(
-		ManagerFlowController controller, ItemMovementRuleFlowData data
+		ManagerFlowController controller, ItemConditionRuleFlowData data
 	) {
 		super(data.getPosition(), new Size(215, 170));
 		this.CONTROLLER = controller;
@@ -46,8 +43,8 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 		ICON_SECTION = new IconSection(this, new Position(5, 25));
 		addChild(ICON_SECTION);
 
-		FILTER_SECTION = new FilterSection(this, new Position(45, 25));
-		addChild(FILTER_SECTION);
+//		FILTER_SECTION = new FilterSection(this, new Position(45, 25));
+//		addChild(FILTER_SECTION);
 
 		FACES_SECTION = new FacesSection(this, new Position(85, 25));
 		addChild(FACES_SECTION);
@@ -63,7 +60,7 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 
 		// Add change listener
 		CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
-			ItemMovementRuleFlowData.class, this
+			ItemConditionRuleFlowData.class, this
 		));
 
 		setDraggable(true);
@@ -75,16 +72,16 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 	}
 
 	@Override
-	public ItemMovementRuleFlowData getData() {
+	public ItemConditionRuleFlowData getData() {
 		return data;
 	}
 
 	@Override
-	public void setData(ItemMovementRuleFlowData data) {
+	public void setData(ItemConditionRuleFlowData data) {
 		this.data = data;
 		getPosition().setXY(data.getPosition());
 		ICON_SECTION.onDataChanged(data);
-		FILTER_SECTION.onDataChanged(data);
+//		FILTER_SECTION.onDataChanged(data);
 		ITEMS_SECTION.onDataChanged(data);
 		TILES_SECTION.onDataChanged(data);
 		SLOTS_SECTION.onDataChanged(data);
@@ -155,31 +152,7 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 
 	@Override
 	public void setVisible(boolean visible) {
-		Set<FlowData> changed = new HashSet<>();
-		if (data.open != visible) {
-			data.open = visible;
-			changed.add(data);
-		}
-		if (visible) {
-			if (!Client.allowMultipleRuleWindows) {
-				// when becoming visible, check if any other windows already open
-				// if so, use their position and close them
-				CONTROLLER.SCREEN.getFlowDataContainer()
-					.get(ItemMovementRuleFlowData.class)
-					.filter(d -> !d.equals(getData()))
-					.filter(d -> d.open)
-					.forEach(d -> {
-						data.position.setXY(d.position);
-						changed.add(data);
-
-						d.open = false;
-						changed.add(d);
-					});
-			}
-		}
-		if (changed.size() > 0) {
-			CONTROLLER.SCREEN.sendFlowDataToServer(changed);
-		}
+		CONTROLLER.SCREEN.setDialogVisibility(data, visible);
 	}
 
 	@Override

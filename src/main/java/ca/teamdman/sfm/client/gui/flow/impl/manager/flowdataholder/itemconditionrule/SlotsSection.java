@@ -4,7 +4,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.TextAreaFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.client.resources.I18n;
@@ -64,7 +64,7 @@ public class SlotsSection extends FlowContainer {
 		onDataChanged(PARENT.getData());
 	}
 
-	public void onDataChanged(ItemMovementRuleFlowData data) {
+	public void onDataChanged(ItemConditionRuleFlowData data) {
 		INPUT.setContent(data.slots.getDefinition());
 	}
 }

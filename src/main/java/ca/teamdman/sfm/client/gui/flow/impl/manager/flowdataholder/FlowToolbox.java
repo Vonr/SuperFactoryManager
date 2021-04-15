@@ -6,6 +6,7 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.template.toolboxspawner.FlowTimerTriggerSpawnerButton;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.template.toolboxspawner.ItemConditionSpawnerFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.template.toolboxspawner.ItemInputSpawnerFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.template.toolboxspawner.ItemOutputSpawnerFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
@@ -43,6 +44,7 @@ public class FlowToolbox extends FlowContainer implements FlowDataHolder<Toolbox
 		DRAWER.addChild(new FlowTimerTriggerSpawnerButton(CONTROLLER));
 		DRAWER.addChild(new ItemInputSpawnerFlowButton(CONTROLLER));
 		DRAWER.addChild(new ItemOutputSpawnerFlowButton(CONTROLLER));
+		DRAWER.addChild(new ItemConditionSpawnerFlowButton(CONTROLLER));
 		DRAWER.setMaxItemsPerRow(4);
 		DRAWER.setMaxItemsPerColumn(3);
 		DRAWER.update();

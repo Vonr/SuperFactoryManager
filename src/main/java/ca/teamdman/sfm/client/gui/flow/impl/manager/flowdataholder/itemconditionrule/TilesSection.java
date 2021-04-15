@@ -12,7 +12,7 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.TileMatcher;
-import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import java.util.Arrays;
 import java.util.List;
@@ -81,7 +81,7 @@ class TilesSection extends FlowContainer {
 			.forEach(DRAWER::addChild);
 	}
 
-	public void onDataChanged(ItemMovementRuleFlowData data) {
+	public void onDataChanged(ItemConditionRuleFlowData data) {
 		rebuildChildren();
 	}
 

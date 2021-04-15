@@ -13,7 +13,7 @@ public enum ButtonLabel {
 	SETTINGS(0, 84, 14, 14),
 	PICKER_MATCHER(0, 98, 14, 14),
 	MODID_MATCHER(0, 112, 14, 14),
-	CONDITIONAL(0, 126,14,14),
+	CONDITIONAL(0, 124,14,14),
 	NONE(0, 0, 0, 0);
 
 	public final ResourceLocation SPRITE_SHEET = new ResourceLocation(

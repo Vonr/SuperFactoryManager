@@ -10,7 +10,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +50,7 @@ class ItemsSection extends FlowContainer {
 	}
 
 	public void onDataChanged(
-		ItemMovementRuleFlowData data
+		ItemConditionRuleFlowData data
 	) {
 		rebuildChildren();
 	}

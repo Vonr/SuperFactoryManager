@@ -5,7 +5,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.RadioFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.RadioFlowButton.RadioGroup;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData.FilterMode;
 import net.minecraft.client.resources.I18n;
 
@@ -31,10 +31,10 @@ class FilterSection extends FlowContainer {
 				FilterMode next = member == WHITELIST_BUTTON
 					? FilterMode.WHITELIST
 					: FilterMode.BLACKLIST;
-				if (PARENT.getData().filterMode != next) {
-					PARENT.getData().filterMode = next;
-					PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
-				}
+//				if (PARENT.getData().filterMode != next) {
+//					PARENT.getData().filterMode = next;
+//					PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
+//				}
 			}
 		};
 		WHITELIST_BUTTON = new RadioFlowButton(
@@ -57,12 +57,12 @@ class FilterSection extends FlowContainer {
 
 
 	public void onDataChanged(
-		ItemMovementRuleFlowData data
+		ItemConditionRuleFlowData data
 	) {
-		ITEM_SELECTION_MODE_GROUP.setSelected(
-			data.filterMode == FilterMode.WHITELIST
-				? WHITELIST_BUTTON
-				: BLACKLIST_BUTTON
-		);
+//		ITEM_SELECTION_MODE_GROUP.setSelected(
+//			data.filterMode == FilterMode.WHITELIST
+//				? WHITELIST_BUTTON
+//				: BLACKLIST_BUTTON
+//		);
 	}
 }

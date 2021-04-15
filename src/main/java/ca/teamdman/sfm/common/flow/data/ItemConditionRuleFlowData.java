@@ -1,6 +1,9 @@
 package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule.ItemConditionRuleFlowComponent;
+import ca.teamdman.sfm.common.flow.core.FlowDialog;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
@@ -25,7 +28,8 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 
-public class ItemConditionRuleFlowData extends FlowData implements Observer, PositionHolder {
+public class ItemConditionRuleFlowData extends FlowData implements Observer, PositionHolder,
+	FlowDialog {
 
 	public static final int MAX_NAME_LENGTH = 256;
 	private final FlowDataRemovedObserver OBSERVER;
@@ -122,7 +126,10 @@ public class ItemConditionRuleFlowData extends FlowData implements Observer, Pos
 	@Nullable
 	@Override
 	public FlowComponent createController(FlowComponent parent) {
-		return null;
+		if (!(parent instanceof ManagerFlowController)) {
+			return null;
+		}
+		return new ItemConditionRuleFlowComponent((ManagerFlowController) parent, this);
 	}
 
 	@Override
@@ -132,7 +139,17 @@ public class ItemConditionRuleFlowData extends FlowData implements Observer, Pos
 
 	@Override
 	public void update(Observable o, Object arg) {
+		OBSERVER.update(o, arg);
+	}
 
+	@Override
+	public boolean isOpen() {
+		return open;
+	}
+
+	@Override
+	public void setOpen(boolean value) {
+		open = value;
 	}
 
 	public enum ItemMode {

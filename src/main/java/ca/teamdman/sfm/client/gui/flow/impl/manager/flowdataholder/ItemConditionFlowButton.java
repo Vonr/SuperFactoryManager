@@ -124,7 +124,7 @@ public class ItemConditionFlowButton extends FlowContainer implements
 		public void reloadFromRuleData() {
 			if (ruleData.getIcon().isEmpty()) {
 				// no custom icon, use default label
-				LABEL = ButtonLabel.INPUT.SPRITE;
+				LABEL = ButtonLabel.CONDITIONAL.SPRITE;
 			} else {
 				// custom icon, hide the default label
 				LABEL = FlowSprite.EMPTY;
