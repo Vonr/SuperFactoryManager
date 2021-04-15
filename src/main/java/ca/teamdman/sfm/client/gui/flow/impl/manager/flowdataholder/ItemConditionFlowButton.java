@@ -157,7 +157,7 @@ public class ItemConditionFlowButton extends FlowContainer implements
 			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 		) {
 			if (LABEL == FlowSprite.EMPTY) {
-				GlStateManager.color4f(0.5f, 0.5f, 1f, 1f);
+				GlStateManager.color4f(0.9f, 0.5f, 0.5f, 1f);
 			}
 			super.draw(screen, matrixStack, mx, my, deltaTime);
 			if (LABEL == FlowSprite.EMPTY) {

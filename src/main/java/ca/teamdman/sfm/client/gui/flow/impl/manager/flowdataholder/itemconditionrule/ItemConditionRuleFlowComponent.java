@@ -24,7 +24,8 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 	private final TilesSection TILES_SECTION;
 	private final ItemsSection ITEMS_SECTION;
 	private final IconSection ICON_SECTION;
-//	private final FilterSection FILTER_SECTION;
+	private final ItemModeSection ITEM_MODE_SECTION;
+	private final TileModeSection TILE_MODE_SECTION;
 	private final ToolbarSection TOOLBAR_SECTION;
 	private final FacesSection FACES_SECTION;
 	private final SlotsSection SLOTS_SECTION;
@@ -43,8 +44,6 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 		ICON_SECTION = new IconSection(this, new Position(5, 25));
 		addChild(ICON_SECTION);
 
-//		FILTER_SECTION = new FilterSection(this, new Position(45, 25));
-//		addChild(FILTER_SECTION);
 
 		FACES_SECTION = new FacesSection(this, new Position(85, 25));
 		addChild(FACES_SECTION);
@@ -55,8 +54,14 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 		ITEMS_SECTION = new ItemsSection(this, new Position(5, 73));
 		addChild(ITEMS_SECTION);
 
+		ITEM_MODE_SECTION = new ItemModeSection(this, new Position(50, 73));
+		addChild(ITEM_MODE_SECTION);
+
 		TILES_SECTION = new TilesSection(this, new Position(110, 73));
 		addChild(TILES_SECTION);
+
+		TILE_MODE_SECTION = new TileModeSection(this, new Position(155, 73));
+		addChild(TILE_MODE_SECTION);
 
 		// Add change listener
 		CONTROLLER.SCREEN.getFlowDataContainer().addObserver(new FlowDataHolderObserver<>(
@@ -81,7 +86,7 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 		this.data = data;
 		getPosition().setXY(data.getPosition());
 		ICON_SECTION.onDataChanged(data);
-//		FILTER_SECTION.onDataChanged(data);
+		ITEM_MODE_SECTION.onDataChanged(data);
 		ITEMS_SECTION.onDataChanged(data);
 		TILES_SECTION.onDataChanged(data);
 		SLOTS_SECTION.onDataChanged(data);

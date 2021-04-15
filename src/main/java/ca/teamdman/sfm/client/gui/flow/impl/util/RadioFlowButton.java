@@ -2,22 +2,46 @@ package ca.teamdman.sfm.client.gui.flow.impl.util;
 
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.common.flow.core.Position;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
 
 public class RadioFlowButton extends SelectableFlowButton {
 
 	private final RadioGroup GROUP;
-
+	private final String HOVER_TEXT;
 	public RadioFlowButton(
 		Position pos,
 		Size size,
 		String text,
 		RadioGroup group
 	) {
+		this(pos, size, text, null, group);
+	}
+
+	public RadioFlowButton(
+		Position pos,
+		Size size,
+		String text,
+		String hoverText,
+		RadioGroup group
+	) {
 		super(pos, size, text);
 		group.addMember(this);
 		this.GROUP = group;
+		this.HOVER_TEXT = hoverText;
+	}
+
+	@Override
+	public List<ITextProperties> getTooltip() {
+		List<ITextProperties> rtn = new ArrayList<>();
+		if (HOVER_TEXT != null) {
+			rtn.add(new StringTextComponent(HOVER_TEXT));
+		}
+		return rtn;
 	}
 
 	@Override
