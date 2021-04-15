@@ -167,11 +167,11 @@ public class ItemMovementRuleFlowComponent extends FlowContainer implements
 
 	public <T extends FlowData & TileMatcher> void addTileMatcher(T matcher) {
 		getData().tileMatcherIds.add(matcher.getId());
-		CONTROLLER.SCREEN.sendFlowDataToServer(getData(), getData());
+		CONTROLLER.SCREEN.sendFlowDataToServer(matcher, getData());
 	}
 
 	public <T extends FlowData & ItemMatcher> void addItemMatcher(T matcher) {
 		getData().itemMatcherIds.add(matcher.getId());
-		CONTROLLER.SCREEN.sendFlowDataToServer(getData(), getData());
+		CONTROLLER.SCREEN.sendFlowDataToServer(matcher, getData());
 	}
 }
