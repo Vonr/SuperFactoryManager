@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder;
 
+import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
@@ -10,7 +11,10 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData;
+import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData.Responsibility;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.util.text.ITextProperties;
@@ -41,6 +45,19 @@ public class ConditionLineNodeFlowComponent extends FlowIconButton implements
 	public void onDragFinished(int dx, int dy, int mx, int my) {
 		data.position = getPosition();
 		CONTROLLER.SCREEN.sendFlowDataToServer(data);
+	}
+
+	@Override
+	public void draw(
+		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
+	) {
+		if (getData().responsibility == Responsibility.ACCEPTED) {
+			RenderSystem.color4f(0.5f, 0.9f, 0.5f, 1f);
+		} else if (getData().responsibility == Responsibility.REJECTED) {
+			RenderSystem.color4f(0.9f, 0.5f, 0.5f, 1f);
+		}
+		super.draw(screen, matrixStack, mx, my, deltaTime);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 	}
 
 	@Override

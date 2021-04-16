@@ -18,7 +18,7 @@ import ca.teamdman.sfm.common.flow.data.ItemConditionFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -133,7 +133,8 @@ public class ItemConditionFlowButton extends FlowContainer implements
 			// update node positions to match parent's change in position
 			getNodes()
 				.filter(OFFSETS::containsKey)
-				.forEach(node -> node.getPosition().setXY(getPosition().subtract(OFFSETS.get(node))));
+				.forEach(
+					node -> node.getPosition().setXY(getPosition().subtract(OFFSETS.get(node))));
 		}
 
 		@Override
@@ -201,7 +202,7 @@ public class ItemConditionFlowButton extends FlowContainer implements
 			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 		) {
 			if (LABEL == FlowSprite.EMPTY) {
-				GlStateManager.color4f(0.9f, 0.5f, 0.5f, 1f);
+				RenderSystem.color4f(0.9f, 0.5f, 0.5f, 1f);
 			}
 			super.draw(screen, matrixStack, mx, my, deltaTime);
 			if (LABEL == FlowSprite.EMPTY) {

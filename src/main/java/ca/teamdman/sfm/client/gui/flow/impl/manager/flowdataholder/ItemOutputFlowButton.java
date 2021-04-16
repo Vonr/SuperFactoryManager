@@ -16,7 +16,7 @@ import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -157,7 +157,7 @@ public class ItemOutputFlowButton extends FlowContainer implements
 			BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 		) {
 			if (LABEL == FlowSprite.EMPTY) {
-				GlStateManager.color4f(1f, 0.6f, 0.4f, 1f);
+				RenderSystem.color4f(1f, 0.6f, 0.4f, 1f);
 			}
 			super.draw(screen, matrixStack, mx, my, deltaTime);
 			if (LABEL == FlowSprite.EMPTY) {
