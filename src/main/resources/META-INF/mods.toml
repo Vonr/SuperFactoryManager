@@ -12,7 +12,7 @@ issueTrackerURL="https://github.com/TeamDman/SuperFactoryManager/issues"
   #updateJSONURL="http://myurl.me/"
   displayURL="https://www.curseforge.com/minecraft/mc-mods/super-factory-manager"
   logoFile="sfm.png"
-  credits="Thanks to VSWE for the original mod, and gigabit101 for the 1.10 work"
+  credits="Thanks to VSWE for the original mod, and gigabit101 for the 1.10 work, and Growl for helping with logic optimization"
   authors="TeamDman"
   description='''
 Adds a certain magical factory manager to the game.

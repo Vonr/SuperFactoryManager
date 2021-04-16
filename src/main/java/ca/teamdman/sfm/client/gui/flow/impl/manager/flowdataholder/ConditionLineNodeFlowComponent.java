@@ -11,7 +11,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData;
-import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData.Responsibility;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData.Result;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -56,9 +56,9 @@ public class ConditionLineNodeFlowComponent extends FlowIconButton implements
 	public void draw(
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
-		if (getData().responsibility == Responsibility.ACCEPTED) {
+		if (getData().responsibility == Result.ACCEPTED) {
 			RenderSystem.color4f(0.5f, 0.9f, 0.5f, 1f);
-		} else if (getData().responsibility == Responsibility.REJECTED) {
+		} else if (getData().responsibility == Result.REJECTED) {
 			RenderSystem.color4f(0.9f, 0.5f, 0.5f, 1f);
 		}
 		super.draw(screen, matrixStack, mx, my, deltaTime);

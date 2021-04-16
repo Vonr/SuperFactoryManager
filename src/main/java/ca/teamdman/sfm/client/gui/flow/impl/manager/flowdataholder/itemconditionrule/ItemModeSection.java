@@ -13,7 +13,6 @@ class ItemModeSection extends FlowContainer {
 	private final RadioGroup GROUP;
 	private final RadioFlowButton ALL_BUTTON;
 	private final RadioFlowButton ANY_BUTTON;
-	private final RadioFlowButton NONE_BUTTON;
 	private ItemConditionRuleFlowComponent PARENT;
 
 	public ItemModeSection(ItemConditionRuleFlowComponent parent, Position pos) {
@@ -29,9 +28,6 @@ class ItemModeSection extends FlowContainer {
 				}
 				if (member == ANY_BUTTON) {
 					next = ItemMode.MATCH_ANY;
-				}
-				if (member == NONE_BUTTON) {
-					next = ItemMode.MATCH_NONE;
 				}
 				if (next != null && PARENT.getData().itemMode != next) {
 					PARENT.getData().itemMode = next;
@@ -57,14 +53,6 @@ class ItemModeSection extends FlowContainer {
 		);
 		addChild(ANY_BUTTON);
 
-		NONE_BUTTON = new RadioFlowButton(
-			new Position(32, 0),
-			new Size(14, 12),
-			I18n.format("gui.sfm.flow.tileentityrule.button.match_none"),
-			I18n.format("gui.sfm.flow.tileentityrule.tooltip.match_none"),
-			GROUP
-		);
-		addChild(NONE_BUTTON);
 		onDataChanged(PARENT.getData());
 	}
 
@@ -78,9 +66,6 @@ class ItemModeSection extends FlowContainer {
 		}
 		if (data.itemMode == ItemMode.MATCH_ANY) {
 			next = ANY_BUTTON;
-		}
-		if (data.itemMode == ItemMode.MATCH_NONE) {
-			next = NONE_BUTTON;
 		}
 		if (next != null) {
 			GROUP.setSelected(next);

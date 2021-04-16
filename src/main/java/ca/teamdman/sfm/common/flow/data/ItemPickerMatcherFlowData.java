@@ -83,7 +83,7 @@ public class ItemPickerMatcherFlowData extends FlowData implements ItemMatcher {
 
 	@Override
 	public boolean matches(@Nonnull ItemStack stack) {
-		return this.stack.isItemEqual(stack);
+		return this.stack.isItemEqual(stack) && (quantity == 0 || stack.getCount() >= quantity);
 	}
 
 	@Override

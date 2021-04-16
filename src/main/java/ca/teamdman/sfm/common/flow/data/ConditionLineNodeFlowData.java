@@ -8,6 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ConditionLineNodeFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData.Result;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer.FlowDataContainerChange.ChangeType;
@@ -17,7 +18,6 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.UUID;
 import java.util.function.Consumer;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -25,9 +25,9 @@ import net.minecraft.util.ResourceLocation;
 public class ConditionLineNodeFlowData extends FlowData implements Observer, PositionHolder {
 
 	public Position position;
-	public Responsibility responsibility;
+	public Result responsibility;
 
-	public ConditionLineNodeFlowData(Responsibility resp) {
+	public ConditionLineNodeFlowData(Result resp) {
 		this(
 			UUID.randomUUID(),
 			new Position(),
@@ -43,7 +43,7 @@ public class ConditionLineNodeFlowData extends FlowData implements Observer, Pos
 		);
 	}
 
-	public ConditionLineNodeFlowData(UUID uuid, Position position, Responsibility resp) {
+	public ConditionLineNodeFlowData(UUID uuid, Position position, Result resp) {
 		super(uuid);
 		this.position = position;
 		this.responsibility = resp;
@@ -102,17 +102,6 @@ public class ConditionLineNodeFlowData extends FlowData implements Observer, Pos
 		}
 	}
 
-	public enum Responsibility {
-		ACCEPTED("gui.sfm.flow.tooltip.condition_accepted"),
-		REJECTED("gui.sfm.flow.tooltip.condition_rejected");
-
-		public final String DISPLAY_NAME;
-
-		Responsibility(String unlocalizedName) {
-			DISPLAY_NAME = I18n.format(unlocalizedName);
-		}
-	}
-
 	public static class Serializer extends FlowDataSerializer<ConditionLineNodeFlowData> {
 
 		public Serializer(ResourceLocation key) {
@@ -124,7 +113,7 @@ public class ConditionLineNodeFlowData extends FlowData implements Observer, Pos
 			return new ConditionLineNodeFlowData(
 				getUUID(tag),
 				new Position(tag.getCompound("pos")),
-				Responsibility.valueOf(tag.getString("resp"))
+				Result.valueOf(tag.getString("resp"))
 			);
 		}
 
@@ -141,7 +130,7 @@ public class ConditionLineNodeFlowData extends FlowData implements Observer, Pos
 			return new ConditionLineNodeFlowData(
 				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong()),
-				Responsibility.valueOf(buf.readString(12))
+				Result.valueOf(buf.readString(12))
 			);
 		}
 

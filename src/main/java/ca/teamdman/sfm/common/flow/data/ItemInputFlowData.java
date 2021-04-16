@@ -11,6 +11,7 @@ import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import ca.teamdman.sfm.common.tile.manager.ExecutionStep;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import com.google.common.collect.ImmutableSet;
 import java.util.Observable;
@@ -34,6 +35,13 @@ public class ItemInputFlowData extends FlowData implements Observer, PositionHol
 			other.position.copy(),
 			other.tileEntityRule
 		);
+	}
+
+	@Override
+	public void execute(ExecutionStep step) {
+		BasicFlowDataContainer container = step.TILE.getFlowDataContainer();
+		container.get(tileEntityRule, ItemMovementRuleFlowData.class)
+			.ifPresent(step.INPUTS::add);
 	}
 
 	public ItemInputFlowData(UUID uuid, Position position, UUID tileEntityRule) {

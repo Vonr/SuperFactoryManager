@@ -125,7 +125,8 @@ public class ItemModMatcherFlowData extends FlowData implements ItemMatcher {
 
 	@Override
 	public boolean matches(@Nonnull ItemStack stack) {
-		return stack.getItem().getRegistryName().getNamespace().equals(modId);
+		return stack.getItem().getRegistryName().getNamespace().equals(modId)
+			&& (quantity == 0 || stack.getCount() >= quantity);
 	}
 
 	@Override

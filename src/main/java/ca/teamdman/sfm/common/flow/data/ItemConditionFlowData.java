@@ -7,28 +7,42 @@ import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemConditionFlowButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
+import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.flow.core.ItemMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
-import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData.Responsibility;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData.ItemMode;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData.Result;
+import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData.TileMode;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
+import ca.teamdman.sfm.common.tile.manager.ExecutionStep;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import com.google.common.collect.ImmutableSet;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.items.IItemHandler;
 
 public class ItemConditionFlowData extends FlowData implements Observer, PositionHolder {
 
 	private final FlowDataRemovedObserver OBSERVER;
 	public Position position;
 	public UUID rule;
+	private transient Result result;
 
 	public ItemConditionFlowData(ItemConditionFlowData other) {
 		this(
@@ -63,6 +77,24 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 	}
 
 	@Override
+	public void execute(ExecutionStep step) {
+		BasicFlowDataContainer container = step.TILE.getFlowDataContainer();
+		Optional<CableNetwork> net = CableNetworkManager
+			.getOrRegisterNetwork(step.TILE);
+		if (!net.isPresent()) {
+			return;
+		}
+		Optional<ItemConditionRuleFlowData> rule = container
+			.get(this.rule, ItemConditionRuleFlowData.class);
+		if (!rule.isPresent()) {
+			return;
+		}
+
+		// set result to be used when branching later in {@code getNextUsingRelationships}
+		result = isSatisfied(step, container, net.get(), rule.get());
+	}
+
+	@Override
 	public ItemConditionFlowData duplicate(
 		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
@@ -76,10 +108,10 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 
 		// create line nodes and their relationships
 		ConditionLineNodeFlowData acceptedNode = new ConditionLineNodeFlowData(
-			Responsibility.ACCEPTED);
+			Result.ACCEPTED);
 		dependencyTracker.accept(acceptedNode);
 		ConditionLineNodeFlowData rejectedNode = new ConditionLineNodeFlowData(
-			Responsibility.REJECTED);
+			Result.REJECTED);
 		dependencyTracker.accept(rejectedNode);
 		RelationshipFlowData acceptedRel = new RelationshipFlowData(
 			dupe.getId(), acceptedNode.getId());
@@ -89,7 +121,7 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 		dependencyTracker.accept(rejectedRel);
 
 		// ugly hack to initialize node positions to an offset of parent position
-		dupe.position = new Position(){
+		dupe.position = new Position() {
 			@Override
 			public void setXY(int x, int y) {
 				super.setXY(x, y);
@@ -105,6 +137,14 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 	@Override
 	public boolean isValidRelationshipTarget() {
 		return true;
+	}
+
+	@Override
+	public Stream<ConditionLineNodeFlowData> getNextUsingRelationships(BasicFlowDataContainer container) {
+		return super.getNextUsingRelationships(container)
+			.filter(ConditionLineNodeFlowData.class::isInstance)
+			.map(ConditionLineNodeFlowData.class::cast)
+			.filter(node -> node.responsibility == result);
 	}
 
 	@Override
@@ -136,6 +176,66 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 	@Override
 	public Position getPosition() {
 		return position;
+	}
+
+	private Result isSatisfied(
+		ExecutionStep step,
+		BasicFlowDataContainer container,
+		CableNetwork network,
+		ItemConditionRuleFlowData rule
+	) {
+		List<ItemMatcher> itemMatchers = rule.itemMatcherIds.stream()
+			.map(container::get)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.filter(ItemMatcher.class::isInstance)
+			.map(ItemMatcher.class::cast)
+			.collect(Collectors.toList());
+
+		List<IItemHandler> handlers = rule.getItemHandlers(container, network);
+
+		if (itemMatchers.size() == 0 || handlers.size() == 0) {
+			return Result.ACCEPTED;
+		}
+
+		// for each inv
+		for (IItemHandler handler : handlers) {
+			// track remaining item matchers
+			Set<ItemMatcher> unsatisfied = new HashSet<>(itemMatchers);
+			// for each slot in inv
+			for (int slot : rule.slots.getSlots(handler.getSlots()).toArray()) {
+				// get stack in slot
+				ItemStack stack = handler.getStackInSlot(slot);
+				// skip empty slots
+				if (stack.isEmpty()) {
+					continue;
+				}
+				// check if satisfied any matchers
+				boolean satisfiedAny = unsatisfied.removeIf(matcher -> matcher.matches(stack));
+				// if satisfied item-any, stop iterating slots
+				if (satisfiedAny && rule.itemMode == ItemMode.MATCH_ANY) {
+					break;
+				}
+				// if satisfied item-all, stop iterating slots
+				if (unsatisfied.size() == 0) {
+					break;
+				}
+				// if satisfied item-any and tile-any, short circuit
+				if (rule.tileMode == TileMode.MATCH_ANY && satisfiedAny) {
+					return Result.ACCEPTED;
+				}
+			}
+			// if failed to satisfy item-any, reject
+			if (unsatisfied.size() == itemMatchers.size() && rule.itemMode == ItemMode.MATCH_ANY) {
+				return Result.REJECTED;
+			}
+			// if failed to satisfy item-all, reject
+			if (rule.itemMode == ItemMode.MATCH_ALL && unsatisfied.size() > 0) {
+				return Result.REJECTED;
+			}
+		}
+		// never rejected, so should be acceptable
+		return Result.ACCEPTED;
 	}
 
 	@Override

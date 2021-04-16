@@ -3,9 +3,11 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemconditionrule.ItemConditionRuleFlowComponent;
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.FlowDialog;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.core.TileMatcher;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
@@ -16,17 +18,24 @@ import ca.teamdman.sfm.common.util.UUIDList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 public class ItemConditionRuleFlowData extends FlowData implements PositionHolder,
 	FlowDialog {
@@ -107,6 +116,37 @@ public class ItemConditionRuleFlowData extends FlowData implements PositionHolde
 		);
 	}
 
+	public List<IItemHandler> getItemHandlers(
+		BasicFlowDataContainer container,
+		CableNetwork network
+	) {
+		return this.getTiles(container, network)
+			.flatMap(tile -> faces.stream()
+				.map(face -> tile.getCapability(
+					CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,
+					face
+				)))
+			.filter(LazyOptional::isPresent)
+			.map(LazyOptional::resolve)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.collect(Collectors.toList());
+	}
+
+	public Stream<TileEntity> getTiles(BasicFlowDataContainer container, CableNetwork network) {
+		List<TileMatcher> matchers = tileMatcherIds.stream()
+			.map(id -> container.get(id, TileMatcher.class))
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.collect(Collectors.toList());
+
+		Predicate<TileEntity> matches = tile -> matchers.stream()
+			.anyMatch(m -> m.matches(tile));
+
+		return network.getInventories().stream()
+			.filter(matches);
+	}
+
 	public ItemStack getIcon() {
 		return icon;
 	}
@@ -165,14 +205,25 @@ public class ItemConditionRuleFlowData extends FlowData implements PositionHolde
 
 	public enum ItemMode {
 		MATCH_ALL,
-		MATCH_NONE,
 		MATCH_ANY;
 	}
 
 	public enum TileMode {
 		MATCH_ALL,
-		MATCH_NONE,
 		MATCH_ANY;
+	}
+
+	public enum Result {
+		ACCEPTED("gui.sfm.flow.tooltip.condition_accepted", true),
+		REJECTED("gui.sfm.flow.tooltip.condition_rejected", false);
+
+		public final String DISPLAY_NAME;
+		public final boolean RESULT;
+
+		Result(String unlocalizedName, boolean result) {
+			DISPLAY_NAME = I18n.format(unlocalizedName);
+			RESULT = result;
+		}
 	}
 
 	public static class Serializer extends
