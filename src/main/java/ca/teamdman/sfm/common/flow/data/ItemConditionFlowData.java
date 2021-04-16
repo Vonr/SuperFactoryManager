@@ -6,6 +6,7 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemConditionFlowButton;
+import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData.Responsibility;
@@ -80,10 +81,24 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 		ConditionLineNodeFlowData rejectedNode = new ConditionLineNodeFlowData(
 			Responsibility.REJECTED);
 		dependencyTracker.accept(rejectedNode);
-		RelationshipFlowData acceptedRel = new RelationshipFlowData(dupe.getId(), acceptedNode.getId());
+		RelationshipFlowData acceptedRel = new RelationshipFlowData(
+			dupe.getId(), acceptedNode.getId());
 		dependencyTracker.accept(acceptedRel);
-		RelationshipFlowData rejectedRel = new RelationshipFlowData(dupe.getId(), rejectedNode.getId());
+		RelationshipFlowData rejectedRel = new RelationshipFlowData(
+			dupe.getId(), rejectedNode.getId());
 		dependencyTracker.accept(rejectedRel);
+
+		// ugly hack to initialize node positions to an offset of parent position
+		dupe.position = new Position(){
+			@Override
+			public void setXY(int x, int y) {
+				super.setXY(x, y);
+				acceptedNode.position.setXY(dupe.getPosition()
+					.withOffset(-ButtonBackground.LINE_NODE.WIDTH, ButtonBackground.NORMAL.HEIGHT));
+				rejectedNode.position.setXY(dupe.getPosition()
+					.withOffset(ButtonBackground.NORMAL.WIDTH, ButtonBackground.NORMAL.HEIGHT));
+			}
+		};
 		return dupe;
 	}
 
@@ -119,13 +134,13 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 	}
 
 	@Override
-	public void update(Observable o, Object arg) {
-		OBSERVER.update(o, arg);
+	public Position getPosition() {
+		return position;
 	}
 
 	@Override
-	public Position getPosition() {
-		return position;
+	public void update(Observable o, Object arg) {
+		OBSERVER.update(o, arg);
 	}
 
 	public static class Serializer extends FlowDataSerializer<ItemConditionFlowData> {
