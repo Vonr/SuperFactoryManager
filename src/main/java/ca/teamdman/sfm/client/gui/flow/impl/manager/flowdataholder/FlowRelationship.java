@@ -35,16 +35,6 @@ public class FlowRelationship extends FlowComponent implements
 	}
 
 	@Override
-	public boolean isDeletable() {
-		return true;
-	}
-
-	@Override
-	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
-		return isCloseTo(mx, my) ? Stream.of(this) : Stream.empty();
-	}
-
-	@Override
 	public boolean mousePressed(int mx, int my, int button) {
 		if (!Screen.hasControlDown()) {
 			return false;
@@ -73,6 +63,16 @@ public class FlowRelationship extends FlowComponent implements
 	@Override
 	public void draw(BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime) {
 		draw(screen, matrixStack, COLOUR);
+	}
+
+	@Override
+	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
+		return isCloseTo(mx, my) ? Stream.of(this) : Stream.empty();
+	}
+
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() - 200;
 	}
 
 	public void draw(BaseScreen screen, MatrixStack matrixStack, Colour3f colour) {
@@ -129,11 +129,6 @@ public class FlowRelationship extends FlowComponent implements
 	}
 
 	@Override
-	public int getZIndex() {
-		return super.getZIndex() - 200;
-	}
-
-	@Override
 	public RelationshipFlowData getData() {
 		return data;
 	}
@@ -141,6 +136,17 @@ public class FlowRelationship extends FlowComponent implements
 	@Override
 	public void setData(RelationshipFlowData data) {
 		this.data = data;
+	}
+
+	@Override
+	public boolean isDeletable() {
+		// can only delete if not a condition<=>node relationship
+		return !(CONTROLLER.findFirstChild(data.to)
+			.filter(ConditionLineNodeFlowComponent.class::isInstance)
+			.isPresent()
+			&& CONTROLLER.findFirstChild(data.from)
+			.filter(ItemConditionFlowButton.class::isInstance)
+			.isPresent());
 	}
 
 	public static class FlowRelationshipPositionPair {
