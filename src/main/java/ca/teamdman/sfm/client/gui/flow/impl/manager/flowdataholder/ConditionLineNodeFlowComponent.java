@@ -8,6 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonLabel;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
+import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import java.util.ArrayList;
@@ -15,13 +16,13 @@ import java.util.List;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class FlowConditionLineNode extends FlowIconButton implements
+public class ConditionLineNodeFlowComponent extends FlowIconButton implements
 	FlowDataHolder<ConditionLineNodeFlowData> {
 
 	public final ManagerFlowController CONTROLLER;
 	private ConditionLineNodeFlowData data;
 
-	public FlowConditionLineNode(ManagerFlowController controller, ConditionLineNodeFlowData data) {
+	public ConditionLineNodeFlowComponent(ManagerFlowController controller, ConditionLineNodeFlowData data) {
 		super(
 			ButtonBackground.LINE_NODE,
 			ButtonBackground.LINE_NODE,
@@ -43,6 +44,11 @@ public class FlowConditionLineNode extends FlowIconButton implements
 	}
 
 	@Override
+	public Position getPosition() {
+		return getData().getPosition();
+	}
+
+	@Override
 	public List<? extends ITextProperties> getTooltip() {
 		ArrayList<ITextProperties> rtn = new ArrayList<>();
 		rtn.add(new TranslationTextComponent(getData().responsibility.DISPLAY_NAME));
@@ -57,7 +63,6 @@ public class FlowConditionLineNode extends FlowIconButton implements
 	@Override
 	public void setData(ConditionLineNodeFlowData data) {
 		this.data = data;
-		getPosition().setXY(data.getPosition());
 	}
 
 	@Override

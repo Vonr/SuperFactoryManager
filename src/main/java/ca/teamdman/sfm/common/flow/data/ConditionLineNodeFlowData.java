@@ -5,7 +5,7 @@ package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.FlowConditionLineNode;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ConditionLineNodeFlowComponent;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
@@ -74,7 +74,7 @@ public class ConditionLineNodeFlowData extends FlowData implements Observer, Pos
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;
 		}
-		return new FlowConditionLineNode((ManagerFlowController) parent, this);
+		return new ConditionLineNodeFlowComponent((ManagerFlowController) parent, this);
 	}
 
 	@Override

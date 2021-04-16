@@ -131,12 +131,9 @@ public class ItemConditionFlowButton extends FlowContainer implements
 		@Override
 		public void onDrag(int dx, int dy, int mx, int my) {
 			// update node positions to match parent's change in position
-			CONTROLLER.getChildren().stream()
-				.filter(FlowConditionLineNode.class::isInstance)
-				.map(FlowConditionLineNode.class::cast)
-				.filter(node -> OFFSETS.containsKey(node.getData()))
-				.forEach(node -> node.getPosition()
-					.setXY(getPosition().subtract(OFFSETS.get(node.getData()))));
+			getNodes()
+				.filter(OFFSETS::containsKey)
+				.forEach(node -> node.getPosition().setXY(getPosition().subtract(OFFSETS.get(node))));
 		}
 
 		@Override
