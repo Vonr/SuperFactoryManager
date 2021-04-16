@@ -49,9 +49,7 @@ public class CloneController extends FlowComponent {
 			return false;
 		}
 		return CONTROLLER.getElementsUnderMouse(mx, my)
-			.map(hit -> startCloning(hit, CONTROLLER.SCREEN.getFlowDataContainer()))
-			.findFirst()
-			.orElse(false);
+			.anyMatch(hit -> startCloning(hit, CONTROLLER.SCREEN.getFlowDataContainer()));
 	}
 
 	@Override
@@ -110,6 +108,6 @@ public class CloneController extends FlowComponent {
 
 	@Override
 	public int getZIndex() {
-		return super.getZIndex() + 300;
+		return super.getZIndex() + 1300;
 	}
 }

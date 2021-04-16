@@ -182,7 +182,7 @@ public abstract class FlowContainer extends FlowComponent {
 
 	@Override
 	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
-		return children.stream()
+		return getEnabledChildrenControllers()
 			.flatMap(c -> c.getElementsUnderMouse(
 				mx + getPosition().getX(),
 				my + getPosition().getY()

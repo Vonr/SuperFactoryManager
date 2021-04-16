@@ -118,6 +118,11 @@ public class ItemConditionFlowButton extends FlowContainer implements
 
 		private final HashMap<ConditionLineNodeFlowData, Position> OFFSETS = new HashMap<>();
 
+		@Override
+		public int getZIndex() {
+			return super.getZIndex() + 10;
+		}
+
 		public MyFlowIconButton(ButtonLabel type, Position pos) {
 			super(type, pos);
 		}

@@ -26,6 +26,11 @@ public class ConditionLineNodeFlowComponent extends FlowIconButton implements
 	public final ManagerFlowController CONTROLLER;
 	private ConditionLineNodeFlowData data;
 
+	@Override
+	public int getZIndex() {
+		return super.getZIndex() + 11;
+	}
+
 	public ConditionLineNodeFlowComponent(ManagerFlowController controller, ConditionLineNodeFlowData data) {
 		super(
 			ButtonBackground.LINE_NODE,
