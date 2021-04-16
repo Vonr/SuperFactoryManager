@@ -63,6 +63,8 @@
   "gui.sfm.flow.tooltip.block_pos": "x=%d, y=%d, z=%d",
   "gui.sfm.flow.tooltip.tile_mod_matcher": "Mod matcher",
   "gui.sfm.flow.tooltip.debug_data_count": "There are %d FlowData saved",
+  "gui.sfm.flow.tooltip.condition_accepted": "Accepted",
+  "gui.sfm.flow.tooltip.condition_rejected": "Rejected",
   "gui.sfm.config.enableDebugMode": "Enable debug mode",
   "gui.sfm.manager.tile_entity_rule.item_mode.title": "Item mode",
   "gui.sfm.flow.tileentityrule.button.match_all": "∀",

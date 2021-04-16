@@ -6,9 +6,11 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.api.distmarker.Dist;
@@ -50,6 +52,16 @@ public abstract class FlowData {
 
 	public boolean isValidRelationshipTarget() {
 		return false;
+	}
+
+
+	public Stream<FlowData> getNextUsingRelationships(BasicFlowDataContainer container) {
+		return container.get(RelationshipFlowData.class)
+			.filter(rel -> rel.from.equals(getId()))
+			.map(rel -> rel.to)
+			.map(container::get)
+			.filter(Optional::isPresent)
+			.map(Optional::get);
 	}
 
 	@Override

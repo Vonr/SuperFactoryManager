@@ -24,18 +24,22 @@ public class RelationshipFlowData extends FlowData implements Observer {
 
 	public UUID from, to;
 
-	public RelationshipFlowData(RelationshipFlowData other) {
-		this(
-			UUID.randomUUID(),
-			other.from,
-			other.to
-		);
+	public RelationshipFlowData(UUID from, UUID to) {
+		this(UUID.randomUUID(), from, to);
 	}
 
 	public RelationshipFlowData(UUID uuid, UUID from, UUID to) {
 		super(uuid);
 		this.from = from;
 		this.to = to;
+	}
+
+	public RelationshipFlowData(RelationshipFlowData other) {
+		this(
+			UUID.randomUUID(),
+			other.from,
+			other.to
+		);
 	}
 
 	@Override
@@ -68,7 +72,9 @@ public class RelationshipFlowData extends FlowData implements Observer {
 	 * @return {@code true} if {@code other} effectively joins the same elements as {@code this}.
 	 */
 	public boolean isSimilar(RelationshipFlowData other, BasicFlowDataContainer container) {
-		if (!other.from.equals(from)) return false;
+		if (!other.from.equals(from)) {
+			return false;
+		}
 		return container.getDescendants(other.from, false).anyMatch(this.to::equals);
 	}
 

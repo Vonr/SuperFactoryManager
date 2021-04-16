@@ -64,6 +64,7 @@ public class FlowComponent implements SizeHolder {
 			dragging = true;
 			dragStart.setXY(mx, my);
 			dragOffset.setXY(mx - getPosition().getX(), my - getPosition().getY());
+			onDragStarted(mx, my);
 			return true;
 		}
 		// Consume click event if mouse is over background
@@ -101,8 +102,8 @@ public class FlowComponent implements SizeHolder {
 				newX = newX - newX % 5;
 				newY = newY - newY % 5;
 			}
-			int dx = getPosition().getX() - newX;
-			int dy = getPosition().getY() - newY;
+			int dx = getPosition().getX() - dragStart.getX() + dragOffset.getX();
+			int dy = getPosition().getY() - dragStart.getY() + dragOffset.getY();
 			getPosition().setXY(newX, newY);
 			onDrag(dx, dy, mx, my);
 			return true;
@@ -115,13 +116,17 @@ public class FlowComponent implements SizeHolder {
 
 	}
 
+	public void onDragStarted(int mx, int my) {
+
+	}
+
 	public boolean mouseReleased(int mx, int my, int button) {
 		if (dragging) {
 			dragging = false;
 			if (!dragStart.equals(getPosition())) {
 				onDragFinished(
-					getPosition().getX() - dragStart.getX(),
-					getPosition().getY() - dragStart.getY(),
+					getPosition().getX() - dragStart.getX() + dragOffset.getX(),
+					getPosition().getY() - dragStart.getY() + dragOffset.getY(),
 					mx,
 					my
 				);

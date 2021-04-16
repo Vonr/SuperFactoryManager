@@ -8,6 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemConditionFlowButton;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
+import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData.Responsibility;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataRemovedObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
@@ -71,6 +72,18 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 				dependencyTracker.accept(newRule);
 				dupe.rule = newRule.getId();
 			});
+
+		// create line nodes and their relationships
+		ConditionLineNodeFlowData acceptedNode = new ConditionLineNodeFlowData(
+			Responsibility.ACCEPTED);
+		dependencyTracker.accept(acceptedNode);
+		ConditionLineNodeFlowData rejectedNode = new ConditionLineNodeFlowData(
+			Responsibility.REJECTED);
+		dependencyTracker.accept(rejectedNode);
+		RelationshipFlowData acceptedRel = new RelationshipFlowData(dupe.getId(), acceptedNode.getId());
+		dependencyTracker.accept(acceptedRel);
+		RelationshipFlowData rejectedRel = new RelationshipFlowData(dupe.getId(), rejectedNode.getId());
+		dependencyTracker.accept(rejectedRel);
 		return dupe;
 	}
 

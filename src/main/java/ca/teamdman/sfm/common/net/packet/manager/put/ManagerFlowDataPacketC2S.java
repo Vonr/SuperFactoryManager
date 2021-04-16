@@ -54,6 +54,7 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 		public void handleDetailed(
 			ManagerFlowDataPacketC2S msg, ManagerTileEntity manager
 		) {
+			//todo: sort by dependencies?
 			for (FlowData datum : msg.DATA) {
 				datum.addToDataContainer(manager.getFlowDataContainer());
 			}

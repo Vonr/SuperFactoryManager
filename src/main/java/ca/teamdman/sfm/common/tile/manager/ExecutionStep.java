@@ -8,12 +8,10 @@ import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemInputFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemOutputFlowData;
-import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.item.ItemStack;
@@ -48,12 +46,7 @@ public class ExecutionStep {
 					.ifPresent(rule -> satisfyOutput(network, rule)));
 
 		}
-		return container.get(RelationshipFlowData.class)
-			.filter(rel -> rel.from.equals(CURRENT.getId()))
-			.map(rel -> rel.to)
-			.map(container::get)
-			.filter(Optional::isPresent)
-			.map(Optional::get)
+		return CURRENT.getNextUsingRelationships(container)
 			.map(this::fork)
 			.collect(Collectors.toList());
 	}

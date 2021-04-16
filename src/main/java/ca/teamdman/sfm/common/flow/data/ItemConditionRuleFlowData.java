@@ -16,10 +16,10 @@ import ca.teamdman.sfm.common.util.UUIDList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -28,11 +28,11 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 
-public class ItemConditionRuleFlowData extends FlowData implements Observer, PositionHolder,
+public class ItemConditionRuleFlowData extends FlowData implements PositionHolder,
 	FlowDialog {
 
 	public static final int MAX_NAME_LENGTH = 256;
-	private final FlowDataRemovedObserver OBSERVER;
+	private final FlowDataRemovedObserver DATA_REMOVED_OBSERVER;
 	public String name;
 	public ItemStack icon;
 	public Position position;
@@ -81,7 +81,7 @@ public class ItemConditionRuleFlowData extends FlowData implements Observer, Pos
 		this.faces = faces;
 		this.slots = slots;
 		this.open = open;
-		this.OBSERVER = new FlowDataRemovedObserver(
+		this.DATA_REMOVED_OBSERVER = new FlowDataRemovedObserver(
 			this,
 			data -> this.itemMatcherIds.remove(data.getId())
 				|| this.tileMatcherIds.remove(data.getId())
@@ -117,6 +117,22 @@ public class ItemConditionRuleFlowData extends FlowData implements Observer, Pos
 	}
 
 	@Override
+	public void addToDataContainer(BasicFlowDataContainer container) {
+		super.addToDataContainer(container);
+		container.addObserver(DATA_REMOVED_OBSERVER);
+	}
+
+	@Override
+	public void removeFromDataContainer(BasicFlowDataContainer container) {
+		super.removeFromDataContainer(container);
+		Stream.concat(itemMatcherIds.stream(), tileMatcherIds.stream())
+			.map(container::get)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.forEach(data -> data.removeFromDataContainer(container));
+	}
+
+	@Override
 	public ItemConditionRuleFlowData duplicate(
 		BasicFlowDataContainer container, Consumer<FlowData> dependencyTracker
 	) {
@@ -135,11 +151,6 @@ public class ItemConditionRuleFlowData extends FlowData implements Observer, Pos
 	@Override
 	public FlowDataSerializer<?> getSerializer() {
 		return FlowDataSerializers.ITEM_CONDITION_RULE;
-	}
-
-	@Override
-	public void update(Observable o, Object arg) {
-		OBSERVER.update(o, arg);
 	}
 
 	@Override

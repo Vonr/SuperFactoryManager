@@ -161,6 +161,20 @@ public class Position implements INBTSerializable<CompoundNBT> {
 	}
 
 	/**
+	 * Update the position by the given offset
+	 */
+	public void addXY(Position pos) {
+		addXY(pos.getX(), pos.getY());
+	}
+
+	/**
+	 * Update the position by the given offset
+	 */
+	public void addXY(int x, int y) {
+		setXY(getX()+x, getY()+y);
+	}
+
+	/**
 	 * Returns a new position with values multiplied
 	 *
 	 * @param val multiplier

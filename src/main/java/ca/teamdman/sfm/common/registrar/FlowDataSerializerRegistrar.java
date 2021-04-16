@@ -4,6 +4,7 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
 import ca.teamdman.sfm.common.flow.data.ItemConditionFlowData;
@@ -58,7 +59,8 @@ public class FlowDataSerializerRegistrar {
 			new TilePositionMatcherFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_position_matcher")),
 			new TileModMatcherFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_mod_matcher")),
 			new ItemConditionRuleFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "item_condition_rule")),
-			new ItemConditionFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "item_condition"))
+			new ItemConditionFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "item_condition")),
+			new ConditionLineNodeFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "condition_line_node"))
 		);
 	}
 
@@ -80,6 +82,7 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<ItemOutputFlowData> BASIC_OUTPUT = WAITING;
 		public static final FlowDataSerializer<RelationshipFlowData> RELATIONSHIP = WAITING;
 		public static final FlowDataSerializer<LineNodeFlowData> LINE_NODE = WAITING;
+		public static final FlowDataSerializer<ConditionLineNodeFlowData> CONDITION_LINE_NODE = WAITING;
 		public static final FlowDataSerializer<TimerTriggerFlowData> TIMER_TRIGGER = WAITING;
 		public static final FlowDataSerializer<ItemMovementRuleFlowData> ITEM_MOVEMENT_RULE = WAITING;
 		public static final FlowDataSerializer<ItemPickerMatcherFlowData> ITEM_PICKER_MATCHER = WAITING;

@@ -12,12 +12,16 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowIconButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowSprite;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
+import ca.teamdman.sfm.common.flow.data.ConditionLineNodeFlowData;
+import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.ItemConditionFlowData;
 import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
 import net.minecraft.util.text.ITextProperties;
@@ -63,6 +67,33 @@ public class ItemConditionFlowButton extends FlowContainer implements
 	}
 
 	@Override
+	public Position getCentroid() {
+		return BUTTON.getCentroid();
+	}
+
+	@Override
+	public Position snapToEdge(Position outside) {
+		return BUTTON.snapToEdge(outside);
+	}
+
+	@Override
+	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
+		return BUTTON.isElementUnderMouse(mx, my) ? Stream.of(this) : Stream.empty();
+	}
+
+	public Stream<ConditionLineNodeFlowData> getNodes() {
+		return CONTROLLER.SCREEN.getFlowDataContainer()
+			.get(ConditionLineNodeFlowData.class)
+			.filter(this::ownsNode);
+	}
+
+	public boolean ownsNode(ConditionLineNodeFlowData node) {
+		return CONTROLLER.SCREEN.getFlowDataContainer()
+			.getAncestors(node.getId(), false)
+			.anyMatch(parent -> parent.equals(getData().getId()));
+	}
+
+	@Override
 	public ItemConditionFlowData getData() {
 		return buttonData;
 	}
@@ -83,22 +114,9 @@ public class ItemConditionFlowButton extends FlowContainer implements
 		return true;
 	}
 
-	@Override
-	public Position getCentroid() {
-		return BUTTON.getCentroid();
-	}
-
-	@Override
-	public Position snapToEdge(Position outside) {
-		return BUTTON.snapToEdge(outside);
-	}
-
-	@Override
-	public Stream<? extends FlowComponent> getElementsUnderMouse(int mx, int my) {
-		return BUTTON.isElementUnderMouse(mx, my) ? Stream.of(this) : Stream.empty();
-	}
-
 	private class MyFlowIconButton extends FlowIconButton {
+
+		private final HashMap<ConditionLineNodeFlowData, Position> OFFSETS = new HashMap<>();
 
 		public MyFlowIconButton(ButtonLabel type, Position pos) {
 			super(type, pos);
@@ -111,9 +129,38 @@ public class ItemConditionFlowButton extends FlowContainer implements
 		}
 
 		@Override
+		public void onDrag(int dx, int dy, int mx, int my) {
+			// update node positions to match parent's change in position
+			CONTROLLER.getChildren().stream()
+				.filter(FlowConditionLineNode.class::isInstance)
+				.map(FlowConditionLineNode.class::cast)
+				.filter(node -> OFFSETS.containsKey(node.getData()))
+				.forEach(node -> node.getPosition()
+					.setXY(getPosition().subtract(OFFSETS.get(node.getData()))));
+		}
+
+		@Override
+		public void onDragStarted(int mx, int my) {
+			// track original offsets
+			getNodes()
+				.forEach(node -> OFFSETS.put(node, getPosition().subtract(node.getPosition())));
+		}
+
+		@Override
 		public void onDragFinished(int dx, int dy, int mx, int my) {
+			List<FlowData> changed = new ArrayList<>();
+
+			// update node positions to match parent's change in position
+			getNodes()
+				.filter(OFFSETS::containsKey)
+				.peek(node -> node.getPosition().setXY(getPosition().subtract(OFFSETS.get(node))))
+				.forEach(changed::add);
+
 			buttonData.position = getPosition();
-			CONTROLLER.SCREEN.sendFlowDataToServer(buttonData);
+			changed.add(buttonData);
+
+			CONTROLLER.SCREEN.sendFlowDataToServer(changed);
+			OFFSETS.clear();
 		}
 
 		@Override

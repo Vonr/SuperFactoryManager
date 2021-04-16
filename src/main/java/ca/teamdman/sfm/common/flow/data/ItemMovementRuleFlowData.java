@@ -27,8 +27,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -48,11 +46,11 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
 public class ItemMovementRuleFlowData extends FlowData implements
-	Observer, PositionHolder, FlowDialog {
+	PositionHolder, FlowDialog {
 
 	public static final int MAX_NAME_LENGTH = 256;
 
-	private final FlowDataRemovedObserver OBSERVER;
+	private final FlowDataRemovedObserver DATA_REMOVED_OBSERVER;
 	public FilterMode filterMode;
 	public String name;
 	public ItemStack icon;
@@ -99,7 +97,7 @@ public class ItemMovementRuleFlowData extends FlowData implements
 		this.faces = faces;
 		this.slots = slots;
 		this.open = open;
-		this.OBSERVER = new FlowDataRemovedObserver(
+		this.DATA_REMOVED_OBSERVER = new FlowDataRemovedObserver(
 			this,
 			data -> this.itemMatcherIds.remove(data.getId())
 				|| this.tileMatcherIds.remove(data.getId())
@@ -140,16 +138,6 @@ public class ItemMovementRuleFlowData extends FlowData implements
 			.filter(m -> m.matches(stack))
 			.max(Comparator
 				.comparingInt(m -> state.getRemainingQuantity(this, m))); // Most remaining first
-	}
-
-	@Override
-	public void removeFromDataContainer(BasicFlowDataContainer container) {
-		super.removeFromDataContainer(container);
-		Stream.concat(itemMatcherIds.stream(), tileMatcherIds.stream())
-			.map(container::get)
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.forEach(data -> data.removeFromDataContainer(container));
 	}
 
 	public List<IItemHandler> getItemHandlers(
@@ -195,7 +183,17 @@ public class ItemMovementRuleFlowData extends FlowData implements
 	@Override
 	public void addToDataContainer(BasicFlowDataContainer container) {
 		super.addToDataContainer(container);
-		container.addObserver(this);
+		container.addObserver(DATA_REMOVED_OBSERVER);
+	}
+
+	@Override
+	public void removeFromDataContainer(BasicFlowDataContainer container) {
+		super.removeFromDataContainer(container);
+		Stream.concat(itemMatcherIds.stream(), tileMatcherIds.stream())
+			.map(container::get)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.forEach(data -> data.removeFromDataContainer(container));
 	}
 
 	@Override
@@ -248,11 +246,6 @@ public class ItemMovementRuleFlowData extends FlowData implements
 	@Override
 	public FlowDataSerializer<ItemMovementRuleFlowData> getSerializer() {
 		return FlowDataSerializers.ITEM_MOVEMENT_RULE;
-	}
-
-	@Override
-	public void update(Observable o, Object arg) {
-		OBSERVER.update(o, arg);
 	}
 
 	@Override
