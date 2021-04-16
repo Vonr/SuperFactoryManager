@@ -36,7 +36,7 @@ public class FlowRelationship extends FlowComponent implements
 
 	@Override
 	public boolean mousePressed(int mx, int my, int button) {
-		if (!Screen.hasControlDown()) {
+		if (!Screen.hasControlDown() || belongsToConditional()) {
 			return false;
 		}
 		Optional<FlowRelationship> rel = CONTROLLER.getChildren().stream()
@@ -141,7 +141,11 @@ public class FlowRelationship extends FlowComponent implements
 	@Override
 	public boolean isDeletable() {
 		// can only delete if not a condition<=>node relationship
-		return !(CONTROLLER.findFirstChild(data.to)
+		return !belongsToConditional();
+	}
+
+	public boolean belongsToConditional() {
+		return (CONTROLLER.findFirstChild(data.to)
 			.filter(ConditionLineNodeFlowComponent.class::isInstance)
 			.isPresent()
 			&& CONTROLLER.findFirstChild(data.from)
