@@ -9,7 +9,9 @@ import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 public class CableBlock extends Block implements ICable {
 
@@ -18,30 +20,29 @@ public class CableBlock extends Block implements ICable {
 	}
 
 	@Override
-	public void neighborChanged(
-		BlockState state,
-		World worldIn,
-		BlockPos pos,
-		Block blockIn,
-		BlockPos fromPos,
-		boolean isMoving
+	public void onNeighborChange(
+		BlockState state, IWorldReader world, BlockPos pos, BlockPos neighbor
 	) {
-		CableNetworkManager.getOrRegisterNetwork(worldIn, pos).ifPresent(network -> {
-			network.rebuildInventories(pos);
-		});
+		if (world instanceof ServerWorld) {
+			CableNetworkManager.getOrRegisterNetwork(((World) world), pos).ifPresent(network -> {
+				network.rebuildAdjacentInventories(pos);
+			});
+		}
 	}
 
 	@Override
 	public void onBlockAdded(
 		BlockState state, World worldIn, BlockPos pos, BlockState oldState, boolean isMoving
 	) {
-		super.onBlockAdded(state, worldIn, pos, oldState, isMoving);
-		CableNetworkManager.getOrRegisterNetwork(worldIn, pos);
-		SFM.LOGGER.debug(
-			SFMUtil.getMarker(getClass()),
-			"{} networks now",
-			CableNetworkManager.size()
-		);
+		if (!worldIn.isRemote) {
+			super.onBlockAdded(state, worldIn, pos, oldState, isMoving);
+			CableNetworkManager.getOrRegisterNetwork(worldIn, pos);
+			SFM.LOGGER.debug(
+				SFMUtil.getMarker(getClass()),
+				"{} networks now",
+				CableNetworkManager.size()
+			);
+		}
 	}
 
 	@Override

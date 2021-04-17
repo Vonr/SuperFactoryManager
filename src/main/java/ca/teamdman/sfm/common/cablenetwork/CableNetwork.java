@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
+import ca.teamdman.sfm.common.block.ICable;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.Arrays;
 import java.util.Collection;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -27,20 +29,48 @@ public class CableNetwork {
 		this.WORLD = world;
 	}
 
+	public void rebuildNetwork(BlockPos pos) {
+		CABLES.clear();
+		INVENTORIES.clear();
+		discoverCables(pos).forEach(this::addCable);
+	}
+
+	public Stream<BlockPos> discoverCables(BlockPos startPos) {
+		return SFMUtil.getRecursiveStream((current, next, results) -> {
+			results.accept(current);
+			for (Direction d : Direction.values()) {
+				BlockPos offset = current.offset(d);
+				if (isValidNetworkMember(getWorld(), offset)) {
+					next.accept(offset);
+				}
+			}
+		}, startPos);
+	}
+
 	public boolean addCable(BlockPos pos) {
 		boolean isNewMember = CABLES.add(pos);
 		if (isNewMember) {
-			rebuildInventories(pos);
+			rebuildAdjacentInventories(pos);
 		}
 		return isNewMember;
 	}
 
+	/**
+	 * Only cable blocks are valid network members
+	 */
+	public static boolean isValidNetworkMember(World world, BlockPos cablePos) {
+		return world.getBlockState(cablePos).getBlock() instanceof ICable;
+	}
 
-	public void rebuildInventories(BlockPos pos) {
+	public World getWorld() {
+		return WORLD;
+	}
+
+	public void rebuildAdjacentInventories(BlockPos pos) {
 		Arrays.stream(Direction.values())
 			.map(pos::offset)
 			.distinct()
-			.peek(INVENTORIES::remove) // Remove tile if present
+			.peek(INVENTORIES::remove)
 			.filter(this::containsNeighbour) // Verify if should [re]join network
 			.map(WORLD::getTileEntity)
 			.filter(Objects::nonNull)
@@ -108,16 +138,16 @@ public class CableNetwork {
 		return CABLES.contains(pos);
 	}
 
-	public Optional<TileEntity> getInventory(BlockPos pos) {
-		return Optional.ofNullable(INVENTORIES.get(pos));
-	}
-
 	public boolean removeCable(BlockPos pos) {
 		boolean wasMember = CABLES.remove(pos);
 		if (wasMember) {
-			rebuildInventories(pos);
+			rebuildAdjacentInventories(pos);
 		}
 		return wasMember;
+	}
+
+	public Optional<TileEntity> getInventory(BlockPos pos) {
+		return Optional.ofNullable(INVENTORIES.get(pos));
 	}
 
 	public int size() {
@@ -136,10 +166,6 @@ public class CableNetwork {
 
 	public boolean isEmpty() {
 		return CABLES.isEmpty();
-	}
-
-	public World getWorld() {
-		return WORLD;
 	}
 
 	public Collection<TileEntity> getInventories() {

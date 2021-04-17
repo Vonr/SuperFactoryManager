@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.container;
 
+import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -29,6 +30,9 @@ public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 			ManagerTileEntity.class
 		)
 			.map(tile -> {
+				CableNetworkManager.getOrRegisterNetwork(tile.getWorld(), tile.getPos()).ifPresent(network -> {
+					network.rebuildNetwork(tile.getPos());
+				});
 				ManagerContainer container = new ManagerContainer(windowId, tile, true);
 				container.readData(data);
 				return container;

@@ -1,7 +1,5 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
-import ca.teamdman.sfm.common.block.ICable;
-import ca.teamdman.sfm.common.util.SFMUtil;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.util.ArrayDeque;
@@ -9,9 +7,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -84,7 +80,7 @@ public class CableNetworkManager {
 	 * one.
 	 */
 	public static Optional<CableNetwork> getOrRegisterNetwork(World world, BlockPos cablePos) {
-		if (!isValidNetworkMember(world, cablePos)) {
+		if (!CableNetwork.isValidNetworkMember(world, cablePos)) {
 			return Optional.empty();
 		}
 
@@ -110,7 +106,7 @@ public class CableNetworkManager {
 				NETWORKS.put(world.getDimensionKey(), network);
 
 				// In case network map not built, rebuild now
-				discoverCables(world, cablePos).forEach(network::addCable);
+				network.rebuildNetwork(cablePos);
 				return Optional.of(network);
 			} else if (candidates.size() == 1) {
 				// Only one network matches this cable, add cable as member
@@ -136,27 +132,4 @@ public class CableNetworkManager {
 		}
 	}
 
-	/**
-	 * Only cable blocks are valid network members
-	 */
-	private static boolean isValidNetworkMember(World world, BlockPos cablePos) {
-		return world.getBlockState(cablePos).getBlock() instanceof ICable;
-	}
-
-	/**
-	 * @param world
-	 * @param startPos
-	 * @return
-	 */
-	public static Stream<BlockPos> discoverCables(World world, BlockPos startPos) {
-		return SFMUtil.getRecursiveStream((current, next, results) -> {
-			results.accept(current);
-			for (Direction d : Direction.values()) {
-				BlockPos offset = current.offset(d);
-				if (isValidNetworkMember(world, offset)) {
-					next.accept(offset);
-				}
-			}
-		}, startPos);
-	}
 }
