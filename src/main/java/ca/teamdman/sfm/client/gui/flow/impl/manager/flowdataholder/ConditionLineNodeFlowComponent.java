@@ -73,7 +73,7 @@ public class ConditionLineNodeFlowComponent extends FlowIconButton implements
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
 		ArrayList<ITextProperties> rtn = new ArrayList<>();
-		rtn.add(new TranslationTextComponent(getData().responsibility.DISPLAY_NAME));
+		rtn.add(new TranslationTextComponent(getData().responsibility.UNLOCALIZED_DISPLAY_NAME));
 		return rtn;
 	}
 

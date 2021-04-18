@@ -225,8 +225,20 @@ public class BasicFlowDataContainer extends Observable implements INBTSerializab
 			case 1:
 				tag.getList("__data", NBT.TAG_COMPOUND).stream()
 					.map(CompoundNBT.class::cast)
-					.filter(t -> t.getString("__type").equals("sfm:item_rule"))
-					.forEach(t -> t.putString("__type", "sfm:item_movement_rule"));
+					.forEach(t -> {
+						if (t.contains("factory_registry_name")) {
+							t.put("__type", t.get("factory_registry_name"));
+						}
+						if (t.contains("uuid")) {
+							t.put("__uuid", t.get("uuid"));
+						}
+						if (t.contains("version")) {
+							t.put("__version", t.get("version"));
+						}
+						if (t.getString("__type").equals("sfm:item_rule")) {
+							t.putString("__type", "sfm:item_movement_rule");
+						}
+					});
 				tag.putInt(NBT_SCHEMA_VERSION_KEY, 2);
 		}
 	}

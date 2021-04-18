@@ -217,11 +217,11 @@ public class ItemConditionRuleFlowData extends FlowData implements PositionHolde
 		ACCEPTED("gui.sfm.flow.tooltip.condition_accepted", true),
 		REJECTED("gui.sfm.flow.tooltip.condition_rejected", false);
 
-		public final String DISPLAY_NAME;
+		public final String UNLOCALIZED_DISPLAY_NAME;
 		public final boolean RESULT;
 
 		Result(String unlocalizedName, boolean result) {
-			DISPLAY_NAME = I18n.format(unlocalizedName);
+			UNLOCALIZED_DISPLAY_NAME = unlocalizedName;
 			RESULT = result;
 		}
 	}
