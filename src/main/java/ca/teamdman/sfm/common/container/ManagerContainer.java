@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.common.container;
 
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
+import ca.teamdman.sfm.common.registrar.SFMContainers;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.entity.player.PlayerInventory;
@@ -20,7 +20,7 @@ import net.minecraftforge.fml.network.NetworkHooks;
 public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 
 	public ManagerContainer(int windowId, ManagerTileEntity tile, boolean isRemote) {
-		super(ContainerRegistrar.MANAGER.get(), windowId, tile, isRemote);
+		super(SFMContainers.MANAGER.get(), windowId, tile, isRemote);
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 

@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.common.tile;
 
 import ca.teamdman.sfm.common.container.CrafterContainer;
-import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
+import ca.teamdman.sfm.common.registrar.SFMTiles;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -68,7 +68,7 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 
 
 	public CrafterTileEntity() {
-		this(TileEntityRegistrar.Tiles.CRAFTER);
+		this(SFMTiles.CRAFTER.get());
 	}
 
 	public CrafterTileEntity(final TileEntityType<?> type) {

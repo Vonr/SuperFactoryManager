@@ -8,6 +8,8 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
@@ -15,8 +17,15 @@ import net.minecraft.world.server.ServerWorld;
 
 public class CableBlock extends Block implements ICable {
 
-	public CableBlock(final Properties props) {
-		super(props);
+	public CableBlock() {
+		this(Block.Properties
+			.create(Material.IRON)
+			.hardnessAndResistance(3F, 6F)
+			.sound(SoundType.METAL));
+	}
+
+	public CableBlock(Properties properties) {
+		super(properties);
 	}
 
 	@Override
@@ -24,15 +33,19 @@ public class CableBlock extends Block implements ICable {
 		BlockState state, IWorldReader world, BlockPos pos, BlockPos neighbor
 	) {
 		if (world instanceof ServerWorld) {
-			CableNetworkManager.getOrRegisterNetwork(((World) world), pos).ifPresent(network -> {
-				network.rebuildAdjacentInventories(pos);
-			});
+			CableNetworkManager
+				.getOrRegisterNetwork(((World) world), pos)
+				.ifPresent(network -> network.rebuildAdjacentInventories(pos));
 		}
 	}
 
 	@Override
 	public void onBlockAdded(
-		BlockState state, World worldIn, BlockPos pos, BlockState oldState, boolean isMoving
+		BlockState state,
+		World worldIn,
+		BlockPos pos,
+		BlockState oldState,
+		boolean isMoving
 	) {
 		if (!worldIn.isRemote) {
 			super.onBlockAdded(state, worldIn, pos, oldState, isMoving);
@@ -47,7 +60,11 @@ public class CableBlock extends Block implements ICable {
 
 	@Override
 	public void onReplaced(
-		BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving
+		BlockState state,
+		World worldIn,
+		BlockPos pos,
+		BlockState newState,
+		boolean isMoving
 	) {
 		super.onReplaced(state, worldIn, pos, newState, isMoving);
 		CableNetworkManager.unregister(worldIn, pos);

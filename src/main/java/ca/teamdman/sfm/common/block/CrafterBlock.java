@@ -3,15 +3,18 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.block;
 
-import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
+import ca.teamdman.sfm.common.registrar.SFMTiles;
 import ca.teamdman.sfm.common.tile.CrafterTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.IWorldPosCallable;
@@ -23,8 +26,11 @@ import net.minecraftforge.fml.network.NetworkHooks;
 
 public class CrafterBlock extends Block {
 
-	public CrafterBlock(final Properties props) {
-		super(props);
+	public CrafterBlock() {
+		super(Block.Properties
+			.create(Material.IRON)
+			.hardnessAndResistance(3F, 6F)
+			.sound(SoundType.METAL));
 	}
 
 	@SuppressWarnings("deprecation")
@@ -38,7 +44,8 @@ public class CrafterBlock extends Block {
 		BlockRayTraceResult hit
 	) {
 		if (!world.isRemote && handIn == Hand.MAIN_HAND) {
-			SFMUtil.getServerTile(IWorldPosCallable.of(world, pos), CrafterTileEntity.class)
+			SFMUtil
+				.getServerTile(IWorldPosCallable.of(world, pos), CrafterTileEntity.class)
 				.ifPresent(tile -> NetworkHooks.openGui((ServerPlayerEntity) player, tile, data -> {
 					data.writeBlockPos(tile.getPos());
 				}));
@@ -55,7 +62,7 @@ public class CrafterBlock extends Block {
 	@Nullable
 	@Override
 	public TileEntity createTileEntity(final BlockState state, final IBlockReader world) {
-		return TileEntityRegistrar.Tiles.CRAFTER.create();
+		return ((TileEntityType<?>) SFMTiles.CRAFTER.get()).create();
 	}
 
 }

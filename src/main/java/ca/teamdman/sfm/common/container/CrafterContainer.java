@@ -4,7 +4,7 @@
 package ca.teamdman.sfm.common.container;
 
 import ca.teamdman.sfm.common.container.slot.CraftingOutputSlot;
-import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
+import ca.teamdman.sfm.common.registrar.SFMContainers;
 import ca.teamdman.sfm.common.tile.CrafterTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.entity.player.PlayerEntity;
@@ -20,7 +20,7 @@ import net.minecraftforge.items.SlotItemHandler;
 public class CrafterContainer extends Container {
 
 	public CrafterContainer(int windowId, PlayerInventory playerInv, CrafterTileEntity tile) {
-		super(ContainerRegistrar.CRAFTER.get(), windowId);
+		super(SFMContainers.CRAFTER.get(), windowId);
 		this.addSlot(new CraftingOutputSlot(tile.inventory, 9, 124, 35));
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {

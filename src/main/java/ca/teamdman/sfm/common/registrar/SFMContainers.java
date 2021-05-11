@@ -14,14 +14,20 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class ContainerRegistrar {
+public class SFMContainers {
 
 	public static final DeferredRegister<ContainerType<?>> CONTAINER_TYPES = DeferredRegister
 		.create(ForgeRegistries.CONTAINERS, SFM.MOD_ID);
 
 	public static final RegistryObject<ContainerType<CrafterContainer>> CRAFTER = CONTAINER_TYPES
-		.register("crafter", () -> IForgeContainerType.create(CrafterContainer::create));
+		.register(
+			"crafter",
+			() -> IForgeContainerType.create(CrafterContainer::create)
+		);
 
 	public static final RegistryObject<ContainerType<ManagerContainer>> MANAGER = CONTAINER_TYPES
-		.register("manager", () -> IForgeContainerType.create(ManagerContainer::create));
+		.register(
+			"manager",
+			() -> IForgeContainerType.create(ManagerContainer::create)
+		);
 }

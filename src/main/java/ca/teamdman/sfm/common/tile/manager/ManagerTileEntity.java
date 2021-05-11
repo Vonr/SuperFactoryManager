@@ -11,7 +11,7 @@ import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.registrar.TileEntityRegistrar;
+import ca.teamdman.sfm.common.registrar.SFMTiles;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.ArrayList;
 import java.util.Map;
@@ -51,7 +51,7 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 
 
 	public ManagerTileEntity() {
-		this(TileEntityRegistrar.Tiles.MANAGER);
+		this(SFMTiles.MANAGER.get());
 	}
 
 	public ManagerTileEntity(final TileEntityType<?> type) {

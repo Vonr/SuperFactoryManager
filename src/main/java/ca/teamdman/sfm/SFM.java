@@ -11,7 +11,10 @@ import ca.teamdman.sfm.common.Proxy;
 import ca.teamdman.sfm.common.ServerProxy;
 import ca.teamdman.sfm.common.config.ConfigHolder;
 import ca.teamdman.sfm.common.net.PacketHandler;
-import ca.teamdman.sfm.common.registrar.ContainerRegistrar;
+import ca.teamdman.sfm.common.registrar.SFMBlocks;
+import ca.teamdman.sfm.common.registrar.SFMContainers;
+import ca.teamdman.sfm.common.registrar.SFMItems;
+import ca.teamdman.sfm.common.registrar.SFMTiles;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
@@ -31,20 +34,29 @@ public class SFM {
 	public static final Logger LOGGER = LogManager.getLogger();
 	public static final String MOD_ID = "sfm";
 	public static final String MOD_NAME = "Super Factory Manager";
-	public static final Proxy PROXY = DistExecutor
-		.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
+	public static final Proxy PROXY = DistExecutor.runForDist(() -> ClientProxy::new,
+		() -> ServerProxy::new
+	);
 
 	public SFM() {
 		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 
-		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigHolder.COMMON_SPEC);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ConfigHolder.SERVER_SPEC);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigHolder.CLIENT_SPEC);
+		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON,
+			ConfigHolder.COMMON_SPEC
+		);
+		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER,
+			ConfigHolder.SERVER_SPEC
+		);
+		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT,
+			ConfigHolder.CLIENT_SPEC
+		);
 
 		bus.addListener(this::onCommonSetup);
 		bus.addListener(this::onClientSetup);
-
-		ContainerRegistrar.CONTAINER_TYPES.register(bus);
+		bus.register(SFMBlocks.BLOCKS);
+		bus.register(SFMItems.ITEMS);
+		bus.register(SFMTiles.TILES);
+		bus.register(SFMContainers.CONTAINER_TYPES);
 
 		PROXY.registerScreens();
 	}
@@ -54,7 +66,11 @@ public class SFM {
 	}
 
 	public void onClientSetup(FMLClientSetupEvent e) {
-		ScreenManager.registerFactory(ContainerRegistrar.MANAGER.get(), ManagerScreen::new);
-		ScreenManager.registerFactory(ContainerRegistrar.CRAFTER.get(), CrafterScreen::new);
+		ScreenManager.registerFactory(SFMContainers.MANAGER.get(),
+			ManagerScreen::new
+		);
+		ScreenManager.registerFactory(SFMContainers.CRAFTER.get(),
+			CrafterScreen::new
+		);
 	}
 }
