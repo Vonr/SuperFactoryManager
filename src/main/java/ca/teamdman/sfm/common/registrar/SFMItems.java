@@ -21,23 +21,27 @@ public class SFMItems {
 		}
 	};
 
-	public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS,
+	public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(
+		ForgeRegistries.ITEMS,
 		SFM.MOD_ID
 	);
 
-	public static final RegistryObject<Item> MANAGER = ITEMS.register("manager",
+	public static final RegistryObject<Item> MANAGER = ITEMS.register(
+		"manager",
 		() -> new BlockItem(
 			SFMBlocks.MANAGER.get(),
 			new Item.Properties().group(GROUP)
 		)
 	);
-	public static final RegistryObject<Item> CABLE = ITEMS.register("cable",
+	public static final RegistryObject<Item> CABLE = ITEMS.register(
+		"cable",
 		() -> new BlockItem(
 			SFMBlocks.CABLE.get(),
 			new Item.Properties().group(GROUP)
 		)
 	);
-	public static final RegistryObject<Item> CRAFTER = ITEMS.register("cable",
+	public static final RegistryObject<Item> CRAFTER = ITEMS.register(
+		"crafter",
 		() -> new BlockItem(
 			SFMBlocks.CRAFTER.get(),
 			new Item.Properties().group(GROUP)

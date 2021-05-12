@@ -53,10 +53,10 @@ public class SFM {
 
 		bus.addListener(this::onCommonSetup);
 		bus.addListener(this::onClientSetup);
-		bus.register(SFMBlocks.BLOCKS);
-		bus.register(SFMItems.ITEMS);
-		bus.register(SFMTiles.TILES);
-		bus.register(SFMContainers.CONTAINER_TYPES);
+		SFMBlocks.BLOCKS.register(bus);
+		SFMItems.ITEMS.register(bus);
+		SFMTiles.TILES.register(bus);
+		SFMContainers.CONTAINER_TYPES.register(bus);
 
 		PROXY.registerScreens();
 	}

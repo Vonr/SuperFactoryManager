@@ -1,0 +1,15 @@
+3542964a17ad79e41ec203839992dd3dd0d1cbc7 assets/sfm/blockstates/cable.json
+bee12a29f7d569bb37e3a8c5864b7268a2b44435 assets/sfm/blockstates/crafter.json
+de84bec1234bfbe493274c634dad4edb5daecaf1 assets/sfm/blockstates/manager.json
+4a1fdc7028d7e913215100dd61e50fd2ec1d4f33 assets/sfm/models/block/cable.json
+d82bbdc3ece2f51e651a671fb1133f1a4efc4031 assets/sfm/models/block/crafter.json
+b9b3d2715923dedbc1a9589f8774f6d81d958a4c assets/sfm/models/block/manager.json
+f0f5f79545a03c81b928d04835e5dc1012f15ec9 assets/sfm/models/item/cable.json
+d18da64a9c74ecbcf44e3aa3da3739acf7c16898 assets/sfm/models/item/crafter.json
+051420be462852603a05011d44f8fc5a19bca77f assets/sfm/models/item/manager.json
+c05301f4ff76fd7ca2abefbe5f8b131a343738db data/sfm/loot_tables/blocks/cable.json
+25f96a11aea7db731e9a08fd4e4bf0db3fe515d3 data/sfm/loot_tables/blocks/crafter.json
+5950ad09c0ffb7e987ceaba54386a81b159db517 data/sfm/loot_tables/blocks/manager.json
+b736932c67feb5ca736d8f88298d679835b0bb9a data/sfm/recipes/cable.json
+29cd1d36eeeaeb58efaddfe3743bf65270a9d784 data/sfm/recipes/crafter.json
+04143a6b7d8477cb503ed535c9c08a7008011361 data/sfm/recipes/manager.json
