@@ -1,12 +1,9 @@
 {
-  "parent": "minecraft:block/cube",
+  "parent": "minecraft:block/cube_bottom_top",
   "textures": {
-    "down": "sfm:block/crafter_top",
-    "up": "sfm:block/crafter_top",
-    "north": "sfm:block/crafter_front",
-    "south": "sfm:block/crafter_front",
-    "east": "sfm:block/crafter_side",
-    "west": "sfm:block/crafter_side",
+    "side": "sfm:block/crafter_side",
+    "bottom": "sfm:block/manager_bot",
+    "top": "sfm:block/crafter_top",
     "particle": "#up"
   }
 }

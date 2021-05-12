@@ -20,22 +20,19 @@ public class BlockStates extends BlockStateProvider {
 			SFMBlocks.MANAGER.get(),
 			models().cubeBottomTop(
 				SFMBlocks.MANAGER.getId().getPath(),
-				modLoc("block/manager_top"),
+				modLoc("block/manager_side"),
 				modLoc("block/manager_bot"),
-				modLoc("block/manager_side")
+				modLoc("block/manager_top")
 			).texture("particle", "#top")
 		);
 		simpleBlock(SFMBlocks.CABLE.get());
 		simpleBlock(
 			SFMBlocks.CRAFTER.get(),
-			models().cube(
+			models().cubeBottomTop(
 				SFMBlocks.CRAFTER.getId().getPath(),
-				modLoc("block/crafter_top"),
-				modLoc("block/crafter_top"),
-				modLoc("block/crafter_front"),
-				modLoc("block/crafter_front"),
 				modLoc("block/crafter_side"),
-				modLoc("block/crafter_side")
+				modLoc("block/manager_bot"),
+				modLoc("block/crafter_top")
 			).texture("particle", "#up")
 		);
 	}
