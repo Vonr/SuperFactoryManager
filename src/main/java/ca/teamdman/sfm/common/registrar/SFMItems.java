@@ -26,24 +26,31 @@ public class SFMItems {
 		SFM.MOD_ID
 	);
 
-	public static final RegistryObject<Item> MANAGER = ITEMS.register(
+	public static final RegistryObject<BlockItem> MANAGER = ITEMS.register(
 		"manager",
 		() -> new BlockItem(
 			SFMBlocks.MANAGER.get(),
 			new Item.Properties().group(GROUP)
 		)
 	);
-	public static final RegistryObject<Item> CABLE = ITEMS.register(
+	public static final RegistryObject<BlockItem> CABLE = ITEMS.register(
 		"cable",
 		() -> new BlockItem(
 			SFMBlocks.CABLE.get(),
 			new Item.Properties().group(GROUP)
 		)
 	);
-	public static final RegistryObject<Item> CRAFTER = ITEMS.register(
+	public static final RegistryObject<BlockItem> CRAFTER = ITEMS.register(
 		"crafter",
 		() -> new BlockItem(
 			SFMBlocks.CRAFTER.get(),
+			new Item.Properties().group(GROUP)
+		)
+	);
+	public static final RegistryObject<BlockItem> WORKSTATION = ITEMS.register(
+		"workstation",
+		() -> new BlockItem(
+			SFMBlocks.WORKSTATION.get(),
 			new Item.Properties().group(GROUP)
 		)
 	);

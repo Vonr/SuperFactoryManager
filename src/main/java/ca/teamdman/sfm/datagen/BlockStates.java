@@ -28,11 +28,26 @@ public class BlockStates extends BlockStateProvider {
 		simpleBlock(SFMBlocks.CABLE.get());
 		simpleBlock(
 			SFMBlocks.CRAFTER.get(),
-			models().cubeBottomTop(
+			models().cube(
 				SFMBlocks.CRAFTER.getId().getPath(),
+				modLoc("block/crafter_top"),
+				modLoc("block/crafter_top"),
 				modLoc("block/crafter_side"),
-				modLoc("block/manager_bot"),
-				modLoc("block/crafter_top")
+				modLoc("block/crafter_side"),
+				modLoc("block/crafter_front"),
+				modLoc("block/crafter_front")
+			).texture("particle", "#up")
+		);
+		simpleBlock(
+			SFMBlocks.WORKSTATION.get(),
+			models().cube(
+				SFMBlocks.WORKSTATION.getId().getPath(),
+				modLoc("block/workstation_top"),
+				modLoc("block/workstation_top"),
+				modLoc("block/workstation_side"),
+				modLoc("block/workstation_side"),
+				modLoc("block/workstation_front"),
+				modLoc("block/workstation_front")
 			).texture("particle", "#up")
 		);
 	}

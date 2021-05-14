@@ -6,6 +6,10 @@ package ca.teamdman.sfm.common.registrar;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.CrafterContainer;
 import ca.teamdman.sfm.common.container.ManagerContainer;
+import ca.teamdman.sfm.common.container.TileContainerType;
+import ca.teamdman.sfm.common.container.WorkstationContainer;
+import ca.teamdman.sfm.common.container.WorkstationContainerType;
+import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.fml.RegistryObject;
@@ -29,5 +33,11 @@ public class SFMContainers {
 		.register(
 			"manager",
 			() -> IForgeContainerType.create(ManagerContainer::create)
+		);
+
+	public static final RegistryObject<TileContainerType<WorkstationContainer, WorkstationTileEntity>> WORKSTATION = CONTAINER_TYPES
+		.register(
+			"workstation",
+			WorkstationContainerType::new
 		);
 }

@@ -7,6 +7,7 @@ package ca.teamdman.sfm;
 import ca.teamdman.sfm.client.ClientProxy;
 import ca.teamdman.sfm.client.gui.screen.CrafterScreen;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.client.gui.screen.WorkstationScreen;
 import ca.teamdman.sfm.common.Proxy;
 import ca.teamdman.sfm.common.ServerProxy;
 import ca.teamdman.sfm.common.config.ConfigHolder;
@@ -34,20 +35,24 @@ public class SFM {
 	public static final Logger LOGGER = LogManager.getLogger();
 	public static final String MOD_ID = "sfm";
 	public static final String MOD_NAME = "Super Factory Manager";
-	public static final Proxy PROXY = DistExecutor.runForDist(() -> ClientProxy::new,
+	public static final Proxy PROXY = DistExecutor.runForDist(
+		() -> ClientProxy::new,
 		() -> ServerProxy::new
 	);
 
 	public SFM() {
 		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 
-		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON,
+		ModLoadingContext.get().registerConfig(
+			ModConfig.Type.COMMON,
 			ConfigHolder.COMMON_SPEC
 		);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER,
+		ModLoadingContext.get().registerConfig(
+			ModConfig.Type.SERVER,
 			ConfigHolder.SERVER_SPEC
 		);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT,
+		ModLoadingContext.get().registerConfig(
+			ModConfig.Type.CLIENT,
 			ConfigHolder.CLIENT_SPEC
 		);
 
@@ -66,11 +71,17 @@ public class SFM {
 	}
 
 	public void onClientSetup(FMLClientSetupEvent e) {
-		ScreenManager.registerFactory(SFMContainers.MANAGER.get(),
+		ScreenManager.registerFactory(
+			SFMContainers.MANAGER.get(),
 			ManagerScreen::new
 		);
-		ScreenManager.registerFactory(SFMContainers.CRAFTER.get(),
+		ScreenManager.registerFactory(
+			SFMContainers.CRAFTER.get(),
 			CrafterScreen::new
+		);
+		ScreenManager.registerFactory(
+			SFMContainers.WORKSTATION.get(),
+			WorkstationScreen::new
 		);
 	}
 }

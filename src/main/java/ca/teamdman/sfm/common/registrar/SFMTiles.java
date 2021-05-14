@@ -6,6 +6,7 @@ package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.tile.CrafterTileEntity;
+import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
@@ -32,6 +33,14 @@ public final class SFMTiles {
 			"crafter",
 			() -> TileEntityType.Builder
 				.create(CrafterTileEntity::new, SFMBlocks.CRAFTER.get())
+				.build(null)
+		);
+
+	public static final RegistryObject<TileEntityType<WorkstationTileEntity>> WORKSTATION = TILES
+		.register(
+			"workstation",
+			() -> TileEntityType.Builder
+				.create(WorkstationTileEntity::new, SFMBlocks.WORKSTATION.get())
 				.build(null)
 		);
 }

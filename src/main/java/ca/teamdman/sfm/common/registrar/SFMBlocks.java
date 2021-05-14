@@ -7,6 +7,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block.CableBlock;
 import ca.teamdman.sfm.common.block.CrafterBlock;
 import ca.teamdman.sfm.common.block.ManagerBlock;
+import ca.teamdman.sfm.common.block.WorkstationBlock;
 import net.minecraft.block.Block;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -16,13 +17,17 @@ public final class SFMBlocks {
 	public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS,
 		SFM.MOD_ID
 	);
-	public static final RegistryObject<Block> MANAGER = BLOCKS.register("manager",
+	public static final RegistryObject<ManagerBlock> MANAGER = BLOCKS.register("manager",
 		ManagerBlock::new
 	);
-	public static final RegistryObject<Block> CABLE = BLOCKS.register("cable",
+	public static final RegistryObject<CableBlock> CABLE = BLOCKS.register("cable",
 		CableBlock::new
 	);
-	public static final RegistryObject<Block> CRAFTER = BLOCKS.register("crafter",
+	public static final RegistryObject<CrafterBlock> CRAFTER = BLOCKS.register("crafter",
 		CrafterBlock::new
+	);
+
+	public static final RegistryObject<WorkstationBlock> WORKSTATION = BLOCKS.register("workstation",
+		WorkstationBlock::new
 	);
 }

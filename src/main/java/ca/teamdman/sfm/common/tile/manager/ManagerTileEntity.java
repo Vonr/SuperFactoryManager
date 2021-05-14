@@ -39,7 +39,8 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ManagerTileEntity extends TileEntity implements ITickableTileEntity,
+public class ManagerTileEntity extends TileEntity implements
+	ITickableTileEntity,
 	INamedContainerProvider {
 
 	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
@@ -61,8 +62,16 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 
 	@Nullable
 	@Override
-	public Container createMenu(int windowId, PlayerInventory playerInv, PlayerEntity player) {
-		ManagerContainer managerContainer = new ManagerContainer(windowId, this, false);
+	public Container createMenu(
+		int windowId,
+		PlayerInventory playerInv,
+		PlayerEntity player
+	) {
+		ManagerContainer managerContainer = new ManagerContainer(
+			windowId,
+			this,
+			false
+		);
 		return managerContainer;
 	}
 
@@ -85,7 +94,8 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			.map(ServerPlayerEntity::getUniqueID)
 			.collect(Collectors.toSet());
 		getFlowDataContainer().removeIf(data ->
-			data instanceof CursorFlowData && !listeners.contains(data.getId()));
+			data instanceof CursorFlowData
+				&& !listeners.contains(data.getId()));
 	}
 
 
@@ -121,7 +131,10 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 			.forEach(entry -> {
 				ServerPlayerEntity player = entry.getKey();
 				MSG packet = packetFunc.apply(entry.getValue());
-				PacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), packet);
+				PacketHandler.INSTANCE.send(
+					PacketDistributor.PLAYER.with(() -> player),
+					packet
+				);
 			});
 	}
 
@@ -153,12 +166,14 @@ public class ManagerTileEntity extends TileEntity implements ITickableTileEntity
 		// apply schema updates
 		upgradeSavedData(tag);
 		if (tag.getInt(NBT_SCHEMA_VERSION_KEY) != NBT_SCHEMA_VERSION) {
-			throw new IllegalArgumentException("tag not using latest schema after upgrade");
+			throw new IllegalArgumentException(
+				"tag not using latest schema after upgrade");
 		}
 
 		// load data
 		getFlowDataContainer().clear();
-		getFlowDataContainer().deserializeNBT(tag.getCompound(NBT_SCHEMA_DATA_KEY));
+		getFlowDataContainer().deserializeNBT(tag.getCompound(
+			NBT_SCHEMA_DATA_KEY));
 	}
 
 	private void upgradeSavedData(CompoundNBT tag) {

@@ -15,7 +15,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.IWorldPosCallable;
@@ -70,6 +69,6 @@ public class ManagerBlock extends CableBlock {
 	@Nullable
 	@Override
 	public TileEntity createTileEntity(final BlockState state, final IBlockReader world) {
-		return ((TileEntityType<?>) SFMTiles.MANAGER.get()).create();
+		return SFMTiles.MANAGER.get().create();
 	}
 }
