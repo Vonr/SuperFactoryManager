@@ -7,28 +7,33 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class WorkstationContainerType extends
-	TileContainerType<WorkstationContainer, WorkstationTileEntity> {
+public class WorkstationLearningContainerType extends
+	TileContainerType<WorkstationLearningContainer, WorkstationTileEntity> {
 
-	public WorkstationContainerType() {
+	public WorkstationLearningContainerType() {
 		super(WorkstationTileEntity.class);
 	}
 
 	@Override
-	public WorkstationContainer createServerContainer(
+	public WorkstationLearningContainer createServerContainer(
 		int windowId, WorkstationTileEntity tile, ServerPlayerEntity player
 	) {
-		return new WorkstationContainer(windowId, tile, player.inventory,false, "SERVER");
+		return new WorkstationLearningContainer(windowId, tile, player.inventory,false, "SERVER");
 	}
 
 	@Override
-	protected WorkstationContainer createClientContainer(
+	protected WorkstationLearningContainer createClientContainer(
 		int windowId,
 		WorkstationTileEntity tile,
 		PlayerInventory playerInv,
 		PacketBuffer buffer
 	) {
-		return new WorkstationContainer(windowId, tile, playerInv,true, "CLIENT");
+		return new WorkstationLearningContainer(windowId, tile, playerInv,true, "CLIENT");
+	}
+
+	@Override
+	public ITextComponent getDisplayName() {
+ 		return new TranslationTextComponent("container.sfm.workstation_learning");
 	}
 
 	@Override
@@ -36,10 +41,5 @@ public class WorkstationContainerType extends
 		WorkstationTileEntity tile, PacketBuffer buffer
 	) {
 
-	}
-
-	@Override
-	public ITextComponent getDisplayName() {
-		return new TranslationTextComponent("container.sfm.workstation");
 	}
 }

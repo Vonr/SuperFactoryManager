@@ -1,19 +1,22 @@
 package ca.teamdman.sfm.common.container;
 
 import ca.teamdman.sfm.common.util.SFMUtil;
+import javax.annotation.Nullable;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkHooks;
 
-public abstract class TileContainerType<C extends BaseContainer<T>, T extends TileEntity & INamedContainerProvider> extends
+public abstract class TileContainerType<C extends BaseContainer<T>, T extends TileEntity> extends
 	ContainerType<C> {
 
 	private final Class<T> TILE_CLASS;
@@ -22,12 +25,6 @@ public abstract class TileContainerType<C extends BaseContainer<T>, T extends Ti
 		super(null);
 		this.TILE_CLASS = tileClass;
 	}
-
-	public abstract C createServerContainer(
-		int windowId,
-		T tile,
-		ServerPlayerEntity player
-	);
 
 	@Override
 	public C create(
@@ -75,13 +72,36 @@ public abstract class TileContainerType<C extends BaseContainer<T>, T extends Ti
 	public void openGui(ServerPlayerEntity player, T tile) {
 		NetworkHooks.openGui(
 			player,
-			tile,
+			new INamedContainerProvider() {
+				@Override
+				public ITextComponent getDisplayName() {
+					return TileContainerType.this.getDisplayName();
+				}
+
+				@Nullable
+				@Override
+				public Container createMenu(
+					int windowId,
+					PlayerInventory playerInventory,
+					PlayerEntity playerEntity
+				) {
+					return createServerContainer(windowId, tile, player);
+				}
+			},
 			data -> {
 				data.writeBlockPos(tile.getPos());
 				prepareClientContainer(tile, data);
 			}
 		);
 	}
+
+	public abstract ITextComponent getDisplayName();
+
+	public abstract C createServerContainer(
+		int windowId,
+		T tile,
+		ServerPlayerEntity player
+	);
 
 	protected abstract void prepareClientContainer(T tile, PacketBuffer buffer);
 }

@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.gui.screen;
 
-import ca.teamdman.sfm.common.container.WorkstationContainer;
+import ca.teamdman.sfm.common.container.WorkstationLearningContainer;
 import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationModeSwitchPacket;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationModeSwitchPacket.Mode;
@@ -8,27 +8,25 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
 
-public class WorkstationScreen extends
-	ContainerScreen<WorkstationContainer> implements
-	IHasContainer<WorkstationContainer> {
+public class WorkstationLearningScreen extends
+	ContainerScreen<WorkstationLearningContainer> implements
+	IHasContainer<WorkstationLearningContainer> {
 
 	private static final ResourceLocation CHEST_GUI_TEXTURE = new ResourceLocation(
 		"textures/gui/container/generic_54.png");
 
-	private final WorkstationContainer CONTAINER;
+	private final WorkstationLearningContainer CONTAINER;
 	private int inventoryRows = 3;
-	private TextFieldWidget searchField;
 	private ExtendedButton modeSwitchButton;
 
-	public WorkstationScreen(
-		WorkstationContainer container,
+	public WorkstationLearningScreen(
+		WorkstationLearningContainer container,
 		PlayerInventory inv,
 		ITextComponent name
 	) {
@@ -41,18 +39,6 @@ public class WorkstationScreen extends
 		super.init();
 		int i = (this.width - this.xSize) / 2;
 		int j = (this.height - this.ySize) / 2;
-		searchField = new TextFieldWidget(
-			this.font,
-			i,
-			j-25,
-			103,
-			12,
-			new TranslationTextComponent("gui.sfm.workstation.search.text")
-		);
-//		searchField.setCanLoseFocus(false);
-		searchField.setTextColor(-1);
-		searchField.setDisabledTextColour(-1);
-		setFocusedDefault(searchField);
 
 		modeSwitchButton = new ExtendedButton(
 			i + 125,
@@ -60,16 +46,15 @@ public class WorkstationScreen extends
 			50,
 			15,
 			new TranslationTextComponent(
-				"gui.sfm.workstation.mode_switch_button.learning.text"),
+				"gui.sfm.workstation.mode_switch_button.using.text"),
 			(button) -> {
 				PacketHandler.INSTANCE.sendToServer(new C2SWorkstationModeSwitchPacket(
 					CONTAINER.windowId,
-					Mode.LEARNING
+					Mode.USING
 				));
 			}
 		);
 
-		addButton(searchField);
 		addButton(modeSwitchButton);
 	}
 
@@ -111,7 +96,7 @@ public class WorkstationScreen extends
 	}
 
 	@Override
-	public WorkstationContainer getContainer() {
+	public WorkstationLearningContainer getContainer() {
 		return CONTAINER;
 	}
 }

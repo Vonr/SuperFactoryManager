@@ -4,12 +4,19 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.gui.screen.CrafterScreen;
+import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
+import ca.teamdman.sfm.client.gui.screen.WorkstationLearningScreen;
+import ca.teamdman.sfm.client.gui.screen.WorkstationScreen;
 import ca.teamdman.sfm.common.container.CrafterContainer;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.container.TileContainerType;
 import ca.teamdman.sfm.common.container.WorkstationContainer;
 import ca.teamdman.sfm.common.container.WorkstationContainerType;
+import ca.teamdman.sfm.common.container.WorkstationLearningContainer;
+import ca.teamdman.sfm.common.container.WorkstationLearningContainerType;
 import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
+import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.fml.RegistryObject;
@@ -40,4 +47,30 @@ public class SFMContainers {
 			"workstation",
 			WorkstationContainerType::new
 		);
+
+	public static final RegistryObject<TileContainerType<WorkstationLearningContainer, WorkstationTileEntity>> WORKSTATION_LEARNING = CONTAINER_TYPES
+		.register(
+			"workstation_learning",
+			WorkstationLearningContainerType::new
+		);
+
+	public static void registerFactories() {
+		ScreenManager.registerFactory(
+			SFMContainers.MANAGER.get(),
+			ManagerScreen::new
+		);
+		ScreenManager.registerFactory(
+			SFMContainers.CRAFTER.get(),
+			CrafterScreen::new
+		);
+		ScreenManager.registerFactory(
+			SFMContainers.WORKSTATION.get(),
+			WorkstationScreen::new
+		);
+
+		ScreenManager.registerFactory(
+			SFMContainers.WORKSTATION_LEARNING.get(),
+			WorkstationLearningScreen::new
+		);
+	}
 }

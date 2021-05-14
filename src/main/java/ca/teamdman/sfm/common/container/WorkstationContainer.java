@@ -51,6 +51,7 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 		for (int slot = 0; slot < 9; ++slot) {
 			this.addSlot(new Slot(playerInv, slot, 8 + slot * 18, 143));
 		}
+
 	}
 
 

@@ -70,7 +70,10 @@ public class SFMUtil {
 		Class<T> clazz
 	) {
 		return access
-			.applyOrElse((world, pos) -> getTile(world, pos, clazz, false), Optional.empty());
+			.applyOrElse(
+				(world, pos) -> getTile(world, pos, clazz, false),
+				Optional.empty()
+			);
 	}
 
 	/**
@@ -115,7 +118,10 @@ public class SFMUtil {
 		Class<T> clazz
 	) {
 		return access
-			.applyOrElse((world, pos) -> getTile(world, pos, clazz, true), Optional.empty());
+			.applyOrElse(
+				(world, pos) -> getTile(world, pos, clazz, true),
+				Optional.empty()
+			);
 	}
 
 	/**
@@ -171,16 +177,19 @@ public class SFMUtil {
 	@OnlyIn(Dist.CLIENT)
 	public static boolean isKeyDown(int key) {
 		return InputMappings
-			.isKeyDown(Minecraft.getInstance().getMainWindow().getHandle(), key);
+			.isKeyDown(
+				Minecraft.getInstance().getMainWindow().getHandle(),
+				key
+			);
 
 	}
 
 	/**
-	 * Gets a stream using a self-feeding mapping function. Prevents the re-traversal of elements
-	 * that have been visited before.
+	 * Gets a stream using a self-feeding mapping function. Prevents the
+	 * re-traversal of elements that have been visited before.
 	 *
-	 * @param operator Consumes queue elements to build the result set and append the next queue
-	 *                 elements
+	 * @param operator Consumes queue elements to build the result set and
+	 *                 append the next queue elements
 	 * @param first    Initial value, not checked against the filter
 	 * @param <T>      Type that the mapper consumes and produces
 	 * @return Stream result after termination of the recursive mapping process
@@ -206,8 +215,8 @@ public class SFMUtil {
 	}
 
 	/**
-	 * Gets shortest distance between a point and a line segment https://stackoverflow.com/a/6853926/11141271
-	 * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
+	 * Gets shortest distance between a point and a line segment
+	 * https://stackoverflow.com/a/6853926/11141271 https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
 	 *
 	 * @param x  point x
 	 * @param y  point y
@@ -252,13 +261,31 @@ public class SFMUtil {
 	}
 
 	/**
-	 * Reads a UUID from a packet buffer Will throw an error if unable to pop a string from the
-	 * buffer Will throw an error if the string is malformed
+	 * Reads a UUID from a packet buffer Will throw an error if unable to pop a
+	 * string from the buffer Will throw an error if the string is malformed
 	 *
 	 * @return UUID
 	 */
 	public static UUID readUUID(PacketBuffer buf) {
 		return UUID.fromString(buf.readString(UUID_STRING_LENGTH));
+	}
+
+	/**
+	 * Perform an action, and restore the mouse position to where it was before the action was performed.
+	 */
+	public static void persistMousePosition(Runnable r) {
+		double mouseX = Minecraft.getInstance().mouseHelper.getMouseX();
+		double mouseY = Minecraft.getInstance().mouseHelper.getMouseY();
+		r.run();
+		InputMappings.setCursorPosAndMode(
+			Minecraft
+				.getInstance()
+				.getMainWindow()
+				.getHandle(),
+			212995,
+			mouseX,
+			mouseY
+		);
 	}
 
 	public interface RecursiveBuilder<T> {

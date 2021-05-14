@@ -5,9 +5,6 @@ package ca.teamdman.sfm;
 
 
 import ca.teamdman.sfm.client.ClientProxy;
-import ca.teamdman.sfm.client.gui.screen.CrafterScreen;
-import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.client.gui.screen.WorkstationScreen;
 import ca.teamdman.sfm.common.Proxy;
 import ca.teamdman.sfm.common.ServerProxy;
 import ca.teamdman.sfm.common.config.ConfigHolder;
@@ -16,7 +13,6 @@ import ca.teamdman.sfm.common.registrar.SFMBlocks;
 import ca.teamdman.sfm.common.registrar.SFMContainers;
 import ca.teamdman.sfm.common.registrar.SFMItems;
 import ca.teamdman.sfm.common.registrar.SFMTiles;
-import net.minecraft.client.gui.ScreenManager;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -71,17 +67,6 @@ public class SFM {
 	}
 
 	public void onClientSetup(FMLClientSetupEvent e) {
-		ScreenManager.registerFactory(
-			SFMContainers.MANAGER.get(),
-			ManagerScreen::new
-		);
-		ScreenManager.registerFactory(
-			SFMContainers.CRAFTER.get(),
-			CrafterScreen::new
-		);
-		ScreenManager.registerFactory(
-			SFMContainers.WORKSTATION.get(),
-			WorkstationScreen::new
-		);
+		SFMContainers.registerFactories();
 	}
 }
