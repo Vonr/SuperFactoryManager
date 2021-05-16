@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "sfm:block/workstation_top",
+    "up": "sfm:block/workstation_top",
+    "north": "sfm:block/workstation_side",
+    "south": "sfm:block/workstation_side",
+    "east": "sfm:block/workstation_front",
+    "west": "sfm:block/workstation_front",
+    "particle": "#up"
+  }
+}

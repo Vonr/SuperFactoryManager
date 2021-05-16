@@ -25,6 +25,7 @@ public class ItemModels extends ItemModelProvider {
 		justParent(SFMItems.CABLE, SFMBlocks.CABLE);
 		justParent(SFMItems.CRAFTER, SFMBlocks.CRAFTER);
 		justParent(SFMItems.WORKSTATION, SFMBlocks.WORKSTATION);
+		basicItem(SFMItems.CRAFTING_CONTRACT);
 	}
 
 	private void justParent(
@@ -35,5 +36,14 @@ public class ItemModels extends ItemModelProvider {
 			block.getId().getPath(),
 			SFM.MOD_ID + ":block/" + item.getId().getPath()
 		);
+	}
+
+	private void basicItem(
+		RegistryObject<? extends Item> item
+	) {
+		withExistingParent(
+			item.getId().getPath(),
+			mcLoc("item/generated")
+		).texture("layer0", modLoc("item/" + item.getId().getPath()));
 	}
 }

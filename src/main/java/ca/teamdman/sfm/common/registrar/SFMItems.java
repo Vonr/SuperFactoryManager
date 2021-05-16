@@ -4,6 +4,7 @@
 package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.item.CraftingContract;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -53,6 +54,12 @@ public class SFMItems {
 			SFMBlocks.WORKSTATION.get(),
 			new Item.Properties().group(GROUP)
 		)
+	);
+
+
+	public static final RegistryObject<CraftingContract> CRAFTING_CONTRACT = ITEMS.register(
+		"crafting_contract",
+		CraftingContract::new
 	);
 
 }

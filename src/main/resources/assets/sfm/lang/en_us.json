@@ -3,6 +3,7 @@
   "block.sfm.crafter": "Crafter",
   "block.sfm.manager": "Super Factory Manager",
   "block.sfm.workstation": "Workstation",
+  "item.sfm.crafting_contract": "Crafting Contract",
   "container.sfm.manager": "Super Factory Manager",
   "container.sfm.workstation": "Workstation",
   "container.sfm.workstation_learning": "Workstation - Learning",
