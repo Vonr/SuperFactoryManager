@@ -270,24 +270,6 @@ public class SFMUtil {
 		return UUID.fromString(buf.readString(UUID_STRING_LENGTH));
 	}
 
-	/**
-	 * Perform an action, and restore the mouse position to where it was before the action was performed.
-	 */
-	public static void persistMousePosition(Runnable r) {
-		double mouseX = Minecraft.getInstance().mouseHelper.getMouseX();
-		double mouseY = Minecraft.getInstance().mouseHelper.getMouseY();
-		r.run();
-		InputMappings.setCursorPosAndMode(
-			Minecraft
-				.getInstance()
-				.getMainWindow()
-				.getHandle(),
-			212995,
-			mouseX,
-			mouseY
-		);
-	}
-
 	public interface RecursiveBuilder<T> {
 
 		void accept(T next, Consumer<T> nextQueue, Consumer<T> resultBuilder);

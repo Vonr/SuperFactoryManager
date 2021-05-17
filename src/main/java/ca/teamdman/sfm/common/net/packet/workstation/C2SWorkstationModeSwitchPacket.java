@@ -5,7 +5,6 @@ import ca.teamdman.sfm.common.container.WorkstationContainer;
 import ca.teamdman.sfm.common.container.WorkstationLearningContainer;
 import ca.teamdman.sfm.common.registrar.SFMContainers;
 import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
-import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.function.Supplier;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -70,13 +69,10 @@ public class C2SWorkstationModeSwitchPacket {
 			if (source != null) {
 				TileContainerType<?, WorkstationTileEntity> finalType = type;
 				WorkstationTileEntity finalSource = source;
-				SFMUtil.persistMousePosition(()->{
-					sender.closeScreen();
-					finalType.openGui(
-						sender,
-						finalSource
-					);
-				});
+				finalType.openGui(
+					sender,
+					finalSource
+				);
 			}
 		});
 	}

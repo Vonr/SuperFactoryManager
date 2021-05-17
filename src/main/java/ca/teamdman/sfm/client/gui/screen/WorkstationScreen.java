@@ -44,7 +44,7 @@ public class WorkstationScreen extends
 		searchField = new TextFieldWidget(
 			this.font,
 			i,
-			j-25,
+			j - 25,
 			103,
 			12,
 			new TranslationTextComponent("gui.sfm.workstation.search.text")
@@ -56,17 +56,15 @@ public class WorkstationScreen extends
 
 		modeSwitchButton = new ExtendedButton(
 			i + 125,
-			j-25,
+			j - 25,
 			50,
 			15,
 			new TranslationTextComponent(
 				"gui.sfm.workstation.mode_switch_button.learning.text"),
-			(button) -> {
-				PacketHandler.INSTANCE.sendToServer(new C2SWorkstationModeSwitchPacket(
-					CONTAINER.windowId,
-					Mode.LEARNING
-				));
-			}
+			(button) -> PacketHandler.INSTANCE.sendToServer(new C2SWorkstationModeSwitchPacket(
+				CONTAINER.windowId,
+				Mode.LEARNING
+			))
 		);
 
 		addButton(searchField);

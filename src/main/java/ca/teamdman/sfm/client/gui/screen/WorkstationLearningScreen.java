@@ -42,17 +42,15 @@ public class WorkstationLearningScreen extends
 
 		modeSwitchButton = new ExtendedButton(
 			i + 125,
-			j-25,
+			j - 25,
 			50,
 			15,
 			new TranslationTextComponent(
 				"gui.sfm.workstation.mode_switch_button.using.text"),
-			(button) -> {
-				PacketHandler.INSTANCE.sendToServer(new C2SWorkstationModeSwitchPacket(
-					CONTAINER.windowId,
-					Mode.USING
-				));
-			}
+			(button) -> PacketHandler.INSTANCE.sendToServer(new C2SWorkstationModeSwitchPacket(
+				CONTAINER.windowId,
+				Mode.USING
+			))
 		);
 
 		addButton(modeSwitchButton);
