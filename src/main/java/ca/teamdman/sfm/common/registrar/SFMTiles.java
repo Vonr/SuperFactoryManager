@@ -10,11 +10,9 @@ import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
-@Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class SFMTiles {
 
 	public static final DeferredRegister<TileEntityType<?>> TILES = DeferredRegister
