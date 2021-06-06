@@ -23,12 +23,13 @@ public class WaterIntakeTileEntity extends TileEntity {
 		{
 			setFluid(new FluidStack(Fluids.WATER, 1000));
 		}
+
 		@Nonnull
 		@Override
 		public FluidStack drain(
 			int maxDrain, FluidAction action
 		) {
-			int drained = Math.min(maxDrain, 1000);
+			int drained = Math.min(maxDrain, active ? 1000 : 0);
 			FluidStack copy = fluid.copy();
 			copy.setAmount(drained);
 			return copy;

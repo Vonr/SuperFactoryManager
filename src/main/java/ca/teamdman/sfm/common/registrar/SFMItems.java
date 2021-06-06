@@ -5,9 +5,9 @@ package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.CraftingContractItem;
+import ca.teamdman.sfm.common.item.WaterIntakeItem;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
-import net.minecraft.item.Item.Properties;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.RegistryObject;
@@ -65,10 +65,7 @@ public class SFMItems {
 		);
 
 	public static final RegistryObject<BlockItem> WATER_INTAKE = ITEMS.register(
-			"water_intake",
-			() -> new BlockItem(
-				SFMBlocks.WATER_INTAKE.get(),
-				new Properties().group(GROUP)
-			)
-		);
+		"water_intake",
+		WaterIntakeItem::new
+	);
 }
