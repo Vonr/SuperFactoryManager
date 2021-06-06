@@ -49,5 +49,16 @@ public class Recipes extends ForgeRecipeProvider {
 			.patternLine("BCB")
 			.patternLine("ABA")
 			.build(consumer);
+
+		ShapedRecipeBuilder.shapedRecipe(SFMBlocks.WATER_INTAKE.get())
+			.key('I', Tags.Items.STORAGE_BLOCKS_IRON)
+			.key('B', Items.BUCKET)
+			.key('G', Items.IRON_BARS)
+			.key('O', Items.OBSERVER)
+			.addCriterion("has_iron_ingot", hasItem(Items.IRON_INGOT))
+			.patternLine("GBG")
+			.patternLine("GIG")
+			.patternLine("GOG")
+			.build(consumer);
 	}
 }

@@ -5,9 +5,12 @@ import javax.annotation.Nullable;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.IBucketPickupHandler;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
@@ -15,10 +18,11 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
-public class WaterIntakeBlock extends Block {
+public class WaterIntakeBlock extends Block implements IBucketPickupHandler {
 
 	public static final BooleanProperty IN_WATER = BooleanProperty.create(
 		"in_water");
@@ -92,5 +96,12 @@ public class WaterIntakeBlock extends Block {
 		BlockState state, IBlockReader world
 	) {
 		return new WaterIntakeTileEntity();
+	}
+
+	@Override
+	public Fluid pickupFluid(
+		IWorld worldIn, BlockPos pos, BlockState state
+	) {
+		return state.get(IN_WATER) ? Fluids.WATER : Fluids.EMPTY;
 	}
 }
