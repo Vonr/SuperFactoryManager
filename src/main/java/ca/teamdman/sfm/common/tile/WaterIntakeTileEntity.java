@@ -15,7 +15,6 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class WaterIntakeTileEntity extends TileEntity {
 
-	private boolean active = false;
 	public final FluidTank TANK = new FluidTank(
 		1000,
 		stack -> false // can't fill, only extract
@@ -29,7 +28,7 @@ public class WaterIntakeTileEntity extends TileEntity {
 		public FluidStack drain(
 			int maxDrain, FluidAction action
 		) {
-			int drained = Math.min(maxDrain, active ? 1000 : 0);
+			int drained = Math.min(maxDrain, 1000);
 			FluidStack copy = fluid.copy();
 			copy.setAmount(drained);
 			return copy;
@@ -40,10 +39,6 @@ public class WaterIntakeTileEntity extends TileEntity {
 
 	public WaterIntakeTileEntity() {
 		super(SFMTiles.WATER_INTAKE.get());
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
 	}
 
 	@Nonnull

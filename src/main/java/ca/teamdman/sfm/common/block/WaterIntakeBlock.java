@@ -12,7 +12,6 @@ import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
@@ -79,10 +78,6 @@ public class WaterIntakeBlock extends Block {
 				newState,
 				1 | 2
 			);
-			TileEntity tile = world.getTileEntity(pos);
-			if (tile instanceof WaterIntakeTileEntity) {
-				((WaterIntakeTileEntity) tile).setActive(isActive);
-			}
 		}
 	}
 
@@ -96,8 +91,6 @@ public class WaterIntakeBlock extends Block {
 	public WaterIntakeTileEntity createTileEntity(
 		BlockState state, IBlockReader world
 	) {
-		WaterIntakeTileEntity tile = new WaterIntakeTileEntity();
-		tile.setActive(state.get(IN_WATER));
-		return tile;
+		return new WaterIntakeTileEntity();
 	}
 }
