@@ -1,9 +1,11 @@
 package ca.teamdman.sfm.common.tile;
 
+import ca.teamdman.sfm.common.item.CraftingContractItem;
 import ca.teamdman.sfm.common.registrar.SFMTiles;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.block.BlockState;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -14,12 +16,7 @@ import net.minecraftforge.items.ItemStackHandler;
 
 public class WorkstationTileEntity extends TileEntity {
 
-	public final ItemStackHandler INVENTORY = new ItemStackHandler(27) {
-		@Override
-		protected void onContentsChanged(int slot) {
-			WorkstationTileEntity.this.markDirty();
-		}
-	};
+	public final ItemStackHandler INVENTORY = new WorkstationInventory();
 	public final LazyOptional<ItemStackHandler> INVENTORY_CAPABILITY = LazyOptional
 		.of(() -> INVENTORY);
 
@@ -52,5 +49,24 @@ public class WorkstationTileEntity extends TileEntity {
 		CompoundNBT tag = super.write(compound);
 		tag.put("inv", INVENTORY.serializeNBT());
 		return tag;
+	}
+
+	private class WorkstationInventory extends ItemStackHandler {
+
+		@Override
+		public boolean isItemValid(
+			int slot, @Nonnull ItemStack stack
+		) {
+			return stack.getItem() instanceof CraftingContractItem;
+		}
+
+		public WorkstationInventory() {
+			super(27);
+		}
+
+		@Override
+		protected void onContentsChanged(int slot) {
+			WorkstationTileEntity.this.markDirty();
+		}
 	}
 }

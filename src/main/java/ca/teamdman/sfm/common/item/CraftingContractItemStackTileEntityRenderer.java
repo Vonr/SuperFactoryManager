@@ -30,10 +30,10 @@ public class CraftingContractItemStackTileEntityRenderer extends
 	) {
 		debounce = true;
 		try {
-			if (!(stack.getItem() instanceof CraftingContract)) return;
+			if (!(stack.getItem() instanceof CraftingContractItem)) return;
 			if (Minecraft.getInstance().world == null) return;
 
-			ItemStack result = CraftingContract.getRecipe(
+			ItemStack result = CraftingContractItem.getRecipe(
 				stack,
 				Minecraft.getInstance().world
 			)
@@ -48,7 +48,7 @@ public class CraftingContractItemStackTileEntityRenderer extends
 			}
 			matrixStack.push();
 			matrixStack.translate(0.5,0.5,0);
-			matrixStack.rotate((new Vector3f(0,0,1)).rotationDegrees(-90));
+			matrixStack.rotate((new Vector3f(0,1,0)).rotationDegrees(180));
 			Minecraft.getInstance().getItemRenderer().renderItem(
 				primary,
 				TransformType.FIXED,
@@ -57,7 +57,7 @@ public class CraftingContractItemStackTileEntityRenderer extends
 				matrixStack,
 				buffer
 			);
-			matrixStack.translate(0.3,0.3,0.1);
+			matrixStack.translate(-0.3,-0.3,0.1);
 			matrixStack.scale(0.7f,0.7f,1);
 			Minecraft.getInstance().getItemRenderer().renderItem(
 				secondary,

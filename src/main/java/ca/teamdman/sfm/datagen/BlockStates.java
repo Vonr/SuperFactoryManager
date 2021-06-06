@@ -1,9 +1,12 @@
 package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.block.WaterIntakeBlock;
 import ca.teamdman.sfm.common.registrar.SFMBlocks;
 import net.minecraft.data.DataGenerator;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
+import net.minecraftforge.client.model.generators.ConfiguredModel;
+import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public class BlockStates extends BlockStateProvider {
@@ -16,7 +19,7 @@ public class BlockStates extends BlockStateProvider {
 
 	@Override
 	protected void registerStatesAndModels() {
-		this.simpleBlock(
+		simpleBlock(
 			SFMBlocks.MANAGER.get(),
 			models().cubeBottomTop(
 				SFMBlocks.MANAGER.getId().getPath(),
@@ -50,5 +53,25 @@ public class BlockStates extends BlockStateProvider {
 				modLoc("block/workstation_front")
 			).texture("particle", "#up")
 		);
+
+		ModelFile waterIntakeModelActive = models()
+			.cubeAll(
+				SFMBlocks.WATER_INTAKE.getId().getPath()+"_active",
+				modLoc("block/water_intake_active")
+			);
+		ModelFile waterIntakeModelInactive = models()
+			.cubeAll(
+				SFMBlocks.WATER_INTAKE.getId().getPath()+"_inactive",
+				modLoc("block/water_intake_inactive")
+			);
+		getVariantBuilder(SFMBlocks.WATER_INTAKE.get())
+			.forAllStates(state -> ConfiguredModel
+				.builder()
+				.modelFile(
+					state.get(WaterIntakeBlock.IN_WATER)
+						? waterIntakeModelActive
+						: waterIntakeModelInactive
+				)
+				.build());
 	}
 }

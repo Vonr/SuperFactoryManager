@@ -6,9 +6,11 @@ package ca.teamdman.sfm.common.registrar;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.tile.CrafterTileEntity;
+import ca.teamdman.sfm.common.tile.WaterIntakeTileEntity;
 import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.tileentity.TileEntityType.Builder;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -41,4 +43,12 @@ public final class SFMTiles {
 				.create(WorkstationTileEntity::new, SFMBlocks.WORKSTATION.get())
 				.build(null)
 		);
+
+	public static final RegistryObject<TileEntityType<WaterIntakeTileEntity>> WATER_INTAKE = TILES
+			.register(
+				"water_intake",
+				() -> Builder
+					.create(WaterIntakeTileEntity::new, SFMBlocks.WATER_INTAKE.get())
+					.build(null)
+			);
 }

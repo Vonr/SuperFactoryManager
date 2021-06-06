@@ -27,6 +27,7 @@ public class ItemModels extends ItemModelProvider {
 		justParent(SFMItems.CABLE, SFMBlocks.CABLE);
 		justParent(SFMItems.CRAFTER, SFMBlocks.CRAFTER);
 		justParent(SFMItems.WORKSTATION, SFMBlocks.WORKSTATION);
+		justParent(SFMItems.WATER_INTAKE, SFMBlocks.WATER_INTAKE, "_active");
 		basicItem(SFMItems.CRAFTING_CONTRACT);
 //		getBuilder(SFMItems.CRAFTING_CONTRACT.getId().getPath())
 //			.parent(HackModel.INSTANCE);
@@ -36,9 +37,17 @@ public class ItemModels extends ItemModelProvider {
 		RegistryObject<? extends Item> item,
 		RegistryObject<? extends Block> block
 	) {
+		justParent(item, block, "");
+	}
+
+	private void justParent(
+		RegistryObject<? extends Item> item,
+		RegistryObject<? extends Block> block,
+		String extra
+	) {
 		withExistingParent(
 			block.getId().getPath(),
-			SFM.MOD_ID + ":block/" + item.getId().getPath()
+			SFM.MOD_ID + ":block/" + item.getId().getPath() + extra
 		);
 	}
 

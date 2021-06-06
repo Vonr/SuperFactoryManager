@@ -1,9 +1,6 @@
 package ca.teamdman.sfm.common.net.packet.workstation;
 
 import ca.teamdman.sfm.common.container.TileContainerType;
-import ca.teamdman.sfm.common.container.WorkstationContainer;
-import ca.teamdman.sfm.common.container.WorkstationLearningContainer;
-import ca.teamdman.sfm.common.registrar.SFMContainers;
 import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import java.util.function.Supplier;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -49,22 +46,22 @@ public class C2SWorkstationModeSwitchPacket {
 			if (sender.openContainer.windowId != msg.WINDOW_ID) return;
 			WorkstationTileEntity source = null;
 			TileContainerType<?, WorkstationTileEntity> type = null;
-
-			if (
-				sender.openContainer instanceof WorkstationContainer
-					&& msg.MODE == Mode.LEARNING
-			) {
-				source = ((WorkstationContainer) sender.openContainer).getSource();
-				type = SFMContainers.WORKSTATION_LEARNING.get();
-			}
-
-			if (
-				sender.openContainer instanceof WorkstationLearningContainer
-					&& msg.MODE == Mode.USING
-			) {
-				source = ((WorkstationLearningContainer) sender.openContainer).getSource();
-				type = SFMContainers.WORKSTATION.get();
-			}
+//
+//			if (
+//				sender.openContainer instanceof WorkstationContainer
+//					&& msg.MODE == Mode.LEARNING
+//			) {
+//				source = ((WorkstationContainer) sender.openContainer).getSource();
+//				type = SFMContainers.WORKSTATION_LEARNING.get();
+//			}
+//
+//			if (
+//				sender.openContainer instanceof WorkstationLearningContainer
+//					&& msg.MODE == Mode.USING
+//			) {
+//				source = ((WorkstationLearningContainer) sender.openContainer).getSource();
+//				type = SFMContainers.WORKSTATION.get();
+//			}
 
 			if (source != null) {
 				TileContainerType<?, WorkstationTileEntity> finalType = type;

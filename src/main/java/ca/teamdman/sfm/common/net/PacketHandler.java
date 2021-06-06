@@ -14,6 +14,7 @@ import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacket
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketS2C;
+import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationLearnClickPacket;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationModeSwitchPacket;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
@@ -86,6 +87,14 @@ public class PacketHandler {
 			C2SWorkstationModeSwitchPacket::encode,
 			C2SWorkstationModeSwitchPacket::decode,
 			C2SWorkstationModeSwitchPacket::handle
+		);
+
+
+		INSTANCE.registerMessage(i++,
+			C2SWorkstationLearnClickPacket.class,
+			C2SWorkstationLearnClickPacket::encode,
+			C2SWorkstationLearnClickPacket::decode,
+			C2SWorkstationLearnClickPacket::handle
 		);
 	}
 
