@@ -45,14 +45,14 @@ public class C2SWorkstationLearnClickPacket {
 			}
 			WorkstationContainer container = (WorkstationContainer) sender.openContainer;
 			WorkstationTileEntity tile = container.getSource();
-			for (int slot = 0; slot < tile.INVENTORY.getSlots(); slot++) {
-				tile.INVENTORY.setStackInSlot(slot, ItemStack.EMPTY);
+			for (int slot = 0; slot < tile.CONTRACT_INVENTORY.getSlots(); slot++) {
+				tile.CONTRACT_INVENTORY.setStackInSlot(slot, ItemStack.EMPTY);
 			}
 			AtomicInteger slot = new AtomicInteger(0);
 			Stream<ICraftingRecipe> oneStepRecipes = container.getOneStepRecipes();
 			oneStepRecipes
 				.map(CraftingContractItem::withRecipe)
-				.forEach(stack -> tile.INVENTORY.setStackInSlot(
+				.forEach(stack -> tile.CONTRACT_INVENTORY.setStackInSlot(
 					slot.getAndIncrement(),
 					stack
 				));

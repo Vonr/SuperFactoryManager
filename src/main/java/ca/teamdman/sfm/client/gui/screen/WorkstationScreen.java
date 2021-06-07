@@ -13,7 +13,6 @@ import net.minecraft.client.renderer.Rectangle2d;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
 
 public class WorkstationScreen extends
@@ -64,17 +63,17 @@ public class WorkstationScreen extends
 //		searchField.setDisabledTextColour(-1);
 //		setFocusedDefault(searchField);
 
-		learnButton = new ExtendedButton(
-			i + 108,
-			j + 7,
-			50,
-			15,
-			new TranslationTextComponent(
-				"gui.sfm.workstation.button.learn.text"),
-			(button) -> {
-			}
-		);
-		addButton(learnButton);
+//		learnButton = new ExtendedButton(
+//			i + 108,
+//			j + 7,
+//			50,
+//			15,
+//			new TranslationTextComponent(
+//				"gui.sfm.workstation.button.learn.text"),
+//			(button) -> {
+//			}
+//		);
+//		addButton(learnButton);
 
 		exclusionAreas = Arrays.asList(
 			new Rectangle2d(i - 104, j, 100, 182)

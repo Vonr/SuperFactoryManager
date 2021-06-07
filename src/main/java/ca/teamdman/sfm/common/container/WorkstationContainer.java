@@ -1,12 +1,14 @@
 package ca.teamdman.sfm.common.container;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.container.slot.CraftingOutputSlot;
 import ca.teamdman.sfm.common.registrar.SFMContainers;
 import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
@@ -33,20 +35,41 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 			data
 		);
 
-//		this.addSlot(new CraftingOutputSlot(tile.INVENTORY, 9, 124, 35));
-//		for (int i = 0; i < 3; i++) {
-//			for (int j = 0; j < 3; j++) {
-//				this.addSlot(
-//					new SlotItemHandler(tile.INVENTORY, j + i * 3, 30 + j * 18, 17 + i * 18));
-//			}
-//		}
-
-		for (int row = 0; row < 3; row++) {
-			for (int slot = 0; slot < 9; slot++) {
+		//todo: copy events and click logic from craftingresultslot, maybe extend?
+		this.addSlot(new CraftingOutputSlot(
+			tile.CRAFTING_INVENTORY,
+			9,
+			118,
+			35
+		));
+		/*
+		 * todo: add button for "auto learning"
+		 * todo: add text underneath contract item when already learnt; "known"
+		 */
+		this.addSlot(new CraftingOutputSlot(
+			tile.CONTRACT_OUTPUT_INVENTORY,
+			0,
+			148,
+			35
+		));
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
 				this.addSlot(new SlotItemHandler(
-					tile.INVENTORY,
-					slot + row * 9,
-					-104 +  8 + slot * 18,
+					tile.CRAFTING_INVENTORY,
+					j + i * 3,
+					30 + j * 18,
+					17 + i * 18
+				));
+			}
+		}
+		int rows = 9;
+		int cols = 5;
+		for (int row = 0; row < rows; row++) {
+			for (int col = 0; col < cols; col++) {
+				this.addSlot(new SlotItemHandler(
+					tile.CONTRACT_INVENTORY,
+					col + row * cols,
+					-96 + col * 18,
 					12 + row * 18
 				));
 			}
@@ -54,7 +77,12 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 
 		for (int i = 0; i < 3; ++i) {
 			for (int j = 0; j < 9; ++j) {
-				this.addSlot(new Slot(playerInv, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
+				this.addSlot(new Slot(
+					playerInv,
+					j + i * 9 + 9,
+					8 + j * 18,
+					84 + i * 18
+				));
 			}
 		}
 		for (int i = 0; i < 9; ++i) {
@@ -62,17 +90,10 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 		}
 	}
 
-
-	public boolean isRecipeSatisfied(
-		Set<ItemStack> availableIngredients,
-		ICraftingRecipe recipe
-	) {
-		if (recipe.getIngredients().size() == 0) return false;
-		boolean rtn = recipe.getIngredients().stream()
-			.allMatch(ingredient ->
-				availableIngredients.stream().anyMatch(ingredient)
-			);
-		return rtn;
+	@Override
+	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
+		System.out.println(index);
+		return ItemStack.EMPTY;
 	}
 
 	public Stream<ICraftingRecipe> getOneStepRecipes() {
@@ -90,5 +111,15 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 
 	}
 
-
+	public boolean isRecipeSatisfied(
+		Set<ItemStack> availableIngredients,
+		ICraftingRecipe recipe
+	) {
+		if (recipe.getIngredients().size() == 0) return false;
+		boolean rtn = recipe.getIngredients().stream()
+			.allMatch(ingredient ->
+				availableIngredients.stream().anyMatch(ingredient)
+			);
+		return rtn;
+	}
 }

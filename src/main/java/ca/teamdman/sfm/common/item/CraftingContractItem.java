@@ -9,9 +9,11 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ICraftingRecipe;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
@@ -29,7 +31,13 @@ public class CraftingContractItem extends Item {
 		);
 	}
 
-	public static ItemStack withRecipe(ICraftingRecipe recipe) {
+//	public static ItemStack withRecipe(ICraftingRecipe recipe) {
+//		ItemStack stack = new ItemStack(SFMItems.CRAFTING_CONTRACT.get());
+//		stack.getOrCreateTag().putString("recipeId", recipe.getId().toString());
+//		return stack;
+//	}
+
+	public static ItemStack withRecipe(IRecipe<CraftingInventory> recipe) {
 		ItemStack stack = new ItemStack(SFMItems.CRAFTING_CONTRACT.get());
 		stack.getOrCreateTag().putString("recipeId", recipe.getId().toString());
 		return stack;
