@@ -837,46 +837,57 @@ public class CommandExecutor {
 
 	private boolean splitFlow(ComponentMenu componentMenu) {
 		ComponentMenuSplit split = (ComponentMenuSplit) componentMenu;
-		if (split.useSplit()) {
-			int amount = componentMenu.getParent().getConnectionSet().getOutputCount();
-			if (!split.useEmpty()) {
-				ConnectionOption[] connections = componentMenu.getParent().getConnectionSet().getConnections();
-				for (int i = 0; i < connections.length; i++) {
-					ConnectionOption connectionOption = connections[i];
-					if (!connectionOption.isInput() && componentMenu.getParent().getConnection(i) == null) {
-						amount--;
-					}
-				}
-			}
-
-			int                usedId      = 0;
+		if (!split.useSplit()) {
+			return false;
+		}
+		int amount = componentMenu.getParent().getConnectionSet().getOutputCount();
+		if (!split.useEmpty()) {
 			ConnectionOption[] connections = componentMenu.getParent().getConnectionSet().getConnections();
 			for (int i = 0; i < connections.length; i++) {
 				ConnectionOption connectionOption = connections[i];
-				Connection       connection       = componentMenu.getParent().getConnection(i);
-				if (!connectionOption.isInput() && connection != null) {
-					List<ItemBufferElement>  itemBufferSplit  = new ArrayList<ItemBufferElement>();
-					List<FluidBufferElement> fluidBufferSplit = new ArrayList<FluidBufferElement>();
-
-					for (ItemBufferElement element : itemBuffer) {
-						itemBufferSplit.add(element.getSplitElement(amount, usedId, split.useFair()));
-					}
-
-					for (FluidBufferElement element : fluidBuffer) {
-						fluidBufferSplit.add(element.getSplitElement(amount, usedId, split.useFair()));
-					}
-
-					List<Integer> usedCommandCopy = new ArrayList<Integer>();
-					usedCommandCopy.addAll(usedCommands);
-
-					CommandExecutor newExecutor = new CommandExecutor(manager, itemBufferSplit, new ArrayList<CraftingBufferElement>(craftingBufferHigh), new ArrayList<CraftingBufferElement>(craftingBufferLow), fluidBufferSplit, usedCommandCopy);
-					newExecutor.executeCommand(manager.getFlowItems().get(connection.getComponentId()), connection.getConnectionId());
-					usedId++;
+				if (!connectionOption.isInput() && componentMenu.getParent().getConnection(i) == null) {
+					amount--;
 				}
 			}
-			return true;
 		}
-		return false;
+
+		int		   usedId      = 0;
+		ConnectionOption[] connections = componentMenu.getParent().getConnectionSet().getConnections();
+		ArrayList<List<ItemBufferElement>> itemBufferSplits = new ArrayList<List<ItemBufferElement>>();
+		ArrayList<List<FluidBufferElement>> fluidBufferSplits = new ArrayList<List<FluidBufferElement>>();
+		ArrayList<Connection> connectionList = new ArrayList<Connection>();
+
+		for (int i = 0; i < connections.length; i++) {
+			ConnectionOption connectionOption = connections[i];
+			Connection	 connection	  = componentMenu.getParent().getConnection(i);
+			if (!connectionOption.isInput() && connection != null) {
+				List<ItemBufferElement>	 itemBufferSplit  = new ArrayList<ItemBufferElement>();
+				List<FluidBufferElement> fluidBufferSplit = new ArrayList<FluidBufferElement>();
+
+				for (ItemBufferElement element : itemBuffer) {
+					itemBufferSplit.add(element.getSplitElement(amount, usedId, split.useFair()));
+				}
+
+				for (FluidBufferElement element : fluidBuffer) {
+					fluidBufferSplit.add(element.getSplitElement(amount, usedId, split.useFair()));
+				}
+
+				connectionList.add(connection);
+				itemBufferSplits.add(itemBufferSplit);
+				fluidBufferSplits.add(fluidBufferSplit);
+				usedId++;
+			}
+		}
+
+		for (int i = 0; i < connectionList.size(); i++) {
+			List<Integer> usedCommandCopy = new ArrayList<Integer>();
+			usedCommandCopy.addAll(usedCommands);
+
+			Connection connection = connectionList.get(i);
+			CommandExecutor newExecutor = new CommandExecutor(manager, itemBufferSplits.get(i), new ArrayList<CraftingBufferElement>(craftingBufferHigh), new ArrayList<CraftingBufferElement>(craftingBufferLow), fluidBufferSplits.get(i), usedCommandCopy);
+			newExecutor.executeCommand(manager.getFlowItems().get(connection.getComponentId()), connection.getConnectionId());
+		}
+		return true;
 	}
 
 	private boolean evaluateRedstoneCondition(List<SlotInventoryHolder> nodes, FlowComponent component) {
