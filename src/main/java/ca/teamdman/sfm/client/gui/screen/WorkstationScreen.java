@@ -2,6 +2,8 @@ package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.WorkstationContainer;
+import ca.teamdman.sfm.common.net.PacketHandler;
+import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationAutoLearnChangedPacket;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Arrays;
@@ -13,6 +15,8 @@ import net.minecraft.client.renderer.Rectangle2d;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
 
 public class WorkstationScreen extends
@@ -63,17 +67,23 @@ public class WorkstationScreen extends
 //		searchField.setDisabledTextColour(-1);
 //		setFocusedDefault(searchField);
 
-//		learnButton = new ExtendedButton(
-//			i + 108,
-//			j + 7,
-//			50,
-//			15,
-//			new TranslationTextComponent(
-//				"gui.sfm.workstation.button.learn.text"),
-//			(button) -> {
-//			}
-//		);
-//		addButton(learnButton);
+		learnButton = new ExtendedButton(
+			i + 108,
+			j + 7,
+			60,
+			15,
+			new TranslationTextComponent("gui.sfm.workstation.button.auto_learn.text")
+			.mergeStyle(CONTAINER.getSource().isAutoLearnEnabled() ? TextFormatting.GREEN : TextFormatting.RED),
+			(button) -> {
+				PacketHandler.INSTANCE.sendToServer(
+					new C2SWorkstationAutoLearnChangedPacket(
+						getContainer().windowId,
+						!CONTAINER.getSource().isAutoLearnEnabled()
+					)
+				);
+			}
+		);
+		addButton(learnButton);
 
 		exclusionAreas = Arrays.asList(
 			new Rectangle2d(i - 104, j, 100, 182)

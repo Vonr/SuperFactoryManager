@@ -10,18 +10,14 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.data.CursorFlowData;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
-import ca.teamdman.sfm.common.net.PacketHandler;
 import ca.teamdman.sfm.common.registrar.SFMTiles;
+import ca.teamdman.sfm.common.tile.ContainerListenerTracker;
 import ca.teamdman.sfm.common.util.SFMUtil;
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -37,19 +33,18 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ManagerTileEntity extends TileEntity implements
 	ITickableTileEntity,
-	INamedContainerProvider {
+	INamedContainerProvider,
+	ContainerListenerTracker {
 
 	private final BasicFlowDataContainer FLOW_DATA_CONTAINER = new BasicFlowDataContainer();
 	private final FlowExecutor EXECUTOR;
 	private final int NBT_SCHEMA_VERSION = 2;
 	private final String NBT_SCHEMA_VERSION_KEY = "__version";
 	private final String NBT_SCHEMA_DATA_KEY = "__data";
-	private final Map<ServerPlayerEntity, Integer> CONTAINER_LISTENERS = new WeakHashMap<>();
-
+	private Map<ServerPlayerEntity, Integer> LISTENERS = new WeakHashMap<>();
 
 	public ManagerTileEntity() {
 		this(SFMTiles.MANAGER.get());
@@ -80,37 +75,20 @@ public class ManagerTileEntity extends TileEntity implements
 		return new TranslationTextComponent("container.sfm.manager");
 	}
 
-	public void addContainerListener(ServerPlayerEntity player, int windowId) {
-		CONTAINER_LISTENERS.put(player, windowId);
-		pruneCursors();
-	}
-
 	/**
 	 * Remove any CursorFlowData instances that don't belong to a listener
 	 */
 	public void pruneCursors() {
-		Set<UUID> listeners = getContainerListeners()
-			.map(Entry::getKey)
-			.map(ServerPlayerEntity::getUniqueID)
+		Set<UUID> listeners = getListeners().keySet().stream()
+			.map(PlayerEntity::getUniqueID)
 			.collect(Collectors.toSet());
 		getFlowDataContainer().removeIf(data ->
 			data instanceof CursorFlowData
 				&& !listeners.contains(data.getId()));
 	}
 
-
-	public Stream<Entry<ServerPlayerEntity, Integer>> getContainerListeners() {
-		// get non-weak reference to all items in the list to avoid CMEs
-		return new ArrayList<>(CONTAINER_LISTENERS.entrySet()).stream();
-	}
-
 	public BasicFlowDataContainer getFlowDataContainer() {
 		return FLOW_DATA_CONTAINER;
-	}
-
-	public void removeContainerListener(ServerPlayerEntity player) {
-		CONTAINER_LISTENERS.remove(player);
-		pruneCursors();
 	}
 
 	public void markAndNotify() {
@@ -126,21 +104,8 @@ public class ManagerTileEntity extends TileEntity implements
 		);
 	}
 
-	public <MSG> void sendPacketToListeners(Function<Integer, MSG> packetFunc) {
-		getContainerListeners()
-			.forEach(entry -> {
-				ServerPlayerEntity player = entry.getKey();
-				MSG packet = packetFunc.apply(entry.getValue());
-				PacketHandler.INSTANCE.send(
-					PacketDistributor.PLAYER.with(() -> player),
-					packet
-				);
-			});
-	}
-
 	public void closeGuiForAllListeners() {
-		getContainerListeners()
-			.map(Entry::getKey)
+		getListeners().keySet()
 			.forEach(ServerPlayerEntity::closeScreen);
 	}
 
@@ -231,5 +196,10 @@ public class ManagerTileEntity extends TileEntity implements
 	@Override
 	public void tick() {
 		EXECUTOR.tick();
+	}
+
+	@Override
+	public Map<ServerPlayerEntity, Integer> getListeners() {
+		return LISTENERS;
 	}
 }

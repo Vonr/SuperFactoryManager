@@ -14,8 +14,10 @@ import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacket
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketS2C;
+import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationAutoLearnChangedPacket;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationLearnClickPacket;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationModeSwitchPacket;
+import ca.teamdman.sfm.common.net.packet.workstation.S2CWorkstationAutoLearnChangedPacket;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -95,6 +97,20 @@ public class PacketHandler {
 			C2SWorkstationLearnClickPacket::encode,
 			C2SWorkstationLearnClickPacket::decode,
 			C2SWorkstationLearnClickPacket::handle
+		);
+
+		INSTANCE.registerMessage(i++,
+			C2SWorkstationAutoLearnChangedPacket.class,
+			C2SWorkstationAutoLearnChangedPacket::encode,
+			C2SWorkstationAutoLearnChangedPacket::decode,
+			C2SWorkstationAutoLearnChangedPacket::handle
+		);
+
+		INSTANCE.registerMessage(i++,
+			S2CWorkstationAutoLearnChangedPacket.class,
+			S2CWorkstationAutoLearnChangedPacket::encode,
+			S2CWorkstationAutoLearnChangedPacket::decode,
+			S2CWorkstationAutoLearnChangedPacket::handle
 		);
 	}
 

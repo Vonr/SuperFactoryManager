@@ -11,9 +11,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IWorldPosCallable;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerContainerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.network.NetworkHooks;
 
 
@@ -21,7 +18,7 @@ public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 
 	public ManagerContainer(int windowId, ManagerTileEntity tile, boolean isRemote) {
 		super(SFMContainers.MANAGER.get(), windowId, tile, isRemote);
-		MinecraftForge.EVENT_BUS.register(this);
+		tile.pruneCursors();
 	}
 
 	public static ManagerContainer create(int windowId, PlayerInventory inv, PacketBuffer data) {
@@ -55,19 +52,5 @@ public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 	private static void writeData(ManagerTileEntity tile, PacketBuffer data) {
 		data.writeBlockPos(tile.getPos());
 		data.writeCompoundTag(tile.serializeNBT());
-	}
-
-	@SubscribeEvent
-	public void onContainerOpen(PlayerContainerEvent.Open e) {
-		if (!IS_REMOTE) {
-			getSource().addContainerListener((ServerPlayerEntity) e.getPlayer(), e.getContainer().windowId);
-		}
-	}
-
-	@SubscribeEvent
-	public void onContainerClose(PlayerContainerEvent.Close e) {
-		if (!IS_REMOTE) {
-			getSource().removeContainerListener(((ServerPlayerEntity) e.getPlayer()));
-		}
 	}
 }
