@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.container;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.container.slot.CraftingOutputSlot;
+import ca.teamdman.sfm.common.item.CraftingContractItem;
 import ca.teamdman.sfm.common.registrar.SFMContainers;
 import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import java.util.Set;
@@ -92,8 +93,43 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 
 	@Override
 	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
-		System.out.println(index);
-		return ItemStack.EMPTY;
+		Slot slot = inventorySlots.get(index);
+		if (slot == null || !slot.getHasStack()) return ItemStack.EMPTY;
+		ItemStack slotStack = slot.getStack();
+		ItemStack rtn = slotStack.copy();
+		if (index == 0) { // crafting output
+			if (!mergeItemStack(slotStack, 56, 91+1, false)) {
+				return ItemStack.EMPTY;
+			}
+		} else if (index == 1) { // contract output
+			if (!mergeItemStack(slotStack, 56, 91+1, false)) {
+				return ItemStack.EMPTY;
+			}
+		} else if (index >= 2 && index <= 10) { // crafting grid
+			if (!mergeItemStack(slotStack, 56, 91+1, false)) {
+				return ItemStack.EMPTY;
+			}
+		} else if (index >= 11 && index <= 55) { // contract inv
+			if (!mergeItemStack(slotStack, 56, 91+1, false)) {
+				return ItemStack.EMPTY;
+			}
+		} else if (index >= 56 && index <= 91) { // player inventory
+			if (slotStack.getItem() instanceof CraftingContractItem) {
+				if (!mergeItemStack(slotStack, 11, 55+1, false)) {
+					return ItemStack.EMPTY;
+				}
+			} else {
+				if (!mergeItemStack(slotStack, 2, 10+1, false)) {
+					return ItemStack.EMPTY;
+				}
+			}
+		}
+		if (slotStack.isEmpty()) {
+			slot.putStack(ItemStack.EMPTY);
+		} else {
+			slot.onSlotChanged();
+		}
+		return rtn;
 	}
 
 	public Stream<ICraftingRecipe> getOneStepRecipes() {
