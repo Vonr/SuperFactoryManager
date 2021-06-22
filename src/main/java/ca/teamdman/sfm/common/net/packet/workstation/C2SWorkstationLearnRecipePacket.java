@@ -1,9 +1,11 @@
 package ca.teamdman.sfm.common.net.packet.workstation;
 
 import ca.teamdman.sfm.common.container.WorkstationContainer;
+import ca.teamdman.sfm.common.item.CraftingContractItem;
 import ca.teamdman.sfm.common.net.packet.C2SContainerPacket;
 import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import java.util.function.Supplier;
+import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -46,9 +48,16 @@ public final class C2SWorkstationLearnRecipePacket extends C2SContainerPacket<Wo
 		public void handleDetailed(
 			Supplier<Context> ctx,
 			C2SWorkstationLearnRecipePacket msg,
-			WorkstationTileEntity workstationTileEntity
+			WorkstationTileEntity tile
 		) {
 			System.out.println("Learning " + msg.RECIPE_ID);
+			tile.getWorld()
+				.getRecipeManager()
+				.getRecipe(msg.RECIPE_ID)
+				.filter(ICraftingRecipe.class::isInstance)
+				.map(ICraftingRecipe.class::cast)
+				.map(CraftingContractItem::withRecipe)
+				.ifPresent(tile::learnContract);
 		}
 	}
 }

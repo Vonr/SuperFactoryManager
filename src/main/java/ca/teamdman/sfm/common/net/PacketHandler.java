@@ -16,6 +16,7 @@ import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketS2C;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationAutoLearnChangedPacket;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationLearnClickPacket;
+import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationLearnRecipePacket;
 import ca.teamdman.sfm.common.net.packet.workstation.S2CWorkstationAutoLearnChangedPacket;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.inventory.container.Container;
@@ -91,6 +92,12 @@ public class PacketHandler {
 			i++,
 			S2CWorkstationAutoLearnChangedPacket.class,
 			new S2CWorkstationAutoLearnChangedPacket.Handler()
+		);
+
+		register(
+			i++,
+			C2SWorkstationLearnRecipePacket.class,
+			new C2SWorkstationLearnRecipePacket.Handler()
 		);
 	}
 

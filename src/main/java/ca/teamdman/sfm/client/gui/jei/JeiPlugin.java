@@ -2,9 +2,11 @@ package ca.teamdman.sfm.client.gui.jei;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.jei.guihandler.WorkstationGuiContainerHandler;
+import ca.teamdman.sfm.client.gui.jei.recipetransferhandler.WorkstationRecipeTransferHandler;
 import ca.teamdman.sfm.client.gui.jei.recipetransferhandler.WorkstationRecipeTransferInfo;
 import ca.teamdman.sfm.client.gui.screen.WorkstationScreen;
 import mezz.jei.api.IModPlugin;
+import mezz.jei.api.constants.VanillaRecipeCategoryUid;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeTransferRegistration;
 import net.minecraft.util.ResourceLocation;
@@ -32,10 +34,14 @@ public class JeiPlugin implements IModPlugin {
 
 	@Override
 	public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
-//		registration.addRecipeTransferHandler(
-//			new WorkstationRecipeTransferHandler(),
-//			VanillaRecipeCategoryUid.CRAFTING
-//		);
-		registration.addRecipeTransferHandler(new WorkstationRecipeTransferInfo());
+		registration.addRecipeTransferHandler(
+			new WorkstationRecipeTransferHandler(
+				registration.getJeiHelpers().getStackHelper(),
+				registration.getTransferHelper(),
+				new WorkstationRecipeTransferInfo()
+			),
+			VanillaRecipeCategoryUid.CRAFTING
+		);
+//		registration.addRecipeTransferHandler(new WorkstationRecipeTransferInfo());
 	}
 }

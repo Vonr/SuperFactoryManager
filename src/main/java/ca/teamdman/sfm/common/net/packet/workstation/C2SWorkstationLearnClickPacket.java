@@ -13,7 +13,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class C2SWorkstationLearnClickPacket extends
+public final class C2SWorkstationLearnClickPacket extends
 	C2SContainerPacket<WorkstationTileEntity, WorkstationContainer> {
 
 	public C2SWorkstationLearnClickPacket(int windowId, BlockPos tilePos) {

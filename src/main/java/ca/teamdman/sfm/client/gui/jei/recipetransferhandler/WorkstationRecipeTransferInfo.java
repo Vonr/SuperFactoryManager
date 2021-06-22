@@ -4,7 +4,6 @@ import ca.teamdman.sfm.common.container.WorkstationContainer;
 import java.util.List;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
 import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.util.ResourceLocation;
 
@@ -22,11 +21,7 @@ public class WorkstationRecipeTransferInfo implements
 	}
 
 	@Override
-	public boolean canHandle(WorkstationContainer workstationContainer) {
-		if (Screen.hasControlDown()) {
-			System.out.println("Learning!");
-			return false;
-		}
+	public boolean canHandle(WorkstationContainer container) {
 		return true;
 	}
 

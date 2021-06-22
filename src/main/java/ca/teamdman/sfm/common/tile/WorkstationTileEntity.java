@@ -66,7 +66,7 @@ public class WorkstationTileEntity extends TileEntity implements
 		this.autoLearnEnabled = autoLearn;
 	}
 
-	private boolean isContractPresent(ItemStack contract) {
+	public boolean isContractPresent(ItemStack contract) {
 		for (int i = 0; i < CONTRACT_INVENTORY.getSlots(); i++) {
 			if (ItemHandlerHelper.canItemStacksStack(
 				contract,
@@ -78,7 +78,7 @@ public class WorkstationTileEntity extends TileEntity implements
 		return false;
 	}
 
-	private void learnContract(ItemStack contract) {
+	public void learnContract(ItemStack contract) {
 		ItemHandlerHelper.insertItem(
 			CONTRACT_INVENTORY,
 			contract,
