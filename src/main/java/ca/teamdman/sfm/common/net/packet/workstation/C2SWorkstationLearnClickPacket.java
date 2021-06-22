@@ -2,50 +2,60 @@ package ca.teamdman.sfm.common.net.packet.workstation;
 
 import ca.teamdman.sfm.common.container.WorkstationContainer;
 import ca.teamdman.sfm.common.item.CraftingContractItem;
+import ca.teamdman.sfm.common.net.packet.C2SContainerPacket;
 import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class C2SWorkstationLearnClickPacket {
+public class C2SWorkstationLearnClickPacket extends
+	C2SContainerPacket<WorkstationTileEntity, WorkstationContainer> {
 
-	public final int WINDOW_ID;
-
-	public C2SWorkstationLearnClickPacket(int windowId) {
-		this.WINDOW_ID = windowId;
+	public C2SWorkstationLearnClickPacket(int windowId, BlockPos tilePos) {
+		super(
+			WorkstationTileEntity.class,
+			WorkstationContainer.class,
+			windowId,
+			tilePos
+		);
 	}
 
-	public static void encode(
-		C2SWorkstationLearnClickPacket msg,
-		PacketBuffer packetBuffer
-	) {
-		packetBuffer.writeInt(msg.WINDOW_ID);
-	}
+	public static final class Handler extends
+		C2SContainerPacketHandler<WorkstationTileEntity, WorkstationContainer, C2SWorkstationLearnClickPacket> {
 
-	public static C2SWorkstationLearnClickPacket decode(PacketBuffer packetBuffer) {
-		return new C2SWorkstationLearnClickPacket(packetBuffer.readInt());
-	}
+		@Override
+		public void finishEncode(
+			C2SWorkstationLearnClickPacket c2SWorkstationLearnClickPacket,
+			PacketBuffer buf
+		) {
 
-	public static void handle(
-		C2SWorkstationLearnClickPacket msg,
-		Supplier<Context> contextSupplier
-	) {
-		contextSupplier.get().enqueueWork(() -> {
-			ServerPlayerEntity sender = contextSupplier.get().getSender();
-			if (sender == null) return;
-			if (sender.openContainer == null) return;
-			if (sender.openContainer.windowId != msg.WINDOW_ID) return;
-			if (!(sender.openContainer instanceof WorkstationContainer)) {
-				return;
-			}
-			WorkstationContainer container = (WorkstationContainer) sender.openContainer;
+		}
+
+		@Override
+		public C2SWorkstationLearnClickPacket finishDecode(
+			int windowId, BlockPos tilePos, PacketBuffer buf
+		) {
+			return new C2SWorkstationLearnClickPacket(windowId, tilePos);
+		}
+
+		@Override
+		public void handleDetailed(
+			Supplier<Context> ctx,
+			C2SWorkstationLearnClickPacket c2SWorkstationLearnClickPacket,
+			WorkstationTileEntity workstationTileEntity
+		) {
+			WorkstationContainer container = (WorkstationContainer) ctx.get().getSender().openContainer;
 			WorkstationTileEntity tile = container.getSource();
-			for (int slot = 0; slot < tile.CONTRACT_INVENTORY.getSlots(); slot++) {
+			for (
+				int slot = 0;
+				slot < tile.CONTRACT_INVENTORY.getSlots();
+				slot++
+			) {
 				tile.CONTRACT_INVENTORY.setStackInSlot(slot, ItemStack.EMPTY);
 			}
 			AtomicInteger slot = new AtomicInteger(0);
@@ -56,6 +66,7 @@ public class C2SWorkstationLearnClickPacket {
 					slot.getAndIncrement(),
 					stack
 				));
-		});
+		}
 	}
 }
+

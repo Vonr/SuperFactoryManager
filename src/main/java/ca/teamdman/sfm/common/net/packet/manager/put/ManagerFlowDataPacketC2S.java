@@ -1,23 +1,28 @@
 package ca.teamdman.sfm.common.net.packet.manager.put;
 
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import ca.teamdman.sfm.common.flow.data.FlowDataSerializer;
-import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
+import ca.teamdman.sfm.common.net.packet.C2SContainerPacket;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
+public final class ManagerFlowDataPacketC2S extends
+	C2SContainerPacket<ManagerTileEntity, ManagerContainer> {
 	private final FlowData[] DATA;
 	public ManagerFlowDataPacketC2S(
 		int windowId, BlockPos pos, FlowData... data
 	) {
-		super(windowId, pos);
+		super(ManagerTileEntity.class, ManagerContainer.class, windowId, pos);
 		this.DATA = data;
 	}
 
-	public static class Handler extends C2SHandler<ManagerFlowDataPacketC2S> {
+	public static final class Handler extends
+		C2SContainerPacketHandler<ManagerTileEntity, ManagerContainer, ManagerFlowDataPacketC2S> {
 
 		@Override
 		public void finishEncode(
@@ -52,7 +57,9 @@ public class ManagerFlowDataPacketC2S extends C2SManagerPacket {
 
 		@Override
 		public void handleDetailed(
-			ManagerFlowDataPacketC2S msg, ManagerTileEntity manager
+			Supplier<Context> ctx,
+			ManagerFlowDataPacketC2S msg,
+			ManagerTileEntity manager
 		) {
 			//todo: sort by dependencies?
 			for (FlowData datum : msg.DATA) {

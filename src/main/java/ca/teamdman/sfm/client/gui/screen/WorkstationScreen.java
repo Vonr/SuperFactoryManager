@@ -78,6 +78,7 @@ public class WorkstationScreen extends
 				PacketHandler.INSTANCE.sendToServer(
 					new C2SWorkstationAutoLearnChangedPacket(
 						getContainer().windowId,
+						CONTAINER.getSource().getPos(),
 						!CONTAINER.getSource().isAutoLearnEnabled()
 					)
 				);

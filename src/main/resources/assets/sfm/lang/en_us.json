@@ -9,6 +9,7 @@
   "container.sfm.workstation": "Workstation",
   "gui.sfm.tooltip.crafting_contract.crafts": "Crafts %d x %s",
   "gui.sfm.tooltip.crafting_contract.consumes": "consumes %d x %s",
+  "gui.sfm.tooltip.workstation.learned": "Learned!",
   "gui.sfm.tooltip.water_intake.1": "Infinite water source",
   "gui.sfm.tooltip.water_intake.2": "Supplies an infinite 1 bucket buffer",
   "gui.sfm.tooltip.water_intake.3": "Requires two adjacent water sources",

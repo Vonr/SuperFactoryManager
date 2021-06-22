@@ -1,20 +1,20 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-package ca.teamdman.sfm.common.net.packet.manager;
+package ca.teamdman.sfm.common.net.packet;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
-import ca.teamdman.sfm.common.net.packet.IWindowIdProvider;
 import java.util.function.Supplier;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public abstract class S2CManagerPacket implements IWindowIdProvider {
-
+public class S2CContainerPacket<SCREEN extends Screen> implements IWindowIdProvider {
+	public final Class<SCREEN> SCREEN_CLASS;
 	final int WINDOW_ID;
 
-	public S2CManagerPacket(int WINDOW_ID) {
+	public S2CContainerPacket(
+		Class<SCREEN> screen_class,
+		int WINDOW_ID
+	) {
+		SCREEN_CLASS = screen_class;
 		this.WINDOW_ID = WINDOW_ID;
 	}
 
@@ -23,7 +23,7 @@ public abstract class S2CManagerPacket implements IWindowIdProvider {
 		return WINDOW_ID;
 	}
 
-	public abstract static class S2CHandler<MSG extends S2CManagerPacket> {
+	public abstract static class S2CContainerPacketHandler<SCREEN extends Screen, MSG extends S2CContainerPacket<SCREEN>> {
 		public void encode(MSG msg, PacketBuffer buf) {
 			buf.writeInt(msg.WINDOW_ID);
 			finishEncode(msg, buf);
@@ -41,11 +41,11 @@ public abstract class S2CManagerPacket implements IWindowIdProvider {
 		public abstract MSG finishDecode(int windowId, PacketBuffer buf);
 
 		public void handle(MSG msg, Supplier<Context> ctx) {
-			SFM.PROXY.getScreenFromPacket(msg, ctx, ManagerScreen.class)
+			SFM.PROXY.getScreenFromPacket(msg, ctx, msg.SCREEN_CLASS)
 				.ifPresent(screen -> handleDetailed(screen, msg));
 			ctx.get().setPacketHandled(true);
 		}
 
-		public abstract void handleDetailed(ManagerScreen screen, MSG msg);
+		public abstract void handleDetailed(SCREEN screen, MSG msg);
 	}
 }

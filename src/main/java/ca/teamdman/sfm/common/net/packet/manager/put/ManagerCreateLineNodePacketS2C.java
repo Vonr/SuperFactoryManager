@@ -6,12 +6,12 @@ package ca.teamdman.sfm.common.net.packet.manager.put;
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.FlowUtils;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
+import ca.teamdman.sfm.common.net.packet.S2CContainerPacket;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 
-public class ManagerCreateLineNodePacketS2C extends S2CManagerPacket {
+public final class ManagerCreateLineNodePacketS2C extends S2CContainerPacket<ManagerScreen> {
 
 	private final UUID FROM_ID, TO_ID, NODE_ID, FROM_TO_NODE_ID, TO_TO_NODE_ID;
 	private final Position ELEMENT_POSITION;
@@ -25,7 +25,7 @@ public class ManagerCreateLineNodePacketS2C extends S2CManagerPacket {
 		UUID toToNodeID,
 		Position elementPos
 	) {
-		super(windowId);
+		super(ManagerScreen.class, windowId);
 		this.FROM_ID = fromId;
 		this.TO_ID = toId;
 		this.NODE_ID = nodeId;
@@ -34,7 +34,8 @@ public class ManagerCreateLineNodePacketS2C extends S2CManagerPacket {
 		this.ELEMENT_POSITION = elementPos;
 	}
 
-	public static class Handler extends S2CHandler<ManagerCreateLineNodePacketS2C> {
+	public static final class Handler extends
+		S2CContainerPacketHandler<ManagerScreen, ManagerCreateLineNodePacketS2C> {
 
 		@Override
 		public void finishEncode(ManagerCreateLineNodePacketS2C msg, PacketBuffer buf) {

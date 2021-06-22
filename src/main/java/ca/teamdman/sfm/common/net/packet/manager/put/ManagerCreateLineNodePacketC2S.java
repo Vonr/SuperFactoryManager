@@ -3,16 +3,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.net.packet.manager.put;
 
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.FlowUtils;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
+import ca.teamdman.sfm.common.net.packet.C2SContainerPacket;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
+import java.util.function.Supplier;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
+public final class ManagerCreateLineNodePacketC2S extends
+	C2SContainerPacket<ManagerTileEntity, ManagerContainer> {
 
 	private final Position ELEMENT_POSITION;
 	private final UUID FROM_ID, TO_ID;
@@ -21,13 +25,19 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 		int WINDOW_ID, BlockPos TILE_POSITION, UUID from, UUID to,
 		Position POSITION
 	) {
-		super(WINDOW_ID, TILE_POSITION);
+		super(
+			ManagerTileEntity.class,
+			ManagerContainer.class,
+			WINDOW_ID,
+			TILE_POSITION
+		);
 		this.ELEMENT_POSITION = POSITION;
 		this.FROM_ID = from;
 		this.TO_ID = to;
 	}
 
-	public static class Handler extends C2SHandler<ManagerCreateLineNodePacketC2S> {
+	public static final class Handler extends
+		C2SContainerPacketHandler<ManagerTileEntity, ManagerContainer, ManagerCreateLineNodePacketC2S> {
 
 		@Override
 		public void finishEncode(
@@ -55,6 +65,7 @@ public class ManagerCreateLineNodePacketC2S extends C2SManagerPacket {
 
 		@Override
 		public void handleDetailed(
+			Supplier<Context> ctx,
 			ManagerCreateLineNodePacketC2S msg,
 			ManagerTileEntity manager
 		) {

@@ -1,64 +1,59 @@
 package ca.teamdman.sfm.common.net.packet.workstation;
 
 import ca.teamdman.sfm.common.container.WorkstationContainer;
+import ca.teamdman.sfm.common.net.packet.C2SContainerPacket;
+import ca.teamdman.sfm.common.tile.WorkstationTileEntity;
 import java.util.function.Supplier;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class C2SWorkstationAutoLearnChangedPacket {
-
-	public final int WINDOW_ID;
+public final class C2SWorkstationAutoLearnChangedPacket extends
+	C2SContainerPacket<WorkstationTileEntity, WorkstationContainer> {
 	public final boolean AUTO_LEARN_ENABLED;
 
 	public C2SWorkstationAutoLearnChangedPacket(
 		int windowId,
-		boolean autoLearnEnabled
+		BlockPos tilePosition, boolean autoLearnEnabled
 	) {
-		this.WINDOW_ID = windowId;
+		super(WorkstationTileEntity.class, WorkstationContainer.class, windowId, tilePosition);
 		this.AUTO_LEARN_ENABLED = autoLearnEnabled;
 	}
 
-	public static void encode(
-		C2SWorkstationAutoLearnChangedPacket msg,
-		PacketBuffer packetBuffer
-	) {
-		packetBuffer.writeInt(msg.WINDOW_ID);
-		packetBuffer.writeBoolean(msg.AUTO_LEARN_ENABLED);
-	}
+	public static final class Handler extends C2SContainerPacketHandler<WorkstationTileEntity, WorkstationContainer, C2SWorkstationAutoLearnChangedPacket> {
 
-	public static C2SWorkstationAutoLearnChangedPacket decode(PacketBuffer packetBuffer) {
-		return new C2SWorkstationAutoLearnChangedPacket(
-			packetBuffer.readInt(),
-			packetBuffer.readBoolean()
-		);
-	}
+		@Override
+		public void finishEncode(
+			C2SWorkstationAutoLearnChangedPacket msg,
+			PacketBuffer buf
+		) {
+			buf.writeBoolean(msg.AUTO_LEARN_ENABLED);
+		}
 
-	public static void handle(
-		C2SWorkstationAutoLearnChangedPacket msg,
-		Supplier<Context> contextSupplier
-	) {
-		contextSupplier.get().enqueueWork(() -> {
-			ServerPlayerEntity sender = contextSupplier.get().getSender();
-			if (sender == null) return;
-			if (sender.openContainer == null) return;
-			if (sender.openContainer.windowId != msg.WINDOW_ID) return;
-			if (!(sender.openContainer instanceof WorkstationContainer)) {
-				return;
-			}
-			((WorkstationContainer) sender.openContainer)
-				.getSource()
-				.setAutoLearnEnabled(msg.AUTO_LEARN_ENABLED);
+		@Override
+		public C2SWorkstationAutoLearnChangedPacket finishDecode(
+			int windowId, BlockPos tilePos, PacketBuffer buf
+		) {
+			return new C2SWorkstationAutoLearnChangedPacket(
+				windowId,
+				tilePos,
+				buf.readBoolean()
+			);
+		}
 
-			((WorkstationContainer) sender.openContainer)
-				.getSource()
+		@Override
+		public void handleDetailed(
+			Supplier<Context> ctx,
+			C2SWorkstationAutoLearnChangedPacket msg,
+			WorkstationTileEntity workstationTileEntity
+		) {
+			workstationTileEntity.setAutoLearnEnabled(msg.AUTO_LEARN_ENABLED);
+			workstationTileEntity
 				.sendPacketToListeners(windowId ->
 					new S2CWorkstationAutoLearnChangedPacket(
 						windowId,
 						msg.AUTO_LEARN_ENABLED
 					));
-		});
-		contextSupplier.get().setPacketHandled(true);
+		}
 	}
-
 }

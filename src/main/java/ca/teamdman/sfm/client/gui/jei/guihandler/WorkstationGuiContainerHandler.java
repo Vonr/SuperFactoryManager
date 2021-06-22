@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.client.gui.jei.guihandlers;
+package ca.teamdman.sfm.client.gui.jei.guihandler;
 
 import ca.teamdman.sfm.client.gui.screen.WorkstationScreen;
 import java.util.List;

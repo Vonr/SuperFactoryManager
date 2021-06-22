@@ -4,10 +4,10 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
-import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket.C2SHandler;
-import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
-import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket.S2CHandler;
+import ca.teamdman.sfm.common.net.packet.C2SContainerPacket;
+import ca.teamdman.sfm.common.net.packet.C2SContainerPacket.C2SContainerPacketHandler;
+import ca.teamdman.sfm.common.net.packet.S2CContainerPacket;
+import ca.teamdman.sfm.common.net.packet.S2CContainerPacket.S2CContainerPacketHandler;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.delete.ManagerDeletePacketS2C;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerCreateLineNodePacketC2S;
@@ -16,8 +16,10 @@ import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketC2S;
 import ca.teamdman.sfm.common.net.packet.manager.put.ManagerFlowDataPacketS2C;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationAutoLearnChangedPacket;
 import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationLearnClickPacket;
-import ca.teamdman.sfm.common.net.packet.workstation.C2SWorkstationModeSwitchPacket;
 import ca.teamdman.sfm.common.net.packet.workstation.S2CWorkstationAutoLearnChangedPacket;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -33,84 +35,88 @@ public class PacketHandler {
 		PROTOCOL_VERSION::equals
 	);
 
-	public static <MSG extends C2SManagerPacket> void register(int id, Class<MSG> clazz,
-		C2SHandler<MSG> handler) {
-		INSTANCE.registerMessage(id,
-			clazz,
-			handler::encode,
-			handler::decode,
-			handler::handle);
-	}
-
-	public static <MSG extends S2CManagerPacket> void register(int id, Class<MSG> clazz,
-		S2CHandler<MSG> handler) {
-		INSTANCE.registerMessage(id,
-			clazz,
-			handler::encode,
-			handler::decode,
-			handler::handle);
-	}
-
-
 	@SuppressWarnings("UnusedAssignment")
 	public static void setup() {
 		int i = 0;
 
-		register(i++,
+		register(
+			i++,
 			ManagerCreateLineNodePacketC2S.class,
-			new ManagerCreateLineNodePacketC2S.Handler());
+			new ManagerCreateLineNodePacketC2S.Handler()
+		);
 
-		register(i++,
+		register(
+			i++,
 			ManagerCreateLineNodePacketS2C.class,
-			new ManagerCreateLineNodePacketS2C.Handler());
+			new ManagerCreateLineNodePacketS2C.Handler()
+		);
 
-		register(i++,
+		register(
+			i++,
 			ManagerDeletePacketC2S.class,
 			new ManagerDeletePacketC2S.Handler()
 		);
 
-		register(i++,
+		register(
+			i++,
 			ManagerDeletePacketS2C.class,
 			new ManagerDeletePacketS2C.Handler()
 		);
 
-		register(i++,
+		register(
+			i++,
 			ManagerFlowDataPacketC2S.class,
 			new ManagerFlowDataPacketC2S.Handler()
 		);
 
-		register(i++,
+		register(
+			i++,
 			ManagerFlowDataPacketS2C.class,
 			new ManagerFlowDataPacketS2C.Handler()
 		);
 
-		INSTANCE.registerMessage(i++,
-			C2SWorkstationModeSwitchPacket.class,
-			C2SWorkstationModeSwitchPacket::encode,
-			C2SWorkstationModeSwitchPacket::decode,
-			C2SWorkstationModeSwitchPacket::handle
-		);
-
-
-		INSTANCE.registerMessage(i++,
+		register(
+			i++,
 			C2SWorkstationLearnClickPacket.class,
-			C2SWorkstationLearnClickPacket::encode,
-			C2SWorkstationLearnClickPacket::decode,
-			C2SWorkstationLearnClickPacket::handle
+			new C2SWorkstationLearnClickPacket.Handler()
 		);
 
-		INSTANCE.registerMessage(i++,
+		register(
+			i++,
 			C2SWorkstationAutoLearnChangedPacket.class,
-			C2SWorkstationAutoLearnChangedPacket::encode,
-			C2SWorkstationAutoLearnChangedPacket::decode,
-			C2SWorkstationAutoLearnChangedPacket::handle
+			new C2SWorkstationAutoLearnChangedPacket.Handler()
 		);
 
-		INSTANCE.registerMessage(i++,
+		register(
+			i++,
 			S2CWorkstationAutoLearnChangedPacket.class,
-			S2CWorkstationAutoLearnChangedPacket::encode,
-			S2CWorkstationAutoLearnChangedPacket::decode,
-			S2CWorkstationAutoLearnChangedPacket::handle
+			new S2CWorkstationAutoLearnChangedPacket.Handler()
+		);
+	}
+
+	public static <TILE extends TileEntity, CONTAINER extends Container, MSG extends C2SContainerPacket<TILE, CONTAINER>> void register(
+		int id, Class<MSG> clazz,
+		C2SContainerPacketHandler<TILE, CONTAINER, MSG> handler
+	) {
+		INSTANCE.registerMessage(
+			id,
+			clazz,
+			handler::encode,
+			handler::decode,
+			handler::handle
+		);
+	}
+
+	public static <SCREEN extends Screen, MSG extends S2CContainerPacket<SCREEN>> void register(
+		int id, Class<MSG> clazz,
+		S2CContainerPacketHandler<SCREEN, MSG> handler
+	) {
+		INSTANCE.registerMessage(
+			id,
+			clazz,
+			handler::encode,
+			handler::decode,
+			handler::handle
 		);
 	}
 

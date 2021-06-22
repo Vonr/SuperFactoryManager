@@ -5,20 +5,22 @@ package ca.teamdman.sfm.common.net.packet.manager.delete;
 
 import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
-import ca.teamdman.sfm.common.net.packet.manager.S2CManagerPacket;
+import ca.teamdman.sfm.common.net.packet.S2CContainerPacket;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
 import net.minecraft.network.PacketBuffer;
 
-public class ManagerDeletePacketS2C extends S2CManagerPacket {
+public final class ManagerDeletePacketS2C extends S2CContainerPacket<ManagerScreen> {
+
 	private final UUID ELEMENT_ID;
 
 	public ManagerDeletePacketS2C(int windowId, UUID elementId) {
-		super(windowId);
+		super(ManagerScreen.class, windowId);
 		this.ELEMENT_ID = elementId;
 	}
 
-	public static class Handler extends S2CHandler<ManagerDeletePacketS2C> {
+	public static final class Handler extends
+		S2CContainerPacketHandler<ManagerScreen, ManagerDeletePacketS2C> {
 
 		@Override
 		public void finishEncode(
@@ -29,7 +31,10 @@ public class ManagerDeletePacketS2C extends S2CManagerPacket {
 		}
 
 		@Override
-		public ManagerDeletePacketS2C finishDecode(int windowId, PacketBuffer buf) {
+		public ManagerDeletePacketS2C finishDecode(
+			int windowId,
+			PacketBuffer buf
+		) {
 			return new ManagerDeletePacketS2C(
 				windowId,
 				SFMUtil.readUUID(buf)

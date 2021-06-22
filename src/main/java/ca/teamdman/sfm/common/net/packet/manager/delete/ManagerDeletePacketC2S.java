@@ -3,24 +3,29 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package ca.teamdman.sfm.common.net.packet.manager.delete;
 
+import ca.teamdman.sfm.common.container.ManagerContainer;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
-import ca.teamdman.sfm.common.net.packet.manager.C2SManagerPacket;
+import ca.teamdman.sfm.common.net.packet.C2SContainerPacket;
 import ca.teamdman.sfm.common.tile.manager.ManagerTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import java.util.UUID;
+import java.util.function.Supplier;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class ManagerDeletePacketC2S extends C2SManagerPacket {
+public final class ManagerDeletePacketC2S extends
+	C2SContainerPacket<ManagerTileEntity, ManagerContainer> {
 
 	private final UUID ELEMENT_ID;
 
 	public ManagerDeletePacketC2S(int windowId, BlockPos pos, UUID elementId) {
-		super(windowId, pos);
+		super(ManagerTileEntity.class, ManagerContainer.class, windowId, pos);
 		this.ELEMENT_ID = elementId;
 	}
 
-	public static class Handler extends C2SHandler<ManagerDeletePacketC2S> {
+	public static final class Handler extends
+		C2SContainerPacketHandler<ManagerTileEntity, ManagerContainer, ManagerDeletePacketC2S> {
 
 		@Override
 		public void finishEncode(
@@ -43,7 +48,11 @@ public class ManagerDeletePacketC2S extends C2SManagerPacket {
 		}
 
 		@Override
-		public void handleDetailed(ManagerDeletePacketC2S msg, ManagerTileEntity manager) {
+		public void handleDetailed(
+			Supplier<Context> ctx,
+			ManagerDeletePacketC2S msg,
+			ManagerTileEntity manager
+		) {
 			BasicFlowDataContainer container = manager.getFlowDataContainer();
 			container.get(msg.ELEMENT_ID)
 				.ifPresent(data -> data.removeFromDataContainer(container));
