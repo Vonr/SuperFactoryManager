@@ -43,7 +43,7 @@ class TilesSection extends FlowContainer {
 		addChild(new SectionHeader(
 			new Position(0, 0),
 			new Size(35, 12),
-			I18n.format("gui.sfm.manager.tile_entity_rule.tiles.title")
+			I18n.get("gui.sfm.manager.tile_entity_rule.tiles.title")
 		));
 
 		DRAWER = new FlowDrawer(new Position(0, 16), 4, 3);

@@ -60,7 +60,7 @@
   "gui.sfm.manager.tile_entity_rule.faces.title": "Faces",
   "gui.sfm.manager.tile_entity_rule.filter.title": "Filter",
   "gui.sfm.manager.tile_entity_rule.icon.title": "Icon",
-  "gui.sfm.manager.tile_entity_rule.items.title": "Items",
+  "gui.sfm.manager.tile_entity_rule.matchers.title": "Matchers",
   "gui.sfm.manager.tile_entity_rule.slots.title": "Slots",
   "gui.sfm.manager.tile_entity_rule.tiles.title": "Tiles",
   "gui.sfm.manager.tile_entity_rule.minimize_button.hint1": "Close dialog",
@@ -84,5 +84,7 @@
   "gui.sfm.flow.tileentityrule.button.match_none": "¬",
   "gui.sfm.flow.tileentityrule.tooltip.match_all": "Match all",
   "gui.sfm.flow.tileentityrule.tooltip.match_any": "Match any",
-  "gui.sfm.flow.tileentityrule.tooltip.match_none": "Match none"
+  "gui.sfm.flow.tileentityrule.tooltip.match_none": "Match none",
+  "gui.sfm.flow.tile_type_matcher.tooltip.data": "Type=%s",
+  "gui.sfm.flow.tile_type_matcher.tooltip.name": "Tile type matcher"
 }

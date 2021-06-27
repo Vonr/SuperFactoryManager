@@ -27,7 +27,7 @@ public abstract class ItemStackTileEntityRuleDrawer extends FlowContainer implem
 	protected final ManagerFlowController CONTROLLER;
 	protected final FlowDrawer DRAWER;
 	protected boolean isGlobalOpen = false;
-	protected String drawerLabel = I18n.format("gui.sfm.associatedrulesdrawer.children.label");
+	protected String drawerLabel = I18n.get("gui.sfm.associatedrulesdrawer.children.label");
 
 	public ItemStackTileEntityRuleDrawer(ManagerFlowController controller, Position pos) {
 		super(pos);
@@ -49,10 +49,10 @@ public abstract class ItemStackTileEntityRuleDrawer extends FlowContainer implem
 	public void rebuildDrawer() {
 		if (isGlobalOpen) {
 			rebuildGlobalDrawer();
-			drawerLabel = I18n.format("gui.sfm.associatedrulesdrawer.selection.label");
+			drawerLabel = I18n.get("gui.sfm.associatedrulesdrawer.selection.label");
 		} else {
 			rebuildChildrenDrawer();
-			drawerLabel = I18n.format("gui.sfm.associatedrulesdrawer.children.label");
+			drawerLabel = I18n.get("gui.sfm.associatedrulesdrawer.children.label");
 		}
 	}
 

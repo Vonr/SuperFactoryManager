@@ -7,7 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.text.ITextProperties;
 
-public interface TileMatcher extends VisibilityHolder{
+public interface TileMatcher extends VisibilityHolder {
 
 	boolean matches(@Nonnull TileEntity tile);
 

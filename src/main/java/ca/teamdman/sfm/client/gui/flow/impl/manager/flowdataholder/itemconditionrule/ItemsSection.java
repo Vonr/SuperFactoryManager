@@ -8,7 +8,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowPlusButton;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData;
 import java.util.Arrays;
@@ -32,7 +32,7 @@ class ItemsSection extends FlowContainer {
 		addChild(new SectionHeader(
 			new Position(0, 0),
 			new Size(35, 12),
-			I18n.format("gui.sfm.manager.tile_entity_rule.items.title")
+			I18n.get("gui.sfm.manager.tile_entity_rule.items.title")
 		));
 
 		ADDER = new ItemMatcherSpawnerDrawer(
@@ -64,7 +64,7 @@ class ItemsSection extends FlowContainer {
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.filter(FlowDataHolder.class::isInstance)
-			.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemMatcher)
+			.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof MovementMatcher)
 			.map(c -> new ItemMatcherDrawerItem(this, c))
 			.forEach(DRAWER::addChild);
 		DRAWER.update();

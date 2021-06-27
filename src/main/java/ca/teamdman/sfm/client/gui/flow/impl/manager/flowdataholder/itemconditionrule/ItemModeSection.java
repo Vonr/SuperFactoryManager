@@ -38,8 +38,8 @@ class ItemModeSection extends FlowContainer {
 		ALL_BUTTON = new RadioFlowButton(
 			new Position(0, 0),
 			new Size(14, 12),
-			I18n.format("gui.sfm.flow.tileentityrule.button.match_all"),
-			I18n.format("gui.sfm.flow.tileentityrule.tooltip.match_all"),
+			I18n.get("gui.sfm.flow.tileentityrule.button.match_all"),
+			I18n.get("gui.sfm.flow.tileentityrule.tooltip.match_all"),
 			GROUP
 		);
 		addChild(ALL_BUTTON);
@@ -47,8 +47,8 @@ class ItemModeSection extends FlowContainer {
 		ANY_BUTTON = new RadioFlowButton(
 			new Position(16, 0),
 			new Size(14, 12),
-			I18n.format("gui.sfm.flow.tileentityrule.button.match_any"),
-			I18n.format("gui.sfm.flow.tileentityrule.tooltip.match_any"),
+			I18n.get("gui.sfm.flow.tileentityrule.button.match_any"),
+			I18n.get("gui.sfm.flow.tileentityrule.tooltip.match_any"),
 			GROUP
 		);
 		addChild(ANY_BUTTON);

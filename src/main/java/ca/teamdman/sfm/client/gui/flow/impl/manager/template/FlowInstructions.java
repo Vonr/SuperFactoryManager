@@ -24,37 +24,37 @@ public class FlowInstructions extends FlowComponent {
 		BaseScreen screen, MatrixStack matrixStack, int mx, int my, float deltaTime
 	) {
 		if (Client.hideManagerInstructions) return;
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
 		screen.drawRightAlignedString(
 			matrixStack,
-			I18n.format("gui.sfm.manager.legend.chain"),
+			I18n.get("gui.sfm.manager.legend.chain"),
 			0,
 			0,
 			CONST.TEXT_NORMAL
 		);
 		screen.drawRightAlignedString(
 			matrixStack,
-			I18n.format("gui.sfm.manager.legend.clone"),
+			I18n.get("gui.sfm.manager.legend.clone"),
 			0,
 			10,
 			CONST.TEXT_NORMAL
 		);
 		screen.drawRightAlignedString(
 			matrixStack,
-			I18n.format("gui.sfm.manager.legend.move"),
+			I18n.get("gui.sfm.manager.legend.move"),
 			0,
 			20,
 			CONST.TEXT_NORMAL
 		);
 		screen.drawRightAlignedString(
 			matrixStack,
-			I18n.format("gui.sfm.manager.legend.snaptogrid"),
+			I18n.get("gui.sfm.manager.legend.snaptogrid"),
 			0,
 			30,
 			CONST.TEXT_NORMAL
 		);
-		matrixStack.pop();
+		matrixStack.popPose();
 	}
 
 	@Override

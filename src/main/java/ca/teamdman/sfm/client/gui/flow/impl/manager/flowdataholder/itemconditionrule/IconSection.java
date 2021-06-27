@@ -18,7 +18,7 @@ class IconSection extends FlowContainer {
 		addChild(new SectionHeader(
 			new Position(0, 0),
 			new Size(35, 12),
-			I18n.format("gui.sfm.manager.tile_entity_rule.icon.title")
+			I18n.get("gui.sfm.manager.tile_entity_rule.icon.title")
 		));
 
 		this.ICON = new RuleIconComponent(PARENT, new Position(0, 15));

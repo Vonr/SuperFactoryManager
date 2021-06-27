@@ -56,7 +56,7 @@ public class ItemConditionRuleFlowData extends FlowData implements PositionHolde
 	public ItemConditionRuleFlowData() {
 		this(
 			UUID.randomUUID(),
-			I18n.format("gui.sfm.flow.placeholder.default_rule_name"),
+			I18n.get("gui.sfm.flow.placeholder.default_rule_name"),
 			ItemStack.EMPTY,
 			new Position(0, 0),
 			Collections.emptyList(),

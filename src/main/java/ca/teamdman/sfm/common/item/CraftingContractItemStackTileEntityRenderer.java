@@ -46,7 +46,7 @@ public class CraftingContractItemStackTileEntityRenderer extends
 				primary = result;
 				secondary = stack;
 			}
-			matrixStack.push();
+			matrixStack.pushPose();
 			matrixStack.translate(0.5,0.5,0);
 			matrixStack.rotate((new Vector3f(0,1,0)).rotationDegrees(180));
 			Minecraft.getInstance().getItemRenderer().renderItem(
@@ -67,7 +67,7 @@ public class CraftingContractItemStackTileEntityRenderer extends
 				matrixStack,
 				buffer
 			);
-			matrixStack.pop();
+			matrixStack.popPose();
 		} finally {
 			debounce = false;
 		}

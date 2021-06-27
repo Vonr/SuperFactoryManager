@@ -9,7 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemOutputFlowButton;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
@@ -104,10 +104,10 @@ public class ItemOutputFlowData extends FlowData implements Observer, PositionHo
 
 					// get the matchers that determine how much of the item is allowed to move
 					// transfer can be throttled input and output at the same time
-					ItemMatcher inMatcher = inRule
+					MovementMatcher inMatcher = inRule
 						.getBestItemMatcher(dataContainer, stack, step.STATE)
 						.orElse(null);
-					ItemMatcher outMatcher = outRule
+					MovementMatcher outMatcher = outRule
 						.getBestItemMatcher(dataContainer, stack, step.STATE).orElse(null);
 
 					// get the amount allowed to be moved, noting whitelist/blacklist

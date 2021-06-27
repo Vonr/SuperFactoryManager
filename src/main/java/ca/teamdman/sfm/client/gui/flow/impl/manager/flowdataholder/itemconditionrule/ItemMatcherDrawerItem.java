@@ -5,7 +5,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.client.gui.flow.impl.util.ItemStackFlowButton;
 import ca.teamdman.sfm.common.config.Config.Client;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.glfw.GLFW;
 
-class ItemMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends ItemMatcher>> extends
+class ItemMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends MovementMatcher>> extends
 	FlowContainer {
 
 	private final T DELEGATE;
@@ -130,7 +130,7 @@ class ItemMatcherDrawerItem<T extends FlowComponent & FlowDataHolder<? extends I
 			if (!Client.allowMultipleRuleWindows && isSelected()) {
 				PARENT.PARENT.CONTROLLER.getChildren().stream()
 					.filter(c -> c instanceof FlowDataHolder)
-					.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof ItemMatcher)
+					.filter(c -> ((FlowDataHolder<?>) c).getData() instanceof MovementMatcher)
 					.filter(c -> c != this)
 					.forEach(c -> c.setVisibleAndEnabled(false));
 

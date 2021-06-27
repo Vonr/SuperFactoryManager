@@ -31,19 +31,19 @@ public class ClientProxy implements Proxy {
 		if (packet.getWindowId() == 0) {
 			return Optional.empty();
 		}
-		if (packet.getWindowId() != Minecraft.getInstance().player.openContainer.windowId) {
+		if (packet.getWindowId() != Minecraft.getInstance().player.containerMenu.containerId) {
 			return Optional.empty();
 		}
-		if (!screenClass.isInstance(Minecraft.getInstance().currentScreen)) {
+		if (!screenClass.isInstance(Minecraft.getInstance().screen)) {
 			return Optional.empty();
 		}
 		//noinspection unchecked
-		return Optional.of((T) Minecraft.getInstance().currentScreen);
+		return Optional.of((T) Minecraft.getInstance().screen);
 	}
 
 	@Override
 	public void fillItemGroup(ItemGroup group, Item[] items) {
-		group.fill(Arrays.stream(items)
+		group.fillItemList(Arrays.stream(items)
 			.map(ItemStack::new)
 			.collect(NonNullList::create, NonNullList::add, NonNullList::addAll));
 	}

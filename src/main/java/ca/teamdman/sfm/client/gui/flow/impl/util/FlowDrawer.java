@@ -118,7 +118,7 @@ public class FlowDrawer extends FlowContainer {
 			getSize().getHeight() - 4
 		);
 
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.translate(getPosition().getX(), getPosition().getY(), 0);
 		for (FlowComponent comp : getChildren()) {
 			if (comp.isVisible() && isChildVisible(comp)) {
@@ -131,7 +131,7 @@ public class FlowDrawer extends FlowContainer {
 				);
 			}
 		}
-		matrixStack.pop();
+		matrixStack.popPose();
 
 		screen.endScissor();
 

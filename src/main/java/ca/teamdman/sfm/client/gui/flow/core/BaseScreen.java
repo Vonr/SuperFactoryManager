@@ -54,7 +54,7 @@ public abstract class BaseScreen extends Screen {
 	 * @param resource Texture location
 	 */
 	public static void bindTexture(ResourceLocation resource) {
-		Minecraft.getInstance().getTextureManager().bindTexture(resource);
+		Minecraft.getInstance().getTextureManager().bind(resource);
 	}
 
 	public int getGuiLeft() {
@@ -95,20 +95,20 @@ public abstract class BaseScreen extends Screen {
 		float scale,
 		Colour3f colour
 	) {
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.scale(scale, scale, 1f);
-		getFontRenderer().drawString(
+		getFontRenderer().draw(
 			matrixStack,
 			str,
-			(float) ((int) (x / scale) - getFontRenderer().getStringWidth(str) / 2),
+			(float) ((int) (x / scale) - getFontRenderer().width(str) / 2),
 			(float) (int) (y / scale),
 			colour.toInt()
 		);
-		matrixStack.pop();
+		matrixStack.popPose();
 	}
 
 	public FontRenderer getFontRenderer() {
-		return this.font != null ? this.font : Minecraft.getInstance().fontRenderer;
+		return this.font != null ? this.font : Minecraft.getInstance().font;
 	}
 
 	public void drawCenteredString(
@@ -139,8 +139,8 @@ public abstract class BaseScreen extends Screen {
 	) {
 		drawString(
 			matrixStack, str,
-			(int) (x - fixScaledCoordinate(font.getStringWidth(str), getScale(),
-				Minecraft.getInstance().getMainWindow().getWidth()
+			(int) (x - fixScaledCoordinate(font.width(str), getScale(),
+				Minecraft.getInstance().getWindow().getWidth()
 			)),
 			y,
 			colour
@@ -190,11 +190,11 @@ public abstract class BaseScreen extends Screen {
 		MatrixStack matrixStack, String str, int x,
 		int y, float scale, Colour3f colour
 	) {
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.scale(scale, scale, 1F);
 		getFontRenderer()
-			.drawString(matrixStack, str, (int) ((x) / scale), (int) ((y) / scale), colour.toInt());
-		matrixStack.pop();
+			.draw(matrixStack, str, (int) ((x) / scale), (int) ((y) / scale), colour.toInt());
+		matrixStack.popPose();
 	}
 
 	@Override
@@ -353,29 +353,29 @@ public abstract class BaseScreen extends Screen {
 	) {
 		RenderSystem.enableBlend();
 		RenderSystem.disableAlphaTest();
-		Matrix4f matrix = matrixStack.getLast().getMatrix();
+		Matrix4f matrix = matrixStack.last().pose();
 		int blitOffset = getBlitOffset();
-		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
+		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuilder();
 		bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		bufferbuilder.pos(matrix, (float) x, (float) (y + h), (float) blitOffset)
+		bufferbuilder.vertex(matrix, (float) x, (float) (y + h), (float) blitOffset)
 			.color(r, g, b, a)
-			.tex(((float) srcX + 0.0F) / (float) 256, ((float) srcY + (float) h) / (float) 256)
+			.uv(((float) srcX + 0.0F) / (float) 256, ((float) srcY + (float) h) / (float) 256)
 			.endVertex();
-		bufferbuilder.pos(matrix, (float) (x + w), (float) (y + h), (float) blitOffset)
+		bufferbuilder.vertex(matrix, (float) (x + w), (float) (y + h), (float) blitOffset)
 			.color(r, g, b, a)
-			.tex(((float) srcX + (float) w) / (float) 256, ((float) srcY + (float) h) / (float) 256)
+			.uv(((float) srcX + (float) w) / (float) 256, ((float) srcY + (float) h) / (float) 256)
 			.endVertex();
-		bufferbuilder.pos(matrix, (float) (x + w), (float) y, (float) blitOffset)
+		bufferbuilder.vertex(matrix, (float) (x + w), (float) y, (float) blitOffset)
 			.color(r, g, b, a)
-			.tex(((float) srcX + (float) w) / (float) 256, ((float) srcY + 0.0F) / (float) 256)
+			.uv(((float) srcX + (float) w) / (float) 256, ((float) srcY + 0.0F) / (float) 256)
 			.endVertex();
-		bufferbuilder.pos(matrix, (float) x, (float) y, (float) blitOffset)
+		bufferbuilder.vertex(matrix, (float) x, (float) y, (float) blitOffset)
 			.color(r, g, b, a)
-			.tex(((float) srcX + 0.0F) / (float) 256, ((float) srcY + 0.0F) / (float) 256)
+			.uv(((float) srcX + 0.0F) / (float) 256, ((float) srcY + 0.0F) / (float) 256)
 			.endVertex();
-		bufferbuilder.finishDrawing();
+		bufferbuilder.end();
 		RenderSystem.enableAlphaTest();
-		WorldVertexBufferUploader.draw(bufferbuilder);
+		WorldVertexBufferUploader.end(bufferbuilder);
 	}
 
 	/**
@@ -431,7 +431,7 @@ public abstract class BaseScreen extends Screen {
 	 */
 	public void startScaling(MatrixStack matrixStack) {
 		float scale = (float) getScale();
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.translate(this.width / 2F, this.height / 2F, 0.0F);
 		matrixStack.scale(scale, scale, 1);
 //		matrixStack.translate(-guiLeft, -guiTop, 0.0F);
@@ -450,7 +450,7 @@ public abstract class BaseScreen extends Screen {
 	 * @param matrixStack
 	 */
 	public void stopScaling(MatrixStack matrixStack) {
-		matrixStack.pop();
+		matrixStack.popPose();
 	}
 
 	/**
@@ -496,28 +496,28 @@ public abstract class BaseScreen extends Screen {
 		MatrixStack matrixStack, int ax, int ay, int bx, int by, int cx, int cy,
 		int dx, int dy, Colour3f colour
 	) {
-		Matrix4f m = matrixStack.getLast().getMatrix();
-		matrixStack.push();
+		Matrix4f m = matrixStack.last().pose();
+		matrixStack.pushPose();
 		RenderSystem.disableTexture();
-		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuilder();
 		bufferBuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-		bufferBuilder.pos(m, ax, ay, 0)
+		bufferBuilder.vertex(m, ax, ay, 0)
 			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
 			.endVertex();
-		bufferBuilder.pos(m, bx, by, 0)
+		bufferBuilder.vertex(m, bx, by, 0)
 			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
 			.endVertex();
-		bufferBuilder.pos(m, cx, cy, 0)
+		bufferBuilder.vertex(m, cx, cy, 0)
 			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
 			.endVertex();
-		bufferBuilder.pos(m, dx, dy, 0)
+		bufferBuilder.vertex(m, dx, dy, 0)
 			.color(colour.RED, colour.GREEN, colour.BLUE, 1)
 			.endVertex();
-		bufferBuilder.finishDrawing();
-		WorldVertexBufferUploader.draw(bufferBuilder);
+		bufferBuilder.end();
+		WorldVertexBufferUploader.end(bufferBuilder);
 		RenderSystem.enableTexture();
 //		RenderSystem.disableBlend();
-		matrixStack.pop();
+		matrixStack.popPose();
 	}
 
 	/**
@@ -553,14 +553,14 @@ public abstract class BaseScreen extends Screen {
 		RenderSystem.pushMatrix();
 		// Minecraft ItemStack renderer does not currently use MatrixStack
 		// Therefore, we must manually apply our current stack to the RenderSystem.
-		RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
-		Minecraft.getInstance().getItemRenderer().zLevel = -100;
-		Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(
+		RenderSystem.multMatrix(matrixStack.last().pose());
+		Minecraft.getInstance().getItemRenderer().blitOffset = -100;
+		Minecraft.getInstance().getItemRenderer().renderGuiItem(
 			stack,
 			x,
 			y
 		);
-		Minecraft.getInstance().getItemRenderer().zLevel = 0;
+		Minecraft.getInstance().getItemRenderer().blitOffset = 0;
 		RenderSystem.popMatrix();
 	}
 
@@ -588,21 +588,21 @@ public abstract class BaseScreen extends Screen {
 
 		// Grab current transform from the matrixStack
 		// Includes our current scale and border accommodation
-		Matrix4f mat = matrixStack.getLast().getMatrix().copy();
+		Matrix4f mat = matrixStack.last().pose().copy();
 
 		// Convert points using matrix stack transform
 		Vector4f start = new Vector4f(left, top, 1, 1);
 		start.transform(mat);
 		Vector4f end = new Vector4f(left + width, top + height, 1, 1);
 		end.transform(mat);
-		double mcScaledLeft = start.getX();
-		double mcScaledTop = start.getY();
-		double mcScaledWidth = (end.getX() - start.getX());
-		double mcScaledHeight = (end.getY() - start.getY());
+		double mcScaledLeft = start.x();
+		double mcScaledTop = start.y();
+		double mcScaledWidth = (end.x() - start.x());
+		double mcScaledHeight = (end.y() - start.y());
 
 		// Convert points to accommodate minecraft scaling messing with us
-		double mcScale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
-		int mcHeight = Minecraft.getInstance().getMainWindow().getFramebufferHeight();
+		double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
+		int mcHeight = Minecraft.getInstance().getWindow().getHeight();
 		int scissorLeft = (int) Math.round(mcScaledLeft * mcScale);
 		int scissorBottom = (int) Math.round(mcHeight - (mcScaledTop + mcScaledHeight) * mcScale);
 		int scissorWidth = (int) Math.floor(mcScaledWidth * mcScale);

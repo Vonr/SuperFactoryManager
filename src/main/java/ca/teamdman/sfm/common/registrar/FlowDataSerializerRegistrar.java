@@ -18,6 +18,7 @@ import ca.teamdman.sfm.common.flow.data.LineNodeFlowData;
 import ca.teamdman.sfm.common.flow.data.RelationshipFlowData;
 import ca.teamdman.sfm.common.flow.data.TileModMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.TilePositionMatcherFlowData;
+import ca.teamdman.sfm.common.flow.data.TileTypeMatcherFlowData;
 import ca.teamdman.sfm.common.flow.data.TimerTriggerFlowData;
 import ca.teamdman.sfm.common.flow.data.ToolboxFlowData;
 import ca.teamdman.sfm.common.flow.data.ToolboxFlowData.Serializer;
@@ -60,7 +61,8 @@ public class FlowDataSerializerRegistrar {
 			new TileModMatcherFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_mod_matcher")),
 			new ItemConditionRuleFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "item_condition_rule")),
 			new ItemConditionFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "item_condition")),
-			new ConditionLineNodeFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "condition_line_node"))
+			new ConditionLineNodeFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "condition_line_node")),
+			new TileTypeMatcherFlowData.Serializer(new ResourceLocation(SFM.MOD_ID, "tile_type_matcher"))
 		);
 	}
 
@@ -91,6 +93,7 @@ public class FlowDataSerializerRegistrar {
 		public static final FlowDataSerializer<CursorFlowData> CURSOR = WAITING;
 		public static final FlowDataSerializer<ToolboxFlowData> TOOLBOX = WAITING;
 		public static final FlowDataSerializer<TilePositionMatcherFlowData> TILE_POSITION_MATCHER = WAITING;
+		public static final FlowDataSerializer<TileTypeMatcherFlowData> TILE_TYPE_MATCHER = WAITING;
 		public static final FlowDataSerializer<ItemConditionRuleFlowData> ITEM_CONDITION_RULE = WAITING;
 		public static final FlowDataSerializer<ItemConditionFlowData> ITEM_CONDITION = WAITING;
 	}

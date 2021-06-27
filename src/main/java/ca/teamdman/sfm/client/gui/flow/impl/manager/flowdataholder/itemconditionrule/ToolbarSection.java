@@ -18,13 +18,13 @@ public class ToolbarSection extends FlowContainer {
 		TITLE = new TextAreaFlowComponent(
 			parent.CONTROLLER.SCREEN,
 			parent.getData().name,
-			I18n.format("gui.sfm.flow.placeholder.default_rule_name"),
+			I18n.get("gui.sfm.flow.placeholder.default_rule_name"),
 			new Position(1,1),
 			new Size(160, 12)
 		);
 		TITLE.setResponder(name -> {
 			if (name == null || name.equals(PARENT.getData().name)) return;
-			if (name.isEmpty()) name = I18n.format("gui.sfm.flow.placeholder.default_rule_name");
+			if (name.isEmpty()) name = I18n.get("gui.sfm.flow.placeholder.default_rule_name");
 			PARENT.getData().name = name;
 			PARENT.CONTROLLER.SCREEN.sendFlowDataToServer(PARENT.getData());
 		});

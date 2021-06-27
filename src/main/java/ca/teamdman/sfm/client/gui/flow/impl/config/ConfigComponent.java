@@ -30,7 +30,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowHeader(
 			new Position(10, 10),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.title")
+			I18n.get("gui.sfm.config.title")
 		));
 
 		int row = 20;
@@ -40,7 +40,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.allowMultipleRuleWindows")
+			I18n.get("gui.sfm.config.allowMultipleRuleWindows")
 		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
@@ -62,7 +62,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.showRuleDrawerLabels")
+			I18n.get("gui.sfm.config.showRuleDrawerLabels")
 		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
@@ -84,7 +84,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.alwaysSnapMovementToGrid")
+			I18n.get("gui.sfm.config.alwaysSnapMovementToGrid")
 		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
@@ -106,7 +106,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.allowElementsOutOfBounds")
+			I18n.get("gui.sfm.config.allowElementsOutOfBounds")
 		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
@@ -128,7 +128,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.enableRegexSearch")
+			I18n.get("gui.sfm.config.enableRegexSearch")
 		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
@@ -150,7 +150,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.hideManagerInstructions")
+			I18n.get("gui.sfm.config.hideManagerInstructions")
 		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
@@ -172,7 +172,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.preventClosingManagerWithInventoryButton")
+			I18n.get("gui.sfm.config.preventClosingManagerWithInventoryButton")
 		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
@@ -194,7 +194,7 @@ public class ConfigComponent extends FlowContainer {
 		addChild(new FlowLabel(
 			new Position(30, row + 4),
 			new Size(0, 0),
-			I18n.format("gui.sfm.config.enableDebugMode")
+			I18n.get("gui.sfm.config.enableDebugMode")
 		));
 		addChild(new FlowToggleBox(
 			new Position(12, row + 2),
@@ -251,10 +251,10 @@ public class ConfigComponent extends FlowContainer {
 			int my,
 			float deltaTime
 		) {
-			matrixStack.push();
+			matrixStack.pushPose();
 			matrixStack.scale(2, 2, 1);
 			super.draw(screen, matrixStack, mx, my, deltaTime);
-			matrixStack.pop();
+			matrixStack.popPose();
 		}
 	}
 

@@ -171,7 +171,7 @@ public class FlowComponent implements SizeHolder {
 			screen.pauseScissor();
 
 			// get current transformation matrix
-			Matrix4f mat = matrixStack.getLast().getMatrix().copy();
+			Matrix4f mat = matrixStack.last().pose().copy();
 
 			// get vector representing pos to draw
 			Vector4f pos = new Vector4f(mx, my, 0, 1);
@@ -185,8 +185,8 @@ public class FlowComponent implements SizeHolder {
 			net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(
 				new MatrixStack(),
 				getTooltip(),
-				(int) pos.getX(),
-				(int) pos.getY(),
+				(int) pos.x(),
+				(int) pos.y(),
 				screen.width,
 				screen.height,
 				-1,

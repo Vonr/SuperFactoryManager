@@ -48,7 +48,7 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 		this.SEARCH_TEXT_INPUT = new TextAreaFlowComponent(
 			controller.SCREEN,
 			"",
-			I18n.format("gui.sfm.flow.search.placeholder"),
+			I18n.get("gui.sfm.flow.search.placeholder"),
 			new Position(0, 0),
 			new Size(100, 20)
 		);
@@ -106,7 +106,7 @@ public abstract class FlowItemStackPicker extends FlowContainer {
 		) {
 			screen.drawString(
 				matrixStack,
-				I18n.format("gui.sfm.flow.search.no_results_found"),
+				I18n.get("gui.sfm.flow.search.no_results_found"),
 				5,
 				5,
 				CONST.TEXT_LIGHT

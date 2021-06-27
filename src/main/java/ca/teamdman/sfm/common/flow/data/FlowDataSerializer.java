@@ -82,7 +82,7 @@ public abstract class FlowDataSerializer<T extends FlowData> extends
 	}
 
 	public static Optional<FlowDataSerializer<?>> getSerializer(String id) {
-		return getSerializer(ResourceLocation.tryCreate(id));
+		return getSerializer(ResourceLocation.tryParse(id));
 	}
 
 	/**

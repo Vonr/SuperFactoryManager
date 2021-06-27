@@ -26,7 +26,7 @@ public class FacesSection extends FlowContainer {
 		addChild(new SectionHeader(
 			new Position(0, 0),
 			new Size(35, 12),
-			I18n.format("gui.sfm.manager.tile_entity_rule.faces.title")
+			I18n.get("gui.sfm.manager.tile_entity_rule.faces.title")
 		));
 
 		NORTH = new FaceFlowButton(new Position(10, 15), new Size(10, 10), Direction.NORTH);

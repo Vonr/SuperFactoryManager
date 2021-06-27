@@ -9,7 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemCondition
 import ca.teamdman.sfm.client.gui.flow.impl.util.ButtonBackground;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.data.ItemConditionRuleFlowData.ItemMode;
@@ -184,24 +184,24 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 		CableNetwork network,
 		ItemConditionRuleFlowData rule
 	) {
-		List<ItemMatcher> itemMatchers = rule.itemMatcherIds.stream()
+		List<MovementMatcher> matchers = rule.itemMatcherIds.stream()
 			.map(container::get)
 			.filter(Optional::isPresent)
 			.map(Optional::get)
-			.filter(ItemMatcher.class::isInstance)
-			.map(ItemMatcher.class::cast)
+			.filter(MovementMatcher.class::isInstance)
+			.map(MovementMatcher.class::cast)
 			.collect(Collectors.toList());
 
 		List<IItemHandler> handlers = rule.getItemHandlers(container, network);
 
-		if (itemMatchers.size() == 0 || handlers.size() == 0) {
+		if (matchers.size() == 0 || handlers.size() == 0) {
 			return Result.ACCEPTED;
 		}
 
 		// for each inv
 		for (IItemHandler handler : handlers) {
 			// track remaining item matchers
-			Set<ItemMatcher> unsatisfied = new HashSet<>(itemMatchers);
+			Set<MovementMatcher> unsatisfied = new HashSet<>(matchers);
 			// for each slot in inv
 			for (int slot : rule.slots.getSlots(handler.getSlots()).toArray()) {
 				// get stack in slot
@@ -226,7 +226,7 @@ public class ItemConditionFlowData extends FlowData implements Observer, Positio
 				}
 			}
 			// if failed to satisfy item-any, reject
-			if (unsatisfied.size() == itemMatchers.size() && rule.itemMode == ItemMode.MATCH_ANY) {
+			if (unsatisfied.size() == matchers.size() && rule.itemMode == ItemMode.MATCH_ANY) {
 				return Result.REJECTED;
 			}
 			// if failed to satisfy item-all, reject

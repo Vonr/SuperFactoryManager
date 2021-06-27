@@ -18,7 +18,7 @@ apply plugin: 'maven-publish'
 
 version = '3.1.0'
 group = 'ca.teamdman.sfm' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = 'SuperFactoryManager-1.16.4'
+archivesBaseName = 'SuperFactoryManager-1.16.5'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
@@ -29,7 +29,8 @@ minecraft {
     // stable_#            Stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: 'snapshot', version: '20210309-1.16.4'
+    mappings channel: 'official', version: '1.16.5'
+
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
     
      accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -121,7 +122,8 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.16.4-35.1.37'
+    minecraft 'net.minecraftforge:forge:1.16.5-36.1.32'
+
 
 //    compileOnly fg.deobf('mezz.jei:jei-1.16.4:7.6.1.71:api')
 //    runtimeOnly fg.deobf('mezz.jei:jei-1.16.4:7.6.1.71')

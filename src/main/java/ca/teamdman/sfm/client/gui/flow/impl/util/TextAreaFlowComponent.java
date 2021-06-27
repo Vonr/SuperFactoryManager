@@ -157,7 +157,7 @@ public class TextAreaFlowComponent extends FlowComponent {
 		@Override
 		protected void drawSelectionBox(int startX, int startY, int endX, int endY) {
 			RenderSystem.pushMatrix();
-			RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
+			RenderSystem.multMatrix(matrixStack.last().pose());
 			super.drawSelectionBox(startX, startY, endX, endY);
 			RenderSystem.popMatrix();
 		}

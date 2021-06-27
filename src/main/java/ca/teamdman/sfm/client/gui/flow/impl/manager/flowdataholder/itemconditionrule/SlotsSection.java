@@ -27,7 +27,7 @@ public class SlotsSection extends FlowContainer {
 		addChild(new SectionHeader(
 			new Position(0, 0),
 			new Size(35, 12),
-			I18n.format("gui.sfm.manager.tile_entity_rule.slots.title")
+			I18n.get("gui.sfm.manager.tile_entity_rule.slots.title")
 		) {
 			@Override
 			public List<? extends ITextProperties> getTooltip() {

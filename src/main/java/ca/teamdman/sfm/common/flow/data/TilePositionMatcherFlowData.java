@@ -82,12 +82,12 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		List<ITextProperties> rtn = new ArrayList<>(normal);
 		rtn.add(
 			1,
-			new StringTextComponent(I18n.format("gui.sfm.flow.tooltip.tile_position_matcher"))
+			new StringTextComponent(I18n.get("gui.sfm.flow.tooltip.tile_position_matcher"))
 				.mergeStyle(TextFormatting.GRAY)
 		);
 		rtn.add(
 			2,
-			new StringTextComponent(I18n.format(
+			new StringTextComponent(I18n.get(
 				"gui.sfm.flow.tooltip.block_pos",
 				position.getX(),
 				position.getY(),

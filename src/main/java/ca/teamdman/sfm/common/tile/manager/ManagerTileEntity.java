@@ -80,7 +80,7 @@ public class ManagerTileEntity extends TileEntity implements
 	 */
 	public void pruneCursors() {
 		Set<UUID> listeners = getListeners().keySet().stream()
-			.map(PlayerEntity::getUniqueID)
+			.map(PlayerEntity::getUUID)
 			.collect(Collectors.toSet());
 		getFlowDataContainer().removeIf(data ->
 			data instanceof CursorFlowData
@@ -92,12 +92,12 @@ public class ManagerTileEntity extends TileEntity implements
 	}
 
 	public void markAndNotify() {
-		if (getWorld() == null) {
+		if (getLevel() == null) {
 			return;
 		}
-		markDirty();
-		getWorld().notifyBlockUpdate(
-			getPos(),
+		setChanged();
+		getLevel().chan(
+			getBlockPos(),
 			getBlockState(),
 			getBlockState(),
 			BLOCK_UPDATE & NOTIFY_NEIGHBORS
@@ -124,7 +124,7 @@ public class ManagerTileEntity extends TileEntity implements
 		SFM.LOGGER.debug(
 			SFMUtil.getMarker(getClass()),
 			"Loading nbt on {}, replacing {} entries",
-			world == null ? "null world" : world.isRemote ? "client" : "server",
+			level == null ? "null world" : level.isClientSide ? "client" : "server",
 			getFlowDataContainer().size()
 		);
 

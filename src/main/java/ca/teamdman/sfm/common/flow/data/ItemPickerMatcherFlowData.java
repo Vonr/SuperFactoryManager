@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.flow.data;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itempickermatcher.ItemPickerMatcherFlowComponent;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
@@ -19,7 +19,8 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class ItemPickerMatcherFlowData extends FlowData implements ItemMatcher {
+public class ItemPickerMatcherFlowData extends FlowData implements
+	MovementMatcher<ItemStack> {
 
 	public ItemStack stack;
 	public int quantity;
@@ -98,7 +99,7 @@ public class ItemPickerMatcherFlowData extends FlowData implements ItemMatcher {
 
 	@Override
 	public String getMatcherDisplayName() {
-		return I18n.format("gui.sfm.flow.tooltip.item_stack_comparer_matcher");
+		return I18n.get("gui.sfm.flow.tooltip.item_stack_comparer_matcher");
 	}
 
 	public static class Serializer extends

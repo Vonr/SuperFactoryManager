@@ -24,7 +24,7 @@ class EditWindow extends FlowContainer {
 		addChild(new SectionHeader(
 			new Position(5,5),
 			new Size(105,15),
-			I18n.format("gui.sfm.flow.timer_trigger.label")
+			I18n.get("gui.sfm.flow.timer_trigger.label")
 		));
 
 		this.INPUT = new TextAreaFlowComponent(
@@ -81,7 +81,7 @@ class EditWindow extends FlowContainer {
 
 		screen.drawString(
 			matrixStack,
-			I18n.format("gui.sfm.flow.timer_trigger.ticks"),
+			I18n.get("gui.sfm.flow.timer_trigger.ticks"),
 			getPosition().getX() + INPUT.getPosition().getX() + INPUT.getSize().getWidth() + 5,
 			getPosition().getY() + INPUT.getPosition().getY() + 3,
 			1,

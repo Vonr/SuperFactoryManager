@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.template.itemmatcherspawner
 
 import ca.teamdman.sfm.client.gui.flow.core.BaseScreen;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowDrawer;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.FlowData;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -13,7 +13,7 @@ public class ItemMatcherSpawnerDrawer extends FlowDrawer {
 	@SuppressWarnings("rawtypes")
 	private final Consumer ACTION;
 
-	public <T extends FlowData & ItemMatcher> ItemMatcherSpawnerDrawer(
+	public <T extends FlowData & MovementMatcher> ItemMatcherSpawnerDrawer(
 		Consumer<T> action,
 		Position pos
 	) {
@@ -38,7 +38,7 @@ public class ItemMatcherSpawnerDrawer extends FlowDrawer {
 		screen.resumeScissor();
 	}
 
-	protected <T extends FlowData & ItemMatcher> void add(T data) {
+	protected <T extends FlowData & MovementMatcher> void add(T data) {
 		//noinspection unchecked
 		ACTION.accept(data);
 	}

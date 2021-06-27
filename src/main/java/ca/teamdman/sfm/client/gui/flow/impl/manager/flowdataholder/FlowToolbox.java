@@ -30,7 +30,7 @@ public class FlowToolbox extends FlowContainer implements FlowDataHolder<Toolbox
 		this.data = data;
 		CONTROLLER = controller;
 
-		title = I18n.format("gui.sfm.toolbox.title.default");
+		title = I18n.get("gui.sfm.toolbox.title.default");
 
 		DRAWER = new FlowDrawer(new Position(0, 30), 1, 10);
 		addChild(DRAWER);

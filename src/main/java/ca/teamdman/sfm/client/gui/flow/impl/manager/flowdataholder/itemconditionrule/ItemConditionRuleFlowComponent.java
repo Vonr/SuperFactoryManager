@@ -9,7 +9,7 @@ import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.TileMatcher;
 import ca.teamdman.sfm.common.flow.data.FlowData;
@@ -71,7 +71,7 @@ public class ItemConditionRuleFlowComponent extends FlowContainer implements
 		setDraggable(true);
 	}
 
-	public <T extends FlowData & ItemMatcher> void addItemMatcher(T matcher) {
+	public <T extends FlowData & MovementMatcher> void addItemMatcher(T matcher) {
 		getData().itemMatcherIds.add(matcher.getId());
 		CONTROLLER.SCREEN.sendFlowDataToServer(matcher, getData());
 	}

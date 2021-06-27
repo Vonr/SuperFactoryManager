@@ -46,7 +46,7 @@ public class DebugController extends FlowComponent {
 				drawDebugInfo(screen, matrixStack, elem.get(), mx, my);
 			} else {
 				int count = CONTROLLER.SCREEN.getFlowDataContainer().size();
-				String info = I18n.format("gui.sfm.flow.tooltip.debug_data_count", count);
+				String info = I18n.get("gui.sfm.flow.tooltip.debug_data_count", count);
 				drawDebugInfo(screen, matrixStack, info, mx, my);
 			}
 		}

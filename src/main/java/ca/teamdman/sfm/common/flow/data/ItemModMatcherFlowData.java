@@ -4,7 +4,7 @@ import ca.teamdman.sfm.client.ItemStackSearchIndexer;
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.ItemModMatcherFlowComponent;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import ca.teamdman.sfm.common.registrar.FlowDataSerializerRegistrar.FlowDataSerializers;
@@ -20,7 +20,8 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
-public class ItemModMatcherFlowData extends FlowData implements ItemMatcher {
+public class ItemModMatcherFlowData extends FlowData implements
+	MovementMatcher<ItemStack> {
 
 	public String modId;
 	public int quantity;
@@ -150,7 +151,7 @@ public class ItemModMatcherFlowData extends FlowData implements ItemMatcher {
 
 	@Override
 	public String getMatcherDisplayName() {
-		return I18n.format("gui.sfm.flow.tooltip.item_stack_mod_id_matcher");
+		return I18n.get("gui.sfm.flow.tooltip.item_stack_mod_id_matcher");
 	}
 
 

@@ -20,9 +20,8 @@ public class ClientEventHandler {
 				SFMItems.CRAFTING_CONTRACT.getId().toString() + "#inventory"),
 			(key, value) -> new BakedModelDelegate(value) {
 				@Override
-				public boolean isBuiltInRenderer() {
+				public boolean isCustomRenderer() {
 					// use ISTSR when holding shift to show the recipe output
-//					return Screen.hasShiftDown()
 					return !CraftingContractItemStackTileEntityRenderer.debounce;
 				}
 			}

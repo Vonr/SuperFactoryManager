@@ -6,10 +6,10 @@ package ca.teamdman.sfm.common.flow.data;
 
 import ca.teamdman.sfm.client.gui.flow.core.FlowComponent;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
-import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.itemmovementrule.ItemMovementRuleFlowComponent;
+import ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.movementrule.MovementRuleFlowComponent;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.flow.core.FlowDialog;
-import ca.teamdman.sfm.common.flow.core.ItemMatcher;
+import ca.teamdman.sfm.common.flow.core.MovementMatcher;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.core.PositionHolder;
 import ca.teamdman.sfm.common.flow.core.TileMatcher;
@@ -64,7 +64,7 @@ public class ItemMovementRuleFlowData extends FlowData implements
 	public ItemMovementRuleFlowData() {
 		this(
 			UUID.randomUUID(),
-			I18n.format("gui.sfm.flow.placeholder.default_rule_name"),
+			I18n.get("gui.sfm.flow.placeholder.default_rule_name"),
 			ItemStack.EMPTY,
 			new Position(0, 0),
 			FilterMode.WHITELIST,
@@ -126,13 +126,13 @@ public class ItemMovementRuleFlowData extends FlowData implements
 	/**
 	 * @return maximum amount allowed through according to this rule
 	 */
-	public Optional<ItemMatcher> getBestItemMatcher(
+	public Optional<MovementMatcher> getBestItemMatcher(
 		BasicFlowDataContainer container,
 		ItemStack stack,
 		ExecutionState state
 	) {
 		return itemMatcherIds.stream()
-			.map(id -> container.get(id, ItemMatcher.class))
+			.map(id -> container.get(id, MovementMatcher.class))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.filter(m -> m.matches(stack))
@@ -208,7 +208,7 @@ public class ItemMovementRuleFlowData extends FlowData implements
 			.map(container::get)
 			.filter(Optional::isPresent)
 			.map(Optional::get)
-			.filter(ItemMatcher.class::isInstance)
+			.filter(MovementMatcher.class::isInstance)
 			.map(data -> data.duplicate(container, dependencyTracker)) // copy matcher data
 			.peek(dependencyTracker) // add new matcher to dependency tracker
 			.map(FlowData::getId)
@@ -235,12 +235,12 @@ public class ItemMovementRuleFlowData extends FlowData implements
 		if (!(parent instanceof ManagerFlowController)) {
 			return null;
 		}
-		return new ItemMovementRuleFlowComponent((ManagerFlowController) parent, this);
+		return new MovementRuleFlowComponent((ManagerFlowController) parent, this);
 	}
 
 	@Override
 	public Set<Class<?>> getDependencies() {
-		return ImmutableSet.of(ItemMatcher.class, TileMatcher.class);
+		return ImmutableSet.of(MovementMatcher.class, TileMatcher.class);
 	}
 
 	@Override
@@ -275,7 +275,7 @@ public class ItemMovementRuleFlowData extends FlowData implements
 			return new ItemMovementRuleFlowData(
 				getUUID(tag),
 				tag.getString("name"),
-				ItemStack.read(tag.getCompound("icon")),
+				ItemStack.of(tag.getCompound("icon")),
 				new Position(tag.getCompound("pos")),
 				FilterMode.valueOf(tag.getString("filterMode")),
 				new UUIDList(tag, "itemMatchers"),
@@ -305,14 +305,14 @@ public class ItemMovementRuleFlowData extends FlowData implements
 		public ItemMovementRuleFlowData fromBuffer(PacketBuffer buf) {
 			return new ItemMovementRuleFlowData(
 				SFMUtil.readUUID(buf),
-				buf.readString(MAX_NAME_LENGTH),
-				buf.readItemStack(),
+				buf.readUtf(MAX_NAME_LENGTH),
+				buf.readItem(),
 				Position.fromLong(buf.readLong()),
-				FilterMode.valueOf(buf.readString(16)),
+				FilterMode.valueOf(buf.readUtf(16)),
 				new UUIDList(buf),
 				new UUIDList(buf),
 				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf, Direction.class),
-				new SlotsRule(buf.readString(32)),
+				new SlotsRule(buf.readUtf(32)),
 				buf.readBoolean()
 			);
 		}
@@ -320,14 +320,14 @@ public class ItemMovementRuleFlowData extends FlowData implements
 		@Override
 		public void toBuffer(ItemMovementRuleFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
-			buf.writeString(data.name, MAX_NAME_LENGTH);
-			buf.writeItemStack(data.icon);
+			buf.writeUtf(data.name, MAX_NAME_LENGTH);
+			buf.writeItem(data.icon);
 			buf.writeLong(data.position.toLong());
-			buf.writeString(data.filterMode.name(), 16);
+			buf.writeUtf(data.filterMode.name(), 16);
 			data.itemMatcherIds.serialize(buf);
 			data.tileMatcherIds.serialize(buf);
 			EnumSetSerializationHelper.serialize(data.faces, buf);
-			buf.writeString(data.slots.getDefinition(), 32);
+			buf.writeUtf(data.slots.getDefinition(), 32);
 			buf.writeBoolean(data.open);
 		}
 	}
