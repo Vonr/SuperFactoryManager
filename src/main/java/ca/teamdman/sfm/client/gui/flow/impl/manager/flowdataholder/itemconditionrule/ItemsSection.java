@@ -97,7 +97,7 @@ class ItemsSection extends FlowContainer {
 			return Arrays.asList(
 				new TranslationTextComponent("gui.sfm.flow.tooltip.add_item_matcher_1"),
 				new TranslationTextComponent("gui.sfm.flow.tooltip.add_item_matcher_2")
-					.mergeStyle(TextFormatting.GRAY)
+					.withStyle(TextFormatting.GRAY)
 			);
 		}
 	}

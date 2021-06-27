@@ -27,6 +27,7 @@ import net.minecraft.util.text.ITextComponent;
 public class ManagerScreen extends ComponentScreen<ManagerFlowController> implements
 	IHasContainer<ManagerContainer> {
 
+
 	private final ManagerFlowController CONTROLLER;
 	private final ManagerContainer CONTAINER;
 
@@ -37,17 +38,17 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 	}
 
 	@Override
-	public void closeScreen() {
+	public void onClose() {
 		getFlowDataContainer().notifyGuiClosed();
-		super.closeScreen();
+		super.onClose();
 	}
 
 	public BasicFlowDataContainer getFlowDataContainer() {
-		return getContainer().getSource().getFlowDataContainer();
+		return getMenu().getSource().getFlowDataContainer();
 	}
 
 	@Override
-	public ManagerContainer getContainer() {
+	public ManagerContainer getMenu() {
 		return CONTAINER;
 	}
 
@@ -112,8 +113,8 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 	public void sendFlowDataToServer(FlowData... data) {
 		if (data.length > 0) {
 			PacketHandler.INSTANCE.sendToServer(new ManagerFlowDataPacketC2S(
-				CONTROLLER.SCREEN.getContainer().windowId,
-				CONTROLLER.SCREEN.getContainer().getSource().getPos(),
+				CONTROLLER.SCREEN.getMenu().containerId,
+				CONTROLLER.SCREEN.getMenu().getSource().getBlockPos(),
 				data
 			));
 		}
@@ -121,8 +122,8 @@ public class ManagerScreen extends ComponentScreen<ManagerFlowController> implem
 
 	public void sendFlowDataDeleteToServer(UUID id) {
 		PacketHandler.INSTANCE.sendToServer(new ManagerDeletePacketC2S(
-			CONTROLLER.SCREEN.getContainer().windowId,
-			CONTROLLER.SCREEN.getContainer().getSource().getPos(),
+			CONTROLLER.SCREEN.getMenu().containerId,
+			CONTROLLER.SCREEN.getMenu().getSource().getBlockPos(),
 			id
 		));
 	}

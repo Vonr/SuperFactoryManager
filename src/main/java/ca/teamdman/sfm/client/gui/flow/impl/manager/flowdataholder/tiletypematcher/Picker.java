@@ -2,23 +2,17 @@ package ca.teamdman.sfm.client.gui.flow.impl.manager.flowdataholder.tiletypematc
 
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.BlockPosPickerFlowComponent;
-import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.flow.core.Position;
-import ca.teamdman.sfm.common.flow.data.ItemMovementRuleFlowData;
-import ca.teamdman.sfm.common.flow.data.TilePositionMatcherFlowData;
-import ca.teamdman.sfm.common.flow.holder.BasicFlowDataContainer;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import ca.teamdman.sfm.common.flow.data.TileTypeMatcherFlowData;
 import net.minecraft.util.math.BlockPos;
 
 class Picker extends BlockPosPickerFlowComponent {
 
-	private final TilePositionMatcherFlowData data;
+	private final TileTypeMatcherFlowData data;
 	private final ManagerFlowController PARENT;
 
 	public Picker(
-		TilePositionMatcherFlowData data,
+		TileTypeMatcherFlowData data,
 		ManagerFlowController parent,
 		Position position
 	) {
@@ -29,12 +23,20 @@ class Picker extends BlockPosPickerFlowComponent {
 	}
 
 	public void rebuildSuggestions() {
+	}
+
+	@Override
+	public void onPicked(BlockPos pos) {
+
+	}
+
+	/*public void rebuildSuggestions() {
 		// gather list of existing selected positions for this
 		BasicFlowDataContainer container = PARENT.SCREEN.getFlowDataContainer();
 		Set<BlockPos> ignore = container.get(ItemMovementRuleFlowData.class)
 			.filter(data -> data.tileMatcherIds.contains(this.data.getId()))
 			.flatMap(data -> data.tileMatcherIds.stream())
-			.map(id -> container.get(id, TilePositionMatcherFlowData.class))
+			.map(id -> container.get(id, TileTypeMatcherFlowData.class))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.map(data -> data.position)
@@ -42,8 +44,11 @@ class Picker extends BlockPosPickerFlowComponent {
 
 		// add suggestions for positions not already selected
 		CableNetworkManager
-			.getOrRegisterNetwork(PARENT.SCREEN.getContainer().getSource())
-			.ifPresent(net -> rebuildFromNetwork(net, p -> !ignore.contains(p)));
+			.getOrRegisterNetwork(PARENT.SCREEN.getMenu().getSource())
+			.ifPresent(net -> rebuildFromNetwork(
+				net,
+				p -> !ignore.contains(p)
+			));
 	}
 
 	@Override
@@ -53,5 +58,5 @@ class Picker extends BlockPosPickerFlowComponent {
 			PARENT.SCREEN.sendFlowDataToServer(data);
 		}
 		setVisibleAndEnabled(false);
-	}
+	}*/
 }

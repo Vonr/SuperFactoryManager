@@ -46,15 +46,15 @@ public class SFMContainers {
 		);
 
 	public static void registerFactories() {
-		ScreenManager.registerFactory(
+		ScreenManager.register(
 			SFMContainers.MANAGER.get(),
 			ManagerScreen::new
 		);
-		ScreenManager.registerFactory(
+		ScreenManager.register(
 			SFMContainers.CRAFTER.get(),
 			CrafterScreen::new
 		);
-		ScreenManager.registerFactory(
+		ScreenManager.register(
 			SFMContainers.WORKSTATION.get(),
 			WorkstationScreen::new
 		);

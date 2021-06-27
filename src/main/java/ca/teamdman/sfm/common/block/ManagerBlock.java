@@ -27,14 +27,14 @@ public class ManagerBlock extends CableBlock {
 
 	public ManagerBlock() {
 		super(Block.Properties
-			.create(Material.IRON)
-			.hardnessAndResistance(5F, 6F)
+			.of(Material.METAL)
+			.strength(5F, 6F)
 			.sound(SoundType.METAL));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public ActionResultType onBlockActivated(
+	public ActionResultType use(
 		BlockState state,
 		World world,
 		BlockPos pos,
@@ -42,22 +42,23 @@ public class ManagerBlock extends CableBlock {
 		Hand handIn,
 		BlockRayTraceResult hit
 	) {
-		if (!world.isRemote && handIn == Hand.MAIN_HAND) {
+		if (!world.isClientSide && handIn == Hand.MAIN_HAND) {
 			SFMUtil
-				.getServerTile(IWorldPosCallable.of(world, pos), ManagerTileEntity.class)
+				.getServerTile(IWorldPosCallable.create(world, pos), ManagerTileEntity.class)
 				.ifPresent(tile -> ManagerContainer.openGui(((ServerPlayerEntity) player), tile));
 		}
 		return ActionResultType.CONSUME;
 	}
 
+
 	@Override
-	public void onBlockHarvested(
+	public void playerWillDestroy(
 		World worldIn, BlockPos pos, BlockState state, PlayerEntity player
 	) {
-		super.onBlockHarvested(worldIn, pos, state, player);
+		super.playerWillDestroy(worldIn, pos, state, player);
 
 		SFMUtil
-			.getServerTile(IWorldPosCallable.of(worldIn, pos), ManagerTileEntity.class)
+			.getServerTile(IWorldPosCallable.create(worldIn, pos), ManagerTileEntity.class)
 			.ifPresent(ManagerTileEntity::closeGuiForAllListeners);
 	}
 

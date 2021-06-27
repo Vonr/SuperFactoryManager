@@ -53,8 +53,7 @@ public class WaterIntakeTileEntity extends TileEntity {
 	}
 
 	@Override
-	public void remove() {
-		super.remove();
+	protected void invalidateCaps() {
 		TANK_CAPABILITY.invalidate();
 	}
 }

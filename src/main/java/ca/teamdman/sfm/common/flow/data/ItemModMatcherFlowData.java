@@ -109,7 +109,7 @@ public class ItemModMatcherFlowData extends FlowData implements
 		public ItemModMatcherFlowData fromBuffer(PacketBuffer buf) {
 			return new ItemModMatcherFlowData(
 				SFMUtil.readUUID(buf),
-				buf.readString(64),
+				buf.readUtf(64),
 				buf.readInt(),
 				buf.readBoolean()
 			);
@@ -118,7 +118,7 @@ public class ItemModMatcherFlowData extends FlowData implements
 		@Override
 		public void toBuffer(ItemModMatcherFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
-			buf.writeString(data.modId, 64);
+			buf.writeUtf(data.modId, 64);
 			buf.writeInt(data.quantity);
 			buf.writeBoolean(data.open);
 		}

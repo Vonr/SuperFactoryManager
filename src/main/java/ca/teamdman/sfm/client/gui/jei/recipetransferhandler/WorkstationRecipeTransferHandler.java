@@ -51,8 +51,8 @@ public class WorkstationRecipeTransferHandler extends
 	) {
 		if (doTransfer && Screen.hasControlDown() && recipe instanceof ICraftingRecipe) {
 			PacketHandler.INSTANCE.sendToServer(new C2SWorkstationLearnRecipePacket(
-				container.windowId,
-				container.getSource().getPos(),
+				container.containerId,
+				container.getSource().getBlockPos(),
 				((ICraftingRecipe) recipe).getId()
 			));
 			return new KeepOpenError();
@@ -93,10 +93,10 @@ public class WorkstationRecipeTransferHandler extends
 				)),
 				mouseX,
 				mouseY,
-				Minecraft.getInstance().getMainWindow().getScaledWidth(),
-				Minecraft.getInstance().getMainWindow().getScaledHeight(),
+				Minecraft.getInstance().getWindow().getGuiScaledWidth(),
+				Minecraft.getInstance().getWindow().getGuiScaledHeight(),
 				150,
-				Minecraft.getInstance().fontRenderer
+				Minecraft.getInstance().font
 			);
 		}
 	}

@@ -25,17 +25,17 @@ public class CrafterScreen extends ContainerScreen<CrafterContainer> implements 
 	}
 
 	@Override
-	protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
+	protected void renderBg(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
 //		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		//noinspection ConstantConditions
-		this.minecraft.getTextureManager().bindTexture(CRAFTER_TEXTURE);
-		int i = this.guiLeft;
-		int j = (this.height - this.ySize) / 2;
-		this.blit(matrixStack, i, j, 0, 0, this.xSize, this.ySize);
+		this.minecraft.getTextureManager().bind(CRAFTER_TEXTURE);
+		int i = this.leftPos;
+		int j = (this.height - this.getYSize()) / 2;
+		this.blit(matrixStack, i, j, 0, 0, this.getXSize(), this.getYSize());
 	}
 
 	@Override
-	public CrafterContainer getContainer() {
-		return container;
+	public CrafterContainer getMenu() {
+		return menu;
 	}
 }

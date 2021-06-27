@@ -39,7 +39,7 @@ public class CableNetwork {
 		return SFMUtil.getRecursiveStream((current, next, results) -> {
 			results.accept(current);
 			for (Direction d : Direction.values()) {
-				BlockPos offset = current.offset(d);
+				BlockPos offset = current.relative(d);
 				if (isValidNetworkMember(getWorld(), offset)) {
 					next.accept(offset);
 				}
@@ -68,13 +68,13 @@ public class CableNetwork {
 
 	public void rebuildAdjacentInventories(BlockPos pos) {
 		Arrays.stream(Direction.values())
-			.map(pos::offset)
+			.map(pos::relative)
 			.distinct()
 			.peek(INVENTORIES::remove)
 			.filter(this::containsNeighbour) // Verify if should [re]join network
-			.map(WORLD::getTileEntity)
+			.map(WORLD::getBlockEntity)
 			.filter(Objects::nonNull)
-			.forEach(tile -> INVENTORIES.put(tile.getPos(), tile)); // register tile [again]
+			.forEach(tile -> INVENTORIES.put(tile.getBlockPos(), tile)); // register tile [again]
 	}
 
 	/**
@@ -85,7 +85,7 @@ public class CableNetwork {
 	 */
 	public boolean containsNeighbour(BlockPos pos) {
 		for (Direction direction : Direction.values()) {
-			if (CABLES.contains(pos.offset(direction))) {
+			if (CABLES.contains(pos.relative(direction))) {
 				return true;
 			}
 		}
@@ -103,7 +103,7 @@ public class CableNetwork {
 		// Discover an adjacent cable that's part of the network
 		BlockPos start = null;
 		for (Direction direction : Direction.values()) {
-			BlockPos p = pos.offset(direction);
+			BlockPos p = pos.relative(direction);
 			if (contains(p)) {
 				start = p;
 				break;
@@ -118,7 +118,7 @@ public class CableNetwork {
 			Set<BlockPos> retain = SFMUtil.getRecursiveStream((current, next, results) -> {
 				results.accept(current);
 				for (Direction direction : Direction.values()) {
-					BlockPos off = current.offset(direction);
+					BlockPos off = current.relative(direction);
 					if (!off.equals(pos) && contains(off)) {
 						next.accept(off);
 					}

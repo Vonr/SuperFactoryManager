@@ -69,7 +69,7 @@ public class TileTypeMatcherFlowData extends FlowData implements TileMatcher {
 		// find all tiles matching our type
 		network.getInventories().stream()
 			.filter(this::matches)
-			.map(TileEntity::getPos)
+			.map(TileEntity::getBlockPos)
 			.map(network::getPreview)
 			.forEach(previewCache::add);
 
@@ -89,7 +89,7 @@ public class TileTypeMatcherFlowData extends FlowData implements TileMatcher {
 			1,
 			new StringTextComponent(I18n.get(
 				"gui.sfm.flow.tile_type_matcher.tooltip.name"))
-				.mergeStyle(TextFormatting.GRAY)
+				.withStyle(TextFormatting.GRAY)
 		);
 		rtn.add(
 			2,
@@ -97,7 +97,7 @@ public class TileTypeMatcherFlowData extends FlowData implements TileMatcher {
 				"gui.sfm.flow.tile_type_matcher.tooltip.data",
 				type.getRegistryName()
 			))
-				.mergeStyle(TextFormatting.GRAY)
+				.withStyle(TextFormatting.GRAY)
 		);
 		return rtn;
 	}

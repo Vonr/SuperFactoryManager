@@ -55,7 +55,7 @@ public class DebugController extends FlowComponent {
 
 	public void drawDebugInfo(BaseScreen screen, MatrixStack matrixStack, String id, int x, int y) {
 		String toDraw = id.toString();
-		int width = screen.getFontRenderer().getStringWidth(toDraw) + 2;
+		int width = screen.getFontRenderer().width(toDraw) + 2;
 		int xOffset = 13;
 		int yOffset = 0;
 		screen.clearRect(matrixStack, x-1 + xOffset, y+yOffset-1, width, 11);

@@ -41,7 +41,7 @@ public final class S2CWorkstationAutoLearnChangedPacket extends S2CContainerPack
 			S2CWorkstationAutoLearnChangedPacket msg
 		) {
 			screen
-				.getContainer()
+				.getMenu()
 				.getSource()
 				.setAutoLearnEnabled(msg.AUTO_LEARN_ENABLED);
 

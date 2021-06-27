@@ -49,7 +49,7 @@ public final class C2SWorkstationLearnClickPacket extends
 			C2SWorkstationLearnClickPacket c2SWorkstationLearnClickPacket,
 			WorkstationTileEntity workstationTileEntity
 		) {
-			WorkstationContainer container = (WorkstationContainer) ctx.get().getSender().openContainer;
+			WorkstationContainer container = (WorkstationContainer) ctx.get().getSender().containerMenu;
 			WorkstationTileEntity tile = container.getSource();
 			for (
 				int slot = 0;

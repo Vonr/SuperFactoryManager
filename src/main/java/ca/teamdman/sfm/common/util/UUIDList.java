@@ -28,7 +28,7 @@ public class UUIDList extends ArrayList<UUID> {
 
 	public UUIDList(CompoundNBT tag, String key) {
 		tag.getList(key, NBT.TAG_STRING).stream()
-			.map(INBT::getString)
+			.map(INBT::getAsString)
 			.map(UUID::fromString)
 			.forEach(this::add);
 	}

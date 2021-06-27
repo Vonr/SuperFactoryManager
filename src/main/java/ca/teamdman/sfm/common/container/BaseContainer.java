@@ -8,28 +8,43 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IWorldPosCallable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class BaseContainer<T> extends Container {
+
 	public final boolean IS_REMOTE;
 	private final T SOURCE;
 
-	public BaseContainer(ContainerType type, int windowId, T source, boolean isRemote) {
+	public BaseContainer(
+		ContainerType type,
+		int windowId,
+		T source,
+		boolean isClientSide
+	) {
 		super(type, windowId);
 		this.SOURCE = source;
-		this.IS_REMOTE = isRemote;
+		this.IS_REMOTE = isClientSide;
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
-	public T getSource() {
-		return SOURCE;
-	}
-
 	@Override
-	public boolean canInteractWith(PlayerEntity playerIn) {
-		return true;
+	public boolean stillValid(PlayerEntity player) {
+		if (SOURCE instanceof TileEntity) {
+			return stillValid(
+				IWorldPosCallable.create(
+					((TileEntity) SOURCE).getLevel(),
+					((TileEntity) SOURCE).getBlockPos()
+				),
+				player,
+				((TileEntity) SOURCE).getBlockState().getBlock()
+			);
+		} else {
+			return true;
+		}
 	}
 
 	@SubscribeEvent
@@ -38,7 +53,11 @@ public class BaseContainer<T> extends Container {
 		if (e.getContainer() != this) return;
 		if (!(getSource() instanceof ContainerListenerTracker)) return;
 		((ContainerListenerTracker) getSource()).getListeners()
-			.put((ServerPlayerEntity) e.getPlayer(), windowId);
+			.put((ServerPlayerEntity) e.getPlayer(), containerId);
+	}
+
+	public T getSource() {
+		return SOURCE;
 	}
 
 	@SubscribeEvent
@@ -47,6 +66,6 @@ public class BaseContainer<T> extends Container {
 		if (e.getContainer() != this) return;
 		if (!(getSource() instanceof ContainerListenerTracker)) return;
 		((ContainerListenerTracker) getSource()).getListeners()
-			.remove((ServerPlayerEntity) e.getPlayer(), windowId);
+			.remove((ServerPlayerEntity) e.getPlayer(), containerId);
 	}
 }

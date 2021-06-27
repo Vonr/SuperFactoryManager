@@ -38,8 +38,8 @@ public abstract class TileContainerType<C extends BaseContainer<T>, T extends Ti
 		int windowId, PlayerInventory playerInv, PacketBuffer extraData
 	) {
 		return SFMUtil.getClientTile(
-			IWorldPosCallable.of(
-				playerInv.player.world,
+			IWorldPosCallable.create(
+				playerInv.player.level,
 				extraData.readBlockPos()
 			),
 			TILE_CLASS
@@ -61,7 +61,7 @@ public abstract class TileContainerType<C extends BaseContainer<T>, T extends Ti
 
 	public void openGui(PlayerEntity player, World world, BlockPos pos) {
 		if (player instanceof ServerPlayerEntity) {
-			SFMUtil.getServerTile(IWorldPosCallable.of(world, pos), TILE_CLASS)
+			SFMUtil.getServerTile(IWorldPosCallable.create(world, pos), TILE_CLASS)
 				.ifPresent(tile -> openGui(
 					((ServerPlayerEntity) player),
 					tile
@@ -89,7 +89,7 @@ public abstract class TileContainerType<C extends BaseContainer<T>, T extends Ti
 				}
 			},
 			data -> {
-				data.writeBlockPos(tile.getPos());
+				data.writeBlockPos(tile.getBlockPos());
 				prepareClientContainer(tile, data);
 			}
 		);

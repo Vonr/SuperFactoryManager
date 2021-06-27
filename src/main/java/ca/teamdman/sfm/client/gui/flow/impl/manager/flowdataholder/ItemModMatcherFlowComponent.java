@@ -47,7 +47,7 @@ public class ItemModMatcherFlowComponent extends
 		){
 			@Override
 			public void clear() {
-				delegate.setText("0");
+				delegate.setValue("0");
 			}
 		};
 		QUANTITY_INPUT.setValidator(next -> Objects.nonNull(next) && next.matches("\\d*"));
@@ -89,12 +89,12 @@ public class ItemModMatcherFlowComponent extends
 		){
 			@Override
 			public void clear() {
-				delegate.setText("");
+				delegate.setValue("");
 			}
 		};
 		MOD_ID_INPUT.setValidator(next ->
 			Objects.nonNull(next)
-				&& ResourceLocation.isResouceNameValid(next.toLowerCase(Locale.ROOT)+":"));
+				&& ResourceLocation.isValidResourceLocation(next.toLowerCase(Locale.ROOT)+":"));
 		MOD_ID_INPUT.setResponder(next -> {
 			if (!next.equals(data.modId)) {
 				data.modId = next.toLowerCase(Locale.ROOT);

@@ -27,7 +27,7 @@ public final class ManagerFlowDataPacketS2C extends
 			buf.writeInt(msg.DATA.length);
 			for (FlowData datum : msg.DATA) {
 				FlowDataSerializer serializer = datum.getSerializer();
-				buf.writeString(serializer.getRegistryName().toString(), 128);
+				buf.writeUtf(serializer.getRegistryName().toString(), 128);
 				serializer.toBuffer(
 					datum,
 					buf
@@ -44,7 +44,7 @@ public final class ManagerFlowDataPacketS2C extends
 				windowId,
 				IntStream.range(0, buf.readInt())
 					.mapToObj(__ -> FlowDataSerializer
-						.getSerializer(buf.readString(128))
+						.getSerializer(buf.readUtf(128))
 						.get()
 						.fromBuffer(buf))
 					.toArray(FlowData[]::new)

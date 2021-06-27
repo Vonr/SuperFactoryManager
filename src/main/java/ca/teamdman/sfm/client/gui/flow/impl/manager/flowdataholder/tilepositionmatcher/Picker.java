@@ -42,7 +42,7 @@ class Picker extends BlockPosPickerFlowComponent {
 
 		// add suggestions for positions not already selected
 		CableNetworkManager
-			.getOrRegisterNetwork(PARENT.SCREEN.getContainer().getSource())
+			.getOrRegisterNetwork(PARENT.SCREEN.getMenu().getSource())
 			.ifPresent(net -> rebuildFromNetwork(net, p -> !ignore.contains(p)));
 	}
 

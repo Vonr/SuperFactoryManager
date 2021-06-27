@@ -43,7 +43,7 @@ public class SFMUtil {
 	 * @param buf Buffer
 	 */
 	public static void writeUUID(UUID id, PacketBuffer buf) {
-		buf.writeString(id.toString(), UUID_STRING_LENGTH);
+		buf.writeUtf(id.toString(), UUID_STRING_LENGTH);
 	}
 
 	/**
@@ -70,7 +70,7 @@ public class SFMUtil {
 		Class<T> clazz
 	) {
 		return access
-			.applyOrElse(
+			.evaluate(
 				(world, pos) -> getTile(world, pos, clazz, false),
 				Optional.empty()
 			);
@@ -82,7 +82,7 @@ public class SFMUtil {
 	 * @param world  World
 	 * @param pos    Tile position
 	 * @param clazz  Tile class
-	 * @param remote isRemote
+	 * @param remote isClientSide
 	 * @param <T>    Tile entity type
 	 * @return Tile of type T
 	 */
@@ -90,10 +90,10 @@ public class SFMUtil {
 		IWorldReader world, BlockPos pos,
 		Class<T> clazz, boolean remote
 	) {
-		if (world.isRemote() != remote) {
+		if (world.isClientSide() != remote) {
 			return Optional.empty();
 		}
-		TileEntity tile = world.getTileEntity(pos);
+		TileEntity tile = world.getBlockEntity(pos);
 		if (tile == null) {
 			return Optional.empty();
 		}
@@ -118,7 +118,7 @@ public class SFMUtil {
 		Class<T> clazz
 	) {
 		return access
-			.applyOrElse(
+			.evaluate(
 				(world, pos) -> getTile(world, pos, clazz, true),
 				Optional.empty()
 			);
@@ -149,18 +149,18 @@ public class SFMUtil {
 		if (sender == null) {
 			return Optional.empty();
 		}
-		if (!containerClass.isInstance(sender.openContainer)) {
+		if (!containerClass.isInstance(sender.containerMenu)) {
 			return Optional.empty();
 		}
-		if (sender.openContainer.windowId != packet.getWindowId()) {
+		if (sender.containerMenu.containerId != packet.getWindowId()) {
 			return Optional.empty();
 		}
-		ServerWorld world = sender.getServerWorld();
+		ServerWorld world = sender.getLevel();
 		//noinspection deprecation
-		if (!world.isBlockLoaded(packet.getTilePosition())) {
+		if (!world.isLoaded(packet.getTilePosition())) {
 			return Optional.empty();
 		}
-		TileEntity tile = world.getTileEntity(packet.getTilePosition());
+		TileEntity tile = world.getBlockEntity(packet.getTilePosition());
 		if (!tileClass.isInstance(tile)) {
 			return Optional.empty();
 		}
@@ -178,7 +178,7 @@ public class SFMUtil {
 	public static boolean isKeyDown(int key) {
 		return InputMappings
 			.isKeyDown(
-				Minecraft.getInstance().getMainWindow().getHandle(),
+				Minecraft.getInstance().getWindow().getWindow(),
 				key
 			);
 
@@ -267,7 +267,7 @@ public class SFMUtil {
 	 * @return UUID
 	 */
 	public static UUID readUUID(PacketBuffer buf) {
-		return UUID.fromString(buf.readString(UUID_STRING_LENGTH));
+		return UUID.fromString(buf.readUtf(UUID_STRING_LENGTH));
 	}
 
 	public interface RecursiveBuilder<T> {

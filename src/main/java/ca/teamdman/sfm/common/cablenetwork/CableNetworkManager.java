@@ -44,7 +44,7 @@ public class CableNetworkManager {
 	 * Remove a block from any networks it is in. Then, prune any empty networks.
 	 */
 	public static void unregister(World world, BlockPos cablePos) {
-		Optional<CableNetwork> lookup = NETWORKS.get(world.getDimensionKey()).stream()
+		Optional<CableNetwork> lookup = NETWORKS.get(world.dimension()).stream()
 			.filter(network -> network.contains(cablePos))
 			.findFirst();
 		if (!lookup.isPresent()) {
@@ -53,7 +53,7 @@ public class CableNetworkManager {
 		CableNetwork previous = lookup.get();
 		if (previous.size() == 1) {
 			// Cable was the last in its network, remove the network
-			NETWORKS.remove(world.getDimensionKey(), previous);
+			NETWORKS.remove(world.dimension(), previous);
 		} else /*if (previous.size() > 1)*/ {
 			// Cable was not the last, and its removal might cause the network to split
 			Deque<BlockPos> split = new ArrayDeque<>(previous.split(cablePos));
@@ -72,7 +72,7 @@ public class CableNetworkManager {
 	}
 
 	public static Optional<CableNetwork> getOrRegisterNetwork(TileEntity tile) {
-		return getOrRegisterNetwork(tile.getWorld(), tile.getPos());
+		return getOrRegisterNetwork(tile.getLevel(), tile.getBlockPos());
 	}
 
 	/**
@@ -84,8 +84,8 @@ public class CableNetworkManager {
 			return Optional.empty();
 		}
 
-		Optional<CableNetwork> existing = NETWORKS.get(world.getDimensionKey()).stream()
-			.filter(net -> net.getWorld().isRemote() == world.isRemote())
+		Optional<CableNetwork> existing = NETWORKS.get(world.dimension()).stream()
+			.filter(net -> net.getWorld().isClientSide() == world.isClientSide())
 			.filter(net -> net.contains(cablePos))
 			.findFirst();
 		if (existing.isPresent()) {
@@ -95,15 +95,15 @@ public class CableNetworkManager {
 			// No cable network exists
 
 			// Discover candidate networks
-			List<CableNetwork> candidates = NETWORKS.get(world.getDimensionKey()).stream()
-				.filter(net -> net.getWorld().isRemote() == world.isRemote())
+			List<CableNetwork> candidates = NETWORKS.get(world.dimension()).stream()
+				.filter(net -> net.getWorld().isClientSide() == world.isClientSide())
 				.filter(net -> net.containsNeighbour(cablePos))
 				.collect(Collectors.toList());
 
 			if (candidates.size() == 0) {
 				// No candidates exists for this cable, create a new network
 				CableNetwork network = new CableNetwork(world);
-				NETWORKS.put(world.getDimensionKey(), network);
+				NETWORKS.put(world.dimension(), network);
 
 				// In case network map not built, rebuild now
 				network.rebuildNetwork(cablePos);
@@ -122,7 +122,7 @@ public class CableNetworkManager {
 				// Merge the rest into the first
 				candidates.listIterator(1).forEachRemaining(other -> {
 					network.mergeNetwork(other);
-					NETWORKS.remove(world.getDimensionKey(), other);
+					NETWORKS.remove(world.dimension(), other);
 				});
 
 				// Register any inventories that the new cable introduces

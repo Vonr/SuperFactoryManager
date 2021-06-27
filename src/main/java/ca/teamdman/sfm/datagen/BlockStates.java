@@ -68,7 +68,7 @@ public class BlockStates extends BlockStateProvider {
 			.forAllStates(state -> ConfiguredModel
 				.builder()
 				.modelFile(
-					state.get(WaterIntakeBlock.IN_WATER)
+					state.getValue(WaterIntakeBlock.IN_WATER)
 						? waterIntakeModelActive
 						: waterIntakeModelInactive
 				)

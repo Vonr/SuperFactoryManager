@@ -52,8 +52,8 @@ public class WorkstationScreen extends
 	@Override
 	protected void init() {
 		super.init();
-		int i = (this.width - this.xSize) / 2;
-		int j = (this.height - this.ySize) / 2;
+		int i = (this.width - this.getXSize()) / 2;
+		int j = (this.height - this.getYSize()) / 2;
 //		searchField = new TextFieldWidget(
 //			this.font,
 //			i,
@@ -72,13 +72,15 @@ public class WorkstationScreen extends
 			j + 7,
 			60,
 			15,
-			new TranslationTextComponent("gui.sfm.workstation.button.auto_learn.text")
-			.mergeStyle(CONTAINER.getSource().isAutoLearnEnabled() ? TextFormatting.GREEN : TextFormatting.RED),
+			new TranslationTextComponent(
+				"gui.sfm.workstation.button.auto_learn.text")
+				.withStyle(CONTAINER.getSource().isAutoLearnEnabled()
+					? TextFormatting.GREEN : TextFormatting.RED),
 			(button) -> {
 				PacketHandler.INSTANCE.sendToServer(
 					new C2SWorkstationAutoLearnChangedPacket(
-						getContainer().windowId,
-						CONTAINER.getSource().getPos(),
+						getMenu().containerId,
+						CONTAINER.getSource().getBlockPos(),
 						!CONTAINER.getSource().isAutoLearnEnabled()
 					)
 				);
@@ -99,25 +101,25 @@ public class WorkstationScreen extends
 	) {
 		this.renderBackground(matrixStack);
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
-		this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
+		this.renderTooltip(matrixStack, mouseX, mouseY);
 	}
 
 	@Override
-	protected void drawGuiContainerBackgroundLayer(
+	protected void renderBg(
 		MatrixStack matrixStack, float partialTicks, int x, int y
 	) {
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		this.minecraft.getTextureManager().bindTexture(MAIN_TEXTURE);
-		int i = this.guiLeft;
-		int j = (this.height - this.ySize) / 2;
-		this.blit(matrixStack, i, j, 0, 0, this.xSize, this.ySize);
-		this.minecraft.getTextureManager().bindTexture(SIDE_TEXTURE);
+		this.minecraft.getTextureManager().bind(MAIN_TEXTURE);
+		int i = this.leftPos;
+		int j = (this.height - this.getYSize()) / 2;
+		this.blit(matrixStack, i, j, 0, 0, this.getXSize(), this.getYSize());
+		this.minecraft.getTextureManager().bind(SIDE_TEXTURE);
 		this.blit(matrixStack, i - 104, j, 0, 0, 97, 182);
 		this.blit(matrixStack, i - 7, j, 169, 0, 10, 182);
 	}
 
 	@Override
-	public WorkstationContainer getContainer() {
+	public WorkstationContainer getMenu() {
 		return CONTAINER;
 	}
 

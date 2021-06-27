@@ -40,7 +40,7 @@ public class LootTables extends LootTableProvider {
 		Map<ResourceLocation, LootTable> map,
 		ValidationTracker validationtracker
 	) {
-		map.forEach((k, v) -> LootTableManager.validateLootTable(
+		map.forEach((k, v) -> LootTableManager.validate(
 			validationtracker,
 			k,
 			v
@@ -51,9 +51,9 @@ public class LootTables extends LootTableProvider {
 
 		@Override
 		protected void addTables() {
-			registerDropSelfLootTable(SFMBlocks.MANAGER.get());
-			registerDropSelfLootTable(SFMBlocks.CABLE.get());
-			registerDropSelfLootTable(SFMBlocks.CRAFTER.get());
+			dropSelf(SFMBlocks.MANAGER.get());
+			dropSelf(SFMBlocks.CABLE.get());
+			dropSelf(SFMBlocks.CRAFTER.get());
 		}
 
 		@Override

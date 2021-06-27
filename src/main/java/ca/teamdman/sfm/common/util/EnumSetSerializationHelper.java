@@ -28,7 +28,7 @@ public class EnumSetSerializationHelper {
 	) {
 		return EnumSet.copyOf(
 			tag.getList(key, NBT.TAG_STRING).stream()
-				.map(INBT::getString)
+				.map(INBT::getAsString)
 				.map(resolver)
 				.collect(Collectors.toList())
 		);
@@ -38,7 +38,7 @@ public class EnumSetSerializationHelper {
 		buf.writeInt(set.size());
 		set.stream()
 			.map(Enum::name)
-			.forEach(name -> buf.writeString(name, 128));
+			.forEach(name -> buf.writeUtf(name, 128));
 	}
 
 	public static <T extends Enum<T>> EnumSet<T> deserialize(
@@ -47,7 +47,7 @@ public class EnumSetSerializationHelper {
 		Class<T> type
 	) {
 		List<T> vals = IntStream.range(0, buf.readInt())
-			.mapToObj(__ -> buf.readString(128))
+			.mapToObj(__ -> buf.readUtf(128))
 			.map(resolver)
 			.collect(Collectors.toList());
 		if (vals.isEmpty()) {

@@ -18,7 +18,7 @@ public class SFMItems {
 
 	public static final ItemGroup GROUP = new ItemGroup(-1, "sfm") {
 		@Override
-		public ItemStack createIcon() {
+		public ItemStack makeIcon() {
 			return new ItemStack(SFMBlocks.MANAGER.get());
 		}
 	};
@@ -32,28 +32,28 @@ public class SFMItems {
 		"manager",
 		() -> new BlockItem(
 			SFMBlocks.MANAGER.get(),
-			new Item.Properties().group(GROUP)
+			new Item.Properties().tab(GROUP)
 		)
 	);
 	public static final RegistryObject<BlockItem> CABLE = ITEMS.register(
 		"cable",
 		() -> new BlockItem(
 			SFMBlocks.CABLE.get(),
-			new Item.Properties().group(GROUP)
+			new Item.Properties().tab(GROUP)
 		)
 	);
 	public static final RegistryObject<BlockItem> CRAFTER = ITEMS.register(
 		"crafter",
 		() -> new BlockItem(
 			SFMBlocks.CRAFTER.get(),
-			new Item.Properties().group(GROUP)
+			new Item.Properties().tab(GROUP)
 		)
 	);
 	public static final RegistryObject<BlockItem> WORKSTATION = ITEMS.register(
 		"workstation",
 		() -> new BlockItem(
 			SFMBlocks.WORKSTATION.get(),
-			new Item.Properties().group(GROUP)
+			new Item.Properties().tab(GROUP)
 		)
 	);
 

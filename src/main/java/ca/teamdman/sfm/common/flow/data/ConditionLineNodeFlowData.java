@@ -130,7 +130,7 @@ public class ConditionLineNodeFlowData extends FlowData implements Observer, Pos
 			return new ConditionLineNodeFlowData(
 				SFMUtil.readUUID(buf),
 				Position.fromLong(buf.readLong()),
-				Result.valueOf(buf.readString(12))
+				Result.valueOf(buf.readUtf(12))
 			);
 		}
 
@@ -138,7 +138,7 @@ public class ConditionLineNodeFlowData extends FlowData implements Observer, Pos
 		public void toBuffer(ConditionLineNodeFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
 			buf.writeLong(data.position.toLong());
-			buf.writeString(data.responsibility.name(), 12);
+			buf.writeUtf(data.responsibility.name(), 12);
 		}
 	}
 }

@@ -33,15 +33,15 @@ public class SlotsSection extends FlowContainer {
 			public List<? extends ITextProperties> getTooltip() {
 				return Arrays.asList(
 					new StringTextComponent("Slots examples:")
-						.mergeStyle(TextFormatting.WHITE),
+						.withStyle(TextFormatting.WHITE),
 					new StringTextComponent("0, 1, 2, 3")
-						.mergeStyle(TextFormatting.GRAY),
+						.withStyle(TextFormatting.GRAY),
 					new StringTextComponent("0-3")
-						.mergeStyle(TextFormatting.GRAY),
+						.withStyle(TextFormatting.GRAY),
 					new StringTextComponent("0-3, 9, 10, 11, 12")
-						.mergeStyle(TextFormatting.GRAY),
+						.withStyle(TextFormatting.GRAY),
 					new StringTextComponent("0-3, 9-12, 16+")
-						.mergeStyle(TextFormatting.GRAY)
+						.withStyle(TextFormatting.GRAY)
 				);
 			}
 		});

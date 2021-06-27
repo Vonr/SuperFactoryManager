@@ -57,14 +57,14 @@ class TilesSection extends FlowContainer {
 		DRAWER.getChildren().clear();
 		DRAWER.addChild(new AddButton());
 
-		ManagerTileEntity tile = PARENT.CONTROLLER.SCREEN.getContainer().getSource();
-		World world = tile.getWorld();
+		ManagerTileEntity tile = PARENT.CONTROLLER.SCREEN.getMenu().getSource();
+		World world = tile.getLevel();
 
 		if (world == null) {
 			return;
 		}
 
-		CableNetworkManager.getOrRegisterNetwork(world, tile.getPos())
+		CableNetworkManager.getOrRegisterNetwork(world, tile.getBlockPos())
 			.ifPresent(this::getDrawerChildrenFromNetwork);
 
 		DRAWER.update();
@@ -101,7 +101,7 @@ class TilesSection extends FlowContainer {
 			return Arrays.asList(
 				new TranslationTextComponent("gui.sfm.flow.tooltip.add_tile_matcher_1"),
 				new TranslationTextComponent("gui.sfm.flow.tooltip.add_tile_matcher_2")
-					.mergeStyle(TextFormatting.GRAY)
+					.withStyle(TextFormatting.GRAY)
 			);
 		}
 	}

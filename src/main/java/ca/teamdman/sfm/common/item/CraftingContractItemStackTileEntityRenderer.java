@@ -20,7 +20,7 @@ public class CraftingContractItemStackTileEntityRenderer extends
 	public static boolean debounce = false;
 
 	@Override
-	public void func_239207_a_(
+	public void renderByItem(
 		ItemStack stack,
 		TransformType p_239207_2_,
 		MatrixStack matrixStack,
@@ -31,13 +31,13 @@ public class CraftingContractItemStackTileEntityRenderer extends
 		debounce = true;
 		try {
 			if (!(stack.getItem() instanceof CraftingContractItem)) return;
-			if (Minecraft.getInstance().world == null) return;
+			if (Minecraft.getInstance().level == null) return;
 
 			ItemStack result = CraftingContractItem.getRecipe(
 				stack,
-				Minecraft.getInstance().world
+				Minecraft.getInstance().level
 			)
-				.map(IRecipe::getRecipeOutput)
+				.map(IRecipe::getResultItem)
 				.orElse(MISSING_OUTPUT_STACK);
 
 			ItemStack primary = stack;
@@ -48,8 +48,8 @@ public class CraftingContractItemStackTileEntityRenderer extends
 			}
 			matrixStack.pushPose();
 			matrixStack.translate(0.5,0.5,0);
-			matrixStack.rotate((new Vector3f(0,1,0)).rotationDegrees(180));
-			Minecraft.getInstance().getItemRenderer().renderItem(
+			matrixStack.mulPose((new Vector3f(0,1,0)).rotationDegrees(180));
+			Minecraft.getInstance().getItemRenderer().renderStatic(
 				primary,
 				TransformType.FIXED,
 				combinedLight,
@@ -59,7 +59,7 @@ public class CraftingContractItemStackTileEntityRenderer extends
 			);
 			matrixStack.translate(-0.3,-0.3,0.1);
 			matrixStack.scale(0.7f,0.7f,1);
-			Minecraft.getInstance().getItemRenderer().renderItem(
+			Minecraft.getInstance().getItemRenderer().renderStatic(
 				secondary,
 				TransformType.FIXED,
 				combinedLight,

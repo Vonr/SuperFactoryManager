@@ -38,7 +38,7 @@ class PlusButton extends FlowPlusButton {
 			rtn.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.addbutton.label"));
 			rtn.add(new StringTextComponent(""));
 			rtn.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.addbutton.hint")
-				.mergeStyle(TextFormatting.GRAY));
+				.withStyle(TextFormatting.GRAY));
 		}
 		return rtn;
 	}

@@ -18,23 +18,23 @@ public class WaterIntakeItem extends BlockItem {
 	public WaterIntakeItem() {
 		super(
 			SFMBlocks.WATER_INTAKE.get(),
-			new Item.Properties().group(SFMItems.GROUP)
+			new Item.Properties().tab(SFMItems.GROUP)
 		);
 	}
 
 	@Override
-	public void addInformation(
+	public void appendHoverText(
 		ItemStack stack,
 		@Nullable World worldIn,
 		List<ITextComponent> tooltip,
 		ITooltipFlag flagIn
 	) {
-		super.addInformation(stack, worldIn, tooltip, flagIn);
+		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		tooltip.add(new TranslationTextComponent(
-			"gui.sfm.tooltip.water_intake.1").mergeStyle(TextFormatting.GRAY));
+			"gui.sfm.tooltip.water_intake.1").withStyle(TextFormatting.GRAY));
 		tooltip.add(new TranslationTextComponent(
-			"gui.sfm.tooltip.water_intake.2").mergeStyle(TextFormatting.GRAY));
+			"gui.sfm.tooltip.water_intake.2").withStyle(TextFormatting.GRAY));
 		tooltip.add(new TranslationTextComponent(
-			"gui.sfm.tooltip.water_intake.3").mergeStyle(TextFormatting.GRAY));
+			"gui.sfm.tooltip.water_intake.3").withStyle(TextFormatting.GRAY));
 	}
 }

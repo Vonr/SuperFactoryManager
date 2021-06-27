@@ -56,7 +56,7 @@ public class ItemStackFlowButton extends FlowButton {
 
 	@Override
 	public List<? extends ITextProperties> getTooltip() {
-		return getItemStack().getTooltip(null, TooltipFlags.ADVANCED);
+		return getItemStack().getTooltipLines(null, TooltipFlags.ADVANCED);
 	}
 
 	public ItemStack getItemStack() {

@@ -88,7 +88,7 @@ public class CursorFlowData extends FlowData implements PositionHolder {
 		public CursorFlowData fromBuffer(PacketBuffer buf) {
 			return new CursorFlowData(
 				SFMUtil.readUUID(buf),
-				buf.readString(64),
+				buf.readUtf(64),
 				Position.fromLong(buf.readLong())
 			);
 		}
@@ -96,7 +96,7 @@ public class CursorFlowData extends FlowData implements PositionHolder {
 		@Override
 		public void toBuffer(CursorFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
-			buf.writeString(data.playerName, 64);
+			buf.writeUtf(data.playerName, 64);
 			buf.writeLong(data.position.toLong());
 		}
 	}

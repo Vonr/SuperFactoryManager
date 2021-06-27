@@ -9,7 +9,6 @@ import ca.teamdman.sfm.common.tile.CrafterTileEntity;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
@@ -40,26 +39,21 @@ public class CrafterContainer extends Container {
 
 	public static CrafterContainer create(int windowId, PlayerInventory inv, PacketBuffer data) {
 		return SFMUtil.getClientTile(
-			IWorldPosCallable.of(inv.player.world, data.readBlockPos()),
+			IWorldPosCallable.create(inv.player.level, data.readBlockPos()),
 			CrafterTileEntity.class
 		)
 			.map(crafterTileEntity -> new CrafterContainer(windowId, inv, crafterTileEntity))
 			.orElse(null);
 	}
 
+
 	@Override
-	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
-		System.out.println(index);
+	public ItemStack quickMoveStack(PlayerEntity p_82846_1_, int p_82846_2_) {
 		return ItemStack.EMPTY;
 	}
 
 	@Override
-	public void onCraftMatrixChanged(IInventory inventoryIn) {
-		super.onCraftMatrixChanged(inventoryIn);
-	}
-
-	@Override
-	public boolean canInteractWith(PlayerEntity playerIn) {
+	public boolean stillValid(PlayerEntity p_75145_1_) {
 		return true;
 	}
 }

@@ -24,10 +24,10 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 		int windowId,
 		WorkstationTileEntity tile,
 		PlayerInventory playerInv,
-		boolean isRemote,
+		boolean isClientSide,
 		String data
 	) {
-		super(SFMContainers.WORKSTATION.get(), windowId, tile, isRemote);
+		super(SFMContainers.WORKSTATION.get(), windowId, tile, isClientSide);
 		this.PLAYER_INVENTORY = playerInv;
 //		MinecraftForge.EVENT_BUS.register(this);
 		SFM.LOGGER.debug(
@@ -92,42 +92,42 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 	}
 
 	@Override
-	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
-		Slot slot = inventorySlots.get(index);
-		if (slot == null || !slot.getHasStack()) return ItemStack.EMPTY;
-		ItemStack slotStack = slot.getStack();
+	public ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
+		Slot slot = slots.get(index);
+		if (slot == null || !slot.hasItem()) return ItemStack.EMPTY;
+		ItemStack slotStack = slot.getItem();
 		ItemStack rtn = slotStack.copy();
 		if (index == 0) { // crafting output
-			if (!mergeItemStack(slotStack, 56, 91+1, false)) {
+			if (!moveItemStackTo(slotStack, 56, 91+1, false)) {
 				return ItemStack.EMPTY;
 			}
 		} else if (index == 1) { // contract output
-			if (!mergeItemStack(slotStack, 56, 91+1, false)) {
+			if (!moveItemStackTo(slotStack, 56, 91+1, false)) {
 				return ItemStack.EMPTY;
 			}
 		} else if (index >= 2 && index <= 10) { // crafting grid
-			if (!mergeItemStack(slotStack, 56, 91+1, false)) {
+			if (!moveItemStackTo(slotStack, 56, 91+1, false)) {
 				return ItemStack.EMPTY;
 			}
 		} else if (index >= 11 && index <= 55) { // contract inv
-			if (!mergeItemStack(slotStack, 56, 91+1, false)) {
+			if (!moveItemStackTo(slotStack, 56, 91+1, false)) {
 				return ItemStack.EMPTY;
 			}
 		} else if (index >= 56 && index <= 91) { // player inventory
 			if (slotStack.getItem() instanceof CraftingContractItem) {
-				if (!mergeItemStack(slotStack, 11, 55+1, false)) {
+				if (!moveItemStackTo(slotStack, 11, 55+1, false)) {
 					return ItemStack.EMPTY;
 				}
 			} else {
-				if (!mergeItemStack(slotStack, 2, 10+1, false)) {
+				if (!moveItemStackTo(slotStack, 2, 10+1, false)) {
 					return ItemStack.EMPTY;
 				}
 			}
 		}
 		if (slotStack.isEmpty()) {
-			slot.putStack(ItemStack.EMPTY);
+			slot.set(ItemStack.EMPTY);
 		} else {
-			slot.onSlotChanged();
+			slot.setChanged();
 		}
 		return rtn;
 	}
@@ -135,12 +135,12 @@ public class WorkstationContainer extends BaseContainer<WorkstationTileEntity> {
 	public Stream<ICraftingRecipe> getOneStepRecipes() {
 		Set<ItemStack> availableIngredients = IntStream.range(
 			0,
-			PLAYER_INVENTORY.getSizeInventory()
+			PLAYER_INVENTORY.getContainerSize()
 		)
-			.mapToObj(PLAYER_INVENTORY::getStackInSlot)
+			.mapToObj(PLAYER_INVENTORY::getItem)
 			.collect(Collectors.toSet());
 
-		return getSource().getWorld().getRecipeManager().getRecipes().stream()
+		return getSource().getLevel().getRecipeManager().getRecipes().stream()
 			.filter(ICraftingRecipe.class::isInstance)
 			.map(ICraftingRecipe.class::cast)
 			.filter(recipe -> isRecipeSatisfied(availableIngredients, recipe));

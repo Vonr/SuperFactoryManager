@@ -89,7 +89,7 @@ public class TileModMatcherFlowData extends FlowData implements TileMatcher {
 		if (preview == null) {
 			return preview = network.getInventories().stream()
 				.filter(this::matches)
-				.map(TileEntity::getPos)
+				.map(TileEntity::getBlockPos)
 				.map(network::getPreview)
 				.collect(Collectors.toList());
 		}
@@ -102,12 +102,12 @@ public class TileModMatcherFlowData extends FlowData implements TileMatcher {
 		rtn.add(
 			1,
 			new StringTextComponent(I18n.get("gui.sfm.flow.tooltip.tile_mod_matcher"))
-				.mergeStyle(TextFormatting.GRAY)
+				.withStyle(TextFormatting.GRAY)
 		);
 		rtn.add(
 			2,
 			new StringTextComponent(modId)
-				.mergeStyle(TextFormatting.GRAY)
+				.withStyle(TextFormatting.GRAY)
 		);
 		return rtn;
 	}
@@ -152,7 +152,7 @@ public class TileModMatcherFlowData extends FlowData implements TileMatcher {
 		public TileModMatcherFlowData fromBuffer(PacketBuffer buf) {
 			return new TileModMatcherFlowData(
 				SFMUtil.readUUID(buf),
-				buf.readString(64),
+				buf.readUtf(64),
 				buf.readBoolean()
 			);
 		}
@@ -160,7 +160,7 @@ public class TileModMatcherFlowData extends FlowData implements TileMatcher {
 		@Override
 		public void toBuffer(TileModMatcherFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
-			buf.writeString(data.modId, 64);
+			buf.writeUtf(data.modId, 64);
 			buf.writeBoolean(data.open);
 		}
 	}

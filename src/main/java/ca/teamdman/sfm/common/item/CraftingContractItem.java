@@ -26,7 +26,7 @@ public class CraftingContractItem extends Item {
 
 	public CraftingContractItem() {
 		super(new Item.Properties()
-			.group(SFMItems.GROUP)
+			.tab(SFMItems.GROUP)
 			.setISTER(() -> CraftingContractItemStackTileEntityRenderer::new)
 		);
 	}
@@ -44,7 +44,7 @@ public class CraftingContractItem extends Item {
 	}
 
 	@Override
-	public void addInformation(
+	public void appendHoverText(
 		ItemStack stack,
 		@Nullable World worldIn,
 		List<ITextComponent> tooltip,
@@ -53,14 +53,14 @@ public class CraftingContractItem extends Item {
 		getRecipe(stack, worldIn).ifPresent(recipe -> {
 			tooltip.add(new TranslationTextComponent(
 				"gui.sfm.tooltip.crafting_contract.crafts",
-				recipe.getRecipeOutput().getCount(),
-				recipe.getRecipeOutput().getDisplayName()
-			).mergeStyle(TextFormatting.GRAY));
+				recipe.getResultItem().getCount(),
+				recipe.getResultItem().getDisplayName()
+			).withStyle(TextFormatting.GRAY));
 			if (Screen.hasShiftDown()) {
 				recipe
 					.getIngredients()
 					.stream()
-					.map(Ingredient::getMatchingStacks)
+					.map(Ingredient::getItems)
 					.map(x -> x.length > 0 ? x[0] : null)
 					.filter(Objects::nonNull)
 					.collect(Collectors.toMap(
@@ -73,7 +73,7 @@ public class CraftingContractItem extends Item {
 							"gui.sfm.tooltip.crafting_contract.consumes",
 							amount,
 							ingredient.getDisplayName()
-						).mergeStyle(TextFormatting.DARK_GRAY));
+						).withStyle(TextFormatting.DARK_GRAY));
 					});
 			}
 		});
@@ -89,14 +89,14 @@ public class CraftingContractItem extends Item {
 		}
 		CompoundNBT tag = stack.getTag();
 		if (tag == null) return Optional.empty();
-		ResourceLocation recipeId = ResourceLocation.tryCreate(
+		ResourceLocation recipeId = ResourceLocation.tryParse(
 			tag.getString("recipeId")
 		);
 		if (recipeId == null) return Optional.empty();
 
 		return world
 			.getRecipeManager()
-			.getRecipe(recipeId)
+			.byKey(recipeId)
 			.filter(x -> x instanceof ICraftingRecipe)
 			.map(ICraftingRecipe.class::cast);
 	}

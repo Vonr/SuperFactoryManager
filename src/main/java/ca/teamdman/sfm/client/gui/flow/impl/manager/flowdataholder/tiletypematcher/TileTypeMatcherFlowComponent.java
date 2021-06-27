@@ -5,21 +5,17 @@ import ca.teamdman.sfm.client.gui.flow.core.Colour3f.CONST;
 import ca.teamdman.sfm.client.gui.flow.core.Size;
 import ca.teamdman.sfm.client.gui.flow.impl.manager.core.ManagerFlowController;
 import ca.teamdman.sfm.client.gui.flow.impl.util.FlowContainer;
-import ca.teamdman.sfm.client.gui.flow.impl.util.TextAreaFlowComponent;
 import ca.teamdman.sfm.common.flow.core.FlowDataHolder;
 import ca.teamdman.sfm.common.flow.core.Position;
 import ca.teamdman.sfm.common.flow.data.TileTypeMatcherFlowData;
 import ca.teamdman.sfm.common.flow.holder.FlowDataHolderObserver;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import java.awt.TextArea;
-import net.minecraft.util.math.BlockPos;
 
 public class TileTypeMatcherFlowComponent extends FlowContainer implements
 	FlowDataHolder<TileTypeMatcherFlowData> {
 
 	protected final ManagerFlowController PARENT;
 	protected final Picker PICKER;
-	private final CoordinateInput TEXT_INPUT, Y_INPUT, Z_INPUT;
 	private final Icon ICON;
 	private TileTypeMatcherFlowData data;
 

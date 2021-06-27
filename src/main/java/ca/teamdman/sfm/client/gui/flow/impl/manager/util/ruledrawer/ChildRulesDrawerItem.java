@@ -70,9 +70,9 @@ class ChildRulesDrawerItem extends ItemStackFlowButton implements
 		list.add(new StringTextComponent(data.name));
 		list.add(new StringTextComponent(""));
 		list.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.children.remove_hint1")
-			.mergeStyle(TextFormatting.GRAY));
+			.withStyle(TextFormatting.GRAY));
 		list.add(new TranslationTextComponent("gui.sfm.associatedrulesdrawer.children.remove_hint2")
-			.mergeStyle(TextFormatting.GRAY));
+			.withStyle(TextFormatting.GRAY));
 		return list;
 	}
 

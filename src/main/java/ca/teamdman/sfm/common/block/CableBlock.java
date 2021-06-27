@@ -19,8 +19,8 @@ public class CableBlock extends Block implements ICable {
 
 	public CableBlock() {
 		this(Block.Properties
-			.create(Material.IRON)
-			.hardnessAndResistance(3F, 6F)
+			.of(Material.METAL)
+			.strength(3F, 6F)
 			.sound(SoundType.METAL));
 	}
 
@@ -40,15 +40,15 @@ public class CableBlock extends Block implements ICable {
 	}
 
 	@Override
-	public void onBlockAdded(
+	public void onPlace(
 		BlockState state,
 		World worldIn,
 		BlockPos pos,
 		BlockState oldState,
 		boolean isMoving
 	) {
-		if (!worldIn.isRemote) {
-			super.onBlockAdded(state, worldIn, pos, oldState, isMoving);
+		if (!worldIn.isClientSide) {
+			super.onPlace(state, worldIn, pos, oldState, isMoving);
 			CableNetworkManager.getOrRegisterNetwork(worldIn, pos);
 			SFM.LOGGER.debug(
 				SFMUtil.getMarker(getClass()),
@@ -59,14 +59,14 @@ public class CableBlock extends Block implements ICable {
 	}
 
 	@Override
-	public void onReplaced(
+	public void onRemove(
 		BlockState state,
 		World worldIn,
 		BlockPos pos,
 		BlockState newState,
 		boolean isMoving
 	) {
-		super.onReplaced(state, worldIn, pos, newState, isMoving);
+		super.onRemove(state, worldIn, pos, newState, isMoving);
 		CableNetworkManager.unregister(worldIn, pos);
 		SFM.LOGGER.debug(
 			SFMUtil.getMarker(getClass()),
@@ -74,4 +74,5 @@ public class CableBlock extends Block implements ICable {
 			CableNetworkManager.size()
 		);
 	}
+
 }

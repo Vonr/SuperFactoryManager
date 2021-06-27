@@ -52,7 +52,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 
 	@Override
 	public boolean matches(@Nonnull TileEntity tile) {
-		return Objects.equals(tile.getPos(), position);
+		return Objects.equals(tile.getBlockPos(), position);
 	}
 
 	@Override
@@ -83,7 +83,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		rtn.add(
 			1,
 			new StringTextComponent(I18n.get("gui.sfm.flow.tooltip.tile_position_matcher"))
-				.mergeStyle(TextFormatting.GRAY)
+				.withStyle(TextFormatting.GRAY)
 		);
 		rtn.add(
 			2,
@@ -93,7 +93,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 				position.getY(),
 				position.getZ()
 			))
-				.mergeStyle(TextFormatting.GRAY)
+				.withStyle(TextFormatting.GRAY)
 		);
 		return rtn;
 	}
@@ -160,7 +160,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		public TilePositionMatcherFlowData fromBuffer(PacketBuffer buf) {
 			return new TilePositionMatcherFlowData(
 				SFMUtil.readUUID(buf),
-				BlockPos.fromLong(buf.readLong()),
+				BlockPos.of(buf.readLong()),
 				buf.readBoolean()
 			);
 		}
@@ -168,7 +168,7 @@ public class TilePositionMatcherFlowData extends FlowData implements TileMatcher
 		@Override
 		public void toBuffer(TilePositionMatcherFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
-			buf.writeLong(data.position.toLong());
+			buf.writeLong(data.position.asLong());
 			buf.writeBoolean(data.open);
 		}
 	}

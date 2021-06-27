@@ -159,9 +159,9 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 		// if "inventory" key pressed, and the event wasn't consumed, close gui
 		if (
 			!Client.preventClosingManagerWithInventoryButton
-				&& SCREEN.getMinecraft().gameSettings.keyBindInventory.matchesKey(keyCode, scanCode)
+				&& SCREEN.getMinecraft().options.keyInventory.matches(keyCode, scanCode)
 		) {
-			SCREEN.closeScreen();
+			SCREEN.onClose();
 			return true;
 		}
 
@@ -197,10 +197,10 @@ public class ManagerFlowController extends FlowContainer implements Observer {
 	 */
 	public void createPlayerCursor() {
 		ClientPlayerEntity localPlayer = SCREEN.getMinecraft().player;
-		SCREEN.getFlowDataContainer().get(localPlayer.getUniqueID(), CursorFlowData.class)
+		SCREEN.getFlowDataContainer().get(localPlayer.getUUID(), CursorFlowData.class)
 			.orElseGet(() -> {
 				CursorFlowData next = new CursorFlowData(
-					localPlayer.getUniqueID(),
+					localPlayer.getUUID(),
 					localPlayer.getScoreboardName(),
 					new Position()
 				);

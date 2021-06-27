@@ -72,7 +72,7 @@ public class PersistentCraftingInventory extends ItemStackHandler {
 		Optional<ICraftingRecipe> recipe = identifyRecipe(world);
 		if (recipe.isPresent()) {
 			latest = recipe.get();
-			setStackInSlot(getSlots() - 1, recipe.get().getRecipeOutput().copy());
+			setStackInSlot(getSlots() - 1, recipe.get().getResultItem().copy());
 		} else {
 			latest = null;
 			setStackInSlot(getSlots() - 1, ItemStack.EMPTY);
@@ -88,10 +88,10 @@ public class PersistentCraftingInventory extends ItemStackHandler {
 			HEIGHT
 		);
 		for (int i = 0; i < getSlots() - 1; i++) {
-			craftingInventory.setInventorySlotContents(i, getStackInSlot(i));
+			craftingInventory.setItem(i, getStackInSlot(i));
 		}
 		return world.getRecipeManager()
-			.getRecipes(IRecipeType.CRAFTING, craftingInventory, world)
+			.getRecipesFor(IRecipeType.CRAFTING, craftingInventory, world)
 			.stream()
 			.findFirst();
 	}
@@ -107,13 +107,13 @@ public class PersistentCraftingInventory extends ItemStackHandler {
 		}
 
 		@Override
-		public void onCraftMatrixChanged(IInventory inventoryIn) {
+		public void slotsChanged(IInventory p_75130_1_) {
+//			super.slotsChanged(p_75130_1_);
 		}
 
 		@Override
-		public boolean canInteractWith(PlayerEntity playerIn) {
+		public boolean stillValid(PlayerEntity p_75145_1_) {
 			return false;
 		}
-
 	}
 }

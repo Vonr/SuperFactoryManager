@@ -238,7 +238,7 @@ public class ItemConditionRuleFlowData extends FlowData implements PositionHolde
 			return new ItemConditionRuleFlowData(
 				getUUID(tag),
 				tag.getString("name"),
-				ItemStack.read(tag.getCompound("icon")),
+				ItemStack.of(tag.getCompound("icon")),
 				new Position(tag.getCompound("pos")),
 				new UUIDList(tag, "itemMatchers"),
 				new UUIDList(tag, "tileMatchers"),
@@ -270,15 +270,15 @@ public class ItemConditionRuleFlowData extends FlowData implements PositionHolde
 		public ItemConditionRuleFlowData fromBuffer(PacketBuffer buf) {
 			return new ItemConditionRuleFlowData(
 				SFMUtil.readUUID(buf),
-				buf.readString(MAX_NAME_LENGTH),
-				buf.readItemStack(),
+				buf.readUtf(MAX_NAME_LENGTH),
+				buf.readItem(),
 				Position.fromLong(buf.readLong()),
 				new UUIDList(buf),
 				new UUIDList(buf),
 				EnumSetSerializationHelper.deserialize(buf, Direction::valueOf, Direction.class),
-				new SlotsRule(buf.readString(32)),
-				ItemMode.valueOf(buf.readString(16)),
-				TileMode.valueOf(buf.readString(16)),
+				new SlotsRule(buf.readUtf(32)),
+				ItemMode.valueOf(buf.readUtf(16)),
+				TileMode.valueOf(buf.readUtf(16)),
 				buf.readBoolean()
 			);
 		}
@@ -286,15 +286,15 @@ public class ItemConditionRuleFlowData extends FlowData implements PositionHolde
 		@Override
 		public void toBuffer(ItemConditionRuleFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
-			buf.writeString(data.name, MAX_NAME_LENGTH);
-			buf.writeItemStack(data.icon);
+			buf.writeUtf(data.name, MAX_NAME_LENGTH);
+			buf.writeItem(data.icon);
 			buf.writeLong(data.position.toLong());
 			data.itemMatcherIds.serialize(buf);
 			data.tileMatcherIds.serialize(buf);
 			EnumSetSerializationHelper.serialize(data.faces, buf);
-			buf.writeString(data.slots.getDefinition(), 32);
-			buf.writeString(data.itemMode.name(), 16);
-			buf.writeString(data.tileMode.name(), 16);
+			buf.writeUtf(data.slots.getDefinition(), 32);
+			buf.writeUtf(data.itemMode.name(), 16);
+			buf.writeUtf(data.tileMode.name(), 16);
 			buf.writeBoolean(data.open);
 		}
 	}

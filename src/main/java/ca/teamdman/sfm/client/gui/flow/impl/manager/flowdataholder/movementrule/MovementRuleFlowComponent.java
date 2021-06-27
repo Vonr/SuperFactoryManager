@@ -109,8 +109,8 @@ public class MovementRuleFlowComponent extends FlowContainer implements
 		// When E is pressed, close window if mouse is hovering
 		if (isVisible()
 			&& isHovering()
-			&& CONTROLLER.SCREEN.getMinecraft().gameSettings.keyBindInventory
-			.matchesKey(keyCode, scanCode)
+			&& CONTROLLER.SCREEN.getMinecraft().options.keyInventory
+			.matches(keyCode, scanCode)
 		) {
 			setVisibleAndEnabled(false);
 			return true;

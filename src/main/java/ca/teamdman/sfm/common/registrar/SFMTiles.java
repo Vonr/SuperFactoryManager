@@ -24,7 +24,7 @@ public final class SFMTiles {
 		.register(
 			"manager",
 			() -> TileEntityType.Builder
-				.create(ManagerTileEntity::new, SFMBlocks.MANAGER.get())
+				.of(ManagerTileEntity::new, SFMBlocks.MANAGER.get())
 				.build(null)
 		);
 
@@ -32,7 +32,7 @@ public final class SFMTiles {
 		.register(
 			"crafter",
 			() -> TileEntityType.Builder
-				.create(CrafterTileEntity::new, SFMBlocks.CRAFTER.get())
+				.of(CrafterTileEntity::new, SFMBlocks.CRAFTER.get())
 				.build(null)
 		);
 
@@ -40,7 +40,7 @@ public final class SFMTiles {
 		.register(
 			"workstation",
 			() -> TileEntityType.Builder
-				.create(WorkstationTileEntity::new, SFMBlocks.WORKSTATION.get())
+				.of(WorkstationTileEntity::new, SFMBlocks.WORKSTATION.get())
 				.build(null)
 		);
 
@@ -48,7 +48,7 @@ public final class SFMTiles {
 			.register(
 				"water_intake",
 				() -> Builder
-					.create(WaterIntakeTileEntity::new, SFMBlocks.WATER_INTAKE.get())
+					.of(WaterIntakeTileEntity::new, SFMBlocks.WATER_INTAKE.get())
 					.build(null)
 			);
 }

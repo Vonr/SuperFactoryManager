@@ -22,15 +22,15 @@ public class WorkstationBlock extends CableBlock {
 
 	public WorkstationBlock() {
 		super(AbstractBlock.Properties
-			.create(Material.PISTON)
-			.hardnessAndResistance(3F, 4F)
+			.of(Material.PISTON)
+			.strength(3F, 4F)
 			.harvestTool(ToolType.AXE)
-			.harvestLevel(ItemTier.WOOD.getHarvestLevel())
+			.harvestLevel(ItemTier.WOOD.getLevel())
 			.sound(SoundType.WOOD));
 	}
 
 	@Override
-	public ActionResultType onBlockActivated(
+	public ActionResultType use(
 		BlockState state,
 		World worldIn,
 		BlockPos pos,
@@ -38,7 +38,7 @@ public class WorkstationBlock extends CableBlock {
 		Hand handIn,
 		BlockRayTraceResult hit
 	) {
-		if (!worldIn.isRemote) {
+		if (!worldIn.isClientSide) {
 			SFMContainers.WORKSTATION.get().openGui(player, worldIn, pos);
 		}
 		return ActionResultType.CONSUME;

@@ -27,11 +27,11 @@ public class WorkstationRecipeTransferInfo implements
 
 	@Override
 	public List<Slot> getRecipeSlots(WorkstationContainer workstationContainer) {
-		return workstationContainer.inventorySlots.subList(2, 10+1);
+		return workstationContainer.slots.subList(2, 10+1);
 	}
 
 	@Override
 	public List<Slot> getInventorySlots(WorkstationContainer workstationContainer) {
-		return workstationContainer.inventorySlots.subList(56, 91+1);
+		return workstationContainer.slots.subList(56, 91+1);
 	}
 }

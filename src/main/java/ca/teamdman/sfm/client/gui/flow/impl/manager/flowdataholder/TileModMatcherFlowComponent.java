@@ -45,12 +45,12 @@ public class TileModMatcherFlowComponent extends
 		) {
 			@Override
 			public void clear() {
-				delegate.setText("");
+				delegate.setValue("");
 			}
 		};
 		MOD_ID_INPUT.setValidator(next ->
 			Objects.nonNull(next)
-				&& ResourceLocation.isResouceNameValid(next.toLowerCase(Locale.ROOT) + ":"));
+				&& ResourceLocation.isValidResourceLocation(next.toLowerCase(Locale.ROOT) + ":"));
 		MOD_ID_INPUT.setResponder(next -> {
 			if (!next.equals(data.modId)) {
 				data.modId = next.toLowerCase(Locale.ROOT);

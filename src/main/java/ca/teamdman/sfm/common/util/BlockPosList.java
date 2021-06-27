@@ -19,7 +19,7 @@ public class BlockPosList extends ArrayList<BlockPos> {
 	public BlockPosList(PacketBuffer buf) {
 		IntStream.range(0, buf.readInt())
 			.mapToLong(__ -> buf.readLong())
-			.mapToObj(BlockPos::fromLong)
+			.mapToObj(BlockPos::of)
 			.forEach(this::add);
 	}
 
@@ -38,6 +38,6 @@ public class BlockPosList extends ArrayList<BlockPos> {
 
 	public void serialize(PacketBuffer buf) {
 		buf.writeInt(size());
-		forEach(id -> buf.writeLong(id.toLong()));
+		forEach(id -> buf.writeLong(id.asLong()));
 	}
 }

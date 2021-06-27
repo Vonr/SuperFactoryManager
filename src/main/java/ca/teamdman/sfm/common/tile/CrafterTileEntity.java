@@ -13,7 +13,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.CraftResultInventory;
 import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.IRecipeHolder;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
@@ -53,7 +52,7 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 			super.onContentsChanged(slot);
 			if (!debounce) {
 				debounce = true;
-				CrafterTileEntity.this.markDirty();
+				CrafterTileEntity.this.setChanged();
 				if (slot == 9) {
 					if (inventory.getStackInSlot(9) == ItemStack.EMPTY) {
 						CrafterTileEntity.this.consumeIngredients(1);
@@ -107,8 +106,7 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 	}
 
 	@Override
-	public void remove() {
-		super.remove();
+	protected void invalidateCaps() {
 		inventoryCapabilityExternal.invalidate();
 		inventoryOutputCapabilityExternal.invalidate();
 		inventoryInputCapabilityExternal.invalidate();
@@ -124,15 +122,15 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 		CraftingInventory inv,
 		CraftResultInventory result
 	) {
-		if (world != null && !world.isRemote) {
+		if (world != null && !world.isClientSide) {
 			ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
 			@SuppressWarnings("ConstantConditions")
 			ItemStack stack = serverPlayer.getServer().getRecipeManager()
-				.getRecipe(IRecipeType.CRAFTING, inv, world)
-				.filter(r -> result.canUseRecipe(world, serverPlayer, r))
-				.map(r -> r.getCraftingResult(inv))
+				.getRecipeFor(IRecipeType.CRAFTING, inv, world)
+				.filter(r -> result.setRecipeUsed(world, serverPlayer, r))
+				.map(r -> r.assemble(inv))
 				.orElse(ItemStack.EMPTY);
-			result.setInventorySlotContents(0, stack);
+			result.setItem(0, stack);
 		}
 	}
 
@@ -147,21 +145,22 @@ public class CrafterTileEntity extends TileEntity implements ICapabilityProvider
 	public void onInputChanged() {
 		CraftingInventory guh = new CraftingInventory(new Container(ContainerType.CRAFTING, -1) {
 			@Override
-			public void onCraftMatrixChanged(IInventory inventoryIn) {
+			public boolean stillValid(PlayerEntity p_75145_1_) {
+				return false;
 			}
 
 			@Override
-			public boolean canInteractWith(PlayerEntity playerIn) {
-				return false;
+			public void broadcastChanges() {
+
 			}
 		}, 3, 3);
 		for (int i = 0; i < 9; i++) {
-			guh.setInventorySlotContents(i, inventory.getStackInSlot(i));
+			guh.setItem(i, inventory.getStackInSlot(i));
 		}
-		List<ICraftingRecipe> recipes = world.getRecipeManager()
-			.getRecipes(IRecipeType.CRAFTING, guh, world);
+		List<ICraftingRecipe> recipes = level.getRecipeManager()
+			.getRecipesFor(IRecipeType.CRAFTING, guh, level);
 		if (recipes.size() > 0) {
-			inventory.setStackInSlot(9, recipes.get(0).getRecipeOutput().copy());
+			inventory.setStackInSlot(9, recipes.get(0).getResultItem().copy());
 		} else {
 			inventory.setStackInSlot(9, ItemStack.EMPTY);
 		}

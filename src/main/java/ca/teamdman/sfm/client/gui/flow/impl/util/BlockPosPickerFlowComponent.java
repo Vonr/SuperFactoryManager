@@ -42,7 +42,7 @@ public abstract class BlockPosPickerFlowComponent extends FlowContainer {
 		DRAWER.getChildren().clear();
 		network.getInventories().stream()
 			.filter(t -> t.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).isPresent())
-			.map(TileEntity::getPos)
+			.map(TileEntity::getBlockPos)
 			.filter(filter)
 			.map(pos -> new Entry(pos, getPreview(network.getWorld(), pos)))
 			.forEach(DRAWER::addChild);
@@ -70,7 +70,7 @@ public abstract class BlockPosPickerFlowComponent extends FlowContainer {
 			List<ITextProperties> rtn = new ArrayList<>(super.getTooltip());
 			rtn.add(1,
 				new StringTextComponent(POS.toString())
-					.mergeStyle(TextFormatting.GRAY)
+					.withStyle(TextFormatting.GRAY)
 			);
 			return rtn;
 		}

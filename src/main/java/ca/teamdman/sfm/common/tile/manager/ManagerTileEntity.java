@@ -75,28 +75,12 @@ public class ManagerTileEntity extends TileEntity implements
 		return new TranslationTextComponent("container.sfm.manager");
 	}
 
-	/**
-	 * Remove any CursorFlowData instances that don't belong to a listener
-	 */
-	public void pruneCursors() {
-		Set<UUID> listeners = getListeners().keySet().stream()
-			.map(PlayerEntity::getUUID)
-			.collect(Collectors.toSet());
-		getFlowDataContainer().removeIf(data ->
-			data instanceof CursorFlowData
-				&& !listeners.contains(data.getId()));
-	}
-
-	public BasicFlowDataContainer getFlowDataContainer() {
-		return FLOW_DATA_CONTAINER;
-	}
-
 	public void markAndNotify() {
 		if (getLevel() == null) {
 			return;
 		}
 		setChanged();
-		getLevel().chan(
+		getLevel().sendBlockUpdated(
 			getBlockPos(),
 			getBlockState(),
 			getBlockState(),
@@ -106,12 +90,19 @@ public class ManagerTileEntity extends TileEntity implements
 
 	public void closeGuiForAllListeners() {
 		getListeners().keySet()
-			.forEach(ServerPlayerEntity::closeScreen);
+			.forEach(ServerPlayerEntity::closeContainer);
 	}
 
 	@Override
-	public void read(BlockState state, CompoundNBT tag) {
-		super.read(state, tag);
+	public Map<ServerPlayerEntity, Integer> getListeners() {
+		return LISTENERS;
+	}
+
+	@Override
+	public void load(
+		BlockState state, CompoundNBT tag
+	) {
+		super.load(state, tag);
 		if (tag.contains("data", NBT.TAG_COMPOUND)) {
 			// "data" not present on first load on client
 			deserializeNBT(tag.getCompound("data"));
@@ -124,7 +115,8 @@ public class ManagerTileEntity extends TileEntity implements
 		SFM.LOGGER.debug(
 			SFMUtil.getMarker(getClass()),
 			"Loading nbt on {}, replacing {} entries",
-			level == null ? "null world" : level.isClientSide ? "client" : "server",
+			level == null ? "null world"
+				: level.isClientSide ? "client" : "server",
 			getFlowDataContainer().size()
 		);
 
@@ -139,6 +131,10 @@ public class ManagerTileEntity extends TileEntity implements
 		getFlowDataContainer().clear();
 		getFlowDataContainer().deserializeNBT(tag.getCompound(
 			NBT_SCHEMA_DATA_KEY));
+	}
+
+	public BasicFlowDataContainer getFlowDataContainer() {
+		return FLOW_DATA_CONTAINER;
 	}
 
 	private void upgradeSavedData(CompoundNBT tag) {
@@ -176,7 +172,8 @@ public class ManagerTileEntity extends TileEntity implements
 		SFM.LOGGER.debug(
 			SFMUtil.getMarker(getClass()),
 			"Saving NBT on {}, writing {} entries",
-			world == null ? "null world" : world.isRemote ? "client" : "server",
+			level == null ? "null world"
+				: level.isClientSide ? "client" : "server",
 			getFlowDataContainer().size()
 		);
 		CompoundNBT c = new CompoundNBT();
@@ -186,20 +183,26 @@ public class ManagerTileEntity extends TileEntity implements
 	}
 
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
-		super.write(compound);
-		compound.put("data", serializeNBT());
-		return compound;
+	public CompoundNBT save(CompoundNBT tag) {
+		super.save(tag);
+		tag.put("data", serializeNBT());
+		return tag;
 	}
 
+	/**
+	 * Remove any CursorFlowData instances that don't belong to a listener
+	 */
+	public void pruneCursors() {
+		Set<UUID> listeners = getListeners().keySet().stream()
+			.map(PlayerEntity::getUUID)
+			.collect(Collectors.toSet());
+		getFlowDataContainer().removeIf(data ->
+			data instanceof CursorFlowData
+				&& !listeners.contains(data.getId()));
+	}
 
 	@Override
 	public void tick() {
 		EXECUTOR.tick();
-	}
-
-	@Override
-	public Map<ServerPlayerEntity, Integer> getListeners() {
-		return LISTENERS;
 	}
 }

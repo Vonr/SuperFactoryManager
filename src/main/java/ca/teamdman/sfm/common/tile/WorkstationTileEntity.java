@@ -38,7 +38,7 @@ public class WorkstationTileEntity extends TileEntity implements
 		3,
 		3,
 		this::onCraftingOutputChanged,
-		this::getWorld
+		this::getLevel
 	);
 
 	public WorkstationTileEntity() {
@@ -46,7 +46,7 @@ public class WorkstationTileEntity extends TileEntity implements
 	}
 
 	public void onCraftingOutputChanged() {
-		this.markDirty();
+		this.setChanged();
 		IRecipe<CraftingInventory> latest = this.CRAFTING_INVENTORY.getLatestRecipe();
 		ItemStack contract = ItemStack.EMPTY;
 		if (latest != null) {
@@ -98,18 +98,18 @@ public class WorkstationTileEntity extends TileEntity implements
 	}
 
 	@Override
-	public void read(
+	public void load(
 		BlockState state, CompoundNBT nbt
 	) {
-		super.read(state, nbt);
+		super.load(state, nbt);
 		CONTRACT_INVENTORY.deserializeNBT(nbt.getCompound("contracts"));
 		CRAFTING_INVENTORY.deserializeNBT(nbt.getCompound("crafting"));
 		setAutoLearnEnabled(nbt.getBoolean("autolearn"));
 	}
 
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
-		CompoundNBT tag = super.write(compound);
+	public CompoundNBT save(CompoundNBT compound) {
+		CompoundNBT tag = super.save(compound);
 		tag.put("contracts", CONTRACT_INVENTORY.serializeNBT());
 		tag.put("crafting", CRAFTING_INVENTORY.serializeNBT());
 		tag.putBoolean("autolearn", isAutoLearnEnabled());

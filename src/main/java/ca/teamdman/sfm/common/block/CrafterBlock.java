@@ -28,14 +28,14 @@ public class CrafterBlock extends Block {
 
 	public CrafterBlock() {
 		super(Block.Properties
-			.create(Material.IRON)
-			.hardnessAndResistance(3F, 6F)
+			.of(Material.METAL)
+			.strength(3F, 6F)
 			.sound(SoundType.METAL));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public ActionResultType onBlockActivated(
+	public ActionResultType use(
 		BlockState state,
 		World world,
 		BlockPos pos,
@@ -43,11 +43,11 @@ public class CrafterBlock extends Block {
 		Hand handIn,
 		BlockRayTraceResult hit
 	) {
-		if (!world.isRemote && handIn == Hand.MAIN_HAND) {
+		if (!world.isClientSide && handIn == Hand.MAIN_HAND) {
 			SFMUtil
-				.getServerTile(IWorldPosCallable.of(world, pos), CrafterTileEntity.class)
+				.getServerTile(IWorldPosCallable.create(world, pos), CrafterTileEntity.class)
 				.ifPresent(tile -> NetworkHooks.openGui((ServerPlayerEntity) player, tile, data -> {
-					data.writeBlockPos(tile.getPos());
+					data.writeBlockPos(tile.getBlockPos());
 				}));
 		}
 

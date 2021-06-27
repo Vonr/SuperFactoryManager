@@ -45,7 +45,7 @@ public class ItemPickerMatcherFlowComponent extends
 		){
 			@Override
 			public void clear() {
-				delegate.setText("0");
+				delegate.setValue("0");
 			}
 		};
 		QUANTITY_INPUT.setValidator(next -> Objects.nonNull(next) && next.matches("\\d*"));

@@ -16,49 +16,49 @@ public class Recipes extends ForgeRecipeProvider {
 	}
 
 	@Override
-	protected void registerRecipes(Consumer<IFinishedRecipe> consumer) {
-		ShapedRecipeBuilder.shapedRecipe(SFMBlocks.CABLE.get(), 16)
-			.key('D', Tags.Items.DYES_BLACK)
-			.key('G', Items.LIGHT_WEIGHTED_PRESSURE_PLATE)
-			.key('C', Tags.Items.CHESTS)
-			.key('B', Items.IRON_BARS)
-			.patternLine("DGD")
-			.patternLine("BCB")
-			.patternLine("DGD")
-			.addCriterion("has_iron_ingot", hasItem(Items.IRON_INGOT))
-			.addCriterion("has_chest", hasItem(Tags.Items.CHESTS))
-			.build(consumer);
+	protected void buildShapelessRecipes(Consumer<IFinishedRecipe> consumer) {
+		ShapedRecipeBuilder.shaped(SFMBlocks.CABLE.get(), 16)
+			.define('D', Tags.Items.DYES_BLACK)
+			.define('G', Items.LIGHT_WEIGHTED_PRESSURE_PLATE)
+			.define('C', Tags.Items.CHESTS)
+			.define('B', Items.IRON_BARS)
+			.pattern("DGD")
+			.pattern("BCB")
+			.pattern("DGD")
+			.unlockedBy("has_iron_ingot", has(Items.IRON_INGOT))
+			.unlockedBy("has_chest", has(Tags.Items.CHESTS))
+			.save(consumer);
 
-		ShapedRecipeBuilder.shapedRecipe(SFMBlocks.CRAFTER.get())
-			.key('A', Tags.Items.DUSTS_REDSTONE)
-			.key('B', Items.REPEATER)
-			.key('C',Items.CRAFTING_TABLE)
-			.patternLine("ABA")
-			.patternLine("BCB")
-			.patternLine("ABA")
-			.addCriterion("has_redstone", hasItem(Tags.Items.DUSTS_REDSTONE))
-			.build(consumer);
+		ShapedRecipeBuilder.shaped(SFMBlocks.CRAFTER.get())
+			.define('A', Tags.Items.DUSTS_REDSTONE)
+			.define('B', Items.REPEATER)
+			.define('C',Items.CRAFTING_TABLE)
+			.pattern("ABA")
+			.pattern("BCB")
+			.pattern("ABA")
+			.unlockedBy("has_redstone", has(Tags.Items.DUSTS_REDSTONE))
+			.save(consumer);
 
-		ShapedRecipeBuilder.shapedRecipe(SFMBlocks.MANAGER.get())
-			.key('A', Tags.Items.CHESTS)
-			.key('B', SFMBlocks.CABLE.get())
-			.key('C', SFMBlocks.CRAFTER.get())
-			.addCriterion("has_iron_ingot", hasItem(Items.IRON_INGOT))
-			.addCriterion("has_chest", hasItem(Tags.Items.CHESTS))
-			.patternLine("ABA")
-			.patternLine("BCB")
-			.patternLine("ABA")
-			.build(consumer);
+		ShapedRecipeBuilder.shaped(SFMBlocks.MANAGER.get())
+			.define('A', Tags.Items.CHESTS)
+			.define('B', SFMBlocks.CABLE.get())
+			.define('C', SFMBlocks.CRAFTER.get())
+			.unlockedBy("has_iron_ingot", has(Items.IRON_INGOT))
+			.unlockedBy("has_chest", has(Tags.Items.CHESTS))
+			.pattern("ABA")
+			.pattern("BCB")
+			.pattern("ABA")
+			.save(consumer);
 
-		ShapedRecipeBuilder.shapedRecipe(SFMBlocks.WATER_INTAKE.get())
-			.key('I', Tags.Items.STORAGE_BLOCKS_IRON)
-			.key('B', Items.BUCKET)
-			.key('G', Items.IRON_BARS)
-			.key('O', Items.OBSERVER)
-			.addCriterion("has_iron_ingot", hasItem(Items.IRON_INGOT))
-			.patternLine("GBG")
-			.patternLine("GIG")
-			.patternLine("GOG")
-			.build(consumer);
+		ShapedRecipeBuilder.shaped(SFMBlocks.WATER_INTAKE.get())
+			.define('I', Tags.Items.STORAGE_BLOCKS_IRON)
+			.define('B', Items.BUCKET)
+			.define('G', Items.IRON_BARS)
+			.define('O', Items.OBSERVER)
+			.unlockedBy("has_iron_ingot", has(Items.IRON_INGOT))
+			.pattern("GBG")
+			.pattern("GIG")
+			.pattern("GOG")
+			.save(consumer);
 	}
 }

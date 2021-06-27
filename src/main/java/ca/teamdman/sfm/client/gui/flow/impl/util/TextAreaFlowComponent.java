@@ -50,16 +50,16 @@ public class TextAreaFlowComponent extends FlowComponent {
 
 	public void setContent(String content) {
 		debounce = true;
-		delegate.setText(content);
+		delegate.setValue(content);
 		debounce = false;
 	}
 
 	public String getContent() {
-		return delegate.getText();
+		return delegate.getValue();
 	}
 
 	public void setValidator(Predicate<String> validator) {
-		delegate.setValidator(validator);
+		delegate.setFilter(validator);
 	}
 
 	public void setResponder(Consumer<String> responder) {
@@ -73,19 +73,19 @@ public class TextAreaFlowComponent extends FlowComponent {
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		delegate.keyPressed(keyCode, scanCode, modifiers);
-		return delegate.canWrite();
+		return delegate.canConsumeInput();
 	}
 
 	@Override
 	public boolean keyReleased(int keyCode, int scanCode, int modifiers, int mx, int my) {
 		delegate.keyReleased(keyCode, scanCode, modifiers);
-		return delegate.canWrite();
+		return delegate.canConsumeInput();
 	}
 
 	@Override
 	public boolean charTyped(char codePoint, int modifiers, int mx, int my) {
 		delegate.charTyped(codePoint, modifiers);
-		return delegate.canWrite();
+		return delegate.canConsumeInput();
 	}
 
 	@Override
@@ -104,7 +104,7 @@ public class TextAreaFlowComponent extends FlowComponent {
 	}
 
 	public void clear() {
-		delegate.setText("");
+		delegate.setValue("");
 	}
 
 	@Override
@@ -149,16 +149,16 @@ public class TextAreaFlowComponent extends FlowComponent {
 			String placeholderContent
 		) {
 			super(font, x, y, width, height, null);
-			setText(content);
+			setValue(content);
 			this.FONT = font;
 			this.PLACEHOLDER_TEXT = placeholderContent;
 		}
 
 		@Override
-		protected void drawSelectionBox(int startX, int startY, int endX, int endY) {
+		protected void renderHighlight(int startX, int startY, int endX, int endY) {
 			RenderSystem.pushMatrix();
 			RenderSystem.multMatrix(matrixStack.last().pose());
-			super.drawSelectionBox(startX, startY, endX, endY);
+			super.renderHighlight(startX, startY, endX, endY);
 			RenderSystem.popMatrix();
 		}
 
@@ -166,8 +166,8 @@ public class TextAreaFlowComponent extends FlowComponent {
 		public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 			this.matrixStack = matrixStack;
 			super.render(matrixStack, mouseX, mouseY, partialTicks);
-			if (!isFocused() && getText().length() == 0) {
-				FONT.drawStringWithShadow(
+			if (!isFocused() && getValue().length() == 0) {
+				FONT.drawShadow(
 					matrixStack,
 					PLACEHOLDER_TEXT,
 					this.x + 4,

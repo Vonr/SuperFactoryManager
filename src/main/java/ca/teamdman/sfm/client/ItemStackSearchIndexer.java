@@ -61,7 +61,7 @@ public class ItemStackSearchIndexer implements Callable<Multimap<ItemStack, Stri
 					// Add full tooltip text
 					rtn.put(
 						stack,
-						stack.getTooltip(null, TooltipFlags.ADVANCED).stream()
+						stack.getTooltipLines(null, TooltipFlags.ADVANCED).stream()
 							.map(ITextComponent::getString)
 							.collect(Collectors.joining(" "))
 					);
@@ -93,7 +93,7 @@ public class ItemStackSearchIndexer implements Callable<Multimap<ItemStack, Stri
 	private static List<ItemStack> getSubItems(Item item) {
 		NonNullList<ItemStack> rtn = NonNullList.create();
 		try {
-			item.fillItemGroup(ItemGroup.SEARCH, rtn);
+			item.fillItemCategory(ItemGroup.TAB_SEARCH, rtn);
 		} catch (Exception ignored) {
 		}
 		return rtn;

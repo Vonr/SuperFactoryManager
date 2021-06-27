@@ -84,7 +84,7 @@ public class ItemPickerMatcherFlowData extends FlowData implements
 
 	@Override
 	public boolean matches(@Nonnull ItemStack stack) {
-		return this.stack.isItemEqual(stack) && (quantity == 0 || stack.getCount() >= quantity);
+		return this.stack.sameItem(stack) && (quantity == 0 || stack.getCount() >= quantity);
 	}
 
 	@Override
@@ -113,7 +113,7 @@ public class ItemPickerMatcherFlowData extends FlowData implements
 		public ItemPickerMatcherFlowData fromNBT(CompoundNBT tag) {
 			return new ItemPickerMatcherFlowData(
 				getUUID(tag),
-				ItemStack.read(tag.getCompound("stack")),
+				ItemStack.of(tag.getCompound("stack")),
 				tag.getInt("quantity"),
 				tag.getBoolean("open")
 
@@ -133,7 +133,7 @@ public class ItemPickerMatcherFlowData extends FlowData implements
 		public ItemPickerMatcherFlowData fromBuffer(PacketBuffer buf) {
 			return new ItemPickerMatcherFlowData(
 				SFMUtil.readUUID(buf),
-				buf.readItemStack(),
+				buf.readItem(),
 				buf.readInt(),
 				buf.readBoolean()
 
@@ -143,7 +143,7 @@ public class ItemPickerMatcherFlowData extends FlowData implements
 		@Override
 		public void toBuffer(ItemPickerMatcherFlowData data, PacketBuffer buf) {
 			SFMUtil.writeUUID(data.getId(), buf);
-			buf.writeItemStack(data.stack);
+			buf.writeItem(data.stack);
 			buf.writeInt(data.quantity);
 			buf.writeBoolean(data.open);
 		}

@@ -16,19 +16,19 @@ import net.minecraftforge.fml.network.NetworkHooks;
 
 public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 
-	public ManagerContainer(int windowId, ManagerTileEntity tile, boolean isRemote) {
-		super(SFMContainers.MANAGER.get(), windowId, tile, isRemote);
+	public ManagerContainer(int windowId, ManagerTileEntity tile, boolean isClientSide) {
+		super(SFMContainers.MANAGER.get(), windowId, tile, isClientSide);
 		tile.pruneCursors();
 	}
 
 	public static ManagerContainer create(int windowId, PlayerInventory inv, PacketBuffer data) {
 		return SFMUtil.getClientTile(
-			IWorldPosCallable.of(inv.player.world, data.readBlockPos()),
+			IWorldPosCallable.create(inv.player.level, data.readBlockPos()),
 			ManagerTileEntity.class
 		)
 			.map(tile -> {
-				CableNetworkManager.getOrRegisterNetwork(tile.getWorld(), tile.getPos()).ifPresent(network -> {
-					network.rebuildNetwork(tile.getPos());
+				CableNetworkManager.getOrRegisterNetwork(tile.getLevel(), tile.getBlockPos()).ifPresent(network -> {
+					network.rebuildNetwork(tile.getBlockPos());
 				});
 				ManagerContainer container = new ManagerContainer(windowId, tile, true);
 				container.readData(data);
@@ -46,11 +46,11 @@ public class ManagerContainer extends BaseContainer<ManagerTileEntity> {
 	}
 
 	private void readData(PacketBuffer data) {
-		getSource().deserializeNBT(data.readCompoundTag());
+		getSource().deserializeNBT(data.readNbt());
 	}
 
 	private static void writeData(ManagerTileEntity tile, PacketBuffer data) {
-		data.writeBlockPos(tile.getPos());
-		data.writeCompoundTag(tile.serializeNBT());
+		data.writeBlockPos(tile.getBlockPos());
+		data.writeNbt(tile.serializeNBT());
 	}
 }

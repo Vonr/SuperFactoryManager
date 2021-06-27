@@ -51,9 +51,9 @@ public final class C2SWorkstationLearnRecipePacket extends C2SContainerPacket<Wo
 			WorkstationTileEntity tile
 		) {
 			System.out.println("Learning " + msg.RECIPE_ID);
-			tile.getWorld()
+			tile.getLevel()
 				.getRecipeManager()
-				.getRecipe(msg.RECIPE_ID)
+				.byKey(msg.RECIPE_ID)
 				.filter(ICraftingRecipe.class::isInstance)
 				.map(ICraftingRecipe.class::cast)
 				.map(CraftingContractItem::withRecipe)

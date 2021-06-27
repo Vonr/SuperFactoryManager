@@ -23,7 +23,7 @@ class Icon extends CyclingItemStackFlowButton {
 	public List<ItemStack> getItemStacks() {
 		ArrayList<ItemStack> rtn = new ArrayList<>();
 		CableNetworkManager
-			.getOrRegisterNetwork(PARENT.PARENT.SCREEN.getContainer().getSource())
+			.getOrRegisterNetwork(PARENT.PARENT.SCREEN.getMenu().getSource())
 			.map(PARENT.getData()::getPreview)
 			.ifPresent(rtn::addAll);
 		return rtn;

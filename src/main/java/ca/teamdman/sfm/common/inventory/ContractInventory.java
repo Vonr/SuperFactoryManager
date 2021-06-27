@@ -26,6 +26,6 @@ public class ContractInventory extends ItemStackHandler {
 
 	@Override
 	protected void onContentsChanged(int slot) {
-		workstationTileEntity.markDirty();
+		workstationTileEntity.setChanged();
 	}
 }

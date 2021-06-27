@@ -17,8 +17,8 @@ public class FlowExecutor {
 	}
 
 	public void tick() {
-		World world = TILE.getWorld();
-		if (world == null || world.isRemote) {
+		World world = TILE.getLevel();
+		if (world == null || world.isClientSide) {
 			return;
 		}
 		tick++;

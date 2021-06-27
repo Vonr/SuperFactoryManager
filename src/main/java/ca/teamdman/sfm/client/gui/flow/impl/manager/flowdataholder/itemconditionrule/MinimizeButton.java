@@ -39,9 +39,9 @@ class MinimizeButton extends FlowMinusButton {
 			new TranslationTextComponent(
 				"gui.sfm.manager.tile_entity_rule.minimize_button.hint2",
 				PARENT.CONTROLLER.SCREEN.getMinecraft()
-					.gameSettings.keyBindInventory.getKey()
-					.func_237520_d_().getString()
-			).mergeStyle(TextFormatting.GRAY)
+					.options.keyInventory.getKey()
+					.getDisplayName().getString()
+			).withStyle(TextFormatting.GRAY)
 		);
 	}
 

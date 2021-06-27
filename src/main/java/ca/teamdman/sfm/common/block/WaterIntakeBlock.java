@@ -29,33 +29,34 @@ public class WaterIntakeBlock extends Block implements IBucketPickupHandler {
 
 	public WaterIntakeBlock() {
 		super(AbstractBlock.Properties
-			.create(Material.PISTON)
-			.hardnessAndResistance(3f, 6f)
+			.of(Material.PISTON)
+			.strength(3f, 6f)
 			.sound(SoundType.METAL));
-		setDefaultState(getStateContainer()
-			.getBaseState()
-			.with(IN_WATER, false));
+		
+		registerDefaultState(getStateDefinition()
+			.any()
+			.setValue(IN_WATER, false));
 	}
 
 	@Nullable
 	@Override
 	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		return getDefaultState().with(
+		return defaultBlockState().setValue(
 			IN_WATER,
-			isActive(context.getWorld(), context.getPos())
+			isActive(context.getLevel(), context.getClickedPos())
 		);
 	}
 
 	@Override
-	protected void fillStateContainer(Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
 		builder.add(IN_WATER);
 	}
 
 	public boolean isActive(IWorldReader world, BlockPos pos) {
 		int neighbourWaterCount = 0;
 		for (Direction direction : Direction.values()) {
-			FluidState state = world.getFluidState(pos.offset(direction));
-			if (state.isSource() && state.isTagged(FluidTags.WATER)) {
+			FluidState state = world.getFluidState(pos.relative(direction));
+			if (state.isSource() && state.is(FluidTags.WATER)) {
 				if (++neighbourWaterCount == 2) {
 					return true;
 				}
@@ -73,11 +74,11 @@ public class WaterIntakeBlock extends Block implements IBucketPickupHandler {
 		BlockPos fromPos,
 		boolean isMoving
 	) {
-		if (world.isRemote) return;
+		if (world.isClientSide) return;
 		boolean isActive = isActive(world, pos);
-		if (state.get(IN_WATER) != isActive) {
-			BlockState newState = getDefaultState().with(IN_WATER, isActive);
-			world.setBlockState(
+		if (state.getValue(IN_WATER) != isActive) {
+			BlockState newState = defaultBlockState().setValue(IN_WATER, isActive);
+			world.setBlock(
 				pos,
 				newState,
 				1 | 2
@@ -87,7 +88,7 @@ public class WaterIntakeBlock extends Block implements IBucketPickupHandler {
 
 	@Override
 	public boolean hasTileEntity(BlockState state) {
-		return state.get(IN_WATER);
+		return state.getValue(IN_WATER);
 	}
 
 	@Nullable
@@ -99,9 +100,9 @@ public class WaterIntakeBlock extends Block implements IBucketPickupHandler {
 	}
 
 	@Override
-	public Fluid pickupFluid(
+	public Fluid takeLiquid(
 		IWorld worldIn, BlockPos pos, BlockState state
 	) {
-		return state.get(IN_WATER) ? Fluids.WATER : Fluids.EMPTY;
+		return state.getValue(IN_WATER) ? Fluids.WATER : Fluids.EMPTY;
 	}
 }

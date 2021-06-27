@@ -17,8 +17,8 @@ public class SlotMemoryItemHandler extends SlotItemHandler {
 	}
 
 	@Override
-	public void putStack(@Nonnull ItemStack stack) {
+	public void set(@Nonnull ItemStack stack) {
 		ghost = stack.copy();
-		super.putStack(stack);
+		super.set(stack);
 	}
 }

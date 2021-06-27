@@ -103,7 +103,7 @@ public class FlowCursor extends FlowComponent implements FlowDataHolder<CursorFl
 		if (player == null) {
 			return false;
 		}
-		return Objects.equals(data.getId(), player.getUniqueID());
+		return Objects.equals(data.getId(), player.getUUID());
 	}
 
 	@Override
