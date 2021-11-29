@@ -1,5 +1,6 @@
 package ca.teamdman.sfm;
 
+import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.world.level.block.Block;
@@ -36,6 +37,7 @@ public class SFM
         var bus = FMLJavaModLoadingContext.get().getModEventBus();
         SFMBlocks.register(bus);
         SFMItems.register(bus);
+        SFMBlockEntities.register(bus);
 
         bus.addListener(this::setup);
         // Register the enqueueIMC method for modloading
