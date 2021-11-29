@@ -1,11 +1,16 @@
 package ca.teamdman.sfm.common.block;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.cablenetwork.ICable;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -17,12 +22,17 @@ import net.minecraft.world.level.material.Material;
 
 import javax.annotation.Nullable;
 
-public class ManagerBlock extends CableBlock implements EntityBlock {
+public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable {
     public ManagerBlock() {
         super(BlockBehaviour.Properties
                       .of(Material.PISTON)
                       .destroyTime(2)
                       .sound(SoundType.METAL));
+    }
+
+
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
     }
 
     @Override
@@ -42,10 +52,26 @@ public class ManagerBlock extends CableBlock implements EntityBlock {
         if (level.isClientSide()) return null;
         return createTickerHelper(type, SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), ManagerBlockEntity::serverTick);
     }
-//
-//    @Nullable
-//    @Override
-//    public <T extends BlockEntity> GameEventListener getListener(Level level, T blockEntity) {
-//        return EntityBlock.super.getListener(level, blockEntity);
-//    }
+
+    @Override
+    public void onNeighborChange(BlockState state, LevelReader world, BlockPos pos, BlockPos neighbor) {
+        if (world instanceof ServerLevel) {
+            CableNetworkManager
+                    .getOrRegisterNetwork(((Level) world), pos)
+                    .ifPresent(network -> network.rebuildAdjacentInventories(pos));
+        }
+    }
+
+    @Override
+    public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
+        CableNetworkManager.getOrRegisterNetwork(world, pos);
+        CableNetworkManager.printDebugInfo();
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        super.onRemove(state, level, pos, newState, isMoving);
+        CableNetworkManager.unregister(level, pos);
+        CableNetworkManager.printDebugInfo();
+    }
 }
