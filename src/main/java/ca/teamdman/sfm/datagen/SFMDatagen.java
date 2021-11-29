@@ -15,6 +15,8 @@ public class SFMDatagen {
         if (event.includeServer()) {
             gen.addProvider(new SFMBlockStates(gen, event.getExistingFileHelper()));
             gen.addProvider(new SFMItemModels(gen, event.getExistingFileHelper()));
+            gen.addProvider(new SFMLootTables(gen));
+            gen.addProvider(new SFMRecipes(gen));
         }
     }
 }

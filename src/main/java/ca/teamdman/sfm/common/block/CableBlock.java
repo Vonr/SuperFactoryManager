@@ -20,7 +20,8 @@ public class CableBlock extends Block implements ICable {
         super(Block.Properties
                       .of(Material.METAL)
                       .destroyTime(1f)
-                      .sound(SoundType.METAL));
+                      .sound(SoundType.METAL)
+                      .lootFrom());
     }
 
     public CableBlock(Properties properties) {

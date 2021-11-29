@@ -1,3 +1,12 @@
+3542964a17ad79e41ec203839992dd3dd0d1cbc7 assets/sfm/blockstates/cable.json
 de84bec1234bfbe493274c634dad4edb5daecaf1 assets/sfm/blockstates/manager.json
+4a1fdc7028d7e913215100dd61e50fd2ec1d4f33 assets/sfm/models/block/cable.json
 0181e451461b41edf486f157e108b369528c6bcd assets/sfm/models/block/manager.json
+f0f5f79545a03c81b928d04835e5dc1012f15ec9 assets/sfm/models/item/cable.json
 051420be462852603a05011d44f8fc5a19bca77f assets/sfm/models/item/manager.json
+6c669c3bcdb29ccaf00963cdce64ec744955b61a data/sfm/advancements/recipes/sfm/cable.json
+5b51390717b1427c9dcdc9cb70ab3263b3f8d25c data/sfm/advancements/recipes/sfm/manager.json
+fb27c8d2ed1407a16dfc08ba703e92c0c6a5487b data/sfm/loot_tables/blocks/cable.json
+fd929c2e4fa69b13c476584842bce732251cfe29 data/sfm/loot_tables/blocks/manager.json
+b736932c67feb5ca736d8f88298d679835b0bb9a data/sfm/recipes/cable.json
+af760783d6780092c557bd2328d3fd7c9654f30f data/sfm/recipes/manager.json
