@@ -14,8 +14,10 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import java.util.stream.Collectors;
 
@@ -24,10 +26,13 @@ import java.util.stream.Collectors;
 public class SFM
 {
     // Directly reference a log4j logger.
-    public static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger(SFM.class);
     public static final String MOD_ID = "sfm";
 
     public SFM() {
+
+        enableDevLogging();
+
         var bus = FMLJavaModLoadingContext.get().getModEventBus();
         SFMBlocks.register(bus);
         SFMItems.register(bus);
@@ -40,6 +45,10 @@ public class SFM
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    private void enableDevLogging() {
+        Configurator.setLevel(LOGGER.getName(), Level.DEBUG);
     }
 
     private void setup(final FMLCommonSetupEvent event)

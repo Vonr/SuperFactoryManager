@@ -20,5 +20,8 @@ public class SFMBlockStates extends BlockStateProvider {
                 modLoc("block/manager_bot"),
                 modLoc("block/manager_top")
         ).texture("particle", "#top"));
+
+        simpleBlock(SFMBlocks.CABLE_BLOCK.get());
+
     }
 }

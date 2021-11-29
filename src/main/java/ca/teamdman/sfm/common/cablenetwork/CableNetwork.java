@@ -21,11 +21,18 @@ public class CableNetwork {
         this.LEVEL = level;
     }
 
+    private CableNetwork(Level level, Collection<BlockPos> init) {
+        this(level);
+        CABLES.addAll(init);
+    }
+
     /**
      * Only cable blocks are valid network members
      */
     public static boolean isValidNetworkMember(Level world, BlockPos cablePos) {
-        return world.getBlockState(cablePos).getBlock() instanceof ICable;
+        return world
+                .getBlockState(cablePos)
+                .getBlock() instanceof ICable;
     }
 
     public void rebuildNetwork(BlockPos pos) {
@@ -53,6 +60,7 @@ public class CableNetwork {
         }
         return isNewMember;
     }
+
 
     public Level getLevel() {
         return LEVEL;
@@ -87,56 +95,79 @@ public class CableNetwork {
     }
 
     /**
-     * If the position is a bridge, splits the network and returns the part that is removed Assumes
-     * the bridge position is still a member
+     * Discover connected cables using only known cable positions.
+     * Used during network fragmentation.
+     */
+    private Set<BlockPos> discoverKnownCables(BlockPos start) {
+        return SFMUtil
+                .getRecursiveStream((current, next, results) -> {
+                    if (!contains(current)) return;
+                    results.accept(current);
+                    for (Direction direction : Direction.values()) {
+                        BlockPos offset = current.offset(direction.getNormal());
+                        next.accept(offset);
+                    }
+                }, start)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Takes the pos out of the network, and returns the networks that result.
+     * <p>
+     * Removing a position may cause the network to split in two, and will return both networks.
      *
      * @param pos Cable bridge position
      * @return List of positions that need to become new networks
      */
-    public Set<BlockPos> split(BlockPos pos) {
-        // Discover an adjacent cable that's part of the network
-        BlockPos start = null;
-        for (Direction direction : Direction.values()) {
-            BlockPos p = pos.offset(direction.getNormal());
-            if (contains(p)) {
-                start = p;
-                break;
+    public Set<CableNetwork> remove(BlockPos pos) {
+        CABLES.remove(pos);
+        if (isEmpty()) return Collections.emptySet();
+
+        // Discover branches
+        Set<CableNetwork> networks = new HashSet<>();
+        for (var direction : Direction.values()) {
+            var offset = pos.offset(direction.getNormal());
+            var branch = discoverKnownCables(offset);
+            if (!branch.isEmpty()) {
+                var network = getDerivativeNetwork(branch);
+                networks.add(network);
             }
         }
 
-        if (start == null) {
-            // No cable exists, not a bridge since not valid network member
-            return Collections.emptySet();
-        } else {
-            // Discover cable chain branching from the starting neighbour
-            Set<BlockPos> retain = SFMUtil.getRecursiveStream((current, next, results) -> {
-                results.accept(current);
-                for (Direction direction : Direction.values()) {
-                    BlockPos off = current.offset(direction.getNormal());
-                    if (!off.equals(pos) && contains(off)) {
-                        next.accept(off);
-                    }
-                }
-            }, start).collect(Collectors.toSet());
+        return networks;
+    }
 
-            Set<BlockPos> remove = CABLES.stream().filter(p -> !retain.contains(p)).collect(Collectors.toSet());
-            remove.forEach(this::removeCable);
-            remove.remove(pos);
-            return remove;
-        }
+    /**
+     * Creates a new network using the given positions and already known inventories
+     */
+    private CableNetwork getDerivativeNetwork(Set<BlockPos> positions) {
+        var network = new CableNetwork(getLevel(), positions);
+
+        // get all cable neighbours
+        Set<BlockPos> validInvPositions = positions
+                .stream()
+
+                .flatMap(pos -> Arrays
+                        .stream(Direction.values())
+                        .map(Direction::getNormal)
+                        .map(pos::offset))
+                .collect(Collectors.toSet());
+
+        // get all inventories occupying a neighbour spot
+        // add them to the new network
+        INVENTORIES
+                .entrySet()
+                .stream()
+                .filter(entry -> validInvPositions.contains(entry.getKey()))
+                .forEach(entry -> network.INVENTORIES.put(entry.getKey(), entry.getValue()));
+
+        return network;
     }
 
     public boolean contains(BlockPos pos) {
         return CABLES.contains(pos);
     }
 
-    public boolean removeCable(BlockPos pos) {
-        boolean wasMember = CABLES.remove(pos);
-        if (wasMember) {
-            rebuildAdjacentInventories(pos);
-        }
-        return wasMember;
-    }
 
     public Optional<BlockEntity> getInventory(BlockPos pos) {
         return Optional.ofNullable(INVENTORIES.get(pos));
@@ -165,7 +196,10 @@ public class CableNetwork {
     }
 
     public ItemStack getPreview(BlockPos pos) {
-        return new ItemStack(LEVEL.getBlockState(pos).getBlock().asItem());
+        return new ItemStack(LEVEL
+                                     .getBlockState(pos)
+                                     .getBlock()
+                                     .asItem());
     }
 
     public Set<BlockPos> getCables() {
