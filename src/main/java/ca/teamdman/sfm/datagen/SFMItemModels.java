@@ -22,6 +22,7 @@ public class SFMItemModels extends ItemModelProvider {
     protected void registerModels() {
         justParent(SFMItems.MANAGER_ITEM, SFMBlocks.MANAGER_BLOCK);
         justParent(SFMItems.CABLE_ITEM, SFMBlocks.CABLE_BLOCK);
+        basicItem(SFMItems.DISK_ITEM);
     }
 
 
@@ -41,5 +42,14 @@ public class SFMItemModels extends ItemModelProvider {
                 block.getId().getPath(),
                 SFM.MOD_ID + ":block/" + item.getId().getPath() + extra
         );
+    }
+
+    private void basicItem(
+            RegistryObject<? extends Item> item
+    ) {
+        withExistingParent(
+                item.getId().getPath(),
+                mcLoc("item/generated")
+        ).texture("layer0", modLoc("item/" + item.getId().getPath()));
     }
 }

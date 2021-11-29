@@ -1,93 +1,30 @@
 package ca.teamdman.sfm;
 
-import ca.teamdman.sfm.common.registry.SFMBlockEntities;
-import ca.teamdman.sfm.common.registry.SFMBlocks;
-import ca.teamdman.sfm.common.registry.SFMItems;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.InterModComms;
+import ca.teamdman.sfm.common.registry.*;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
-import java.util.stream.Collectors;
-
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod("sfm")
-public class SFM
-{
-    // Directly reference a log4j logger.
+public class SFM {
     public static final Logger LOGGER = LogManager.getLogger(SFM.class);
     public static final String MOD_ID = "sfm";
 
     public SFM() {
-
-        enableDevLogging();
-
-        var bus = FMLJavaModLoadingContext.get().getModEventBus();
+        var bus = FMLJavaModLoadingContext
+                .get()
+                .getModEventBus();
         SFMBlocks.register(bus);
         SFMItems.register(bus);
         SFMBlockEntities.register(bus);
-
-        bus.addListener(this::setup);
-        // Register the enqueueIMC method for modloading
-        bus.addListener(this::enqueueIMC);
-        // Register the processIMC method for modloading
-        bus.addListener(this::processIMC);
-
-        // Register ourselves for server and other game events we are interested in
-        MinecraftForge.EVENT_BUS.register(this);
+        SFMMenus.register(bus);
+        bus.addListener(this::onClientSetup);
     }
 
-    private void enableDevLogging() {
-        Configurator.setLevel(LOGGER.getName(), Level.DEBUG);
-    }
-
-    private void setup(final FMLCommonSetupEvent event)
-    {
-        // some preinit code
-        LOGGER.info("HELLO FROM PREINIT");
-        LOGGER.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
-    }
-
-    private void enqueueIMC(final InterModEnqueueEvent event)
-    {
-        // some example code to dispatch IMC to another mod
-        InterModComms.sendTo("examplemod", "helloworld", () -> { LOGGER.info("Hello world from the MDK"); return "Hello world";});
-    }
-
-    private void processIMC(final InterModProcessEvent event)
-    {
-        // some example code to receive and process InterModComms from other mods
-        LOGGER.info("Got IMC {}", event.getIMCStream().
-                map(m->m.messageSupplier().get()).
-                collect(Collectors.toList()));
-    }
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
-    public void onServerStarting(FMLServerStartingEvent event) {
-        // do something when the server starts
-        LOGGER.info("HELLO from server starting");
-    }
-
-    // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
-    // Event bus for receiving Registry Events)
-    @Mod.EventBusSubscriber(bus=Mod.EventBusSubscriber.Bus.MOD)
-    public static class RegistryEvents {
-        @SubscribeEvent
-        public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent) {
-            // register a new block here
-            LOGGER.info("HELLO from Register Block");
-        }
+    public void onClientSetup(FMLClientSetupEvent event) {
+        SFMScreens.register();
     }
 }

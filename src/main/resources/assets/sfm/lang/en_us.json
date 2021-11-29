@@ -1,6 +1,8 @@
 {
   "mod.name": "Super Factory Manager",
   "itemGroup.sfm": "Super Factory Manager",
-  "block.sfm.manager": "Super Factory Manager",
-  "block.sfm.cable": "Inventory Cable"
+  "block.sfm.manager": "Factory Manager",
+  "block.sfm.cable": "Inventory Cable",
+  "item.sfm.disk": "Factory Manager Program Disk",
+  "container.sfm.manager": "Factory Manager"
 }
