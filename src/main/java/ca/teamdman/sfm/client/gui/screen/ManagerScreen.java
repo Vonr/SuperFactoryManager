@@ -2,7 +2,6 @@ package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
@@ -26,6 +25,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
 
     @Override
     protected void init() {
+        super.init();
         doneButton = this.addRenderableWidget(new Button(
                 this.width / 2 - 4 - 150,
                 this.height / 4 + 120 + 12,
