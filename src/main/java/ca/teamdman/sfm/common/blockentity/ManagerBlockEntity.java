@@ -5,10 +5,11 @@ import ca.teamdman.sfm.common.menu.ManagerMenu;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.world.Container;
-import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -19,7 +20,7 @@ import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
-    private final Container INVENTORY = new SimpleContainer(1);
+    private final NonNullList<ItemStack> ITEMS = NonNullList.withSize(1, ItemStack.EMPTY);
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
@@ -41,32 +42,34 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     public int getContainerSize() {
-        return INVENTORY.getContainerSize();
+        return ITEMS.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return INVENTORY.isEmpty();
+        return ITEMS.isEmpty();
     }
 
     @Override
     public ItemStack getItem(int slot) {
-        return INVENTORY.getItem(slot);
+        if (slot < 0 || slot >= ITEMS.size()) return ItemStack.EMPTY;
+        return ITEMS.get(slot);
     }
 
     @Override
     public ItemStack removeItem(int slot, int amount) {
-        return INVENTORY.removeItem(slot, amount);
+        return ContainerHelper.removeItem(ITEMS, slot, amount);
     }
 
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
-        return INVENTORY.removeItemNoUpdate(slot);
+        return ContainerHelper.takeItem(ITEMS, slot);
     }
 
     @Override
     public void setItem(int slot, ItemStack stack) {
-        INVENTORY.setItem(slot, stack);
+        if (slot < 0 || slot >= ITEMS.size()) return;
+        ITEMS.set(slot, stack);
     }
 
     @Override
@@ -85,8 +88,21 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        ContainerHelper.loadAllItems(tag, ITEMS);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        super.save(tag);
+        ContainerHelper.saveAllItems(tag, ITEMS);
+        return tag;
+    }
+
+    @Override
     public void clearContent() {
-        INVENTORY.clearContent();
+        ITEMS.clear();
     }
 
 }
