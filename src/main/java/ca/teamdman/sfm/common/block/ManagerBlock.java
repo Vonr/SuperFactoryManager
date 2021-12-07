@@ -6,9 +6,9 @@ import ca.teamdman.sfm.common.cablenetwork.ICable;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -21,9 +21,9 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.gameevent.GameEventListener;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.fmllegacy.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
@@ -56,11 +56,13 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
             InteractionHand hand,
             BlockHitResult hit
     ) {
-        if (level.getBlockEntity(pos) instanceof ManagerBlockEntity tile) {
-            player.openMenu(tile);
-            return InteractionResult.sidedSuccess(level.isClientSide());
+        if (level.getBlockEntity(pos) instanceof ManagerBlockEntity tile && player instanceof ServerPlayer sp) {
+            NetworkHooks.openGui(sp, tile, buf -> {
+                buf.writeBlockPos(tile.getBlockPos());
+            });
+            return InteractionResult.CONSUME;
         }
-        return InteractionResult.PASS;
+        return InteractionResult.SUCCESS;
     }
 
     @Nullable

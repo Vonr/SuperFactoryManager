@@ -1,9 +1,9 @@
 package ca.teamdman.sfm;
 
 import ca.teamdman.sfm.common.registry.*;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,10 +21,7 @@ public class SFM {
         SFMItems.register(bus);
         SFMBlockEntities.register(bus);
         SFMMenus.register(bus);
-        bus.addListener(this::onClientSetup);
-    }
-
-    public void onClientSetup(FMLClientSetupEvent event) {
-        SFMScreens.register();
+        bus.addListener((FMLCommonSetupEvent e) -> SFMScreens.register());
+        bus.addListener((FMLClientSetupEvent e) -> SFMPackets.register());
     }
 }
