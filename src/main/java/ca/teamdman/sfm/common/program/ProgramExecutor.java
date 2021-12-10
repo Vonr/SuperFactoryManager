@@ -4,16 +4,23 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfml.ast.Program;
 
 public class ProgramExecutor {
-    private final Program            Program;
+    private final Program            PROGRAM;
     private final ManagerBlockEntity MANAGER;
 
     public ProgramExecutor(Program program, ManagerBlockEntity manager) {
-        this.Program = program;
+        this.PROGRAM = program;
         this.MANAGER = manager;
     }
 
     public void tick() {
         var context = new ProgramContext(MANAGER);
-        Program.tick(context);
+        if (MANAGER
+                    .getLevel()
+                    .getGameTime() % 20 == 0) {
+            MANAGER
+                    .getDisk()
+                    .ifPresent(PROGRAM::addWarnings);
+        }
+        PROGRAM.tick(context);
     }
 }

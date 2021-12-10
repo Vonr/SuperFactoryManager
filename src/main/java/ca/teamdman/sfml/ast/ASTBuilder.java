@@ -45,7 +45,11 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .map(this::visit)
                 .map(Trigger.class::cast)
                 .collect(Collectors.toList());
-        return new Program(name.getValue(), triggers);
+        var labels = getLabels()
+                .stream()
+                .map(Label::NAME)
+                .collect(Collectors.toSet());
+        return new Program(name.getValue(), triggers, labels);
     }
 
     @Override

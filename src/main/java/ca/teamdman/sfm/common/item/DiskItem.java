@@ -1,6 +1,8 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.common.registry.SFMItems;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.ListTag;
@@ -84,10 +86,35 @@ public class DiskItem extends Item {
                 );
     }
 
+
+    public static void setWarnings(ItemStack stack, List<String> warnings) {
+        stack
+                .getOrCreateTag()
+                .put(
+                        "sfm:warnings",
+                        warnings
+                                .stream()
+                                .map(StringTag::valueOf)
+                                .collect(ListTag::new, ListTag::add, ListTag::addAll)
+                );
+    }
+
+
     public static List<String> getErrors(ItemStack stack) {
         return stack
                 .getOrCreateTag()
                 .getList("sfm:errors", Tag.TAG_STRING)
+                .stream()
+                .map(StringTag.class::cast)
+                .map(Tag::getAsString)
+                .collect(
+                        Collectors.toList());
+    }
+
+    public static List<String> getWarnings(ItemStack stack) {
+        return stack
+                .getOrCreateTag()
+                .getList("sfm:warnings", Tag.TAG_STRING)
                 .stream()
                 .map(StringTag.class::cast)
                 .map(Tag::getAsString)
@@ -138,6 +165,23 @@ public class DiskItem extends Item {
                 .mapToObj(BlockPos::of);
     }
 
+    public static Multimap<String, BlockPos> getPositions(ItemStack stack) {
+        var rtn = HashMultimap.<String, BlockPos>create();
+        var dict = stack
+                .getOrCreateTag()
+                .getCompound("sfm:labels");
+        for (var key : dict.getAllKeys()) {
+            dict
+                    .getList(key, Tag.TAG_LONG)
+                    .stream()
+                    .map(LongTag.class::cast)
+                    .mapToLong(LongTag::getAsLong)
+                    .mapToObj(BlockPos::of)
+                    .forEach(pos -> rtn.put(key, pos));
+        }
+        return rtn;
+    }
+
     @Override
     public Component getName(ItemStack stack) {
         var name = getProgramName(stack);
@@ -155,6 +199,11 @@ public class DiskItem extends Item {
                     .stream()
                     .map(TextComponent::new)
                     .map(line -> line.withStyle(ChatFormatting.RED))
+                    .forEach(list::add);
+            getWarnings(stack)
+                    .stream()
+                    .map(TextComponent::new)
+                    .map(line -> line.withStyle(ChatFormatting.YELLOW))
                     .forEach(list::add);
         }
     }
