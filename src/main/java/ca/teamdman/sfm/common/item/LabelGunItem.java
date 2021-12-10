@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.gui.screen.LabelGunScreen;
 import ca.teamdman.sfm.common.block.ManagerBlock;
+import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -61,14 +62,26 @@ public class LabelGunItem extends Item {
     ) {
         var pos   = ctx.getClickedPos();
         var level = ctx.getLevel();
+        if (level.isClientSide) return InteractionResult.SUCCESS;
         if (level
                 .getBlockState(pos)
                 .getBlock() instanceof ManagerBlock) {
             setPairedLocation(ctx.getItemInHand(), pos);
-            return InteractionResult.sidedSuccess(level.isClientSide);
-        } else {
-            return InteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.CONSUME;
         }
+        var label = getLabel(stack);
+        if (label.isEmpty()) return InteractionResult.SUCCESS;
+
+        var pairedPos = getPairedLocation(stack);
+        if (pairedPos.isEmpty()) return InteractionResult.CONSUME;
+
+        var paired = level.getBlockEntity(pairedPos.get());
+        if (paired instanceof ManagerBlockEntity manager) {
+            var disk = manager.getItem(0);
+            DiskItem.toggleLabel(disk, label, pos);
+            manager.setItem(0, disk);
+        }
+        return InteractionResult.CONSUME;
     }
 
     @Override

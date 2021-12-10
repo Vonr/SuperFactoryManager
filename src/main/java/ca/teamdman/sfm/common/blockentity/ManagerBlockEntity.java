@@ -106,11 +106,13 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     public ItemStack removeItem(int slot, int amount) {
+        setChanged();
         return ContainerHelper.removeItem(ITEMS, slot, amount);
     }
 
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
+        setChanged();
         return ContainerHelper.takeItem(ITEMS, slot);
     }
 
@@ -118,6 +120,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void setItem(int slot, ItemStack stack) {
         if (slot < 0 || slot >= ITEMS.size()) return;
         ITEMS.set(slot, stack);
+        setChanged();
     }
 
     @Override

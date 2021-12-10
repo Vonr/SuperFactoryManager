@@ -105,6 +105,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     public void render(PoseStack poseStack, int mx, int my, float partialTicks) {
         this.renderBackground(poseStack);
         super.render(poseStack, mx, my, partialTicks);
+        this.renderTooltip(poseStack, mx, my);
     }
 
     @Override
