@@ -2,9 +2,12 @@ package ca.teamdman.sfm.common.blockentity;
 
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
-import ca.teamdman.sfm.common.parser.SFMParser;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
+import ca.teamdman.sfml.SFMLLexer;
+import ca.teamdman.sfml.SFMLParser;
+import ca.teamdman.sfml.ast.ASTBuilder;
+import ca.teamdman.sfml.ast.Start;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -21,11 +24,16 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import org.antlr.v4.runtime.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int                    STATE_DATA_ACCESS_KEY = 0;
     private final       NonNullList<ItemStack> ITEMS                 = NonNullList.withSize(1, ItemStack.EMPTY);
-    private final       Object                 compiledProgram       = null;
+    private             Start                  compiledProgram       = null;
     private final       ContainerData          DATA_ACCESS           = new ContainerData() {
         @Override
         public int get(int key) {
@@ -56,28 +64,66 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public State getState() {
-        if (getItem(0).isEmpty()) return State.NO_DISK;
+        if (getDisk().isEmpty()) return State.NO_DISK;
         if (getProgram().isEmpty()) return State.NO_PROGRAM;
         if (compiledProgram == null) return State.INVALID_PROGRAM;
         return State.RUNNING;
     }
 
-    public String getProgram() {
-        return DiskItem.getProgram(getItem(0));
+    public Optional<String> getProgram() {
+        return getDisk().map(DiskItem::getProgram);
     }
 
     public void setProgram(String program) {
-        DiskItem.setProgram(getItem(0), program);
-        compileProgram();
+        getDisk().ifPresent(disk -> {
+            DiskItem.setProgram(disk, program);
+            compileProgram();
+            setChanged();
+        });
+    }
+
+    public Optional<ItemStack> getDisk() {
+        var item = getItem(0);
+        if (item.getItem() instanceof DiskItem) return Optional.of(item);
+        return Optional.empty();
     }
 
     private void compileProgram() {
-        var program = getProgram();
-        System.out.println("Compiling " + program.length());
-        var parser = new SFMParser(program);
-        //        var parser = new TomlParser();
-        //        var x = parser.parse(program);
-        //        System.out.println(x);
+        if (getProgram().isEmpty()) return;
+        var disk = getDisk().get();
+
+        var program = getProgram().get();
+        var lexer   = new SFMLLexer(CharStreams.fromString(program));
+        var tokens  = new CommonTokenStream(lexer);
+        var parser  = new SFMLParser(tokens);
+        var builder = new ASTBuilder();
+
+        parser.removeErrorListeners();
+        List<String> errors = new ArrayList<>();
+        parser.addErrorListener(new BaseErrorListener() {
+            @Override
+            public void syntaxError(
+                    Recognizer<?, ?> recognizer,
+                    Object offendingSymbol,
+                    int line,
+                    int charPositionInLine,
+                    String msg,
+                    RecognitionException e
+            ) {
+                errors.add("line " + line + ":" + charPositionInLine + " " + msg);
+            }
+        });
+
+        compiledProgram = null;
+        var context = parser.start();
+
+        var newProgram = builder.visitStart(context);
+        if (parser.getNumberOfSyntaxErrors() == 0) {
+            compiledProgram = newProgram;
+        }
+
+        DiskItem.setProgramName(disk, newProgram.getName());
+        DiskItem.setErrors(disk, errors);
     }
 
     @Override
@@ -144,6 +190,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         ContainerHelper.loadAllItems(tag, ITEMS);
+        compileProgram();
     }
 
     @Override
@@ -159,7 +206,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public void reset() {
-        getItem(0).setTag(null);
+        getDisk().ifPresent(disk -> disk.setTag(null));
     }
 
     public enum State {

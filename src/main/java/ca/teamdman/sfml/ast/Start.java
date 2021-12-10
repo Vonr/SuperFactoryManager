@@ -10,4 +10,8 @@ public class Start implements ASTNode {
         this.WORLD   = WORLD;
         this.PROGRAM = PROGRAM;
     }
+
+    public String getName() {
+        return NAME;
+    }
 }
