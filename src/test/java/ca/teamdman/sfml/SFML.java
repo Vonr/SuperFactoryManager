@@ -8,23 +8,8 @@ import org.junit.jupiter.api.Test;
 public class SFML {
     @Test
     public void Test() {
-        //        var input = """
-        //                     world
-        //                         blood_altar
-        //                         input_chests
-        //                         output_chests
-        //                     end
-        //
-        //                     program
-        //                         every 20 ticks do
-        //                             input from blood_altar
-        //                             if blood_altar has gt 1 bucket bloodmagic:blood:
-        //                                 output to blood_altar
-        //                             end
-        //                         end
-        //                     end
-        //                """;
         var input = """
+                    NAME "NAME TEST WITH \\"ESCAPED STR\\" INGS"
                     WORLD
                         input_chests
                         output_chests

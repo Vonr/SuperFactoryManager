@@ -18,15 +18,27 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
+    public StringHolder visitName(SFMLParser.NameContext ctx) {
+        return visitString(ctx.string());
+    }
+
+    @Override
+    public StringHolder visitString(SFMLParser.StringContext ctx) {
+        var content = ctx.getText();
+        return new StringHolder(content.substring(1, content.length() - 1));
+    }
+
+    @Override
     public Label visitLabel(SFMLParser.LabelContext ctx) {
         return new Label(ctx.getText());
     }
 
     @Override
     public Start visitStart(SFMLParser.StartContext ctx) {
+        var name    = visitName(ctx.name());
         var world   = visitWorld(ctx.world());
         var program = visitProgram(ctx.program());
-        return new Start(world, program);
+        return new Start(name.getValue(), world, program);
     }
 
     @Override
