@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.blockentity;
 
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfm.common.parser.SFMParser;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import net.minecraft.ChatFormatting;
@@ -71,6 +72,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     private void compileProgram() {
         System.out.println("Compiling " + program.length());
+        var parser = new SFMParser(program);
+        //        var parser = new TomlParser();
+        //        var x = parser.parse(program);
+        //        System.out.println(x);
     }
 
     @Override
