@@ -8,7 +8,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 
 public class SFMItemModels extends ItemModelProvider {
     public SFMItemModels(
@@ -39,8 +39,12 @@ public class SFMItemModels extends ItemModelProvider {
             String extra
     ) {
         withExistingParent(
-                block.getId().getPath(),
-                SFM.MOD_ID + ":block/" + item.getId().getPath() + extra
+                block
+                        .getId()
+                        .getPath(),
+                SFM.MOD_ID + ":block/" + item
+                        .getId()
+                        .getPath() + extra
         );
     }
 
@@ -48,8 +52,15 @@ public class SFMItemModels extends ItemModelProvider {
             RegistryObject<? extends Item> item
     ) {
         withExistingParent(
-                item.getId().getPath(),
+                item
+                        .getId()
+                        .getPath(),
                 mcLoc("item/generated")
-        ).texture("layer0", modLoc("item/" + item.getId().getPath()));
+        ).texture(
+                "layer0",
+                modLoc("item/" + item
+                        .getId()
+                        .getPath())
+        );
     }
 }
