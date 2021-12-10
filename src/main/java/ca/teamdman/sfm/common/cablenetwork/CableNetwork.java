@@ -73,7 +73,7 @@ public class CableNetwork {
                 .map(pos::offset)
                 .distinct()
                 .peek(INVENTORIES::remove)
-                .filter(this::containsNeighbour) // Verify if should [re]join network
+                .filter(this::hasCableNeighbour) // Verify if should [re]join network
                 .map(LEVEL::getBlockEntity)
                 .filter(Objects::nonNull)
                 .forEach(tile -> INVENTORIES.put(tile.getBlockPos(), tile)); // register tile [again]
@@ -85,7 +85,7 @@ public class CableNetwork {
      * @param pos Candidate cable position
      * @return {@code true} if adjacent to cable in network
      */
-    public boolean containsNeighbour(BlockPos pos) {
+    public boolean hasCableNeighbour(BlockPos pos) {
         for (Direction direction : Direction.values()) {
             if (CABLES.contains(pos.offset(direction.getNormal()))) {
                 return true;

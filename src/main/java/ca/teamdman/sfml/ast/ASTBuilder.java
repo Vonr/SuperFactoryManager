@@ -54,7 +54,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitTimerTrigger(SFMLParser.TimerTriggerContext ctx) {
-        var time  = (Interval) visit(ctx.interval());
+        var time = (Interval) visit(ctx.interval());
+        if (time.getSeconds() < 1) throw new IllegalArgumentException("Minimum trigger interval is 1 second.");
         var block = visitBlock(ctx.block());
         return new TimerTrigger(block, time);
     }

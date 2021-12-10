@@ -18,6 +18,7 @@ import net.minecraft.world.level.Level;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DiskItem extends Item {
     public DiskItem() {
@@ -123,6 +124,18 @@ public class DiskItem extends Item {
                 .sum();
         return new TranslatableComponent("item.sfm.disk.tooltip.labels", labelCount, blockCount).withStyle(
                 ChatFormatting.GRAY);
+    }
+
+    public static Stream<BlockPos> getPositions(ItemStack stack, String label) {
+        var dict = stack
+                .getOrCreateTag()
+                .getCompound("sfm:labels");
+        return dict
+                .getList(label, Tag.TAG_LONG)
+                .stream()
+                .map(LongTag.class::cast)
+                .mapToLong(LongTag::getAsLong)
+                .mapToObj(BlockPos::of);
     }
 
     @Override

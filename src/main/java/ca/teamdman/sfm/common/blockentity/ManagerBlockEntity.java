@@ -2,12 +2,12 @@ package ca.teamdman.sfm.common.blockentity;
 
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfm.common.program.ProgramExecutor;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import ca.teamdman.sfml.ast.ASTBuilder;
-import ca.teamdman.sfml.ast.Start;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -33,7 +33,7 @@ import java.util.Optional;
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int                    STATE_DATA_ACCESS_KEY = 0;
     private final       NonNullList<ItemStack> ITEMS                 = NonNullList.withSize(1, ItemStack.EMPTY);
-    private             Start                  compiledProgram       = null;
+    private             ProgramExecutor        compiledProgram       = null;
     private final       ContainerData          DATA_ACCESS           = new ContainerData() {
         @Override
         public int get(int key) {
@@ -61,6 +61,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
         level.setBlock(pos.below(), Blocks.DIAMOND_BLOCK.defaultBlockState(), 1 | 2);
+        if (tile.compiledProgram != null) {
+            tile.compiledProgram.tick();
+        }
     }
 
     public State getState() {
@@ -89,6 +92,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     private void compileProgram() {
+        compiledProgram = null;
         if (getProgram().isEmpty()) return;
         var disk = getDisk().get();
 
@@ -114,15 +118,13 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             }
         });
 
-        compiledProgram = null;
         var context = parser.start();
-
-        var newProgram = builder.visitStart(context);
+        var start   = builder.visitStart(context);
         if (parser.getNumberOfSyntaxErrors() == 0) {
-            compiledProgram = newProgram;
+            compiledProgram = new ProgramExecutor(start, this);
         }
 
-        DiskItem.setProgramName(disk, newProgram.getName());
+        DiskItem.setProgramName(disk, start.getName());
         DiskItem.setErrors(disk, errors);
     }
 

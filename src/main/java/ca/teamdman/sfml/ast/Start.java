@@ -14,4 +14,12 @@ public class Start implements ASTNode {
     public String getName() {
         return NAME;
     }
+
+    public World getWorld() {
+        return WORLD;
+    }
+
+    public Program getProgram() {
+        return PROGRAM;
+    }
 }

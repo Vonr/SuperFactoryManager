@@ -1,5 +1,8 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.program.ItemInput;
+import ca.teamdman.sfm.common.program.ProgramContext;
+
 public class InputStatement extends Statement {
     private final Label LABEL;
 
@@ -7,7 +10,14 @@ public class InputStatement extends Statement {
         this.LABEL = label;
     }
 
-    public Label getLabel() {
-        return LABEL;
+    public String getLabel() {
+        return LABEL.NAME();
+    }
+
+    @Override
+    public void tick(ProgramContext context) {
+        var inventories = context.getItemHandlersByLabel(getLabel());
+        var input       = new ItemInput(inventories);
+        context.addInput(input);
     }
 }

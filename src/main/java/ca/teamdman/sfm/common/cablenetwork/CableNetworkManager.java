@@ -9,7 +9,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -92,7 +94,7 @@ public class CableNetworkManager {
                 .filter(net -> net
                                        .getLevel()
                                        .isClientSide() == level.isClientSide)
-                .filter(net -> net.containsNeighbour(pos))
+                .filter(net -> net.hasCableNeighbour(pos))
                 .collect(Collectors.toSet());
     }
 

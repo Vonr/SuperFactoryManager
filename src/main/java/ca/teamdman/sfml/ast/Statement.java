@@ -1,4 +1,7 @@
 package ca.teamdman.sfml.ast;
 
-public class Statement implements ASTNode {
+import ca.teamdman.sfm.common.program.ProgramContext;
+
+public abstract class Statement implements ASTNode {
+    public abstract void tick(ProgramContext context);
 }
