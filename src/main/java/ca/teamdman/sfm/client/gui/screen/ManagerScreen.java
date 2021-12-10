@@ -54,7 +54,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     }
 
     private void sendProgram(String program) {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerProgramPacket(
+        SFMPackets.LABEL_GUN_CHANNEL.sendToServer(new ServerboundManagerProgramPacket(
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION,
                 program

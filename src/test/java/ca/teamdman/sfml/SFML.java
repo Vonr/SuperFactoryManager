@@ -26,14 +26,14 @@ public class SFML {
         //                """;
         var input = """
                     WORLD
-                        in
-                        out
+                        input_chests
+                        output_chests
                         altar
                     END
                     PROGRAM
                         EVERY 20 TICKS DO
                             INPUT FROM input_chests
-                            OUTPUT TO blood_altar
+                            OUTPUT TO altar
                         END
                     END
                 """;

@@ -1,12 +1,12 @@
 package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.common.registry.SFMBlocks;
+import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 
 import java.util.function.Consumer;
@@ -42,6 +42,18 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("ABA")
                 .pattern("BCB")
                 .pattern("ABA")
+                .save(consumer);
+
+        ShapedRecipeBuilder
+                .shaped(SFMItems.LABEL_GUN_ITEM.get())
+                .define('S', Items.STICK)
+                .define('B', Items.INK_SAC)
+                .define('L', Items.LAPIS_LAZULI)
+                .define('C', Items.OAK_SIGN)
+                .unlockedBy("has_ink", has(Items.INK_SAC))
+                .pattern(" LC")
+                .pattern(" SB")
+                .pattern("S  ")
                 .save(consumer);
     }
 }

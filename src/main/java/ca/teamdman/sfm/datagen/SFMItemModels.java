@@ -23,8 +23,8 @@ public class SFMItemModels extends ItemModelProvider {
         justParent(SFMItems.MANAGER_ITEM, SFMBlocks.MANAGER_BLOCK);
         justParent(SFMItems.CABLE_ITEM, SFMBlocks.CABLE_BLOCK);
         basicItem(SFMItems.DISK_ITEM);
+        basicItem(SFMItems.LABEL_GUN_ITEM);
     }
-
 
     private void justParent(
             RegistryObject<? extends Item> item,
