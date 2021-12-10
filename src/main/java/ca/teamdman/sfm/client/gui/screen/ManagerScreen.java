@@ -4,6 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -37,7 +38,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         super.init();
         clipboardButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 + 70,
-                (this.height - this.imageHeight) / 2 + 47,
+                (this.height - this.imageHeight) / 2 + 37,
                 100,
                 16,
                 new TranslatableComponent("sfm.manager.button.load_clipboard"),
@@ -45,16 +46,23 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         ));
         resetButton     = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 + 70,
-                (this.height - this.imageHeight) / 2 + 67,
+                (this.height - this.imageHeight) / 2 + 57,
                 100,
                 16,
                 new TranslatableComponent("sfm.manager.button.reset"),
-                button -> this.sendProgram("")
+                button -> sendReset()
+        ));
+    }
+
+    private void sendReset() {
+        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerResetPacket(
+                menu.containerId,
+                menu.BLOCK_ENTITY_POSITION
         ));
     }
 
     private void sendProgram(String program) {
-        SFMPackets.LABEL_GUN_CHANNEL.sendToServer(new ServerboundManagerProgramPacket(
+        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerProgramPacket(
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION,
                 program

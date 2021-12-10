@@ -4,6 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.MenuPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fmllegacy.network.NetworkRegistry;
 import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
@@ -35,11 +36,18 @@ public class SFMPackets {
 
     public static void register() {
         register(
-                LABEL_GUN_CHANNEL,
+                MANAGER_CHANNEL,
                 0,
                 ServerboundManagerProgramPacket.class,
                 new ServerboundManagerProgramPacket.ResetPacketHandler()
         );
+        register(
+                MANAGER_CHANNEL,
+                1,
+                ServerboundManagerResetPacket.class,
+                new ServerboundManagerResetPacket.ResetPacketHandler()
+        );
+
 
         LABEL_GUN_CHANNEL.registerMessage(
                 0,

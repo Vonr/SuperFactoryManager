@@ -55,16 +55,21 @@ public class DiskItem extends Item {
         tag.put("sfm:labels", dict);
     }
 
-    @Override
-    public void appendHoverText(
-            ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag detail
-    ) {
-        if (stack.hasTag()) {
-            list.add(getLabelCount(stack));
+    public static String getProgram(ItemStack stack) {
+        return stack
+                .getOrCreateTag()
+                .getString("sfm:program");
+    }
+
+    public static void setProgram(ItemStack stack, String program) {
+        if (stack.getItem() instanceof DiskItem) {
+            stack
+                    .getOrCreateTag()
+                    .putString("sfm:program", program);
         }
     }
 
-    public Component getLabelCount(ItemStack stack) {
+    public static Component getLabelCount(ItemStack stack) {
         var dict = stack
                 .getOrCreateTag()
                 .getCompound("sfm:labels");
@@ -79,5 +84,14 @@ public class DiskItem extends Item {
                 .sum();
         return new TranslatableComponent("item.sfm.disk.tooltip.labels", labelCount, blockCount).withStyle(
                 ChatFormatting.GRAY);
+    }
+
+    @Override
+    public void appendHoverText(
+            ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag detail
+    ) {
+        if (stack.hasTag()) {
+            list.add(getLabelCount(stack));
+        }
     }
 }

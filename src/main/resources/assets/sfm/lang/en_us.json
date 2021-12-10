@@ -11,6 +11,8 @@
   "item.sfm.labelgun.unpaired": "Unpaired Label Gun",
   "gui.sfm.title.labelgun": "Label Gun",
   "gui.sfm.label.labelgun_placeholder": "Label",
+  "gui.sfm.manager.tooltip.paste": "Press Ctrl+V to paste.",
+  "gui.sfm.manager.tooltip.reset": "Wipes program AND label data.",
   "container.sfm.manager": "Factory Manager",
   "sfm.manager.state": "State: %s",
   "sfm.manager.state.no_program": "no program",

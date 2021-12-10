@@ -26,7 +26,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int                    STATE_DATA_ACCESS_KEY = 0;
     private final       NonNullList<ItemStack> ITEMS                 = NonNullList.withSize(1, ItemStack.EMPTY);
     private final       Object                 compiledProgram       = null;
-    private             String                 program               = "";
     private final       ContainerData          DATA_ACCESS           = new ContainerData() {
         @Override
         public int get(int key) {
@@ -58,19 +57,22 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public State getState() {
         if (getItem(0).isEmpty()) return State.NO_DISK;
-        if (program == null || program
-                .trim()
-                .isEmpty()) return State.NO_PROGRAM;
+        if (getProgram().isEmpty()) return State.NO_PROGRAM;
         if (compiledProgram == null) return State.INVALID_PROGRAM;
         return State.RUNNING;
     }
 
+    public String getProgram() {
+        return DiskItem.getProgram(getItem(0));
+    }
+
     public void setProgram(String program) {
-        this.program = program;
+        DiskItem.setProgram(getItem(0), program);
         compileProgram();
     }
 
     private void compileProgram() {
+        var program = getProgram();
         System.out.println("Compiling " + program.length());
         var parser = new SFMParser(program);
         //        var parser = new TomlParser();
@@ -142,20 +144,22 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         ContainerHelper.loadAllItems(tag, ITEMS);
-        tag.putString("program", program);
     }
 
     @Override
     public CompoundTag save(CompoundTag tag) {
         super.save(tag);
         ContainerHelper.saveAllItems(tag, ITEMS);
-        program = tag.getString("program");
         return tag;
     }
 
     @Override
     public void clearContent() {
         ITEMS.clear();
+    }
+
+    public void reset() {
+        getItem(0).setTag(null);
     }
 
     public enum State {
