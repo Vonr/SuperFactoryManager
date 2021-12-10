@@ -6,10 +6,16 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import java.util.List;
 
 public class Program implements ASTNode {
+    private final String        NAME;
     private final List<Trigger> TRIGGERS;
 
-    public Program(List<Trigger> triggers) {
+    public Program(String name, List<Trigger> triggers) {
+        this.NAME     = name;
         this.TRIGGERS = triggers;
+    }
+
+    public String getName() {
+        return NAME;
     }
 
     public void tick(ProgramContext context) {

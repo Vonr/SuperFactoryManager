@@ -1,14 +1,8 @@
 grammar SFML;
 
-start : world program;
+program : name trigger*;
 
-world: WORLD label* END ;
-
-label: IDENTIFIER ;
-number: NUMBER ;
-
-program: PROGRAM trigger* END ;
-
+name: NAME string ;
 
 trigger     : EVERY interval DO block END           #TimerTrigger
             | EVERY REDSTONE PULSE DO block END     #PulseTrigger
@@ -24,11 +18,17 @@ statement   : INPUT FROM label  #InputStatement
             | OUTPUT TO label   #OutputStatement
             ;
 
+string: STRING ;
+number: NUMBER ;
+label: IDENTIFIER ;
+
+
 MOVE    : M O V E ;
 FROM    : F R O M ;
 TO      : T O ;
 INPUT   : I N P U T ;
 OUTPUT  : O U T P U T ;
+
 
 TICKS   : T I C K S ;
 SECONDS : S E C O N D S ;
@@ -41,9 +41,14 @@ DO      : D O ;
 WORLD   : W O R L D ;
 PROGRAM : P R O G R A M ;
 END     : E N D ;
+NAME    : N A M E ;
 
 IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]+ ;
 NUMBER          : [0-9]+ ;
+
+STRING : '"' (~'"'|'\\"')* '"' ;
+
+LINE_COMMENT : '--' ~[\r\n]* (EOF|'\r'? '\n') -> skip ;
 
 WS
         :   [ \r\t\n]+ -> channel(HIDDEN)

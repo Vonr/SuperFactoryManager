@@ -359,7 +359,7 @@ Build: 1.17.1-37.0.64 - Thu Sep 16 23:54:41 GMT 2021
 		Re-add patch to release buffer in custom payload packet (#8042)
 
 	noeppi-noeppi:
-		Propagate all arguments passed to the server start scripts to the game (#8060)
+		Propagate all arguments passed to the server program scripts to the game (#8060)
 
 =========
 Build: 1.17.1-37.0.62 - Thu Sep 16 23:37:31 GMT 2021

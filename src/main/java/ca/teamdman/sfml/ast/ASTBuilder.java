@@ -3,18 +3,19 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
-    @Override
-    public World visitWorld(SFMLParser.WorldContext worldContext) {
-        var labels = worldContext
-                .label()
-                .stream()
-                .map(this::visitLabel)
-                .collect(Collectors.toList());
+    private final Set<Label> LABELS = new HashSet<>();
 
-        return new World(labels);
+    private void trackLabel(Label label) {
+        LABELS.add(label);
+    }
+
+    public Set<Label> getLabels() {
+        return LABELS;
     }
 
     @Override
@@ -30,26 +31,21 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public Label visitLabel(SFMLParser.LabelContext ctx) {
-        return new Label(ctx.getText());
-    }
-
-    @Override
-    public Start visitStart(SFMLParser.StartContext ctx) {
-        var name    = visitName(ctx.name());
-        var world   = visitWorld(ctx.world());
-        var program = visitProgram(ctx.program());
-        return new Start(name.getValue(), world, program);
+        var label = new Label(ctx.getText());
+        trackLabel(label);
+        return label;
     }
 
     @Override
     public Program visitProgram(SFMLParser.ProgramContext ctx) {
+        var name = visitName(ctx.name());
         var triggers = ctx
                 .trigger()
                 .stream()
                 .map(this::visit)
                 .map(Trigger.class::cast)
                 .collect(Collectors.toList());
-        return new Program(triggers);
+        return new Program(name.getValue(), triggers);
     }
 
     @Override

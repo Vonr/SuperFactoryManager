@@ -8,6 +8,7 @@ import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import ca.teamdman.sfml.ast.ASTBuilder;
+import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -74,7 +75,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public Optional<String> getProgram() {
-        return getDisk().map(DiskItem::getProgram);
+        return getDisk()
+                .map(DiskItem::getProgram)
+                .filter(prog -> !prog.isBlank());
     }
 
     public void setProgram(String program) {
@@ -94,8 +97,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     private void compileProgram() {
         compiledProgram = null;
         if (getProgram().isEmpty()) return;
-        var disk = getDisk().get();
-
+        var disk    = getDisk().get();
         var program = getProgram().get();
         var lexer   = new SFMLLexer(CharStreams.fromString(program));
         var tokens  = new CommonTokenStream(lexer);
@@ -118,13 +120,17 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             }
         });
 
-        var context = parser.start();
-        var start   = builder.visitStart(context);
+        var     context    = parser.program();
+        Program programAST = null;
+        try {
+            programAST = builder.visitProgram(context);
+            DiskItem.setProgramName(disk, programAST.getName());
+        } catch (Throwable t) {
+        }
         if (parser.getNumberOfSyntaxErrors() == 0) {
-            compiledProgram = new ProgramExecutor(start, this);
+            compiledProgram = new ProgramExecutor(programAST, this);
         }
 
-        DiskItem.setProgramName(disk, start.getName());
         DiskItem.setErrors(disk, errors);
     }
 
@@ -156,20 +162,25 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     public ItemStack removeItem(int slot, int amount) {
+        var result = ContainerHelper.removeItem(ITEMS, slot, amount);
+        if (slot == 0) compileProgram();
         setChanged();
-        return ContainerHelper.removeItem(ITEMS, slot, amount);
+        return result;
     }
 
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
+        var result = ContainerHelper.takeItem(ITEMS, slot);
+        if (slot == 0) compileProgram();
         setChanged();
-        return ContainerHelper.takeItem(ITEMS, slot);
+        return result;
     }
 
     @Override
     public void setItem(int slot, ItemStack stack) {
         if (slot < 0 || slot >= ITEMS.size()) return;
         ITEMS.set(slot, stack);
+        if (slot == 0) compileProgram();
         setChanged();
     }
 
@@ -208,7 +219,11 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public void reset() {
-        getDisk().ifPresent(disk -> disk.setTag(null));
+        getDisk().ifPresent(disk -> {
+            disk.setTag(null);
+            setItem(0, disk);
+            setChanged();
+        });
     }
 
     public enum State {
