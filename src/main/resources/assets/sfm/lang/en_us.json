@@ -4,7 +4,7 @@
   "block.sfm.manager": "Factory Manager",
   "block.sfm.cable": "Inventory Cable",
   "item.sfm.disk": "Factory Manager Program Disk",
-  "item.sfm.disk.tooltip.labels": "%d labels on %d blocks stored",
+  "item.sfm.disk.tooltip.labels": "%d labels across %d blocks stored.",
   "item.sfm.labelgun": "Label Gun",
   "item.sfm.labelgun.tooltip.1": "Right click a Factory Manager to push labels.",
   "item.sfm.labelgun.tooltip.2": "Right click a Factory Manager while sneaking to pull labels.",

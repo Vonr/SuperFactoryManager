@@ -65,31 +65,36 @@ public class SFMLabelNBTHelper {
                 ChatFormatting.GRAY);
     }
 
-    public static Stream<BlockPos> getPositions(ItemStack stack, String label) {
+    public static Stream<BlockPos> getLabelPositions(ItemStack stack, String label) {
         var dict = stack
                 .getOrCreateTag()
                 .getCompound("sfm:labels");
-        return dict
-                .getList(label, Tag.TAG_LONG)
-                .stream()
+        return getPositions(dict.getList(label, Tag.TAG_LONG));
+    }
+
+    private static Stream<BlockPos> getPositions(ListTag list) {
+        return list.stream()
                 .map(LongTag.class::cast)
                 .mapToLong(LongTag::getAsLong)
                 .mapToObj(BlockPos::of);
     }
 
-    public static Multimap<String, BlockPos> getPositions(ItemStack stack) {
+    public static Multimap<String, BlockPos> getLabelPositions(ItemStack stack) {
         var rtn = HashMultimap.<String, BlockPos>create();
         var dict = stack
                 .getOrCreateTag()
                 .getCompound("sfm:labels");
         for (var key : dict.getAllKeys()) {
-            dict
-                    .getList(key, Tag.TAG_LONG)
-                    .stream()
-                    .map(LongTag.class::cast)
-                    .mapToLong(LongTag::getAsLong)
-                    .mapToObj(BlockPos::of)
-                    .forEach(pos -> rtn.put(key, pos));
+            getPositions(dict.getList(key, Tag.TAG_LONG)).forEach(pos -> rtn.put(key, pos));
+        }
+        return rtn;
+    }
+
+    public static Multimap<BlockPos, String> getPositionLabels(ItemStack stack) {
+        var rtn  = HashMultimap.<BlockPos, String>create();
+        var dict = stack.getOrCreateTag().getCompound("sfm:labels");
+        for (var key : dict.getAllKeys()) {
+            getPositions(dict.getList(key, Tag.TAG_LONG)).forEach(pos -> rtn.put(pos, key));
         }
         return rtn;
     }

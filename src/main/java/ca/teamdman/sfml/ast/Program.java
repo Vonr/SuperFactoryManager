@@ -25,7 +25,7 @@ public class Program implements ASTNode {
         var warnings = new ArrayList<String>();
         for (String label : REFERENCED_LABELS) {
             var isUsed = SFMLabelNBTHelper
-                    .getPositions(disk, label)
+                    .getLabelPositions(disk, label)
                     .findAny()
                     .isPresent();
             if (!isUsed) {

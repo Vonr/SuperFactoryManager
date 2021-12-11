@@ -15,7 +15,6 @@ import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.InteractionHand;
 import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -44,16 +43,10 @@ public class LabelGunWorldRenderer {
                             new RenderStateShard.TransparencyStateShard(
                                     "src_to_one",
                                     () -> {
-//                                        RenderSystem.enableBlend();
-//                                        RenderSystem.blendFunc(
-//                                                GlStateManager.SourceFactor.SRC_ALPHA,
-//                                                GlStateManager.DestFactor.ONE
-//                                        );
-
                                         RenderSystem.enableBlend();
                                         RenderSystem.blendFunc(
                                                 GlStateManager.SourceFactor.SRC_ALPHA,
-                                                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA
+                                                GlStateManager.DestFactor.ONE
                                         );
                                     },
                                     () -> {
@@ -70,11 +63,11 @@ public class LabelGunWorldRenderer {
         var player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var labelGun = player.getItemInHand(InteractionHand.MAIN_HAND);
-        if (!(labelGun.getItem() instanceof LabelGunItem)) labelGun = player.getItemInHand(InteractionHand.OFF_HAND);
+        var labelGun = player.getMainHandItem();
+        if (!(labelGun.getItem() instanceof LabelGunItem)) labelGun = player.getOffhandItem();
         if (!(labelGun.getItem() instanceof LabelGunItem)) return;
         var playerPosition = player.position();
-        var labelPositions = SFMLabelNBTHelper.getPositions(labelGun);
+        var labelPositions = SFMLabelNBTHelper.getPositionLabels(labelGun);
 
         var poseStack    = event.getPoseStack();
         var camera       = Minecraft.getInstance().gameRenderer.getMainCamera();
@@ -86,19 +79,21 @@ public class LabelGunWorldRenderer {
         poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 
         { // draw labels
-            for (var entry : labelPositions.entries()) {
-                drawLabel(poseStack, camera, entry.getValue(), bufferSource, entry.getKey());
+            for (var entry : labelPositions.asMap().entrySet()) {
+                drawLabel(poseStack, camera, entry.getKey(), bufferSource, entry.getValue());
             }
         }
         { // draw highlights
+            RENDER_TYPE.setupRenderState();
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
             RenderSystem.disableTexture();
-            var vbo = createVBO(new PoseStack(), camera, labelPositions.values());
+            var vbo = createVBO(new PoseStack(), camera, labelPositions.keySet());
             vbo.drawWithShader(
                     poseStack.last().pose(),
                     event.getProjectionMatrix(),
                     GameRenderer.getPositionColorShader()
             );
+            RENDER_TYPE.clearRenderState();
             RenderSystem.enableTexture();
         }
         bufferSource.endBatch();
@@ -111,7 +106,7 @@ public class LabelGunWorldRenderer {
             Camera camera,
             BlockPos pos,
             MultiBufferSource mbs,
-            String label
+            Collection<String> labels
     ) {
         poseStack.pushPose();
         poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5);
@@ -119,18 +114,21 @@ public class LabelGunWorldRenderer {
         poseStack.scale(-0.025f, -0.025f, 0.025f);
 
         Font font = Minecraft.getInstance().font;
-        font.drawInBatch(
-                label,
-                -font.width(label) / 2f,
-                0,
-                -0x1,
-                false,
-                poseStack.last().pose(),
-                mbs,
-                true,
-                0,
-                0xF000F0
-        );
+        for (var label : labels) {
+            font.drawInBatch(
+                    label,
+                    -font.width(label) / 2f,
+                    0,
+                    -0x1,
+                    false,
+                    poseStack.last().pose(),
+                    mbs,
+                    true,
+                    0,
+                    0xF000F0
+            );
+            poseStack.translate(0, font.lineHeight + 0.1, 0);
+        }
         poseStack.popPose();
     }
 
@@ -138,7 +136,7 @@ public class LabelGunWorldRenderer {
         var builder = new BufferBuilder(RENDER_TYPE.bufferSize() * positions.size());
         builder.begin(RENDER_TYPE.mode(), RENDER_TYPE.format());
         for (var pos : positions) {
-            drawBlockOutline(pos, poseStack, builder, 255, 0, 0, 40);
+            drawBlockOutline(pos, poseStack, builder, 100, 0, 255, 100);
         }
         builder.end();
         var vert = new VertexBuffer();

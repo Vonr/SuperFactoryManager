@@ -62,6 +62,26 @@ public class LabelGunItem extends Item {
         return InteractionResult.CONSUME;
     }
 
+    public static String getNextLabel(ItemStack gun, int change) {
+        var dict = gun.getOrCreateTag().getCompound("sfm:labels");
+        var keys = dict.getAllKeys().toArray(String[]::new);
+        if (keys.length == 0) return "";
+        var currentLabel = getLabel(gun);
+
+        int currentLabelIndex = 0;
+        for (int i = 0; i < keys.length; i++) {
+            if (keys[i].equals(currentLabel)) {
+                currentLabelIndex = i;
+                break;
+            }
+        }
+
+        int nextLabelIndex = currentLabelIndex + change;
+        nextLabelIndex = ((nextLabelIndex % keys.length) + keys.length) % keys.length;
+
+        return keys[nextLabelIndex];
+    }
+
     @Override
     public void appendHoverText(
             ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail

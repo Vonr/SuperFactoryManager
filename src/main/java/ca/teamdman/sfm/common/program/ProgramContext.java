@@ -47,7 +47,7 @@ public class ProgramContext {
         var disk = MANAGER
                 .getDisk()
                 .get();
-        var positions = SFMLabelNBTHelper.getPositions(disk, label);
+        var positions = SFMLabelNBTHelper.getLabelPositions(disk, label);
         return positions
                 .map(NETWORK::getInventory)
                 .filter(Optional::isPresent)
