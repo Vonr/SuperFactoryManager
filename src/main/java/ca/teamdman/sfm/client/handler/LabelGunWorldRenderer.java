@@ -109,11 +109,11 @@ public class LabelGunWorldRenderer {
             Collection<String> labels
     ) {
         poseStack.pushPose();
-        poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5);
+        poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         poseStack.mulPose(camera.rotation());
         poseStack.scale(-0.025f, -0.025f, 0.025f);
-
         Font font = Minecraft.getInstance().font;
+        poseStack.translate(0, labels.size() * (font.lineHeight + 0.1) / -2f, 0);
         for (var label : labels) {
             font.drawInBatch(
                     label,
