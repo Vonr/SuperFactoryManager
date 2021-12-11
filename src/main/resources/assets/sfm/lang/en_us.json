@@ -14,11 +14,15 @@
   "gui.sfm.manager.tooltip.paste": "Press Ctrl+V to paste.",
   "gui.sfm.manager.tooltip.reset": "Wipes program AND label data.",
   "container.sfm.manager": "Factory Manager",
-  "sfm.manager.state": "State: %s",
-  "sfm.manager.state.no_program": "no program",
-  "sfm.manager.state.no_disk": "missing disk",
-  "sfm.manager.state.running": "running",
-  "sfm.manager.state.invalid_program": "invalid program",
-  "sfm.manager.button.load_clipboard": "Load clipboard",
-  "sfm.manager.button.reset": "Reset"
+  "gui.sfm.manager.state": "State: %s",
+  "gui.sfm.manager.state.no_program": "no program",
+  "gui.sfm.manager.state.no_disk": "missing disk",
+  "gui.sfm.manager.state.running": "running",
+  "gui.sfm.manager.state.invalid_program": "invalid program",
+  "gui.sfm.manager.button.import_clipboard": "Import clipboard",
+  "gui.sfm.manager.button.export_clipboard": "Export clipboard",
+  "gui.sfm.manager.button.reset": "Reset",
+  "gui.sfm.manager.status.loaded_clipboard": "Loaded from clipboard!",
+  "gui.sfm.manager.status.saved_clipboard": "Saved to clipboard!",
+  "gui.sfm.manager.status.reset": "Reset program and labels!"
 }

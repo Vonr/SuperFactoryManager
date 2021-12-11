@@ -100,9 +100,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         var disk    = getDisk().get();
         var program = getProgram().get();
         var lexer   = new SFMLLexer(CharStreams.fromString(program));
+        lexer.removeErrorListeners();
         var tokens  = new CommonTokenStream(lexer);
         var parser  = new SFMLParser(tokens);
-        var builder = new ASTBuilder();
 
         parser.removeErrorListeners();
         List<String> errors = new ArrayList<>();
@@ -123,7 +123,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         var     context    = parser.program();
         Program programAST = null;
         try {
-            programAST = builder.visitProgram(context);
+            programAST = new ASTBuilder().visitProgram(context);
             DiskItem.setProgramName(disk, programAST.getName());
         } catch (Throwable t) {
         }
@@ -141,7 +141,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
-        return new ManagerMenu(windowId, inv, this, getBlockPos(), this.DATA_ACCESS);
+        return new ManagerMenu(windowId, inv, this, getBlockPos(), this.DATA_ACCESS, getProgram().orElse(""));
     }
 
     @Override

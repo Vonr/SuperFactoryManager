@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.menu;
 
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.registry.SFMMenus;
+import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.Container;
@@ -19,13 +20,15 @@ public class ManagerMenu extends AbstractContainerMenu {
     public final Container     CONTAINER;
     public final Inventory     INVENTORY;
     public final BlockPos      BLOCK_ENTITY_POSITION;
+    public       String        program;
 
     public ManagerMenu(
             int windowId,
             Inventory inv,
             Container container,
             BlockPos blockEntityPos,
-            ContainerData dataAccess
+            ContainerData dataAccess,
+            String program
     ) {
         super(SFMMenus.MANAGER_MENU.get(), windowId);
         checkContainerSize(container, 1);
@@ -34,6 +37,7 @@ public class ManagerMenu extends AbstractContainerMenu {
         CONTAINER             = container;
         INVENTORY             = inv;
         BLOCK_ENTITY_POSITION = blockEntityPos;
+        this.program          = program;
 
         this.addSlot(new Slot(container, 0, 15, 47) {
             @Override
@@ -60,7 +64,14 @@ public class ManagerMenu extends AbstractContainerMenu {
     }
 
     public ManagerMenu(int windowId, Inventory inventory, FriendlyByteBuf buf) {
-        this(windowId, inventory, new SimpleContainer(1), buf.readBlockPos(), new SimpleContainerData(1));
+        this(
+                windowId,
+                inventory,
+                new SimpleContainer(1),
+                buf.readBlockPos(),
+                new SimpleContainerData(1),
+                buf.readUtf(Program.MAX_PROGRAM_LENGTH)
+        );
     }
 
     @Override

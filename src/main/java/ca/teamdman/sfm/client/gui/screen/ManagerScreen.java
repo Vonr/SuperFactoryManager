@@ -9,11 +9,12 @@ import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.BaseComponent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -26,8 +27,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
             SFM.MOD_ID,
             "textures/gui/container/manager.png"
     );
-    protected            Button           clipboardButton;
-    protected            Button           resetButton;
+    private final        float            STATUS_DURATION             = 40;
+    private              BaseComponent    status                      = new TextComponent("");
+    private              float            statusCountdown             = 0;
 
     public ManagerScreen(ManagerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -36,20 +38,28 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     @Override
     protected void init() {
         super.init();
-        clipboardButton = this.addRenderableWidget(new ExtendedButton(
+        this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 + 70,
                 (this.height - this.imageHeight) / 2 + 37,
                 100,
                 16,
-                new TranslatableComponent("sfm.manager.button.load_clipboard"),
+                new TranslatableComponent("gui.sfm.manager.button.import_clipboard"),
                 button -> this.onLoadClipboard()
         ));
-        resetButton     = this.addRenderableWidget(new ExtendedButton(
+        this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 + 70,
-                (this.height - this.imageHeight) / 2 + 57,
+                (this.height - this.imageHeight) / 2 + 37 + 20,
                 100,
                 16,
-                new TranslatableComponent("sfm.manager.button.reset"),
+                new TranslatableComponent("gui.sfm.manager.button.export_clipboard"),
+                button -> this.onSaveClipboard()
+        ));
+        this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2 + 120,
+                (this.height - this.imageHeight) / 2 + 10,
+                50,
+                12,
+                new TranslatableComponent("gui.sfm.manager.button.reset"),
                 button -> sendReset()
         ));
     }
@@ -59,6 +69,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION
         ));
+        status          = new TranslatableComponent("gui.sfm.manager.status.reset");
+        statusCountdown = STATUS_DURATION;
     }
 
     private void sendProgram(String program) {
@@ -67,6 +79,19 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.BLOCK_ENTITY_POSITION,
                 program
         ));
+        menu.program    = program;
+        status          = new TranslatableComponent("gui.sfm.manager.status.loaded_clipboard");
+        statusCountdown = STATUS_DURATION;
+    }
+
+    private void onSaveClipboard() {
+        try {
+            Minecraft.getInstance().keyboardHandler.setClipboard(menu.program);
+            status          = new TranslatableComponent("gui.sfm.manager.status.saved_clipboard");
+            statusCountdown = STATUS_DURATION;
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     private void onLoadClipboard() {
@@ -97,14 +122,22 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         this.font.draw(
                 matrixStack,
                 new TranslatableComponent(
-                        "sfm.manager.state",
-                        new TranslatableComponent("sfm.manager.state." + state
+                        "gui.sfm.manager.state",
+                        new TranslatableComponent("gui.sfm.manager.state." + state
                                 .name()
                                 .toLowerCase(
                                         Locale.ROOT)).withStyle(state.COLOR)
                 ),
                 titleLabelX,
                 20,
+                0
+        );
+        if (statusCountdown <= 0) return;
+        this.font.draw(
+                matrixStack,
+                status,
+                titleLabelX,
+                20f + font.lineHeight + 0.1f,
                 0
         );
     }
@@ -114,6 +147,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         this.renderBackground(poseStack);
         super.render(poseStack, mx, my, partialTicks);
         this.renderTooltip(poseStack, mx, my);
+        statusCountdown -= partialTicks;
     }
 
     @Override

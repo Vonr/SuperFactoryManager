@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -22,12 +23,12 @@ public class ServerboundManagerProgramPacket extends MenuPacket {
         public void encode(
                 ServerboundManagerProgramPacket msg, FriendlyByteBuf buf
         ) {
-            buf.writeUtf(msg.PROGRAM, 8096);
+            buf.writeUtf(msg.PROGRAM, Program.MAX_PROGRAM_LENGTH);
         }
 
         @Override
         public ServerboundManagerProgramPacket decode(int containerId, BlockPos pos, FriendlyByteBuf buf) {
-            return new ServerboundManagerProgramPacket(containerId, pos, buf.readUtf(8096));
+            return new ServerboundManagerProgramPacket(containerId, pos, buf.readUtf(Program.MAX_PROGRAM_LENGTH));
         }
 
         @Override

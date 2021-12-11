@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICable;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -59,6 +60,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity tile && player instanceof ServerPlayer sp) {
             NetworkHooks.openGui(sp, tile, buf -> {
                 buf.writeBlockPos(tile.getBlockPos());
+                buf.writeUtf(tile.getProgram().orElse(""), Program.MAX_PROGRAM_LENGTH);
             });
             return InteractionResult.CONSUME;
         }

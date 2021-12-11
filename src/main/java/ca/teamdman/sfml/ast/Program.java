@@ -11,9 +11,10 @@ import java.util.List;
 import java.util.Set;
 
 public class Program implements ASTNode {
-    private final String        NAME;
-    private final List<Trigger> TRIGGERS;
-    private final Set<String>   REFERENCED_LABELS;
+    private final       String        NAME;
+    private final       List<Trigger> TRIGGERS;
+    private final       Set<String>   REFERENCED_LABELS;
+    public static final int           MAX_PROGRAM_LENGTH = 8096;
 
     public Program(String name, List<Trigger> triggers, Set<String> referencedLabels) {
         this.NAME              = name;
