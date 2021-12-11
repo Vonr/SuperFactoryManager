@@ -2,6 +2,7 @@ package ca.teamdman.sfm.client.handler;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.LabelGunItem;
+import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -19,7 +20,6 @@ import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -73,12 +73,8 @@ public class LabelGunWorldRenderer {
         var labelGun = player.getItemInHand(InteractionHand.MAIN_HAND);
         if (!(labelGun.getItem() instanceof LabelGunItem)) labelGun = player.getItemInHand(InteractionHand.OFF_HAND);
         if (!(labelGun.getItem() instanceof LabelGunItem)) return;
-
-        var                 playerPosition = player.position();
-        ArrayList<BlockPos> positions      = new ArrayList<>();
-        positions.add(new BlockPos(playerPosition));
-        positions.add(new BlockPos(playerPosition).north());
-        positions.add(new BlockPos(playerPosition).north().north());
+        var playerPosition = player.position();
+        var labelPositions = SFMLabelNBTHelper.getPositions(labelGun);
 
         var poseStack    = event.getPoseStack();
         var camera       = Minecraft.getInstance().gameRenderer.getMainCamera();
@@ -90,14 +86,14 @@ public class LabelGunWorldRenderer {
         poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 
         { // draw labels
-            for (var p : positions) {
-                drawLabel(poseStack, camera, p, bufferSource, "beans");
+            for (var entry : labelPositions.entries()) {
+                drawLabel(poseStack, camera, entry.getValue(), bufferSource, entry.getKey());
             }
         }
         { // draw highlights
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
             RenderSystem.disableTexture();
-            var vbo = createVBO(new PoseStack(), camera, positions);
+            var vbo = createVBO(new PoseStack(), camera, labelPositions.values());
             vbo.drawWithShader(
                     poseStack.last().pose(),
                     event.getProjectionMatrix(),
@@ -118,7 +114,7 @@ public class LabelGunWorldRenderer {
             String label
     ) {
         poseStack.pushPose();
-        poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
+        poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5);
         poseStack.mulPose(camera.rotation());
         poseStack.scale(-0.025f, -0.025f, 0.025f);
 
@@ -142,7 +138,7 @@ public class LabelGunWorldRenderer {
         var builder = new BufferBuilder(RENDER_TYPE.bufferSize() * positions.size());
         builder.begin(RENDER_TYPE.mode(), RENDER_TYPE.format());
         for (var pos : positions) {
-            drawBlockOutline(pos, poseStack, builder, 255, 0, 0, 177);
+            drawBlockOutline(pos, poseStack, builder, 255, 0, 0, 40);
         }
         builder.end();
         var vert = new VertexBuffer();

@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.program;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
@@ -47,7 +47,7 @@ public class ProgramContext {
         var disk = MANAGER
                 .getDisk()
                 .get();
-        var positions = DiskItem.getPositions(disk, label);
+        var positions = SFMLabelNBTHelper.getPositions(disk, label);
         return positions
                 .map(NETWORK::getInventory)
                 .filter(Optional::isPresent)

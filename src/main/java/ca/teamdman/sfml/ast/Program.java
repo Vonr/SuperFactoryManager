@@ -3,6 +3,7 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class Program implements ASTNode {
     public void addWarnings(ItemStack disk) {
         var warnings = new ArrayList<String>();
         for (String label : REFERENCED_LABELS) {
-            var isUsed = DiskItem
+            var isUsed = SFMLabelNBTHelper
                     .getPositions(disk, label)
                     .findAny()
                     .isPresent();

@@ -1,12 +1,11 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.gui.screen.LabelGunScreen;
-import ca.teamdman.sfm.common.block.ManagerBlock;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.InteractionHand;
@@ -21,7 +20,6 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 
 public class LabelGunItem extends Item {
     public LabelGunItem() {
@@ -34,26 +32,8 @@ public class LabelGunItem extends Item {
                 .putString("sfm:label", label);
     }
 
-    public static Optional<BlockPos> getPairedLocation(ItemStack gun) {
-        if (!gun.hasTag()) return Optional.empty();
-        var pos = BlockPos.of(gun
-                                      .getTag()
-                                      .getLong("sfm:pos"));
-        return Optional.of(pos);
-    }
-
-    public static void setPairedLocation(ItemStack gun, BlockPos pos) {
-        gun
-                .getOrCreateTag()
-                .putLong("sfm:pos", pos.asLong());
-    }
-
     public static String getLabel(ItemStack stack) {
-        return !stack.hasTag()
-               ? ""
-               : stack
-                       .getTag()
-                       .getString("sfm:label");
+        return !stack.hasTag() ? "" : stack.getTag().getString("sfm:label");
     }
 
     @Override
@@ -63,32 +43,32 @@ public class LabelGunItem extends Item {
         var pos   = ctx.getClickedPos();
         var level = ctx.getLevel();
         if (level.isClientSide) return InteractionResult.SUCCESS;
-        if (level
-                .getBlockState(pos)
-                .getBlock() instanceof ManagerBlock) {
-            setPairedLocation(ctx.getItemInHand(), pos);
+        if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager) {
+            manager.getDisk().ifPresent(disk -> {
+                ItemStack source      = stack;
+                ItemStack destination = disk;
+                if (ctx.getPlayer().isShiftKeyDown()) {
+                    source      = disk;
+                    destination = stack;
+                }
+                SFMLabelNBTHelper.copyLabels(source, destination);
+            });
             return InteractionResult.CONSUME;
         }
+
         var label = getLabel(stack);
         if (label.isEmpty()) return InteractionResult.SUCCESS;
-
-        var pairedPos = getPairedLocation(stack);
-        if (pairedPos.isEmpty()) return InteractionResult.CONSUME;
-
-        var paired = level.getBlockEntity(pairedPos.get());
-        if (paired instanceof ManagerBlockEntity manager) {
-            var disk = manager.getItem(0);
-            DiskItem.toggleLabel(disk, label, pos);
-            manager.setItem(0, disk);
-        }
+        SFMLabelNBTHelper.toggleLabel(stack, label, pos);
         return InteractionResult.CONSUME;
     }
 
     @Override
     public void appendHoverText(
-            ItemStack item, @Nullable Level level, List<Component> lines, TooltipFlag detail
+            ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
     ) {
-        lines.add(new TranslatableComponent("item.sfm.labelgun.tooltip.pairing").withStyle(ChatFormatting.GRAY));
+        lines.add(new TranslatableComponent("item.sfm.labelgun.tooltip.1").withStyle(ChatFormatting.GRAY));
+        lines.add(new TranslatableComponent("item.sfm.labelgun.tooltip.2").withStyle(ChatFormatting.GRAY));
+        lines.add(SFMLabelNBTHelper.getLabelCount(stack));
     }
 
     @Override
@@ -109,14 +89,8 @@ public class LabelGunItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
-        if (getPairedLocation(stack).isEmpty()) {
-            return new TranslatableComponent("item.sfm.labelgun.unpaired").withStyle(
-                    ChatFormatting.BOLD,
-                    ChatFormatting.RED
-            );
-        }
         var name = getLabel(stack);
         if (name.isEmpty()) return super.getName(stack);
-        return new TranslatableComponent("item.sfm.labelgun.paired", name).withStyle(ChatFormatting.AQUA);
+        return new TranslatableComponent("item.sfm.labelgun.with_label", name).withStyle(ChatFormatting.AQUA);
     }
 }
