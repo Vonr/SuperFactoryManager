@@ -9,11 +9,12 @@ public class SFML {
     @Test
     public void Test() {
         var input = """
-                    NAME "NAME TEST WITH \\"ESCAPED STR\\" INGS"
-                    EVERY 20 TICKS DO
-                        INPUT FROM input_chests TOP SIDE
-                        OUTPUT TO altar
-                    END
+                name "hello world"
+                                
+                every 20 ticks do
+                    input 4 retain 1 from a top side
+                    output to b
+                end
                 """;
         var lexer   = new SFMLLexer(CharStreams.fromString(input));
         var tokens  = new CommonTokenStream(lexer);

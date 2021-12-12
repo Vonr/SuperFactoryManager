@@ -18,10 +18,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ProgramContext {
-    private final ManagerBlockEntity       MANAGER;
-    private final CableNetwork             NETWORK;
-    private final List<QualifiedInventory> INPUTS = new ArrayList<>();
-    private final Level                    LEVEL;
+    private final ManagerBlockEntity     MANAGER;
+    private final CableNetwork           NETWORK;
+    private final List<InventoryTracker> INPUTS = new ArrayList<>();
+    private final Level                  LEVEL;
 
     public ProgramContext(ManagerBlockEntity manager) {
         this.MANAGER = manager;
@@ -35,11 +35,11 @@ public class ProgramContext {
         return MANAGER;
     }
 
-    public void addInput(QualifiedInventory input) {
+    public void addInput(InventoryTracker input) {
         INPUTS.add(input);
     }
 
-    public Stream<QualifiedInventory> getInputs() {
+    public Stream<InventoryTracker> getInputs() {
         return INPUTS.stream();
     }
 

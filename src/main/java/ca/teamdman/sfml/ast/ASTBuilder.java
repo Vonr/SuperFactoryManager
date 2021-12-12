@@ -4,6 +4,7 @@ import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -91,16 +92,51 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
-        var label = visitLabel(ctx.label());
+        var      label = visitLabel(ctx.label());
+        Matchers matchers;
+        if (ctx.matchers() != null)
+            matchers = visitMatchers(ctx.matchers());
+        else
+            matchers = new Matchers(List.of(new Matcher(Integer.MAX_VALUE, 0)));
         var sides = visitSidequalifier(ctx.sidequalifier());
-        return new InputStatement(label, sides);
+        return new InputStatement(label, matchers, sides);
     }
 
     @Override
     public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
-        var label = visitLabel(ctx.label());
+        var      label = visitLabel(ctx.label());
+        Matchers matchers;
+        if (ctx.matchers() != null)
+            matchers = visitMatchers(ctx.matchers());
+        else
+            matchers = new Matchers(List.of(new Matcher(Integer.MAX_VALUE, Integer.MAX_VALUE)));
         var sides = visitSidequalifier(ctx.sidequalifier());
-        return new OutputStatement(label, sides);
+        return new OutputStatement(label, matchers, sides);
+    }
+
+    @Override
+    public Matcher visitMatcher(SFMLParser.MatcherContext ctx) {
+        var quantity = visitQuantity(ctx.quantity());
+        var retain   = visitRetention(ctx.retention());
+        return new Matcher(quantity.value(), retain.value());
+    }
+
+    @Override
+    public Number visitRetention(SFMLParser.RetentionContext ctx) {
+        if (ctx == null) return new Number(0);
+        return visitNumber(ctx.number());
+    }
+
+    @Override
+    public Matchers visitMatchers(SFMLParser.MatchersContext ctx) {
+        List<Matcher> matchers = ctx.matcher().stream().map(this::visitMatcher).collect(Collectors.toList());
+        return new Matchers(matchers);
+    }
+
+    @Override
+    public Number visitQuantity(SFMLParser.QuantityContext ctx) {
+        if (ctx == null) return new Number(Integer.MAX_VALUE);
+        return visitNumber(ctx.number());
     }
 
     @Override
@@ -111,8 +147,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ASTSide visitSide(SFMLParser.SideContext ctx) {
-        return ASTSide.valueOf(ctx.getText().toUpperCase(Locale.ROOT));
+    public Side visitSide(SFMLParser.SideContext ctx) {
+        return Side.valueOf(ctx.getText().toUpperCase(Locale.ROOT));
     }
 
     @Override

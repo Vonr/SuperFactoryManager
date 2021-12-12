@@ -1,6 +1,6 @@
 package ca.teamdman.sfml.ast;
 
-public enum ASTSide implements ASTNode {
+public enum Side implements ASTNode {
     TOP,
     BOTTOM,
     NORTH,

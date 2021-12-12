@@ -7,11 +7,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNode {
-    public DirectionQualifier(Stream<ASTSide> sides) {
+    public DirectionQualifier(Stream<Side> sides) {
         this(convert(sides));
     }
 
-    private static EnumSet<Direction> convert(Stream<ASTSide> sides) {
+    private static EnumSet<Direction> convert(Stream<Side> sides) {
         var dirs = sides.map(DirectionQualifier::lookup).collect(Collectors.toSet());
         if (dirs.isEmpty())
             return EnumSet.noneOf(Direction.class);
@@ -19,7 +19,7 @@ public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNo
             return EnumSet.copyOf(dirs);
     }
 
-    private static Direction lookup(ASTSide side) {
+    private static Direction lookup(Side side) {
         return switch (side) {
             case TOP -> Direction.UP;
             case BOTTOM -> Direction.DOWN;
