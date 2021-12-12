@@ -131,6 +131,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             var limit = (Limit) this.visit(ctx.limit());
             limit = limit.withDefaults(Integer.MAX_VALUE, 0);
             return new Matchers(List.of(new ItemLimit(limit)));
+        } else if (ctx.item() != null) {
+            var item = this.visitItem(ctx.item());
+            return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, 0), item)));
         } else {
             var itemLimits = ctx.itemlimit().stream()
                     .map(this::visitItemlimit)
@@ -154,6 +157,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             var limit = (Limit) this.visit(ctx.limit());
             limit = limit.withDefaults(Integer.MAX_VALUE, 0);
             return new Matchers(List.of(new ItemLimit(limit)));
+        } else if (ctx.item() != null) {
+            var item = this.visitItem(ctx.item());
+            return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE), item)));
         } else {
             var itemLimits = ctx.itemlimit().stream()
                     .map(this::visitItemlimit)

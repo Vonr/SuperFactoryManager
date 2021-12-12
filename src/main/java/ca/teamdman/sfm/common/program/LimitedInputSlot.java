@@ -15,7 +15,12 @@ public class LimitedInputSlot extends LimitedSlot<InputItemMatcher> {
 
     public void moveTo(LimitedOutputSlot other) {
         var potential = this.extract(Integer.MAX_VALUE, true);
-        if (potential.isEmpty()) return;
+        if (potential.isEmpty()) {
+            setDone();
+            return;
+        }
+        if (!MATCHER.test(potential)) return;
+        if (!other.MATCHER.test(potential)) return;
         var remainder = other.insert(potential, true);
 
         // how many can we move unrestrained

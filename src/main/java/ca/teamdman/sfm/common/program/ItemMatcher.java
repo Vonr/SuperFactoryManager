@@ -25,6 +25,6 @@ public abstract class ItemMatcher implements Predicate<ItemStack> {
 
     @Override
     public boolean test(ItemStack itemStack) {
-        return true;
+        return ITEM_LIMIT.test(itemStack);
     }
 }

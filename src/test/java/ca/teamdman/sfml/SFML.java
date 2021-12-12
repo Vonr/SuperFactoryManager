@@ -13,7 +13,7 @@ public class SFML {
                                 
                 every 20 ticks do
                     input 4 iron from a
-                    output 2 iron to b
+                    output iron to b
                 end
                 """;
         var lexer   = new SFMLLexer(CharStreams.fromString(input));
