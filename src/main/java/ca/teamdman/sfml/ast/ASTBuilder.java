@@ -92,45 +92,79 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
-        var      label = visitLabel(ctx.label());
-        Matchers matchers;
-        if (ctx.matchers() != null)
-            matchers = visitMatchers(ctx.matchers());
-        else
-            matchers = new Matchers(List.of(new Matcher(Integer.MAX_VALUE, 0)));
-        var sides = visitSidequalifier(ctx.sidequalifier());
+        var label    = visitLabel(ctx.label());
+        var matchers = visitInputmatchers(ctx.inputmatchers());
+        var sides    = visitSidequalifier(ctx.sidequalifier());
         return new InputStatement(label, matchers, sides);
     }
 
     @Override
     public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
-        var      label = visitLabel(ctx.label());
-        Matchers matchers;
-        if (ctx.matchers() != null)
-            matchers = visitMatchers(ctx.matchers());
-        else
-            matchers = new Matchers(List.of(new Matcher(Integer.MAX_VALUE, Integer.MAX_VALUE)));
-        var sides = visitSidequalifier(ctx.sidequalifier());
+        var label    = visitLabel(ctx.label());
+        var matchers = visitOutputmatchers(ctx.outputmatchers());
+        var sides    = visitSidequalifier(ctx.sidequalifier());
         return new OutputStatement(label, matchers, sides);
     }
 
     @Override
-    public Matcher visitMatcher(SFMLParser.MatcherContext ctx) {
+    public Matcher visitQuantityRetentionMatcher(SFMLParser.QuantityRetentionMatcherContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
         var retain   = visitRetention(ctx.retention());
         return new Matcher(quantity.value(), retain.value());
     }
 
     @Override
-    public Number visitRetention(SFMLParser.RetentionContext ctx) {
-        if (ctx == null) return new Number(0);
-        return visitNumber(ctx.number());
+    public Matchers visitInputmatchers(SFMLParser.InputmatchersContext ctx) {
+        if (ctx == null) return new Matchers(List.of(new Matcher(Integer.MAX_VALUE, 0)));
+        List<Matcher> matchers = ctx
+                .matcher()
+                .stream()
+                .map(this::visit)
+                .map(Matcher.class::cast)
+                .map(m -> setDefaults(m, Integer.MAX_VALUE, 0))
+                .collect(Collectors.toList());
+        return new Matchers(matchers);
+    }
+
+    private Matcher setDefaults(Matcher matcher, int quantity, int retention) {
+        if (matcher.quantity() < 0 && matcher.retention() < 0)
+            return new Matcher(quantity, retention);
+        else if (matcher.quantity() < 0)
+            return new Matcher(quantity, matcher.retention());
+        else if (matcher.retention() < 0)
+            return new Matcher(matcher.quantity(), retention);
+        return matcher;
     }
 
     @Override
-    public Matchers visitMatchers(SFMLParser.MatchersContext ctx) {
-        List<Matcher> matchers = ctx.matcher().stream().map(this::visitMatcher).collect(Collectors.toList());
+    public Matchers visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
+        if (ctx == null) return new Matchers(List.of(new Matcher(Integer.MAX_VALUE, Integer.MAX_VALUE)));
+        List<Matcher> matchers = ctx
+                .matcher()
+                .stream()
+                .map(this::visit)
+                .map(Matcher.class::cast)
+                .map(m -> setDefaults(m, Integer.MAX_VALUE, Integer.MAX_VALUE))
+                .collect(Collectors.toList());
         return new Matchers(matchers);
+    }
+
+    @Override
+    public Matcher visitRetentionMatcher(SFMLParser.RetentionMatcherContext ctx) {
+        var retain = visitRetention(ctx.retention());
+        return new Matcher(-1, retain.value());
+    }
+
+    @Override
+    public Matcher visitQuantityMatcher(SFMLParser.QuantityMatcherContext ctx) {
+        var quantity = visitQuantity(ctx.quantity());
+        return new Matcher(quantity.value(), -1);
+    }
+
+    @Override
+    public Number visitRetention(SFMLParser.RetentionContext ctx) {
+        if (ctx == null) return new Number(-1);
+        return visitNumber(ctx.number());
     }
 
     @Override

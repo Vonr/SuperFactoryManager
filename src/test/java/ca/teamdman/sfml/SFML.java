@@ -13,6 +13,7 @@ public class SFML {
                                 
                 every 20 ticks do
                     input 4 retain 1 from a top side
+                    input 4 from c
                     output to b
                 end
                 """;
