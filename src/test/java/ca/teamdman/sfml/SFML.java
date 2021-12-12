@@ -12,9 +12,8 @@ public class SFML {
                 name "hello world"
                                 
                 every 20 ticks do
-                    input 4 retain 1 from a top side
-                    input 4 from c
-                    output to b
+                    input 4 iron from a
+                    output 2 iron to b
                 end
                 """;
         var lexer   = new SFMLLexer(CharStreams.fromString(input));

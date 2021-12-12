@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.program;
 
-import ca.teamdman.sfml.ast.Matcher;
+import ca.teamdman.sfml.ast.ItemLimit;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
@@ -9,12 +9,12 @@ public class InputItemMatcher extends ItemMatcher {
     private final Int2IntMap PROMISED      = new Int2IntOpenHashMap();
     private       int        promisedCount = 0;
 
-    public InputItemMatcher(Matcher matcher) {
-        super(matcher);
+    public InputItemMatcher(ItemLimit limit) {
+        super(limit);
     }
 
     public boolean isDone() {
-        return transferred >= MATCHER.quantity() - MATCHER.retention();
+        return transferred >= ITEM_LIMIT.limit().quantity() - ITEM_LIMIT.limit().retention();
     }
 
     public int getExistingPromise(int slot) {
@@ -22,7 +22,7 @@ public class InputItemMatcher extends ItemMatcher {
     }
 
     public int getRemainingPromise() {
-        int needed = MATCHER.retention() - promisedCount;
+        int needed = ITEM_LIMIT.limit().retention() - promisedCount;
         return needed;
     }
 

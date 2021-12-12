@@ -1,6 +1,6 @@
 grammar SFML;
 
-program : name trigger*;
+program : name? trigger*;
 
 name: NAME string ;
 
@@ -22,12 +22,20 @@ inputstatement  : INPUT inputmatchers? FROM EACH? label sidequalifier? ;
 
 outputstatement : OUTPUT outputmatchers? TO EACH? label sidequalifier? ;
 
-inputmatchers        : matcher (COMMA matcher)*;
-outputmatchers        : matcher (COMMA matcher)*;
-matcher         : quantity retention    #QuantityRetentionMatcher
-                | retention             #RetentionMatcher
-                | quantity              #QuantityMatcher
+inputmatchers           : limit 
+                        | itemlimit (COMMA itemlimit)*;
+
+outputmatchers          : limit
+                        | itemlimit (COMMA itemlimit)*;
+
+itemlimit: limit item;
+
+limit           : quantity retention    #QuantityRetentionLimit
+                | retention             #RetentionLimit
+                | quantity              #QuantityLimit
                 ;
+
+item            : IDENTIFIER (COLON IDENTIFIER)?;
 
 quantity        : number;
 retention       : RETAIN number;
@@ -81,6 +89,7 @@ END     : E N D ;
 NAME    : N A M E ;
 
 COMMA   : ',';
+COLON   : ':';
 
 IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]* ;
 NUMBER          : [0-9]+ ;

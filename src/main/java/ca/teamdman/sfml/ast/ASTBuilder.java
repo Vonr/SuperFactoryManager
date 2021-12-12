@@ -2,6 +2,7 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +26,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public StringHolder visitName(SFMLParser.NameContext ctx) {
         if (ctx == null) return new StringHolder("");
         return visitString(ctx.string());
+    }
+
+    @Override
+    public ItemIdentifier visitItem(SFMLParser.ItemContext ctx) {
+        var params = ctx.IDENTIFIER().stream().map(TerminalNode::getText).collect(Collectors.toList());
+        if (params.size() == 1) return new ItemIdentifier("minecraft", params.get(0));
+        return new ItemIdentifier(params.get(0), params.get(1));
     }
 
     @Override
@@ -110,58 +118,61 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public Matcher visitQuantityRetentionMatcher(SFMLParser.QuantityRetentionMatcherContext ctx) {
+    public Limit visitQuantityRetentionLimit(SFMLParser.QuantityRetentionLimitContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
         var retain   = visitRetention(ctx.retention());
-        return new Matcher(quantity.value(), retain.value());
+        return new Limit(quantity.value(), retain.value());
     }
 
     @Override
     public Matchers visitInputmatchers(SFMLParser.InputmatchersContext ctx) {
-        if (ctx == null) return new Matchers(List.of(new Matcher(Integer.MAX_VALUE, 0)));
-        List<Matcher> matchers = ctx
-                .matcher()
-                .stream()
-                .map(this::visit)
-                .map(Matcher.class::cast)
-                .map(m -> setDefaults(m, Integer.MAX_VALUE, 0))
-                .collect(Collectors.toList());
-        return new Matchers(matchers);
+        if (ctx == null) return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, 0))));
+        if (ctx.limit() != null) {
+            var limit = (Limit) this.visit(ctx.limit());
+            limit = limit.withDefaults(Integer.MAX_VALUE, 0);
+            return new Matchers(List.of(new ItemLimit(limit)));
+        } else {
+            var itemLimits = ctx.itemlimit().stream()
+                    .map(this::visitItemlimit)
+                    .map(il -> il.withDefaults(Integer.MAX_VALUE, 0))
+                    .collect(Collectors.toList());
+            return new Matchers(itemLimits);
+        }
     }
 
-    private Matcher setDefaults(Matcher matcher, int quantity, int retention) {
-        if (matcher.quantity() < 0 && matcher.retention() < 0)
-            return new Matcher(quantity, retention);
-        else if (matcher.quantity() < 0)
-            return new Matcher(quantity, matcher.retention());
-        else if (matcher.retention() < 0)
-            return new Matcher(matcher.quantity(), retention);
-        return matcher;
+    @Override
+    public ItemLimit visitItemlimit(SFMLParser.ItemlimitContext ctx) {
+        var limit = (Limit) visit(ctx.limit());
+        var item  = (ItemIdentifier) visitItem(ctx.item());
+        return new ItemLimit(limit, item);
     }
 
     @Override
     public Matchers visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
-        if (ctx == null) return new Matchers(List.of(new Matcher(Integer.MAX_VALUE, Integer.MAX_VALUE)));
-        List<Matcher> matchers = ctx
-                .matcher()
-                .stream()
-                .map(this::visit)
-                .map(Matcher.class::cast)
-                .map(m -> setDefaults(m, Integer.MAX_VALUE, Integer.MAX_VALUE))
-                .collect(Collectors.toList());
-        return new Matchers(matchers);
+        if (ctx == null) return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE))));
+        if (ctx.limit() != null) {
+            var limit = (Limit) this.visit(ctx.limit());
+            limit = limit.withDefaults(Integer.MAX_VALUE, 0);
+            return new Matchers(List.of(new ItemLimit(limit)));
+        } else {
+            var itemLimits = ctx.itemlimit().stream()
+                    .map(this::visitItemlimit)
+                    .map(il -> il.withDefaults(Integer.MAX_VALUE, Integer.MAX_VALUE))
+                    .collect(Collectors.toList());
+            return new Matchers(itemLimits);
+        }
     }
 
     @Override
-    public Matcher visitRetentionMatcher(SFMLParser.RetentionMatcherContext ctx) {
+    public Limit visitRetentionLimit(SFMLParser.RetentionLimitContext ctx) {
         var retain = visitRetention(ctx.retention());
-        return new Matcher(-1, retain.value());
+        return new Limit(-1, retain.value());
     }
 
     @Override
-    public Matcher visitQuantityMatcher(SFMLParser.QuantityMatcherContext ctx) {
+    public Limit visitQuantityLimit(SFMLParser.QuantityLimitContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
-        return new Matcher(quantity.value(), -1);
+        return new Limit(quantity.value(), -1);
     }
 
     @Override
