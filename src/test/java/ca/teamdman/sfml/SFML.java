@@ -11,7 +11,7 @@ public class SFML {
         var input = """
                     NAME "NAME TEST WITH \\"ESCAPED STR\\" INGS"
                     EVERY 20 TICKS DO
-                        INPUT FROM input_chests
+                        INPUT FROM input_chests TOP SIDE
                         OUTPUT TO altar
                     END
                 """;

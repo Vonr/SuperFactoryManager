@@ -10,21 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class Program implements ASTNode {
-    private final       String        NAME;
-    private final       List<Trigger> TRIGGERS;
-    private final       Set<String>   REFERENCED_LABELS;
-    public static final int           MAX_PROGRAM_LENGTH = 8096;
-
-    public Program(String name, List<Trigger> triggers, Set<String> referencedLabels) {
-        this.NAME              = name;
-        this.TRIGGERS          = triggers;
-        this.REFERENCED_LABELS = referencedLabels;
-    }
+public record Program(
+        String name,
+        List<Trigger> triggers,
+        Set<String> referencedLabels
+) implements ASTNode {
+    public static final int MAX_PROGRAM_LENGTH = 8096;
 
     public void addWarnings(ItemStack disk) {
         var warnings = new ArrayList<String>();
-        for (String label : REFERENCED_LABELS) {
+        for (String label : referencedLabels) {
             var isUsed = SFMLabelNBTHelper
                     .getLabelPositions(disk, label)
                     .findAny()
@@ -36,12 +31,8 @@ public class Program implements ASTNode {
         DiskItem.setWarnings(disk, warnings);
     }
 
-    public String getName() {
-        return NAME;
-    }
-
     public void tick(ProgramContext context) {
-        for (Trigger t : TRIGGERS) {
+        for (Trigger t : triggers) {
             if (t.shouldTick(context)) {
                 var start = System.nanoTime();
                 t.tick(context);

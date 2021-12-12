@@ -4,8 +4,10 @@ import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     private final Set<Label> LABELS = new HashSet<>();
@@ -47,9 +49,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .collect(Collectors.toList());
         var labels = getLabels()
                 .stream()
-                .map(Label::NAME)
+                .map(Label::name)
                 .collect(Collectors.toSet());
-        return new Program(name.getValue(), triggers, labels);
+        return new Program(name.value(), triggers, labels);
     }
 
     @Override
@@ -57,7 +59,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var time = (Interval) visit(ctx.interval());
         if (time.getSeconds() < 1) throw new IllegalArgumentException("Minimum trigger interval is 1 second.");
         var block = visitBlock(ctx.block());
-        return new TimerTrigger(block, time);
+        return new TimerTrigger(time, block);
     }
 
     @Override
@@ -68,25 +70,49 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Interval visitTicks(SFMLParser.TicksContext ctx) {
         var num = visitNumber(ctx.number());
-        return Interval.fromTicks(num.getValue());
+        return Interval.fromTicks(num.value());
     }
 
     @Override
     public Interval visitSeconds(SFMLParser.SecondsContext ctx) {
         var num = visitNumber(ctx.number());
-        return Interval.fromSeconds(num.getValue());
+        return Interval.fromSeconds(num.value());
     }
 
     @Override
-    public InputStatement visitInputStatement(SFMLParser.InputStatementContext ctx) {
-        var label = visitLabel(ctx.label());
-        return new InputStatement(label);
+    public InputStatement visitInputStatementStatement(SFMLParser.InputStatementStatementContext ctx) {
+        return (InputStatement) visit(ctx.inputstatement());
     }
 
     @Override
-    public OutputStatement visitOutputStatement(SFMLParser.OutputStatementContext ctx) {
+    public OutputStatement visitOutputStatementStatement(SFMLParser.OutputStatementStatementContext ctx) {
+        return (OutputStatement) visit(ctx.outputstatement());
+    }
+
+    @Override
+    public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
         var label = visitLabel(ctx.label());
-        return new OutputStatement(label);
+        var sides = visitSidequalifier(ctx.sidequalifier());
+        return new InputStatement(label, sides);
+    }
+
+    @Override
+    public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
+        var label = visitLabel(ctx.label());
+        var sides = visitSidequalifier(ctx.sidequalifier());
+        return new OutputStatement(label, sides);
+    }
+
+    @Override
+    public DirectionQualifier visitSidequalifier(SFMLParser.SidequalifierContext ctx) {
+        if (ctx == null) return new DirectionQualifier(Stream.empty());
+        var sides = ctx.side().stream().map(this::visitSide);
+        return new DirectionQualifier(sides);
+    }
+
+    @Override
+    public ASTSide visitSide(SFMLParser.SideContext ctx) {
+        return ASTSide.valueOf(ctx.getText().toUpperCase(Locale.ROOT));
     }
 
     @Override

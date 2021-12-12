@@ -124,7 +124,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         Program programAST = null;
         try {
             programAST = new ASTBuilder().visitProgram(context);
-            DiskItem.setProgramName(disk, programAST.getName());
+            DiskItem.setProgramName(disk, programAST.name());
         } catch (Throwable t) {
         }
         if (parser.getNumberOfSyntaxErrors() == 0) {

@@ -1,8 +1,8 @@
 package ca.teamdman.sfml.ast;
 
-public record Label(String NAME) implements ASTNode {
+public record Label(String name) implements ASTNode {
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " = '" + NAME + "'";
+        return getClass().getSimpleName() + " = '" + name + "'";
     }
 }

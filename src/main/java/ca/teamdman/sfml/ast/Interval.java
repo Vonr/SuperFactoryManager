@@ -1,12 +1,6 @@
 package ca.teamdman.sfml.ast;
 
-public class Interval implements ASTNode {
-    private final int TICKS;
-
-    private Interval(int ticks) {
-        this.TICKS = ticks;
-    }
-
+public record Interval(int ticks) implements ASTNode {
     public static Interval fromTicks(int ticks) {
         return new Interval(ticks);
     }
@@ -16,10 +10,10 @@ public class Interval implements ASTNode {
     }
 
     public int getTicks() {
-        return TICKS;
+        return ticks;
     }
 
     public int getSeconds() {
-        return TICKS / 20;
+        return ticks / 20;
     }
 }

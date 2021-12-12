@@ -14,9 +14,24 @@ interval  : number TICKS     #Ticks
 
 block: statement* ;
 
-statement   : INPUT FROM label  #InputStatement
-            | OUTPUT TO label   #OutputStatement
+statement   : inputstatement    #InputStatementStatement
+            | outputstatement   #OutputStatementStatement
             ;
+
+inputstatement  : INPUT FROM label sidequalifier? ;
+
+outputstatement : OUTPUT TO label sidequalifier? ;
+
+sidequalifier   : side(COMMA side)* SIDE;
+
+side    : TOP
+        | BOTTOM
+        | NORTH
+        | EAST
+        | SOUTH
+        | WEST
+        ;
+
 
 string: STRING ;
 number: NUMBER ;
@@ -28,6 +43,16 @@ FROM    : F R O M ;
 TO      : T O ;
 INPUT   : I N P U T ;
 OUTPUT  : O U T P U T ;
+WHERE   : W H E R E ;
+SLOT    : S L O T ;
+
+TOP     : T O P ;
+BOTTOM  : B O T T O M ;
+NORTH   : N O R T H ;
+EAST    : E A S T ;
+SOUTH   : S O U T H ;
+WEST    : W E S T ;
+SIDE    : S I D E ;
 
 
 TICKS   : T I C K S ;
@@ -42,6 +67,8 @@ WORLD   : W O R L D ;
 PROGRAM : P R O G R A M ;
 END     : E N D ;
 NAME    : N A M E ;
+
+COMMA   : ',';
 
 IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]+ ;
 NUMBER          : [0-9]+ ;
