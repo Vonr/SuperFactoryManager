@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfml.ast.DirectionQualifier;
+import ca.teamdman.sfml.ast.Matchers;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
@@ -12,11 +13,11 @@ import java.util.stream.Stream;
 public class InventoryTracker implements Iterable<IItemHandler> {
     private final List<LazyOptional<IItemHandler>> CAPS;
     private final DirectionQualifier               DIRECTIONS;
-    private final List<ItemMatcher>                MATCHERS;
+    private final Matchers                         MATCHERS;
 
     public InventoryTracker(
             List<LazyOptional<IItemHandler>> containers,
-            List<ItemMatcher> matchers,
+            Matchers matchers,
             DirectionQualifier directions
     ) {
         this.CAPS       = containers;
@@ -30,12 +31,26 @@ public class InventoryTracker implements Iterable<IItemHandler> {
         return new CapabilityIterator<>(CAPS);
     }
 
-    public Stream<LimitedSlot> streamSlots() {
-        var rtn = Stream.<LimitedSlot>builder();
+    public Stream<LimitedInputSlot> streamInputSlots() {
+        var rtn      = Stream.<LimitedInputSlot>builder();
+        var matchers = MATCHERS.createInputMatchers();
         for (var inv : this) {
             for (int slot = 0; slot < inv.getSlots(); slot++) {
-                for (var matcher : MATCHERS) {
-                    rtn.add(new LimitedSlot(inv, slot, matcher));
+                for (var matcher : matchers) {
+                    rtn.add(new LimitedInputSlot(inv, slot, matcher));
+                }
+            }
+        }
+        return rtn.build();
+    }
+
+    public Stream<LimitedOutputSlot> streamOutputSlots() {
+        var rtn      = Stream.<LimitedOutputSlot>builder();
+        var matchers = MATCHERS.createOutputMatchers();
+        for (var inv : this) {
+            for (int slot = 0; slot < inv.getSlots(); slot++) {
+                for (var matcher : matchers) {
+                    rtn.add(new LimitedOutputSlot(inv, slot, matcher));
                 }
             }
         }

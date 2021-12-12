@@ -18,11 +18,21 @@ statement   : inputstatement    #InputStatementStatement
             | outputstatement   #OutputStatementStatement
             ;
 
-inputstatement  : INPUT FROM label sidequalifier? ;
+inputstatement  : INPUT inputmatchers? FROM EACH? label sidequalifier? ;
 
-outputstatement : OUTPUT TO label sidequalifier? ;
+outputstatement : OUTPUT outputmatchers? TO EACH? label sidequalifier? ;
 
-sidequalifier   : side(COMMA side)* SIDE;
+inputmatchers        : matcher (COMMA matcher)*;
+outputmatchers        : matcher (COMMA matcher)*;
+matcher         : quantity retention    #QuantityRetentionMatcher
+                | retention             #RetentionMatcher
+                | quantity              #QuantityMatcher
+                ;
+
+quantity        : number;
+retention       : RETAIN number;
+
+sidequalifier : side(COMMA side)* SIDE;
 
 side    : TOP
         | BOTTOM
@@ -45,6 +55,8 @@ INPUT   : I N P U T ;
 OUTPUT  : O U T P U T ;
 WHERE   : W H E R E ;
 SLOT    : S L O T ;
+RETAIN  : R E T A I N ;
+EACH    : E A C H ;
 
 TOP     : T O P ;
 BOTTOM  : B O T T O M ;
@@ -70,7 +82,7 @@ NAME    : N A M E ;
 
 COMMA   : ',';
 
-IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]+ ;
+IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]* ;
 NUMBER          : [0-9]+ ;
 
 STRING : '"' (~'"'|'\\"')* '"' ;

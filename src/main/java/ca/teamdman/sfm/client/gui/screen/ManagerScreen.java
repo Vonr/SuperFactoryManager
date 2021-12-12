@@ -109,6 +109,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         if (Screen.isPaste(p_97765_)) {
             onLoadClipboard();
             return true;
+        } else if (Screen.isCopy(p_97765_)) {
+            onSaveClipboard();
+            return true;
         }
         return false;
     }

@@ -14,7 +14,7 @@ public record InputStatement(
     @Override
     public void tick(ProgramContext context) {
         var inventories = context.getItemHandlersByLabel(label().name(), directions).collect(Collectors.toList());
-        var input       = new InventoryTracker(inventories, matchers.createMatchers(), directions);
+        var input       = new InventoryTracker(inventories, matchers, directions);
         context.addInput(input);
     }
 }
