@@ -95,7 +95,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var label    = visitLabel(ctx.label());
         var matchers = visitInputmatchers(ctx.inputmatchers());
         var sides    = visitSidequalifier(ctx.sidequalifier());
-        return new InputStatement(label, matchers, sides);
+        var each     = ctx.EACH() != null;
+        return new InputStatement(label, matchers, sides, each);
     }
 
     @Override
@@ -103,7 +104,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var label    = visitLabel(ctx.label());
         var matchers = visitOutputmatchers(ctx.outputmatchers());
         var sides    = visitSidequalifier(ctx.sidequalifier());
-        return new OutputStatement(label, matchers, sides);
+        var each     = ctx.EACH() != null;
+        return new OutputStatement(label, matchers, sides, each);
     }
 
     @Override

@@ -8,13 +8,14 @@ import java.util.stream.Collectors;
 public record InputStatement(
         Label label,
         Matchers matchers,
-        DirectionQualifier directions
+        DirectionQualifier directions,
+        boolean each
 ) implements Statement {
 
     @Override
     public void tick(ProgramContext context) {
         var inventories = context.getItemHandlersByLabel(label().name(), directions).collect(Collectors.toList());
-        var input       = new InventoryTracker(inventories, matchers, directions);
+        var input       = new InventoryTracker(inventories, matchers, directions, each);
         context.addInput(input);
     }
 }

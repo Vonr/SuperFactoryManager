@@ -14,15 +14,18 @@ public class InventoryTracker implements Iterable<IItemHandler> {
     private final List<LazyOptional<IItemHandler>> CAPS;
     private final DirectionQualifier               DIRECTIONS;
     private final Matchers                         MATCHERS;
+    private final boolean                          EACH;
 
     public InventoryTracker(
             List<LazyOptional<IItemHandler>> containers,
             Matchers matchers,
-            DirectionQualifier directions
+            DirectionQualifier directions,
+            boolean each
     ) {
         this.CAPS       = containers;
         this.DIRECTIONS = directions;
         this.MATCHERS   = matchers;
+        this.EACH       = each;
     }
 
     @NotNull
@@ -32,9 +35,10 @@ public class InventoryTracker implements Iterable<IItemHandler> {
     }
 
     public Stream<LimitedInputSlot> streamInputSlots() {
-        var rtn      = Stream.<LimitedInputSlot>builder();
-        var matchers = MATCHERS.createInputMatchers();
+        var                    rtn      = Stream.<LimitedInputSlot>builder();
+        List<InputItemMatcher> matchers = null;
         for (var inv : this) {
+            if (matchers == null || EACH) matchers = MATCHERS.createInputMatchers();
             for (int slot = 0; slot < inv.getSlots(); slot++) {
                 for (var matcher : matchers) {
                     rtn.add(new LimitedInputSlot(inv, slot, matcher));
@@ -45,9 +49,10 @@ public class InventoryTracker implements Iterable<IItemHandler> {
     }
 
     public Stream<LimitedOutputSlot> streamOutputSlots() {
-        var rtn      = Stream.<LimitedOutputSlot>builder();
-        var matchers = MATCHERS.createOutputMatchers();
+        var                     rtn      = Stream.<LimitedOutputSlot>builder();
+        List<OutputItemMatcher> matchers = null;
         for (var inv : this) {
+            if (matchers == null || EACH) matchers = MATCHERS.createOutputMatchers();
             for (int slot = 0; slot < inv.getSlots(); slot++) {
                 for (var matcher : matchers) {
                     rtn.add(new LimitedOutputSlot(inv, slot, matcher));

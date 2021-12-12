@@ -9,12 +9,13 @@ import java.util.stream.Collectors;
 public record OutputStatement(
         Label label,
         Matchers matchers,
-        DirectionQualifier directions
+        DirectionQualifier directions,
+        boolean each
 ) implements Statement {
     @Override
     public void tick(ProgramContext context) {
         var inventories = context.getItemHandlersByLabel(label().name(), directions).collect(Collectors.toList());
-        var outputs     = new InventoryTracker(inventories, matchers, directions);
+        var outputs     = new InventoryTracker(inventories, matchers, directions, each);
         var inputSlots  = context.getInputs().flatMap(InventoryTracker::streamInputSlots);
         var outputSlots = outputs.streamOutputSlots().collect(Collectors.toList());
 
