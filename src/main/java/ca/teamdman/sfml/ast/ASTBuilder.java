@@ -23,6 +23,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public StringHolder visitName(SFMLParser.NameContext ctx) {
+        if (ctx == null) return new StringHolder("");
         return visitString(ctx.string());
     }
 
