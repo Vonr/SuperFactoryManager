@@ -4,13 +4,18 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class SFMLabelNBTHelper {
@@ -23,9 +28,7 @@ public class SFMLabelNBTHelper {
     }
 
     public static boolean hasLabel(ItemStack stack, String label, BlockPos pos) {
-        return stack
-                .getOrCreateTag()
-                .getCompound("sfm:labels")
+        return getLabelDict(stack)
                 .getList(label, Tag.TAG_LONG)
                 .contains(LongTag.valueOf(pos.asLong()));
     }
@@ -39,6 +42,16 @@ public class SFMLabelNBTHelper {
         tag.put("sfm:labels", dict);
     }
 
+    public static void addLabels(ItemStack stack, Collection<String> labels) {
+        var tag  = stack.getOrCreateTag();
+        var dict = tag.getCompound("sfm:labels");
+        for (String label : labels) {
+            var list = dict.getList(label, Tag.TAG_LONG);
+            dict.put(label, list);
+        }
+        tag.put("sfm:labels", dict);
+    }
+
     public static void removeLabel(ItemStack stack, String label, BlockPos pos) {
         var tag  = stack.getOrCreateTag();
         var dict = tag.getCompound("sfm:labels");
@@ -48,27 +61,22 @@ public class SFMLabelNBTHelper {
         tag.put("sfm:labels", dict);
     }
 
-    public static Component getLabelCount(ItemStack stack) {
-        var dict = stack
-                .getOrCreateTag()
-                .getCompound("sfm:labels");
-        var labelCount = dict
-                .getAllKeys()
-                .size();
-        var blockCount = dict
-                .getAllKeys()
-                .stream()
-                .map(key -> dict.getList(key, Tag.TAG_LONG))
-                .mapToInt(ListTag::size)
-                .sum();
-        return new TranslatableComponent("item.sfm.disk.tooltip.labels", labelCount, blockCount).withStyle(
-                ChatFormatting.GRAY);
+    public static List<Component> getHoverText(ItemStack stack) {
+        var rtn = new ArrayList<Component>();
+        rtn.add(new TranslatableComponent("item.sfm.disk.tooltip.label.header").withStyle(ChatFormatting.UNDERLINE));
+        var dict = getLabelDict(stack);
+        for (var label : dict.getAllKeys()) {
+            rtn.add(new TranslatableComponent(
+                    "item.sfm.disk.tooltip.label",
+                    label,
+                    dict.getList(label, Tag.TAG_LONG).size()
+            ).withStyle(ChatFormatting.GRAY));
+        }
+        return rtn;
     }
 
     public static Stream<BlockPos> getLabelPositions(ItemStack stack, String label) {
-        var dict = stack
-                .getOrCreateTag()
-                .getCompound("sfm:labels");
+        var dict = getLabelDict(stack);
         return getPositions(dict.getList(label, Tag.TAG_LONG));
     }
 
@@ -80,10 +88,8 @@ public class SFMLabelNBTHelper {
     }
 
     public static Multimap<String, BlockPos> getLabelPositions(ItemStack stack) {
-        var rtn = HashMultimap.<String, BlockPos>create();
-        var dict = stack
-                .getOrCreateTag()
-                .getCompound("sfm:labels");
+        var rtn  = HashMultimap.<String, BlockPos>create();
+        var dict = getLabelDict(stack);
         for (var key : dict.getAllKeys()) {
             getPositions(dict.getList(key, Tag.TAG_LONG)).forEach(pos -> rtn.put(key, pos));
         }
@@ -92,14 +98,26 @@ public class SFMLabelNBTHelper {
 
     public static Multimap<BlockPos, String> getPositionLabels(ItemStack stack) {
         var rtn  = HashMultimap.<BlockPos, String>create();
-        var dict = stack.getOrCreateTag().getCompound("sfm:labels");
+        var dict = getLabelDict(stack);
         for (var key : dict.getAllKeys()) {
             getPositions(dict.getList(key, Tag.TAG_LONG)).forEach(pos -> rtn.put(pos, key));
         }
         return rtn;
     }
 
+    @NotNull
+    private static CompoundTag getLabelDict(ItemStack stack) {
+        return stack.getOrCreateTag().getCompound("sfm:labels");
+    }
+
     public static void copyLabels(ItemStack source, ItemStack destination) {
-        destination.getOrCreateTag().put("sfm:labels", source.getOrCreateTag().getCompound("sfm:labels"));
+        destination.getOrCreateTag().put("sfm:labels", getLabelDict(source));
+    }
+
+    public static void clearLabels(ItemStack gun, BlockPos pos) {
+        var dict = getLabelDict(gun);
+        for (String key : dict.getAllKeys()) {
+            dict.getList(key, Tag.TAG_LONG).removeIf(p -> ((LongTag) p).getAsLong() == pos.asLong());
+        }
     }
 }

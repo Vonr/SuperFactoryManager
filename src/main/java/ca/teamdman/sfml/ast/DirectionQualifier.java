@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNode {
-
     public DirectionQualifier(Stream<ASTSide> sides) {
         this(convert(sides));
     }

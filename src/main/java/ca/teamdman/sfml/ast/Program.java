@@ -42,4 +42,8 @@ public record Program(
             }
         }
     }
+
+    public Set<String> getReferencedLabels() {
+        return referencedLabels;
+    }
 }

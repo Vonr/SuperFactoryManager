@@ -30,6 +30,7 @@ import org.antlr.v4.runtime.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int                    STATE_DATA_ACCESS_KEY = 0;
@@ -78,6 +79,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return getDisk()
                 .map(DiskItem::getProgram)
                 .filter(prog -> !prog.isBlank());
+    }
+
+    public Set<String> getReferencedLabels() {
+        return compiledProgram.getReferencedLabels();
     }
 
     public void setProgram(String program) {
@@ -207,11 +212,11 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
-        super.save(tag);
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
         ContainerHelper.saveAllItems(tag, ITEMS);
-        return tag;
     }
+
 
     @Override
     public void clearContent() {

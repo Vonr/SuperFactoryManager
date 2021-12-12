@@ -109,7 +109,7 @@ public class DiskItem extends Item {
             ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag detail
     ) {
         if (stack.hasTag()) {
-            list.add(SFMLabelNBTHelper.getLabelCount(stack));
+            list.addAll(SFMLabelNBTHelper.getHoverText(stack));
             getErrors(stack)
                     .stream()
                     .map(TextComponent::new)

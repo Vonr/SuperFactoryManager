@@ -45,20 +45,23 @@ public class LabelGunItem extends Item {
         if (level.isClientSide) return InteractionResult.SUCCESS;
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager) {
             manager.getDisk().ifPresent(disk -> {
-                ItemStack source      = stack;
-                ItemStack destination = disk;
                 if (ctx.getPlayer().isShiftKeyDown()) {
-                    source      = disk;
-                    destination = stack;
+                    SFMLabelNBTHelper.copyLabels(disk, stack);
+                    var scriptLabels = manager.getReferencedLabels();
+                    SFMLabelNBTHelper.addLabels(stack, scriptLabels);
+                } else {
+                    SFMLabelNBTHelper.copyLabels(stack, disk);
                 }
-                SFMLabelNBTHelper.copyLabels(source, destination);
             });
             return InteractionResult.CONSUME;
         }
 
         var label = getLabel(stack);
         if (label.isEmpty()) return InteractionResult.SUCCESS;
-        SFMLabelNBTHelper.toggleLabel(stack, label, pos);
+        if (ctx.getPlayer().isShiftKeyDown())
+            SFMLabelNBTHelper.clearLabels(stack, pos);
+        else
+            SFMLabelNBTHelper.toggleLabel(stack, label, pos);
         return InteractionResult.CONSUME;
     }
 
@@ -88,7 +91,7 @@ public class LabelGunItem extends Item {
     ) {
         lines.add(new TranslatableComponent("item.sfm.labelgun.tooltip.1").withStyle(ChatFormatting.GRAY));
         lines.add(new TranslatableComponent("item.sfm.labelgun.tooltip.2").withStyle(ChatFormatting.GRAY));
-        lines.add(SFMLabelNBTHelper.getLabelCount(stack));
+        lines.addAll(SFMLabelNBTHelper.getHoverText(stack));
     }
 
     @Override

@@ -3,6 +3,8 @@ package ca.teamdman.sfm.common.program;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfml.ast.Program;
 
+import java.util.Set;
+
 public class ProgramExecutor {
     private final Program            PROGRAM;
     private final ManagerBlockEntity MANAGER;
@@ -22,5 +24,9 @@ public class ProgramExecutor {
                     .ifPresent(PROGRAM::addWarnings);
         }
         PROGRAM.tick(context);
+    }
+
+    public Set<String> getReferencedLabels() {
+        return PROGRAM.getReferencedLabels();
     }
 }
