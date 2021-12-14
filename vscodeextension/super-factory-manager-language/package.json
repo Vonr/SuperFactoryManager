@@ -1,0 +1,27 @@
+{
+    "name": "super-factory-manager-language",
+    "displayName": "Super Factory Manager Language",
+    "description": "Adds language support for the Super Factory Manager Language.",
+    "repository": "https://github.com/TeamDman/SuperFactoryManager",
+    "publisher": "TeamDman",
+    "version": "0.0.2",
+    "engines": {
+        "vscode": "^1.0.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "sfml",
+            "aliases": ["Super Factory Manager Language", "sfml"],
+            "extensions": [".sfm",".sfml"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "sfml",
+            "scopeName": "source.sfml",
+            "path": "./syntaxes/sfml.tmLanguage.json"
+        }]
+    }
+}

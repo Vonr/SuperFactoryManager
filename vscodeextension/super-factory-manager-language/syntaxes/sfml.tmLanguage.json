@@ -1,0 +1,51 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Super Factory Manager Language",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#numbers"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.sfml",
+					"match": "\\b(IF|THEN|MOVE|FROM|TO|INPUT|OUTPUT|WHERE|SLOTS|RETAIN|EACH|TOP|BOTTOM|NORTH|EAST|SOUTH|WEST|SIDE|SELF|TICKS|SECONDS|EVERY|REDSTONE|PULSE|WORLD|PROGRAM|if|then|move|from|to|input|output|where|slots|retain|each|top|bottom|north|east|south|west|side|self|ticks|seconds|every|redstone|pulse|world|program)\\b"
+				},
+				{
+					"name": "storage.type.name.sfml",
+					"match": "\\b(name|NAME)\\b"
+				},
+				{
+					"name": "keyword.control.flow.sfml",
+					"match": "\\b(DO|do|END|end)\\b"
+				}
+			]
+		},
+		"numbers": {
+			"patterns": [{
+				"name": "constant.numeric.sfml",
+				"match": "\\d+"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.sfml",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.sfml",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.sfml"
+}
