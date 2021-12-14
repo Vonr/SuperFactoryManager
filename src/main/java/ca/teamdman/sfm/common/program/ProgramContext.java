@@ -32,6 +32,10 @@ public class ProgramContext {
         LEVEL        = MANAGER.getLevel();
     }
 
+    public void clear() {
+        INPUTS.clear();
+    }
+
     public ManagerBlockEntity getManager() {
         return MANAGER;
     }

@@ -36,6 +36,7 @@ public record Program(
             if (t.shouldTick(context)) {
                 var start = System.nanoTime();
                 t.tick(context);
+                context.clear();
                 var end  = System.nanoTime();
                 var diff = end - start;
                 SFM.LOGGER.info("Took {}ms ({}us)", diff / 1000000, diff);
