@@ -1,0 +1,12 @@
+-- not yet implemented.
+
+name "condition"
+
+every 20 ticks do
+    INPUT FROM a
+    if a has gt 10 iron,  then
+        OUTPUT TO b
+    else
+        OUTPUT TO c
+    end
+end

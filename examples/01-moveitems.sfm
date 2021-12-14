@@ -1,0 +1,11 @@
+name "move items"
+
+-- use two dashes for a comment
+-- keywords are case insensitive
+
+every 20 ticks do
+    INPUT FROM a
+    OUTPUT TO b
+    -- "a" and "b" are inventory labels
+    -- use a label gun to identify them in world
+end
