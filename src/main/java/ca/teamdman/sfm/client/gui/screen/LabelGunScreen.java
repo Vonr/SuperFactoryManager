@@ -36,7 +36,7 @@ public class LabelGunScreen extends Screen {
                 50,
                 300,
                 20,
-                new TranslatableComponent("gui.sfm.label.labelgun.placeholder")
+                new TranslatableComponent("gui.sfm.labels.labelgun.placeholder")
         ));
         this.setInitialFocus(labelField);
         this.labelField.setFocus(true);

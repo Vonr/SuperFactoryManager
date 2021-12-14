@@ -1,11 +1,11 @@
 package ca.teamdman.sfm.common.util;
 
+import ca.teamdman.sfml.ast.Label;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -77,30 +77,30 @@ public class SFMLabelNBTHelper {
 
     public static Stream<BlockPos> getLabelPositions(ItemStack stack, String label) {
         var dict = getLabelDict(stack);
-        return getPositions(dict.getList(label, Tag.TAG_LONG));
+        return getPositions(dict, label);
     }
 
-    private static Stream<BlockPos> getPositions(ListTag list) {
-        return list.stream()
+    public static Stream<BlockPos> getPositions(ItemStack stack, List<Label> labels) {
+        var dict = getLabelDict(stack);
+        return labels
+                .stream()
+                .map(Label::name)
+                .flatMap(label -> getPositions(dict, label))
+                .distinct();
+    }
+
+    private static Stream<BlockPos> getPositions(CompoundTag tag, String label) {
+        return tag.getList(label, Tag.TAG_LONG).stream()
                 .map(LongTag.class::cast)
                 .mapToLong(LongTag::getAsLong)
                 .mapToObj(BlockPos::of);
-    }
-
-    public static Multimap<String, BlockPos> getLabelPositions(ItemStack stack) {
-        var rtn  = HashMultimap.<String, BlockPos>create();
-        var dict = getLabelDict(stack);
-        for (var key : dict.getAllKeys()) {
-            getPositions(dict.getList(key, Tag.TAG_LONG)).forEach(pos -> rtn.put(key, pos));
-        }
-        return rtn;
     }
 
     public static Multimap<BlockPos, String> getPositionLabels(ItemStack stack) {
         var rtn  = HashMultimap.<BlockPos, String>create();
         var dict = getLabelDict(stack);
         for (var key : dict.getAllKeys()) {
-            getPositions(dict.getList(key, Tag.TAG_LONG)).forEach(pos -> rtn.put(pos, key));
+            getPositions(dict, key).forEach(pos -> rtn.put(pos, key));
         }
         return rtn;
     }

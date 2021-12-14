@@ -1,16 +1,25 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfml.ast.InputStatement;
 import net.minecraftforge.items.IItemHandler;
 
 public class LimitedInputSlot extends LimitedSlot<InputItemMatcher> {
 
+    private final InputStatement STATEMENT;
+
     public LimitedInputSlot(
+            InputStatement statement,
             IItemHandler handler,
             int slot,
             InputItemMatcher matcher
     ) {
         super(handler, slot, matcher);
+        this.STATEMENT = statement;
+    }
+
+    public InputStatement getStatement() {
+        return STATEMENT;
     }
 
     public void moveTo(LimitedOutputSlot other) {

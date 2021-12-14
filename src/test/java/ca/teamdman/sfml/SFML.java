@@ -12,8 +12,9 @@ public class SFML {
                 name "hello world"
                                 
                 every 20 ticks do
-                    input 4 iron from a
-                    output iron to b
+                    input 4 iron from a slots 1-5, 7, 10
+                    output stone to furnace top side
+                    output iron, stone to b
                 end
                 """;
         var lexer   = new SFMLLexer(CharStreams.fromString(input));

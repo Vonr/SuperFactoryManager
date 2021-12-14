@@ -29,4 +29,9 @@ public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNo
             case WEST -> Direction.WEST;
         };
     }
+
+    public Stream<Direction> stream() {
+        if (directions.isEmpty()) return Stream.<Direction>builder().add(null).build();
+        return directions.stream();
+    }
 }

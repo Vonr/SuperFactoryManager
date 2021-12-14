@@ -18,15 +18,19 @@ statement   : inputstatement    #InputStatementStatement
             | outputstatement   #OutputStatementStatement
             ;
 
-inputstatement  : INPUT inputmatchers? FROM EACH? label sidequalifier? ;
+inputstatement  : INPUT inputmatchers? FROM EACH? label+ sidequalifier? slotqualifier?;
 
-outputstatement : OUTPUT outputmatchers? TO EACH? label sidequalifier? ;
+outputstatement : OUTPUT outputmatchers? TO EACH? label+ sidequalifier? slotqualifier?;
 
-inputmatchers           : limit 
-                        | itemlimit (COMMA itemlimit)*;
+inputmatchers           : itemlimit (COMMA itemlimit)*
+                        | limit
+                        | item (COMMA item)*
+                        ;
 
-outputmatchers          : limit
-                        | itemlimit (COMMA itemlimit)*;
+outputmatchers          : itemlimit (COMMA itemlimit)*
+                        | limit
+                        | item (COMMA item)*
+                        ;
 
 itemlimit: limit item;
 
@@ -50,11 +54,15 @@ side    : TOP
         | WEST
         ;
 
+slotqualifier   : SLOTS rangeset;
+
+rangeset        : range (COMMA range)*;
+range           : number (DASH number)? ;
 
 string: STRING ;
 number: NUMBER ;
-label: IDENTIFIER ;
 
+label: IDENTIFIER ;
 
 MOVE    : M O V E ;
 FROM    : F R O M ;
@@ -62,7 +70,7 @@ TO      : T O ;
 INPUT   : I N P U T ;
 OUTPUT  : O U T P U T ;
 WHERE   : W H E R E ;
-SLOT    : S L O T ;
+SLOTS    : S L O T S ;
 RETAIN  : R E T A I N ;
 EACH    : E A C H ;
 
@@ -74,6 +82,7 @@ SOUTH   : S O U T H ;
 WEST    : W E S T ;
 SIDE    : S I D E ;
 
+SELF    : S E L F ;
 
 TICKS   : T I C K S ;
 SECONDS : S E C O N D S ;
@@ -90,6 +99,7 @@ NAME    : N A M E ;
 
 COMMA   : ',';
 COLON   : ':';
+DASH    : '-';
 
 IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]* ;
 NUMBER          : [0-9]+ ;

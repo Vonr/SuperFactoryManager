@@ -101,20 +101,22 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
-        var label    = visitLabel(ctx.label());
+        var labels   = ctx.label().stream().map(this::visitLabel).collect(Collectors.toList());
         var matchers = visitInputmatchers(ctx.inputmatchers());
         var sides    = visitSidequalifier(ctx.sidequalifier());
         var each     = ctx.EACH() != null;
-        return new InputStatement(label, matchers, sides, each);
+        var slots    = visitSlotqualifier(ctx.slotqualifier());
+        return new InputStatement(labels, matchers, sides, each, slots);
     }
 
     @Override
     public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
-        var label    = visitLabel(ctx.label());
+        var labels   = ctx.label().stream().map(this::visitLabel).collect(Collectors.toList());
         var matchers = visitOutputmatchers(ctx.outputmatchers());
         var sides    = visitSidequalifier(ctx.sidequalifier());
         var each     = ctx.EACH() != null;
-        return new OutputStatement(label, matchers, sides, each);
+        var slots    = visitSlotqualifier(ctx.slotqualifier());
+        return new OutputStatement(labels, matchers, sides, each, slots);
     }
 
     @Override
@@ -132,8 +134,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             limit = limit.withDefaults(Integer.MAX_VALUE, 0);
             return new Matchers(List.of(new ItemLimit(limit)));
         } else if (ctx.item() != null) {
-            var item = this.visitItem(ctx.item());
-            return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, 0), item)));
+            var items = ctx
+                    .item()
+                    .stream()
+                    .map(this::visitItem)
+                    .map(item -> new ItemLimit(new Limit(Integer.MAX_VALUE, 0), item))
+                    .collect(Collectors.toList());
+            return new Matchers(items);
         } else {
             var itemLimits = ctx.itemlimit().stream()
                     .map(this::visitItemlimit)
@@ -151,6 +158,29 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
+    public NumberRangeSet visitSlotqualifier(SFMLParser.SlotqualifierContext ctx) {
+        return visitRangeset(ctx == null ? null : ctx.rangeset());
+    }
+
+    @Override
+    public NumberRangeSet visitRangeset(SFMLParser.RangesetContext ctx) {
+        if (ctx == null) return new NumberRangeSet(List.of(new NumberRange(Integer.MIN_VALUE, Integer.MAX_VALUE)));
+        return new NumberRangeSet(ctx.range().stream().map(this::visitRange).collect(Collectors.toList()));
+    }
+
+    @Override
+    public NumberRange visitRange(SFMLParser.RangeContext ctx) {
+        var iter  = ctx.number().stream().map(this::visitNumber).mapToInt(Number::value).iterator();
+        var start = iter.next();
+        if (iter.hasNext()) {
+            var end = iter.next();
+            return new NumberRange(start, end);
+        } else {
+            return new NumberRange(start, start);
+        }
+    }
+
+    @Override
     public Matchers visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
         if (ctx == null) return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE))));
         if (ctx.limit() != null) {
@@ -158,8 +188,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             limit = limit.withDefaults(Integer.MAX_VALUE, 0);
             return new Matchers(List.of(new ItemLimit(limit)));
         } else if (ctx.item() != null) {
-            var item = this.visitItem(ctx.item());
-            return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE), item)));
+            var items = ctx
+                    .item()
+                    .stream()
+                    .map(this::visitItem)
+                    .map(item -> new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE), item))
+                    .collect(Collectors.toList());
+            return new Matchers(items);
         } else {
             var itemLimits = ctx.itemlimit().stream()
                     .map(this::visitItemlimit)
