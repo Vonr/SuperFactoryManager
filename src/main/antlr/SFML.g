@@ -16,11 +16,16 @@ block: statement* ;
 
 statement   : inputstatement    #InputStatementStatement
             | outputstatement   #OutputStatementStatement
+            | ifstatement       #IfStatementStatement
             ;
 
 inputstatement  : INPUT inputmatchers? FROM EACH? label+ sidequalifier? slotqualifier?;
 
 outputstatement : OUTPUT outputmatchers? TO EACH? label+ sidequalifier? slotqualifier?;
+
+ifstatement: IF condition THEN block END;
+
+condition : ;
 
 inputmatchers           : itemlimit (COMMA itemlimit)*
                         | limit
@@ -63,6 +68,9 @@ string: STRING ;
 number: NUMBER ;
 
 label: IDENTIFIER ;
+
+IF      : I F ;
+THEN    : T H E N ;
 
 MOVE    : M O V E ;
 FROM    : F R O M ;
