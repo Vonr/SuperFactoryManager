@@ -8,7 +8,8 @@ public enum ComparisonOperator implements ASTNode, BiPredicate<Integer, Integer>
     LESSER((a, b) -> a < b),
     EQUALS(Integer::equals),
     LESSER_OR_EQUAL((a, b) -> a <= b),
-    GREATER_OR_EQUAL((a, b) -> a >= b);
+    GREATER_OR_EQUAL((a, b) -> a >= b),
+    NEVER((a, b) -> false);
 
     private final BiPredicate<Integer, Integer> PRED;
 
@@ -23,6 +24,7 @@ public enum ComparisonOperator implements ASTNode, BiPredicate<Integer, Integer>
             case "EQ" -> EQUALS;
             case "LE" -> LESSER_OR_EQUAL;
             case "GE" -> GREATER_OR_EQUAL;
+            default -> NEVER;
         };
     }
 

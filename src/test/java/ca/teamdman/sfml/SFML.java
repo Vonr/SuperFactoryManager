@@ -24,18 +24,6 @@ public class SFML {
                     end
                 end
                 """;
-        input = """
-                name "move items"
-                                
-                -- use two dashes for a comment
-                -- keywords are case insensitive
-                                
-                every 20 ticks do
-                    INPUT FROM a
-                    OUTPUT TO b
-                    -- "a" and "b" are inventory labels
-                    -- use a label gun to identify them in world
-                end""";
         var lexer   = new SFMLLexer(CharStreams.fromString(input));
         var tokens  = new CommonTokenStream(lexer);
         var parser  = new SFMLParser(tokens);

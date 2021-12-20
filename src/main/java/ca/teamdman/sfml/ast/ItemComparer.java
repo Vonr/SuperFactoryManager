@@ -1,18 +1,27 @@
 package ca.teamdman.sfml.ast;
 
-import net.minecraft.world.item.ItemStack;
-
-import java.util.function.Predicate;
+import net.minecraftforge.items.IItemHandler;
 
 public record ItemComparer(
         ComparisonOperator op,
         Quantity num,
         ItemIdentifier item
-) implements ASTNode, Predicate<ItemStack> {
-    @Override
-    public boolean test(ItemStack stack) {
-        int count = stack.getCount();
-        if (!item.test(stack)) return false;
-        return op.test(count, num.value());
+) implements ASTNode {
+    public static BoolExpr toBooleanExpression(LabelAccess labelAccess, ItemComparer itemComparer) {
+        return new BoolExpr(context -> {
+            var handlers = context.getItemHandlersByLabels(labelAccess);
+            var count    = 0;
+            for (var inv : (Iterable<IItemHandler>) handlers::iterator) {
+                for (int slot = 0; slot < inv.getSlots(); slot++) {
+                    if (labelAccess.slots().contains(slot)) {
+                        var stack = inv.getStackInSlot(slot);
+                        if (itemComparer.item.test(stack)) {
+                            count += stack.getCount();
+                        }
+                    }
+                }
+            }
+            return itemComparer.op.test(count, itemComparer.num().value());
+        });
     }
 }
