@@ -27,10 +27,7 @@ import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.antlr.v4.runtime.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int                    STATE_DATA_ACCESS_KEY = 0;
@@ -82,6 +79,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public Set<String> getReferencedLabels() {
+        if (compiledProgram == null) return Collections.emptySet();
         return compiledProgram.getReferencedLabels();
     }
 

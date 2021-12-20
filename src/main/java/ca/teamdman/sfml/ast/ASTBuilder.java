@@ -97,7 +97,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         return (OutputStatement) visit(ctx.outputstatement());
     }
 
-
     @Override
     public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
@@ -147,9 +146,16 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public BoolExpr visitBooleanHas(SFMLParser.BooleanHasContext ctx) {
+        var setOp          = visitSetOp(ctx.setOp());
         var labelAccess    = visitLabelaccess(ctx.labelaccess());
         var itemComparison = visitItemcomparison(ctx.itemcomparison());
-        return ItemComparer.toBooleanExpression(labelAccess, itemComparison);
+        return ItemComparer.toBooleanExpression(setOp, labelAccess, itemComparison);
+    }
+
+    @Override
+    public SetOperator visitSetOp(SFMLParser.SetOpContext ctx) {
+        if (ctx == null) return SetOperator.OVERALL;
+        return SetOperator.from(ctx.getText());
     }
 
     @Override
