@@ -16,25 +16,29 @@ public class SFMLParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		IF=1, THEN=2, MOVE=3, FROM=4, TO=5, INPUT=6, OUTPUT=7, WHERE=8, SLOTS=9, 
-		RETAIN=10, EACH=11, TOP=12, BOTTOM=13, NORTH=14, EAST=15, SOUTH=16, WEST=17, 
-		SIDE=18, SELF=19, TICKS=20, SECONDS=21, EVERY=22, REDSTONE=23, PULSE=24, 
-		DO=25, WORLD=26, PROGRAM=27, END=28, NAME=29, COMMA=30, COLON=31, DASH=32, 
-		IDENTIFIER=33, NUMBER=34, STRING=35, LINE_COMMENT=36, WS=37;
+		IF=1, THEN=2, ELSE=3, HAS=4, OVERALL=5, SOME=6, ONE=7, LONE=8, NO=9, TRUE=10, 
+		FALSE=11, NOT=12, AND=13, OR=14, GT=15, LT=16, EQ=17, LE=18, GE=19, MOVE=20, 
+		FROM=21, TO=22, INPUT=23, OUTPUT=24, WHERE=25, SLOTS=26, RETAIN=27, EACH=28, 
+		TOP=29, BOTTOM=30, NORTH=31, EAST=32, SOUTH=33, WEST=34, SIDE=35, TICKS=36, 
+		SECONDS=37, REDSTONE=38, PULSE=39, DO=40, WORLD=41, PROGRAM=42, END=43, 
+		NAME=44, EVERY=45, COMMA=46, COLON=47, DASH=48, LPAREN=49, RPAREN=50, 
+		IDENTIFIER=51, NUMBER=52, STRING=53, LINE_COMMENT=54, WS=55;
 	public static final int
 		RULE_program = 0, RULE_name = 1, RULE_trigger = 2, RULE_interval = 3, 
 		RULE_block = 4, RULE_statement = 5, RULE_inputstatement = 6, RULE_outputstatement = 7, 
-		RULE_ifstatement = 8, RULE_condition = 9, RULE_inputmatchers = 10, RULE_outputmatchers = 11, 
-		RULE_itemlimit = 12, RULE_limit = 13, RULE_item = 14, RULE_quantity = 15, 
-		RULE_retention = 16, RULE_sidequalifier = 17, RULE_side = 18, RULE_slotqualifier = 19, 
-		RULE_rangeset = 20, RULE_range = 21, RULE_string = 22, RULE_number = 23, 
-		RULE_label = 24;
+		RULE_inputmatchers = 8, RULE_outputmatchers = 9, RULE_itemmovement = 10, 
+		RULE_itemlimit = 11, RULE_limit = 12, RULE_quantity = 13, RULE_retention = 14, 
+		RULE_sidequalifier = 15, RULE_side = 16, RULE_slotqualifier = 17, RULE_rangeset = 18, 
+		RULE_range = 19, RULE_ifstatement = 20, RULE_boolexpr = 21, RULE_itemcomparison = 22, 
+		RULE_comparisonOp = 23, RULE_setOp = 24, RULE_labelaccess = 25, RULE_label = 26, 
+		RULE_item = 27, RULE_string = 28, RULE_number = 29;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"program", "name", "trigger", "interval", "block", "statement", "inputstatement", 
-			"outputstatement", "ifstatement", "condition", "inputmatchers", "outputmatchers", 
-			"itemlimit", "limit", "item", "quantity", "retention", "sidequalifier", 
-			"side", "slotqualifier", "rangeset", "range", "string", "number", "label"
+			"outputstatement", "inputmatchers", "outputmatchers", "itemmovement", 
+			"itemlimit", "limit", "quantity", "retention", "sidequalifier", "side", 
+			"slotqualifier", "rangeset", "range", "ifstatement", "boolexpr", "itemcomparison", 
+			"comparisonOp", "setOp", "labelaccess", "label", "item", "string", "number"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -43,16 +47,20 @@ public class SFMLParser extends Parser {
 		return new String[] {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, null, null, null, null, null, null, null, 
-			null, null, null, null, null, null, "','", "':'", "'-'"
+			null, null, null, null, null, null, null, null, null, null, null, null, 
+			null, null, null, null, null, null, null, null, null, null, "','", "':'", 
+			"'-'", "'('", "')'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "IF", "THEN", "MOVE", "FROM", "TO", "INPUT", "OUTPUT", "WHERE", 
-			"SLOTS", "RETAIN", "EACH", "TOP", "BOTTOM", "NORTH", "EAST", "SOUTH", 
-			"WEST", "SIDE", "SELF", "TICKS", "SECONDS", "EVERY", "REDSTONE", "PULSE", 
-			"DO", "WORLD", "PROGRAM", "END", "NAME", "COMMA", "COLON", "DASH", "IDENTIFIER", 
+			null, "IF", "THEN", "ELSE", "HAS", "OVERALL", "SOME", "ONE", "LONE", 
+			"NO", "TRUE", "FALSE", "NOT", "AND", "OR", "GT", "LT", "EQ", "LE", "GE", 
+			"MOVE", "FROM", "TO", "INPUT", "OUTPUT", "WHERE", "SLOTS", "RETAIN", 
+			"EACH", "TOP", "BOTTOM", "NORTH", "EAST", "SOUTH", "WEST", "SIDE", "TICKS", 
+			"SECONDS", "REDSTONE", "PULSE", "DO", "WORLD", "PROGRAM", "END", "NAME", 
+			"EVERY", "COMMA", "COLON", "DASH", "LPAREN", "RPAREN", "IDENTIFIER", 
 			"NUMBER", "STRING", "LINE_COMMENT", "WS"
 		};
 	}
@@ -130,27 +138,27 @@ public class SFMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(51);
+			setState(61);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==NAME) {
 				{
-				setState(50);
+				setState(60);
 				name();
 				}
 			}
 
-			setState(56);
+			setState(66);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==EVERY) {
 				{
 				{
-				setState(53);
+				setState(63);
 				trigger();
 				}
 				}
-				setState(58);
+				setState(68);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -184,9 +192,9 @@ public class SFMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(59);
+			setState(69);
 			match(NAME);
-			setState(60);
+			setState(70);
 			string();
 			}
 		}
@@ -240,22 +248,22 @@ public class SFMLParser extends Parser {
 		TriggerContext _localctx = new TriggerContext(_ctx, getState());
 		enterRule(_localctx, 4, RULE_trigger);
 		try {
-			setState(75);
+			setState(85);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,2,_ctx) ) {
 			case 1:
 				_localctx = new TimerTriggerContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(62);
+				setState(72);
 				match(EVERY);
-				setState(63);
+				setState(73);
 				interval();
-				setState(64);
+				setState(74);
 				match(DO);
-				setState(65);
+				setState(75);
 				block();
-				setState(66);
+				setState(76);
 				match(END);
 				}
 				break;
@@ -263,17 +271,17 @@ public class SFMLParser extends Parser {
 				_localctx = new PulseTriggerContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(68);
+				setState(78);
 				match(EVERY);
-				setState(69);
+				setState(79);
 				match(REDSTONE);
-				setState(70);
+				setState(80);
 				match(PULSE);
-				setState(71);
+				setState(81);
 				match(DO);
-				setState(72);
+				setState(82);
 				block();
-				setState(73);
+				setState(83);
 				match(END);
 				}
 				break;
@@ -320,16 +328,16 @@ public class SFMLParser extends Parser {
 		IntervalContext _localctx = new IntervalContext(_ctx, getState());
 		enterRule(_localctx, 6, RULE_interval);
 		try {
-			setState(83);
+			setState(93);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
 			case 1:
 				_localctx = new TicksContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(77);
+				setState(87);
 				number();
-				setState(78);
+				setState(88);
 				match(TICKS);
 				}
 				break;
@@ -337,9 +345,9 @@ public class SFMLParser extends Parser {
 				_localctx = new SecondsContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(80);
+				setState(90);
 				number();
-				setState(81);
+				setState(91);
 				match(SECONDS);
 				}
 				break;
@@ -376,17 +384,17 @@ public class SFMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(88);
+			setState(98);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << IF) | (1L << INPUT) | (1L << OUTPUT))) != 0)) {
 				{
 				{
-				setState(85);
+				setState(95);
 				statement();
 				}
 				}
-				setState(90);
+				setState(100);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -437,14 +445,14 @@ public class SFMLParser extends Parser {
 		StatementContext _localctx = new StatementContext(_ctx, getState());
 		enterRule(_localctx, 10, RULE_statement);
 		try {
-			setState(94);
+			setState(104);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case INPUT:
 				_localctx = new InputStatementStatementContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(91);
+				setState(101);
 				inputstatement();
 				}
 				break;
@@ -452,7 +460,7 @@ public class SFMLParser extends Parser {
 				_localctx = new OutputStatementStatementContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(92);
+				setState(102);
 				outputstatement();
 				}
 				break;
@@ -460,7 +468,7 @@ public class SFMLParser extends Parser {
 				_localctx = new IfStatementStatementContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(93);
+				setState(103);
 				ifstatement();
 				}
 				break;
@@ -482,22 +490,13 @@ public class SFMLParser extends Parser {
 	public static class InputstatementContext extends ParserRuleContext {
 		public TerminalNode INPUT() { return getToken(SFMLParser.INPUT, 0); }
 		public TerminalNode FROM() { return getToken(SFMLParser.FROM, 0); }
+		public LabelaccessContext labelaccess() {
+			return getRuleContext(LabelaccessContext.class,0);
+		}
 		public InputmatchersContext inputmatchers() {
 			return getRuleContext(InputmatchersContext.class,0);
 		}
 		public TerminalNode EACH() { return getToken(SFMLParser.EACH, 0); }
-		public List<LabelContext> label() {
-			return getRuleContexts(LabelContext.class);
-		}
-		public LabelContext label(int i) {
-			return getRuleContext(LabelContext.class,i);
-		}
-		public SidequalifierContext sidequalifier() {
-			return getRuleContext(SidequalifierContext.class,0);
-		}
-		public SlotqualifierContext slotqualifier() {
-			return getRuleContext(SlotqualifierContext.class,0);
-		}
 		public InputstatementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -511,64 +510,32 @@ public class SFMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(96);
+			setState(106);
 			match(INPUT);
-			setState(98);
+			setState(108);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << RETAIN) | (1L << IDENTIFIER) | (1L << NUMBER))) != 0)) {
 				{
-				setState(97);
+				setState(107);
 				inputmatchers();
 				}
 			}
 
-			setState(100);
+			setState(110);
 			match(FROM);
-			setState(102);
+			setState(112);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==EACH) {
 				{
-				setState(101);
+				setState(111);
 				match(EACH);
 				}
 			}
 
-			setState(105); 
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			do {
-				{
-				{
-				setState(104);
-				label();
-				}
-				}
-				setState(107); 
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-			} while ( _la==IDENTIFIER );
-			setState(110);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << TOP) | (1L << BOTTOM) | (1L << NORTH) | (1L << EAST) | (1L << SOUTH) | (1L << WEST))) != 0)) {
-				{
-				setState(109);
-				sidequalifier();
-				}
-			}
-
-			setState(113);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if (_la==SLOTS) {
-				{
-				setState(112);
-				slotqualifier();
-				}
-			}
-
+			setState(114);
+			labelaccess();
 			}
 		}
 		catch (RecognitionException re) {
@@ -585,22 +552,13 @@ public class SFMLParser extends Parser {
 	public static class OutputstatementContext extends ParserRuleContext {
 		public TerminalNode OUTPUT() { return getToken(SFMLParser.OUTPUT, 0); }
 		public TerminalNode TO() { return getToken(SFMLParser.TO, 0); }
+		public LabelaccessContext labelaccess() {
+			return getRuleContext(LabelaccessContext.class,0);
+		}
 		public OutputmatchersContext outputmatchers() {
 			return getRuleContext(OutputmatchersContext.class,0);
 		}
 		public TerminalNode EACH() { return getToken(SFMLParser.EACH, 0); }
-		public List<LabelContext> label() {
-			return getRuleContexts(LabelContext.class);
-		}
-		public LabelContext label(int i) {
-			return getRuleContext(LabelContext.class,i);
-		}
-		public SidequalifierContext sidequalifier() {
-			return getRuleContext(SidequalifierContext.class,0);
-		}
-		public SlotqualifierContext slotqualifier() {
-			return getRuleContext(SlotqualifierContext.class,0);
-		}
 		public OutputstatementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -614,135 +572,32 @@ public class SFMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(115);
+			setState(116);
 			match(OUTPUT);
-			setState(117);
+			setState(118);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << RETAIN) | (1L << IDENTIFIER) | (1L << NUMBER))) != 0)) {
 				{
-				setState(116);
+				setState(117);
 				outputmatchers();
 				}
 			}
 
-			setState(119);
+			setState(120);
 			match(TO);
-			setState(121);
+			setState(122);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==EACH) {
 				{
-				setState(120);
+				setState(121);
 				match(EACH);
 				}
 			}
 
-			setState(124); 
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			do {
-				{
-				{
-				setState(123);
-				label();
-				}
-				}
-				setState(126); 
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-			} while ( _la==IDENTIFIER );
-			setState(129);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << TOP) | (1L << BOTTOM) | (1L << NORTH) | (1L << EAST) | (1L << SOUTH) | (1L << WEST))) != 0)) {
-				{
-				setState(128);
-				sidequalifier();
-				}
-			}
-
-			setState(132);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if (_la==SLOTS) {
-				{
-				setState(131);
-				slotqualifier();
-				}
-			}
-
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class IfstatementContext extends ParserRuleContext {
-		public TerminalNode IF() { return getToken(SFMLParser.IF, 0); }
-		public ConditionContext condition() {
-			return getRuleContext(ConditionContext.class,0);
-		}
-		public TerminalNode THEN() { return getToken(SFMLParser.THEN, 0); }
-		public BlockContext block() {
-			return getRuleContext(BlockContext.class,0);
-		}
-		public TerminalNode END() { return getToken(SFMLParser.END, 0); }
-		public IfstatementContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_ifstatement; }
-	}
-
-	public final IfstatementContext ifstatement() throws RecognitionException {
-		IfstatementContext _localctx = new IfstatementContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_ifstatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(134);
-			match(IF);
-			setState(135);
-			condition();
-			setState(136);
-			match(THEN);
-			setState(137);
-			block();
-			setState(138);
-			match(END);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class ConditionContext extends ParserRuleContext {
-		public ConditionContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_condition; }
-	}
-
-	public final ConditionContext condition() throws RecognitionException {
-		ConditionContext _localctx = new ConditionContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_condition);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
+			setState(124);
+			labelaccess();
 			}
 		}
 		catch (RecognitionException re) {
@@ -757,24 +612,8 @@ public class SFMLParser extends Parser {
 	}
 
 	public static class InputmatchersContext extends ParserRuleContext {
-		public List<ItemlimitContext> itemlimit() {
-			return getRuleContexts(ItemlimitContext.class);
-		}
-		public ItemlimitContext itemlimit(int i) {
-			return getRuleContext(ItemlimitContext.class,i);
-		}
-		public List<TerminalNode> COMMA() { return getTokens(SFMLParser.COMMA); }
-		public TerminalNode COMMA(int i) {
-			return getToken(SFMLParser.COMMA, i);
-		}
-		public LimitContext limit() {
-			return getRuleContext(LimitContext.class,0);
-		}
-		public List<ItemContext> item() {
-			return getRuleContexts(ItemContext.class);
-		}
-		public ItemContext item(int i) {
-			return getRuleContext(ItemContext.class,i);
+		public ItemmovementContext itemmovement() {
+			return getRuleContext(ItemmovementContext.class,0);
 		}
 		public InputmatchersContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -784,65 +623,12 @@ public class SFMLParser extends Parser {
 
 	public final InputmatchersContext inputmatchers() throws RecognitionException {
 		InputmatchersContext _localctx = new InputmatchersContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_inputmatchers);
-		int _la;
+		enterRule(_localctx, 16, RULE_inputmatchers);
 		try {
-			setState(159);
-			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,18,_ctx) ) {
-			case 1:
-				enterOuterAlt(_localctx, 1);
-				{
-				setState(142);
-				itemlimit();
-				setState(147);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while (_la==COMMA) {
-					{
-					{
-					setState(143);
-					match(COMMA);
-					setState(144);
-					itemlimit();
-					}
-					}
-					setState(149);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-				}
-				break;
-			case 2:
-				enterOuterAlt(_localctx, 2);
-				{
-				setState(150);
-				limit();
-				}
-				break;
-			case 3:
-				enterOuterAlt(_localctx, 3);
-				{
-				setState(151);
-				item();
-				setState(156);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while (_la==COMMA) {
-					{
-					{
-					setState(152);
-					match(COMMA);
-					setState(153);
-					item();
-					}
-					}
-					setState(158);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-				}
-				break;
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(126);
+			itemmovement();
 			}
 		}
 		catch (RecognitionException re) {
@@ -857,6 +643,67 @@ public class SFMLParser extends Parser {
 	}
 
 	public static class OutputmatchersContext extends ParserRuleContext {
+		public ItemmovementContext itemmovement() {
+			return getRuleContext(ItemmovementContext.class,0);
+		}
+		public OutputmatchersContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_outputmatchers; }
+	}
+
+	public final OutputmatchersContext outputmatchers() throws RecognitionException {
+		OutputmatchersContext _localctx = new OutputmatchersContext(_ctx, getState());
+		enterRule(_localctx, 18, RULE_outputmatchers);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(128);
+			itemmovement();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class ItemmovementContext extends ParserRuleContext {
+		public ItemmovementContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_itemmovement; }
+	 
+		public ItemmovementContext() { }
+		public void copyFrom(ItemmovementContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	public static class ItemNoLimitMovementContext extends ItemmovementContext {
+		public List<ItemContext> item() {
+			return getRuleContexts(ItemContext.class);
+		}
+		public ItemContext item(int i) {
+			return getRuleContext(ItemContext.class,i);
+		}
+		public List<TerminalNode> COMMA() { return getTokens(SFMLParser.COMMA); }
+		public TerminalNode COMMA(int i) {
+			return getToken(SFMLParser.COMMA, i);
+		}
+		public ItemNoLimitMovementContext(ItemmovementContext ctx) { copyFrom(ctx); }
+	}
+	public static class LimitMovementContext extends ItemmovementContext {
+		public LimitContext limit() {
+			return getRuleContext(LimitContext.class,0);
+		}
+		public LimitMovementContext(ItemmovementContext ctx) { copyFrom(ctx); }
+	}
+	public static class ItemLimitMovementContext extends ItemmovementContext {
 		public List<ItemlimitContext> itemlimit() {
 			return getRuleContexts(ItemlimitContext.class);
 		}
@@ -867,77 +714,68 @@ public class SFMLParser extends Parser {
 		public TerminalNode COMMA(int i) {
 			return getToken(SFMLParser.COMMA, i);
 		}
-		public LimitContext limit() {
-			return getRuleContext(LimitContext.class,0);
-		}
-		public List<ItemContext> item() {
-			return getRuleContexts(ItemContext.class);
-		}
-		public ItemContext item(int i) {
-			return getRuleContext(ItemContext.class,i);
-		}
-		public OutputmatchersContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_outputmatchers; }
+		public ItemLimitMovementContext(ItemmovementContext ctx) { copyFrom(ctx); }
 	}
 
-	public final OutputmatchersContext outputmatchers() throws RecognitionException {
-		OutputmatchersContext _localctx = new OutputmatchersContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_outputmatchers);
+	public final ItemmovementContext itemmovement() throws RecognitionException {
+		ItemmovementContext _localctx = new ItemmovementContext(_ctx, getState());
+		enterRule(_localctx, 20, RULE_itemmovement);
 		int _la;
 		try {
-			setState(178);
+			setState(147);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,21,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,12,_ctx) ) {
 			case 1:
+				_localctx = new ItemLimitMovementContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(161);
+				setState(130);
 				itemlimit();
-				setState(166);
+				setState(135);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==COMMA) {
 					{
 					{
-					setState(162);
+					setState(131);
 					match(COMMA);
-					setState(163);
+					setState(132);
 					itemlimit();
 					}
 					}
-					setState(168);
+					setState(137);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
 				}
 				break;
 			case 2:
+				_localctx = new LimitMovementContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(169);
+				setState(138);
 				limit();
 				}
 				break;
 			case 3:
+				_localctx = new ItemNoLimitMovementContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(170);
+				setState(139);
 				item();
-				setState(175);
+				setState(144);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==COMMA) {
 					{
 					{
-					setState(171);
+					setState(140);
 					match(COMMA);
-					setState(172);
+					setState(141);
 					item();
 					}
 					}
-					setState(177);
+					setState(146);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
@@ -971,13 +809,13 @@ public class SFMLParser extends Parser {
 
 	public final ItemlimitContext itemlimit() throws RecognitionException {
 		ItemlimitContext _localctx = new ItemlimitContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_itemlimit);
+		enterRule(_localctx, 22, RULE_itemlimit);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(180);
+			setState(149);
 			limit();
-			setState(181);
+			setState(150);
 			item();
 			}
 		}
@@ -1027,18 +865,18 @@ public class SFMLParser extends Parser {
 
 	public final LimitContext limit() throws RecognitionException {
 		LimitContext _localctx = new LimitContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_limit);
+		enterRule(_localctx, 24, RULE_limit);
 		try {
-			setState(188);
+			setState(157);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,22,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
 			case 1:
 				_localctx = new QuantityRetentionLimitContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(183);
+				setState(152);
 				quantity();
-				setState(184);
+				setState(153);
 				retention();
 				}
 				break;
@@ -1046,7 +884,7 @@ public class SFMLParser extends Parser {
 				_localctx = new RetentionLimitContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(186);
+				setState(155);
 				retention();
 				}
 				break;
@@ -1054,56 +892,10 @@ public class SFMLParser extends Parser {
 				_localctx = new QuantityLimitContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(187);
+				setState(156);
 				quantity();
 				}
 				break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class ItemContext extends ParserRuleContext {
-		public List<TerminalNode> IDENTIFIER() { return getTokens(SFMLParser.IDENTIFIER); }
-		public TerminalNode IDENTIFIER(int i) {
-			return getToken(SFMLParser.IDENTIFIER, i);
-		}
-		public TerminalNode COLON() { return getToken(SFMLParser.COLON, 0); }
-		public ItemContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_item; }
-	}
-
-	public final ItemContext item() throws RecognitionException {
-		ItemContext _localctx = new ItemContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_item);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(190);
-			match(IDENTIFIER);
-			setState(193);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if (_la==COLON) {
-				{
-				setState(191);
-				match(COLON);
-				setState(192);
-				match(IDENTIFIER);
-				}
-			}
-
 			}
 		}
 		catch (RecognitionException re) {
@@ -1129,11 +921,11 @@ public class SFMLParser extends Parser {
 
 	public final QuantityContext quantity() throws RecognitionException {
 		QuantityContext _localctx = new QuantityContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_quantity);
+		enterRule(_localctx, 26, RULE_quantity);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(195);
+			setState(159);
 			number();
 			}
 		}
@@ -1161,13 +953,13 @@ public class SFMLParser extends Parser {
 
 	public final RetentionContext retention() throws RecognitionException {
 		RetentionContext _localctx = new RetentionContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_retention);
+		enterRule(_localctx, 28, RULE_retention);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(197);
+			setState(161);
 			match(RETAIN);
-			setState(198);
+			setState(162);
 			number();
 			}
 		}
@@ -1202,30 +994,30 @@ public class SFMLParser extends Parser {
 
 	public final SidequalifierContext sidequalifier() throws RecognitionException {
 		SidequalifierContext _localctx = new SidequalifierContext(_ctx, getState());
-		enterRule(_localctx, 34, RULE_sidequalifier);
+		enterRule(_localctx, 30, RULE_sidequalifier);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(200);
+			setState(164);
 			side();
-			setState(205);
+			setState(169);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				setState(201);
+				setState(165);
 				match(COMMA);
-				setState(202);
+				setState(166);
 				side();
 				}
 				}
-				setState(207);
+				setState(171);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(208);
+			setState(172);
 			match(SIDE);
 			}
 		}
@@ -1255,12 +1047,12 @@ public class SFMLParser extends Parser {
 
 	public final SideContext side() throws RecognitionException {
 		SideContext _localctx = new SideContext(_ctx, getState());
-		enterRule(_localctx, 36, RULE_side);
+		enterRule(_localctx, 32, RULE_side);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(210);
+			setState(174);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << TOP) | (1L << BOTTOM) | (1L << NORTH) | (1L << EAST) | (1L << SOUTH) | (1L << WEST))) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -1296,13 +1088,13 @@ public class SFMLParser extends Parser {
 
 	public final SlotqualifierContext slotqualifier() throws RecognitionException {
 		SlotqualifierContext _localctx = new SlotqualifierContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_slotqualifier);
+		enterRule(_localctx, 34, RULE_slotqualifier);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(212);
+			setState(176);
 			match(SLOTS);
-			setState(213);
+			setState(177);
 			rangeset();
 			}
 		}
@@ -1336,26 +1128,26 @@ public class SFMLParser extends Parser {
 
 	public final RangesetContext rangeset() throws RecognitionException {
 		RangesetContext _localctx = new RangesetContext(_ctx, getState());
-		enterRule(_localctx, 40, RULE_rangeset);
+		enterRule(_localctx, 36, RULE_rangeset);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(215);
+			setState(179);
 			range();
-			setState(220);
+			setState(184);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				setState(216);
+				setState(180);
 				match(COMMA);
-				setState(217);
+				setState(181);
 				range();
 				}
 				}
-				setState(222);
+				setState(186);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1388,25 +1180,623 @@ public class SFMLParser extends Parser {
 
 	public final RangeContext range() throws RecognitionException {
 		RangeContext _localctx = new RangeContext(_ctx, getState());
-		enterRule(_localctx, 42, RULE_range);
+		enterRule(_localctx, 38, RULE_range);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(223);
+			setState(187);
 			number();
-			setState(226);
+			setState(190);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==DASH) {
 				{
-				setState(224);
+				setState(188);
 				match(DASH);
-				setState(225);
+				setState(189);
 				number();
 				}
 			}
 
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class IfstatementContext extends ParserRuleContext {
+		public List<TerminalNode> IF() { return getTokens(SFMLParser.IF); }
+		public TerminalNode IF(int i) {
+			return getToken(SFMLParser.IF, i);
+		}
+		public List<BoolexprContext> boolexpr() {
+			return getRuleContexts(BoolexprContext.class);
+		}
+		public BoolexprContext boolexpr(int i) {
+			return getRuleContext(BoolexprContext.class,i);
+		}
+		public List<TerminalNode> THEN() { return getTokens(SFMLParser.THEN); }
+		public TerminalNode THEN(int i) {
+			return getToken(SFMLParser.THEN, i);
+		}
+		public List<BlockContext> block() {
+			return getRuleContexts(BlockContext.class);
+		}
+		public BlockContext block(int i) {
+			return getRuleContext(BlockContext.class,i);
+		}
+		public TerminalNode END() { return getToken(SFMLParser.END, 0); }
+		public List<TerminalNode> ELSE() { return getTokens(SFMLParser.ELSE); }
+		public TerminalNode ELSE(int i) {
+			return getToken(SFMLParser.ELSE, i);
+		}
+		public IfstatementContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_ifstatement; }
+	}
+
+	public final IfstatementContext ifstatement() throws RecognitionException {
+		IfstatementContext _localctx = new IfstatementContext(_ctx, getState());
+		enterRule(_localctx, 40, RULE_ifstatement);
+		int _la;
+		try {
+			int _alt;
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(192);
+			match(IF);
+			setState(193);
+			boolexpr(0);
+			setState(194);
+			match(THEN);
+			setState(195);
+			block();
+			setState(204);
+			_errHandler.sync(this);
+			_alt = getInterpreter().adaptivePredict(_input,17,_ctx);
+			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
+					{
+					{
+					setState(196);
+					match(ELSE);
+					setState(197);
+					match(IF);
+					setState(198);
+					boolexpr(0);
+					setState(199);
+					match(THEN);
+					setState(200);
+					block();
+					}
+					} 
+				}
+				setState(206);
+				_errHandler.sync(this);
+				_alt = getInterpreter().adaptivePredict(_input,17,_ctx);
+			}
+			setState(209);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==ELSE) {
+				{
+				setState(207);
+				match(ELSE);
+				setState(208);
+				block();
+				}
+			}
+
+			setState(211);
+			match(END);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class BoolexprContext extends ParserRuleContext {
+		public BoolexprContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_boolexpr; }
+	 
+		public BoolexprContext() { }
+		public void copyFrom(BoolexprContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	public static class BooleanHasContext extends BoolexprContext {
+		public LabelaccessContext labelaccess() {
+			return getRuleContext(LabelaccessContext.class,0);
+		}
+		public TerminalNode HAS() { return getToken(SFMLParser.HAS, 0); }
+		public ItemcomparisonContext itemcomparison() {
+			return getRuleContext(ItemcomparisonContext.class,0);
+		}
+		public SetOpContext setOp() {
+			return getRuleContext(SetOpContext.class,0);
+		}
+		public BooleanHasContext(BoolexprContext ctx) { copyFrom(ctx); }
+	}
+	public static class BooleanConjunctionContext extends BoolexprContext {
+		public List<BoolexprContext> boolexpr() {
+			return getRuleContexts(BoolexprContext.class);
+		}
+		public BoolexprContext boolexpr(int i) {
+			return getRuleContext(BoolexprContext.class,i);
+		}
+		public TerminalNode AND() { return getToken(SFMLParser.AND, 0); }
+		public BooleanConjunctionContext(BoolexprContext ctx) { copyFrom(ctx); }
+	}
+	public static class BooleanDisjunctionContext extends BoolexprContext {
+		public List<BoolexprContext> boolexpr() {
+			return getRuleContexts(BoolexprContext.class);
+		}
+		public BoolexprContext boolexpr(int i) {
+			return getRuleContext(BoolexprContext.class,i);
+		}
+		public TerminalNode OR() { return getToken(SFMLParser.OR, 0); }
+		public BooleanDisjunctionContext(BoolexprContext ctx) { copyFrom(ctx); }
+	}
+	public static class BooleanFalseContext extends BoolexprContext {
+		public TerminalNode FALSE() { return getToken(SFMLParser.FALSE, 0); }
+		public BooleanFalseContext(BoolexprContext ctx) { copyFrom(ctx); }
+	}
+	public static class BooleanParenContext extends BoolexprContext {
+		public TerminalNode LPAREN() { return getToken(SFMLParser.LPAREN, 0); }
+		public BoolexprContext boolexpr() {
+			return getRuleContext(BoolexprContext.class,0);
+		}
+		public TerminalNode RPAREN() { return getToken(SFMLParser.RPAREN, 0); }
+		public BooleanParenContext(BoolexprContext ctx) { copyFrom(ctx); }
+	}
+	public static class BooleanNegationContext extends BoolexprContext {
+		public TerminalNode NOT() { return getToken(SFMLParser.NOT, 0); }
+		public BoolexprContext boolexpr() {
+			return getRuleContext(BoolexprContext.class,0);
+		}
+		public BooleanNegationContext(BoolexprContext ctx) { copyFrom(ctx); }
+	}
+	public static class BooleanTrueContext extends BoolexprContext {
+		public TerminalNode TRUE() { return getToken(SFMLParser.TRUE, 0); }
+		public BooleanTrueContext(BoolexprContext ctx) { copyFrom(ctx); }
+	}
+
+	public final BoolexprContext boolexpr() throws RecognitionException {
+		return boolexpr(0);
+	}
+
+	private BoolexprContext boolexpr(int _p) throws RecognitionException {
+		ParserRuleContext _parentctx = _ctx;
+		int _parentState = getState();
+		BoolexprContext _localctx = new BoolexprContext(_ctx, _parentState);
+		BoolexprContext _prevctx = _localctx;
+		int _startState = 42;
+		enterRecursionRule(_localctx, 42, RULE_boolexpr, _p);
+		int _la;
+		try {
+			int _alt;
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(229);
+			_errHandler.sync(this);
+			switch (_input.LA(1)) {
+			case TRUE:
+				{
+				_localctx = new BooleanTrueContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+
+				setState(214);
+				match(TRUE);
+				}
+				break;
+			case FALSE:
+				{
+				_localctx = new BooleanFalseContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(215);
+				match(FALSE);
+				}
+				break;
+			case LPAREN:
+				{
+				_localctx = new BooleanParenContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(216);
+				match(LPAREN);
+				setState(217);
+				boolexpr(0);
+				setState(218);
+				match(RPAREN);
+				}
+				break;
+			case NOT:
+				{
+				_localctx = new BooleanNegationContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(220);
+				match(NOT);
+				setState(221);
+				boolexpr(4);
+				}
+				break;
+			case OVERALL:
+			case SOME:
+			case ONE:
+			case LONE:
+			case NO:
+			case EVERY:
+			case IDENTIFIER:
+				{
+				_localctx = new BooleanHasContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(223);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << OVERALL) | (1L << SOME) | (1L << ONE) | (1L << LONE) | (1L << NO) | (1L << EVERY))) != 0)) {
+					{
+					setState(222);
+					setOp();
+					}
+				}
+
+				setState(225);
+				labelaccess();
+				setState(226);
+				match(HAS);
+				setState(227);
+				itemcomparison();
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+			_ctx.stop = _input.LT(-1);
+			setState(239);
+			_errHandler.sync(this);
+			_alt = getInterpreter().adaptivePredict(_input,22,_ctx);
+			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
+					if ( _parseListeners!=null ) triggerExitRuleEvent();
+					_prevctx = _localctx;
+					{
+					setState(237);
+					_errHandler.sync(this);
+					switch ( getInterpreter().adaptivePredict(_input,21,_ctx) ) {
+					case 1:
+						{
+						_localctx = new BooleanConjunctionContext(new BoolexprContext(_parentctx, _parentState));
+						pushNewRecursionContext(_localctx, _startState, RULE_boolexpr);
+						setState(231);
+						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
+						setState(232);
+						match(AND);
+						setState(233);
+						boolexpr(4);
+						}
+						break;
+					case 2:
+						{
+						_localctx = new BooleanDisjunctionContext(new BoolexprContext(_parentctx, _parentState));
+						pushNewRecursionContext(_localctx, _startState, RULE_boolexpr);
+						setState(234);
+						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
+						setState(235);
+						match(OR);
+						setState(236);
+						boolexpr(3);
+						}
+						break;
+					}
+					} 
+				}
+				setState(241);
+				_errHandler.sync(this);
+				_alt = getInterpreter().adaptivePredict(_input,22,_ctx);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			unrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	public static class ItemcomparisonContext extends ParserRuleContext {
+		public ComparisonOpContext comparisonOp() {
+			return getRuleContext(ComparisonOpContext.class,0);
+		}
+		public NumberContext number() {
+			return getRuleContext(NumberContext.class,0);
+		}
+		public ItemContext item() {
+			return getRuleContext(ItemContext.class,0);
+		}
+		public ItemcomparisonContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_itemcomparison; }
+	}
+
+	public final ItemcomparisonContext itemcomparison() throws RecognitionException {
+		ItemcomparisonContext _localctx = new ItemcomparisonContext(_ctx, getState());
+		enterRule(_localctx, 44, RULE_itemcomparison);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(242);
+			comparisonOp();
+			setState(243);
+			number();
+			setState(244);
+			item();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class ComparisonOpContext extends ParserRuleContext {
+		public TerminalNode GT() { return getToken(SFMLParser.GT, 0); }
+		public TerminalNode LT() { return getToken(SFMLParser.LT, 0); }
+		public TerminalNode EQ() { return getToken(SFMLParser.EQ, 0); }
+		public TerminalNode LE() { return getToken(SFMLParser.LE, 0); }
+		public TerminalNode GE() { return getToken(SFMLParser.GE, 0); }
+		public ComparisonOpContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_comparisonOp; }
+	}
+
+	public final ComparisonOpContext comparisonOp() throws RecognitionException {
+		ComparisonOpContext _localctx = new ComparisonOpContext(_ctx, getState());
+		enterRule(_localctx, 46, RULE_comparisonOp);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(246);
+			_la = _input.LA(1);
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << GT) | (1L << LT) | (1L << EQ) | (1L << LE) | (1L << GE))) != 0)) ) {
+			_errHandler.recoverInline(this);
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
+				consume();
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class SetOpContext extends ParserRuleContext {
+		public TerminalNode OVERALL() { return getToken(SFMLParser.OVERALL, 0); }
+		public TerminalNode SOME() { return getToken(SFMLParser.SOME, 0); }
+		public TerminalNode EVERY() { return getToken(SFMLParser.EVERY, 0); }
+		public TerminalNode ONE() { return getToken(SFMLParser.ONE, 0); }
+		public TerminalNode LONE() { return getToken(SFMLParser.LONE, 0); }
+		public TerminalNode NO() { return getToken(SFMLParser.NO, 0); }
+		public SetOpContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_setOp; }
+	}
+
+	public final SetOpContext setOp() throws RecognitionException {
+		SetOpContext _localctx = new SetOpContext(_ctx, getState());
+		enterRule(_localctx, 48, RULE_setOp);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(248);
+			_la = _input.LA(1);
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << OVERALL) | (1L << SOME) | (1L << ONE) | (1L << LONE) | (1L << NO) | (1L << EVERY))) != 0)) ) {
+			_errHandler.recoverInline(this);
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
+				consume();
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class LabelaccessContext extends ParserRuleContext {
+		public List<LabelContext> label() {
+			return getRuleContexts(LabelContext.class);
+		}
+		public LabelContext label(int i) {
+			return getRuleContext(LabelContext.class,i);
+		}
+		public List<TerminalNode> COMMA() { return getTokens(SFMLParser.COMMA); }
+		public TerminalNode COMMA(int i) {
+			return getToken(SFMLParser.COMMA, i);
+		}
+		public SidequalifierContext sidequalifier() {
+			return getRuleContext(SidequalifierContext.class,0);
+		}
+		public SlotqualifierContext slotqualifier() {
+			return getRuleContext(SlotqualifierContext.class,0);
+		}
+		public LabelaccessContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_labelaccess; }
+	}
+
+	public final LabelaccessContext labelaccess() throws RecognitionException {
+		LabelaccessContext _localctx = new LabelaccessContext(_ctx, getState());
+		enterRule(_localctx, 50, RULE_labelaccess);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(250);
+			label();
+			setState(255);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(251);
+				match(COMMA);
+				setState(252);
+				label();
+				}
+				}
+				setState(257);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			setState(259);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << TOP) | (1L << BOTTOM) | (1L << NORTH) | (1L << EAST) | (1L << SOUTH) | (1L << WEST))) != 0)) {
+				{
+				setState(258);
+				sidequalifier();
+				}
+			}
+
+			setState(262);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==SLOTS) {
+				{
+				setState(261);
+				slotqualifier();
+				}
+			}
+
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class LabelContext extends ParserRuleContext {
+		public TerminalNode IDENTIFIER() { return getToken(SFMLParser.IDENTIFIER, 0); }
+		public LabelContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_label; }
+	}
+
+	public final LabelContext label() throws RecognitionException {
+		LabelContext _localctx = new LabelContext(_ctx, getState());
+		enterRule(_localctx, 52, RULE_label);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(264);
+			match(IDENTIFIER);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class ItemContext extends ParserRuleContext {
+		public List<TerminalNode> IDENTIFIER() { return getTokens(SFMLParser.IDENTIFIER); }
+		public TerminalNode IDENTIFIER(int i) {
+			return getToken(SFMLParser.IDENTIFIER, i);
+		}
+		public TerminalNode COLON() { return getToken(SFMLParser.COLON, 0); }
+		public ItemContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_item; }
+	}
+
+	public final ItemContext item() throws RecognitionException {
+		ItemContext _localctx = new ItemContext(_ctx, getState());
+		enterRule(_localctx, 54, RULE_item);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(266);
+			match(IDENTIFIER);
+			setState(269);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,26,_ctx) ) {
+			case 1:
+				{
+				setState(267);
+				match(COLON);
+				setState(268);
+				match(IDENTIFIER);
+				}
+				break;
+			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -1430,11 +1820,11 @@ public class SFMLParser extends Parser {
 
 	public final StringContext string() throws RecognitionException {
 		StringContext _localctx = new StringContext(_ctx, getState());
-		enterRule(_localctx, 44, RULE_string);
+		enterRule(_localctx, 56, RULE_string);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(228);
+			setState(271);
 			match(STRING);
 			}
 		}
@@ -1459,11 +1849,11 @@ public class SFMLParser extends Parser {
 
 	public final NumberContext number() throws RecognitionException {
 		NumberContext _localctx = new NumberContext(_ctx, getState());
-		enterRule(_localctx, 46, RULE_number);
+		enterRule(_localctx, 58, RULE_number);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(230);
+			setState(273);
 			match(NUMBER);
 			}
 		}
@@ -1478,110 +1868,114 @@ public class SFMLParser extends Parser {
 		return _localctx;
 	}
 
-	public static class LabelContext extends ParserRuleContext {
-		public TerminalNode IDENTIFIER() { return getToken(SFMLParser.IDENTIFIER, 0); }
-		public LabelContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
+	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
+		switch (ruleIndex) {
+		case 21:
+			return boolexpr_sempred((BoolexprContext)_localctx, predIndex);
 		}
-		@Override public int getRuleIndex() { return RULE_label; }
+		return true;
 	}
-
-	public final LabelContext label() throws RecognitionException {
-		LabelContext _localctx = new LabelContext(_ctx, getState());
-		enterRule(_localctx, 48, RULE_label);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(232);
-			match(IDENTIFIER);
-			}
+	private boolean boolexpr_sempred(BoolexprContext _localctx, int predIndex) {
+		switch (predIndex) {
+		case 0:
+			return precpred(_ctx, 3);
+		case 1:
+			return precpred(_ctx, 2);
 		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
+		return true;
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\'\u00ed\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\39\u0116\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
-		"\4\32\t\32\3\2\5\2\66\n\2\3\2\7\29\n\2\f\2\16\2<\13\2\3\3\3\3\3\3\3\4"+
-		"\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4N\n\4\3\5\3\5\3\5"+
-		"\3\5\3\5\3\5\5\5V\n\5\3\6\7\6Y\n\6\f\6\16\6\\\13\6\3\7\3\7\3\7\5\7a\n"+
-		"\7\3\b\3\b\5\be\n\b\3\b\3\b\5\bi\n\b\3\b\6\bl\n\b\r\b\16\bm\3\b\5\bq\n"+
-		"\b\3\b\5\bt\n\b\3\t\3\t\5\tx\n\t\3\t\3\t\5\t|\n\t\3\t\6\t\177\n\t\r\t"+
-		"\16\t\u0080\3\t\5\t\u0084\n\t\3\t\5\t\u0087\n\t\3\n\3\n\3\n\3\n\3\n\3"+
-		"\n\3\13\3\13\3\f\3\f\3\f\7\f\u0094\n\f\f\f\16\f\u0097\13\f\3\f\3\f\3\f"+
-		"\3\f\7\f\u009d\n\f\f\f\16\f\u00a0\13\f\5\f\u00a2\n\f\3\r\3\r\3\r\7\r\u00a7"+
-		"\n\r\f\r\16\r\u00aa\13\r\3\r\3\r\3\r\3\r\7\r\u00b0\n\r\f\r\16\r\u00b3"+
-		"\13\r\5\r\u00b5\n\r\3\16\3\16\3\16\3\17\3\17\3\17\3\17\3\17\5\17\u00bf"+
-		"\n\17\3\20\3\20\3\20\5\20\u00c4\n\20\3\21\3\21\3\22\3\22\3\22\3\23\3\23"+
-		"\3\23\7\23\u00ce\n\23\f\23\16\23\u00d1\13\23\3\23\3\23\3\24\3\24\3\25"+
-		"\3\25\3\25\3\26\3\26\3\26\7\26\u00dd\n\26\f\26\16\26\u00e0\13\26\3\27"+
-		"\3\27\3\27\5\27\u00e5\n\27\3\30\3\30\3\31\3\31\3\32\3\32\3\32\2\2\33\2"+
-		"\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\2\3\3\2\16\23\2\u00f2"+
-		"\2\65\3\2\2\2\4=\3\2\2\2\6M\3\2\2\2\bU\3\2\2\2\nZ\3\2\2\2\f`\3\2\2\2\16"+
-		"b\3\2\2\2\20u\3\2\2\2\22\u0088\3\2\2\2\24\u008e\3\2\2\2\26\u00a1\3\2\2"+
-		"\2\30\u00b4\3\2\2\2\32\u00b6\3\2\2\2\34\u00be\3\2\2\2\36\u00c0\3\2\2\2"+
-		" \u00c5\3\2\2\2\"\u00c7\3\2\2\2$\u00ca\3\2\2\2&\u00d4\3\2\2\2(\u00d6\3"+
-		"\2\2\2*\u00d9\3\2\2\2,\u00e1\3\2\2\2.\u00e6\3\2\2\2\60\u00e8\3\2\2\2\62"+
-		"\u00ea\3\2\2\2\64\66\5\4\3\2\65\64\3\2\2\2\65\66\3\2\2\2\66:\3\2\2\2\67"+
-		"9\5\6\4\28\67\3\2\2\29<\3\2\2\2:8\3\2\2\2:;\3\2\2\2;\3\3\2\2\2<:\3\2\2"+
-		"\2=>\7\37\2\2>?\5.\30\2?\5\3\2\2\2@A\7\30\2\2AB\5\b\5\2BC\7\33\2\2CD\5"+
-		"\n\6\2DE\7\36\2\2EN\3\2\2\2FG\7\30\2\2GH\7\31\2\2HI\7\32\2\2IJ\7\33\2"+
-		"\2JK\5\n\6\2KL\7\36\2\2LN\3\2\2\2M@\3\2\2\2MF\3\2\2\2N\7\3\2\2\2OP\5\60"+
-		"\31\2PQ\7\26\2\2QV\3\2\2\2RS\5\60\31\2ST\7\27\2\2TV\3\2\2\2UO\3\2\2\2"+
-		"UR\3\2\2\2V\t\3\2\2\2WY\5\f\7\2XW\3\2\2\2Y\\\3\2\2\2ZX\3\2\2\2Z[\3\2\2"+
-		"\2[\13\3\2\2\2\\Z\3\2\2\2]a\5\16\b\2^a\5\20\t\2_a\5\22\n\2`]\3\2\2\2`"+
-		"^\3\2\2\2`_\3\2\2\2a\r\3\2\2\2bd\7\b\2\2ce\5\26\f\2dc\3\2\2\2de\3\2\2"+
-		"\2ef\3\2\2\2fh\7\6\2\2gi\7\r\2\2hg\3\2\2\2hi\3\2\2\2ik\3\2\2\2jl\5\62"+
-		"\32\2kj\3\2\2\2lm\3\2\2\2mk\3\2\2\2mn\3\2\2\2np\3\2\2\2oq\5$\23\2po\3"+
-		"\2\2\2pq\3\2\2\2qs\3\2\2\2rt\5(\25\2sr\3\2\2\2st\3\2\2\2t\17\3\2\2\2u"+
-		"w\7\t\2\2vx\5\30\r\2wv\3\2\2\2wx\3\2\2\2xy\3\2\2\2y{\7\7\2\2z|\7\r\2\2"+
-		"{z\3\2\2\2{|\3\2\2\2|~\3\2\2\2}\177\5\62\32\2~}\3\2\2\2\177\u0080\3\2"+
-		"\2\2\u0080~\3\2\2\2\u0080\u0081\3\2\2\2\u0081\u0083\3\2\2\2\u0082\u0084"+
-		"\5$\23\2\u0083\u0082\3\2\2\2\u0083\u0084\3\2\2\2\u0084\u0086\3\2\2\2\u0085"+
-		"\u0087\5(\25\2\u0086\u0085\3\2\2\2\u0086\u0087\3\2\2\2\u0087\21\3\2\2"+
-		"\2\u0088\u0089\7\3\2\2\u0089\u008a\5\24\13\2\u008a\u008b\7\4\2\2\u008b"+
-		"\u008c\5\n\6\2\u008c\u008d\7\36\2\2\u008d\23\3\2\2\2\u008e\u008f\3\2\2"+
-		"\2\u008f\25\3\2\2\2\u0090\u0095\5\32\16\2\u0091\u0092\7 \2\2\u0092\u0094"+
-		"\5\32\16\2\u0093\u0091\3\2\2\2\u0094\u0097\3\2\2\2\u0095\u0093\3\2\2\2"+
-		"\u0095\u0096\3\2\2\2\u0096\u00a2\3\2\2\2\u0097\u0095\3\2\2\2\u0098\u00a2"+
-		"\5\34\17\2\u0099\u009e\5\36\20\2\u009a\u009b\7 \2\2\u009b\u009d\5\36\20"+
-		"\2\u009c\u009a\3\2\2\2\u009d\u00a0\3\2\2\2\u009e\u009c\3\2\2\2\u009e\u009f"+
-		"\3\2\2\2\u009f\u00a2\3\2\2\2\u00a0\u009e\3\2\2\2\u00a1\u0090\3\2\2\2\u00a1"+
-		"\u0098\3\2\2\2\u00a1\u0099\3\2\2\2\u00a2\27\3\2\2\2\u00a3\u00a8\5\32\16"+
-		"\2\u00a4\u00a5\7 \2\2\u00a5\u00a7\5\32\16\2\u00a6\u00a4\3\2\2\2\u00a7"+
-		"\u00aa\3\2\2\2\u00a8\u00a6\3\2\2\2\u00a8\u00a9\3\2\2\2\u00a9\u00b5\3\2"+
-		"\2\2\u00aa\u00a8\3\2\2\2\u00ab\u00b5\5\34\17\2\u00ac\u00b1\5\36\20\2\u00ad"+
-		"\u00ae\7 \2\2\u00ae\u00b0\5\36\20\2\u00af\u00ad\3\2\2\2\u00b0\u00b3\3"+
-		"\2\2\2\u00b1\u00af\3\2\2\2\u00b1\u00b2\3\2\2\2\u00b2\u00b5\3\2\2\2\u00b3"+
-		"\u00b1\3\2\2\2\u00b4\u00a3\3\2\2\2\u00b4\u00ab\3\2\2\2\u00b4\u00ac\3\2"+
-		"\2\2\u00b5\31\3\2\2\2\u00b6\u00b7\5\34\17\2\u00b7\u00b8\5\36\20\2\u00b8"+
-		"\33\3\2\2\2\u00b9\u00ba\5 \21\2\u00ba\u00bb\5\"\22\2\u00bb\u00bf\3\2\2"+
-		"\2\u00bc\u00bf\5\"\22\2\u00bd\u00bf\5 \21\2\u00be\u00b9\3\2\2\2\u00be"+
-		"\u00bc\3\2\2\2\u00be\u00bd\3\2\2\2\u00bf\35\3\2\2\2\u00c0\u00c3\7#\2\2"+
-		"\u00c1\u00c2\7!\2\2\u00c2\u00c4\7#\2\2\u00c3\u00c1\3\2\2\2\u00c3\u00c4"+
-		"\3\2\2\2\u00c4\37\3\2\2\2\u00c5\u00c6\5\60\31\2\u00c6!\3\2\2\2\u00c7\u00c8"+
-		"\7\f\2\2\u00c8\u00c9\5\60\31\2\u00c9#\3\2\2\2\u00ca\u00cf\5&\24\2\u00cb"+
-		"\u00cc\7 \2\2\u00cc\u00ce\5&\24\2\u00cd\u00cb\3\2\2\2\u00ce\u00d1\3\2"+
-		"\2\2\u00cf\u00cd\3\2\2\2\u00cf\u00d0\3\2\2\2\u00d0\u00d2\3\2\2\2\u00d1"+
-		"\u00cf\3\2\2\2\u00d2\u00d3\7\24\2\2\u00d3%\3\2\2\2\u00d4\u00d5\t\2\2\2"+
-		"\u00d5\'\3\2\2\2\u00d6\u00d7\7\13\2\2\u00d7\u00d8\5*\26\2\u00d8)\3\2\2"+
-		"\2\u00d9\u00de\5,\27\2\u00da\u00db\7 \2\2\u00db\u00dd\5,\27\2\u00dc\u00da"+
-		"\3\2\2\2\u00dd\u00e0\3\2\2\2\u00de\u00dc\3\2\2\2\u00de\u00df\3\2\2\2\u00df"+
-		"+\3\2\2\2\u00e0\u00de\3\2\2\2\u00e1\u00e4\5\60\31\2\u00e2\u00e3\7\"\2"+
-		"\2\u00e3\u00e5\5\60\31\2\u00e4\u00e2\3\2\2\2\u00e4\u00e5\3\2\2\2\u00e5"+
-		"-\3\2\2\2\u00e6\u00e7\7%\2\2\u00e7/\3\2\2\2\u00e8\u00e9\7$\2\2\u00e9\61"+
-		"\3\2\2\2\u00ea\u00eb\7#\2\2\u00eb\63\3\2\2\2\35\65:MUZ`dhmpsw{\u0080\u0083"+
-		"\u0086\u0095\u009e\u00a1\u00a8\u00b1\u00b4\u00be\u00c3\u00cf\u00de\u00e4";
+		"\4\32\t\32\4\33\t\33\4\34\t\34\4\35\t\35\4\36\t\36\4\37\t\37\3\2\5\2@"+
+		"\n\2\3\2\7\2C\n\2\f\2\16\2F\13\2\3\3\3\3\3\3\3\4\3\4\3\4\3\4\3\4\3\4\3"+
+		"\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4X\n\4\3\5\3\5\3\5\3\5\3\5\3\5\5\5`\n\5\3"+
+		"\6\7\6c\n\6\f\6\16\6f\13\6\3\7\3\7\3\7\5\7k\n\7\3\b\3\b\5\bo\n\b\3\b\3"+
+		"\b\5\bs\n\b\3\b\3\b\3\t\3\t\5\ty\n\t\3\t\3\t\5\t}\n\t\3\t\3\t\3\n\3\n"+
+		"\3\13\3\13\3\f\3\f\3\f\7\f\u0088\n\f\f\f\16\f\u008b\13\f\3\f\3\f\3\f\3"+
+		"\f\7\f\u0091\n\f\f\f\16\f\u0094\13\f\5\f\u0096\n\f\3\r\3\r\3\r\3\16\3"+
+		"\16\3\16\3\16\3\16\5\16\u00a0\n\16\3\17\3\17\3\20\3\20\3\20\3\21\3\21"+
+		"\3\21\7\21\u00aa\n\21\f\21\16\21\u00ad\13\21\3\21\3\21\3\22\3\22\3\23"+
+		"\3\23\3\23\3\24\3\24\3\24\7\24\u00b9\n\24\f\24\16\24\u00bc\13\24\3\25"+
+		"\3\25\3\25\5\25\u00c1\n\25\3\26\3\26\3\26\3\26\3\26\3\26\3\26\3\26\3\26"+
+		"\3\26\7\26\u00cd\n\26\f\26\16\26\u00d0\13\26\3\26\3\26\5\26\u00d4\n\26"+
+		"\3\26\3\26\3\27\3\27\3\27\3\27\3\27\3\27\3\27\3\27\3\27\3\27\5\27\u00e2"+
+		"\n\27\3\27\3\27\3\27\3\27\5\27\u00e8\n\27\3\27\3\27\3\27\3\27\3\27\3\27"+
+		"\7\27\u00f0\n\27\f\27\16\27\u00f3\13\27\3\30\3\30\3\30\3\30\3\31\3\31"+
+		"\3\32\3\32\3\33\3\33\3\33\7\33\u0100\n\33\f\33\16\33\u0103\13\33\3\33"+
+		"\5\33\u0106\n\33\3\33\5\33\u0109\n\33\3\34\3\34\3\35\3\35\3\35\5\35\u0110"+
+		"\n\35\3\36\3\36\3\37\3\37\3\37\2\3, \2\4\6\b\n\f\16\20\22\24\26\30\32"+
+		"\34\36 \"$&(*,.\60\62\64\668:<\2\5\3\2\37$\3\2\21\25\4\2\7\13//\2\u0118"+
+		"\2?\3\2\2\2\4G\3\2\2\2\6W\3\2\2\2\b_\3\2\2\2\nd\3\2\2\2\fj\3\2\2\2\16"+
+		"l\3\2\2\2\20v\3\2\2\2\22\u0080\3\2\2\2\24\u0082\3\2\2\2\26\u0095\3\2\2"+
+		"\2\30\u0097\3\2\2\2\32\u009f\3\2\2\2\34\u00a1\3\2\2\2\36\u00a3\3\2\2\2"+
+		" \u00a6\3\2\2\2\"\u00b0\3\2\2\2$\u00b2\3\2\2\2&\u00b5\3\2\2\2(\u00bd\3"+
+		"\2\2\2*\u00c2\3\2\2\2,\u00e7\3\2\2\2.\u00f4\3\2\2\2\60\u00f8\3\2\2\2\62"+
+		"\u00fa\3\2\2\2\64\u00fc\3\2\2\2\66\u010a\3\2\2\28\u010c\3\2\2\2:\u0111"+
+		"\3\2\2\2<\u0113\3\2\2\2>@\5\4\3\2?>\3\2\2\2?@\3\2\2\2@D\3\2\2\2AC\5\6"+
+		"\4\2BA\3\2\2\2CF\3\2\2\2DB\3\2\2\2DE\3\2\2\2E\3\3\2\2\2FD\3\2\2\2GH\7"+
+		".\2\2HI\5:\36\2I\5\3\2\2\2JK\7/\2\2KL\5\b\5\2LM\7*\2\2MN\5\n\6\2NO\7-"+
+		"\2\2OX\3\2\2\2PQ\7/\2\2QR\7(\2\2RS\7)\2\2ST\7*\2\2TU\5\n\6\2UV\7-\2\2"+
+		"VX\3\2\2\2WJ\3\2\2\2WP\3\2\2\2X\7\3\2\2\2YZ\5<\37\2Z[\7&\2\2[`\3\2\2\2"+
+		"\\]\5<\37\2]^\7\'\2\2^`\3\2\2\2_Y\3\2\2\2_\\\3\2\2\2`\t\3\2\2\2ac\5\f"+
+		"\7\2ba\3\2\2\2cf\3\2\2\2db\3\2\2\2de\3\2\2\2e\13\3\2\2\2fd\3\2\2\2gk\5"+
+		"\16\b\2hk\5\20\t\2ik\5*\26\2jg\3\2\2\2jh\3\2\2\2ji\3\2\2\2k\r\3\2\2\2"+
+		"ln\7\31\2\2mo\5\22\n\2nm\3\2\2\2no\3\2\2\2op\3\2\2\2pr\7\27\2\2qs\7\36"+
+		"\2\2rq\3\2\2\2rs\3\2\2\2st\3\2\2\2tu\5\64\33\2u\17\3\2\2\2vx\7\32\2\2"+
+		"wy\5\24\13\2xw\3\2\2\2xy\3\2\2\2yz\3\2\2\2z|\7\30\2\2{}\7\36\2\2|{\3\2"+
+		"\2\2|}\3\2\2\2}~\3\2\2\2~\177\5\64\33\2\177\21\3\2\2\2\u0080\u0081\5\26"+
+		"\f\2\u0081\23\3\2\2\2\u0082\u0083\5\26\f\2\u0083\25\3\2\2\2\u0084\u0089"+
+		"\5\30\r\2\u0085\u0086\7\60\2\2\u0086\u0088\5\30\r\2\u0087\u0085\3\2\2"+
+		"\2\u0088\u008b\3\2\2\2\u0089\u0087\3\2\2\2\u0089\u008a\3\2\2\2\u008a\u0096"+
+		"\3\2\2\2\u008b\u0089\3\2\2\2\u008c\u0096\5\32\16\2\u008d\u0092\58\35\2"+
+		"\u008e\u008f\7\60\2\2\u008f\u0091\58\35\2\u0090\u008e\3\2\2\2\u0091\u0094"+
+		"\3\2\2\2\u0092\u0090\3\2\2\2\u0092\u0093\3\2\2\2\u0093\u0096\3\2\2\2\u0094"+
+		"\u0092\3\2\2\2\u0095\u0084\3\2\2\2\u0095\u008c\3\2\2\2\u0095\u008d\3\2"+
+		"\2\2\u0096\27\3\2\2\2\u0097\u0098\5\32\16\2\u0098\u0099\58\35\2\u0099"+
+		"\31\3\2\2\2\u009a\u009b\5\34\17\2\u009b\u009c\5\36\20\2\u009c\u00a0\3"+
+		"\2\2\2\u009d\u00a0\5\36\20\2\u009e\u00a0\5\34\17\2\u009f\u009a\3\2\2\2"+
+		"\u009f\u009d\3\2\2\2\u009f\u009e\3\2\2\2\u00a0\33\3\2\2\2\u00a1\u00a2"+
+		"\5<\37\2\u00a2\35\3\2\2\2\u00a3\u00a4\7\35\2\2\u00a4\u00a5\5<\37\2\u00a5"+
+		"\37\3\2\2\2\u00a6\u00ab\5\"\22\2\u00a7\u00a8\7\60\2\2\u00a8\u00aa\5\""+
+		"\22\2\u00a9\u00a7\3\2\2\2\u00aa\u00ad\3\2\2\2\u00ab\u00a9\3\2\2\2\u00ab"+
+		"\u00ac\3\2\2\2\u00ac\u00ae\3\2\2\2\u00ad\u00ab\3\2\2\2\u00ae\u00af\7%"+
+		"\2\2\u00af!\3\2\2\2\u00b0\u00b1\t\2\2\2\u00b1#\3\2\2\2\u00b2\u00b3\7\34"+
+		"\2\2\u00b3\u00b4\5&\24\2\u00b4%\3\2\2\2\u00b5\u00ba\5(\25\2\u00b6\u00b7"+
+		"\7\60\2\2\u00b7\u00b9\5(\25\2\u00b8\u00b6\3\2\2\2\u00b9\u00bc\3\2\2\2"+
+		"\u00ba\u00b8\3\2\2\2\u00ba\u00bb\3\2\2\2\u00bb\'\3\2\2\2\u00bc\u00ba\3"+
+		"\2\2\2\u00bd\u00c0\5<\37\2\u00be\u00bf\7\62\2\2\u00bf\u00c1\5<\37\2\u00c0"+
+		"\u00be\3\2\2\2\u00c0\u00c1\3\2\2\2\u00c1)\3\2\2\2\u00c2\u00c3\7\3\2\2"+
+		"\u00c3\u00c4\5,\27\2\u00c4\u00c5\7\4\2\2\u00c5\u00ce\5\n\6\2\u00c6\u00c7"+
+		"\7\5\2\2\u00c7\u00c8\7\3\2\2\u00c8\u00c9\5,\27\2\u00c9\u00ca\7\4\2\2\u00ca"+
+		"\u00cb\5\n\6\2\u00cb\u00cd\3\2\2\2\u00cc\u00c6\3\2\2\2\u00cd\u00d0\3\2"+
+		"\2\2\u00ce\u00cc\3\2\2\2\u00ce\u00cf\3\2\2\2\u00cf\u00d3\3\2\2\2\u00d0"+
+		"\u00ce\3\2\2\2\u00d1\u00d2\7\5\2\2\u00d2\u00d4\5\n\6\2\u00d3\u00d1\3\2"+
+		"\2\2\u00d3\u00d4\3\2\2\2\u00d4\u00d5\3\2\2\2\u00d5\u00d6\7-\2\2\u00d6"+
+		"+\3\2\2\2\u00d7\u00d8\b\27\1\2\u00d8\u00e8\7\f\2\2\u00d9\u00e8\7\r\2\2"+
+		"\u00da\u00db\7\63\2\2\u00db\u00dc\5,\27\2\u00dc\u00dd\7\64\2\2\u00dd\u00e8"+
+		"\3\2\2\2\u00de\u00df\7\16\2\2\u00df\u00e8\5,\27\6\u00e0\u00e2\5\62\32"+
+		"\2\u00e1\u00e0\3\2\2\2\u00e1\u00e2\3\2\2\2\u00e2\u00e3\3\2\2\2\u00e3\u00e4"+
+		"\5\64\33\2\u00e4\u00e5\7\6\2\2\u00e5\u00e6\5.\30\2\u00e6\u00e8\3\2\2\2"+
+		"\u00e7\u00d7\3\2\2\2\u00e7\u00d9\3\2\2\2\u00e7\u00da\3\2\2\2\u00e7\u00de"+
+		"\3\2\2\2\u00e7\u00e1\3\2\2\2\u00e8\u00f1\3\2\2\2\u00e9\u00ea\f\5\2\2\u00ea"+
+		"\u00eb\7\17\2\2\u00eb\u00f0\5,\27\6\u00ec\u00ed\f\4\2\2\u00ed\u00ee\7"+
+		"\20\2\2\u00ee\u00f0\5,\27\5\u00ef\u00e9\3\2\2\2\u00ef\u00ec\3\2\2\2\u00f0"+
+		"\u00f3\3\2\2\2\u00f1\u00ef\3\2\2\2\u00f1\u00f2\3\2\2\2\u00f2-\3\2\2\2"+
+		"\u00f3\u00f1\3\2\2\2\u00f4\u00f5\5\60\31\2\u00f5\u00f6\5<\37\2\u00f6\u00f7"+
+		"\58\35\2\u00f7/\3\2\2\2\u00f8\u00f9\t\3\2\2\u00f9\61\3\2\2\2\u00fa\u00fb"+
+		"\t\4\2\2\u00fb\63\3\2\2\2\u00fc\u0101\5\66\34\2\u00fd\u00fe\7\60\2\2\u00fe"+
+		"\u0100\5\66\34\2\u00ff\u00fd\3\2\2\2\u0100\u0103\3\2\2\2\u0101\u00ff\3"+
+		"\2\2\2\u0101\u0102\3\2\2\2\u0102\u0105\3\2\2\2\u0103\u0101\3\2\2\2\u0104"+
+		"\u0106\5 \21\2\u0105\u0104\3\2\2\2\u0105\u0106\3\2\2\2\u0106\u0108\3\2"+
+		"\2\2\u0107\u0109\5$\23\2\u0108\u0107\3\2\2\2\u0108\u0109\3\2\2\2\u0109"+
+		"\65\3\2\2\2\u010a\u010b\7\65\2\2\u010b\67\3\2\2\2\u010c\u010f\7\65\2\2"+
+		"\u010d\u010e\7\61\2\2\u010e\u0110\7\65\2\2\u010f\u010d\3\2\2\2\u010f\u0110"+
+		"\3\2\2\2\u01109\3\2\2\2\u0111\u0112\7\67\2\2\u0112;\3\2\2\2\u0113\u0114"+
+		"\7\66\2\2\u0114=\3\2\2\2\35?DW_djnrx|\u0089\u0092\u0095\u009f\u00ab\u00ba"+
+		"\u00c0\u00ce\u00d3\u00e1\u00e7\u00ef\u00f1\u0101\u0105\u0108\u010f";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

@@ -1,12 +1,13 @@
--- not yet implemented.
-
 name "condition"
 
 every 20 ticks do
     INPUT FROM a
-    if a has gt 10 iron,  then
+    -- if every a has gt 10 iron_ingot then
+    -- if some a has gt 10 iron_ingot then
+    -- if one a has gt 10 iron_ingot then
+    -- if lone a has gt 10 iron_ingot then
+    -- if overall a has gt 10 iron_ingot then
+    if a has gt 10 iron_ingot then -- defaults to "overall"
         OUTPUT TO b
-    else
-        OUTPUT TO c
     end
 end

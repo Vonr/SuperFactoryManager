@@ -1,7 +1,0 @@
--- not yet implemented.
-
-name "shortform"
-
-every 20 ticks do
-    INPUT FROM a TO b
-end

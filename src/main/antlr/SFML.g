@@ -4,84 +4,143 @@ program : name? trigger*;
 
 name: NAME string ;
 
-trigger     : EVERY interval DO block END           #TimerTrigger
-            | EVERY REDSTONE PULSE DO block END     #PulseTrigger
-            ;
+//
+// TRIGGERS
+//
 
-interval  : number TICKS     #Ticks
-          | number SECONDS   #Seconds
-          ;
+trigger : EVERY interval DO block END           #TimerTrigger
+        | EVERY REDSTONE PULSE DO block END     #PulseTrigger
+        ;
 
-block: statement* ;
+interval: number TICKS     #Ticks
+        | number SECONDS   #Seconds
+        ;
 
-statement   : inputstatement    #InputStatementStatement
-            | outputstatement   #OutputStatementStatement
-            | ifstatement       #IfStatementStatement
-            ;
+//
+// BLOCK STATEMENT
+//
 
-inputstatement  : INPUT inputmatchers? FROM EACH? label+ sidequalifier? slotqualifier?;
+block           : statement* ;
+statement       : inputstatement    #InputStatementStatement
+                | outputstatement   #OutputStatementStatement
+                | ifstatement       #IfStatementStatement
+                ;
 
-outputstatement : OUTPUT outputmatchers? TO EACH? label+ sidequalifier? slotqualifier?;
-
-ifstatement: IF condition THEN block END;
-
-condition : ;
-
-inputmatchers           : itemlimit (COMMA itemlimit)*
-                        | limit
-                        | item (COMMA item)*
-                        ;
-
-outputmatchers          : itemlimit (COMMA itemlimit)*
-                        | limit
-                        | item (COMMA item)*
-                        ;
-
-itemlimit: limit item;
-
+// IO STATEMENT
+inputstatement  : INPUT inputmatchers? FROM EACH? labelaccess;
+outputstatement : OUTPUT outputmatchers? TO EACH? labelaccess;
+inputmatchers   : itemmovement; // separate for different defaults
+outputmatchers  : itemmovement; // separate for different defaults
+itemmovement    : itemlimit (COMMA itemlimit)*  #ItemLimitMovement
+                | limit                         #LimitMovement
+                | item (COMMA item)*            #ItemNoLimitMovement
+                ;
+itemlimit       : limit item;
 limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
                 | quantity              #QuantityLimit
                 ;
 
-item            : IDENTIFIER (COLON IDENTIFIER)?;
-
 quantity        : number;
 retention       : RETAIN number;
 
-sidequalifier : side(COMMA side)* SIDE;
-
-side    : TOP
-        | BOTTOM
-        | NORTH
-        | EAST
-        | SOUTH
-        | WEST
-        ;
-
+sidequalifier   : side(COMMA side)* SIDE;
+side            : TOP
+                | BOTTOM
+                | NORTH
+                | EAST
+                | SOUTH
+                | WEST
+                ;
 slotqualifier   : SLOTS rangeset;
-
 rangeset        : range (COMMA range)*;
 range           : number (DASH number)? ;
 
+
+ifstatement     : IF boolexpr THEN block (ELSE IF boolexpr THEN block)* (ELSE block)? END;
+boolexpr        : TRUE                                  #BooleanTrue
+                | FALSE                                 #BooleanFalse
+                | LPAREN boolexpr RPAREN                #BooleanParen
+                | NOT boolexpr                          #BooleanNegation
+                | boolexpr AND boolexpr                 #BooleanConjunction
+                | boolexpr OR boolexpr                  #BooleanDisjunction
+                | setOp? labelaccess HAS itemcomparison #BooleanHas
+                ;
+itemcomparison  : comparisonOp number item ;
+comparisonOp    : GT
+                | LT
+                | EQ
+                | LE
+                | GE
+                ;
+setOp           : OVERALL
+                | SOME
+                | EVERY
+                | ONE
+                | LONE
+                | NO
+                ;
+
+
+
+
+
+
+//
+// IO HELPERS
+//
+labelaccess     : label (COMMA label)* sidequalifier? slotqualifier?;
+label           : IDENTIFIER ;
+item            : IDENTIFIER (COLON IDENTIFIER)?; // namespace:path
+
+// GENERAL
 string: STRING ;
 number: NUMBER ;
 
-label: IDENTIFIER ;
 
+
+//
+// LEXER
+//
+
+// IF STATEMENT
 IF      : I F ;
 THEN    : T H E N ;
+ELSE    : E L S E ;
 
+HAS     : H A S ;
+OVERALL : O V E R A L L ;
+SOME    : S O M E ;
+ONE     : O N E ;
+LONE    : L O N E ;
+NO      : N O ;
+
+// BOOLEAN LOGIC
+TRUE    : T R U E ;
+FALSE   : F A L S E ;
+NOT     : N O T ;
+AND     : A N D ;
+OR      : O R ;
+
+// QUANTITY LOGIC
+GT      : G T ;
+LT      : L T ;
+EQ      : E Q ;
+LE      : L E ;
+GE      : G E ;
+
+// IO LOGIC
 MOVE    : M O V E ;
 FROM    : F R O M ;
 TO      : T O ;
 INPUT   : I N P U T ;
 OUTPUT  : O U T P U T ;
 WHERE   : W H E R E ;
-SLOTS    : S L O T S ;
+SLOTS   : S L O T S ;
 RETAIN  : R E T A I N ;
 EACH    : E A C H ;
 
+// SIDE LOGIC
 TOP     : T O P ;
 BOTTOM  : B O T T O M ;
 NORTH   : N O R T H ;
@@ -90,24 +149,29 @@ SOUTH   : S O U T H ;
 WEST    : W E S T ;
 SIDE    : S I D E ;
 
-SELF    : S E L F ;
 
-TICKS   : T I C K S ;
-SECONDS : S E C O N D S ;
+// TRIGGERS
+TICKS           : T I C K S ;
+SECONDS         : S E C O N D S ;
+// REDSTONE TRIGGER
+REDSTONE        : R E D S T O N E ;
+PULSE           : P U L S E;
+// PROGRAM SYMBOLS
+DO              : D O ;
+WORLD           : W O R L D ;
+PROGRAM         : P R O G R A M ;
+END             : E N D ;
+NAME            : N A M E ;
 
-EVERY       : E V E R Y ;
-REDSTONE    : R E D S T O N E ;
-PULSE       : P U L S E;
-
-DO      : D O ;
-WORLD   : W O R L D ;
-PROGRAM : P R O G R A M ;
-END     : E N D ;
-NAME    : N A M E ;
+// GENERAL SYMBOLS
+EVERY           : E V E R Y ;
 
 COMMA   : ',';
 COLON   : ':';
 DASH    : '-';
+LPAREN  : '(';
+RPAREN  : ')';
+
 
 IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]* ;
 NUMBER          : [0-9]+ ;
