@@ -141,9 +141,9 @@ dependencies {
 
 
 //    // compile against the JEI API but do not include it at runtime
-//    compileOnly fg.deobf("mezz.jei-1.18.1:9.1.0.41:api")
+    compileOnly fg.deobf("mezz.jei:jei-1.18.1:9.1.0.41:api")
 //    // at runtime, use the full JEI jar
-//    runtimeOnly fg.deobf("mezz.jei-1.18.1:9.1.0.41")
+    runtimeOnly fg.deobf("mezz.jei:jei-1.18.1:9.1.0.41")
 
 
     // Real mod deobf dependency examples - these get remapped to your current mappings
