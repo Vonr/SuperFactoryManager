@@ -7,6 +7,7 @@ import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 
 import java.util.function.Consumer;
@@ -47,13 +48,29 @@ public class SFMRecipes extends RecipeProvider {
         ShapedRecipeBuilder
                 .shaped(SFMItems.LABEL_GUN_ITEM.get())
                 .define('S', Items.STICK)
-                .define('B', Items.INK_SAC)
-                .define('L', Items.LAPIS_LAZULI)
+                .define('B', Tags.Items.DYES_BLACK)
+                .define('L', Tags.Items.DYES_BLUE)
                 .define('C', Items.OAK_SIGN)
                 .unlockedBy("has_ink", has(Items.INK_SAC))
                 .pattern(" LC")
                 .pattern(" SB")
                 .pattern("S  ")
+                .save(consumer);
+
+
+        ShapedRecipeBuilder
+                .shaped(SFMItems.DISK_ITEM.get())
+                .define('R', Blocks.REDSTONE_BLOCK)
+                .define('e', Items.REDSTONE)
+                .define('d', Items.REPEATER)
+                .define('a', Tags.Items.DYES_RED)
+                .define('b', Tags.Items.DYES_GREEN)
+                .define('c', Tags.Items.DYES_BLUE)
+                .define('p', Items.PAPER)
+                .unlockedBy("has_redstone", has(Items.REDSTONE))
+                .pattern("pbp")
+                .pattern("aRc")
+                .pattern("ede")
                 .save(consumer);
     }
 }
