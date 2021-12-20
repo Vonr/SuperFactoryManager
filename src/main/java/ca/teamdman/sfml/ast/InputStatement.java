@@ -9,11 +9,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public record InputStatement(
-        List<Label> labels,
+        LabelAccess labelAccess,
         Matchers matchers,
-        DirectionQualifier directions,
-        boolean each,
-        NumberRangeSet slots
+        boolean each
 ) implements Statement {
 
     @Override
@@ -22,13 +20,13 @@ public record InputStatement(
     }
 
     public Stream<LimitedInputSlot> getSlots(ProgramContext context) {
-        var                    handlers     = context.getItemHandlersByLabels(labels, directions);
+        var                    handlers     = context.getItemHandlersByLabels(labelAccess);
         var                    rtn          = Stream.<LimitedInputSlot>builder();
         List<InputItemMatcher> itemMatchers = null;
         for (var inv : (Iterable<IItemHandler>) handlers::iterator) {
             if (itemMatchers == null || each) itemMatchers = matchers.createInputMatchers();
             for (int slot = 0; slot < inv.getSlots(); slot++) {
-                if (slots.contains(slot)) {
+                if (labelAccess.slots().contains(slot)) {
                     for (var matcher : itemMatchers) {
                         rtn.add(new LimitedInputSlot(this, inv, slot, matcher));
                     }

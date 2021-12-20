@@ -14,4 +14,11 @@ public record Matchers(List<ItemLimit> itemLimits) implements ASTNode {
     public List<OutputItemMatcher> createOutputMatchers() {
         return itemLimits.stream().map(OutputItemMatcher::new).collect(Collectors.toList());
     }
+
+    public Matchers withDefaults(int quantity, int retention) {
+        return new Matchers(itemLimits
+                                    .stream()
+                                    .map(il -> il.withDefaults(quantity, retention))
+                                    .collect(Collectors.toList()));
+    }
 }

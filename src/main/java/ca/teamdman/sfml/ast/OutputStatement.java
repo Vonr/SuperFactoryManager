@@ -11,11 +11,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public record OutputStatement(
-        List<Label> labels,
+        LabelAccess labelAccess,
         Matchers matchers,
-        DirectionQualifier directions,
-        boolean each,
-        NumberRangeSet slots
+        boolean each
 ) implements Statement {
     @Override
     public void tick(ProgramContext context) {
@@ -31,13 +29,13 @@ public record OutputStatement(
     }
 
     public Stream<LimitedOutputSlot> getSlots(ProgramContext context) {
-        var                     handlers     = context.getItemHandlersByLabels(labels, directions);
+        var                     handlers     = context.getItemHandlersByLabels(labelAccess);
         var                     rtn          = Stream.<LimitedOutputSlot>builder();
         List<OutputItemMatcher> itemMatchers = null;
         for (var inv : (Iterable<IItemHandler>) handlers::iterator) {
             if (itemMatchers == null || each) itemMatchers = matchers.createOutputMatchers();
             for (int slot = 0; slot < inv.getSlots(); slot++) {
-                if (slots.contains(slot)) {
+                if (labelAccess.slots().contains(slot)) {
                     for (var matcher : itemMatchers) {
                         rtn.add(new LimitedOutputSlot(this, inv, slot, matcher));
                     }

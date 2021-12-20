@@ -31,7 +31,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ItemIdentifier visitItem(SFMLParser.ItemContext ctx) {
         var params = ctx.IDENTIFIER().stream().map(TerminalNode::getText).collect(Collectors.toList());
-        if (params.size() == 1) return new ItemIdentifier("minecraft", params.get(0));
+        if (params.size() == 1) return new ItemIdentifier(params.get(0));
         return new ItemIdentifier(params.get(0), params.get(1));
     }
 
@@ -99,24 +99,30 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         return (OutputStatement) visit(ctx.outputstatement());
     }
 
+
     @Override
     public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
-        var labels   = ctx.label().stream().map(this::visitLabel).collect(Collectors.toList());
-        var matchers = visitInputmatchers(ctx.inputmatchers());
-        var sides    = visitSidequalifier(ctx.sidequalifier());
-        var each     = ctx.EACH() != null;
-        var slots    = visitSlotqualifier(ctx.slotqualifier());
-        return new InputStatement(labels, matchers, sides, each, slots);
+        var labelAccess = visitLabelaccess(ctx.labelaccess());
+        var matchers    = visitInputmatchers(ctx.inputmatchers());
+        var each        = ctx.EACH() != null;
+        return new InputStatement(labelAccess, matchers, each);
     }
 
     @Override
     public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
-        var labels   = ctx.label().stream().map(this::visitLabel).collect(Collectors.toList());
-        var matchers = visitOutputmatchers(ctx.outputmatchers());
-        var sides    = visitSidequalifier(ctx.sidequalifier());
-        var each     = ctx.EACH() != null;
-        var slots    = visitSlotqualifier(ctx.slotqualifier());
-        return new OutputStatement(labels, matchers, sides, each, slots);
+        var labelAccess = visitLabelaccess(ctx.labelaccess());
+        var matchers    = visitOutputmatchers(ctx.outputmatchers());
+        var each        = ctx.EACH() != null;
+        return new OutputStatement(labelAccess, matchers, each);
+    }
+
+    @Override
+    public LabelAccess visitLabelaccess(SFMLParser.LabelaccessContext ctx) {
+        return new LabelAccess(
+                ctx.label().stream().map(this::visitLabel).collect(Collectors.toList()),
+                visitSidequalifier(ctx.sidequalifier()),
+                visitSlotqualifier(ctx.slotqualifier())
+        );
     }
 
     @Override
@@ -129,25 +135,35 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Matchers visitInputmatchers(SFMLParser.InputmatchersContext ctx) {
         if (ctx == null) return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, 0))));
-        if (ctx.limit() != null) {
-            var limit = (Limit) this.visit(ctx.limit());
-            limit = limit.withDefaults(Integer.MAX_VALUE, 0);
-            return new Matchers(List.of(new ItemLimit(limit)));
-        } else if (ctx.item() != null) {
-            var items = ctx
-                    .item()
-                    .stream()
-                    .map(this::visitItem)
-                    .map(item -> new ItemLimit(new Limit(Integer.MAX_VALUE, 0), item))
-                    .collect(Collectors.toList());
-            return new Matchers(items);
-        } else {
-            var itemLimits = ctx.itemlimit().stream()
-                    .map(this::visitItemlimit)
-                    .map(il -> il.withDefaults(Integer.MAX_VALUE, 0))
-                    .collect(Collectors.toList());
-            return new Matchers(itemLimits);
-        }
+        return ((Matchers) visit(ctx.itemmovement())).withDefaults(Integer.MAX_VALUE, 0);
+    }
+
+    @Override
+    public Matchers visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
+        if (ctx == null) return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE))));
+        return ((Matchers) visit(ctx.itemmovement())).withDefaults(Integer.MAX_VALUE, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public Matchers visitItemLimitMovement(SFMLParser.ItemLimitMovementContext ctx) {
+        return new Matchers(ctx.itemlimit().stream()
+                                    .map(this::visitItemlimit)
+                                    .collect(Collectors.toList()));
+    }
+
+    @Override
+    public Matchers visitLimitMovement(SFMLParser.LimitMovementContext ctx) {
+        return new Matchers(List.of(new ItemLimit((Limit) this.visit(ctx.limit()))));
+    }
+
+    @Override
+    public ASTNode visitItemNoLimitMovement(SFMLParser.ItemNoLimitMovementContext ctx) {
+        return new Matchers(ctx
+                                    .item()
+                                    .stream()
+                                    .map(this::visitItem)
+                                    .map(ItemLimit::new)
+                                    .collect(Collectors.toList()));
     }
 
     @Override
@@ -180,29 +196,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         }
     }
 
-    @Override
-    public Matchers visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
-        if (ctx == null) return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE))));
-        if (ctx.limit() != null) {
-            var limit = (Limit) this.visit(ctx.limit());
-            limit = limit.withDefaults(Integer.MAX_VALUE, 0);
-            return new Matchers(List.of(new ItemLimit(limit)));
-        } else if (ctx.item() != null) {
-            var items = ctx
-                    .item()
-                    .stream()
-                    .map(this::visitItem)
-                    .map(item -> new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE), item))
-                    .collect(Collectors.toList());
-            return new Matchers(items);
-        } else {
-            var itemLimits = ctx.itemlimit().stream()
-                    .map(this::visitItemlimit)
-                    .map(il -> il.withDefaults(Integer.MAX_VALUE, Integer.MAX_VALUE))
-                    .collect(Collectors.toList());
-            return new Matchers(itemLimits);
-        }
-    }
 
     @Override
     public Limit visitRetentionLimit(SFMLParser.RetentionLimitContext ctx) {
@@ -250,5 +243,4 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .collect(Collectors.toList());
         return new Block(statements);
     }
-
 }

@@ -10,6 +10,9 @@
 		},
 		{
 			"include": "#numbers"
+		},
+		{
+			"include": "#comments"
 		}
 	],
 	"repository": {
@@ -29,11 +32,27 @@
 				}
 			]
 		},
+		"comments": {
+			"patterns": [
+				{
+					"begin": "--",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.sfml"
+						}
+					},
+					"end": "\\n",
+					"name": "comment.line.double-dash.sfml"
+				}
+			]
+		},
 		"numbers": {
-			"patterns": [{
-				"name": "constant.numeric.sfml",
-				"match": "\\d+"
-			}]
+			"patterns": [
+				{
+					"name": "constant.numeric.sfml",
+					"match": "\\d+"
+				}
+			]
 		},
 		"strings": {
 			"name": "string.quoted.double.sfml",

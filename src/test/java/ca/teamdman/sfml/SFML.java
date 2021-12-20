@@ -12,11 +12,30 @@ public class SFML {
                 name "hello world"
                                 
                 every 20 ticks do
-                    input 4 iron from a slots 1-5, 7, 10
-                    output stone to furnace top side
-                    output iron, stone to b
+                    input from a
+                    if a has gt 100 iron then
+                        output to b
+                    else if a has gt 50 iron then
+                        output to c
+                    else if a has gt 10 iron then
+                        output to d
+                    else if a has gt 2 iron then
+                        output to e
+                    end
                 end
                 """;
+        input = """
+                name "move items"
+                                
+                -- use two dashes for a comment
+                -- keywords are case insensitive
+                                
+                every 20 ticks do
+                    INPUT FROM a
+                    OUTPUT TO b
+                    -- "a" and "b" are inventory labels
+                    -- use a label gun to identify them in world
+                end""";
         var lexer   = new SFMLLexer(CharStreams.fromString(input));
         var tokens  = new CommonTokenStream(lexer);
         var parser  = new SFMLParser(tokens);

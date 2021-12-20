@@ -12,6 +12,10 @@ public record ItemLimit(
         this(limit, ItemIdentifier.MATCH_ALL);
     }
 
+    public ItemLimit(ItemIdentifier item) {
+        this(new Limit(), item);
+    }
+
     public ItemLimit withDefaults(int quantity, int retention) {
         return new ItemLimit(limit.withDefaults(quantity, retention), item);
     }

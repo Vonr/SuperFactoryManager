@@ -4,9 +4,8 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
-import ca.teamdman.sfml.ast.DirectionQualifier;
 import ca.teamdman.sfml.ast.InputStatement;
-import ca.teamdman.sfml.ast.Label;
+import ca.teamdman.sfml.ast.LabelAccess;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -49,18 +48,17 @@ public class ProgramContext {
     }
 
     public Stream<IItemHandler> getItemHandlersByLabels(
-            List<Label> labels,
-            DirectionQualifier dir
+            LabelAccess labelAccess
     ) {
         var disk = MANAGER
                 .getDisk()
                 .get();
-        return SFMLabelNBTHelper.getPositions(disk, labels)
+        return SFMLabelNBTHelper.getPositions(disk, labelAccess.labels())
                 .map(NETWORK::getInventory)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .flatMap((
-                                 prov -> dir
+                                 prov -> labelAccess.directions()
                                          .stream()
                                          .map(d -> prov.getCapability(
                                                  CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,
