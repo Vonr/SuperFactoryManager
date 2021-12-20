@@ -73,8 +73,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public Number visitNumber(SFMLParser.NumberContext ctx) {
-        return new Number(Integer.parseInt(ctx.getText()));
+    public Quantity visitNumber(SFMLParser.NumberContext ctx) {
+        return new Quantity(Integer.parseInt(ctx.getText()));
     }
 
     @Override
@@ -123,6 +123,61 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 visitSidequalifier(ctx.sidequalifier()),
                 visitSlotqualifier(ctx.slotqualifier())
         );
+    }
+
+    @Override
+    public BoolExpr visitBooleanTrue(SFMLParser.BooleanTrueContext ctx) {
+        return new BoolExpr(__ -> true);
+    }
+
+    @Override
+    public BoolExpr visitBooleanHas(SFMLParser.BooleanHasContext ctx) {
+        var labelAccess    = visitLabelaccess(ctx.labelaccess());
+        var itemComparison = visitItemcomparison(ctx.itemcomparison());
+        return BoolExpr.from(labelAccess, itemComparison);
+    }
+
+    @Override
+    public ItemComparer visitItemcomparison(SFMLParser.ItemcomparisonContext ctx) {
+        var op   = visitComparisonOp(ctx.comparisonOp());
+        var num  = visitNumber(ctx.number());
+        var item = visitItem(ctx.item());
+        return new ItemComparer(op, num, item);
+    }
+
+    @Override
+    public ComparisonOperator visitComparisonOp(SFMLParser.ComparisonOpContext ctx) {
+        return ComparisonOperator.from(ctx.getText());
+    }
+
+    @Override
+    public BoolExpr visitBooleanConjunction(SFMLParser.BooleanConjunctionContext ctx) {
+        var left  = (BoolExpr) visit(ctx.boolexpr(0));
+        var right = (BoolExpr) visit(ctx.boolexpr(1));
+        return new BoolExpr(left.and(right));
+    }
+
+    @Override
+    public BoolExpr visitBooleanDisjunction(SFMLParser.BooleanDisjunctionContext ctx) {
+        var left  = (BoolExpr) visit(ctx.boolexpr(0));
+        var right = (BoolExpr) visit(ctx.boolexpr(1));
+        return new BoolExpr(left.or(right));
+    }
+
+    @Override
+    public BoolExpr visitBooleanFalse(SFMLParser.BooleanFalseContext ctx) {
+        return new BoolExpr(__ -> false);
+    }
+
+    @Override
+    public BoolExpr visitBooleanParen(SFMLParser.BooleanParenContext ctx) {
+        return (BoolExpr) visit(ctx.boolexpr());
+    }
+
+    @Override
+    public BoolExpr visitBooleanNegation(SFMLParser.BooleanNegationContext ctx) {
+        var x = (BoolExpr) visit(ctx.boolexpr());
+        return new BoolExpr(x.negate());
     }
 
     @Override
@@ -186,7 +241,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public NumberRange visitRange(SFMLParser.RangeContext ctx) {
-        var iter  = ctx.number().stream().map(this::visitNumber).mapToInt(Number::value).iterator();
+        var iter  = ctx.number().stream().map(this::visitNumber).mapToInt(Quantity::value).iterator();
         var start = iter.next();
         if (iter.hasNext()) {
             var end = iter.next();
@@ -210,14 +265,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public Number visitRetention(SFMLParser.RetentionContext ctx) {
-        if (ctx == null) return new Number(-1);
+    public Quantity visitRetention(SFMLParser.RetentionContext ctx) {
+        if (ctx == null) return new Quantity(-1);
         return visitNumber(ctx.number());
     }
 
     @Override
-    public Number visitQuantity(SFMLParser.QuantityContext ctx) {
-        if (ctx == null) return new Number(Integer.MAX_VALUE);
+    public Quantity visitQuantity(SFMLParser.QuantityContext ctx) {
+        if (ctx == null) return new Quantity(Integer.MAX_VALUE);
         return visitNumber(ctx.number());
     }
 
