@@ -10,10 +10,10 @@
       "item": "minecraft:stick"
     },
     "B": {
-      "item": "minecraft:ink_sac"
+      "tag": "forge:dyes/black"
     },
     "L": {
-      "item": "minecraft:lapis_lazuli"
+      "tag": "forge:dyes/blue"
     },
     "C": {
       "item": "minecraft:oak_sign"
