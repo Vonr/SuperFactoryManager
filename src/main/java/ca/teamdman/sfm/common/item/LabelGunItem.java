@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -49,8 +50,11 @@ public class LabelGunItem extends Item {
                     SFMLabelNBTHelper.copyLabels(disk, stack);
                     var scriptLabels = manager.getReferencedLabels();
                     SFMLabelNBTHelper.addLabels(stack, scriptLabels);
+                    ctx.getPlayer().sendMessage(new TranslatableComponent("chat.sfm.labelgun.pull"), Util.NIL_UUID);
                 } else {
                     SFMLabelNBTHelper.copyLabels(stack, disk);
+                    manager.setChanged();
+                    ctx.getPlayer().sendMessage(new TranslatableComponent("chat.sfm.labelgun.push"), Util.NIL_UUID);
                 }
             });
             return InteractionResult.CONSUME;
