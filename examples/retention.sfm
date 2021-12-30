@@ -1,0 +1,4 @@
+input 20 retain 1   iron_ingot, 15 retain 1 gold_ingot    from a
+input 20            iron,       30          gold          from a
+input retain    20 from a
+input           20 from a
