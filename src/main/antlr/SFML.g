@@ -33,9 +33,8 @@ inputmatchers   : itemmovement; // separate for different defaults
 outputmatchers  : itemmovement; // separate for different defaults
 itemmovement    : itemlimit (COMMA itemlimit)*  #ItemLimitMovement
                 | limit                         #LimitMovement
-                | item (COMMA item)*            #ItemNoLimitMovement
                 ;
-itemlimit       : limit item;
+itemlimit       : limit? item;
 limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
                 | quantity              #QuantityLimit
@@ -78,7 +77,6 @@ setOp           : OVERALL
                 | EVERY
                 | ONE
                 | LONE
-                | NO
                 ;
 
 

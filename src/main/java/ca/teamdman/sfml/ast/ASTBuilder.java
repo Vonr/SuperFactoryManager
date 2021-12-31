@@ -233,19 +233,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ASTNode visitItemNoLimitMovement(SFMLParser.ItemNoLimitMovementContext ctx) {
-        return new Matchers(ctx
-                                    .item()
-                                    .stream()
-                                    .map(this::visitItem)
-                                    .map(ItemLimit::new)
-                                    .collect(Collectors.toList()));
-    }
-
-    @Override
     public ItemLimit visitItemlimit(SFMLParser.ItemlimitContext ctx) {
-        var limit = (Limit) visit(ctx.limit());
         var item  = (ItemIdentifier) visitItem(ctx.item());
+
+        if (ctx.limit() == null)
+            return new ItemLimit(item);
+
+        var limit = (Limit) visit(ctx.limit());
         return new ItemLimit(limit, item);
     }
 
