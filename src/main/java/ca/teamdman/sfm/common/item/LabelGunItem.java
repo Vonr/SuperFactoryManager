@@ -1,12 +1,11 @@
 package ca.teamdman.sfm.common.item;
 
-import ca.teamdman.sfm.client.gui.screen.LabelGunScreen;
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.InteractionHand;
@@ -35,6 +34,26 @@ public class LabelGunItem extends Item {
 
     public static String getLabel(ItemStack stack) {
         return !stack.hasTag() ? "" : stack.getTag().getString("sfm:label");
+    }
+
+    public static String getNextLabel(ItemStack gun, int change) {
+        var dict = gun.getOrCreateTag().getCompound("sfm:labels");
+        var keys = dict.getAllKeys().toArray(String[]::new);
+        if (keys.length == 0) return "";
+        var currentLabel = getLabel(gun);
+
+        int currentLabelIndex = 0;
+        for (int i = 0; i < keys.length; i++) {
+            if (keys[i].equals(currentLabel)) {
+                currentLabelIndex = i;
+                break;
+            }
+        }
+
+        int nextLabelIndex = currentLabelIndex + change;
+        nextLabelIndex = ((nextLabelIndex % keys.length) + keys.length) % keys.length;
+
+        return keys[nextLabelIndex];
     }
 
     @Override
@@ -69,26 +88,6 @@ public class LabelGunItem extends Item {
         return InteractionResult.CONSUME;
     }
 
-    public static String getNextLabel(ItemStack gun, int change) {
-        var dict = gun.getOrCreateTag().getCompound("sfm:labels");
-        var keys = dict.getAllKeys().toArray(String[]::new);
-        if (keys.length == 0) return "";
-        var currentLabel = getLabel(gun);
-
-        int currentLabelIndex = 0;
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[i].equals(currentLabel)) {
-                currentLabelIndex = i;
-                break;
-            }
-        }
-
-        int nextLabelIndex = currentLabelIndex + change;
-        nextLabelIndex = ((nextLabelIndex % keys.length) + keys.length) % keys.length;
-
-        return keys[nextLabelIndex];
-    }
-
     @Override
     public void appendHoverText(
             ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
@@ -105,12 +104,7 @@ public class LabelGunItem extends Item {
             InteractionHand hand
     ) {
         var stack = player.getItemInHand(hand);
-        if (level.isClientSide) {
-            Minecraft
-                    .getInstance()
-                    .setScreen(new LabelGunScreen(stack, hand));
-        }
-
+        SFM.PROXY.showLabelGunScreen(stack, hand);
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 
