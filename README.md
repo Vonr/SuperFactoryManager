@@ -1,6 +1,6 @@
 # Super Factory Manager 4.0.0
 
-[![](https://cf.way2muchnoise.eu/full_super-factory-manager_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/super-factory-manager)
+[![](https://cf.way2muchnoise.eu/full_306935_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/super-factory-manager)
 
 Check out [the examples folder](./examples/) for sample scripts.
 
