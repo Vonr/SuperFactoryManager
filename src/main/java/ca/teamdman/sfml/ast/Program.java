@@ -1,6 +1,5 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
@@ -39,7 +38,7 @@ public record Program(
                 context.clear();
                 var end  = System.nanoTime();
                 var diff = end - start;
-                SFM.LOGGER.debug("Took {}ms ({}us)", diff / 1000000, diff);
+//                SFM.LOGGER.debug("Took {}ms ({}us)", diff / 1000000, diff);
             }
         }
     }
