@@ -39,7 +39,7 @@ public record Program(
                 context.clear();
                 var end  = System.nanoTime();
                 var diff = end - start;
-                SFM.LOGGER.info("Took {}ms ({}us)", diff / 1000000, diff);
+                SFM.LOGGER.debug("Took {}ms ({}us)", diff / 1000000, diff);
             }
         }
     }
