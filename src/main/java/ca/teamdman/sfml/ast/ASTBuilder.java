@@ -2,6 +2,7 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
+import net.minecraft.resources.ResourceLocation;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.*;
@@ -27,10 +28,17 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ItemIdentifier visitItem(SFMLParser.ItemContext ctx) {
-        var params = ctx.IDENTIFIER().stream().map(TerminalNode::getText).collect(Collectors.toList());
+    public ItemIdentifier visitItemRaw(SFMLParser.ItemRawContext ctx) {
+        var params = ctx.IDENTIFIER().stream().map(TerminalNode::getText).toList();
         if (params.size() == 1) return new ItemIdentifier(params.get(0));
         return new ItemIdentifier(params.get(0), params.get(1));
+    }
+
+    @Override
+    public ItemIdentifier visitItemString(SFMLParser.ItemStringContext ctx) {
+        var item = ctx.STRING().getText();
+        var rl   = new ResourceLocation(item.substring(1, item.length() - 1));
+        return new ItemIdentifier(rl.getNamespace(), rl.getPath());
     }
 
     @Override
@@ -162,7 +170,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public ItemComparer visitItemcomparison(SFMLParser.ItemcomparisonContext ctx) {
         var op   = visitComparisonOp(ctx.comparisonOp());
         var num  = visitNumber(ctx.number());
-        var item = visitItem(ctx.item());
+        var item = (ItemIdentifier) visit(ctx.item());
         return new ItemComparer(op, num, item);
     }
 
@@ -234,7 +242,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public ItemLimit visitItemlimit(SFMLParser.ItemlimitContext ctx) {
-        var item  = (ItemIdentifier) visitItem(ctx.item());
+        var item = (ItemIdentifier) visit(ctx.item());
 
         if (ctx.limit() == null)
             return new ItemLimit(item);
