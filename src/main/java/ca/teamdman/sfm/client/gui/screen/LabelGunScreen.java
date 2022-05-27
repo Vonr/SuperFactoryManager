@@ -69,6 +69,7 @@ public class LabelGunScreen extends Screen {
 
     @Override
     public void resize(Minecraft mc, int x, int y) {
+        init(mc, x, y);
         var prev = this.labelField.getValue();
         super.resize(mc, x, y);
         this.labelField.setValue(prev);
