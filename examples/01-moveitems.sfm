@@ -43,3 +43,31 @@ every 20 ticks do
                         -- instead of 1 item total being moved
     output to b
 end
+
+every 20 ticks do
+    input iron_ingot from a -- only move iron ingots, "minecraft:" namespace is assumed
+    output to b
+end
+
+every 20 ticks do
+    input thaumcraft:iron_nugget from a -- only move thaumcraft iron nuggets
+    output to b
+end
+
+every 20 ticks do
+    input "redstone" from a -- redstone is a keyword for future use, so must be surrounded in quotes
+    output to b
+end
+
+every 20 ticks do
+    input "minecraft:redstone" from a -- redstone is a keyword, so must be surrounded in quotes
+    output to b
+end
+
+every 20 ticks do
+    if a has gt 0 "redstone" then -- again, redstone must be in quotes
+        input from a
+        output to b
+    end
+end
+
