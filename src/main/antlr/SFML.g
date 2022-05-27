@@ -89,7 +89,9 @@ setOp           : OVERALL
 //
 labelaccess     : label (COMMA label)* sidequalifier? slotqualifier?;
 label           : IDENTIFIER ;
-item            : IDENTIFIER (COLON IDENTIFIER)?; // namespace:path
+item            : IDENTIFIER (COLON IDENTIFIER)?        # ItemRaw
+                | STRING                                # ItemString
+                ;
 
 // GENERAL
 string: STRING ;
