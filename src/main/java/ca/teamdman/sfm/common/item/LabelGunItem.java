@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.item;
 
-import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
@@ -104,7 +104,9 @@ public class LabelGunItem extends Item {
             InteractionHand hand
     ) {
         var stack = player.getItemInHand(hand);
-        SFM.PROXY.showLabelGunScreen(stack, hand);
+        if (level.isClientSide) {
+            ClientStuff.showLabelGunScreen(stack, hand);
+        }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 

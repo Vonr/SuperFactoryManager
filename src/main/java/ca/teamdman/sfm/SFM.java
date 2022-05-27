@@ -1,9 +1,6 @@
 package ca.teamdman.sfm;
 
-import ca.teamdman.sfm.client.ClientProxy;
-import ca.teamdman.sfm.common.CommonProxy;
 import ca.teamdman.sfm.common.registry.*;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -15,10 +12,6 @@ import org.apache.logging.log4j.Logger;
 public class SFM {
     public static final String      MOD_ID = "sfm";
     public static final Logger      LOGGER = LogManager.getLogger(SFM.MOD_ID);
-    public static final CommonProxy PROXY  = DistExecutor.unsafeRunForDist(
-            () -> ClientProxy::new,
-            () -> CommonProxy::new
-    );
 
     public SFM() {
         var bus = FMLJavaModLoadingContext
@@ -28,7 +21,7 @@ public class SFM {
         SFMItems.register(bus);
         SFMBlockEntities.register(bus);
         SFMMenus.register(bus);
-        bus.addListener((FMLClientSetupEvent e) -> PROXY.setupScreens());
+        bus.addListener((FMLClientSetupEvent e) -> SFMScreens.register());
         bus.addListener((FMLCommonSetupEvent e) -> SFMPackets.register());
     }
 }
