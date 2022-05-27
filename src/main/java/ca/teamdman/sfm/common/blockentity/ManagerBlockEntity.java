@@ -10,6 +10,7 @@ import ca.teamdman.sfml.SFMLParser;
 import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -102,8 +103,8 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         var program = getProgram().get();
         var lexer   = new SFMLLexer(CharStreams.fromString(program));
         lexer.removeErrorListeners();
-        var tokens  = new CommonTokenStream(lexer);
-        var parser  = new SFMLParser(tokens);
+        var tokens = new CommonTokenStream(lexer);
+        var parser = new SFMLParser(tokens);
 
         parser.removeErrorListeners();
         List<String> errors = new ArrayList<>();
@@ -126,10 +127,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         try {
             programAST = new ASTBuilder().visitProgram(context);
             DiskItem.setProgramName(disk, programAST.name());
+        } catch (ResourceLocationException e) {
+            errors.add(e.getMessage());
         } catch (Throwable t) {
             t.printStackTrace();
-            errors.add(t.getMessage());
-
         }
         if (errors.isEmpty()) {
             compiledProgram = new ProgramExecutor(programAST, this);

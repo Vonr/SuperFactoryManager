@@ -2,6 +2,7 @@ package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
@@ -20,6 +21,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 
+import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
 
 public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
@@ -30,6 +33,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     private final        float            STATUS_DURATION             = 40;
     private              BaseComponent    status                      = new TextComponent("");
     private              float            statusCountdown             = 0;
+    private              ExtendedButton   DiagButton;
 
     public ManagerScreen(ManagerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -62,6 +66,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 new TranslatableComponent("gui.sfm.manager.button.reset"),
                 button -> sendReset()
         ));
+        this.addRenderableWidget(DiagButton = new ExtendedButton(
+                (this.width - this.imageWidth) / 2 + 35,
+                (this.height - this.imageHeight) / 2 + 48,
+                12,
+                14,
+                new TranslatableComponent("!"),
+                button -> this.onSaveDiagClipboard()
+        ));
     }
 
     private void sendReset() {
@@ -87,6 +99,41 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     private void onSaveClipboard() {
         try {
             Minecraft.getInstance().keyboardHandler.setClipboard(menu.program);
+            status          = new TranslatableComponent("gui.sfm.manager.status.saved_clipboard");
+            statusCountdown = STATUS_DURATION;
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+
+    private void onSaveDiagClipboard() {
+        try {
+            var disk = menu.CONTAINER.getItem(0);
+            if (!(disk.getItem() instanceof DiskItem)) return;
+            StringBuilder content = new StringBuilder(menu.program);
+
+            content
+                    .append("\n\n-- Diagnostic info ")
+                    .append(new SimpleDateFormat("yyyy-MM-dd HH:mm.ss").format(new java.util.Date()))
+                    .append(" --");
+
+            List<String> errors = DiskItem.getErrors(disk);
+            if (!errors.isEmpty()) {
+                content.append("\n\n-- Errors\n");
+                for (String error : errors) {
+                    content.append("-- * ").append(error).append("\n");
+                }
+            }
+
+            List<String> warnings = DiskItem.getWarnings(disk);
+            if (!warnings.isEmpty()) {
+                content.append("\n\n-- Warnings\n");
+                for (String warning : warnings) {
+                    content.append("-- * ").append(warning).append("\n");
+                }
+            }
+
+            Minecraft.getInstance().keyboardHandler.setClipboard(content.toString());
             status          = new TranslatableComponent("gui.sfm.manager.status.saved_clipboard");
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
@@ -135,6 +182,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 20,
                 0
         );
+        DiagButton.visible = state == ManagerBlockEntity.State.INVALID_PROGRAM;
         if (statusCountdown <= 0) return;
         this.font.draw(
                 matrixStack,
