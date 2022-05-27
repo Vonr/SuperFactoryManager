@@ -106,6 +106,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         }
     }
 
+    private boolean shouldShowDiagButton() {
+        var disk = menu.CONTAINER.getItem(0);
+        if (!(disk.getItem() instanceof DiskItem)) return false;
+        List<String> errors   = DiskItem.getErrors(disk);
+        List<String> warnings = DiskItem.getWarnings(disk);
+        return !errors.isEmpty() || !warnings.isEmpty();
+    }
+
     private void onSaveDiagClipboard() {
         try {
             var disk = menu.CONTAINER.getItem(0);
@@ -182,7 +190,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 20,
                 0
         );
-        DiagButton.visible = state == ManagerBlockEntity.State.INVALID_PROGRAM;
+        DiagButton.visible = shouldShowDiagButton();
         if (statusCountdown <= 0) return;
         this.font.draw(
                 matrixStack,
