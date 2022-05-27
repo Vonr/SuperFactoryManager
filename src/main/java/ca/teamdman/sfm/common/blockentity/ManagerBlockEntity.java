@@ -128,8 +128,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             DiskItem.setProgramName(disk, programAST.name());
         } catch (Throwable t) {
             t.printStackTrace();
+            errors.add(t.getMessage());
+
         }
-        if (parser.getNumberOfSyntaxErrors() == 0) {
+        if (errors.isEmpty()) {
             compiledProgram = new ProgramExecutor(programAST, this);
         }
 
