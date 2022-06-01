@@ -16,3 +16,42 @@ I recommend writing your program, then pulling the labels from the program inste
 An example video of loading scripts and labels into a manager:
 
 https://user-images.githubusercontent.com/9356891/171307447-5895b809-9685-4e1c-a5e5-f102b6620b68.mp4
+
+
+## Details
+
+Keywords are case-insensitive.
+
+Super-nerds can read the grammar file [here](https://github.com/TeamDman/SuperFactoryManager/blob/1.18/src/main/antlr/SFML.g)  
+Some stuff may not be implemented yet, like redstone pulse triggers.
+
+### Triggers
+
+- A program consists of an ordered list of triggers
+- Each trigger has an ordered list of inputs
+- Each trigger clears the input list after executing (so they don't affect other triggers)
+- Each trigger contains a block, which is an ordered list of statements
+
+Example:
+
+```lua
+EVERY 20 TICKS DO
+  -- do stuff here
+END
+```
+
+```lua
+every 5 seconds do
+  -- do stuff here
+end
+```
+
+### Statements
+
+There are currently 3 statements.
+
+- INPUT
+- OUTPUT
+- IF
+
+See example scripts for detailed usage
