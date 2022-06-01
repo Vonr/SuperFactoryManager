@@ -1,6 +1,6 @@
 grammar SFML;
 
-program : name? trigger*;
+program : name? trigger* EOF;
 
 name: NAME string ;
 
