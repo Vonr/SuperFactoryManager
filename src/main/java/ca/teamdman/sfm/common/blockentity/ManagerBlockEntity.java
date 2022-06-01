@@ -127,7 +127,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         try {
             programAST = new ASTBuilder().visitProgram(context);
             DiskItem.setProgramName(disk, programAST.name());
-        } catch (ResourceLocationException e) {
+        } catch (ResourceLocationException | IllegalArgumentException e) {
             errors.add(e.getMessage());
         } catch (Throwable t) {
             t.printStackTrace();
