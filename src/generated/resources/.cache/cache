@@ -6,6 +6,7 @@ f0f5f79545a03c81b928d04835e5dc1012f15ec9 assets/sfm/models/item/cable.json
 b2b7c77ca9cb525bbfcb3377ba04e5003582a4fe assets/sfm/models/item/disk.json
 b9efc8167d7766ba20a6ff8af194b5dd4379b279 assets/sfm/models/item/labelgun.json
 051420be462852603a05011d44f8fc5a19bca77f assets/sfm/models/item/manager.json
+4c446d92a5634d6a715c4e55d9b4d333c910f077 data/minecraft/tags/blocks/mineable/pickaxe.json
 6c669c3bcdb29ccaf00963cdce64ec744955b61a data/sfm/advancements/recipes/sfm/cable.json
 45366a752da40f153be00d2a5ac04b9fc65aaf0c data/sfm/advancements/recipes/sfm/disk.json
 3a7c97765c0bc400f13332365f1067e89396a4fd data/sfm/advancements/recipes/sfm/labelgun.json
