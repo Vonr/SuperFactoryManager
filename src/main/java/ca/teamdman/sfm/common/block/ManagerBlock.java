@@ -8,6 +8,8 @@ import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -95,8 +97,12 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        super.onRemove(state, level, pos, newState, isMoving);
+        if (level.getBlockEntity(pos) instanceof Container container) {
+            Containers.dropContents(level, pos, container);
+            level.updateNeighbourForOutputSignal(pos, this);
+        }
         CableNetworkManager.unregister(level, pos);
         CableNetworkManager.printDebugInfo();
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 }
