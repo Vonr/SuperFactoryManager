@@ -1,5 +1,10 @@
 package ca.teamdman.sfm.common.util;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
@@ -56,5 +61,27 @@ public class SFMUtil {
 	public interface RecursiveBuilder<T> {
 
 		void accept(T next, Consumer<T> nextQueue, Consumer<T> resultBuilder);
+	}
+
+	public static CompoundTag serializeTranslation(TranslatableContents contents) {
+		CompoundTag tag = new CompoundTag();
+		tag.putString("key", contents.getKey());
+		ListTag args = new ListTag();
+		for (var arg : contents.getArgs()) {
+			args.add(StringTag.valueOf(arg.toString()));
+		}
+		tag.put("args", args);
+		return tag;
+	}
+
+	public static TranslatableContents deserializeTranslation(CompoundTag tag) {
+		var key = tag.getString("key");
+		var args = tag
+				.getList("args", Tag.TAG_STRING)
+				.stream()
+				.map(StringTag.class::cast)
+				.map(StringTag::getAsString)
+				.toArray();
+		return new TranslatableContents(key, args);
 	}
 }

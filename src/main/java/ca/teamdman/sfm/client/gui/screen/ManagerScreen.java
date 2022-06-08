@@ -13,13 +13,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.Locale;
 
 public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
@@ -106,8 +106,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     private boolean shouldShowDiagButton() {
         var disk = menu.CONTAINER.getItem(0);
         if (!(disk.getItem() instanceof DiskItem)) return false;
-        List<String> errors   = DiskItem.getErrors(disk);
-        List<String> warnings = DiskItem.getWarnings(disk);
+        var errors   = DiskItem.getErrors(disk);
+        var warnings = DiskItem.getWarnings(disk);
         return !errors.isEmpty() || !warnings.isEmpty();
     }
 
@@ -122,19 +122,19 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                     .append(new SimpleDateFormat("yyyy-MM-dd HH:mm.ss").format(new java.util.Date()))
                     .append(" --");
 
-            List<String> errors = DiskItem.getErrors(disk);
+            var errors = DiskItem.getErrors(disk);
             if (!errors.isEmpty()) {
                 content.append("\n\n-- Errors\n");
-                for (String error : errors) {
-                    content.append("-- * ").append(error).append("\n");
+                for (var error : errors) {
+                    content.append("-- * ").append(I18n.get(error.getKey(), error.getArgs())).append("\n");
                 }
             }
 
-            List<String> warnings = DiskItem.getWarnings(disk);
+            var warnings = DiskItem.getWarnings(disk);
             if (!warnings.isEmpty()) {
                 content.append("\n\n-- Warnings\n");
-                for (String warning : warnings) {
-                    content.append("-- * ").append(warning).append("\n");
+                for (var warning : warnings) {
+                    content.append("-- * ").append(I18n.get(warning.getKey(), warning.getArgs())).append("\n");
                 }
             }
 

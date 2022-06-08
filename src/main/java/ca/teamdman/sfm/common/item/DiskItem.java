@@ -2,11 +2,14 @@ package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -34,50 +37,49 @@ public class DiskItem extends Item {
 
     }
 
-    public static void setErrors(ItemStack stack, List<String> errors) {
+    public static void setErrors(ItemStack stack, List<TranslatableContents> errors) {
         stack
                 .getOrCreateTag()
                 .put(
                         "sfm:errors",
                         errors
                                 .stream()
-                                .map(StringTag::valueOf)
+                                .map(SFMUtil::serializeTranslation)
                                 .collect(ListTag::new, ListTag::add, ListTag::addAll)
                 );
     }
 
 
-    public static void setWarnings(ItemStack stack, List<String> warnings) {
+    public static void setWarnings(ItemStack stack, List<TranslatableContents> warnings) {
         stack
                 .getOrCreateTag()
                 .put(
                         "sfm:warnings",
                         warnings
                                 .stream()
-                                .map(StringTag::valueOf)
+                                .map(SFMUtil::serializeTranslation)
                                 .collect(ListTag::new, ListTag::add, ListTag::addAll)
                 );
     }
 
 
-    public static List<String> getErrors(ItemStack stack) {
+    public static List<TranslatableContents> getErrors(ItemStack stack) {
         return stack
                 .getOrCreateTag()
-                .getList("sfm:errors", Tag.TAG_STRING)
+                .getList("sfm:errors", Tag.TAG_COMPOUND)
                 .stream()
-                .map(StringTag.class::cast)
-                .map(Tag::getAsString)
-                .collect(
-                        Collectors.toList());
+                .map(CompoundTag.class::cast)
+                .map(SFMUtil::deserializeTranslation)
+                .toList();
     }
 
-    public static List<String> getWarnings(ItemStack stack) {
+    public static List<TranslatableContents> getWarnings(ItemStack stack) {
         return stack
                 .getOrCreateTag()
-                .getList("sfm:warnings", Tag.TAG_STRING)
+                .getList("sfm:warnings", Tag.TAG_COMPOUND)
                 .stream()
-                .map(StringTag.class::cast)
-                .map(Tag::getAsString)
+                .map(CompoundTag.class::cast)
+                .map(SFMUtil::deserializeTranslation)
                 .collect(
                         Collectors.toList());
     }
@@ -111,12 +113,12 @@ public class DiskItem extends Item {
             list.addAll(SFMLabelNBTHelper.getHoverText(stack));
             getErrors(stack)
                     .stream()
-                    .map(Component::literal)
+                    .map(MutableComponent::create)
                     .map(line -> line.withStyle(ChatFormatting.RED))
                     .forEach(list::add);
             getWarnings(stack)
                     .stream()
-                    .map(Component::literal)
+                    .map(MutableComponent::create)
                     .map(line -> line.withStyle(ChatFormatting.YELLOW))
                     .forEach(list::add);
         }

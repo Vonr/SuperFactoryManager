@@ -15,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -106,7 +107,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         var parser = new SFMLParser(tokens);
 
         parser.removeErrorListeners();
-        List<String> errors = new ArrayList<>();
+        List<TranslatableContents> errors = new ArrayList<>();
         parser.addErrorListener(new BaseErrorListener() {
             @Override
             public void syntaxError(
@@ -117,7 +118,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                     String msg,
                     RecognitionException e
             ) {
-                errors.add("line " + line + ":" + charPositionInLine + " " + msg);
+                errors.add(new TranslatableContents(
+                        "program.sfm.literal",
+                        "line " + line + ":" + charPositionInLine + " " + msg
+                ));
             }
         });
 
@@ -127,7 +131,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             programAST = new ASTBuilder().visitProgram(context);
             DiskItem.setProgramName(disk, programAST.name());
         } catch (ResourceLocationException | IllegalArgumentException e) {
-            errors.add(e.getMessage());
+            errors.add(new TranslatableContents("program.sfm.literal", e.getMessage()));
         } catch (Throwable t) {
             t.printStackTrace();
         }

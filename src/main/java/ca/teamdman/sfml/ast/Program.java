@@ -3,6 +3,7 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -17,16 +18,25 @@ public record Program(
     public static final int MAX_PROGRAM_LENGTH = 8096;
 
     public void addWarnings(ItemStack disk) {
-        var warnings = new ArrayList<String>();
+        var warnings = new ArrayList<TranslatableContents>();
         for (String label : referencedLabels) {
             var isUsed = SFMLabelNBTHelper
                     .getLabelPositions(disk, label)
                     .findAny()
                     .isPresent();
             if (!isUsed) {
-                warnings.add("There are no blocks labelled with \"" + label + "\".");
+                warnings.add(new TranslatableContents("program.sfm.warnings.unused_label", label));
             }
         }
+
+        SFMLabelNBTHelper.getPositionLabels(disk)
+                .values().stream().distinct()
+                .filter(x -> !referencedLabels.contains(x))
+                .forEach(label -> warnings.add(new TranslatableContents(
+                        "program.sfm.warnings.undefined_label",
+                        label
+                )));
+
         DiskItem.setWarnings(disk, warnings);
     }
 
