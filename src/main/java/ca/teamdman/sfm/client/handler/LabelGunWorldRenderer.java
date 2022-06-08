@@ -19,6 +19,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
@@ -28,8 +29,8 @@ import java.util.Collection;
  * https://github.com/tasgon/observable/blob/master/common/src/main/kotlin/observable/client/Overlay.kt
  */
 public class LabelGunWorldRenderer {
-    private static final int        BUFFER_SIZE = 256;
-    private static final RenderType RENDER_TYPE = RenderType.create(
+    private static final int          BUFFER_SIZE = 256;
+    private static final RenderType   RENDER_TYPE = RenderType.create(
             "sfmlabels",
             DefaultVertexFormat.POSITION_COLOR,
             VertexFormat.Mode.QUADS,
@@ -58,6 +59,8 @@ public class LabelGunWorldRenderer {
                     )
                     .createCompositeState(true)
     );
+    @Nullable
+    private static       VertexBuffer vbo;
 
     @SubscribeEvent
     public static void renderLabelHighlights(RenderLevelLastEvent event) {
@@ -86,14 +89,29 @@ public class LabelGunWorldRenderer {
         }
         { // draw highlights
             RENDER_TYPE.setupRenderState();
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
             RenderSystem.disableTexture();
-            var vbo = createVBO(new PoseStack(), camera, labelPositions.keySet());
-            vbo.drawWithShader(
-                    poseStack.last().pose(),
-                    event.getProjectionMatrix(),
-                    GameRenderer.getPositionColorShader()
-            );
+
+            if (vbo == null) {
+                vbo = new VertexBuffer();
+                vbo.bind();
+                vbo.upload(createShape());
+            } else {
+                vbo.bind();
+            }
+
+            for (var pos : labelPositions.keySet()) {
+                poseStack.pushPose();
+                poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
+
+                vbo.drawWithShader(
+                        poseStack.last().pose(),
+                        event.getProjectionMatrix(),
+                        GameRenderer.getPositionColorShader()
+                );
+                poseStack.popPose();
+            }
+
+            VertexBuffer.unbind();
             RENDER_TYPE.clearRenderState();
             RenderSystem.enableTexture();
         }
@@ -133,63 +151,46 @@ public class LabelGunWorldRenderer {
         poseStack.popPose();
     }
 
-    private static VertexBuffer createVBO(PoseStack poseStack, Camera camera, Collection<BlockPos> positions) {
-        var builder = new BufferBuilder(RENDER_TYPE.bufferSize() * positions.size());
-        builder.begin(RENDER_TYPE.mode(), RENDER_TYPE.format());
-        for (var pos : positions) {
-            drawBlockOutline(pos, poseStack, builder, 100, 0, 255, 100);
-        }
-        builder.end();
-        var vert = new VertexBuffer();
-        vert.upload(builder);
-        return vert;
+    public static BufferBuilder.RenderedBuffer createShape() {
+        var builder = new BufferBuilder(4 * 6 * 8);
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+
+        int r = 100;
+        int g = 0;
+        int b = 255;
+        int a = 100;
+
+        builder.vertex(0F, 1F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 1F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 1F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 1F, 0F).color(r, g, b, a).endVertex();
+
+        builder.vertex(0F, 1F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 1F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 0F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 0F, 0F).color(r, g, b, a).endVertex();
+
+        builder.vertex(1F, 1F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 1F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 0F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 0F, 1F).color(r, g, b, a).endVertex();
+
+        builder.vertex(0F, 1F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 1F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 0F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 0F, 1F).color(r, g, b, a).endVertex();
+
+        builder.vertex(1F, 0F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 0F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 1F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 1F, 1F).color(r, g, b, a).endVertex();
+
+        builder.vertex(1F, 0F, 0F).color(r, g, b, a).endVertex();
+        builder.vertex(1F, 0F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 0F, 1F).color(r, g, b, a).endVertex();
+        builder.vertex(0F, 0F, 0F).color(r, g, b, a).endVertex();
+
+        return builder.end();
     }
 
-    private static void drawBlockOutline(
-            BlockPos pos,
-            PoseStack poseStack,
-            VertexConsumer buf,
-            int r,
-            int g,
-            int b,
-            int a
-    ) {
-        poseStack.pushPose();
-        poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
-        var mat = poseStack
-                .last()
-                .pose();
-
-        buf.vertex(mat, 0F, 1F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 1F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 1F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 1F, 0F).color(r, g, b, a).endVertex();
-
-        buf.vertex(mat, 0F, 1F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 1F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 0F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 0F, 0F).color(r, g, b, a).endVertex();
-
-        buf.vertex(mat, 1F, 1F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 1F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 0F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 0F, 1F).color(r, g, b, a).endVertex();
-
-        buf.vertex(mat, 0F, 1F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 1F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 0F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 0F, 1F).color(r, g, b, a).endVertex();
-
-        buf.vertex(mat, 1F, 0F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 0F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 1F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 1F, 1F).color(r, g, b, a).endVertex();
-
-        buf.vertex(mat, 1F, 0F, 0F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 1F, 0F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 0F, 1F).color(r, g, b, a).endVertex();
-        buf.vertex(mat, 0F, 0F, 0F).color(r, g, b, a).endVertex();
-
-        poseStack.popPose();
-    }
 }
