@@ -5,9 +5,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -69,11 +67,11 @@ public class LabelGunItem extends Item {
                     SFMLabelNBTHelper.copyLabels(disk, stack);
                     var scriptLabels = manager.getReferencedLabels();
                     SFMLabelNBTHelper.addLabels(stack, scriptLabels);
-                    ctx.getPlayer().sendMessage(new TranslatableComponent("chat.sfm.labelgun.pull"), Util.NIL_UUID);
+                    ctx.getPlayer().sendSystemMessage(Component.translatable("chat.sfm.labelgun.pull"));
                 } else {
                     SFMLabelNBTHelper.copyLabels(stack, disk);
                     manager.setChanged();
-                    ctx.getPlayer().sendMessage(new TranslatableComponent("chat.sfm.labelgun.push"), Util.NIL_UUID);
+                    ctx.getPlayer().sendSystemMessage(Component.translatable("chat.sfm.labelgun.push"));
                 }
             });
             return InteractionResult.CONSUME;
@@ -92,8 +90,8 @@ public class LabelGunItem extends Item {
     public void appendHoverText(
             ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
     ) {
-        lines.add(new TranslatableComponent("item.sfm.labelgun.tooltip.1").withStyle(ChatFormatting.GRAY));
-        lines.add(new TranslatableComponent("item.sfm.labelgun.tooltip.2").withStyle(ChatFormatting.GRAY));
+        lines.add(Component.translatable("item.sfm.labelgun.tooltip.1").withStyle(ChatFormatting.GRAY));
+        lines.add(Component.translatable("item.sfm.labelgun.tooltip.2").withStyle(ChatFormatting.GRAY));
         lines.addAll(SFMLabelNBTHelper.getHoverText(stack));
     }
 
@@ -114,6 +112,6 @@ public class LabelGunItem extends Item {
     public Component getName(ItemStack stack) {
         var name = getLabel(stack);
         if (name.isEmpty()) return super.getName(stack);
-        return new TranslatableComponent("item.sfm.labelgun.with_label", name).withStyle(ChatFormatting.AQUA);
+        return Component.translatable("item.sfm.labelgun.with_label", name).withStyle(ChatFormatting.AQUA);
     }
 }

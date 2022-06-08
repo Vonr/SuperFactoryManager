@@ -13,11 +13,11 @@ public class SFMDatagen {
         if (!DatagenModLoader.isRunningDataGen()) return;
         var gen = event.getGenerator();
         if (event.includeServer()) {
-            gen.addProvider(new SFMBlockStates(gen, event.getExistingFileHelper()));
-            gen.addProvider(new SFMItemModels(gen, event.getExistingFileHelper()));
-            gen.addProvider(new SFMBlockTags(gen, event.getExistingFileHelper()));
-            gen.addProvider(new SFMLootTables(gen));
-            gen.addProvider(new SFMRecipes(gen));
+            gen.addProvider(event.includeClient(), new SFMBlockStates(gen, event.getExistingFileHelper()));
+            gen.addProvider(event.includeClient(), new SFMItemModels(gen, event.getExistingFileHelper()));
+            gen.addProvider(event.includeClient(), new SFMBlockTags(gen, event.getExistingFileHelper()));
+            gen.addProvider(event.includeClient(), new SFMLootTables(gen));
+            gen.addProvider(event.includeClient(), new SFMRecipes(gen));
         }
     }
 }

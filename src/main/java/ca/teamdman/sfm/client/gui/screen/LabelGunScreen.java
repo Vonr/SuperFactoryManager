@@ -8,7 +8,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
@@ -21,7 +21,7 @@ public class LabelGunScreen extends Screen {
     private       Button          doneButton;
 
     public LabelGunScreen(ItemStack labelGunStack, InteractionHand hand) {
-        super(new TranslatableComponent("gui.sfm.title.labelgun"));
+        super(Component.translatable("gui.sfm.title.labelgun"));
         ITEM_STACK = labelGunStack;
         HAND       = hand;
     }
@@ -36,7 +36,7 @@ public class LabelGunScreen extends Screen {
                 50,
                 300,
                 20,
-                new TranslatableComponent("gui.sfm.labels.labelgun.placeholder")
+                Component.translatable("gui.sfm.labels.labelgun.placeholder")
         ));
         this.setInitialFocus(labelField);
         this.labelField.setFocus(true);

@@ -9,7 +9,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -63,10 +62,10 @@ public class SFMLabelNBTHelper {
 
     public static List<Component> getHoverText(ItemStack stack) {
         var rtn = new ArrayList<Component>();
-        rtn.add(new TranslatableComponent("item.sfm.disk.tooltip.label.header").withStyle(ChatFormatting.UNDERLINE));
+        rtn.add(Component.translatable("item.sfm.disk.tooltip.label.header").withStyle(ChatFormatting.UNDERLINE));
         var dict = getLabelDict(stack);
         for (var label : dict.getAllKeys()) {
-            rtn.add(new TranslatableComponent(
+            rtn.add(Component.translatable(
                     "item.sfm.disk.tooltip.label",
                     label,
                     dict.getList(label, Tag.TAG_LONG).size()

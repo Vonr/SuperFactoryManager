@@ -7,7 +7,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -101,7 +100,7 @@ public class DiskItem extends Item {
     public Component getName(ItemStack stack) {
         var name = getProgramName(stack);
         if (name.isEmpty()) return super.getName(stack);
-        return new TextComponent(name).withStyle(ChatFormatting.AQUA);
+        return Component.literal(name).withStyle(ChatFormatting.AQUA);
     }
 
     @Override
@@ -112,12 +111,12 @@ public class DiskItem extends Item {
             list.addAll(SFMLabelNBTHelper.getHoverText(stack));
             getErrors(stack)
                     .stream()
-                    .map(TextComponent::new)
+                    .map(Component::literal)
                     .map(line -> line.withStyle(ChatFormatting.RED))
                     .forEach(list::add);
             getWarnings(stack)
                     .stream()
-                    .map(TextComponent::new)
+                    .map(Component::literal)
                     .map(line -> line.withStyle(ChatFormatting.YELLOW))
                     .forEach(list::add);
         }

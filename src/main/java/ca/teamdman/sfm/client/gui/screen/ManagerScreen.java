@@ -13,10 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.network.chat.BaseComponent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
@@ -31,7 +28,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
             "textures/gui/container/manager.png"
     );
     private final        float            STATUS_DURATION             = 40;
-    private              BaseComponent    status                      = new TextComponent("");
+    private              Component        status                      = Component.empty();
     private              float            statusCountdown             = 0;
     private              ExtendedButton   DiagButton;
 
@@ -47,7 +44,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 (this.height - this.imageHeight) / 2 + 37,
                 100,
                 16,
-                new TranslatableComponent("gui.sfm.manager.button.import_clipboard"),
+                Component.translatable("gui.sfm.manager.button.import_clipboard"),
                 button -> this.onLoadClipboard()
         ));
         this.addRenderableWidget(new ExtendedButton(
@@ -55,7 +52,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 (this.height - this.imageHeight) / 2 + 37 + 20,
                 100,
                 16,
-                new TranslatableComponent("gui.sfm.manager.button.export_clipboard"),
+                Component.translatable("gui.sfm.manager.button.export_clipboard"),
                 button -> this.onSaveClipboard()
         ));
         this.addRenderableWidget(new ExtendedButton(
@@ -63,7 +60,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 (this.height - this.imageHeight) / 2 + 10,
                 50,
                 12,
-                new TranslatableComponent("gui.sfm.manager.button.reset"),
+                Component.translatable("gui.sfm.manager.button.reset"),
                 button -> sendReset()
         ));
         this.addRenderableWidget(DiagButton = new ExtendedButton(
@@ -71,7 +68,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 (this.height - this.imageHeight) / 2 + 48,
                 12,
                 14,
-                new TranslatableComponent("!"),
+                Component.translatable("!"),
                 button -> this.onSaveDiagClipboard()
         ));
     }
@@ -81,7 +78,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION
         ));
-        status          = new TranslatableComponent("gui.sfm.manager.status.reset");
+        status          = Component.translatable("gui.sfm.manager.status.reset");
         statusCountdown = STATUS_DURATION;
     }
 
@@ -92,14 +89,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 program
         ));
         menu.program    = program;
-        status          = new TranslatableComponent("gui.sfm.manager.status.loaded_clipboard");
+        status          = Component.translatable("gui.sfm.manager.status.loaded_clipboard");
         statusCountdown = STATUS_DURATION;
     }
 
     private void onSaveClipboard() {
         try {
             Minecraft.getInstance().keyboardHandler.setClipboard(menu.program);
-            status          = new TranslatableComponent("gui.sfm.manager.status.saved_clipboard");
+            status          = Component.translatable("gui.sfm.manager.status.saved_clipboard");
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -142,7 +139,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
             }
 
             Minecraft.getInstance().keyboardHandler.setClipboard(content.toString());
-            status          = new TranslatableComponent("gui.sfm.manager.status.saved_clipboard");
+            status          = Component.translatable("gui.sfm.manager.status.saved_clipboard");
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -179,9 +176,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         var state  = states[key];
         this.font.draw(
                 matrixStack,
-                new TranslatableComponent(
+                Component.translatable(
                         "gui.sfm.manager.state",
-                        new TranslatableComponent("gui.sfm.manager.state." + state
+                        Component.translatable("gui.sfm.manager.state." + state
                                 .name()
                                 .toLowerCase(
                                         Locale.ROOT)).withStyle(state.COLOR)

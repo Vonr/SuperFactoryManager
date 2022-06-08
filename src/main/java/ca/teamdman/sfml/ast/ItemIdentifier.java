@@ -1,6 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.function.Predicate;
 
@@ -16,7 +17,7 @@ public record ItemIdentifier(
 
     public boolean test(ItemStack stack) {
         if (domain.equals("*") && value.equals("*")) return true;
-        var reg = stack.getItem().getRegistryName();
+        var reg = ForgeRegistries.ITEMS.getKey(stack.getItem());
         if (reg == null) return false;
         if (domain.equals("*")) return value.equals(reg.getPath());
         if (value.equals("*")) return domain.equals(reg.getNamespace());

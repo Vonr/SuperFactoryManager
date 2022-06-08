@@ -10,8 +10,8 @@ import org.apache.logging.log4j.Logger;
 
 @Mod("sfm")
 public class SFM {
-    public static final String      MOD_ID = "sfm";
-    public static final Logger      LOGGER = LogManager.getLogger(SFM.MOD_ID);
+    public static final String MOD_ID = "sfm";
+    public static final Logger LOGGER = LogManager.getLogger(SFM.MOD_ID);
 
     public SFM() {
         var bus = FMLJavaModLoadingContext
