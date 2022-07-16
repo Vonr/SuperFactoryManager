@@ -26,7 +26,7 @@ public class ProgramExecutor {
                     .getGameTime() % 20 == 0) {
             MANAGER
                     .getDisk()
-                    .ifPresent(PROGRAM::addWarnings);
+                    .ifPresent(disk -> PROGRAM.addWarnings(disk, MANAGER));
         }
         PROGRAM.tick(context);
         MANAGER.clearRedstonePulseQueue();

@@ -1,5 +1,7 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
@@ -17,7 +19,7 @@ public record Program(
 ) implements ASTNode {
     public static final int MAX_PROGRAM_LENGTH = 8096;
 
-    public void addWarnings(ItemStack disk) {
+    public void addWarnings(ItemStack disk, ManagerBlockEntity manager) {
         var warnings = new ArrayList<TranslatableContents>();
         for (String label : referencedLabels) {
             var isUsed = SFMLabelNBTHelper
@@ -36,6 +38,17 @@ public record Program(
                         "program.sfm.warnings.undefined_label",
                         label
                 )));
+
+        CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
+            SFMLabelNBTHelper.getPositionLabels(disk)
+                    .entries().stream()
+                    .filter(e -> !network.containsInventoryLocation(e.getKey()))
+                    .forEach(e -> warnings.add(new TranslatableContents(
+                            "program.sfm.warnings.disconnected_label",
+                            e.getValue(),
+                            String.format("[%d,%d,%d]", e.getKey().getX(), e.getKey().getY(), e.getKey().getZ())
+                    )));
+        });
 
         DiskItem.setWarnings(disk, warnings);
     }

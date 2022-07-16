@@ -19,6 +19,7 @@
   "container.sfm.manager": "Factory Manager",
   "program.sfm.warnings.unused_label": "Label \"%s\" is used in code but not assigned in the world.",
   "program.sfm.warnings.undefined_label": "Label \"%s\" is assigned in the world but not defined in code.",
+  "program.sfm.warnings.disconnected_label": "Label \"%s\" is assigned in the world at %s but not connected by cables.",
   "program.sfm.literal": "%s",
   "gui.sfm.manager.state": "State: %s",
   "gui.sfm.manager.state.no_program": "no program",

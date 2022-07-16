@@ -68,7 +68,7 @@ public class CableNetworkManager {
                 .filter(net -> net
                                        .getLevel()
                                        .isClientSide() == level.isClientSide())
-                .filter(net -> net.contains(pos))
+                .filter(net -> net.containsCableLocation(pos))
                 .findFirst();
     }
 

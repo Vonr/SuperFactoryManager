@@ -101,7 +101,7 @@ public class CableNetwork {
     private Set<BlockPos> discoverKnownCables(BlockPos start) {
         return SFMUtil
                 .getRecursiveStream((current, next, results) -> {
-                    if (!contains(current)) return;
+                    if (!containsCableLocation(current)) return;
                     results.accept(current);
                     for (Direction direction : Direction.values()) {
                         BlockPos offset = current.offset(direction.getNormal());
@@ -164,8 +164,12 @@ public class CableNetwork {
         return network;
     }
 
-    public boolean contains(BlockPos pos) {
+    public boolean containsCableLocation(BlockPos pos) {
         return CABLES.contains(pos);
+    }
+
+    public boolean containsInventoryLocation(BlockPos pos) {
+        return INVENTORIES.containsKey(pos);
     }
 
 
