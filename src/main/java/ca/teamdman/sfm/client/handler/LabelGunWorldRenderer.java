@@ -16,7 +16,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderLevelLastEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.jetbrains.annotations.Nullable;
@@ -63,7 +63,8 @@ public class LabelGunWorldRenderer {
     private static       VertexBuffer vbo;
 
     @SubscribeEvent
-    public static void renderLabelHighlights(RenderLevelLastEvent event) {
+    public static void renderLabelHighlights(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
         var player = Minecraft.getInstance().player;
         if (player == null) return;
 

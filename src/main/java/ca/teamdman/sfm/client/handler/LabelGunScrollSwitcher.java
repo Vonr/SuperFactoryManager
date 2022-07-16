@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class LabelGunScrollSwitcher {
     @SubscribeEvent
-    public static void onScroll(InputEvent.MouseScrollEvent event) {
+    public static void onScroll(InputEvent.MouseScrollingEvent event) {
         var player = Minecraft.getInstance().player;
         if (player == null) return;
         if (!player.isShiftKeyDown()) return;

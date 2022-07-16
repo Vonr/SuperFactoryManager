@@ -88,7 +88,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
             BlockHitResult hit
     ) {
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity tile && player instanceof ServerPlayer sp) {
-            NetworkHooks.openGui(sp, tile, buf -> {
+            NetworkHooks.openScreen(sp, tile, buf -> {
                 buf.writeBlockPos(tile.getBlockPos());
                 buf.writeUtf(tile.getProgram().orElse(""), Program.MAX_PROGRAM_LENGTH);
             });

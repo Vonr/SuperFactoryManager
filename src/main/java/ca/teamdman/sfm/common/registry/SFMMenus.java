@@ -12,7 +12,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class SFMMenus {
     private static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister
-            .create(ForgeRegistries.CONTAINERS, SFM.MOD_ID);
+            .create(ForgeRegistries.MENU_TYPES, SFM.MOD_ID);
 
     public static void register(IEventBus bus) {
         MENU_TYPES.register(bus);
