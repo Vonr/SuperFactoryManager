@@ -21,6 +21,8 @@ public record Program(
 
     public void addWarnings(ItemStack disk, ManagerBlockEntity manager) {
         var warnings = new ArrayList<TranslatableContents>();
+
+        // labels in code but not in world
         for (String label : referencedLabels) {
             var isUsed = SFMLabelNBTHelper
                     .getLabelPositions(disk, label)
@@ -31,6 +33,7 @@ public record Program(
             }
         }
 
+        // labels used in world but not defined in code
         SFMLabelNBTHelper.getPositionLabels(disk)
                 .values().stream().distinct()
                 .filter(x -> !referencedLabels.contains(x))
@@ -39,6 +42,7 @@ public record Program(
                         label
                 )));
 
+        // labels in world but not connected via cables
         CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
             SFMLabelNBTHelper.getPositionLabels(disk)
                     .entries().stream()
@@ -51,6 +55,25 @@ public record Program(
         });
 
         DiskItem.setWarnings(disk, warnings);
+    }
+
+    public void fixWarnings(ItemStack disk, ManagerBlockEntity manager) {
+        // remove labels not defined in code
+        SFMLabelNBTHelper.getPositionLabels(disk)
+                .values().stream().distinct()
+                .filter(label -> !referencedLabels.contains(label))
+                .forEach(label -> SFMLabelNBTHelper.removeLabel(disk, label));
+
+        // remove labels not connected via cables
+        CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
+            SFMLabelNBTHelper.getPositionLabels(disk)
+                    .entries().stream()
+                    .filter(e -> !network.containsInventoryLocation(e.getKey()))
+                    .forEach(e -> SFMLabelNBTHelper.removeLabel(disk, e.getValue(), e.getKey()));
+        });
+
+        // update warnings
+        addWarnings(disk, manager);
     }
 
     public void tick(ProgramContext context) {

@@ -1,10 +1,7 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.net.MenuPacket;
-import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
+import ca.teamdman.sfm.common.net.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -46,6 +43,12 @@ public class SFMPackets {
                 1,
                 ServerboundManagerResetPacket.class,
                 new ServerboundManagerResetPacket.ResetPacketHandler()
+        );
+        register(
+                MANAGER_CHANNEL,
+                2,
+                ServerboundManagerFixPacket.class,
+                new ServerboundManagerFixPacket.ResetPacketHandler()
         );
 
 

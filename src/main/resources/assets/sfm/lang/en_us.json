@@ -21,15 +21,17 @@
   "program.sfm.warnings.undefined_label": "Label \"%s\" is assigned in the world but not defined in code.",
   "program.sfm.warnings.disconnected_label": "Label \"%s\" is assigned in the world at %s but not connected by cables.",
   "program.sfm.literal": "%s",
-  "gui.sfm.manager.state": "State: %s",
   "gui.sfm.manager.state.no_program": "no program",
+  "gui.sfm.manager.state": "State: %s",
   "gui.sfm.manager.state.no_disk": "missing disk",
   "gui.sfm.manager.state.running": "running",
   "gui.sfm.manager.state.invalid_program": "invalid program",
   "gui.sfm.manager.button.import_clipboard": "Import clipboard",
   "gui.sfm.manager.button.export_clipboard": "Export clipboard",
   "gui.sfm.manager.button.reset": "Reset",
+  "gui.sfm.manager.button.warning.tooltip": "Click to copy code with warnings and errors.\nShift-click to attempt to fix warnings.",
   "gui.sfm.manager.status.loaded_clipboard": "Loaded from clipboard!",
   "gui.sfm.manager.status.saved_clipboard": "Saved to clipboard!",
-  "gui.sfm.manager.status.reset": "Reset program and labels!"
+  "gui.sfm.manager.status.reset": "Reset program and labels!",
+  "gui.sfm.manager.status.fix": "Cleaning up labels!"
 }

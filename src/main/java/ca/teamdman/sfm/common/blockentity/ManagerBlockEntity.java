@@ -30,10 +30,10 @@ import org.antlr.v4.runtime.*;
 import java.util.*;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
-    public static final int                    STATE_DATA_ACCESS_KEY = 0;
-    private final       NonNullList<ItemStack> ITEMS                 = NonNullList.withSize(1, ItemStack.EMPTY);
-    private             ProgramExecutor        compiledProgram       = null;
-    private final       ContainerData          DATA_ACCESS           = new ContainerData() {
+    public static final int                    STATE_DATA_ACCESS_KEY     = 0;
+    private final       NonNullList<ItemStack> ITEMS                     = NonNullList.withSize(1, ItemStack.EMPTY);
+    private             ProgramExecutor        compiledProgram           = null;
+    private final       ContainerData          DATA_ACCESS               = new ContainerData() {
         @Override
         public int get(int key) {
             return switch (key) {
@@ -55,6 +55,20 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     };
     private             int                    unprocessedRedstonePulses = 0; // used by redstone trigger
 
+    public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
+        super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
+        if (tile.compiledProgram != null) {
+            tile.compiledProgram.tick();
+        }
+    }
+
+    public ProgramExecutor getCompiledProgram() {
+        return compiledProgram;
+    }
+
     public void trackRedstonePulseUnprocessed() {
         unprocessedRedstonePulses++;
     }
@@ -65,16 +79,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public int getUnprocessedRedstonePulseCount() {
         return unprocessedRedstonePulses;
-    }
-
-    public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
-        super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
-    }
-
-    public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
-        if (tile.compiledProgram != null) {
-            tile.compiledProgram.tick();
-        }
     }
 
     public State getState() {
@@ -90,17 +94,17 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 .filter(prog -> !prog.isBlank());
     }
 
-    public Set<String> getReferencedLabels() {
-        if (compiledProgram == null) return Collections.emptySet();
-        return compiledProgram.getReferencedLabels();
-    }
-
     public void setProgram(String program) {
         getDisk().ifPresent(disk -> {
             DiskItem.setProgram(disk, program);
             compileProgram();
             setChanged();
         });
+    }
+
+    public Set<String> getReferencedLabels() {
+        if (compiledProgram == null) return Collections.emptySet();
+        return compiledProgram.getReferencedLabels();
     }
 
     public Optional<ItemStack> getDisk() {

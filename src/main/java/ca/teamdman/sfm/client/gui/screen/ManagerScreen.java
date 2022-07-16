@@ -4,6 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
@@ -63,13 +64,28 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 Component.translatable("gui.sfm.manager.button.reset"),
                 button -> sendReset()
         ));
-        this.addRenderableWidget(DiagButton = new ExtendedButton(
+        this.addRenderableWidget(DiagButton = new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
                 (this.height - this.imageHeight) / 2 + 48,
                 12,
                 14,
                 Component.translatable("!"),
-                button -> this.onSaveDiagClipboard()
+                button -> {
+                    if (Screen.hasShiftDown()) {
+                        sendAttemptFix();
+                    } else {
+                        this.onSaveDiagClipboard();
+                    }
+                },
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                Component.translatable("gui.sfm.manager.button.warning.tooltip"),
+                                Math.max(width / 2 - 43, 170)
+                        ),
+                        mx,
+                        my
+                )
         ));
     }
 
@@ -79,6 +95,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.BLOCK_ENTITY_POSITION
         ));
         status          = Component.translatable("gui.sfm.manager.status.reset");
+        statusCountdown = STATUS_DURATION;
+    }
+
+    private void sendAttemptFix() {
+        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerFixPacket(
+                menu.containerId,
+                menu.BLOCK_ENTITY_POSITION
+        ));
+        status          = Component.translatable("gui.sfm.manager.status.fix");
         statusCountdown = STATUS_DURATION;
     }
 
@@ -204,6 +229,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         super.render(poseStack, mx, my, partialTicks);
         this.renderTooltip(poseStack, mx, my);
         statusCountdown -= partialTicks;
+    }
+
+    @Override
+    protected void renderTooltip(PoseStack pose, int mx, int my) {
+        super.renderTooltip(pose, mx, my);
+        DiagButton.renderToolTip(pose, mx, my);
     }
 
     @Override

@@ -32,6 +32,10 @@ public class ProgramExecutor {
         MANAGER.clearRedstonePulseQueue();
     }
 
+    public Program getProgram() {
+        return PROGRAM;
+    }
+
     public Set<String> getReferencedLabels() {
         return PROGRAM.getReferencedLabels();
     }
