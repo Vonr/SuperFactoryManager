@@ -60,6 +60,13 @@ public class SFMLabelNBTHelper {
         tag.put("sfm:labels", dict);
     }
 
+    public static void removeLabel(ItemStack stack, String label) {
+        var tag  = stack.getOrCreateTag();
+        var dict = tag.getCompound("sfm:labels");
+        dict.remove(label);
+        tag.put("sfm:labels", dict);
+    }
+
     public static List<Component> getHoverText(ItemStack stack) {
         var rtn = new ArrayList<Component>();
         rtn.add(Component.translatable("item.sfm.disk.tooltip.label.header").withStyle(ChatFormatting.UNDERLINE));
@@ -110,7 +117,7 @@ public class SFMLabelNBTHelper {
     }
 
     public static void copyLabels(ItemStack source, ItemStack destination) {
-        destination.getOrCreateTag().put("sfm:labels", getLabelDict(source));
+        destination.getOrCreateTag().put("sfm:labels", getLabelDict(source).copy());
     }
 
     public static void clearLabels(ItemStack gun, BlockPos pos) {
