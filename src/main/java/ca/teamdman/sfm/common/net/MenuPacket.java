@@ -54,23 +54,24 @@ public abstract class MenuPacket {
 
             var ctx = ctxSupplier.get();
             if (ctx == null) return;
+            ctx.enqueueWork(() -> {
+                var sender = ctx.getSender();
+                if (sender == null) return;
 
-            var sender = ctx.getSender();
-            if (sender == null) return;
+                var menu = sender.containerMenu;
+                if (!MENU_CLASS.isInstance(menu)) return;
+                if (menu.containerId != msg.CONTAINER_ID) return;
 
-            var menu = sender.containerMenu;
-            if (!MENU_CLASS.isInstance(menu)) return;
-            if (menu.containerId != msg.CONTAINER_ID) return;
+                var level = sender.getLevel();
+                if (level == null) return;
+                if (!level.isLoaded(msg.POSITION)) return;
 
-            var level = sender.getLevel();
-            if (level == null) return;
-            if (!level.isLoaded(msg.POSITION)) return;
+                var blockEntity = level.getBlockEntity(msg.POSITION);
+                if (!BLOCK_ENTITY_CLASS.isInstance(blockEntity)) return;
 
-            var blockEntity = level.getBlockEntity(msg.POSITION);
-            if (!BLOCK_ENTITY_CLASS.isInstance(blockEntity)) return;
-
-            //noinspection unchecked
-            handle(msg, (MENU) menu, (BLOCK_ENTITY) blockEntity);
+                //noinspection unchecked
+                handle(msg, (MENU) menu, (BLOCK_ENTITY) blockEntity);
+            });
         }
     }
 }
