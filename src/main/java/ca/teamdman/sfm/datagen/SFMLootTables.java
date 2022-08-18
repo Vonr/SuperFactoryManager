@@ -43,11 +43,16 @@ public class SFMLootTables extends LootTableProvider {
         protected void addTables() {
             dropSelf(SFMBlocks.MANAGER_BLOCK.get());
             dropSelf(SFMBlocks.CABLE_BLOCK.get());
+            dropSelf(SFMBlocks.WATER_TANK_BLOCK.get());
         }
 
         @Override
         protected Iterable<Block> getKnownBlocks() {
-            return Arrays.asList(SFMBlocks.MANAGER_BLOCK.get(), SFMBlocks.CABLE_BLOCK.get());
+            return Arrays.asList(
+                    SFMBlocks.MANAGER_BLOCK.get(),
+                    SFMBlocks.CABLE_BLOCK.get(),
+                    SFMBlocks.WATER_TANK_BLOCK.get()
+            );
         }
     }
 }

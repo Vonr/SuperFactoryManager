@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -20,10 +21,16 @@ public final class SFMBlockEntities {
         BLOCK_ENTITY_TYPES.register(bus);
     }
 
-    public static final RegistryObject<BlockEntityType<ManagerBlockEntity>> MANAGER_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+    public static final RegistryObject<BlockEntityType<ManagerBlockEntity>>   MANAGER_BLOCK_ENTITY    = BLOCK_ENTITY_TYPES.register(
             "manager",
             () -> BlockEntityType.Builder
                     .of(ManagerBlockEntity::new, SFMBlocks.MANAGER_BLOCK.get())
+                    .build(null)
+    );
+    public static final RegistryObject<BlockEntityType<WaterTankBlockEntity>> WATER_TANK_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+            "water_tank",
+            () -> BlockEntityType.Builder
+                    .of(WaterTankBlockEntity::new, SFMBlocks.WATER_TANK_BLOCK.get())
                     .build(null)
     );
 
