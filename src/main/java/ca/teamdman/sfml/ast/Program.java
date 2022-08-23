@@ -54,6 +54,9 @@ public record Program(
                     )));
         });
 
+        //todo: iterate resource identifiers and find used ones that don't exist
+        // example: item:minecraft:iron instead of item:minecraft:iron_ingot
+
         DiskItem.setWarnings(disk, warnings);
     }
 

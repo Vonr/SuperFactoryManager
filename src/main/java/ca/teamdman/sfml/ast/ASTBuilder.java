@@ -2,8 +2,6 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
-import net.minecraft.resources.ResourceLocation;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,17 +26,27 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ItemIdentifier visitItemRaw(SFMLParser.ItemRawContext ctx) {
-        var params = ctx.IDENTIFIER().stream().map(TerminalNode::getText).toList();
-        if (params.size() == 1) return new ItemIdentifier(params.get(0));
-        return new ItemIdentifier(params.get(0), params.get(1));
+    public ResourceIdentifier visitItemResource(SFMLParser.ItemResourceContext ctx) {
+        return new ResourceIdentifier(ctx.IDENTIFIER(0).getText(), ctx.IDENTIFIER(1).getText());
     }
 
     @Override
-    public ItemIdentifier visitItemString(SFMLParser.ItemStringContext ctx) {
-        var item = ctx.STRING().getText();
-        var rl   = new ResourceLocation(item.substring(1, item.length() - 1));
-        return new ItemIdentifier(rl.getNamespace(), rl.getPath());
+    public ResourceIdentifier visitStringResource(SFMLParser.StringResourceContext ctx) {
+        return ResourceIdentifier.fromString(ctx.STRING().getText());
+    }
+
+    @Override
+    public ResourceIdentifier visitMinecraftResource(SFMLParser.MinecraftResourceContext ctx) {
+        return new ResourceIdentifier(ctx.IDENTIFIER().getText());
+    }
+
+    @Override
+    public ASTNode visitExplicitResource(SFMLParser.ExplicitResourceContext ctx) {
+        return new ResourceIdentifier(
+                ctx.IDENTIFIER(0).getText(),
+                ctx.IDENTIFIER(1).getText(),
+                ctx.IDENTIFIER(2).getText()
+        );
     }
 
     @Override
@@ -184,10 +192,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public BoolExpr visitBooleanHas(SFMLParser.BooleanHasContext ctx) {
-        var setOp          = visitSetOp(ctx.setOp());
-        var labelAccess    = visitLabelaccess(ctx.labelaccess());
-        var itemComparison = visitItemcomparison(ctx.itemcomparison());
-        return ItemComparer.toBooleanExpression(setOp, labelAccess, itemComparison);
+        var setOp       = visitSetOp(ctx.setOp());
+        var labelAccess = visitLabelaccess(ctx.labelaccess());
+        var comparison  = visitResourcecomparison(ctx.resourcecomparison());
+        return comparison.toBooleanExpression(setOp, labelAccess);
     }
 
     @Override
@@ -197,11 +205,11 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ItemComparer visitItemcomparison(SFMLParser.ItemcomparisonContext ctx) {
+    public ResourceComparer visitResourcecomparison(SFMLParser.ResourcecomparisonContext ctx) {
         var op   = visitComparisonOp(ctx.comparisonOp());
         var num  = visitNumber(ctx.number());
-        var item = (ItemIdentifier) visit(ctx.item());
-        return new ItemComparer(op, num, item);
+        var item = (ResourceIdentifier) visit(ctx.resourceid());
+        return new ResourceComparer(op, num, item);
     }
 
     @Override
@@ -248,37 +256,41 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public Matchers visitInputmatchers(SFMLParser.InputmatchersContext ctx) {
-        if (ctx == null) return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, 0))));
-        return ((Matchers) visit(ctx.itemmovement())).withDefaults(Integer.MAX_VALUE, 0);
+        if (ctx == null) return new Matchers(List.of(new ResourceLimit(new Limit(Integer.MAX_VALUE, 0))));
+        return ((Matchers) visit(ctx.movement())).withDefaults(Integer.MAX_VALUE, 0);
     }
+
 
     @Override
     public Matchers visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
-        if (ctx == null) return new Matchers(List.of(new ItemLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE))));
-        return ((Matchers) visit(ctx.itemmovement())).withDefaults(Integer.MAX_VALUE, Integer.MAX_VALUE);
+        if (ctx == null)
+            return new Matchers(List.of(new ResourceLimit(new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE))));
+        return ((Matchers) visit(ctx.movement())).withDefaults(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
     @Override
-    public Matchers visitItemLimitMovement(SFMLParser.ItemLimitMovementContext ctx) {
-        return new Matchers(ctx.itemlimit().stream()
-                                    .map(this::visitItemlimit)
+    public ASTNode visitResourceLimitMovement(SFMLParser.ResourceLimitMovementContext ctx) {
+
+        return new Matchers(ctx.resourcelimit().stream()
+                                    .map(this::visitResourcelimit)
                                     .collect(Collectors.toList()));
     }
 
     @Override
     public Matchers visitLimitMovement(SFMLParser.LimitMovementContext ctx) {
-        return new Matchers(List.of(new ItemLimit((Limit) this.visit(ctx.limit()))));
+        return new Matchers(List.of(new ResourceLimit((Limit) this.visit(ctx.limit()))));
     }
 
     @Override
-    public ItemLimit visitItemlimit(SFMLParser.ItemlimitContext ctx) {
-        var item = (ItemIdentifier) visit(ctx.item());
+    public ResourceLimit visitResourcelimit(SFMLParser.ResourcelimitContext ctx) {
+
+        var res = (ResourceIdentifier) visit(ctx.resourceid());
 
         if (ctx.limit() == null)
-            return new ItemLimit(item);
+            return new ResourceLimit(res);
 
         var limit = (Limit) visit(ctx.limit());
-        return new ItemLimit(limit, item);
+        return new ResourceLimit(limit, res);
     }
 
     @Override

@@ -1,13 +1,13 @@
 package ca.teamdman.sfm.common.program;
 
-import ca.teamdman.sfml.ast.ItemLimit;
+import ca.teamdman.sfml.ast.ResourceLimit;
 import net.minecraft.world.item.ItemStack;
 
 public class OutputItemMatcher extends ItemMatcher {
     private int seen = 0;
 
-    public OutputItemMatcher(ItemLimit itemLimit) {
-        super(itemLimit);
+    public OutputItemMatcher(ResourceLimit resourceLimit) {
+        super(resourceLimit);
     }
 
     public void visit(LimitedOutputSlot slot) {

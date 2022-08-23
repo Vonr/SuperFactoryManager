@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.program;
 
-import ca.teamdman.sfml.ast.ItemLimit;
+import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
@@ -9,7 +9,7 @@ public class InputItemMatcher extends ItemMatcher {
     private final Int2IntMap PROMISED      = new Int2IntOpenHashMap();
     private       int        promisedCount = 0;
 
-    public InputItemMatcher(ItemLimit limit) {
+    public InputItemMatcher(ResourceLimit limit) {
         super(limit);
     }
 
