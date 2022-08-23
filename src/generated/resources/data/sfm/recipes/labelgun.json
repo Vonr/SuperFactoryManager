@@ -1,24 +1,24 @@
 {
   "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": {
+      "tag": "forge:dyes/black"
+    },
+    "C": {
+      "item": "minecraft:oak_sign"
+    },
+    "L": {
+      "tag": "forge:dyes/blue"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
   "pattern": [
     " LC",
     " SB",
     "S  "
   ],
-  "key": {
-    "S": {
-      "item": "minecraft:stick"
-    },
-    "B": {
-      "tag": "forge:dyes/black"
-    },
-    "L": {
-      "tag": "forge:dyes/blue"
-    },
-    "C": {
-      "item": "minecraft:oak_sign"
-    }
-  },
   "result": {
     "item": "sfm:labelgun"
   }
