@@ -144,6 +144,8 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
         var     context    = parser.program();
         Program programAST = null;
+        // clear warnings in case of problems rebuilding program
+        DiskItem.setWarnings(disk, Collections.emptyList());
         try {
             programAST = new ASTBuilder().visitProgram(context);
             DiskItem.setProgramName(disk, programAST.name());
