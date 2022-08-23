@@ -7,6 +7,7 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,8 @@ import java.util.Set;
 public record Program(
         String name,
         List<Trigger> triggers,
-        Set<String> referencedLabels
+        Set<String> referencedLabels,
+        Set<ResourceIdentifier> referencedResources
 ) implements ASTNode {
     public static final int MAX_PROGRAM_LENGTH = 8096;
 
@@ -54,9 +56,15 @@ public record Program(
                     )));
         });
 
-        //todo: iterate resource identifiers and find used ones that don't exist
-        // example: item:minecraft:iron instead of item:minecraft:iron_ingot
-
+        for (ResourceIdentifier resource : referencedResources) {
+            if (resource.type().equals("item")) {
+                if (!ForgeRegistries.ITEMS.containsKey(resource.cast())) {
+                    warnings.add(new TranslatableContents("program.sfm.warnings.unknown_resource_id", resource));
+                }
+            } else {
+                warnings.add(new TranslatableContents("program.sfm.warnings.unknown_resource_type", resource.type()));
+            }
+        }
         DiskItem.setWarnings(disk, warnings);
     }
 

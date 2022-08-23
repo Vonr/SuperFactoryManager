@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -14,6 +15,10 @@ public record ResourceIdentifier(
 
     public ResourceIdentifier(String value) {
         this("item", "minecraft", value);
+    }
+
+    public ResourceLocation cast() {
+        return new ResourceLocation(domain, value);
     }
 
     public ResourceIdentifier(String namespace, String value) {
