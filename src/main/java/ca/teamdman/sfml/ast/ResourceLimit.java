@@ -2,19 +2,15 @@ package ca.teamdman.sfml.ast;
 
 import java.util.function.Predicate;
 
-public record ResourceLimit<STACK>(
+public record ResourceLimit<STACK, CAP>(
         Limit limit,
-        ResourceIdentifier resourceId
+        ResourceIdentifier<STACK, CAP> resourceId
 ) implements ASTNode, Predicate<STACK> {
-    public ResourceLimit(Limit limit) {
-        this(limit, ResourceIdentifier.MATCH_ALL);
-    }
-
-    public ResourceLimit(ResourceIdentifier resourceId) {
+    public ResourceLimit(ResourceIdentifier<STACK, CAP> resourceId) {
         this(new Limit(), resourceId);
     }
 
-    public ResourceLimit<STACK> withDefaults(int quantity, int retention) {
+    public ResourceLimit<STACK, CAP> withDefaults(int quantity, int retention) {
         return new ResourceLimit<>(limit.withDefaults(quantity, retention), resourceId);
     }
 

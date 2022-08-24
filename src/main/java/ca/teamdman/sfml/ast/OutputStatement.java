@@ -8,15 +8,15 @@ import java.util.stream.Stream;
 
 public record OutputStatement<STACK, CAP>(
         LabelAccess labelAccess,
-        Matchers<STACK> matchers,
+        Matchers<STACK, CAP> matchers,
         boolean each
 ) implements Statement {
     @Override
     public void tick(ProgramContext context) {
-        var inputSlots  = context.getInputs().flatMap(x -> x.getSlots(context));
-        var outputSlots = getSlots(context).toList();
+        Stream<LimitedInputSlot> inputSlots  = context.getInputs().flatMap(x -> x.getSlots(context));
+        var                      outputSlots = getSlots(context).toList();
         grabbing:
-        for (var in : (Iterable<LimitedInputSlot<STACK, CAP>>) inputSlots::iterator) {
+        for (var in : (Iterable<LimitedInputSlot>) inputSlots::iterator) {
             for (var out : outputSlots) {
                 in.moveTo(out);
                 if (in.isDone()) continue grabbing;
@@ -39,8 +39,8 @@ public record OutputStatement<STACK, CAP>(
                 .map(ResourceLimit::resourceId)
                 .map(ResourceIdentifier::getType)
                 .collect(Collectors.toSet());
-        var                                rtn      = Stream.<LimitedOutputSlot<STACK, CAP>>builder();
-        List<OutputResourceMatcher<STACK>> matchers = null;
+        var                                     rtn      = Stream.<LimitedOutputSlot<STACK, CAP>>builder();
+        List<OutputResourceMatcher<STACK, CAP>> matchers = null;
         for (var cap : (Iterable<CAP>) handlers::iterator) {
             if (matchers == null || each) matchers = this.matchers.createOutputMatchers();
             for (var type : types) {

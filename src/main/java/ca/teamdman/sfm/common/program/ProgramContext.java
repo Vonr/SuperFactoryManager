@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class ProgramContext {
-    private final ManagerBlockEntity   MANAGER;
-    private final CableNetwork         NETWORK;
-    private final List<InputStatement> INPUTS = new ArrayList<>();
-    private final Level                LEVEL;
+    private final ManagerBlockEntity         MANAGER;
+    private final CableNetwork               NETWORK;
+    private final List<InputStatement<?, ?>> INPUTS = new ArrayList<>();
+    private final Level                      LEVEL;
 
     private final int REDSTONE_PULSES;
 
@@ -47,11 +47,11 @@ public class ProgramContext {
         return MANAGER;
     }
 
-    public void addInput(InputStatement input) {
+    public void addInput(InputStatement<?, ?> input) {
         INPUTS.add(input);
     }
 
-    public Stream<InputStatement> getInputs() {
+    public Stream<InputStatement<?, ?>> getInputs() {
         return INPUTS.stream();
     }
 

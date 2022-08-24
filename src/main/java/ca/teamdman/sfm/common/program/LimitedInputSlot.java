@@ -3,21 +3,21 @@ package ca.teamdman.sfm.common.program;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfml.ast.InputStatement;
 
-public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputResourceMatcher<STACK>> {
+public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputResourceMatcher<STACK, CAP>> {
 
-    private final InputStatement STATEMENT;
+    private final InputStatement<STACK, CAP> STATEMENT;
 
     public LimitedInputSlot(
-            InputStatement statement,
+            InputStatement<STACK, CAP> statement,
             CAP handler,
             int slot,
-            InputResourceMatcher<STACK> matcher
+            InputResourceMatcher<STACK, CAP> matcher
     ) {
         super(handler, matcher.LIMIT.resourceId().getType(), slot, matcher);
         this.STATEMENT = statement;
     }
 
-    public InputStatement getStatement() {
+    public InputStatement<STACK, CAP> getStatement() {
         return STATEMENT;
     }
 

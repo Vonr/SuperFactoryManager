@@ -5,13 +5,13 @@ import ca.teamdman.sfm.common.program.ResourceType;
 import java.util.ArrayList;
 import java.util.List;
 
-public record ResourceComparer(
+public record ResourceComparer<STACK, CAP>(
         ComparisonOperator op,
         Quantity num,
-        ResourceIdentifier res
+        ResourceIdentifier<STACK, CAP> res
 ) implements ASTNode {
     public BoolExpr toBooleanExpression(SetOperator setOp, LabelAccess labelAccess) {
-        ResourceType<Object, Object> type = res.getType();
+        ResourceType<STACK, CAP> type = res.getType();
         return new BoolExpr(context -> {
             // get the inventories to check
 
@@ -22,9 +22,9 @@ public record ResourceComparer(
             // track how many inventories satisfied the condition
             List<Boolean> satisfiedSet = new ArrayList<>();
 
-            for (var cap : (Iterable<Object>) handlers::iterator) {
+            for (var cap : (Iterable<CAP>) handlers::iterator) {
                 var invCount = 0;
-                for (var stack : (Iterable<Object>) type.collect(cap, labelAccess)::iterator) {
+                for (var stack : (Iterable<STACK>) type.collect(cap, labelAccess)::iterator) {
                     if (this.res.test(stack)) {
                         invCount += type.getCount(stack);
                         overallCount += type.getCount(stack);

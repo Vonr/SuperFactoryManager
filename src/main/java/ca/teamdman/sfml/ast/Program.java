@@ -19,7 +19,7 @@ public record Program(
         String name,
         List<Trigger> triggers,
         Set<String> referencedLabels,
-        Set<ResourceIdentifier> referencedResources
+        Set<ResourceIdentifier<?, ?>> referencedResources
 ) implements ASTNode {
     public static final int MAX_PROGRAM_LENGTH = 8096;
 
@@ -58,7 +58,7 @@ public record Program(
                     )));
         });
 
-        for (ResourceIdentifier resource : referencedResources) {
+        for (var resource : referencedResources) {
             // skip wildcard since we can't validate
             if (resource.type().equals("*")) continue;
             if (resource.domain().equals("*")) continue;

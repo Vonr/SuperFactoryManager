@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 public record InputStatement<STACK, CAP>(
         LabelAccess labelAccess,
-        Matchers<STACK> matchers,
+        Matchers<STACK, CAP> matchers,
         boolean each
 ) implements Statement {
 
@@ -35,8 +35,8 @@ public record InputStatement<STACK, CAP>(
                 .map(ResourceLimit::resourceId)
                 .map(ResourceIdentifier::getType)
                 .collect(Collectors.toSet());
-        var                               rtn      = Stream.<LimitedInputSlot<STACK, CAP>>builder();
-        List<InputResourceMatcher<STACK>> matchers = null;
+        var                                    rtn      = Stream.<LimitedInputSlot<STACK, CAP>>builder();
+        List<InputResourceMatcher<STACK, CAP>> matchers = null;
         for (var cap : (Iterable<CAP>) handlers::iterator) {
             if (matchers == null || each) matchers = this.matchers.createInputMatchers();
             for (var type : types) {

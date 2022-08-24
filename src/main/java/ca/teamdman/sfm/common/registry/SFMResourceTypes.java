@@ -5,7 +5,11 @@ import ca.teamdman.sfm.common.program.FluidResourceType;
 import ca.teamdman.sfm.common.program.ItemResourceType;
 import ca.teamdman.sfm.common.program.ResourceType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryBuilder;
@@ -25,17 +29,17 @@ public class SFMResourceTypes {
 //        e.create(builder);
 //    }
 
-    private static final DeferredRegister<ResourceType>         TYPES          = DeferredRegister.create(
+    private static final DeferredRegister<ResourceType<?, ?>>                    TYPES          = DeferredRegister.create(
             REGISTRY_ID,
             SFM.MOD_ID
     );
-    public static final  Supplier<IForgeRegistry<ResourceType>> DEFERRED_TYPES = TYPES.makeRegistry(() -> new RegistryBuilder<ResourceType>().setName(
+    public static final  Supplier<IForgeRegistry<ResourceType<?, ?>>>            DEFERRED_TYPES = TYPES.makeRegistry(() -> new RegistryBuilder<ResourceType<?, ?>>().setName(
             REGISTRY_ID));
-    public static final  RegistryObject<ResourceType>           ITEM           = TYPES.register(
+    public static final  RegistryObject<ResourceType<ItemStack, IItemHandler>>   ITEM           = TYPES.register(
             "item",
             ItemResourceType::new
     );
-    public static final  RegistryObject<ResourceType>           FLUID          = TYPES.register(
+    public static final  RegistryObject<ResourceType<FluidStack, IFluidHandler>> FLUID          = TYPES.register(
             "fluid",
             FluidResourceType::new
     );

@@ -23,7 +23,7 @@ public class SFMUtil {
 	 * @param clazz The class used for naming the marker
 	 * @return Logging marker
 	 */
-	public static Marker getMarker(Class clazz) {
+	public static Marker getMarker(Class<?> clazz) {
 		String[] x = clazz.getName().split("\\.");
 		return MarkerManager.getMarker(x[x.length - 1]);
 	}

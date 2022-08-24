@@ -4,15 +4,15 @@ import ca.teamdman.sfml.ast.ResourceLimit;
 
 import java.util.function.Predicate;
 
-public abstract class ResourceMatcher<STACK> implements Predicate<STACK> {
-    protected final ResourceLimit<STACK> LIMIT;
-    protected       int                  transferred = 0;
+public abstract class ResourceMatcher<STACK, CAP> implements Predicate<STACK> {
+    protected final ResourceLimit<STACK, CAP> LIMIT;
+    protected       int                       transferred = 0;
 
-    public ResourceMatcher(ResourceLimit<STACK> resourceLimit) {
+    public ResourceMatcher(ResourceLimit<STACK, CAP> resourceLimit) {
         this.LIMIT = resourceLimit;
     }
 
-    public ResourceLimit<STACK> getLimit() {
+    public ResourceLimit<STACK, CAP> getLimit() {
         return LIMIT;
     }
 

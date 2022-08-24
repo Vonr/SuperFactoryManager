@@ -4,12 +4,12 @@ import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
-public class InputResourceMatcher<STACK> extends ResourceMatcher<STACK> {
+public class InputResourceMatcher<STACK, CAP> extends ResourceMatcher<STACK, CAP> {
 
     private final Int2IntMap PROMISED      = new Int2IntOpenHashMap();
     private       int        promisedCount = 0;
 
-    public InputResourceMatcher(ResourceLimit<STACK> limit) {
+    public InputResourceMatcher(ResourceLimit<STACK, CAP> limit) {
         super(limit);
     }
 
