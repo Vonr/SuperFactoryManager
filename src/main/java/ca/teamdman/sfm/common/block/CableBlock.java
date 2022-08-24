@@ -5,7 +5,6 @@ import ca.teamdman.sfm.common.cablenetwork.ICable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,12 +20,19 @@ public class CableBlock extends Block implements ICable {
     }
 
     @Override
-    public void onNeighborChange(BlockState state, LevelReader world, BlockPos pos, BlockPos neighbor) {
-        if (world instanceof ServerLevel) {
-            CableNetworkManager
-                    .getOrRegisterNetwork(((Level) world), pos)
-                    .ifPresent(network -> network.rebuildAdjacentInventories(pos));
-        }
+    public void neighborChanged(
+            BlockState state,
+            Level level,
+            BlockPos pos,
+            Block block,
+            BlockPos fromPos,
+            boolean movedByPiston
+    ) {
+        if (!(level instanceof ServerLevel)) return;
+        // reassess neighbours of the CABLE's position
+        CableNetworkManager
+                .getOrRegisterNetwork(level, pos)
+                .ifPresent(network -> network.rebuildAdjacentInventories(pos));
     }
 
     @Override

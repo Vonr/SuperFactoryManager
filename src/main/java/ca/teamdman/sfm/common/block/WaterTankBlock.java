@@ -28,7 +28,7 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     public static final BooleanProperty IN_WATER = BooleanProperty.create("in_water");
 
     public WaterTankBlock() {
-        super(BlockBehaviour.Properties.of(Material.PISTON).destroyTime(2).sound(SoundType.ANVIL));
+        super(BlockBehaviour.Properties.of(Material.PISTON).destroyTime(2).sound(SoundType.WOOD));
         registerDefaultState(getStateDefinition().any().setValue(IN_WATER, false));
     }
 

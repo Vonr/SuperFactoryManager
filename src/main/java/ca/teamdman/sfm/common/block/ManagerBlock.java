@@ -14,7 +14,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -61,13 +60,22 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
             boolean movedByPiston
     ) {
         if (!(level.getBlockEntity(pos) instanceof ManagerBlockEntity mgr)) return;
-        var isPowered = level.hasNeighborSignal(pos) || level.hasNeighborSignal(pos.above());
-        var debounce  = state.getValue(TRIGGERED);
-        if (isPowered && !debounce) {
-            mgr.trackRedstonePulseUnprocessed();
-            level.setBlock(pos, state.setValue(TRIGGERED, true), 4);
-        } else if (!isPowered && debounce) {
-            level.setBlock(pos, state.setValue(TRIGGERED, false), 4);
+        if (!(level instanceof ServerLevel)) return;
+        { // update cable network
+            // reassess neighbours of the CABLE's position
+            CableNetworkManager
+                    .getOrRegisterNetwork(level, pos)
+                    .ifPresent(network -> network.rebuildAdjacentInventories(pos));
+        }
+        { // check redstone for triggers
+            var isPowered = level.hasNeighborSignal(pos) || level.hasNeighborSignal(pos.above());
+            var debounce  = state.getValue(TRIGGERED);
+            if (isPowered && !debounce) {
+                mgr.trackRedstonePulseUnprocessed();
+                level.setBlock(pos, state.setValue(TRIGGERED, true), 4);
+            } else if (!isPowered && debounce) {
+                level.setBlock(pos, state.setValue(TRIGGERED, false), 4);
+            }
         }
     }
 
@@ -106,15 +114,6 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     ) {
         if (level.isClientSide()) return null;
         return createTickerHelper(type, SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), ManagerBlockEntity::serverTick);
-    }
-
-    @Override
-    public void onNeighborChange(BlockState state, LevelReader world, BlockPos pos, BlockPos neighbor) {
-        if (world instanceof ServerLevel) {
-            CableNetworkManager
-                    .getOrRegisterNetwork(((Level) world), pos)
-                    .ifPresent(network -> network.rebuildAdjacentInventories(pos));
-        }
     }
 
     @Override
