@@ -1,18 +1,17 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfml.ast.OutputStatement;
-import net.minecraftforge.items.IItemHandler;
 
-public class LimitedOutputSlot extends LimitedSlot<OutputItemMatcher> {
-    private final OutputStatement STATEMENT;
+public class LimitedOutputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, OutputResourceMatcher<STACK>> {
+    private final OutputStatement<STACK, CAP> STATEMENT;
 
     public LimitedOutputSlot(
-            OutputStatement statement,
-            IItemHandler handler,
+            OutputStatement<STACK, CAP> statement,
+            CAP handler,
             int slot,
-            OutputItemMatcher matcher
+            OutputResourceMatcher<STACK> matcher
     ) {
-        super(handler, slot, matcher);
+        super(handler, matcher.LIMIT.resourceId().getType(), slot, matcher);
         this.STATEMENT = statement;
         MATCHER.visit(this);
     }

@@ -1,17 +1,14 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.program.LimitedInputSlot;
-import ca.teamdman.sfm.common.program.LimitedOutputSlot;
-import ca.teamdman.sfm.common.program.OutputItemMatcher;
-import ca.teamdman.sfm.common.program.ProgramContext;
-import net.minecraftforge.items.IItemHandler;
+import ca.teamdman.sfm.common.program.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public record OutputStatement(
+public record OutputStatement<STACK, CAP>(
         LabelAccess labelAccess,
-        Matchers matchers,
+        Matchers<STACK> matchers,
         boolean each
 ) implements Statement {
     @Override
@@ -19,7 +16,7 @@ public record OutputStatement(
         var inputSlots  = context.getInputs().flatMap(x -> x.getSlots(context));
         var outputSlots = getSlots(context).toList();
         grabbing:
-        for (var in : (Iterable<LimitedInputSlot>) inputSlots::iterator) {
+        for (var in : (Iterable<LimitedInputSlot<STACK, CAP>>) inputSlots::iterator) {
             for (var out : outputSlots) {
                 in.moveTo(out);
                 if (in.isDone()) continue grabbing;
@@ -27,16 +24,32 @@ public record OutputStatement(
         }
     }
 
-    public Stream<LimitedOutputSlot> getSlots(ProgramContext context) {
-        var                     handlers     = context.getItemHandlersByLabels(labelAccess);
-        var                     rtn          = Stream.<LimitedOutputSlot>builder();
-        List<OutputItemMatcher> itemMatchers = null;
-        for (var inv : (Iterable<IItemHandler>) handlers::iterator) {
-            if (itemMatchers == null || each) itemMatchers = matchers.createOutputMatchers();
-            for (int slot = 0; slot < inv.getSlots(); slot++) {
-                if (labelAccess.slots().contains(slot)) {
-                    for (var matcher : itemMatchers) {
-                        rtn.add(new LimitedOutputSlot(this, inv, slot, matcher));
+    public Stream<LimitedOutputSlot<STACK, CAP>> getSlots(ProgramContext context) {
+        var handlers = matchers
+                .createInputMatchers()
+                .stream()
+                .map(ResourceMatcher::getLimit)
+                .map(ResourceLimit::resourceId)
+                .map(ResourceIdentifier::getType)
+                .flatMap(t -> t.getCaps(context, labelAccess));
+        var types = matchers
+                .createInputMatchers()
+                .stream()
+                .map(ResourceMatcher::getLimit)
+                .map(ResourceLimit::resourceId)
+                .map(ResourceIdentifier::getType)
+                .collect(Collectors.toSet());
+        var                                rtn      = Stream.<LimitedOutputSlot<STACK, CAP>>builder();
+        List<OutputResourceMatcher<STACK>> matchers = null;
+        for (var cap : (Iterable<CAP>) handlers::iterator) {
+            if (matchers == null || each) matchers = this.matchers.createOutputMatchers();
+            for (var type : types) {
+                if (!type.matchesCapType(cap)) continue;
+                for (int slot = 0; slot < type.getSlots(cap); slot++) {
+                    if (labelAccess.slots().contains(slot)) {
+                        for (var matcher : matchers) {
+                            rtn.add(new LimitedOutputSlot<>(this, cap, slot, matcher));
+                        }
                     }
                 }
             }

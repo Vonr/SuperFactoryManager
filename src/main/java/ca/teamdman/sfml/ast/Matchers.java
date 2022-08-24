@@ -1,24 +1,24 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.program.InputItemMatcher;
-import ca.teamdman.sfm.common.program.OutputItemMatcher;
+import ca.teamdman.sfm.common.program.InputResourceMatcher;
+import ca.teamdman.sfm.common.program.OutputResourceMatcher;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record Matchers(List<ResourceLimit> resourceLimits) implements ASTNode {
-    public List<InputItemMatcher> createInputMatchers() {
-        return resourceLimits.stream().map(InputItemMatcher::new).collect(Collectors.toList());
+public record Matchers<STACK>(List<ResourceLimit<STACK>> resourceLimits) implements ASTNode {
+    public List<InputResourceMatcher<STACK>> createInputMatchers() {
+        return resourceLimits.stream().map(InputResourceMatcher::new).collect(Collectors.toList());
     }
 
-    public List<OutputItemMatcher> createOutputMatchers() {
-        return resourceLimits.stream().map(OutputItemMatcher::new).collect(Collectors.toList());
+    public List<OutputResourceMatcher<STACK>> createOutputMatchers() {
+        return resourceLimits.stream().map(OutputResourceMatcher<STACK>::new).collect(Collectors.toList());
     }
 
-    public Matchers withDefaults(int quantity, int retention) {
-        return new Matchers(resourceLimits
-                                    .stream()
-                                    .map(il -> il.withDefaults(quantity, retention))
-                                    .collect(Collectors.toList()));
+    public Matchers<STACK> withDefaults(int quantity, int retention) {
+        return new Matchers<>(resourceLimits
+                                      .stream()
+                                      .map(il -> il.withDefaults(quantity, retention))
+                                      .collect(Collectors.toList()));
     }
 }

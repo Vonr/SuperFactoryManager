@@ -2,19 +2,18 @@ package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfml.ast.InputStatement;
-import net.minecraftforge.items.IItemHandler;
 
-public class LimitedInputSlot extends LimitedSlot<InputItemMatcher> {
+public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputResourceMatcher<STACK>> {
 
     private final InputStatement STATEMENT;
 
     public LimitedInputSlot(
             InputStatement statement,
-            IItemHandler handler,
+            CAP handler,
             int slot,
-            InputItemMatcher matcher
+            InputResourceMatcher<STACK> matcher
     ) {
-        super(handler, slot, matcher);
+        super(handler, matcher.LIMIT.resourceId().getType(), slot, matcher);
         this.STATEMENT = statement;
     }
 
@@ -22,9 +21,9 @@ public class LimitedInputSlot extends LimitedSlot<InputItemMatcher> {
         return STATEMENT;
     }
 
-    public void moveTo(LimitedOutputSlot other) {
+    public void moveTo(LimitedOutputSlot<STACK, CAP> other) {
         var potential = this.extract(Integer.MAX_VALUE, true);
-        if (potential.isEmpty()) {
+        if (this.TYPE.isEmpty(potential)) {
             setDone();
             return;
         }
@@ -33,7 +32,7 @@ public class LimitedInputSlot extends LimitedSlot<InputItemMatcher> {
         var remainder = other.insert(potential, true);
 
         // how many can we move unrestrained
-        var toMove = potential.getCount() - remainder.getCount();
+        var toMove = this.TYPE.getCount(potential) - this.TYPE.getCount(remainder);
         if (toMove == 0) return;
 
         // how many have we promised to leave in this slot
@@ -61,15 +60,15 @@ public class LimitedInputSlot extends LimitedSlot<InputItemMatcher> {
         if (toMove <= 0) return;
 
         // extract item for real
-        var extracted = this.HANDLER.extractItem(SLOT, toMove, false);
+        var extracted = this.TYPE.extract(this.HANDLER, SLOT, toMove, false);
         // insert item for real
-        remainder = other.HANDLER.insertItem(other.SLOT, extracted, false);
+        remainder = other.TYPE.insert(other.HANDLER, other.SLOT, extracted, false);
         // track transfer amounts
         this.MATCHER.trackTransfer(toMove);
         other.MATCHER.trackTransfer(toMove);
 
         // if remainder exists, someone lied.
-        if (!remainder.isEmpty()) {
+        if (!other.TYPE.isEmpty(remainder)) {
             SFM.LOGGER.error(
                     "Failed to move all promised items, took {} but had {} left over after insertion.",
                     extracted,

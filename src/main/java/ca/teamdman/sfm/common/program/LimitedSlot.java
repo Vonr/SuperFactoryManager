@@ -1,15 +1,14 @@
 package ca.teamdman.sfm.common.program;
 
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.IItemHandler;
+public abstract class LimitedSlot<STACK, CAP, M extends ResourceMatcher<STACK>> {
+    public final ResourceType<STACK, CAP> TYPE;
+    public final CAP                      HANDLER;
+    public final int                      SLOT;
+    public final M                        MATCHER;
+    private      boolean                  done = false;
 
-public abstract class LimitedSlot<T extends ItemMatcher> {
-    protected final IItemHandler HANDLER;
-    protected final int          SLOT;
-    protected final T            MATCHER;
-    private         boolean      done = false;
-
-    public LimitedSlot(IItemHandler handler, int slot, T matcher) {
+    public LimitedSlot(CAP handler, ResourceType<STACK, CAP> type, int slot, M matcher) {
+        this.TYPE    = type;
         this.HANDLER = handler;
         this.SLOT    = slot;
         this.MATCHER = matcher;
@@ -23,16 +22,16 @@ public abstract class LimitedSlot<T extends ItemMatcher> {
         this.done = true;
     }
 
-    public ItemStack getStackInSlot() {
-        return HANDLER.getStackInSlot(SLOT);
+    public STACK getStackInSlot() {
+        return TYPE.getStackInSlot(HANDLER, SLOT);
     }
 
-    public ItemStack extract(int amount, boolean simulate) {
-        return HANDLER.extractItem(SLOT, amount, simulate);
+    public STACK extract(int amount, boolean simulate) {
+        return TYPE.extract(HANDLER, SLOT, amount, simulate);
     }
 
-    public ItemStack insert(ItemStack stack, boolean simulate) {
-        return HANDLER.insertItem(SLOT, stack, simulate);
+    public STACK insert(STACK stack, boolean simulate) {
+        return TYPE.insert(HANDLER, SLOT, stack, simulate);
     }
 
 }

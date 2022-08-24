@@ -1,26 +1,24 @@
 package ca.teamdman.sfml.ast;
 
-import net.minecraft.world.item.ItemStack;
-
 import java.util.function.Predicate;
 
-public record ResourceLimit(
+public record ResourceLimit<STACK>(
         Limit limit,
-        ResourceIdentifier item
-) implements ASTNode, Predicate<ItemStack> {
+        ResourceIdentifier resourceId
+) implements ASTNode, Predicate<STACK> {
     public ResourceLimit(Limit limit) {
         this(limit, ResourceIdentifier.MATCH_ALL);
     }
 
-    public ResourceLimit(ResourceIdentifier item) {
-        this(new Limit(), item);
+    public ResourceLimit(ResourceIdentifier resourceId) {
+        this(new Limit(), resourceId);
     }
 
-    public ResourceLimit withDefaults(int quantity, int retention) {
-        return new ResourceLimit(limit.withDefaults(quantity, retention), item);
+    public ResourceLimit<STACK> withDefaults(int quantity, int retention) {
+        return new ResourceLimit<>(limit.withDefaults(quantity, retention), resourceId);
     }
 
-    public boolean test(ItemStack stack) {
-        return item.test(stack);
+    public boolean test(STACK stack) {
+        return resourceId.test(stack);
     }
 }

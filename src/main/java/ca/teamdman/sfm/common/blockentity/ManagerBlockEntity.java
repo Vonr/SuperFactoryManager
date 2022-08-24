@@ -25,6 +25,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
 
 import java.util.*;
@@ -153,8 +154,15 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         } catch (ResourceLocationException | IllegalArgumentException e) {
             errors.add(new TranslatableContents("program.sfm.literal", e.getMessage()));
         } catch (Throwable t) {
+            errors.add(new TranslatableContents("program.sfm.compile_failed"));
             t.printStackTrace();
+//            if (ModLoader)
+            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage()));
+//                errors.add(new )
         }
+
+        // todo: move illegal argument handling from exception flow to a check right here
+
         if (errors.isEmpty()) {
             compiledProgram = new ProgramExecutor(programAST, this);
         }

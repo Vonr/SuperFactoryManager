@@ -1,13 +1,15 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,12 +59,24 @@ public record Program(
         });
 
         for (ResourceIdentifier resource : referencedResources) {
-            if (resource.type().equals("item")) {
-                if (!ForgeRegistries.ITEMS.containsKey(resource.cast())) {
+            // skip wildcard since we can't validate
+            if (resource.type().equals("*")) continue;
+            if (resource.domain().equals("*")) continue;
+            if (resource.value().equals("*")) continue;
+
+            var type = SFMResourceTypes.DEFERRED_TYPES
+                    .get()
+                    .getValue(new ResourceLocation(SFM.MOD_ID, resource.type()));
+            if (type == null) {
+                warnings.add(new TranslatableContents(
+                        "program.sfm.warnings.unknown_resource_type",
+                        resource.type(),
+                        resource.toString()
+                ));
+            } else {
+                if (!type.containsKey(resource.getLocation())) {
                     warnings.add(new TranslatableContents("program.sfm.warnings.unknown_resource_id", resource));
                 }
-            } else {
-                warnings.add(new TranslatableContents("program.sfm.warnings.unknown_resource_type", resource.type()));
             }
         }
         DiskItem.setWarnings(disk, warnings);

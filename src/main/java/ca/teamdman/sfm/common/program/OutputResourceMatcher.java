@@ -1,19 +1,18 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfml.ast.ResourceLimit;
-import net.minecraft.world.item.ItemStack;
 
-public class OutputItemMatcher extends ItemMatcher {
+public class OutputResourceMatcher<STACK> extends ResourceMatcher<STACK> {
     private int seen = 0;
 
-    public OutputItemMatcher(ResourceLimit resourceLimit) {
+    public OutputResourceMatcher(ResourceLimit resourceLimit) {
         super(resourceLimit);
     }
 
-    public void visit(LimitedOutputSlot slot) {
-        ItemStack stack = slot.getStackInSlot();
+    public void visit(LimitedOutputSlot<STACK, ?> slot) {
+        var stack = slot.getStackInSlot();
         if (test(stack)) {
-            seen += stack.getCount();
+            seen += slot.TYPE.getCount(stack);
         }
     }
 
@@ -23,7 +22,7 @@ public class OutputItemMatcher extends ItemMatcher {
     }
 
     private int getRemainingRoom() {
-        return ITEM_LIMIT.limit().retention() - seen;
+        return LIMIT.limit().retention() - seen;
     }
 
     @Override

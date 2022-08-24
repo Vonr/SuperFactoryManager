@@ -30,6 +30,7 @@ public class CableNetwork {
      * Only cable blocks are valid network members
      */
     public static boolean isValidNetworkMember(Level world, BlockPos cablePos) {
+        if (world == null) return false;
         return world
                 .getBlockState(cablePos)
                 .getBlock() instanceof ICable;

@@ -19,6 +19,7 @@ public class SFM {
                 .getModEventBus();
         SFMBlocks.register(bus);
         SFMItems.register(bus);
+        SFMResourceTypes.register(bus);
         SFMBlockEntities.register(bus);
         SFMMenus.register(bus);
         bus.addListener((FMLClientSetupEvent e) -> SFMScreens.register());

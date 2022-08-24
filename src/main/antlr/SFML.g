@@ -29,12 +29,12 @@ statement       : inputstatement    #InputStatementStatement
 // IO STATEMENT
 inputstatement  : INPUT inputmatchers? FROM EACH? labelaccess;
 outputstatement : OUTPUT outputmatchers? TO EACH? labelaccess;
-inputmatchers   : itemmovement; // separate for different defaults
-outputmatchers  : itemmovement; // separate for different defaults
-itemmovement    : itemlimit (COMMA itemlimit)*  #ItemLimitMovement
+inputmatchers   : movement; // separate for different defaults
+outputmatchers  : movement; // separate for different defaults
+movement        : resourcelimit (COMMA resourcelimit)*  #ResourceLimitMovement
                 | limit                         #LimitMovement
                 ;
-itemlimit       : limit? item;
+resourcelimit   : limit? resourceid;
 limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
                 | quantity              #QuantityLimit
@@ -63,10 +63,10 @@ boolexpr        : TRUE                                  #BooleanTrue
                 | NOT boolexpr                          #BooleanNegation
                 | boolexpr AND boolexpr                 #BooleanConjunction
                 | boolexpr OR boolexpr                  #BooleanDisjunction
-                | setOp? labelaccess HAS itemcomparison #BooleanHas
+                | setOp? labelaccess HAS resourcecomparison #BooleanHas
                 | REDSTONE (comparisonOp number)?       #BooleanRedstone
                 ;
-itemcomparison  : comparisonOp number item ;
+resourcecomparison : comparisonOp number resourceid ;
 comparisonOp    : GT
                 | LT
                 | EQ
@@ -90,8 +90,10 @@ setOp           : OVERALL
 //
 labelaccess     : label (COMMA label)* sidequalifier? slotqualifier?;
 label           : IDENTIFIER ;
-item            : IDENTIFIER (COLON IDENTIFIER)?        # ItemRaw
-                | STRING                                # ItemString
+resourceid      : IDENTIFIER COLON IDENTIFIER COLON IDENTIFIER  # ExplicitResource
+                | IDENTIFIER COLON IDENTIFIER                   # ItemResource
+                | IDENTIFIER                                    # MinecraftResource
+                | STRING                                        # StringResource
                 ;
 
 // GENERAL
@@ -174,7 +176,7 @@ LPAREN  : '(';
 RPAREN  : ')';
 
 
-IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]* ;
+IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]* | '*';
 NUMBER          : [0-9]+ ;
 
 STRING : '"' (~'"'|'\\"')* '"' ;
