@@ -157,6 +157,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     runtimeOnly fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
+    runtimeOnly fg.deobf("curse.maven:jei-238222:3944627") //jei-1.19.2-forge-11.2.0.256.jar
+    runtimeOnly fg.deobf("curse.maven:the-one-probe-245211:3927520") //TheOneProbe - 1.19-6.2.1
 
 
 //    // compile against the JEI API but do not include it at runtime
