@@ -16,7 +16,8 @@ public class SFMBlockTags extends BlockTagsProvider {
     protected void addTags() {
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .add(SFMBlocks.CABLE_BLOCK.get())
-                .add(SFMBlocks.MANAGER_BLOCK.get());
+                .add(SFMBlocks.MANAGER_BLOCK.get())
+                .add(SFMBlocks.CABLE_BLOCK.get());
     }
 
     @Override

@@ -17,6 +17,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class WaterTankBlockEntity extends BlockEntity {
+    public void setConnectedCount(int connectedCount) {
+        TANK.setCapacity(connectedCount * 1000);
+        TANK.getFluid().setAmount(TANK.getCapacity());
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        ((WaterTankBlock) getBlockState().getBlock()).recount(getLevel(), getBlockPos());
+    }
+
     // can't fill, only extract
     public final FluidTank TANK = new FluidTank(1000, fluidStack -> false) {
         {
@@ -26,7 +37,7 @@ public class WaterTankBlockEntity extends BlockEntity {
         @Override
         public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
             if (!getLevel().getBlockState(getBlockPos()).getValue(WaterTankBlock.IN_WATER)) return FluidStack.EMPTY;
-            int        drained = Math.min(maxDrain, 1000);
+            int        drained = Math.min(maxDrain, TANK.getCapacity());
             FluidStack copy    = fluid.copy();
             copy.setAmount(drained);
             return copy;

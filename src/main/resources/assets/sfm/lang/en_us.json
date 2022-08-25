@@ -13,6 +13,8 @@
   "item.sfm.labelgun.tooltip.1": "Right click a Factory Manager to push labels.",
   "item.sfm.labelgun.tooltip.2": "Right click a Factory Manager while sneaking to pull labels.",
   "item.sfm.labelgun.with_label": "Label Gun: \"%s\"",
+  "item.sfm.water_tank.tooltip.1": "Requires two adjacent water sources",
+  "item.sfm.water_tank.tooltip.2": "More effective when also adjacent to other water tanks",
   "gui.sfm.title.labelgun": "Label Gun",
   "gui.sfm.label.labelgun.placeholder": "Label",
   "gui.sfm.manager.tooltip.paste": "Press Ctrl+V to paste.",

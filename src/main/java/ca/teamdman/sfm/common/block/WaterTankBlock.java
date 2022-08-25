@@ -1,11 +1,16 @@
 package ca.teamdman.sfm.common.block;
 
+import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.util.SFMUtil;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -22,14 +27,57 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.Material;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 
 public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, BucketPickup, LiquidBlockContainer {
-    public static final BooleanProperty IN_WATER = BooleanProperty.create("in_water");
+    public static final BooleanProperty      IN_WATER = BooleanProperty.create("in_water");
+    private             WaterTankBlockEntity offset;
 
     public WaterTankBlock() {
         super(BlockBehaviour.Properties.of(Material.PISTON).destroyTime(2).sound(SoundType.WOOD));
         registerDefaultState(getStateDefinition().any().setValue(IN_WATER, false));
+    }
+
+
+    @Override
+    public void onPlace(BlockState pState, Level pLevel, BlockPos pPos, BlockState pOldState, boolean pIsMoving) {
+        super.onPlace(pState, pLevel, pPos, pOldState, pIsMoving);
+        for (Direction direction : Direction.values()) {
+            recount(pLevel, pPos.offset(direction.getNormal()));
+        }
+    }
+
+    @Override
+    public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
+        super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
+        for (Direction direction : Direction.values()) {
+            recount(pLevel, pPos.offset(direction.getNormal()));
+        }
+    }
+
+    @Override
+    public void appendHoverText(
+            ItemStack pStack,
+            @Nullable BlockGetter pLevel,
+            List<Component> pTooltip,
+            TooltipFlag pFlag
+    ) {
+        pTooltip.add(Component.translatable("item.sfm.water_tank.tooltip.1").withStyle(ChatFormatting.GRAY));
+        pTooltip.add(Component.translatable("item.sfm.water_tank.tooltip.2").withStyle(ChatFormatting.GRAY));
+    }
+
+    public void recount(Level level, BlockPos pos) {
+        if (!(level.getBlockEntity(pos) instanceof WaterTankBlockEntity be)) return;
+        var tanks = SFMUtil.getRecursiveStream((current, next, results) -> {
+            results.accept(current);
+            for (var d : Direction.values()) {
+                var offset = current.getBlockPos().offset(d.getNormal());
+                if (!(level.getBlockEntity(offset) instanceof WaterTankBlockEntity bruh)) continue;
+                next.accept(bruh);
+            }
+        }, be).toList();
+        tanks.forEach(t -> t.setConnectedCount(tanks.size()));
     }
 
     @Override
