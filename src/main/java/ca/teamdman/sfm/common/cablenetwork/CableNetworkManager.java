@@ -1,7 +1,5 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
-import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.util.SFMUtil;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import net.minecraft.core.BlockPos;
@@ -37,7 +35,7 @@ public class CableNetworkManager {
     private static final Multimap<ResourceKey<Level>, CableNetwork> NETWORKS = ArrayListMultimap.create();
 
     public static void printDebugInfo() {
-        SFM.LOGGER.info(SFMUtil.getMarker(CableNetworkManager.class), "{} networks now", size());
+//        SFM.LOGGER.debug(SFMUtil.getMarker(CableNetworkManager.class), "{} networks now", size());
     }
 
     public static int size() {
