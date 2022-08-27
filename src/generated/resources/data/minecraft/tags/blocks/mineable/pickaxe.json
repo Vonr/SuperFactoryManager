@@ -1,6 +1,7 @@
 {
   "values": [
     "sfm:cable",
-    "sfm:manager"
+    "sfm:manager",
+    "sfm:cable"
   ]
 }
