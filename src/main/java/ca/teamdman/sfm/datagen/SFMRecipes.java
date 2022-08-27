@@ -72,5 +72,16 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("aRc")
                 .pattern("ede")
                 .save(consumer);
+
+        ShapedRecipeBuilder
+                .shaped(SFMItems.WATER_TANK_ITEM.get())
+                .define('b', Items.WATER_BUCKET)
+                .define('g', Items.IRON_BARS)
+                .define('p', Items.LIGHT_WEIGHTED_PRESSURE_PLATE)
+                .unlockedBy("has_water", has(Items.WATER_BUCKET))
+                .pattern("gbg")
+                .pattern("gpg")
+                .pattern("gbg")
+                .save(consumer);
     }
 }
