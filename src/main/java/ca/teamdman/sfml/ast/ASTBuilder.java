@@ -28,7 +28,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public ResourceIdentifier<?, ?> visitStringResource(SFMLParser.StringResourceContext ctx) {
-        var rtn = ResourceIdentifier.fromString(ctx.STRING().getText());
+        var rtn = ResourceIdentifier.fromString(visitString(ctx.string()).value());
         USED_RESOURCES.add(rtn);
         return rtn;
     }

@@ -93,7 +93,7 @@ label           : IDENTIFIER ;
 resourceid      : IDENTIFIER COLON IDENTIFIER COLON IDENTIFIER  # ExplicitResource
                 | IDENTIFIER COLON IDENTIFIER                   # ItemResource
                 | IDENTIFIER                                    # MinecraftResource
-                | STRING                                        # StringResource
+                | string                                        # StringResource
                 ;
 
 // GENERAL
