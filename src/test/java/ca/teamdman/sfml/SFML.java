@@ -97,4 +97,6 @@ public class SFML {
         var x = "wool";
         System.out.println(ResourceIdentifier.fromString(x));
     }
+
+    //todo: test for "redstone" "minecraft:redstone" "item:minecraft:redstone"
 }
