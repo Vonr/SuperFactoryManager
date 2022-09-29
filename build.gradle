@@ -37,7 +37,7 @@ sourceSets {
         compileClasspath += main.output
 //        runtimeClasspath += sourceSets.main.output
         resources {
-            srcDir "src/gametest/resources"
+            srcDirs += "src/gametest/resources"
         }
     }
 }
@@ -229,9 +229,9 @@ processResources {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 }
 
-//processTestResources {
-//    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-//}
+processGametestResources {
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
 
 
 test {
