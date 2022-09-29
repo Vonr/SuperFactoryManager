@@ -89,7 +89,9 @@ setOp           : OVERALL
 // IO HELPERS
 //
 labelaccess     : label (COMMA label)* sidequalifier? slotqualifier?;
-label           : IDENTIFIER ;
+label           : IDENTIFIER #RawLabel
+                | string    #StringLabel
+                ;
 resourceid      : IDENTIFIER COLON IDENTIFIER COLON IDENTIFIER  # ExplicitResource
                 | IDENTIFIER COLON IDENTIFIER                   # ItemResource
                 | IDENTIFIER                                    # MinecraftResource

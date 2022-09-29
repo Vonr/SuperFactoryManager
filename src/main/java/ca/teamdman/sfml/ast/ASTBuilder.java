@@ -58,8 +58,15 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public Label visitLabel(SFMLParser.LabelContext ctx) {
+    public Label visitRawLabel(SFMLParser.RawLabelContext ctx) {
         var label = new Label(ctx.getText());
+        USED_LABELS.add(label);
+        return label;
+    }
+
+    @Override
+    public Label visitStringLabel(SFMLParser.StringLabelContext ctx) {
+        var label = new Label(visitString(ctx.string()).value());
         USED_LABELS.add(label);
         return label;
     }
@@ -164,7 +171,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public LabelAccess visitLabelaccess(SFMLParser.LabelaccessContext ctx) {
         return new LabelAccess(
-                ctx.label().stream().map(this::visitLabel).collect(Collectors.toList()),
+                ctx.label().stream().map(this::visit).map(Label.class::cast).collect(Collectors.toList()),
                 visitSidequalifier(ctx.sidequalifier()),
                 visitSlotqualifier(ctx.slotqualifier())
         );
