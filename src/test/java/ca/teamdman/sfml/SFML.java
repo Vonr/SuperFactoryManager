@@ -202,6 +202,21 @@ public class SFML {
         assertTrue(errors.isEmpty());
     }
 
+
+    @Test
+    public void quotedLabels() {
+        var input = """
+                name "hello world"
+                                
+                every 20 ticks do
+                    input from "hehe beans 😀"
+                    output to "haha benis"
+                end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+    }
+
     @Test
     public void basicResourceIdentifier() {
         var identifier = ResourceIdentifier.fromString("wool");
