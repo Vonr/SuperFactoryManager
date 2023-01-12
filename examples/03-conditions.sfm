@@ -47,3 +47,18 @@ end
 -- if this program were running while "a" had (2*64)*stone:
 -- "d" would receive 20*stone
 -- "c" would receive (64+44)*stone
+
+
+--------------------
+
+every 20 ticks do
+    if a has ge 32 iron_ingot then
+        input 1 cobblestone from a
+    else if a has ge 16 iron_ingot then
+        input 1 stone from a
+    else
+        input 1 red_sandstone from a
+    end
+
+    output to b
+end
