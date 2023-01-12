@@ -18,6 +18,8 @@ public class SFMGameTests {
     public static void exampleTest(GameTestHelper helper) {
 //        helper.
         System.out.println("hi");
+        // https://github.com/MinecraftForge/MinecraftForge/blob/d7b137d1446377bfd1958f8a0e24f63819b81bfc/src/test/java/net/minecraftforge/debug/misc/GameTestTest.java#L155
+        // https://docs.minecraftforge.net/en/1.19.x/misc/gametest/
         helper.succeed();
     }
 }
