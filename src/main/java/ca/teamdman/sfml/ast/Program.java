@@ -66,7 +66,7 @@ public record Program(
             if (type == null) {
                 warnings.add(new TranslatableContents(
                         "program.sfm.warnings.unknown_resource_type",
-                        resource.resourceTypeName(),
+                        resource.resourceTypeNamespace() + ":" + resource.resourceTypeName(),
                         resource.toString()
                 ));
                 continue;
