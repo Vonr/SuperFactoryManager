@@ -2,6 +2,7 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,9 +21,16 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ResourceIdentifier<?, ?> visitItemResource(SFMLParser.ItemResourceContext ctx) {
-        var rtn = new ResourceIdentifier(ctx.IDENTIFIER(0).getText(), ctx.IDENTIFIER(1).getText());
+    public ASTNode visitResource(SFMLParser.ResourceContext ctx) {
+        var str = ctx
+                .IDENTIFIER()
+                .stream()
+                .map(ParseTree::getText)
+                .collect(Collectors.joining(":"))
+                .replaceAll("\\*", ".*");
+        var rtn = ResourceIdentifier.fromString(str);
         USED_RESOURCES.add(rtn);
+        rtn.assertValid();
         return rtn;
     }
 
@@ -30,24 +38,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public ResourceIdentifier<?, ?> visitStringResource(SFMLParser.StringResourceContext ctx) {
         var rtn = ResourceIdentifier.fromString(visitString(ctx.string()).value());
         USED_RESOURCES.add(rtn);
-        return rtn;
-    }
-
-    @Override
-    public ResourceIdentifier<?, ?> visitMinecraftResource(SFMLParser.MinecraftResourceContext ctx) {
-        var rtn = new ResourceIdentifier(ctx.IDENTIFIER().getText());
-        USED_RESOURCES.add(rtn);
-        return rtn;
-    }
-
-    @Override
-    public ASTNode visitExplicitResource(SFMLParser.ExplicitResourceContext ctx) {
-        var rtn = new ResourceIdentifier(
-                ctx.IDENTIFIER(0).getText(),
-                ctx.IDENTIFIER(1).getText(),
-                ctx.IDENTIFIER(2).getText()
-        );
-        USED_RESOURCES.add(rtn);
+        rtn.assertValid();
         return rtn;
     }
 

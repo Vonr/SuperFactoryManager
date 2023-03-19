@@ -15,12 +15,12 @@ public class ItemResourceType extends ResourceType<ItemStack, IItemHandler> {
     }
 
     @Override
-    public boolean containsKey(ResourceLocation location) {
+    public boolean registryKeyExists(ResourceLocation location) {
         return ForgeRegistries.ITEMS.containsKey(location);
     }
 
     @Override
-    public ResourceLocation getKey(ItemStack itemStack) {
+    public ResourceLocation getRegistryKey(ItemStack itemStack) {
         return ForgeRegistries.ITEMS.getKey(itemStack.getItem());
     }
 

@@ -1,4 +1,4 @@
-// Generated from d:\Repos\Minecraft\Forge\SuperFactoryManager\src\main\antlr\SFML.g by ANTLR 4.9.2
+// Generated from d:\Repos\Minecraft\Forge\SuperFactoryManager\src\main\antlr\SFML.g4 by ANTLR 4.9.2
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -100,7 +100,7 @@ public class SFMLParser extends Parser {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "SFML.g"; }
+	public String getGrammarFileName() { return "SFML.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }

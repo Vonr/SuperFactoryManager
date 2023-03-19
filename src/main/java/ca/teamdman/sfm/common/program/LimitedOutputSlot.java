@@ -11,7 +11,7 @@ public class LimitedOutputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, Outpu
             int slot,
             OutputResourceMatcher<STACK, CAP> matcher
     ) {
-        super(handler, matcher.LIMIT.resourceId().getType(), slot, matcher);
+        super(handler, matcher.LIMIT.resourceId().getResourceType(), slot, matcher);
         this.STATEMENT = statement;
         MATCHER.visit(this);
     }

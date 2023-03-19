@@ -30,14 +30,14 @@ public record OutputStatement<STACK, CAP>(
                 .stream()
                 .map(ResourceMatcher::getLimit)
                 .map(ResourceLimit::resourceId)
-                .map(ResourceIdentifier::getType)
+                .map(ResourceIdentifier::getResourceType)
                 .flatMap(t -> t.getCaps(context, labelAccess));
         var types = matchers
                 .createInputMatchers()
                 .stream()
                 .map(ResourceMatcher::getLimit)
                 .map(ResourceLimit::resourceId)
-                .map(ResourceIdentifier::getType)
+                .map(ResourceIdentifier::getResourceType)
                 .collect(Collectors.toSet());
         var                                     rtn      = Stream.<LimitedOutputSlot<STACK, CAP>>builder();
         List<OutputResourceMatcher<STACK, CAP>> matchers = null;

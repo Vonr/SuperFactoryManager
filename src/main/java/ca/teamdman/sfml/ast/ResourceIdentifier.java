@@ -3,24 +3,35 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.program.ResourceType;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
+// resourceTypeName resourceNamespace, resourceTypeName name, resource resourceNamespace, resource name
+// sfm:item:minecraft:stone
 public record ResourceIdentifier<STACK, CAP>(
-        String type,
-        String domain,
-        String value
+        String resourceTypeNamespace,
+        String resourceTypeName,
+        String resourceNamespace,
+        String resourceName
 ) implements ASTNode, Predicate<Object> {
 
-    public static final ResourceIdentifier<?, ?> MATCH_ALL = new ResourceIdentifier<>("*", "*");
+    public static final ResourceIdentifier<?, ?> MATCH_ALL = new ResourceIdentifier<>(".*", ".*");
 
     public ResourceIdentifier(String value) {
-        this("item", "minecraft", value);
+        this(SFM.MOD_ID, "item", "minecraft", value);
     }
 
     public ResourceIdentifier(String namespace, String value) {
-        this("item", namespace, value);
+        this(SFM.MOD_ID, "item", namespace, value);
+    }
+
+    public ResourceIdentifier(String typeName, String resourceNamespace, String resourceName) {
+        this(SFM.MOD_ID, typeName, resourceNamespace, resourceName);
     }
 
     public static <STACK, CAP> ResourceIdentifier<STACK, CAP> fromString(String string) {
@@ -31,29 +42,45 @@ public record ResourceIdentifier<STACK, CAP>(
             return new ResourceIdentifier<>(parts[0], parts[1]);
         } else if (parts.length == 3) {
             return new ResourceIdentifier<>(parts[0], parts[1], parts[2]);
+        } else if (parts.length == 4) {
+            return new ResourceIdentifier<>(parts[0], parts[1], parts[2], parts[3]);
         } else {
             throw new IllegalArgumentException("bad resource id");
         }
     }
 
-    public ResourceLocation getLocation() {
-        return new ResourceLocation(domain, value);
+    public void assertValid() throws IllegalArgumentException {
+        try {
+            Pattern.compile(this.resourceNamespace);
+            Pattern.compile(this.resourceName);
+        } catch (PatternSyntaxException e) {
+            throw new IllegalArgumentException("Invalid resource identifier pattern \""
+                                               + this
+                                               + "\" - "
+                                               + e.getMessage());
+        }
+    }
+
+    public Optional<ResourceLocation> getLocation() {
+        try {
+            return Optional.of(new ResourceLocation(resourceNamespace, resourceName));
+        } catch (ResourceLocationException e) {
+            return Optional.empty();
+        }
     }
 
     public boolean test(Object other) {
-        return getType().test(this, other);
+        return getResourceType().test(this, other);
     }
 
-    public ResourceType<STACK, CAP> getType() {
-        // in the off chance someone other than me is looking at this,
-        // I hope hardcoding the SFM MOD ID here isn't causing problems.
+    public ResourceType<STACK, CAP> getResourceType() {
         return (ResourceType<STACK, CAP>) SFMResourceTypes.DEFERRED_TYPES
                 .get()
-                .getValue(new ResourceLocation(SFM.MOD_ID, this.type));
+                .getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
     }
 
     @Override
     public String toString() {
-        return type + ":" + domain + ":" + value;
+        return resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
     }
 }

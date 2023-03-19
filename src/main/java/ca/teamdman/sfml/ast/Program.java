@@ -1,14 +1,11 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
-import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -58,25 +55,26 @@ public record Program(
                     )));
         });
 
+        // try and validate that references resources exist
         for (var resource : referencedResources) {
-            // skip wildcard since we can't validate
-            if (resource.type().equals("*")) continue;
-            if (resource.domain().equals("*")) continue;
-            if (resource.value().equals("*")) continue;
+            // skip regex resources
+            var loc = resource.getLocation();
+            if (!loc.isPresent()) continue;
 
-            var type = SFMResourceTypes.DEFERRED_TYPES
-                    .get()
-                    .getValue(new ResourceLocation(SFM.MOD_ID, resource.type()));
+            // make sure resource type is registered
+            var type = resource.getResourceType();
             if (type == null) {
                 warnings.add(new TranslatableContents(
                         "program.sfm.warnings.unknown_resource_type",
-                        resource.type(),
+                        resource.resourceTypeName(),
                         resource.toString()
                 ));
-            } else {
-                if (!type.containsKey(resource.getLocation())) {
-                    warnings.add(new TranslatableContents("program.sfm.warnings.unknown_resource_id", resource));
-                }
+                continue;
+            }
+
+            // make sure resource exists in the registry
+            if (!type.registryKeyExists(loc.get())) {
+                warnings.add(new TranslatableContents("program.sfm.warnings.unknown_resource_id", resource));
             }
         }
         DiskItem.setWarnings(disk, warnings);

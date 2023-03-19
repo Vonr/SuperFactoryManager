@@ -92,12 +92,10 @@ labelaccess     : label (COMMA label)* sidequalifier? slotqualifier?;
 label           : IDENTIFIER #RawLabel
                 | string    #StringLabel
                 ;
-resourceid      : IDENTIFIER COLON IDENTIFIER COLON IDENTIFIER  # ExplicitResource
-                | IDENTIFIER COLON IDENTIFIER                   # ItemResource
-                | IDENTIFIER                                    # MinecraftResource
-                | string                                        # StringResource
-                ;
 
+resourceid      : IDENTIFIER (COLON IDENTIFIER (COLON IDENTIFIER (COLON IDENTIFIER)?)?)? # Resource
+                | string                             # StringResource
+                ;
 // GENERAL
 string: STRING ;
 number: NUMBER ;
@@ -178,7 +176,7 @@ LPAREN  : '(';
 RPAREN  : ')';
 
 
-IDENTIFIER      : [a-zA-Z_][a-zA-Z0-9_]* | '*';
+IDENTIFIER      : [a-zA-Z_*][a-zA-Z0-9_*]* | '*';
 NUMBER          : [0-9]+ ;
 
 STRING : '"' (~'"'|'\\"')* '"' ;

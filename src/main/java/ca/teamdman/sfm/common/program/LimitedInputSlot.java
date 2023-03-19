@@ -13,7 +13,7 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
             int slot,
             InputResourceMatcher<STACK, CAP> matcher
     ) {
-        super(handler, matcher.LIMIT.resourceId().getType(), slot, matcher);
+        super(handler, matcher.LIMIT.resourceId().getResourceType(), slot, matcher);
         this.STATEMENT = statement;
     }
 

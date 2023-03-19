@@ -26,14 +26,14 @@ public record InputStatement<STACK, CAP>(
                 .stream()
                 .map(ResourceMatcher::getLimit)
                 .map(ResourceLimit::resourceId)
-                .map(ResourceIdentifier::getType)
+                .map(ResourceIdentifier::getResourceType)
                 .flatMap(t -> t.getCaps(context, labelAccess));
         var types = matchers
                 .createInputMatchers()
                 .stream()
                 .map(ResourceMatcher::getLimit)
                 .map(ResourceLimit::resourceId)
-                .map(ResourceIdentifier::getType)
+                .map(ResourceIdentifier::getResourceType)
                 .collect(Collectors.toSet());
         var                                    rtn      = Stream.<LimitedInputSlot<STACK, CAP>>builder();
         List<InputResourceMatcher<STACK, CAP>> matchers = null;

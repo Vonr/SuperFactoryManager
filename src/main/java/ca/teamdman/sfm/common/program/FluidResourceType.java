@@ -15,12 +15,12 @@ public class FluidResourceType extends ResourceType<FluidStack, IFluidHandler> {
     }
 
     @Override
-    public boolean containsKey(ResourceLocation location) {
+    public boolean registryKeyExists(ResourceLocation location) {
         return ForgeRegistries.FLUIDS.containsKey(location);
     }
 
     @Override
-    public ResourceLocation getKey(FluidStack stack) {
+    public ResourceLocation getRegistryKey(FluidStack stack) {
         return ForgeRegistries.FLUIDS.getKey(stack.getFluid());
     }
 

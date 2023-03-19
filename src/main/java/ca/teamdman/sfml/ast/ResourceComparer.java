@@ -12,7 +12,7 @@ public record ResourceComparer<STACK, CAP>(
 ) implements ASTNode {
     public BoolExpr toBooleanExpression(SetOperator setOp, LabelAccess labelAccess) {
         return new BoolExpr(context -> {
-            ResourceType<STACK, CAP> type = res.getType();
+            ResourceType<STACK, CAP> type = res.getResourceType();
             // get the inventories to check
 
             var handlers = type.getCaps(context, labelAccess);
