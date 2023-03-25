@@ -1,11 +1,13 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
+import ca.teamdman.sfm.common.registry.SFMCapabilityProviderMappers;
 import ca.teamdman.sfm.common.util.SFMUtil;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.capabilities.CapabilityProvider;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,9 +15,9 @@ import java.util.stream.Stream;
 
 public class CableNetwork {
 
-    private final Level                      LEVEL;
-    private final Set<BlockPos>              CABLES      = new HashSet<>();
-    private final Map<BlockPos, BlockEntity> INVENTORIES = new HashMap<>();
+    private final Level                              LEVEL;
+    private final Set<BlockPos>                      CABLES               = new HashSet<>();
+    private final Map<BlockPos, ICapabilityProvider> CAPABILITY_PROVIDERS = new HashMap<>();
 
     public CableNetwork(Level level) {
         this.LEVEL = level;
@@ -29,7 +31,7 @@ public class CableNetwork {
     /**
      * Only cable blocks are valid network members
      */
-    public static boolean isValidNetworkMember(Level world, BlockPos cablePos) {
+    public static boolean isCable(Level world, BlockPos cablePos) {
         if (world == null) return false;
         return world
                 .getBlockState(cablePos)
@@ -38,7 +40,7 @@ public class CableNetwork {
 
     public void rebuildNetwork(BlockPos pos) {
         CABLES.clear();
-        INVENTORIES.clear();
+        CAPABILITY_PROVIDERS.clear();
         discoverCables(pos).forEach(this::addCable);
     }
 
@@ -47,7 +49,7 @@ public class CableNetwork {
             results.accept(current);
             for (Direction d : Direction.values()) {
                 BlockPos offset = current.offset(d.getNormal());
-                if (isValidNetworkMember(getLevel(), offset)) {
+                if (isCable(getLevel(), offset)) {
                     next.accept(offset);
                 }
             }
@@ -67,17 +69,41 @@ public class CableNetwork {
         return LEVEL;
     }
 
-    public void rebuildAdjacentInventories(BlockPos pos) {
+    /**
+     * Collects the capability providers of blocks neighbouring the cable
+     *
+     * @param cablePos position of the cable
+     */
+    public void rebuildAdjacentInventories(BlockPos cablePos) {
         Arrays
                 .stream(Direction.values())
                 .map(Direction::getNormal)
-                .map(pos::offset)
+                .map(cablePos::offset)
                 .distinct()
-                .peek(INVENTORIES::remove)
+                .peek(CAPABILITY_PROVIDERS::remove) // Bust the cache
                 .filter(this::hasCableNeighbour) // Verify if should [re]join network
-                .map(LEVEL::getBlockEntity)
-                .filter(Objects::nonNull)
-                .forEach(tile -> INVENTORIES.put(tile.getBlockPos(), tile)); // register tile [again]
+                .map(this::discoverCapabilityProvider) // Check if we can get capabilities from this block
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .forEach(prov -> CAPABILITY_PROVIDERS.put(prov.getFirst(), prov.getSecond())); // track it
+    }
+
+    /**
+     * Find a {@link CapabilityProvider} for a given {@link BlockPos} in the level associated with this cable network.
+     * If multiple {@link CapabilityProviderMapper}s match, the first one is returned.
+     *
+     * @param pos block position be checked
+     * @return {@link Optional} containing the {@link CapabilityProvider} if one was found
+     */
+    public Optional<Pair<BlockPos, ICapabilityProvider>> discoverCapabilityProvider(BlockPos pos) {
+        return SFMCapabilityProviderMappers.DEFERRED_MAPPERS
+                .get()
+                .getValues()
+                .stream()
+                .map(mapper -> mapper.getProviderFor(LEVEL, pos))
+                .filter(Optional::isPresent)
+                .map(iCapabilityProvider -> Pair.of(pos, iCapabilityProvider.get()))
+                .findFirst();
     }
 
     /**
@@ -156,11 +182,11 @@ public class CableNetwork {
 
         // get all inventories occupying a neighbour spot
         // add them to the new network
-        INVENTORIES
+        CAPABILITY_PROVIDERS
                 .entrySet()
                 .stream()
                 .filter(entry -> validInvPositions.contains(entry.getKey()))
-                .forEach(entry -> network.INVENTORIES.put(entry.getKey(), entry.getValue()));
+                .forEach(entry -> network.CAPABILITY_PROVIDERS.put(entry.getKey(), entry.getValue()));
 
         return network;
     }
@@ -169,13 +195,13 @@ public class CableNetwork {
         return CABLES.contains(pos);
     }
 
-    public boolean containsInventoryLocation(BlockPos pos) {
-        return INVENTORIES.containsKey(pos);
+    public boolean isInNetwork(BlockPos pos) {
+        return CAPABILITY_PROVIDERS.containsKey(pos);
     }
 
 
-    public Optional<BlockEntity> getInventory(BlockPos pos) {
-        return Optional.ofNullable(INVENTORIES.get(pos));
+    public Optional<ICapabilityProvider> getCapabilityProvider(BlockPos pos) {
+        return Optional.ofNullable(CAPABILITY_PROVIDERS.get(pos));
     }
 
     public int size() {
@@ -189,25 +215,18 @@ public class CableNetwork {
      */
     public void mergeNetwork(CableNetwork other) {
         CABLES.addAll(other.CABLES);
-        INVENTORIES.putAll(other.INVENTORIES);
+        CAPABILITY_PROVIDERS.putAll(other.CAPABILITY_PROVIDERS);
     }
 
     public boolean isEmpty() {
         return CABLES.isEmpty();
     }
 
-    public Collection<BlockEntity> getInventories() {
-        return INVENTORIES.values();
-    }
-
-    public ItemStack getPreview(BlockPos pos) {
-        return new ItemStack(LEVEL
-                                     .getBlockState(pos)
-                                     .getBlock()
-                                     .asItem());
+    public Map<BlockPos, ICapabilityProvider> getCapabilityProviders() {
+        return Collections.unmodifiableMap(CAPABILITY_PROVIDERS);
     }
 
     public Set<BlockPos> getCables() {
-        return CABLES;
+        return Collections.unmodifiableSet(CABLES);
     }
 }

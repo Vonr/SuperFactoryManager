@@ -21,6 +21,7 @@ public class SFM {
         SFMItems.register(bus);
         SFMResourceTypes.register(bus);
         SFMBlockEntities.register(bus);
+        SFMCapabilityProviderMappers.register(bus);
         SFMMenus.register(bus);
         bus.addListener((FMLClientSetupEvent e) -> SFMScreens.register());
         bus.addListener((FMLCommonSetupEvent e) -> SFMPackets.register());

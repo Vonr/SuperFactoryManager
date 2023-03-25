@@ -56,7 +56,7 @@ public abstract class ResourceType<STACK, CAP> {
         if (disk.isEmpty()) return Stream.empty();
         return SFMLabelNBTHelper
                 .getPositions(disk.get(), labelAccess.labels())
-                .map(programContext.getNetwork()::getInventory)
+                .map(programContext.getNetwork()::getCapabilityProvider)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .flatMap((
