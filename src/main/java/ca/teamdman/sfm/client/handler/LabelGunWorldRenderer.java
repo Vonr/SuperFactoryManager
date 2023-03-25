@@ -84,13 +84,13 @@ public class LabelGunWorldRenderer {
         poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 
         { // draw labels
+//            RenderSystem.depthMask(false);
             for (var entry : labelPositions.asMap().entrySet()) {
                 drawLabel(poseStack, camera, entry.getKey(), bufferSource, entry.getValue());
             }
         }
         { // draw highlights
             RENDER_TYPE.setupRenderState();
-//            RenderSystem.disableTexture();
 
             if (vbo == null) {
                 vbo = new VertexBuffer();
@@ -114,7 +114,6 @@ public class LabelGunWorldRenderer {
 
             VertexBuffer.unbind();
             RENDER_TYPE.clearRenderState();
-//            RenderSystem.enableTexture();
         }
         bufferSource.endBatch();
         poseStack.popPose();
@@ -130,29 +129,24 @@ public class LabelGunWorldRenderer {
     ) {
         poseStack.pushPose();
         poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+//        poseStack.translate(0,1,0);
         poseStack.mulPose(camera.rotation());
         poseStack.scale(-0.025f, -0.025f, 0.025f);
         Font font = Minecraft.getInstance().font;
         poseStack.translate(0, labels.size() * (font.lineHeight + 0.1) / -2f, 0);
         for (var label : labels) {
-            font.draw(
-                    poseStack,
+            font.drawInBatch(
                     label,
-                    0, 0,
+                    -font.width(label) / 2f,
+                    0,
+                    -0x1,
+                    false,
+                    poseStack.last().pose(),
+                    mbs,
+                    Font.DisplayMode.SEE_THROUGH,
+                    0,
                     0xF000F0
             );
-//            font.drawInBatch(
-//                    label,
-//                    -font.width(label) / 2f,
-//                    0,
-//                    -0x1,
-//                    false,
-//                    poseStack.last().pose(),
-//                    mbs,
-//                    true,
-//                    0,
-//                    0xF000F0
-//            );
             poseStack.translate(0, font.lineHeight + 0.1, 0);
         }
         poseStack.popPose();
