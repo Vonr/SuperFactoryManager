@@ -1,5 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "redstone",
   "key": {
     "B": {
       "item": "minecraft:iron_bars"
@@ -22,5 +23,6 @@
   "result": {
     "count": 16,
     "item": "sfm:cable"
-  }
+  },
+  "show_notification": true
 }

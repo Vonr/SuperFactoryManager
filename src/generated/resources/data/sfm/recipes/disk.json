@@ -1,5 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "redstone",
   "key": {
     "R": {
       "item": "minecraft:redstone_block"
@@ -30,5 +31,6 @@
   ],
   "result": {
     "item": "sfm:disk"
-  }
+  },
+  "show_notification": true
 }
