@@ -25,6 +25,7 @@
   "program.sfm.warnings.unknown_resource_id": "Resource \"%s\" was not found.",
   "program.sfm.warnings.undefined_label": "Label \"%s\" is assigned in the world but not defined in code.",
   "program.sfm.warnings.disconnected_label": "Label \"%s\" is assigned in the world at %s but not connected by cables.",
+  "program.sfm.warnings.adjacent_but_disconnected_label": "Label \"%s\" is assigned in the world at %s and is connected by cables but is not detected as a valid inventory.",
   "program.sfm.compile_failed": "Failed to compile.",
   "program.sfm.literal": "%s",
   "gui.sfm.manager.state.no_program": "no program",

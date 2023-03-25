@@ -20,7 +20,7 @@ public record Program(
 ) implements ASTNode {
     public static final int MAX_PROGRAM_LENGTH = 8096;
 
-    public void addWarnings(ItemStack disk, ManagerBlockEntity manager) {
+    public void gatherWarnings(ItemStack disk, ManagerBlockEntity manager) {
         var warnings = new ArrayList<TranslatableContents>();
 
         // labels in code but not in world
@@ -46,17 +46,31 @@ public record Program(
 
         // labels in world but not connected via cables
         CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
-            SFMLabelNBTHelper.getPositionLabels(disk)
-                    .entries().stream()
-                    .filter(e -> !network.containsInventoryLocation(e.getKey()))
-                    .forEach(e -> warnings.add(new TranslatableContents(
+            for (var entry : SFMLabelNBTHelper.getPositionLabels(disk).entries()) {
+                var label     = entry.getValue();
+                var pos       = entry.getKey();
+                var inNetwork = network.containsInventoryLocation(pos);
+                var adjacent  = network.hasCableNeighbour(pos);
+                if (!inNetwork && !adjacent) {
+                    warnings.add(new TranslatableContents(
                             "program.sfm.warnings.disconnected_label",
                             null,
                             new Object[]{
-                                    e.getValue(),
-                                    String.format("[%d,%d,%d]", e.getKey().getX(), e.getKey().getY(), e.getKey().getZ())
+                                    label,
+                                    String.format("[%d,%d,%d]", pos.getX(), pos.getY(), pos.getZ())
                             }
-                    )));
+                    ));
+                } else if (!inNetwork && adjacent) {
+                    warnings.add(new TranslatableContents(
+                            "program.sfm.warnings.adjacent_but_disconnected_label",
+                            null,
+                            new Object[]{
+                                    label,
+                                    String.format("[%d,%d,%d]", pos.getX(), pos.getY(), pos.getZ())
+                            }
+                    ));
+                }
+            }
         });
 
         // try and validate that references resources exist
@@ -107,7 +121,7 @@ public record Program(
         });
 
         // update warnings
-        addWarnings(disk, manager);
+        gatherWarnings(disk, manager);
     }
 
     public void tick(ProgramContext context) {
