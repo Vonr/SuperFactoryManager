@@ -82,6 +82,6 @@ public class SFMUtil {
 				.map(StringTag.class::cast)
 				.map(StringTag::getAsString)
 				.toArray();
-		return new TranslatableContents(key, args);
+		return new TranslatableContents(key, null, args);
 	}
 }

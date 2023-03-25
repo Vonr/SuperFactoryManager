@@ -11,6 +11,8 @@ import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -77,15 +79,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                         this.onSaveDiagClipboard();
                     }
                 },
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                Component.translatable("gui.sfm.manager.button.warning.tooltip"),
-                                Math.max(width / 2 - 43, 170)
-                        ),
-                        mx,
-                        my
-                )
+                Tooltip.create(Component.translatable("gui.sfm.manager.button.warning.tooltip"))
         ));
     }
 
@@ -230,12 +224,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         this.renderTooltip(poseStack, mx, my);
         statusCountdown -= partialTicks;
     }
-
-    @Override
-    protected void renderTooltip(PoseStack pose, int mx, int my) {
-        super.renderTooltip(pose, mx, my);
-        DiagButton.renderToolTip(pose, mx, my);
-    }
+//
+//    @Override
+//    protected void renderTooltip(PoseStack pose, int mx, int my) {
+//        super.renderTooltip(pose, mx, my);
+//        DiagButton.renderToolTip(pose, mx, my);
+//    }
 
     @Override
     protected void renderBg(PoseStack matrixStack, float partialTicks, int mx, int my) {
@@ -245,6 +239,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE_LOCATION);
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
-        this.blit(matrixStack, i, j, 0, 0, this.imageWidth, this.imageHeight);
+        blit(matrixStack, i, j, 0, 0, this.imageWidth, this.imageHeight);
     }
 }

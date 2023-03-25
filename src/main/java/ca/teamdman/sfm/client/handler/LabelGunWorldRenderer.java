@@ -90,7 +90,7 @@ public class LabelGunWorldRenderer {
         }
         { // draw highlights
             RENDER_TYPE.setupRenderState();
-            RenderSystem.disableTexture();
+//            RenderSystem.disableTexture();
 
             if (vbo == null) {
                 vbo = new VertexBuffer();
@@ -114,7 +114,7 @@ public class LabelGunWorldRenderer {
 
             VertexBuffer.unbind();
             RENDER_TYPE.clearRenderState();
-            RenderSystem.enableTexture();
+//            RenderSystem.enableTexture();
         }
         bufferSource.endBatch();
         poseStack.popPose();
@@ -135,18 +135,24 @@ public class LabelGunWorldRenderer {
         Font font = Minecraft.getInstance().font;
         poseStack.translate(0, labels.size() * (font.lineHeight + 0.1) / -2f, 0);
         for (var label : labels) {
-            font.drawInBatch(
+            font.draw(
+                    poseStack,
                     label,
-                    -font.width(label) / 2f,
-                    0,
-                    -0x1,
-                    false,
-                    poseStack.last().pose(),
-                    mbs,
-                    true,
-                    0,
+                    0, 0,
                     0xF000F0
             );
+//            font.drawInBatch(
+//                    label,
+//                    -font.width(label) / 2f,
+//                    0,
+//                    -0x1,
+//                    false,
+//                    poseStack.last().pose(),
+//                    mbs,
+//                    true,
+//                    0,
+//                    0xF000F0
+//            );
             poseStack.translate(0, font.lineHeight + 0.1, 0);
         }
         poseStack.popPose();

@@ -29,7 +29,7 @@ public class LabelGunScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
+//        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
         this.labelField = addRenderableWidget(new EditBox(
                 this.font,
                 this.width / 2 - 150,
@@ -38,17 +38,13 @@ public class LabelGunScreen extends Screen {
                 20,
                 Component.translatable("gui.sfm.labels.labelgun.placeholder")
         ));
-        this.setInitialFocus(labelField);
-        this.labelField.setFocus(true);
+        labelField.setFocused(true);
+        this.setFocused(labelField);
 
-        this.doneButton = this.addRenderableWidget(new Button(
-                this.width / 2 - 2 - 150,
-                this.height / 4 + 120 + 12,
-                300,
-                20,
-                CommonComponents.GUI_DONE,
-                (p_97691_) -> this.onDone()
-        ));
+        this.doneButton = new Button.Builder(CommonComponents.GUI_DONE, __ -> this.onDone())
+                .pos(this.width / 2 - 2 - 150, this.height / 4 + 120 + 12)
+                .size(300, 20)
+                .build();
     }
 
     @Override

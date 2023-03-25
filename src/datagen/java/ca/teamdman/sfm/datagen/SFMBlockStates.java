@@ -3,17 +3,16 @@ package ca.teamdman.sfm.datagen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
-import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public class SFMBlockStates extends BlockStateProvider {
-    public SFMBlockStates(DataGenerator gen, ExistingFileHelper exFileHelper) {
-        super(gen, SFM.MOD_ID, exFileHelper);
+    public SFMBlockStates(PackOutput output, ExistingFileHelper exFileHelper) {
+        super(output, SFM.MOD_ID, exFileHelper);
     }
-
 
     @Override
     protected void registerStatesAndModels() {

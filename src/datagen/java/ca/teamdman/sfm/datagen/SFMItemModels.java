@@ -3,7 +3,7 @@ package ca.teamdman.sfm.datagen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
@@ -11,12 +11,9 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.RegistryObject;
 
 public class SFMItemModels extends ItemModelProvider {
-    public SFMItemModels(
-            DataGenerator generator, ExistingFileHelper existingFileHelper
-    ) {
-        super(generator, SFM.MOD_ID, existingFileHelper);
+    public SFMItemModels(PackOutput output, ExistingFileHelper existingFileHelper) {
+        super(output, SFM.MOD_ID, existingFileHelper);
     }
-
 
     @Override
     protected void registerModels() {

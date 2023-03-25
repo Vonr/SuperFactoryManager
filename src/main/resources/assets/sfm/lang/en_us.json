@@ -1,6 +1,6 @@
 {
   "mod.name": "Super Factory Manager",
-  "itemGroup.sfm": "Super Factory Manager",
+  "item_group.sfm": "Super Factory Manager",
   "block.sfm.manager": "Factory Manager",
   "block.sfm.cable": "Inventory Cable",
   "block.sfm.water_tank": "Water Tank",

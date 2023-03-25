@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.common.item;
 
-import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.ChatFormatting;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 
 public class DiskItem extends Item {
     public DiskItem() {
-        super(new Item.Properties().tab(SFMItems.TAB));
+        super(new Item.Properties());
     }
 
     public static String getProgram(ItemStack stack) {
@@ -57,6 +56,7 @@ public class DiskItem extends Item {
                         "sfm:warnings",
                         warnings
                                 .stream()
+                                .map(TranslatableContents.class::cast)
                                 .map(SFMUtil::serializeTranslation)
                                 .collect(ListTag::new, ListTag::add, ListTag::addAll)
                 );

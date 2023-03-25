@@ -138,7 +138,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             ) {
                 errors.add(new TranslatableContents(
                         "program.sfm.literal",
-                        "line " + line + ":" + charPositionInLine + " " + msg
+                        null,
+                        new Object[]{
+                                "line " + line + ":" + charPositionInLine + " " + msg
+                        }
                 ));
             }
         });
@@ -152,13 +155,16 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             DiskItem.setProgramName(disk, programAST.name());
             programAST.addWarnings(disk, this);
         } catch (ResourceLocationException | IllegalArgumentException e) {
-            errors.add(new TranslatableContents("program.sfm.literal", e.getMessage()));
+            errors.add(new TranslatableContents("program.sfm.literal", null, new Object[]{e.getMessage()}));
         } catch (Throwable t) {
-            errors.add(new TranslatableContents("program.sfm.compile_failed"));
+            errors.add(new TranslatableContents("program.sfm.compile_failed", null, TranslatableContents.NO_ARGS));
             t.printStackTrace();
-//            if (ModLoader)
-            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage()));
-//                errors.add(new )
+
+            if (!FMLEnvironment.production) errors.add(new TranslatableContents(
+                    t.getMessage(),
+                    null,
+                    TranslatableContents.NO_ARGS
+            ));
         }
 
         // todo: move illegal argument handling from exception flow to a check right here

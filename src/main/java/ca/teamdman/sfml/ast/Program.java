@@ -30,7 +30,7 @@ public record Program(
                     .findAny()
                     .isPresent();
             if (!isUsed) {
-                warnings.add(new TranslatableContents("program.sfm.warnings.unused_label", label));
+                warnings.add(new TranslatableContents("program.sfm.warnings.unused_label", null, new Object[]{label}));
             }
         }
 
@@ -40,7 +40,8 @@ public record Program(
                 .filter(x -> !referencedLabels.contains(x))
                 .forEach(label -> warnings.add(new TranslatableContents(
                         "program.sfm.warnings.undefined_label",
-                        label
+                        null,
+                        new Object[]{label}
                 )));
 
         // labels in world but not connected via cables
@@ -50,8 +51,11 @@ public record Program(
                     .filter(e -> !network.containsInventoryLocation(e.getKey()))
                     .forEach(e -> warnings.add(new TranslatableContents(
                             "program.sfm.warnings.disconnected_label",
-                            e.getValue(),
-                            String.format("[%d,%d,%d]", e.getKey().getX(), e.getKey().getY(), e.getKey().getZ())
+                            null,
+                            new Object[]{
+                                    e.getValue(),
+                                    String.format("[%d,%d,%d]", e.getKey().getX(), e.getKey().getY(), e.getKey().getZ())
+                            }
                     )));
         });
 
@@ -66,15 +70,22 @@ public record Program(
             if (type == null) {
                 warnings.add(new TranslatableContents(
                         "program.sfm.warnings.unknown_resource_type",
-                        resource.resourceTypeNamespace() + ":" + resource.resourceTypeName(),
-                        resource.toString()
+                        null,
+                        new Object[]{
+                                resource.resourceTypeNamespace() + ":" + resource.resourceTypeName(),
+                                resource.toString()
+                        }
                 ));
                 continue;
             }
 
             // make sure resource exists in the registry
             if (!type.registryKeyExists(loc.get())) {
-                warnings.add(new TranslatableContents("program.sfm.warnings.unknown_resource_id", resource));
+                warnings.add(new TranslatableContents(
+                        "program.sfm.warnings.unknown_resource_id",
+                        null,
+                        new Object[]{resource}
+                ));
             }
         }
         DiskItem.setWarnings(disk, warnings);

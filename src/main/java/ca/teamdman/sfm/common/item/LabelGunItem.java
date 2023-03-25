@@ -2,7 +2,6 @@ package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -21,7 +20,7 @@ import java.util.List;
 
 public class LabelGunItem extends Item {
     public LabelGunItem() {
-        super(new Properties().tab(SFMItems.TAB));
+        super(new Properties());
     }
 
     public static void setLabel(ItemStack stack, String label) {
