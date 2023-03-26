@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiPredicate;
 
+/**
+ * Helper for {@link ResourceComparer} to determine if the overall count is satisfied
+ * The condition is evaluated BEFORE {@link SetOperator} is applied, so the set operator is a fancy way to turn all those boolean results into a single boolean.
+ */
 public enum SetOperator implements ASTNode, BiPredicate<Boolean, List<Boolean>> {
     OVERALL((overall, __) -> overall),
     SOME((__, set) -> set.stream().anyMatch(Boolean::booleanValue)),
