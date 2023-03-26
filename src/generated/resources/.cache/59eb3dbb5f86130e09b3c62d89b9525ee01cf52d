@@ -1,0 +1,4 @@
+// 1.19.4	2023-03-25T12:47:53.6588503	Loot Tables
+9e70512e8a79930d4a37b54d00c63522fc4328bb data/sfm/loot_tables/blocks/cable.json
+1a5ab3d2e3f2a140176fbe24f6f7bfda4739b10b data/sfm/loot_tables/blocks/manager.json
+d5d85bc1984fef98042d421d4c9ccd0e18263bb6 data/sfm/loot_tables/blocks/water_tank.json
