@@ -1,10 +1,12 @@
 package ca.teamdman.sfm.common.blockentity;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
 import ca.teamdman.sfm.common.program.ProgramExecutor;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
+import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import ca.teamdman.sfml.ast.ASTBuilder;
@@ -14,6 +16,7 @@ import net.minecraft.ResourceLocationException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.ContainerHelper;
@@ -26,6 +29,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.gametest.ForgeGameTestHooks;
 import org.antlr.v4.runtime.*;
 
 import java.util.*;
@@ -245,6 +249,24 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         ContainerHelper.loadAllItems(tag, ITEMS);
+        if (ForgeGameTestHooks.isGametestEnabled()) {
+            var lastKnownPos = NbtUtils.readBlockPos(tag.getCompound("LastKnownPos"));
+            if (!lastKnownPos.equals(getBlockPos())) {
+                var diff = getBlockPos().subtract(lastKnownPos);
+                SFM.LOGGER.debug(
+                        "Manager at {} was moved from {} ({} offset), updating labels",
+                        getBlockPos(),
+                        lastKnownPos,
+                        diff
+                );
+                getDisk().ifPresent(disk -> {
+                    disk = disk.copy();
+                    SFMLabelNBTHelper.offsetPositions(disk, diff);
+                    setItem(0, disk);
+                    setChanged();
+                });
+            }
+        }
         compileProgram();
     }
 
@@ -252,6 +274,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         ContainerHelper.saveAllItems(tag, ITEMS);
+        if (ForgeGameTestHooks.isGametestEnabled()) {
+            tag.put("LastKnownPos", NbtUtils.writeBlockPos(getBlockPos()));
+        }
     }
 
 

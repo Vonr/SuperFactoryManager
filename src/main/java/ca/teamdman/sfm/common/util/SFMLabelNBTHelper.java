@@ -126,4 +126,19 @@ public class SFMLabelNBTHelper {
             dict.getList(key, Tag.TAG_LONG).removeIf(p -> ((LongTag) p).getAsLong() == pos.asLong());
         }
     }
+
+    /**
+     * Offsets all positions in the disk by the given diff
+     * Used by game tests to fix label positions since structures use relative positioning
+     */
+    public static void offsetPositions(ItemStack disk, BlockPos diff) {
+        var dict = getLabelDict(disk);
+        for (String key : dict.getAllKeys()) {
+            var list = dict.getList(key, Tag.TAG_LONG);
+            for (int i = 0; i < list.size(); i++) {
+                var tag = (LongTag) list.get(i);
+                list.set(i, LongTag.valueOf(BlockPos.of(tag.getAsLong()).offset(diff).asLong()));
+            }
+        }
+    }
 }
