@@ -44,6 +44,8 @@ public class SFMResourceTypes {
             FluidResourceType::new
     );
 
+//    public static final GasStack gas;
+
     public static void register(IEventBus bus) {
         TYPES.register(bus);
     }
