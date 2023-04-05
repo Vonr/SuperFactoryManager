@@ -17,17 +17,8 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.function.Supplier;
 
-// Ensure class is loaded (even though we're using field initializers instead of the register event)
-//@Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class SFMResourceTypes {
     public static final ResourceLocation REGISTRY_ID = new ResourceLocation(SFM.MOD_ID, "resource_type");
-
-//    @SubscribeEvent
-//    public static void onRegisterRegistry(NewRegistryEvent e) {
-//        var builder = new RegistryBuilder<ResourceType>();
-//        builder.setName(REGISTRY_ID);
-//        e.create(builder);
-//    }
 
     private static final DeferredRegister<ResourceType<?, ?>>                    TYPES          = DeferredRegister.create(
             REGISTRY_ID,
