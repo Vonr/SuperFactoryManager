@@ -105,6 +105,10 @@ minecraft {
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', 'sfm'
 
+//            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
+//            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
+            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions'
+
             mods {
                 sfm {
                     source sourceSets.main
@@ -122,6 +126,10 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             property 'forge.enabledGameTestNamespaces', 'sfm'
+
+//            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
+//            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
+            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions'
 
             mods {
                 sfm {
@@ -143,6 +151,10 @@ minecraft {
 
             property 'forge.enabledGameTestNamespaces', 'sfm'
             ideaModule "${project.name}.gametest"
+
+//            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
+//            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
+            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions'
 
             mods {
                 sfm {
