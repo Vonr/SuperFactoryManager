@@ -40,7 +40,7 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
 
         // how many more need to be promised
         var toPromise = this.MATCHER.getRemainingPromise();
-        toPromise = Math.min(toMove, toPromise);
+        toPromise = Long.min(toMove, toPromise);
         toMove -= toPromise;
 
         // track the promise

@@ -1,9 +1,15 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.program.FluidResourceType;
-import ca.teamdman.sfm.common.program.ItemResourceType;
-import ca.teamdman.sfm.common.program.ResourceType;
+import ca.teamdman.sfm.common.resourcetype.*;
+import mekanism.api.chemical.gas.GasStack;
+import mekanism.api.chemical.gas.IGasHandler;
+import mekanism.api.chemical.infuse.IInfusionHandler;
+import mekanism.api.chemical.infuse.InfusionStack;
+import mekanism.api.chemical.pigment.IPigmentHandler;
+import mekanism.api.chemical.pigment.PigmentStack;
+import mekanism.api.chemical.slurry.ISlurryHandler;
+import mekanism.api.chemical.slurry.SlurryStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -42,6 +48,25 @@ public class SFMResourceTypes {
     public static final  RegistryObject<ResourceType<FluidStack, IFluidHandler>> FLUID          = TYPES.register(
             "fluid",
             FluidResourceType::new
+    );
+
+    public static final RegistryObject<ResourceType<GasStack, IGasHandler>>           GASES     = TYPES.register(
+            "gas",
+            GasResourceType::new
+    );
+    public static final RegistryObject<ResourceType<InfusionStack, IInfusionHandler>> INFUSIONS = TYPES.register(
+            "infusion",
+            InfusionResourceType::new
+    );
+
+    public static final RegistryObject<ResourceType<PigmentStack, IPigmentHandler>> PIGMENTS = TYPES.register(
+            "pigment",
+            PigmentResourceType::new
+    );
+
+    public static final RegistryObject<ResourceType<SlurryStack, ISlurryHandler>> SLURRIES = TYPES.register(
+            "slurry",
+            SlurryResourceType::new
     );
 
 //    public static final GasStack gas;

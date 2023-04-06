@@ -1,8 +1,8 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.program.ResourceType;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 

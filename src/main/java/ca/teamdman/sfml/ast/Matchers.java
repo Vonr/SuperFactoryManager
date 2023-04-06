@@ -15,7 +15,7 @@ public record Matchers<STACK, CAP>(List<ResourceLimit<STACK, CAP>> resourceLimit
         return resourceLimits.stream().map(OutputResourceMatcher<STACK, CAP>::new).collect(Collectors.toList());
     }
 
-    public Matchers<STACK, CAP> withDefaults(int quantity, int retention) {
+    public Matchers<STACK, CAP> withDefaults(long quantity, long retention) {
         return new Matchers<>(resourceLimits
                                       .stream()
                                       .map(il -> il.withDefaults(quantity, retention))

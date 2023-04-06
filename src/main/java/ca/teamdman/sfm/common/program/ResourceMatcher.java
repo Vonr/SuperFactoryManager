@@ -6,7 +6,7 @@ import java.util.function.Predicate;
 
 public abstract class ResourceMatcher<STACK, CAP> implements Predicate<STACK> {
     protected final ResourceLimit<STACK, CAP> LIMIT;
-    protected       int                       transferred = 0;
+    protected       long                      transferred = 0;
 
     public ResourceMatcher(ResourceLimit<STACK, CAP> resourceLimit) {
         this.LIMIT = resourceLimit;
@@ -16,17 +16,17 @@ public abstract class ResourceMatcher<STACK, CAP> implements Predicate<STACK> {
         return LIMIT;
     }
 
-    public int getTransferred() {
+    public long getTransferred() {
         return transferred;
     }
 
     public abstract boolean isDone();
 
-    public int getMaxTransferable() {
+    public long getMaxTransferable() {
         return LIMIT.limit().quantity() - transferred;
     }
 
-    public void trackTransfer(int amount) {
+    public void trackTransfer(long amount) {
         transferred += amount;
     }
 

@@ -1,15 +1,15 @@
 package ca.teamdman.sfml.ast;
 
 public record Limit(
-        int quantity,
-        int retention
+        long quantity,
+        long retention
 ) implements ASTNode {
 
     public Limit() {
         this(-1, -1);
     }
 
-    public Limit withDefaults(int quantity, int retention) {
+    public Limit withDefaults(long quantity, long retention) {
         if (quantity() < 0 && retention() < 0)
             return new Limit(quantity, retention);
         else if (quantity() < 0)

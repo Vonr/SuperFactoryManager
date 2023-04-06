@@ -1,5 +1,7 @@
 package ca.teamdman.sfm.common.program;
 
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
+
 public abstract class LimitedSlot<STACK, CAP, M extends ResourceMatcher<STACK, CAP>> {
     public final ResourceType<STACK, CAP> TYPE;
     public final CAP                      HANDLER;
