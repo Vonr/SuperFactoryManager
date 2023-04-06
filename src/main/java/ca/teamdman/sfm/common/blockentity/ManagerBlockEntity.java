@@ -2,20 +2,14 @@ package ca.teamdman.sfm.common.blockentity;
 
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
-import ca.teamdman.sfm.common.program.ProgramExecutor;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
-import ca.teamdman.sfml.SFMLLexer;
-import ca.teamdman.sfml.SFMLParser;
-import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
-import net.minecraft.ResourceLocationException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -25,15 +19,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import org.antlr.v4.runtime.*;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int                    STATE_DATA_ACCESS_KEY     = 0;
     private final       NonNullList<ItemStack> ITEMS                     = NonNullList.withSize(1, ItemStack.EMPTY);
-    private             ProgramExecutor        compiledProgram           = null;
+    private             Program                program                   = null;
     private final       ContainerData          DATA_ACCESS               = new ContainerData() {
         @Override
         public int get(int key) {
@@ -61,13 +55,13 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
-        if (tile.compiledProgram != null) {
-            tile.compiledProgram.tick();
+        if (tile.program != null) {
+            tile.program.tick(tile);
         }
     }
 
-    public ProgramExecutor getCompiledProgram() {
-        return compiledProgram;
+    public Program getProgram() {
+        return program;
     }
 
     public void trackRedstonePulseUnprocessed() {
@@ -82,30 +76,30 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return unprocessedRedstonePulses;
     }
 
+    public void setProgram(String program) {
+        getDisk().ifPresent(disk -> {
+            DiskItem.setProgram(disk, program);
+            rebuildProgramAndUpdateDisk();
+            setChanged();
+        });
+    }
+
     public State getState() {
         if (getDisk().isEmpty()) return State.NO_DISK;
-        if (getProgram().isEmpty()) return State.NO_PROGRAM;
-        if (compiledProgram == null) return State.INVALID_PROGRAM;
+        if (getProgramString().isEmpty()) return State.NO_PROGRAM;
+        if (program == null) return State.INVALID_PROGRAM;
         return State.RUNNING;
     }
 
-    public Optional<String> getProgram() {
+    public Optional<String> getProgramString() {
         return getDisk()
                 .map(DiskItem::getProgram)
                 .filter(prog -> !prog.isBlank());
     }
 
-    public void setProgram(String program) {
-        getDisk().ifPresent(disk -> {
-            DiskItem.setProgram(disk, program);
-            compileProgram();
-            setChanged();
-        });
-    }
-
     public Set<String> getReferencedLabels() {
-        if (compiledProgram == null) return Collections.emptySet();
-        return compiledProgram.getReferencedLabels();
+        if (program == null) return Collections.emptySet();
+        return program.getReferencedLabels();
     }
 
     public Optional<ItemStack> getDisk() {
@@ -114,60 +108,29 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return Optional.empty();
     }
 
-    private void compileProgram() {
-        compiledProgram = null;
-        if (getProgram().isEmpty()) return;
-        var disk    = getDisk().get();
-        var program = getProgram().get();
-        var lexer   = new SFMLLexer(CharStreams.fromString(program));
-        lexer.removeErrorListeners();
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new SFMLParser(tokens);
-
-        parser.removeErrorListeners();
-        List<TranslatableContents> errors = new ArrayList<>();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(
-                    Recognizer<?, ?> recognizer,
-                    Object offendingSymbol,
-                    int line,
-                    int charPositionInLine,
-                    String msg,
-                    RecognitionException e
-            ) {
-                errors.add(new TranslatableContents(
-                        "program.sfm.literal",
-                        "line " + line + ":" + charPositionInLine + " " + msg
-                ));
-            }
+    public void rebuildProgramAndUpdateDisk() {
+        getProgramString().ifPresentOrElse(programString -> {
+            Program.compile(programString, success -> {
+                this.program = success;
+                getDisk().ifPresent(disk -> {
+                    DiskItem.setProgramName(disk, success.name());
+                    DiskItem.setWarnings(disk, success.gatherWarnings(disk, this));
+                    DiskItem.setErrors(disk, Collections.emptyList());
+                });
+            }, failure -> {
+                program = null;
+                getDisk().ifPresent(disk -> {
+                    DiskItem.setWarnings(disk, Collections.emptyList());
+                    DiskItem.setErrors(disk, failure);
+                });
+            });
+        }, () -> {
+            program = null;
+            getDisk().ifPresent(disk -> {
+                DiskItem.setWarnings(disk, Collections.emptyList());
+                DiskItem.setErrors(disk, Collections.emptyList());
+            });
         });
-
-        var     context    = parser.program();
-        Program programAST = null;
-        // clear warnings in case of problems rebuilding program
-        DiskItem.setWarnings(disk, Collections.emptyList());
-        try {
-            programAST = new ASTBuilder().visitProgram(context);
-            DiskItem.setProgramName(disk, programAST.name());
-            programAST.addWarnings(disk, this);
-        } catch (ResourceLocationException | IllegalArgumentException e) {
-            errors.add(new TranslatableContents("program.sfm.literal", e.getMessage()));
-        } catch (Throwable t) {
-            errors.add(new TranslatableContents("program.sfm.compile_failed"));
-            t.printStackTrace();
-//            if (ModLoader)
-            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage()));
-//                errors.add(new )
-        }
-
-        // todo: move illegal argument handling from exception flow to a check right here
-
-        if (errors.isEmpty()) {
-            compiledProgram = new ProgramExecutor(programAST, this);
-        }
-
-        DiskItem.setErrors(disk, errors);
     }
 
     @Override
@@ -177,7 +140,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
-        return new ManagerMenu(windowId, inv, this, getBlockPos(), this.DATA_ACCESS, getProgram().orElse(""));
+        return new ManagerMenu(windowId, inv, this, getBlockPos(), this.DATA_ACCESS, getProgramString().orElse(""));
     }
 
     @Override
@@ -199,7 +162,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     @Override
     public ItemStack removeItem(int slot, int amount) {
         var result = ContainerHelper.removeItem(ITEMS, slot, amount);
-        if (slot == 0) compileProgram();
+        if (slot == 0) rebuildProgramAndUpdateDisk();
         setChanged();
         return result;
     }
@@ -207,7 +170,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
         var result = ContainerHelper.takeItem(ITEMS, slot);
-        if (slot == 0) compileProgram();
+        if (slot == 0) rebuildProgramAndUpdateDisk();
         setChanged();
         return result;
     }
@@ -216,7 +179,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void setItem(int slot, ItemStack stack) {
         if (slot < 0 || slot >= ITEMS.size()) return;
         ITEMS.set(slot, stack);
-        if (slot == 0) compileProgram();
+        if (slot == 0) rebuildProgramAndUpdateDisk();
         setChanged();
     }
 
@@ -239,7 +202,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         ContainerHelper.loadAllItems(tag, ITEMS);
-        compileProgram();
+        rebuildProgramAndUpdateDisk();
     }
 
     @Override

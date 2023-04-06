@@ -33,7 +33,7 @@ public class ServerboundManagerFixPacket extends MenuPacket {
                 ManagerMenu menu,
                 ManagerBlockEntity manager
         ) {
-            manager.getDisk().ifPresent(disk -> manager.getCompiledProgram().getProgram().fixWarnings(disk, manager));
+            manager.getDisk().ifPresent(disk -> manager.getProgram().fixWarnings(disk, manager));
         }
     }
 }

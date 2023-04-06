@@ -28,7 +28,7 @@ public abstract class LimitedSlot<STACK, CAP, M extends ResourceMatcher<STACK, C
         return TYPE.getStackInSlot(HANDLER, SLOT);
     }
 
-    public STACK extract(int amount, boolean simulate) {
+    public STACK extract(long amount, boolean simulate) {
         return TYPE.extract(HANDLER, SLOT, amount, simulate);
     }
 

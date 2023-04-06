@@ -22,7 +22,7 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
     }
 
     public void moveTo(LimitedOutputSlot<STACK, CAP> other) {
-        var potential = this.extract(Integer.MAX_VALUE, true);
+        var potential = this.extract(Long.MAX_VALUE, true);
         if (this.TYPE.isEmpty(potential)) {
             setDone();
             return;

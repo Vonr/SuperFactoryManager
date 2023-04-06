@@ -75,8 +75,7 @@ public record ResourceIdentifier<STACK, CAP>(
 
     public ResourceType<STACK, CAP> getResourceType() {
         return (ResourceType<STACK, CAP>) SFMResourceTypes.DEFERRED_TYPES
-                .get()
-                .getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
+                .get().getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
     }
 
     @Override
