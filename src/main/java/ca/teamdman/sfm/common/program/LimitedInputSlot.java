@@ -22,7 +22,7 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
     }
 
     public void moveTo(LimitedOutputSlot<STACK, CAP> other) {
-        var potential = this.extract(Integer.MAX_VALUE, true);
+        var potential = this.extract(Long.MAX_VALUE, true);
         if (this.TYPE.isEmpty(potential)) {
             setDone();
             return;
@@ -40,7 +40,7 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
 
         // how many more need to be promised
         var toPromise = this.MATCHER.getRemainingPromise();
-        toPromise = Math.min(toMove, toPromise);
+        toPromise = Long.min(toMove, toPromise);
         toMove -= toPromise;
 
         // track the promise

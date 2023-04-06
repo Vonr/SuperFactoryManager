@@ -69,6 +69,7 @@ public class LabelGunItem extends Item {
                     ctx.getPlayer().sendSystemMessage(Component.translatable("chat.sfm.labelgun.pull"));
                 } else {
                     SFMLabelNBTHelper.copyLabels(stack, disk);
+                    manager.rebuildProgramAndUpdateDisk();
                     manager.setChanged();
                     ctx.getPlayer().sendSystemMessage(Component.translatable("chat.sfm.labelgun.push"));
                 }

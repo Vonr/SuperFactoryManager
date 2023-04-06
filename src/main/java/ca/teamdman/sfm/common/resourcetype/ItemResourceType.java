@@ -1,13 +1,10 @@
-package ca.teamdman.sfm.common.program;
+package ca.teamdman.sfm.common.resourcetype;
 
-import ca.teamdman.sfml.ast.LabelAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.stream.Stream;
 
 public class ItemResourceType extends ResourceType<ItemStack, IItemHandler> {
     public ItemResourceType() {
@@ -25,7 +22,7 @@ public class ItemResourceType extends ResourceType<ItemStack, IItemHandler> {
     }
 
     @Override
-    public int getCount(ItemStack stack) {
+    public long getCount(ItemStack stack) {
         return stack.getCount();
     }
 
@@ -35,8 +32,9 @@ public class ItemResourceType extends ResourceType<ItemStack, IItemHandler> {
     }
 
     @Override
-    public ItemStack extract(IItemHandler handler, int slot, int amount, boolean simulate) {
-        return handler.extractItem(slot, amount, simulate);
+    public ItemStack extract(IItemHandler handler, int slot, long amount, boolean simulate) {
+        int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
+        return handler.extractItem(slot, finalAmount, simulate);
     }
 
     @Override
@@ -71,15 +69,4 @@ public class ItemResourceType extends ResourceType<ItemStack, IItemHandler> {
         return stack.isEmpty();
     }
 
-    @Override
-    public Stream<ItemStack> collect(IItemHandler cap, LabelAccess labelAccess) {
-        var rtn = Stream.<ItemStack>builder();
-        for (int slot = 0; slot < cap.getSlots(); slot++) {
-            if (!labelAccess.slots().contains(slot)) continue;
-            var stack = cap.getStackInSlot(slot);
-            if (stack.isEmpty()) continue;
-            rtn.add(stack);
-        }
-        return rtn.build();
-    }
 }

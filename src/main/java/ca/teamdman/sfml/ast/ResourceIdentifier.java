@@ -1,8 +1,8 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.program.ResourceType;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 
@@ -75,8 +75,7 @@ public record ResourceIdentifier<STACK, CAP>(
 
     public ResourceType<STACK, CAP> getResourceType() {
         return (ResourceType<STACK, CAP>) SFMResourceTypes.DEFERRED_TYPES
-                .get()
-                .getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
+                .get().getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
     }
 
     @Override

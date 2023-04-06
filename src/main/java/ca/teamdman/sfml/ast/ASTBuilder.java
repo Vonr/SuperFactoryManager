@@ -96,16 +96,17 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         }
 
         ComparisonOperator finalComp = comp;
-        int                finalNum  = num.value();
+        assert num.value() <= Integer.MAX_VALUE;
+        int finalNum = (int) num.value();
         return new BoolExpr(
                 programContext -> finalComp.test(
-                        programContext
+                        (long) programContext
                                 .getManager()
                                 .getLevel()
                                 .getBestNeighborSignal(programContext
                                                                .getManager()
                                                                .getBlockPos()),
-                        finalNum
+                        (long) finalNum
                 )
         );
     }
@@ -118,19 +119,21 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public Quantity visitNumber(SFMLParser.NumberContext ctx) {
-        return new Quantity(Integer.parseInt(ctx.getText()));
+        return new Quantity(Long.parseLong(ctx.getText()));
     }
 
     @Override
     public Interval visitTicks(SFMLParser.TicksContext ctx) {
         var num = visitNumber(ctx.number());
-        return Interval.fromTicks(num.value());
+        assert num.value() <= Integer.MAX_VALUE;
+        return Interval.fromTicks((int) num.value());
     }
 
     @Override
     public Interval visitSeconds(SFMLParser.SecondsContext ctx) {
         var num = visitNumber(ctx.number());
-        return Interval.fromSeconds(num.value());
+        assert num.value() <= Integer.MAX_VALUE;
+        return Interval.fromSeconds((int) num.value());
     }
 
     @Override
@@ -257,10 +260,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Matchers<?, ?> visitInputmatchers(SFMLParser.InputmatchersContext ctx) {
         if (ctx == null) return new Matchers(List.of(new ResourceLimit(
-                new Limit(Integer.MAX_VALUE, 0),
+                new Limit(Long.MAX_VALUE, 0),
                 ResourceIdentifier.MATCH_ALL
         )));
-        return ((Matchers) visit(ctx.movement())).withDefaults(Integer.MAX_VALUE, 0);
+        return ((Matchers) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, 0);
     }
 
 
@@ -268,10 +271,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public Matchers<?, ?> visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
         if (ctx == null)
             return new Matchers(List.of(new ResourceLimit(
-                    new Limit(Integer.MAX_VALUE, Integer.MAX_VALUE),
+                    new Limit(Long.MAX_VALUE, Long.MAX_VALUE),
                     ResourceIdentifier.MATCH_ALL
             )));
-        return ((Matchers<?, ?>) visit(ctx.movement())).withDefaults(Integer.MAX_VALUE, Integer.MAX_VALUE);
+        return ((Matchers<?, ?>) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, Long.MAX_VALUE);
     }
 
     @Override
@@ -306,13 +309,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public NumberRangeSet visitRangeset(SFMLParser.RangesetContext ctx) {
-        if (ctx == null) return new NumberRangeSet(List.of(new NumberRange(Integer.MIN_VALUE, Integer.MAX_VALUE)));
+        if (ctx == null) return new NumberRangeSet(List.of(new NumberRange(Long.MIN_VALUE, Long.MAX_VALUE)));
         return new NumberRangeSet(ctx.range().stream().map(this::visitRange).collect(Collectors.toList()));
     }
 
     @Override
     public NumberRange visitRange(SFMLParser.RangeContext ctx) {
-        var iter  = ctx.number().stream().map(this::visitNumber).mapToInt(Quantity::value).iterator();
+        var iter  = ctx.number().stream().map(this::visitNumber).mapToLong(Quantity::value).iterator();
         var start = iter.next();
         if (iter.hasNext()) {
             var end = iter.next();
@@ -343,7 +346,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public Quantity visitQuantity(SFMLParser.QuantityContext ctx) {
-        if (ctx == null) return new Quantity(Integer.MAX_VALUE);
+        if (ctx == null) return new Quantity(Long.MAX_VALUE);
         return visitNumber(ctx.number());
     }
 

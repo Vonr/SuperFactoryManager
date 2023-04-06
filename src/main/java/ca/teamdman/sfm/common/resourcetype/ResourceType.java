@@ -1,5 +1,6 @@
-package ca.teamdman.sfm.common.program;
+package ca.teamdman.sfm.common.resourcetype;
 
+import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
@@ -18,11 +19,11 @@ public abstract class ResourceType<STACK, CAP> {
         this.CAPABILITY = CAPABILITY;
     }
 
-    public abstract int getCount(STACK stack);
+    public abstract long getCount(STACK stack);
 
     public abstract STACK getStackInSlot(CAP cap, int slot);
 
-    public abstract STACK extract(CAP cap, int slot, int amount, boolean simulate);
+    public abstract STACK extract(CAP cap, int slot, long amount, boolean simulate);
 
     public abstract int getSlots(CAP handler);
 
@@ -69,7 +70,17 @@ public abstract class ResourceType<STACK, CAP> {
                 .filter(Objects::nonNull);
     }
 
-    public abstract Stream<STACK> collect(CAP cap, LabelAccess labelAccess);
+    public Stream<STACK> collect(CAP cap, LabelAccess labelAccess) {
+        var rtn = Stream.<STACK>builder();
+        for (int slot = 0; slot < getSlots(cap); slot++) {
+            if (!labelAccess.slots().contains(slot)) continue;
+            var stack = getStackInSlot(cap, slot);
+            if (!isEmpty(stack)) {
+                rtn.add(stack);
+            }
+        }
+        return rtn.build();
+    }
 
     public abstract boolean registryKeyExists(ResourceLocation location);
 

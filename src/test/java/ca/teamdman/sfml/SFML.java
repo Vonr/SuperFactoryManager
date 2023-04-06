@@ -220,7 +220,7 @@ public class SFML {
     @Test
     public void basicResourceIdentifier() {
         var identifier = ResourceIdentifier.fromString("wool");
-        assertEquals(identifier.toString(), "sfm:item:minecraft:wool");
+        assertEquals("sfm:item:minecraft:wool", identifier.toString());
     }
 
 

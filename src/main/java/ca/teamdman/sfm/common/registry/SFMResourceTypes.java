@@ -1,9 +1,9 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.program.FluidResourceType;
-import ca.teamdman.sfm.common.program.ItemResourceType;
-import ca.teamdman.sfm.common.program.ResourceType;
+import ca.teamdman.sfm.common.resourcetype.FluidResourceType;
+import ca.teamdman.sfm.common.resourcetype.ItemResourceType;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.eventbus.api.IEventBus;

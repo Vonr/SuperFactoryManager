@@ -2,15 +2,21 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
+import ca.teamdman.sfml.SFMLLexer;
+import ca.teamdman.sfml.SFMLParser;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.antlr.v4.runtime.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public record Program(
         String name,
@@ -20,7 +26,79 @@ public record Program(
 ) implements ASTNode {
     public static final int MAX_PROGRAM_LENGTH = 8096;
 
-    public void gatherWarnings(ItemStack disk, ManagerBlockEntity manager) {
+    public static void compile(
+            String programString,
+            Consumer<Program> onSuccess,
+            Consumer<List<TranslatableContents>> onFailure
+    ) {
+        var lexer = new SFMLLexer(CharStreams.fromString(programString));
+        lexer.removeErrorListeners();
+        var tokens = new CommonTokenStream(lexer);
+        var parser = new SFMLParser(tokens);
+
+        parser.removeErrorListeners();
+        List<TranslatableContents> errors = new ArrayList<>();
+        parser.addErrorListener(new BaseErrorListener() {
+            @Override
+            public void syntaxError(
+                    Recognizer<?, ?> recognizer,
+                    Object offendingSymbol,
+                    int line,
+                    int charPositionInLine,
+                    String msg,
+                    RecognitionException e
+            ) {
+                errors.add(new TranslatableContents(
+                        "program.sfm.error.literal",
+                        null,
+                        new Object[]{
+                                "line " + line + ":" + charPositionInLine + " " + msg
+                        }
+                ));
+            }
+        });
+
+        var context     = parser.program();
+        Program program = null;
+
+        try {
+            program = new ASTBuilder().visitProgram(context);
+            // make sure all referenced resources exist now during compilation instead of waiting for the program to tick
+        } catch (ResourceLocationException | IllegalArgumentException | AssertionError e) {
+            errors.add(new TranslatableContents("program.sfm.error.literal", null, new Object[]{e.getMessage()}));
+        } catch (Throwable t) {
+            errors.add(new TranslatableContents("program.sfm.error.compile_failed", null, new Object[]{}));
+            t.printStackTrace();
+            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage(), null, new Object[]{}));
+        }
+
+        for (ResourceIdentifier<?, ?> referencedResource : program.referencedResources) {
+            try {
+                ResourceType<?, ?> resourceType = referencedResource.getResourceType();
+                if (resourceType == null) {
+                    errors.add(new TranslatableContents(
+                            "program.sfm.error.unknown_resource_type",
+                            null,
+                            new Object[]{referencedResource}
+                    ));
+                }
+            } catch (ResourceLocationException e) {
+                errors.add(new TranslatableContents(
+                        "program.sfm.error.malformed_resource_type",
+                        null,
+                        new Object[]{referencedResource}
+                ));
+            }
+        }
+
+        if (errors.isEmpty()) {
+            onSuccess.accept(program);
+        } else {
+            onFailure.accept(errors);
+        }
+    }
+
+    public ArrayList<TranslatableContents> gatherWarnings(ItemStack disk, ManagerBlockEntity manager) {
         var warnings = new ArrayList<TranslatableContents>();
 
         // labels in code but not in world
@@ -102,7 +180,7 @@ public record Program(
                 ));
             }
         }
-        DiskItem.setWarnings(disk, warnings);
+        return warnings;
     }
 
     public void fixWarnings(ItemStack disk, ManagerBlockEntity manager) {
@@ -124,7 +202,21 @@ public record Program(
         gatherWarnings(disk, manager);
     }
 
-    public void tick(ProgramContext context) {
+    public Set<String> getReferencedLabels() {
+        return referencedLabels;
+    }
+
+    public void tick(ManagerBlockEntity manager) {
+        var context = new ProgramContext(manager);
+
+        // update warnings on disk item every 20 seconds
+        if (manager
+                    .getLevel()
+                    .getGameTime() % 20 == 0) {
+            manager
+                    .getDisk()
+                    .ifPresent(disk -> gatherWarnings(disk, manager));
+        }
         for (Trigger t : triggers) {
             if (t.shouldTick(context)) {
 //                var start = System.nanoTime();
@@ -134,9 +226,7 @@ public record Program(
 //                SFM.LOGGER.debug("Took {}ms ({}us)", diff / 1000000, diff);
             }
         }
-    }
+        manager.clearRedstonePulseQueue();
 
-    public Set<String> getReferencedLabels() {
-        return referencedLabels;
     }
 }

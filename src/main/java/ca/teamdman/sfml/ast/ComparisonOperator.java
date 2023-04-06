@@ -3,17 +3,17 @@ package ca.teamdman.sfml.ast;
 import java.util.Locale;
 import java.util.function.BiPredicate;
 
-public enum ComparisonOperator implements ASTNode, BiPredicate<Integer, Integer> {
+public enum ComparisonOperator implements ASTNode, BiPredicate<Long, Long> {
     GREATER((a, b) -> a > b),
     LESSER((a, b) -> a < b),
-    EQUALS(Integer::equals),
+    EQUALS(Long::equals),
     LESSER_OR_EQUAL((a, b) -> a <= b),
     GREATER_OR_EQUAL((a, b) -> a >= b),
     NEVER((a, b) -> false);
 
-    private final BiPredicate<Integer, Integer> PRED;
+    private final BiPredicate<Long, Long> PRED;
 
-    ComparisonOperator(BiPredicate<Integer, Integer> pred) {
+    ComparisonOperator(BiPredicate<Long, Long> pred) {
         this.PRED = pred;
     }
 
@@ -29,7 +29,7 @@ public enum ComparisonOperator implements ASTNode, BiPredicate<Integer, Integer>
     }
 
     @Override
-    public boolean test(Integer a, Integer b) {
+    public boolean test(Long a, Long b) {
         return PRED.test(a, b);
     }
 }

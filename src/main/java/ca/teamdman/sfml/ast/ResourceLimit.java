@@ -10,7 +10,7 @@ public record ResourceLimit<STACK, CAP>(
         this(new Limit(), resourceId);
     }
 
-    public ResourceLimit<STACK, CAP> withDefaults(int quantity, int retention) {
+    public ResourceLimit<STACK, CAP> withDefaults(long quantity, long retention) {
         return new ResourceLimit<>(limit.withDefaults(quantity, retention), resourceId);
     }
 

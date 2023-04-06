@@ -1,6 +1,6 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.program.ResourceType;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +18,12 @@ public record ResourceComparer<STACK, CAP>(
             var handlers = type.getCaps(context, labelAccess);
 
             // track how many items seen
-            var overallCount = 0;
+            long overallCount = 0;
             // track how many inventories satisfied the condition
             List<Boolean> satisfiedSet = new ArrayList<>();
 
             for (var cap : (Iterable<CAP>) handlers::iterator) {
-                var invCount = 0;
+                long invCount = 0;
                 for (var stack : (Iterable<STACK>) type.collect(cap, labelAccess)::iterator) {
                     if (this.res.test(stack)) {
                         invCount += type.getCount(stack);
