@@ -128,7 +128,7 @@ public class CableNetworkManager {
      */
     public static Optional<CableNetwork> getOrRegisterNetwork(Level level, BlockPos pos) {
         // only cables define the main spine of a network
-        if (!CableNetwork.isValidNetworkMember(level, pos)) return Optional.empty();
+        if (!CableNetwork.isCable(level, pos)) return Optional.empty();
 
         // discover existing network for this position
         Optional<CableNetwork> existing = getNetwork(level, pos);

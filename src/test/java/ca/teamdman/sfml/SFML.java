@@ -91,9 +91,9 @@ public class SFML {
                     OUTPUT *:*:* to b
                     OUTPUT *:* to b
                     OUTPUT * to b
-                    OUTPUT "*:*:*" to b
-                    OUTPUT "*:*" to b
-                    OUTPUT "*" to b
+                    OUTPUT ".*:.*:.*" to b
+                    OUTPUT ".*:.*" to b
+                    OUTPUT ".*" to b
                 end
                 """;
         var errors = getCompileErrors(input);
@@ -220,7 +220,7 @@ public class SFML {
     @Test
     public void basicResourceIdentifier() {
         var identifier = ResourceIdentifier.fromString("wool");
-        assertEquals(identifier.toString(), "item:minecraft:wool");
+        assertEquals("sfm:item:minecraft:wool", identifier.toString());
     }
 
 
