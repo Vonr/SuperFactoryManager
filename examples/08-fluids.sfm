@@ -2,10 +2,3 @@ EVERY 20 TICKS DO
     INPUT fluid:minecraft:water from a BOTTOM SIDE
     OUTPUT fluid:*:* to b TOP SIDE
 END
-
----
-
-EVERY 20 TICKS DO
-    INPUT fluid:*:* from a BOTTOM SIDE
-    OUTPUT fluid:*:* to b TOP SIDE
-END
