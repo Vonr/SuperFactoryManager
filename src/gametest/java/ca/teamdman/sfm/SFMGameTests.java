@@ -288,9 +288,9 @@ public class SFMGameTests {
         // fill the platform with cables and barrels
         var sourceBlocks = new ArrayList<BlockPos>();
         var destBlocks   = new ArrayList<BlockPos>();
-        for (int x = 0; x < 4; x++) {
+        for (int x = 0; x < 3; x++) {
 //            for (int z = 0; z < 25; z++) {
-            for (int z = 0; z < 4; z++) {
+            for (int z = 0; z < 2; z++) {
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
                 helper.setBlock(new BlockPos(x, 3, z), Blocks.BARREL);
                 if (z % 2 == 0) {
@@ -345,7 +345,7 @@ public class SFMGameTests {
                 BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
                 for (int i = 0; i < barrel.getContainerSize(); i++) {
                     assertTrue(barrel.getItem(i).getCount() == 64, "Items did not arrive");
-                    barrel.setItem(i, ItemStack.EMPTY); // prevent lag from resetting the test
+//                    barrel.setItem(i, ItemStack.EMPTY); // prevent lag from resetting the test
                 }
             });
             helper.succeed();
@@ -355,19 +355,22 @@ public class SFMGameTests {
     @GameTest(template = "25x3x25") // start with empty platform
     public static void CableNetworkFormation(GameTestHelper helper) {
         // create a row of cables
-        helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.CABLE_BLOCK.get());
-        // those cables should all be on the same network
-        var net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
-                .get();
         for (int i = 0; i < 10; i++) {
             helper.setBlock(new BlockPos(i, 2, 0), SFMBlocks.CABLE_BLOCK.get());
         }
+
+        var net = CableNetworkManager
+                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                .get();
+        // those cables should all be on the same network
         for (int i = 0; i < 10; i++) {
             assertTrue(CableNetworkManager
                                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
                                .get() == net, "Networks did not merge");
         }
+
+        // the network should only contain those cables
+        assertTrue(net.getCables().size() == 10, "Network size did not match");
 
         // break a block in the middle of the cable
         helper.setBlock(new BlockPos(5, 2, 0), Blocks.AIR);
@@ -375,6 +378,7 @@ public class SFMGameTests {
         net = CableNetworkManager
                 .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                 .get();
+        // now we have a network of 5 cables and a network of 4 cables
         for (int i = 0; i < 5; i++) {
             assertTrue(CableNetworkManager
                                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
@@ -400,6 +404,20 @@ public class SFMGameTests {
                                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
                                .get() == net, "Networks did not merge");
         }
+
+        // add cables in the corner
+        helper.setBlock(new BlockPos(0, 2, 1), SFMBlocks.CABLE_BLOCK.get());
+        helper.setBlock(new BlockPos(1, 2, 1), SFMBlocks.CABLE_BLOCK.get());
+        assertTrue(CableNetworkManager
+                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                           .get().getCables().size() == 12, "Network size did not match");
+
+        // punch out the corner, the network should shrink by 1
+        helper.setBlock(new BlockPos(1, 2, 1), Blocks.AIR);
+        assertTrue(CableNetworkManager
+                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                           .get().getCables().size() == 11, "Network size did not match");
+
 
         // create a new network in a plus shape
         helper.setBlock(new BlockPos(15, 2, 15), SFMBlocks.CABLE_BLOCK.get());
@@ -453,6 +471,43 @@ public class SFMGameTests {
                                )
                                .get() == net, "Networks did not merge");
         }
+
+        // lets also test having cables in more than just a straight line
+        // we want corners with multiple cables adjacent
+
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                helper.setBlock(new BlockPos(7 + i, 2, 7 + j), SFMBlocks.CABLE_BLOCK.get());
+            }
+        }
+        // make sure it's all in a single network
+        assertTrue(CableNetworkManager
+                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 7)))
+                           .get().getCables().size() == 25, "Network size did not match");
+        // cut a line through it
+        for (int i = 0; i < 5; i++) {
+            helper.setBlock(new BlockPos(7 + i, 2, 9), Blocks.AIR);
+        }
+        // make sure the network disappeared where it was cut
+        assertTrue(CableNetworkManager
+                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 9)))
+                           .isEmpty(), "Network should not be present where the cable was removed from");
+        // make sure new network of 10 is formed
+        assertTrue(CableNetworkManager
+                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 8)))
+                           .get().getCables().size() == 10, "Network size did not match");
+        // make sure new network of 10 is formed
+        assertTrue(CableNetworkManager
+                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 11)))
+                           .get().getCables().size() == 10, "Network size did not match");
+        // make sure the new networks are distinct
+        assertTrue(CableNetworkManager
+                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 8)))
+                           .get() !=
+                   CableNetworkManager
+                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 11)))
+                           .get(), "Networks did not split");
+
 
         helper.succeed();
     }

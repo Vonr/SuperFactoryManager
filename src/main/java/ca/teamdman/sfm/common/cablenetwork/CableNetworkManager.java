@@ -38,11 +38,9 @@ public class CableNetworkManager {
      */
     public static void unregister(Level level, BlockPos cablePos) {
         getNetwork(level, cablePos).ifPresent(network -> {
-            var branches = network.remove(cablePos);
-            // remove old network
             removeNetwork(network);
-            // add all branch networks
-            branches.forEach(CableNetworkManager::addNetwork);
+            var newNetworks = network.withoutCable(cablePos);
+            newNetworks.forEach(CableNetworkManager::addNetwork);
         });
     }
 
@@ -108,9 +106,13 @@ public class CableNetworkManager {
     /**
      * Gets the cable network object. If none exists and one should, it will create and populate
      * one.
+     * <p>
+     * Networks should only exist on the server side.
      */
     public static Optional<CableNetwork> getOrRegisterNetwork(Level level, BlockPos pos) {
         if (level == null) return Optional.empty();
+        if (level.isClientSide()) return Optional.empty();
+
         // only cables define the main spine of a network
         if (!CableNetwork.isCable(level, pos)) return Optional.empty();
 
