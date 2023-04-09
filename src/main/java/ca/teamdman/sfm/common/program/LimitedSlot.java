@@ -2,22 +2,22 @@ package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-public abstract class LimitedSlot<STACK, CAP, M extends ResourceMatcher<STACK, CAP>> {
+public abstract class LimitedSlot<STACK, CAP, T extends ResourceTracker<STACK, CAP>> {
     public final ResourceType<STACK, CAP> TYPE;
     public final CAP                      HANDLER;
     public final int                      SLOT;
-    public final M                        MATCHER;
+    public final T                        TRACKER;
     private      boolean                  done = false;
 
-    public LimitedSlot(CAP handler, ResourceType<STACK, CAP> type, int slot, M matcher) {
+    public LimitedSlot(CAP handler, ResourceType<STACK, CAP> type, int slot, T matcher) {
         this.TYPE    = type;
         this.HANDLER = handler;
         this.SLOT    = slot;
-        this.MATCHER = matcher;
+        this.TRACKER = matcher;
     }
 
     public boolean isDone() {
-        return done || MATCHER.isDone();
+        return done || TRACKER.isDone();
     }
 
     protected void setDone() {

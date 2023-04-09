@@ -2,17 +2,17 @@ package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfml.ast.OutputStatement;
 
-public class LimitedOutputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, OutputResourceMatcher<STACK, CAP>> {
-    private final OutputStatement<STACK, CAP> STATEMENT;
+public class LimitedOutputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, OutputResourceTracker<STACK, CAP>> {
+    private final OutputStatement STATEMENT;
 
     public LimitedOutputSlot(
-            OutputStatement<STACK, CAP> statement,
+            OutputStatement statement,
             CAP handler,
             int slot,
-            OutputResourceMatcher<STACK, CAP> matcher
+            OutputResourceTracker<STACK, CAP> matcher
     ) {
         super(handler, matcher.LIMIT.resourceId().getResourceType(), slot, matcher);
         this.STATEMENT = statement;
-        MATCHER.visit(this);
+        TRACKER.visit(this);
     }
 }

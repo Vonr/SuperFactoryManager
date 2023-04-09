@@ -2,10 +2,10 @@ package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfml.ast.ResourceLimit;
 
-public class OutputResourceMatcher<STACK, CAP> extends ResourceMatcher<STACK, CAP> {
+public class OutputResourceTracker<STACK, CAP> extends ResourceTracker<STACK, CAP> {
     private long seen = 0;
 
-    public OutputResourceMatcher(ResourceLimit<STACK, CAP> resourceLimit) {
+    public OutputResourceTracker(ResourceLimit<STACK, CAP> resourceLimit) {
         super(resourceLimit);
     }
 

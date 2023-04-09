@@ -3,21 +3,21 @@ package ca.teamdman.sfm.common.program;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfml.ast.InputStatement;
 
-public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputResourceMatcher<STACK, CAP>> {
+public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputResourceTracker<STACK, CAP>> {
 
-    private final InputStatement<STACK, CAP> STATEMENT;
+    private final InputStatement STATEMENT;
 
     public LimitedInputSlot(
-            InputStatement<STACK, CAP> statement,
+            InputStatement statement,
             CAP handler,
             int slot,
-            InputResourceMatcher<STACK, CAP> matcher
+            InputResourceTracker<STACK, CAP> matcher
     ) {
         super(handler, matcher.LIMIT.resourceId().getResourceType(), slot, matcher);
         this.STATEMENT = statement;
     }
 
-    public InputStatement<STACK, CAP> getStatement() {
+    public InputStatement getStatement() {
         return STATEMENT;
     }
 
@@ -27,8 +27,8 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
             setDone();
             return;
         }
-        if (!MATCHER.test(potential)) return;
-        if (!other.MATCHER.test(potential)) return;
+        if (!TRACKER.test(potential)) return;
+        if (!other.TRACKER.test(potential)) return;
         var remainder = other.insert(potential, true);
 
         // how many can we move unrestrained
@@ -36,15 +36,15 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
         if (toMove == 0) return;
 
         // how many have we promised to leave in this slot
-        toMove -= this.MATCHER.getExistingPromise(SLOT);
+        toMove -= this.TRACKER.getExistingPromise(SLOT);
 
         // how many more need to be promised
-        var toPromise = this.MATCHER.getRemainingPromise();
+        var toPromise = this.TRACKER.getRemainingPromise();
         toPromise = Long.min(toMove, toPromise);
         toMove -= toPromise;
 
         // track the promise
-        this.MATCHER.track(SLOT, 0, toPromise);
+        this.TRACKER.track(SLOT, 0, toPromise);
 
         // if whole slot has been promised, mark done
         if (toMove == 0) {
@@ -53,10 +53,10 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
         }
 
         // how many are we allowed to put in the other inventory
-        toMove = Math.min(toMove, other.MATCHER.getMaxTransferable());
+        toMove = Math.min(toMove, other.TRACKER.getMaxTransferable());
 
         // how many can we move at once
-        toMove = Math.min(toMove, this.MATCHER.getMaxTransferable());
+        toMove = Math.min(toMove, this.TRACKER.getMaxTransferable());
         if (toMove <= 0) return;
 
         // extract item for real
@@ -64,8 +64,8 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
         // insert item for real
         remainder = other.TYPE.insert(other.HANDLER, other.SLOT, extracted, false);
         // track transfer amounts
-        this.MATCHER.trackTransfer(toMove);
-        other.MATCHER.trackTransfer(toMove);
+        this.TRACKER.trackTransfer(toMove);
+        other.TRACKER.trackTransfer(toMove);
 
         // if remainder exists, someone lied.
         if (!other.TYPE.isEmpty(remainder)) {

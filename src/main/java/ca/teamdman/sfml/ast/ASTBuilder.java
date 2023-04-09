@@ -137,17 +137,17 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public InputStatement<?, ?> visitInputStatementStatement(SFMLParser.InputStatementStatementContext ctx) {
-        return (InputStatement<?, ?>) visit(ctx.inputstatement());
+    public InputStatement visitInputStatementStatement(SFMLParser.InputStatementStatementContext ctx) {
+        return (InputStatement) visit(ctx.inputstatement());
     }
 
     @Override
-    public OutputStatement<?, ?> visitOutputStatementStatement(SFMLParser.OutputStatementStatementContext ctx) {
-        return (OutputStatement<?, ?>) visit(ctx.outputstatement());
+    public OutputStatement visitOutputStatementStatement(SFMLParser.OutputStatementStatementContext ctx) {
+        return (OutputStatement) visit(ctx.outputstatement());
     }
 
     @Override
-    public InputStatement<?, ?> visitInputstatement(SFMLParser.InputstatementContext ctx) {
+    public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
         var matchers    = visitInputmatchers(ctx.inputmatchers());
         var each        = ctx.EACH() != null;
@@ -155,7 +155,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public OutputStatement<?, ?> visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
+    public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
         var matchers    = visitOutputmatchers(ctx.outputmatchers());
         var each        = ctx.EACH() != null;
@@ -258,36 +258,39 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public Matchers<?, ?> visitInputmatchers(SFMLParser.InputmatchersContext ctx) {
-        if (ctx == null) return new Matchers(List.of(new ResourceLimit(
+    public ResourceLimits visitInputmatchers(SFMLParser.InputmatchersContext ctx) {
+        if (ctx == null) return new ResourceLimits(List.of(new ResourceLimit(
                 new Limit(Long.MAX_VALUE, 0),
                 ResourceIdentifier.MATCH_ALL
         )));
-        return ((Matchers) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, 0);
+        return ((ResourceLimits) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, 0);
     }
 
 
     @Override
-    public Matchers<?, ?> visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
+    public ResourceLimits visitOutputmatchers(SFMLParser.OutputmatchersContext ctx) {
         if (ctx == null)
-            return new Matchers(List.of(new ResourceLimit(
+            return new ResourceLimits(List.of(new ResourceLimit(
                     new Limit(Long.MAX_VALUE, Long.MAX_VALUE),
                     ResourceIdentifier.MATCH_ALL
             )));
-        return ((Matchers<?, ?>) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, Long.MAX_VALUE);
+        return ((ResourceLimits) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, Long.MAX_VALUE);
     }
 
     @Override
     public ASTNode visitResourceLimitMovement(SFMLParser.ResourceLimitMovementContext ctx) {
 
-        return new Matchers(ctx.resourcelimit().stream()
-                                    .map(this::visitResourcelimit)
-                                    .collect(Collectors.toList()));
+        return new ResourceLimits(ctx.resourcelimit().stream()
+                                          .map(this::visitResourcelimit)
+                                          .collect(Collectors.toList()));
     }
 
     @Override
-    public Matchers<?, ?> visitLimitMovement(SFMLParser.LimitMovementContext ctx) {
-        return new Matchers(List.of(new ResourceLimit((Limit) this.visit(ctx.limit()), ResourceIdentifier.MATCH_ALL)));
+    public ResourceLimits visitLimitMovement(SFMLParser.LimitMovementContext ctx) {
+        return new ResourceLimits(List.of(new ResourceLimit(
+                (Limit) this.visit(ctx.limit()),
+                ResourceIdentifier.MATCH_ALL
+        )));
     }
 
     @Override

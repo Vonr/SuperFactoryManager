@@ -7,9 +7,12 @@ import ca.teamdman.sfml.ast.ResourceIdentifier;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, CAP> {
@@ -26,6 +29,13 @@ public abstract class ResourceType<STACK, CAP> {
     public abstract STACK extract(CAP cap, int slot, long amount, boolean simulate);
 
     public abstract int getSlots(CAP handler);
+
+    public List<STACK> getStacksIfMatches(Object cap) {
+        if (!matchesCapType(cap)) return List.of();
+        return IntStream.range(0, getSlots((CAP) cap))
+                .mapToObj(i -> getStackInSlot((CAP) cap, i))
+                .collect(Collectors.toList());
+    }
 
     public abstract STACK insert(CAP cap, int slot, STACK stack, boolean simulate);
 
@@ -49,6 +59,11 @@ public abstract class ResourceType<STACK, CAP> {
 
 
     public abstract boolean matchesCapType(Object o);
+
+
+    public Optional<CAP> asCapability(Object o) {
+        return matchesCapType(o) ? Optional.of((CAP) o) : Optional.empty();
+    }
 
     public Stream<CAP> getCaps(
             ProgramContext programContext, LabelAccess labelAccess

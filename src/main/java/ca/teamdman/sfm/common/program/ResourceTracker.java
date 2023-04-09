@@ -4,11 +4,14 @@ import ca.teamdman.sfml.ast.ResourceLimit;
 
 import java.util.function.Predicate;
 
-public abstract class ResourceMatcher<STACK, CAP> implements Predicate<STACK> {
+/**
+ * Tracks how many things have been transferred.
+ */
+public abstract class ResourceTracker<STACK, CAP> implements Predicate<STACK> {
     protected final ResourceLimit<STACK, CAP> LIMIT;
     protected       long                      transferred = 0;
 
-    public ResourceMatcher(ResourceLimit<STACK, CAP> resourceLimit) {
+    public ResourceTracker(ResourceLimit<STACK, CAP> resourceLimit) {
         this.LIMIT = resourceLimit;
     }
 
