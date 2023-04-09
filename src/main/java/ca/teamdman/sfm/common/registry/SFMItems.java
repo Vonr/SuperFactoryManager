@@ -26,6 +26,7 @@ public class SFMItems {
     );
     public static final  RegistryObject<Item>   MANAGER_ITEM    = register("manager", SFMBlocks.MANAGER_BLOCK);
     public static final  RegistryObject<Item>   CABLE_ITEM      = register("cable", SFMBlocks.CABLE_BLOCK);
+    public static final  RegistryObject<Item>   BATTERY_ITEM    = register("battery", SFMBlocks.BATTERY_BLOCK);
     public static final  RegistryObject<Item>   WATER_TANK_ITEM = register("water_tank", SFMBlocks.WATER_TANK_BLOCK);
     public static final  RegistryObject<Item>   DISK_ITEM       = ITEMS.register("disk", DiskItem::new);
     public static final  RegistryObject<Item>   LABEL_GUN_ITEM  = ITEMS.register("labelgun", LabelGunItem::new);
