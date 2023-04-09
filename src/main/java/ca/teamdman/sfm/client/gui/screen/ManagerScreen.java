@@ -21,7 +21,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 
 import java.text.SimpleDateFormat;
-import java.util.Locale;
+
+import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
 
 public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     private static final ResourceLocation BACKGROUND_TEXTURE_LOCATION = new ResourceLocation(
@@ -31,7 +32,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     private final        float            STATUS_DURATION             = 40;
     private              Component        status                      = Component.empty();
     private              float            statusCountdown             = 0;
-    private              ExtendedButton   DiagButton;
+    private              ExtendedButton   diagButton;
+
 
     public ManagerScreen(ManagerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -40,31 +42,49 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     @Override
     protected void init() {
         super.init();
-        this.addRenderableWidget(new ExtendedButton(
+        this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 70,
                 (this.height - this.imageHeight) / 2 + 37,
                 100,
                 16,
-                Component.translatable("gui.sfm.manager.button.import_clipboard"),
-                button -> this.onLoadClipboard()
+                MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent(),
+                button -> this.onLoadClipboard(),
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(width / 2 - 43, 170)
+                        ),
+                        mx,
+                        my
+                )
         ));
         this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 + 70,
                 (this.height - this.imageHeight) / 2 + 37 + 20,
                 100,
                 16,
-                Component.translatable("gui.sfm.manager.button.export_clipboard"),
+                MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent(),
                 button -> this.onSaveClipboard()
         ));
-        this.addRenderableWidget(new ExtendedButton(
+        this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
                 (this.height - this.imageHeight) / 2 + 10,
                 50,
                 12,
-                Component.translatable("gui.sfm.manager.button.reset"),
-                button -> sendReset()
+                MANAGER_GUI_BUTTON_RESET.getComponent(),
+                button -> sendReset(),
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(width / 2 - 43, 170)
+                        ),
+                        mx,
+                        my
+                )
         ));
-        this.addRenderableWidget(DiagButton = new ExtendedButtonWithTooltip(
+        this.addRenderableWidget(diagButton = new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
                 (this.height - this.imageHeight) / 2 + 48,
                 12,
@@ -80,7 +100,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 (btn, pose, mx, my) -> renderTooltip(
                         pose,
                         font.split(
-                                Component.translatable("gui.sfm.manager.button.warning.tooltip"),
+                                MANAGER_GUI_WARNING_BUTTON_TOOLTIP.getComponent(),
                                 Math.max(width / 2 - 43, 170)
                         ),
                         mx,
@@ -94,7 +114,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION
         ));
-        status          = Component.translatable("gui.sfm.manager.status.reset");
+        status          = MANAGER_GUI_STATUS_RESET.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
@@ -103,7 +123,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION
         ));
-        status          = Component.translatable("gui.sfm.manager.status.fix");
+        status          = MANAGER_GUI_STATUS_FIX.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
@@ -114,14 +134,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 program
         ));
         menu.program    = program;
-        status          = Component.translatable("gui.sfm.manager.status.loaded_clipboard");
+        status          = MANAGER_GUI_STATUS_LOADED_CLIPBOARD.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
     private void onSaveClipboard() {
         try {
             Minecraft.getInstance().keyboardHandler.setClipboard(menu.program);
-            status          = Component.translatable("gui.sfm.manager.status.saved_clipboard");
+            status          = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -164,7 +184,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
             }
 
             Minecraft.getInstance().keyboardHandler.setClipboard(content.toString());
-            status          = Component.translatable("gui.sfm.manager.status.saved_clipboard");
+            status          = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -201,18 +221,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         var state  = states[key];
         this.font.draw(
                 matrixStack,
-                Component.translatable(
-                        "gui.sfm.manager.state",
-                        Component.translatable("gui.sfm.manager.state." + state
-                                .name()
-                                .toLowerCase(
-                                        Locale.ROOT)).withStyle(state.COLOR)
-                ),
+                MANAGER_GUI_STATE.getComponent(state.LOC.getComponent().withStyle(state.COLOR)),
                 titleLabelX,
                 20,
                 0
         );
-        DiagButton.visible = shouldShowDiagButton();
+        diagButton.visible = shouldShowDiagButton();
         if (statusCountdown <= 0) return;
         this.font.draw(
                 matrixStack,
@@ -234,7 +248,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     @Override
     protected void renderTooltip(PoseStack pose, int mx, int my) {
         super.renderTooltip(pose, mx, my);
-        DiagButton.renderToolTip(pose, mx, my);
+        this.renderables
+                .stream()
+                .filter(ExtendedButtonWithTooltip.class::isInstance)
+                .map(ExtendedButtonWithTooltip.class::cast)
+                .forEach(x -> x.renderToolTip(pose, mx, my));
+
     }
 
     @Override

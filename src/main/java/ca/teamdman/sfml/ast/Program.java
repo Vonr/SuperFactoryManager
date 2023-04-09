@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.program.ProgramContext;
@@ -48,10 +49,12 @@ public record Program(
                     String msg,
                     RecognitionException e
             ) {
-                errors.add(new TranslatableContents(
-                        "program.sfm.error.literal",
-                        "line " + line + ":" + charPositionInLine + " " + msg
-                ));
+                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get("line "
+                                                                                + line
+                                                                                + ":"
+                                                                                + charPositionInLine
+                                                                                + " "
+                                                                                + msg));
             }
         });
 
@@ -62,9 +65,9 @@ public record Program(
             program = new ASTBuilder().visitProgram(context);
             // make sure all referenced resources exist now during compilation instead of waiting for the program to tick
         } catch (ResourceLocationException | IllegalArgumentException | AssertionError e) {
-            errors.add(new TranslatableContents("program.sfm.error.literal", e.getMessage()));
+            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
         } catch (Throwable t) {
-            errors.add(new TranslatableContents("program.sfm.error.compile_failed"));
+            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
             t.printStackTrace();
             if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage()));
         }
@@ -73,10 +76,10 @@ public record Program(
             try {
                 ResourceType<?, ?> resourceType = referencedResource.getResourceType();
                 if (resourceType == null) {
-                    errors.add(new TranslatableContents("program.sfm.error.unknown_resource_type", referencedResource));
+                    errors.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(referencedResource));
                 }
             } catch (ResourceLocationException e) {
-                errors.add(new TranslatableContents("program.sfm.error.malformed_resource_type", referencedResource));
+                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(referencedResource));
             }
         }
 
@@ -97,7 +100,7 @@ public record Program(
                     .findAny()
                     .isPresent();
             if (!isUsed) {
-                warnings.add(new TranslatableContents("program.sfm.warnings.unused_label", label));
+                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_LABEL.get(label));
             }
         }
 
@@ -105,10 +108,7 @@ public record Program(
         SFMLabelNBTHelper.getPositionLabels(disk)
                 .values().stream().distinct()
                 .filter(x -> !referencedLabels.contains(x))
-                .forEach(label -> warnings.add(new TranslatableContents(
-                        "program.sfm.warnings.undefined_label",
-                        label
-                )));
+                .forEach(label -> warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNDEFINED_LABEL.get(label)));
 
         // labels in world but not connected via cables
         CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
@@ -118,18 +118,24 @@ public record Program(
                 var inNetwork = network.isInNetwork(pos);
                 var adjacent  = network.hasCableNeighbour(pos);
                 if (!inNetwork && !adjacent) {
-                    warnings.add(new TranslatableContents(
-                            "program.sfm.warnings.disconnected_label",
+                    warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
                             label,
-                            String.format("[%d,%d,%d]", pos.getX(), pos.getY(), pos.getZ())
-
+                            String.format(
+                                    "[%d,%d,%d]",
+                                    pos.getX(),
+                                    pos.getY(),
+                                    pos.getZ()
+                            )
                     ));
                 } else if (!inNetwork && adjacent) {
-                    warnings.add(new TranslatableContents(
-                            "program.sfm.warnings.adjacent_but_disconnected_label",
+                    warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
                             label,
-                            String.format("[%d,%d,%d]", pos.getX(), pos.getY(), pos.getZ())
-
+                            String.format(
+                                    "[%d,%d,%d]",
+                                    pos.getX(),
+                                    pos.getY(),
+                                    pos.getZ()
+                            )
                     ));
                 }
             }
@@ -144,17 +150,18 @@ public record Program(
             // make sure resource type is registered
             var type = resource.getResourceType();
             if (type == null) {
-                warnings.add(new TranslatableContents(
-                        "program.sfm.warnings.unknown_resource_type",
-                        resource.resourceTypeNamespace() + ":" + resource.resourceTypeName(),
-                        resource.toString()
+                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
+                        resource.resourceTypeNamespace()
+                        + ":"
+                        + resource.resourceTypeName(),
+                        resource
                 ));
                 continue;
             }
 
             // make sure resource exists in the registry
             if (!type.registryKeyExists(loc.get())) {
-                warnings.add(new TranslatableContents("program.sfm.warnings.unknown_resource_id", resource));
+                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_ID.get(resource));
             }
         }
         return warnings;

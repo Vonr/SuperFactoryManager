@@ -1,14 +1,18 @@
 package ca.teamdman.sfm.common.blockentity;
 
+import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
+import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
@@ -19,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.gametest.ForgeGameTestHooks;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -135,7 +140,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     protected Component getDefaultName() {
-        return Component.translatable("container.sfm.manager");
+        return Constants.LocalizationKeys.MANAGER_CONTAINER.getComponent();
     }
 
     @Override
@@ -226,15 +231,17 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public enum State {
-        NO_PROGRAM(ChatFormatting.RED),
-        NO_DISK(ChatFormatting.RED),
-        RUNNING(ChatFormatting.GREEN),
-        INVALID_PROGRAM(ChatFormatting.DARK_RED);
+        NO_PROGRAM(ChatFormatting.RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_PROGRAM),
+        NO_DISK(ChatFormatting.RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_DISK),
+        RUNNING(ChatFormatting.GREEN, Constants.LocalizationKeys.MANAGER_GUI_STATE_RUNNING),
+        INVALID_PROGRAM(ChatFormatting.DARK_RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_INVALID_PROGRAM);
 
-        public final ChatFormatting COLOR;
+        public final ChatFormatting                               COLOR;
+        public final Constants.LocalizationKeys.LocalizationEntry LOC;
 
-        State(ChatFormatting color) {
+        State(ChatFormatting color, Constants.LocalizationKeys.LocalizationEntry loc) {
             COLOR = color;
+            LOC   = loc;
         }
     }
 

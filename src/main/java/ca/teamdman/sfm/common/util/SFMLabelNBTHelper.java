@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.util;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfml.ast.Label;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -69,11 +70,12 @@ public class SFMLabelNBTHelper {
 
     public static List<Component> getHoverText(ItemStack stack) {
         var rtn = new ArrayList<Component>();
-        rtn.add(Component.translatable("item.sfm.disk.tooltip.label.header").withStyle(ChatFormatting.UNDERLINE));
+        rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL_HEADER
+                        .getComponent()
+                        .withStyle(ChatFormatting.UNDERLINE));
         var dict = getLabelDict(stack);
         for (var label : dict.getAllKeys()) {
-            rtn.add(Component.translatable(
-                    "item.sfm.disk.tooltip.label",
+            rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL.getComponent(
                     label,
                     dict.getList(label, Tag.TAG_LONG).size()
             ).withStyle(ChatFormatting.GRAY));
@@ -124,6 +126,21 @@ public class SFMLabelNBTHelper {
         var dict = getLabelDict(gun);
         for (String key : dict.getAllKeys()) {
             dict.getList(key, Tag.TAG_LONG).removeIf(p -> ((LongTag) p).getAsLong() == pos.asLong());
+        }
+    }
+
+    /**
+     * Offsets all positions in the disk by the given diff
+     * Used by game tests to fix label positions since structures use relative positioning
+     */
+    public static void offsetPositions(ItemStack disk, BlockPos diff) {
+        var dict = getLabelDict(disk);
+        for (String key : dict.getAllKeys()) {
+            var list = dict.getList(key, Tag.TAG_LONG);
+            for (int i = 0; i < list.size(); i++) {
+                var tag = (LongTag) list.get(i);
+                list.set(i, LongTag.valueOf(BlockPos.of(tag.getAsLong()).offset(diff).asLong()));
+            }
         }
     }
 }

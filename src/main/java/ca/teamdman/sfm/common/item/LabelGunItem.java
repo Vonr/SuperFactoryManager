@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
@@ -67,12 +68,12 @@ public class LabelGunItem extends Item {
                     SFMLabelNBTHelper.copyLabels(disk, stack);
                     var scriptLabels = manager.getReferencedLabels();
                     SFMLabelNBTHelper.addLabels(stack, scriptLabels);
-                    ctx.getPlayer().sendSystemMessage(Component.translatable("chat.sfm.labelgun.pull"));
+                    ctx.getPlayer().sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
                 } else {
                     SFMLabelNBTHelper.copyLabels(stack, disk);
                     manager.rebuildProgramAndUpdateDisk();
                     manager.setChanged();
-                    ctx.getPlayer().sendSystemMessage(Component.translatable("chat.sfm.labelgun.push"));
+                    ctx.getPlayer().sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PUSHED.getComponent());
                 }
             });
             return InteractionResult.CONSUME;
@@ -91,8 +92,8 @@ public class LabelGunItem extends Item {
     public void appendHoverText(
             ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
     ) {
-        lines.add(Component.translatable("item.sfm.labelgun.tooltip.1").withStyle(ChatFormatting.GRAY));
-        lines.add(Component.translatable("item.sfm.labelgun.tooltip.2").withStyle(ChatFormatting.GRAY));
+        lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
+        lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
         lines.addAll(SFMLabelNBTHelper.getHoverText(stack));
     }
 
@@ -113,6 +114,8 @@ public class LabelGunItem extends Item {
     public Component getName(ItemStack stack) {
         var name = getLabel(stack);
         if (name.isEmpty()) return super.getName(stack);
-        return Component.translatable("item.sfm.labelgun.with_label", name).withStyle(ChatFormatting.AQUA);
+        return Constants.LocalizationKeys.LABEL_GUN_ITEM_NAME_WITH_LABEL
+                .getComponent(name)
+                .withStyle(ChatFormatting.AQUA);
     }
 }

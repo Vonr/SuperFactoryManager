@@ -18,6 +18,7 @@ public class SFMDatagen {
             gen.addProvider(event.includeClient(), new SFMBlockTags(gen, event.getExistingFileHelper()));
             gen.addProvider(event.includeClient(), new SFMLootTables(gen));
             gen.addProvider(event.includeClient(), new SFMRecipes(gen));
+            gen.addProvider(event.includeClient(), new SFMLanguageProvider(gen));
         }
     }
 }
