@@ -55,11 +55,17 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     };
     private             int                    unprocessedRedstonePulses = 0; // used by redstone trigger
 
+    private boolean shouldRebuildProgram = false;
+
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
+        if (tile.shouldRebuildProgram) {
+            tile.rebuildProgramAndUpdateDisk();
+            tile.shouldRebuildProgram = false;
+        }
         if (tile.program != null) {
             tile.program.tick(tile);
         }
@@ -223,9 +229,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                     setItem(0, disk);
                     setChanged();
                 });
+                setChanged();
             }
         }
-        rebuildProgramAndUpdateDisk();
+        this.shouldRebuildProgram = true;
     }
 
     @Override
