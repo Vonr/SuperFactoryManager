@@ -3,10 +3,12 @@ package ca.teamdman.sfm.common.registry;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.resourcetype.FluidResourceType;
+import ca.teamdman.sfm.common.resourcetype.ForgeEnergyResourceType;
 import ca.teamdman.sfm.common.resourcetype.ItemResourceType;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -35,6 +37,10 @@ public class SFMResourceTypes {
     public static final  RegistryObject<ResourceType<FluidStack, IFluidHandler>> FLUID          = TYPES.register(
             "fluid",
             FluidResourceType::new
+    );
+    public static final  RegistryObject<ResourceType<Integer, IEnergyStorage>>   FORGE_ENERGY   = TYPES.register(
+            "forge_energy",
+            ForgeEnergyResourceType::new
     );
 
     static {
