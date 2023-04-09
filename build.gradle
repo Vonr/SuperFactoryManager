@@ -112,6 +112,7 @@ minecraft {
             mods {
                 sfm {
                     source sourceSets.main
+                    source sourceSets.gametest
                 }
             }
 
@@ -133,6 +134,7 @@ minecraft {
             mods {
                 sfm {
                     source sourceSets.main
+                    source sourceSets.gametest
                 }
             }
         }
