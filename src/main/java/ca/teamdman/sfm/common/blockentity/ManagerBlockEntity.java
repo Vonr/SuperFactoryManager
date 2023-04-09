@@ -207,6 +207,24 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         ContainerHelper.loadAllItems(tag, ITEMS);
+        if (ForgeGameTestHooks.isGametestEnabled()) {
+            var lastKnownPos = NbtUtils.readBlockPos(tag.getCompound("LastKnownPos"));
+            if (!lastKnownPos.equals(getBlockPos())) {
+                var diff = getBlockPos().subtract(lastKnownPos);
+                SFM.LOGGER.debug(
+                        "Manager at {} was moved from {} ({} offset), updating labels",
+                        getBlockPos(),
+                        lastKnownPos,
+                        diff
+                );
+                getDisk().ifPresent(disk -> {
+                    disk = disk.copy();
+                    SFMLabelNBTHelper.offsetPositions(disk, diff);
+                    setItem(0, disk);
+                    setChanged();
+                });
+            }
+        }
         rebuildProgramAndUpdateDisk();
     }
 
@@ -214,6 +232,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         ContainerHelper.saveAllItems(tag, ITEMS);
+        if (ForgeGameTestHooks.isGametestEnabled()) {
+            tag.put("LastKnownPos", NbtUtils.writeBlockPos(getBlockPos()));
+        }
     }
 
 
