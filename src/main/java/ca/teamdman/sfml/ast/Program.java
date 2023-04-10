@@ -194,9 +194,7 @@ public record Program(
         var context = new ProgramContext(manager);
 
         // update warnings on disk item every 20 seconds
-        if (manager
-                    .getLevel()
-                    .getGameTime() % 20 == 0) {
+        if (manager.getTick() % 20 == 0) {
             manager
                     .getDisk()
                     .ifPresent(disk -> gatherWarnings(disk, manager));
