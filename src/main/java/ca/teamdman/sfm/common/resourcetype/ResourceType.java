@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
@@ -22,7 +21,6 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     static {
         patternCache.put(".*", s -> true);
-        patternCache.put("sfm:item:.*:.*", s -> true);
     }
 
     public final Capability<CAP> CAPABILITY;
@@ -67,45 +65,18 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         if (isEmpty((STACK) stack)) return false;
         var stackId = getRegistryKey((STACK) stack);
         if (stackId == null) return false;
-        Predicate<String> pred = patternCache.get(id.toString());
-        if (pred == null) {
-            pred = buildPredicate(id);
-            patternCache.put(id.toString(), pred);
+        Predicate<String> namespacePredicate = patternCache.get(id.resourceNamespace());
+        if (namespacePredicate == null) {
+            namespacePredicate = buildPredicate(id.resourceNamespace());
+            patternCache.put(id.resourceNamespace(), namespacePredicate);
         }
-        return pred.test(stackId.toString());
-
-//        Predicate<String> namespacePredicate = patternCache.get(id.resourceNamespace());
-//        if (namespacePredicate == null) {
-//            namespacePredicate = buildPredicate(id.resourceNamespace());
-//            patternCache.put(id.resourceNamespace(), namespacePredicate);
-//        }
-//        Predicate<String> namePredicate = patternCache.get(id.resourceName());
-//        if (namePredicate == null) {
-//            namePredicate = buildPredicate(id.resourceName());
-//            patternCache.put(id.resourceName(), namePredicate);
-//        }
-//        return namespacePredicate.test(stackId.getNamespace()) && namePredicate.test(stackId.getPath());
+        Predicate<String> namePredicate = patternCache.get(id.resourceName());
+        if (namePredicate == null) {
+            namePredicate = buildPredicate(id.resourceName());
+            patternCache.put(id.resourceName(), namePredicate);
+        }
+        return namespacePredicate.test(stackId.getNamespace()) && namePredicate.test(stackId.getPath());
     }
-
-    private Predicate<String> buildPredicate(ResourceIdentifier<STACK, ITEM, CAP> id) {
-        Predicate<String> checkNamespace = isRegexPattern(id.resourceNamespace())
-                                           ? Pattern.compile(id.resourceNamespace()).asMatchPredicate()
-                                           : id.resourceNamespace()::equals;
-        Predicate<String> checkPath = isRegexPattern(id.resourceName())
-                                      ? Pattern.compile(id.resourceName()).asMatchPredicate()
-                                      : id.resourceName()::equals;
-        var found = id
-                .getResourceType()
-                .getRegistry()
-                .getEntries()
-                .stream()
-                .filter(entry -> checkNamespace.test(entry.getKey().location().getNamespace()))
-                .filter(entry -> checkPath.test(entry.getKey().location().getPath()))
-                .map(entry -> entry.getKey().location().toString())
-                .collect(Collectors.toSet());
-        return found::contains;
-    }
-
 
     public abstract boolean matchesCapType(Object o);
 
