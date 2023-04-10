@@ -5,17 +5,17 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import java.util.ArrayList;
 import java.util.List;
 
-public record ResourceComparer<STACK, CAP>(
+public record ResourceComparer<STACK, ITEM, CAP>(
         ComparisonOperator op,
         Quantity num,
-        ResourceIdentifier<STACK, CAP> res
+        ResourceIdentifier<STACK, ITEM, CAP> res
 ) implements ASTNode {
     public BoolExpr toBooleanExpression(SetOperator setOp, LabelAccess labelAccess) {
         return new BoolExpr(context -> {
-            ResourceType<STACK, CAP> type = res.getResourceType();
+            ResourceType<STACK, ITEM, CAP> type = res.getResourceType();
             // get the inventories to check
 
-            var handlers = type.getCaps(context, labelAccess);
+            var handlers = type.getCapabilities(context, labelAccess);
 
             // track how many items seen
             long overallCount = 0;

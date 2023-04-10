@@ -10,12 +10,14 @@ import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -23,7 +25,7 @@ public record Program(
         String name,
         List<Trigger> triggers,
         Set<String> referencedLabels,
-        Set<ResourceIdentifier<?, ?>> referencedResources
+        Set<ResourceIdentifier<?, ?, ?>> referencedResources
 ) implements ASTNode {
     public static final int MAX_PROGRAM_LENGTH = 8096;
 
@@ -72,9 +74,9 @@ public record Program(
             if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage()));
         }
 
-        for (ResourceIdentifier<?, ?> referencedResource : program.referencedResources) {
+        for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {
             try {
-                ResourceType<?, ?> resourceType = referencedResource.getResourceType();
+                ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
                 if (resourceType == null) {
                     errors.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(referencedResource));
                 }
@@ -144,8 +146,8 @@ public record Program(
         // try and validate that references resources exist
         for (var resource : referencedResources) {
             // skip regex resources
-            var loc = resource.getLocation();
-            if (!loc.isPresent()) continue;
+            Optional<ResourceLocation> loc = resource.getLocation();
+            if (loc.isEmpty()) continue;
 
             // make sure resource type is registered
             var type = resource.getResourceType();

@@ -8,8 +8,6 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public record OutputStatement(
@@ -20,22 +18,19 @@ public record OutputStatement(
     @Override
     public void tick(ProgramContext context) {
         // gather the input slots from all the input statements
-        List<LimitedInputSlot<?, ?>> inputSlots = new ArrayList<>();
-        for (InputStatement in : context.getInputs().toList()) {
-            in.getSlots(context).forEach(inputSlots::add);
-        }
+        var inputSlots = context.getInputs().flatMap(in -> in.getSlots(context));
 
         // collect the output slots
-        List<LimitedOutputSlot<?, ?>> outputSlots = this.getSlots(context).toList();
+        var outputSlots = this.getSlots(context).toArray(LimitedOutputSlot[]::new);
 
         // try and move resources from input slots to output slots
         grabbing:
-        for (LimitedInputSlot in : inputSlots) {
+        for (LimitedInputSlot in : (Iterable<? extends LimitedInputSlot<?, ?, ?>>) inputSlots::iterator) {
             for (LimitedOutputSlot out : outputSlots) {
                 if (in.TYPE.equals(out.TYPE)) {
                     in.moveTo(out);
+                    if (in.isDone()) continue grabbing;
                 }
-                if (in.isDone()) continue grabbing;
             }
         }
     }
@@ -48,63 +43,57 @@ public record OutputStatement(
      * <p>
      * We want collect the slots from all the labelled blocks.
      */
-    public Stream<LimitedOutputSlot<?, ?>> getSlots(ProgramContext context) {
-        Stream.Builder<LimitedOutputSlot<?, ?>> rtn = Stream.builder();
+    public Stream<LimitedOutputSlot<?, ?, ?>> getSlots(ProgramContext context) {
+        Stream.Builder<LimitedOutputSlot<?, ?, ?>> rtn = Stream.builder();
 
         // find all the types referenced in the output statement
-        Set<ResourceType<?, ?>> types = resourceLimits
+        Stream<ResourceType> types = resourceLimits
                 .resourceLimits()
                 .stream()
                 .map(ResourceLimit::resourceId)
-                .map(ResourceIdentifier::getResourceType)
-                .collect(Collectors.toSet());
-
-        // collect all the capabilities that match the types
-        List<?> capabilities = types.stream()
-                .flatMap(t -> t.getCaps(context, labelAccess))
-                .toList();
-
+                .distinct()
+                .map(ResourceIdentifier::getResourceType);
 
         if (each) {
-            for (var cap : capabilities) {
-                // create a new matcher for each capability
-                List<OutputResourceTracker<?, ?>> outputMatchers = resourceLimits.createOutputTrackers();
-                for (var type : types) {
-                    if (type.matchesCapType(cap)) {
-                        getSlots((ResourceType<Object, Object>) type, cap, outputMatchers).forEach(rtn::add);
-                    }
+            for (var type : (Iterable<ResourceType>) types::iterator) {
+                for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
+                    // create a new matcher for each capability
+                    List<OutputResourceTracker<?, ?, ?>> outputMatchers = resourceLimits.createOutputTrackers();
+//                    if (type.matchesCapType(cap)) {
+                    getSlots((ResourceType<Object, Object, Object>) type, cap, outputMatchers).forEach(rtn::add);
+//                    }
                 }
             }
         } else {
             // create a single matcher to be shared by all capabilities
-            List<OutputResourceTracker<?, ?>> outputMatchers = resourceLimits.createOutputTrackers();
-            for (var cap : capabilities) {
-                for (var type : types) {
-                    if (type.matchesCapType(cap)) {
-                        getSlots((ResourceType<Object, Object>) type, cap, outputMatchers).forEach(rtn::add);
-                    }
+            List<OutputResourceTracker<?, ?, ?>> outputMatchers = resourceLimits.createOutputTrackers();
+            for (var type : (Iterable<ResourceType>) types::iterator) {
+                for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
+//                    if (type.matchesCapType(cap)) {
+                    getSlots((ResourceType<Object, Object, Object>) type, cap, outputMatchers).forEach(rtn::add);
+//                    }
                 }
             }
         }
         return rtn.build();
     }
 
-    private <STACK, CAP> List<LimitedOutputSlot<STACK, CAP>> getSlots(
-            ResourceType<STACK, CAP> type,
+    private <STACK, ITEM, CAP> List<LimitedOutputSlot<STACK, ITEM, CAP>> getSlots(
+            ResourceType<STACK, ITEM, CAP> type,
             CAP capability,
-            List<OutputResourceTracker<?, ?>> trackers
+            List<OutputResourceTracker<?, ?, ?>> trackers
     ) {
-        List<LimitedOutputSlot<STACK, CAP>> rtn = new ArrayList<>();
+        List<LimitedOutputSlot<STACK, ITEM, CAP>> rtn = new ArrayList<>();
         for (int slot = 0; slot < type.getSlots(capability); slot++) {
             if (labelAccess.slots().contains(slot)) {
                 // the destination is allowed to be empty, don't check for empty slot
-                for (OutputResourceTracker<?, ?> tracker : trackers) {
+                for (OutputResourceTracker<?, ?, ?> tracker : trackers) {
                     // we can't make any assumptions about the tracker
                     var x = new LimitedOutputSlot<>(
                             this,
                             capability,
                             slot,
-                            (OutputResourceTracker<STACK, CAP>) tracker
+                            (OutputResourceTracker<STACK, ITEM, CAP>) tracker
                     );
                     rtn.add(x);
                 }

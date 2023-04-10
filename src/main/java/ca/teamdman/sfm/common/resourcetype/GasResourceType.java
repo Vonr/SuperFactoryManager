@@ -2,15 +2,16 @@ package ca.teamdman.sfm.common.resourcetype;
 
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
+import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasHandler;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.registries.IForgeRegistry;
 
 import static net.minecraftforge.common.capabilities.CapabilityManager.get;
 
-public class GasResourceType extends ResourceType<GasStack, IGasHandler> {
+public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     public static final Capability<IGasHandler> CAP = get(new CapabilityToken<>() {
     });
 
@@ -58,13 +59,14 @@ public class GasResourceType extends ResourceType<GasStack, IGasHandler> {
         return o instanceof IGasHandler;
     }
 
+
     @Override
-    public boolean registryKeyExists(ResourceLocation location) {
-        return MekanismAPI.gasRegistry().containsKey(location);
+    public IForgeRegistry<Gas> getRegistry() {
+        return MekanismAPI.gasRegistry();
     }
 
     @Override
-    public ResourceLocation getRegistryKey(GasStack gasStack) {
-        return MekanismAPI.gasRegistry().getKey(gasStack.getType());
+    public Gas getItem(GasStack gasStack) {
+        return gasStack.getType();
     }
 }

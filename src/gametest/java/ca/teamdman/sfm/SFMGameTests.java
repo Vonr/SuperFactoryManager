@@ -10,13 +10,11 @@ import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.ast.Trigger;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -281,6 +279,7 @@ public class SFMGameTests {
         });
     }
 
+
     @GameTest(template = "25x3x25") //todo : fix whatever the heck is going on here
     public static void ManyInventoryLag(GameTestHelper helper) {
         // fill the platform with cables and barrels
@@ -357,17 +356,17 @@ public class SFMGameTests {
         });
 
         runAfterManagerFirstTick(helper, manager, () -> {
-            helper
-                    .getLevel()
-                    .getPlayers(p -> true)
-                    .forEach(player -> player.sendSystemMessage(Component
-                                                                        .literal(
-                                                                                "manyinventorylag manager execution took "
-                                                                                + (
-                                                                                        endTime.get() - startTime.get()
-                                                                                )
-                                                                                + "ms")
-                                                                        .withStyle(ChatFormatting.GREEN)));
+//            helper
+//                    .getLevel()
+//                    .getPlayers(p -> true)
+//                    .forEach(player -> player.sendSystemMessage(Component
+//                                                                        .literal(
+//                                                                                "manyinventorylag manager execution took "
+//                                                                                + (
+//                                                                                        endTime.get() - startTime.get()
+//                                                                                )
+//                                                                                + "ms")
+//                                                                        .withStyle(ChatFormatting.GREEN)));
 
             // ensure all the source chests are empty
             sourceBlocks.forEach(pos -> {
@@ -402,6 +401,130 @@ public class SFMGameTests {
 
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "25x3x25") //todo : fix whatever the heck is going on here
+    public static void FullSourceAndDest(GameTestHelper helper) {
+        // fill the platform with cables and barrels
+        var sourceBlocks = new ArrayList<BlockPos>();
+        var destBlocks   = new ArrayList<BlockPos>();
+        for (int x = 0; x < 25; x++) {
+//            for (int z = 0; z < 25; z++) {
+            for (int z = 0; z < 24; z++) {
+                helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
+                helper.setBlock(new BlockPos(x, 3, z), Blocks.BARREL);
+                if (z % 2 == 0) {
+                    sourceBlocks.add(new BlockPos(x, 3, z));
+                } else {
+                    destBlocks.add(new BlockPos(x, 3, z));
+                }
+
+                // fill the source chests with ingots
+                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(x, 3, z));
+                for (int i = 0; i < barrel.getContainerSize(); i++) {
+                    barrel.setItem(i, new ItemStack(Items.IRON_INGOT, 64));
+                }
+            }
+        }
+
+        // fill in the blocks needed for the test
+        helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // create the program
+        var program = """
+                    NAME "many inventory lag test"
+                                    
+                    EVERY 20 TICKS DO
+                        INPUT FROM a
+                        OUTPUT TO b
+                    END
+                """;
+
+        // set the labels
+        sourceBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(pos)));
+        destBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(pos)));
+
+        // load the program
+        manager.setProgram(program);
+        assertTrue(
+                manager.getState() == ManagerBlockEntity.State.RUNNING,
+                "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())
+        );
+        List<Trigger> triggers  = manager.getProgram().triggers();
+        var           existing  = triggers.get(0);
+        var           startTime = new AtomicLong();
+        var           endTime   = new AtomicLong();
+        triggers.add(0, new Trigger() {
+            @Override
+            public boolean shouldTick(ProgramContext manager) {
+                return existing.shouldTick(manager);
+            }
+
+            @Override
+            public void tick(ProgramContext context) {
+                startTime.set(System.currentTimeMillis());
+            }
+        });
+        triggers.add(new Trigger() {
+            @Override
+            public boolean shouldTick(ProgramContext manager) {
+                return existing.shouldTick(manager);
+            }
+
+            @Override
+            public void tick(ProgramContext context) {
+                endTime.set(System.currentTimeMillis());
+            }
+        });
+
+        runAfterManagerFirstTick(helper, manager, () -> {
+            // ensure all the source chests are full
+            sourceBlocks.forEach(pos -> {
+                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
+                for (int i = 0; i < barrel.getContainerSize(); i++) {
+                    assertTrue(barrel.getItem(i).getCount() == 64, "Items did not stay");
+                }
+            });
+            // ensure all the dest chests are full
+            destBlocks.forEach(pos -> {
+                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
+                for (int i = 0; i < barrel.getContainerSize(); i++) {
+                    assertTrue(barrel.getItem(i).getCount() == 64, "Items did not arrive");
+                }
+            });
+
+
+            // remove all the items to speed up retests
+//            sourceBlocks.forEach(pos -> {
+//                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
+//                for (int i = 0; i < barrel.getContainerSize(); i++) {
+//                    barrel.setItem(i, ItemStack.EMPTY);
+//                }
+//            });
+//            destBlocks.forEach(pos -> {
+//                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
+//                for (int i = 0; i < barrel.getContainerSize(); i++) {
+//                    barrel.setItem(i, ItemStack.EMPTY);
+//                }
+//            });
+
+            // ensure the program did not take too long
+            assertTrue(
+                    endTime.get() - startTime.get() < 1000,
+                    "Program took too long to run: took " + (endTime.get() - startTime.get()) + "ms"
+            );
+
+
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "25x3x25")
+    public static void GatherGoodSupplies(GameTestHelper helper) {
+        helper.succeed();
     }
 
     public static void runAfterManagerFirstTick(GameTestHelper helper, ManagerBlockEntity manager, Runnable runnable) {

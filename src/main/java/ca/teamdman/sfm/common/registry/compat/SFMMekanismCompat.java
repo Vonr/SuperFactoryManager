@@ -4,14 +4,14 @@ import ca.teamdman.sfm.common.resourcetype.*;
 import net.minecraftforge.registries.DeferredRegister;
 
 public class SFMMekanismCompat {
-    public static void register(DeferredRegister<ResourceType<?, ?>> types) {
+    public static void register(DeferredRegister<ResourceType<?, ?, ?>> types) {
         var gases = types.register(
                 "gas",
                 GasResourceType::new
         );
         var infusions = types.register(
                 "infusion",
-                InfusionResourceType::new
+                InfuseResourceType::new
         );
 
         var pigments = types.register(

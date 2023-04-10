@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.program;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfml.ast.InputStatement;
 
-public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputResourceTracker<STACK, CAP>> {
+public class LimitedInputSlot<STACK, ITEM, CAP> extends LimitedSlot<STACK, ITEM, CAP, InputResourceTracker<STACK, ITEM, CAP>> {
 
     private final InputStatement STATEMENT;
 
@@ -11,7 +11,7 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
             InputStatement statement,
             CAP handler,
             int slot,
-            InputResourceTracker<STACK, CAP> matcher
+            InputResourceTracker<STACK, ITEM, CAP> matcher
     ) {
         super(handler, matcher.LIMIT.resourceId().getResourceType(), slot, matcher);
         this.STATEMENT = statement;
@@ -21,7 +21,7 @@ public class LimitedInputSlot<STACK, CAP> extends LimitedSlot<STACK, CAP, InputR
         return STATEMENT;
     }
 
-    public void moveTo(LimitedOutputSlot<STACK, CAP> other) {
+    public void moveTo(LimitedOutputSlot<STACK, ITEM, CAP> other) {
         var potential = this.extract(Long.MAX_VALUE, true);
         if (this.TYPE.isEmpty(potential)) {
             setDone();

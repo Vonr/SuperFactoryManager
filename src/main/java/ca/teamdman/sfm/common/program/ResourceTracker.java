@@ -7,15 +7,15 @@ import java.util.function.Predicate;
 /**
  * Tracks how many things have been transferred.
  */
-public abstract class ResourceTracker<STACK, CAP> implements Predicate<Object> {
-    protected final ResourceLimit<STACK, CAP> LIMIT;
-    protected       long                      transferred = 0;
+public abstract class ResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
+    protected final ResourceLimit<STACK, ITEM, CAP> LIMIT;
+    protected       long                            transferred = 0;
 
-    public ResourceTracker(ResourceLimit<STACK, CAP> resourceLimit) {
+    public ResourceTracker(ResourceLimit<STACK, ITEM, CAP> resourceLimit) {
         this.LIMIT = resourceLimit;
     }
 
-    public ResourceLimit<STACK, CAP> getLimit() {
+    public ResourceLimit<STACK, ITEM, CAP> getLimit() {
         return LIMIT;
     }
 

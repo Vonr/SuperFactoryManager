@@ -2,14 +2,14 @@ package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfml.ast.ResourceLimit;
 
-public class OutputResourceTracker<STACK, CAP> extends ResourceTracker<STACK, CAP> {
+public class OutputResourceTracker<STACK, ITEM, CAP> extends ResourceTracker<STACK, ITEM, CAP> {
     private long seen = 0;
 
-    public OutputResourceTracker(ResourceLimit<STACK, CAP> resourceLimit) {
+    public OutputResourceTracker(ResourceLimit<STACK, ITEM, CAP> resourceLimit) {
         super(resourceLimit);
     }
 
-    public void visit(LimitedOutputSlot<STACK, ?> slot) {
+    public void visit(LimitedOutputSlot<STACK, ITEM, CAP> slot) {
         var stack = slot.getStackInSlot();
         if (test(stack)) {
             seen += slot.TYPE.getCount(stack);

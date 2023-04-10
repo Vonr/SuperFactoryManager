@@ -6,12 +6,12 @@ import ca.teamdman.sfm.common.program.OutputResourceTracker;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record ResourceLimits(List<ResourceLimit<?, ?>> resourceLimits) implements ASTNode {
-    public List<InputResourceTracker<?, ?>> createInputTrackers() {
+public record ResourceLimits(List<ResourceLimit<?, ?, ?>> resourceLimits) implements ASTNode {
+    public List<InputResourceTracker<?, ?, ?>> createInputTrackers() {
         return resourceLimits.stream().map(InputResourceTracker::new).collect(Collectors.toList());
     }
 
-    public List<OutputResourceTracker<?, ?>> createOutputTrackers() {
+    public List<OutputResourceTracker<?, ?, ?>> createOutputTrackers() {
         return resourceLimits.stream().map(OutputResourceTracker::new).collect(Collectors.toList());
     }
 

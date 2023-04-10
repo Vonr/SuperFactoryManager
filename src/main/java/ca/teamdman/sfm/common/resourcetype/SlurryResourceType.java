@@ -3,14 +3,15 @@ package ca.teamdman.sfm.common.resourcetype;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.slurry.ISlurryHandler;
+import mekanism.api.chemical.slurry.Slurry;
 import mekanism.api.chemical.slurry.SlurryStack;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.registries.IForgeRegistry;
 
 import static net.minecraftforge.common.capabilities.CapabilityManager.get;
 
-public class SlurryResourceType extends ResourceType<SlurryStack, ISlurryHandler> {
+public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurryHandler> {
     public static final Capability<ISlurryHandler> CAP = get(new CapabilityToken<>() {
     });
 
@@ -63,13 +64,14 @@ public class SlurryResourceType extends ResourceType<SlurryStack, ISlurryHandler
         return o instanceof ISlurryHandler;
     }
 
+
     @Override
-    public boolean registryKeyExists(ResourceLocation location) {
-        return MekanismAPI.slurryRegistry().containsKey(location);
+    public IForgeRegistry<Slurry> getRegistry() {
+        return MekanismAPI.slurryRegistry();
     }
 
     @Override
-    public ResourceLocation getRegistryKey(SlurryStack stack) {
-        return MekanismAPI.slurryRegistry().getKey(stack.getType());
+    public Slurry getItem(SlurryStack stack) {
+        return stack.getType();
     }
 }

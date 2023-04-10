@@ -1,24 +1,25 @@
 package ca.teamdman.sfm.common.resourcetype;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.IForgeRegistry;
 
-public class ItemResourceType extends ResourceType<ItemStack, IItemHandler> {
+public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler> {
     public ItemResourceType() {
         super(ForgeCapabilities.ITEM_HANDLER);
     }
 
     @Override
-    public boolean registryKeyExists(ResourceLocation location) {
-        return ForgeRegistries.ITEMS.containsKey(location);
+    public IForgeRegistry<Item> getRegistry() {
+        return ForgeRegistries.ITEMS;
     }
 
     @Override
-    public ResourceLocation getRegistryKey(ItemStack itemStack) {
-        return ForgeRegistries.ITEMS.getKey(itemStack.getItem());
+    public Item getItem(ItemStack itemStack) {
+        return itemStack.getItem();
     }
 
     @Override

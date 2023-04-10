@@ -3,18 +3,19 @@ package ca.teamdman.sfm.common.resourcetype;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.infuse.IInfusionHandler;
+import mekanism.api.chemical.infuse.InfuseType;
 import mekanism.api.chemical.infuse.InfusionStack;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.registries.IForgeRegistry;
 
 import static net.minecraftforge.common.capabilities.CapabilityManager.get;
 
-public class InfusionResourceType extends ResourceType<InfusionStack, IInfusionHandler> {
+public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, IInfusionHandler> {
     public static final Capability<IInfusionHandler> CAP = get(new CapabilityToken<>() {
     });
 
-    public InfusionResourceType() {
+    public InfuseResourceType() {
         super(CAP);
     }
 
@@ -63,13 +64,14 @@ public class InfusionResourceType extends ResourceType<InfusionStack, IInfusionH
         return o instanceof IInfusionHandler;
     }
 
+
     @Override
-    public boolean registryKeyExists(ResourceLocation location) {
-        return MekanismAPI.infuseTypeRegistry().containsKey(location);
+    public IForgeRegistry<InfuseType> getRegistry() {
+        return MekanismAPI.infuseTypeRegistry();
     }
 
     @Override
-    public ResourceLocation getRegistryKey(InfusionStack infusionStack) {
-        return MekanismAPI.infuseTypeRegistry().getKey(infusionStack.getType());
+    public InfuseType getItem(InfusionStack stack) {
+        return stack.getType();
     }
 }

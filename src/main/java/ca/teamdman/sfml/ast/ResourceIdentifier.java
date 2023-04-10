@@ -15,18 +15,18 @@ import java.util.regex.PatternSyntaxException;
 
 // resourceTypeName resourceNamespace, resourceTypeName name, resource resourceNamespace, resource name
 // sfm:item:minecraft:stone
-public record ResourceIdentifier<STACK, CAP>(
+public record ResourceIdentifier<STACK, ITEM, CAP>(
         String resourceTypeNamespace,
         String resourceTypeName,
         String resourceNamespace,
         String resourceName
 ) implements ASTNode, Predicate<Object> {
 
-    public static final  ResourceIdentifier<?, ?>                     MATCH_ALL   = new ResourceIdentifier<>(
+    public static final  ResourceIdentifier<?, ?, ?>                     MATCH_ALL   = new ResourceIdentifier<>(
             ".*",
             ".*"
     );
-    private static final Map<String, Map<String, ResourceType<?, ?>>> lookupCache = new Object2ObjectOpenHashMap<>();
+    private static final Map<String, Map<String, ResourceType<?, ?, ?>>> lookupCache = new Object2ObjectOpenHashMap<>();
 
     public ResourceIdentifier(String value) {
         this(SFM.MOD_ID, "item", "minecraft", value);
@@ -40,7 +40,7 @@ public record ResourceIdentifier<STACK, CAP>(
         this(SFM.MOD_ID, typeName, resourceNamespace, resourceName);
     }
 
-    public static <STACK, CAP> ResourceIdentifier<STACK, CAP> fromString(String string) {
+    public static <STACK, ITEM, CAP> ResourceIdentifier<STACK, ITEM, CAP> fromString(String string) {
         var parts = string.split(":");
         if (parts.length == 1) {
             return new ResourceIdentifier<>(parts[0]);
@@ -79,14 +79,20 @@ public record ResourceIdentifier<STACK, CAP>(
         return getResourceType().test(this, other);
     }
 
-    public ResourceType<STACK, CAP> getResourceType() {
-        var namespaceMap = lookupCache.computeIfAbsent(
-                this.resourceTypeNamespace,
-                k -> new Object2ObjectOpenHashMap<>()
-        );
-        var type = namespaceMap.computeIfAbsent(this.resourceTypeName, k -> SFMResourceTypes.DEFERRED_TYPES
-                .get().getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName)));
-        return (ResourceType<STACK, CAP>) type;
+    public ResourceType<STACK, ITEM, CAP> getResourceType() {
+        var namespaceMap = lookupCache.get(this.resourceTypeNamespace);
+        if (namespaceMap == null) {
+            namespaceMap = new Object2ObjectOpenHashMap<>();
+            lookupCache.put(this.resourceTypeNamespace, namespaceMap);
+        }
+        var type = namespaceMap.get(this.resourceTypeName);
+        if (type == null) {
+            type = SFMResourceTypes.DEFERRED_TYPES
+                    .get()
+                    .getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
+            namespaceMap.put(this.resourceTypeName, type);
+        }
+        return (ResourceType<STACK, ITEM, CAP>) type;
     }
 
     @Override
