@@ -107,7 +107,7 @@ minecraft {
 
 //            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
 //            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
-            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions'
+            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
                 sfm {
@@ -129,7 +129,7 @@ minecraft {
 
 //            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
 //            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
-            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions'
+            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
                 sfm {
@@ -154,7 +154,7 @@ minecraft {
 
 //            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
 //            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
-            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions'
+            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
                 sfm {
