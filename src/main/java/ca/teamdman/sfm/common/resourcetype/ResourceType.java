@@ -7,9 +7,8 @@ import ca.teamdman.sfml.ast.ResourceIdentifier;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -43,18 +42,36 @@ public abstract class ResourceType<STACK, CAP> {
 
     public abstract boolean matchesStackType(Object o);
 
-    public boolean test(ResourceIdentifier<STACK, CAP> id, Object o) {
-        if (!matchesStackType(o)) return false;
+    private static final Map<String, Predicate<String>> patternCache = new HashMap<>();
 
-        if (isEmpty((STACK) o)) return false;
-        var key = getRegistryKey((STACK) o);
-        if (key == null) return false;
+    static {
+        patternCache.put(".*", s -> true);
+    }
 
-        var nsPattern    = Pattern.compile(id.resourceNamespace());
-        var namePattern  = Pattern.compile(id.resourceName());
-        var keyNamespace = key.getNamespace();
-        var keyName      = key.getPath();
-        return nsPattern.matcher(keyNamespace).matches() && namePattern.matcher(keyName).matches();
+    private static Predicate<String> buildPredicate(String possiblePattern) {
+        return isRegexPattern(possiblePattern)
+               ? Pattern.compile(possiblePattern).asMatchPredicate()
+               : possiblePattern::equals;
+    }
+
+    private static boolean isRegexPattern(String pattern) {
+        String specialChars = ".?*+^$[](){}|\\";
+        for (int i = 0; i < pattern.length(); i++) {
+            if (specialChars.indexOf(pattern.charAt(i)) >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean test(ResourceIdentifier<STACK, CAP> id, Object stack) {
+        if (!matchesStackType(stack)) return false;
+        if (isEmpty((STACK) stack)) return false;
+        var stackId = getRegistryKey((STACK) stack);
+        if (stackId == null) return false;
+        var nsPattern   = patternCache.computeIfAbsent(id.resourceNamespace(), ResourceType::buildPredicate);
+        var namePattern = patternCache.computeIfAbsent(id.resourceName(), ResourceType::buildPredicate);
+        return nsPattern.test(stackId.getNamespace()) && namePattern.test(stackId.getPath());
     }
 
 
