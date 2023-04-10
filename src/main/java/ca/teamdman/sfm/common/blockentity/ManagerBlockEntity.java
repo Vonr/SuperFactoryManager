@@ -23,8 +23,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.gametest.ForgeGameTestHooks;
 
+import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -33,6 +35,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int                    STATE_DATA_ACCESS_KEY     = 0;
     private final       NonNullList<ItemStack> ITEMS                     = NonNullList.withSize(1, ItemStack.EMPTY);
     private             Program                program                   = null;
+    private             int                    tick                      = 0;
     private final       ContainerData          DATA_ACCESS               = new ContainerData() {
         @Override
         public int get(int key) {
@@ -62,6 +65,8 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
+        long start = System.nanoTime();
+        tile.tick++;
         if (tile.shouldRebuildProgram) {
             tile.rebuildProgramAndUpdateDisk();
             tile.shouldRebuildProgram = false;
@@ -69,6 +74,18 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         if (tile.program != null) {
             tile.program.tick(tile);
         }
+        if (!FMLEnvironment.production) {
+            long durationNs = System.nanoTime() - start;
+            if (durationNs > 100000) {
+                NumberFormat formatter         = NumberFormat.getInstance();
+                String       formattedDuration = formatter.format(durationNs);
+                SFM.LOGGER.info("Manager tick took {}ns", formattedDuration);
+            }
+        }
+    }
+
+    public int getTick() {
+        return tick;
     }
 
     public Program getProgram() {

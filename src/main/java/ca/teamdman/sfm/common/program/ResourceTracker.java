@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 /**
  * Tracks how many things have been transferred.
  */
-public abstract class ResourceTracker<STACK, CAP> implements Predicate<STACK> {
+public abstract class ResourceTracker<STACK, CAP> implements Predicate<Object> {
     protected final ResourceLimit<STACK, CAP> LIMIT;
     protected       long                      transferred = 0;
 
@@ -34,7 +34,7 @@ public abstract class ResourceTracker<STACK, CAP> implements Predicate<STACK> {
     }
 
     @Override
-    public boolean test(STACK stack) {
+    public boolean test(Object stack) {
         return LIMIT.test(stack);
     }
 }

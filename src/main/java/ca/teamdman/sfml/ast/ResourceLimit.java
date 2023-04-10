@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 public record ResourceLimit<STACK, CAP>(
         Limit limit,
         ResourceIdentifier<STACK, CAP> resourceId
-) implements ASTNode, Predicate<STACK> {
+) implements ASTNode, Predicate<Object> {
     public ResourceLimit(ResourceIdentifier<STACK, CAP> resourceId) {
         this(new Limit(), resourceId);
     }
@@ -14,7 +14,7 @@ public record ResourceLimit<STACK, CAP>(
         return new ResourceLimit<>(limit.withDefaults(quantity, retention), resourceId);
     }
 
-    public boolean test(STACK stack) {
+    public boolean test(Object stack) {
         return resourceId.test(stack);
     }
 }
