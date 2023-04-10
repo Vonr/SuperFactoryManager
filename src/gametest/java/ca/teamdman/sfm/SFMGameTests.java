@@ -383,11 +383,22 @@ public class SFMGameTests {
                     assertTrue(barrel.getItem(i).getCount() == 64, "Items did not arrive");
                 }
             });
+
+
+            // remove all the items to speed up retests
+            destBlocks.forEach(pos -> {
+                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
+                for (int i = 0; i < barrel.getContainerSize(); i++) {
+                    barrel.setItem(i, ItemStack.EMPTY);
+                }
+            });
+
             // ensure the program did not take too long
             assertTrue(
                     endTime.get() - startTime.get() < 1000,
                     "Program took too long to run: took " + (endTime.get() - startTime.get()) + "ms"
             );
+
 
             helper.succeed();
         });

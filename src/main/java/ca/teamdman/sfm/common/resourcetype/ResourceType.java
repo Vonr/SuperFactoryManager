@@ -4,10 +4,14 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -42,7 +46,7 @@ public abstract class ResourceType<STACK, CAP> {
 
     public abstract boolean matchesStackType(Object o);
 
-    private static final Map<String, Predicate<String>> patternCache = new HashMap<>();
+    private static final Map<String, Predicate<String>> patternCache = new Object2ObjectOpenHashMap<>();
 
     static {
         patternCache.put(".*", s -> true);

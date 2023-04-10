@@ -3,9 +3,11 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -20,7 +22,11 @@ public record ResourceIdentifier<STACK, CAP>(
         String resourceName
 ) implements ASTNode, Predicate<Object> {
 
-    public static final ResourceIdentifier<?, ?> MATCH_ALL = new ResourceIdentifier<>(".*", ".*");
+    public static final  ResourceIdentifier<?, ?>                     MATCH_ALL   = new ResourceIdentifier<>(
+            ".*",
+            ".*"
+    );
+    private static final Map<String, Map<String, ResourceType<?, ?>>> lookupCache = new Object2ObjectOpenHashMap<>();
 
     public ResourceIdentifier(String value) {
         this(SFM.MOD_ID, "item", "minecraft", value);
@@ -74,8 +80,13 @@ public record ResourceIdentifier<STACK, CAP>(
     }
 
     public ResourceType<STACK, CAP> getResourceType() {
-        return (ResourceType<STACK, CAP>) SFMResourceTypes.DEFERRED_TYPES
-                .get().getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
+        var namespaceMap = lookupCache.computeIfAbsent(
+                this.resourceTypeNamespace,
+                k -> new Object2ObjectOpenHashMap<>()
+        );
+        var type = namespaceMap.computeIfAbsent(this.resourceTypeName, k -> SFMResourceTypes.DEFERRED_TYPES
+                .get().getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName)));
+        return (ResourceType<STACK, CAP>) type;
     }
 
     @Override
