@@ -66,11 +66,11 @@ public record OutputStatement(
             }
         } else {
             // create a single matcher to be shared by all capabilities
-            List<OutputResourceTracker<?, ?, ?>> outputMatchers = resourceLimits.createOutputTrackers();
+            List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
             for (var type : (Iterable<ResourceType>) types::iterator) {
                 for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
 //                    if (type.matchesCapType(cap)) {
-                    getSlots((ResourceType<Object, Object, Object>) type, cap, outputMatchers).forEach(rtn::add);
+                    getSlots((ResourceType<Object, Object, Object>) type, cap, outputTracker).forEach(rtn::add);
 //                    }
                 }
             }
@@ -88,14 +88,17 @@ public record OutputStatement(
             if (labelAccess.slots().contains(slot)) {
                 // the destination is allowed to be empty, don't check for empty slot
                 for (OutputResourceTracker<?, ?, ?> tracker : trackers) {
-                    // we can't make any assumptions about the tracker
-                    var x = new LimitedOutputSlot<>(
-                            this,
-                            capability,
-                            slot,
-                            (OutputResourceTracker<STACK, ITEM, CAP>) tracker
-                    );
-                    rtn.add(x);
+                    if (tracker.getLimit().resourceId().getResourceType().matchesCapabilityType(capability)) {
+                        // doesn't matter if destination slot is empty
+                        // doesn't let us short circuit like it does for input slots
+                        var x = new LimitedOutputSlot<>(
+                                this,
+                                capability,
+                                slot,
+                                (OutputResourceTracker<STACK, ITEM, CAP>) tracker
+                        );
+                        rtn.add(x);
+                    }
                 }
             }
         }

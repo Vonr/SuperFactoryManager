@@ -49,7 +49,7 @@ public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHan
     }
 
     @Override
-    public boolean matchesCapType(Object o) {
+    public boolean matchesCapabilityType(Object o) {
         return o instanceof IFluidHandler;
     }
 

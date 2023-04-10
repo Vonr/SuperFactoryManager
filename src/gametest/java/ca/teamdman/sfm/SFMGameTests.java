@@ -280,6 +280,68 @@ public class SFMGameTests {
     }
 
 
+    @GameTest(template = "myfirststructure")
+    public static void TestWaterMixingCrash(GameTestHelper helper) {
+        // fill in the blocks needed for the test
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+
+        BlockPos left = new BlockPos(2, 2, 1);
+        helper.setBlock(left, Blocks.CHEST);
+        // add sticks to the chest
+        ChestBlockEntity chest = (ChestBlockEntity) helper.getBlockEntity(left);
+        chest.setItem(0, new ItemStack(Items.STICK, 64));
+
+        BlockPos right = new BlockPos(0, 2, 1);
+        helper.setBlock(right, Blocks.CHEST);
+
+        BlockPos front = new BlockPos(1, 2, 2);
+        helper.setBlock(front, Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+
+        BlockPos back = new BlockPos(1, 2, 0);
+        helper.setBlock(back, Blocks.CAULDRON);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // create the program
+        var program = """
+                    NAME "water crash test"
+                                    
+                    every 20 ticks do
+                        INPUT  item:minecraft:stick, fluid:minecraft:water FROM a
+                        OUTPUT stick, fluid:minecraft:water TO b
+                    end
+                """;
+
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(front));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(right));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(back));
+
+        // load the program
+        manager.setProgram(program);
+
+        assertManagerRunning(manager);
+        helper.runAtTickTime(20 - helper.getTick() % 20, () -> {
+            helper.assertBlock(front, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
+            helper.assertBlockState(
+                    back,
+                    s -> s.getBlock() == Blocks.WATER_CAULDRON
+                         && s.getValue(LayeredCauldronBlock.LEVEL) == 3,
+                    () -> "cauldron didn't fill"
+            );
+            // ensure sticks departed
+            assertTrue(chest.getItem(0).getCount() == 0, "Items did not move");
+            // ensure sticks arrived
+            ChestBlockEntity rightChest = (ChestBlockEntity) helper.getBlockEntity(right);
+            assertTrue(rightChest.getItem(0).getCount() == 64, "Items did not move");
+
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "25x3x25") //todo : fix whatever the heck is going on here
     public static void ManyInventoryLag(GameTestHelper helper) {
         // fill the platform with cables and barrels

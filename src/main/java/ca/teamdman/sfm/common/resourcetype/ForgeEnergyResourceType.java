@@ -56,7 +56,7 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public boolean matchesCapType(Object o) {
+    public boolean matchesCapabilityType(Object o) {
         return o instanceof IEnergyStorage;
     }
 

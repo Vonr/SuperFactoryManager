@@ -44,7 +44,7 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     }
 
     @Override
-    public boolean matchesCapType(Object o) {
+    public boolean matchesCapabilityType(Object o) {
         return o instanceof IItemHandler;
     }
 

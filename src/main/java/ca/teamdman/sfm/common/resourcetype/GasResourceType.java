@@ -55,7 +55,7 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     }
 
     @Override
-    public boolean matchesCapType(Object o) {
+    public boolean matchesCapabilityType(Object o) {
         return o instanceof IGasHandler;
     }
 

@@ -78,11 +78,11 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         return namespacePredicate.test(stackId.getNamespace()) && namePredicate.test(stackId.getPath());
     }
 
-    public abstract boolean matchesCapType(Object o);
+    public abstract boolean matchesCapabilityType(Object o);
 
 
     public Optional<CAP> asCapability(Object o) {
-        return matchesCapType(o) ? Optional.of((CAP) o) : Optional.empty();
+        return matchesCapabilityType(o) ? Optional.of((CAP) o) : Optional.empty();
     }
 
     public Stream<CAP> getCapabilities(

@@ -60,7 +60,7 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     }
 
     @Override
-    public boolean matchesCapType(Object o) {
+    public boolean matchesCapabilityType(Object o) {
         return o instanceof IPigmentHandler;
     }
 

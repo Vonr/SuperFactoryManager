@@ -60,7 +60,7 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    public boolean matchesCapType(Object o) {
+    public boolean matchesCapabilityType(Object o) {
         return o instanceof ISlurryHandler;
     }
 

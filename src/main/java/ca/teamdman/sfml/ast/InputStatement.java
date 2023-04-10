@@ -34,9 +34,9 @@ public record InputStatement(
             for (ResourceType type : (Iterable<ResourceType>) types::iterator) {
                 for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
                     // create a new matcher for each capability
-                    List<InputResourceTracker<?, ?, ?>> inputMatchers = resourceLimits.createInputTrackers();
+                    List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
 //                    if (type.matchesCapType(cap)) {
-                    getSlots((ResourceType<Object, Object, Object>) type, cap, inputMatchers).forEach(rtn::add);
+                    getSlots((ResourceType<Object, Object, Object>) type, cap, inputTrackers).forEach(rtn::add);
 //                    }
                 }
             }
@@ -69,7 +69,8 @@ public record InputStatement(
                 STACK stack = type.getStackInSlot(capability, slot);
                 if (!type.isEmpty(stack)) {
                     for (InputResourceTracker<?, ?, ?> tracker : trackers) {
-                        if (tracker.test(stack)) {
+                        if (tracker.getLimit().resourceId().getResourceType().matchesCapabilityType(capability)
+                            && tracker.test(stack)) {
                             var x = new LimitedInputSlot<>(
                                     this,
                                     capability,

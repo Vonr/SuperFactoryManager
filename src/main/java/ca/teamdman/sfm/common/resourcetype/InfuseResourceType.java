@@ -60,7 +60,7 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     }
 
     @Override
-    public boolean matchesCapType(Object o) {
+    public boolean matchesCapabilityType(Object o) {
         return o instanceof IInfusionHandler;
     }
 
