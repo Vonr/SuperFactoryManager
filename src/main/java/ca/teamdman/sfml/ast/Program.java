@@ -192,7 +192,7 @@ public record Program(
         return referencedLabels;
     }
 
-    public void tick(ManagerBlockEntity manager) {
+    public boolean tick(ManagerBlockEntity manager) {
         var context = new ProgramContext(manager);
 
         // update warnings on disk item every 20 seconds
@@ -201,16 +201,14 @@ public record Program(
                     .getDisk()
                     .ifPresent(disk -> gatherWarnings(disk, manager));
         }
+        boolean didSomething = false;
         for (Trigger t : triggers) {
             if (t.shouldTick(context)) {
-//                var start = System.nanoTime();
                 t.tick(context.fork());
-//                var end  = System.nanoTime();
-//                var diff = end - start;
-//                SFM.LOGGER.debug("Took {}ms ({}us)", diff / 1000000, diff);
+                didSomething = true;
             }
         }
         manager.clearRedstonePulseQueue();
-
+        return didSomething;
     }
 }
