@@ -1,36 +1,25 @@
 package ca.teamdman.sfm;
 
-import ca.teamdman.sfm.common.block.ManagerBlock;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
-import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
-import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
-import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
-import net.minecraftforge.items.IItemHandler;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
@@ -43,17 +32,16 @@ import java.util.stream.IntStream;
 // https://docs.minecraftforge.net/en/1.19.x/misc/gametest/
 // https://github.com/MinecraftForge/MinecraftForge/blob/1.19.x/src/test/java/net/minecraftforge/debug/misc/GameTestTest.java#LL101-L116C6
 
+@SuppressWarnings("DataFlowIssue")
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
-public class SFMGameTests {
-    private static void assertTrue(boolean condition, String message) {
-        if (!condition) {
-            throw new GameTestAssertException(message);
-        }
-    }
+public class SFMGameTests extends SFMGameTestBase {
 
-    @GameTest(template = "single")
-    public static void ManagerUpdatesState(GameTestHelper helper) {
+    /**
+     * Ensure that the manager state gets updated as the disk is inserted and the program is set
+     */
+    @GameTest(template = "1x2x1")
+    public static void manager_state_update(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
         assertTrue(manager.getState() == ManagerBlockEntity.State.NO_DISK, "Manager did not start with no disk");
@@ -70,115 +58,198 @@ public class SFMGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "twochest")
-    public static void MoveAll(GameTestHelper helper) {
-        assertTwoChestTest(
-                helper,
-                """
-                            EVERY 20 TICKS DO
-                                INPUT FROM a
-                                OUTPUT TO b
-                            END
-                        """,
-                (left) -> left.insertItem(0, new ItemStack(Blocks.DIRT, 64), false),
-                right -> {
-                },
-                left -> assertTrue(left.getStackInSlot(0).isEmpty(), "Dirt did not move"),
-                right -> assertTrue(right.getStackInSlot(0).getCount() == 64, "Dirt did not move")
-        );
-    }
+    /**
+     * Ensure moving everything a single stack of
+     */
+    @GameTest(template = "3x2x1")
+    public static void move_1_stack(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
 
-    @GameTest(template = "twochest")
-    public static void MoveOne(GameTestHelper helper) {
-        assertTwoChestTest(
-                helper,
-                """
-                            EVERY 20 TICKS DO
-                                INPUT 1 FROM a
-                                OUTPUT TO b
-                            END
-                        """,
-                (left) -> left.insertItem(0, new ItemStack(Blocks.DIRT, 64), false),
-                right -> {
-                },
-                left -> assertTrue(left.getStackInSlot(0).getCount() == 63, "Dirt did not move"),
-                right -> assertTrue(right.getStackInSlot(0).getCount() == 1, "Dirt did not move")
-        );
-    }
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper
+                .getBlockEntity(leftPos)
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
 
-    @GameTest(template = "twochest")
-    public static void MoveFull(GameTestHelper helper) {
-        assertTwoChestTest(
-                helper,
-                """
-                            EVERY 20 TICKS DO
-                                INPUT FROM a
-                                OUTPUT TO b
-                            END
-                        """,
-                (left) -> fillWith(left, new ItemStack(Blocks.DIRT, 64)),
-                right -> {
-                },
-                left -> assertTrue(
-                        IntStream
-                                .range(0, left.getSlots())
-                                .allMatch(slot -> left.getStackInSlot(slot).isEmpty()),
-                        "Dirt did not leave"
-                ),
-                right -> assertTrue(
-                        countMatches(right, x -> x.is(Items.DIRT), right.getSlots() * 64),
-                        "Dirt did not arrive"
-                )
-        );
-    }
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-    @GameTest(template = "twochest")
-    public static void RetainSome(GameTestHelper helper) {
-        assertTwoChestTest(
-                helper,
-                """
-                            EVERY 20 TICKS DO
-                                INPUT RETAIN 5 FROM a
-                                OUTPUT TO b
-                            END
-                        """,
-                (left) -> left.insertItem(0, new ItemStack(Blocks.DIRT, 64), false),
-                right -> {
-                },
-                left -> assertTrue(left.getStackInSlot(0).getCount() == 5, "Dirt did not move"),
-                right -> assertTrue(right.getStackInSlot(0).getCount() == 64 - 5, "Dirt did not move")
-        );
-    }
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """);
 
-    @GameTest(template = "twochest")
-    public static void MultiInputOutput(GameTestHelper helper) {
-        assertTwoChestTest(helper, """
-                    EVERY 20 TICKS DO
-                        INPUT
-                            RETAIN 5 iron_ingot,
-                            RETAIN 3 stone
-                        FROM a TOP SIDE
-                    
-                        OUTPUT
-                            2 iron_ingot,
-                            RETAIN 10 stone
-                        TO b
-                    END
-                """, (left) -> {
-            left.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
-            left.insertItem(1, new ItemStack(Items.STONE, 64), false);
-        }, right -> {
-        }, left -> {
-            assertTrue(left.getStackInSlot(0).getCount() == 64 - 2, "Iron ingots did not retain");
-            assertTrue(left.getStackInSlot(1).getCount() == 64 - 10, "Stone did not retain");
-        }, right -> {
-            assertTrue(right.getStackInSlot(0).getCount() == 2, "Iron ingots did not move");
-            assertTrue(right.getStackInSlot(1).getCount() == 10, "Stone did not move");
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt did not move");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt did not move");
+            helper.succeed();
         });
     }
 
-    @GameTest(template = "3x2x1") // start with empty platform
-    public static void CauldronWaterMovement(GameTestHelper helper) {
+    @GameTest(template = "3x2x1")
+    public static void move_full_chest(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+
+
+        var leftChest = (helper.getBlockEntity(leftPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        for (int i = 0; i < leftChest.getSlots(); i++) {
+            leftChest.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
+        }
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """);
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
+            assertTrue(
+                    IntStream.range(0, leftChest.getSlots()).allMatch(slot -> leftChest.getStackInSlot(slot).isEmpty()),
+                    "Dirt did not leave"
+            );
+            int count = rightChest.getSlots() * 64;
+            int total = 0;
+            for (int i = 0; i < rightChest.getSlots(); i++) {
+                if (((Predicate<ItemStack>) x -> x.is(Items.DIRT)).test(rightChest.getStackInSlot(i))) {
+                    total += rightChest.getStackInSlot(i).getCount();
+                }
+            }
+            assertTrue(total == count, "Dirt did not arrive");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void retain_5(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, Blocks.CHEST);
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = (helper.getBlockEntity(leftPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT RETAIN 5 FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """);
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
+            assertTrue(
+                    leftChest.getStackInSlot(0).getCount() == 5,
+                    "Dirt did not move"
+            );
+            assertTrue(
+                    rightChest.getStackInSlot(0).getCount() == 64 - 5,
+                    "Dirt did not move"
+            );
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void move_multiple_item_names(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+
+        var leftChest = (helper.getBlockEntity(leftPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+        leftChest.insertItem(1, new ItemStack(Items.STONE, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT
+                                               RETAIN 5 iron_ingot,
+                                               RETAIN 3 stone
+                                           FROM a TOP SIDE
+                                       
+                                           OUTPUT
+                                               2 iron_ingot,
+                                               RETAIN 10 stone
+                                           TO b
+                                       END
+                                   """);
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64 - 2, "Iron ingots did not retain");
+            assertTrue(leftChest.getStackInSlot(1).getCount() == 64 - 10, "Stone did not retain");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 2, "Iron ingots did not move");
+            assertTrue(rightChest.getStackInSlot(1).getCount() == 10, "Stone did not move");
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Ensure that cauldrons can be treated as water fluid holders
+     */
+    @GameTest(template = "3x2x1")
+    public static void move_cauldron_water(GameTestHelper helper) {
         // fill in the blocks needed for the test
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos left = new BlockPos(2, 2, 0);
@@ -207,7 +278,7 @@ public class SFMGameTests {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        helper.runAtTickTime(20 - helper.getTick() % 20, () -> {
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(
                     right,
@@ -219,8 +290,52 @@ public class SFMGameTests {
         });
     }
 
+    /**
+     * Ensure that a cauldrons can be treated as a lava fluid holder
+     */
+    @GameTest(template = "3x2x1")
+    public static void move_cauldron_lava(GameTestHelper helper) {
+        // fill in the blocks needed for the test
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos left = new BlockPos(2, 2, 0);
+        helper.setBlock(left, Blocks.LAVA_CAULDRON.defaultBlockState());
+        BlockPos right = new BlockPos(0, 2, 0);
+        helper.setBlock(right, Blocks.CAULDRON);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // create the program
+        var program = """
+                    NAME "cauldron lava test"
+                                    
+                    EVERY 20 TICKS DO
+                        INPUT fluid:minecraft:lava FROM a
+                        OUTPUT fluid:*:* TO b
+                    END
+                """;
+
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(right));
+
+        // load the program
+        manager.setProgram(program);
+
+        assertManagerRunning(manager);
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
+            helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
+            helper.assertBlockState(
+                    right,
+                    s -> s.getBlock() == Blocks.LAVA_CAULDRON,
+                    () -> "cauldron didn't fill"
+            );
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "25x3x25")
-    public static void LongCableMovement(GameTestHelper helper) {
+    public static void cable_spiral(GameTestHelper helper) {
         BlockPos start = new BlockPos(0, 2, 0);
         BlockPos end   = new BlockPos(12, 2, 12);
 
@@ -270,7 +385,7 @@ public class SFMGameTests {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        helper.runAtTickTime(20 - helper.getTick() % 20, () -> {
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
             // ensure item arrived
             assertTrue(endChest.getItem(0).getCount() == 64, "Items did not move");
             // ensure item left
@@ -280,8 +395,8 @@ public class SFMGameTests {
     }
 
 
-    @GameTest(template = "myfirststructure")
-    public static void TestWaterMixingCrash(GameTestHelper helper) {
+    @GameTest(template = "3x4x3")
+    public static void regression_crash_type_mixing(GameTestHelper helper) {
         // fill in the blocks needed for the test
         BlockPos managerPos = new BlockPos(1, 2, 1);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
@@ -324,7 +439,7 @@ public class SFMGameTests {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        helper.runAtTickTime(20 - helper.getTick() % 20, () -> {
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
             helper.assertBlock(front, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(
                     back,
@@ -342,271 +457,9 @@ public class SFMGameTests {
         });
     }
 
-    @GameTest(template = "25x3x25") //todo : fix whatever the heck is going on here
-    public static void ManyInventoryLag(GameTestHelper helper) {
-        // fill the platform with cables and barrels
-        var sourceBlocks = new ArrayList<BlockPos>();
-        var destBlocks   = new ArrayList<BlockPos>();
-        for (int x = 0; x < 25; x++) {
-//            for (int z = 0; z < 25; z++) {
-            for (int z = 0; z < 24; z++) {
-                helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
-                helper.setBlock(new BlockPos(x, 3, z), Blocks.BARREL);
-                if (z % 2 == 0) {
-                    sourceBlocks.add(new BlockPos(x, 3, z));
-                    // fill the source chests with ingots
-                    BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(x, 3, z));
-                    for (int i = 0; i < barrel.getContainerSize(); i++) {
-                        barrel.setItem(i, new ItemStack(Items.IRON_INGOT, 64));
-                    }
-                } else {
-                    destBlocks.add(new BlockPos(x, 3, z));
-                }
-            }
-        }
-
-        // fill in the blocks needed for the test
-        helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
-        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
-
-        // create the program
-        var program = """
-                    NAME "many inventory lag test"
-                                    
-                    EVERY 20 TICKS DO
-                        INPUT FROM a
-                        OUTPUT TO b
-                    END
-                """;
-
-        // set the labels
-        sourceBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(pos)));
-        destBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(pos)));
-
-        // load the program
-        manager.setProgram(program);
-        assertTrue(
-                manager.getState() == ManagerBlockEntity.State.RUNNING,
-                "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())
-        );
-        List<Trigger> triggers  = manager.getProgram().triggers();
-        var           existing  = triggers.get(0);
-        var           startTime = new AtomicLong();
-        var           endTime   = new AtomicLong();
-        triggers.add(0, new Trigger() {
-            @Override
-            public boolean shouldTick(ProgramContext manager) {
-                return existing.shouldTick(manager);
-            }
-
-            @Override
-            public void tick(ProgramContext context) {
-                startTime.set(System.currentTimeMillis());
-            }
-        });
-        triggers.add(new Trigger() {
-            @Override
-            public boolean shouldTick(ProgramContext manager) {
-                return existing.shouldTick(manager);
-            }
-
-            @Override
-            public void tick(ProgramContext context) {
-                endTime.set(System.currentTimeMillis());
-            }
-        });
-
-        runAfterManagerFirstTick(helper, manager, () -> {
-//            helper
-//                    .getLevel()
-//                    .getPlayers(p -> true)
-//                    .forEach(player -> player.sendSystemMessage(Component
-//                                                                        .literal(
-//                                                                                "manyinventorylag manager execution took "
-//                                                                                + (
-//                                                                                        endTime.get() - startTime.get()
-//                                                                                )
-//                                                                                + "ms")
-//                                                                        .withStyle(ChatFormatting.GREEN)));
-
-            // ensure all the source chests are empty
-            sourceBlocks.forEach(pos -> {
-                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-                for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    assertTrue(barrel.getItem(i).isEmpty(), "Items did not leave");
-                }
-            });
-            // ensure all the dest chests are full
-            destBlocks.forEach(pos -> {
-                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-                for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    assertTrue(barrel.getItem(i).getCount() == 64, "Items did not arrive");
-                }
-            });
-
-
-            // remove all the items to speed up retests
-            destBlocks.forEach(pos -> {
-                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-                for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    barrel.setItem(i, ItemStack.EMPTY);
-                }
-            });
-
-            // ensure the program did not take too long
-            assertTrue(
-                    endTime.get() - startTime.get() < 1000,
-                    "Program took too long to run: took " + (endTime.get() - startTime.get()) + "ms"
-            );
-
-
-            helper.succeed();
-        });
-    }
-
-    @GameTest(template = "25x3x25") //todo : fix whatever the heck is going on here
-    public static void FullSourceAndDest(GameTestHelper helper) {
-        // fill the platform with cables and barrels
-        var sourceBlocks = new ArrayList<BlockPos>();
-        var destBlocks   = new ArrayList<BlockPos>();
-        for (int x = 0; x < 25; x++) {
-//            for (int z = 0; z < 25; z++) {
-            for (int z = 0; z < 24; z++) {
-                helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
-                helper.setBlock(new BlockPos(x, 3, z), Blocks.BARREL);
-                if (z % 2 == 0) {
-                    sourceBlocks.add(new BlockPos(x, 3, z));
-                } else {
-                    destBlocks.add(new BlockPos(x, 3, z));
-                }
-
-                // fill the source chests with ingots
-                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(x, 3, z));
-                for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    barrel.setItem(i, new ItemStack(Items.IRON_INGOT, 64));
-                }
-            }
-        }
-
-        // fill in the blocks needed for the test
-        helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
-        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
-
-        // create the program
-        var program = """
-                    NAME "many inventory lag test"
-                                    
-                    EVERY 20 TICKS DO
-                        INPUT FROM a
-                        OUTPUT TO b
-                    END
-                """;
-
-        // set the labels
-        sourceBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(pos)));
-        destBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(pos)));
-
-        // load the program
-        manager.setProgram(program);
-        assertTrue(
-                manager.getState() == ManagerBlockEntity.State.RUNNING,
-                "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())
-        );
-        List<Trigger> triggers  = manager.getProgram().triggers();
-        var           existing  = triggers.get(0);
-        var           startTime = new AtomicLong();
-        var           endTime   = new AtomicLong();
-        triggers.add(0, new Trigger() {
-            @Override
-            public boolean shouldTick(ProgramContext manager) {
-                return existing.shouldTick(manager);
-            }
-
-            @Override
-            public void tick(ProgramContext context) {
-                startTime.set(System.currentTimeMillis());
-            }
-        });
-        triggers.add(new Trigger() {
-            @Override
-            public boolean shouldTick(ProgramContext manager) {
-                return existing.shouldTick(manager);
-            }
-
-            @Override
-            public void tick(ProgramContext context) {
-                endTime.set(System.currentTimeMillis());
-            }
-        });
-
-        runAfterManagerFirstTick(helper, manager, () -> {
-            // ensure all the source chests are full
-            sourceBlocks.forEach(pos -> {
-                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-                for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    assertTrue(barrel.getItem(i).getCount() == 64, "Items did not stay");
-                }
-            });
-            // ensure all the dest chests are full
-            destBlocks.forEach(pos -> {
-                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-                for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    assertTrue(barrel.getItem(i).getCount() == 64, "Items did not arrive");
-                }
-            });
-
-
-            // remove all the items to speed up retests
-//            sourceBlocks.forEach(pos -> {
-//                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-//                for (int i = 0; i < barrel.getContainerSize(); i++) {
-//                    barrel.setItem(i, ItemStack.EMPTY);
-//                }
-//            });
-//            destBlocks.forEach(pos -> {
-//                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-//                for (int i = 0; i < barrel.getContainerSize(); i++) {
-//                    barrel.setItem(i, ItemStack.EMPTY);
-//                }
-//            });
-
-            // ensure the program did not take too long
-            assertTrue(
-                    endTime.get() - startTime.get() < 1000,
-                    "Program took too long to run: took " + (endTime.get() - startTime.get()) + "ms"
-            );
-
-
-            helper.succeed();
-        });
-    }
-
-
     @GameTest(template = "25x3x25")
-    public static void GatherGoodSupplies(GameTestHelper helper) {
+    public static void gather_supplies(GameTestHelper helper) {
         helper.succeed();
-    }
-
-    public static void runAfterManagerFirstTick(GameTestHelper helper, ManagerBlockEntity manager, Runnable runnable) {
-        var hasExecuted = new AtomicBoolean(false);
-        manager.getProgram().triggers().add(new Trigger() {
-            @Override
-            public boolean shouldTick(ProgramContext manager) {
-                return manager.getManager().getTick() % 20 == 0;
-            }
-
-            @Override
-            public void tick(ProgramContext context) {
-                hasExecuted.set(true);
-            }
-        });
-        IntStream.range(0, 200).forEach(i -> helper.runAfterDelay(i, () -> {
-            if (hasExecuted.get()) {
-                runnable.run();
-            }
-        }));
     }
 
     @GameTest(template = "25x3x25") // start with empty platform
@@ -690,15 +543,13 @@ public class SFMGameTests {
                 .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
                 .get();
         for (Direction value : Direction.values()) {
-            assertTrue(
-                    CableNetworkManager
-                            .getOrRegisterNetwork(
-                                    helper.getLevel(),
-                                    helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
-                            )
-                            .get() == net,
-                    "Networks did not merge"
-            );
+            assertTrue(CableNetworkManager
+                               .getOrRegisterNetwork(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
+                               )
+                               .get()
+                       == net, "Networks did not merge");
         }
 
         // break the block in the middle
@@ -728,15 +579,13 @@ public class SFMGameTests {
                 .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
                 .get();
         for (Direction value : Direction.values()) {
-            assertTrue(
-                    CableNetworkManager
-                            .getOrRegisterNetwork(
-                                    helper.getLevel(),
-                                    helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
-                            )
-                            .get() == net,
-                    "Networks did not merge"
-            );
+            assertTrue(CableNetworkManager
+                               .getOrRegisterNetwork(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
+                               )
+                               .get()
+                       == net, "Networks did not merge");
         }
 
         // lets also test having cables in more than just a straight line
@@ -815,98 +664,65 @@ public class SFMGameTests {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        helper.runAtTickTime(20 - helper.getTick() % 20, () -> {
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(right, s -> s.getBlock() == Blocks.LAVA_CAULDRON, () -> "cauldron didn't fill");
             helper.succeed();
         });
     }
 
-    public static void assertManagerRunning(ManagerBlockEntity manager) {
-        assertTrue(
-                manager.getState() == ManagerBlockEntity.State.RUNNING,
-                "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())
-        );
-    }
+    @GameTest(template = "3x2x1")
+    public static void move_slots(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
 
-    @GameTest(template = "twochest")
-    public static void MultiSlotInputOutput(GameTestHelper helper) {
-        assertTwoChestTest(helper, """
-                    EVERY 20 TICKS DO
-                        INPUT FROM a TOP SIDE SLOTS 0,1,3-4,5
-                        OUTPUT TO a SLOTS 2
-                    END
-                """, (left) -> {
-            left.insertItem(0, new ItemStack(Items.DIAMOND, 5), false);
-            left.insertItem(1, new ItemStack(Items.DIAMOND, 5), false);
-            left.insertItem(3, new ItemStack(Items.DIAMOND, 5), false);
-            left.insertItem(4, new ItemStack(Items.DIAMOND, 5), false);
-            left.insertItem(5, new ItemStack(Items.DIAMOND, 5), false);
-        }, right -> {
-        }, left -> {
-            assertTrue(left.getStackInSlot(0).isEmpty(), "slot 0 did not leave");
-            assertTrue(left.getStackInSlot(1).isEmpty(), "slot 1 did not leave");
-            assertTrue(left.getStackInSlot(3).isEmpty(), "slot 3 did not leave");
-            assertTrue(left.getStackInSlot(4).isEmpty(), "slot 4 did not leave");
-            assertTrue(left.getStackInSlot(5).isEmpty(), "slot 5 did not leave");
-            assertTrue(left.getStackInSlot(2).getCount() == 25, "Items did not transfer to slot 2");
-        }, right -> {
-            assertTrue(
-                    IntStream.range(0, right.getSlots()).allMatch(slot -> right.getStackInSlot(slot).isEmpty()),
-                    "Chest b is not empty"
-            );
-        });
-    }
-
-
-    private static void fillWith(IItemHandler inv, ItemStack stack) {
-        for (int i = 0; i < inv.getSlots(); i++) {
-            inv.insertItem(i, stack.copy(), false);
-        }
-    }
-
-    private static boolean countMatches(IItemHandler inv, Predicate<ItemStack> filter, int count) {
-        int total = 0;
-        for (int i = 0; i < inv.getSlots(); i++) {
-            if (filter.test(inv.getStackInSlot(i))) {
-                total += inv.getStackInSlot(i).getCount();
-            }
-        }
-        return total == count;
-    }
-
-    private static void assertTwoChestTest(
-            GameTestHelper helper,
-            String program,
-            Consumer<IItemHandler> setupLeft,
-            Consumer<IItemHandler> setupRight,
-            Consumer<IItemHandler> leftCheck,
-            Consumer<IItemHandler> rightCheck
-    ) {
-        helper.assertBlock(new BlockPos(1, 2, 0), ManagerBlock.class::isInstance, "Manager did not spawn");
-        helper.assertBlock(new BlockPos(0, 2, 0), b -> b == Blocks.CHEST, "Chest did not spawn");
-        helper.assertBlock(new BlockPos(2, 2, 0), b -> b == Blocks.CHEST, "Chest did not spawn");
-
-        var right = (helper.getBlockEntity(new BlockPos(0, 2, 0)))
+        var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .resolve()
                 .get();
-        var left = (helper.getBlockEntity(new BlockPos(2, 2, 0)))
+        var leftChest = (helper.getBlockEntity(leftPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .resolve()
                 .get();
 
-        setupLeft.accept(left);
-        setupRight.accept(right);
+        leftChest.insertItem(0, new ItemStack(Items.DIAMOND, 5), false);
+        leftChest.insertItem(1, new ItemStack(Items.DIAMOND, 5), false);
+        leftChest.insertItem(3, new ItemStack(Items.DIAMOND, 5), false);
+        leftChest.insertItem(4, new ItemStack(Items.DIAMOND, 5), false);
+        leftChest.insertItem(5, new ItemStack(Items.DIAMOND, 5), false);
 
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
-        manager.setProgram(program);
-        assertManagerRunning(manager);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a TOP SIDE SLOTS 0,1,3-4,5
+                                           OUTPUT TO a SLOTS 2
+                                       END
+                                   """);
 
-        helper.runAtTickTime(20 - helper.getTick() % 20, () -> {
-            leftCheck.accept(left);
-            rightCheck.accept(right);
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        assertManagerFirstTickSub1Second(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "slot 0 did not leave");
+            assertTrue(leftChest.getStackInSlot(1).isEmpty(), "slot 1 did not leave");
+            assertTrue(leftChest.getStackInSlot(3).isEmpty(), "slot 3 did not leave");
+            assertTrue(leftChest.getStackInSlot(4).isEmpty(), "slot 4 did not leave");
+            assertTrue(leftChest.getStackInSlot(5).isEmpty(), "slot 5 did not leave");
+            assertTrue(leftChest.getStackInSlot(2).getCount() == 25, "Items did not transfer to slot 2");
+            assertTrue(
+                    IntStream
+                            .range(0, rightChest.getSlots())
+                            .allMatch(slot -> rightChest.getStackInSlot(slot).isEmpty()),
+                    "Chest b is not empty"
+            );
             helper.succeed();
         });
     }
+
+
 }
