@@ -14,7 +14,7 @@ public record RedstoneTrigger(
     }
 
     @Override
-    public boolean shouldTick(ProgramContext manager) {
-        return manager.getManager().getUnprocessedRedstonePulseCount() > 0;
+    public boolean shouldTick(ProgramContext context) {
+        return context.getManager().getUnprocessedRedstonePulseCount() > 0;
     }
 }
