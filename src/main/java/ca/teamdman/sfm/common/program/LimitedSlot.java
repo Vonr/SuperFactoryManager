@@ -20,7 +20,7 @@ public abstract class LimitedSlot<STACK, ITEM, CAP, T extends ResourceTracker<ST
         return done || TRACKER.isDone();
     }
 
-    protected void setDone() {
+    public void setDone() {
         this.done = true;
     }
 
