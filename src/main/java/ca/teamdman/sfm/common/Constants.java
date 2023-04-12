@@ -188,19 +188,19 @@ public class Constants {
                 "gui.sfm.manager.button.warning.tooltip",
                 "Click to copy code with warnings and errors.\nShift-click to attempt to fix warnings."
         );
-        public static LocalizationEntry MANAGER_GUI_STATUS_LOADED_CLIPBOARD             = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATUS_LOADED_CLIPBOARD = new LocalizationEntry(
                 "gui.sfm.manager.status.loaded_clipboard",
                 "Loaded from clipboard!"
         );
-        public static LocalizationEntry MANAGER_GUI_STATUS_SAVED_CLIPBOARD              = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATUS_SAVED_CLIPBOARD  = new LocalizationEntry(
                 "gui.sfm.manager.status.saved_clipboard",
                 "Saved to clipboard!"
         );
-        public static LocalizationEntry MANAGER_GUI_STATUS_RESET                        = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATUS_RESET            = new LocalizationEntry(
                 "gui.sfm.manager.status.reset",
                 "Reset program and labels!"
         );
-        public static LocalizationEntry MANAGER_GUI_STATUS_FIX                          = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATUS_FIX              = new LocalizationEntry(
                 "gui.sfm.manager.status.fix",
                 "Cleaning up labels!"
         );
