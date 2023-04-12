@@ -69,7 +69,7 @@ public class ManagerMenu extends AbstractContainerMenu {
                 inventory,
                 new SimpleContainer(1),
                 buf.readBlockPos(),
-                new SimpleContainerData(1),
+                new SimpleContainerData(22),
                 buf.readUtf(Program.MAX_PROGRAM_LENGTH)
         );
     }

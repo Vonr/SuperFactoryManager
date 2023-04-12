@@ -2,6 +2,8 @@ package ca.teamdman.sfm.common;
 
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -154,7 +156,11 @@ public class Constants {
                 "gui.sfm.manager.state",
                 "State: %s"
         );
-        public static LocalizationEntry MANAGER_GUI_STATE_NO_DISK                       = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME            = new LocalizationEntry(
+                "gui.sfm.manager.peak_tick_time",
+                "Peak tick time: %s us"
+        );
+        public static LocalizationEntry MANAGER_GUI_STATE_NO_DISK             = new LocalizationEntry(
                 "gui.sfm.manager.state.no_disk",
                 "missing disk"
         );
@@ -199,6 +205,22 @@ public class Constants {
                 "Cleaning up labels!"
         );
 
+        public static LocalizationEntry GUI_ADVANCED_TOOLTIP_HINT = new LocalizationEntry(
+                "gui.sfm.advanced.tooltip.hint",
+                ChatFormatting.GRAY + "Hold " + ChatFormatting.AQUA + "Shift" + ChatFormatting.GRAY + " for more info"
+        );
+
+        public static LocalizationEntry KEY_MORE_INFO = new LocalizationEntry(
+                "key.sfm.more_info",
+                "Press for more info key"
+        );
+
+
+        public static LocalizationEntry SFM_KEY_CATEGORY = new LocalizationEntry(
+                "key.categories.sfm",
+                "Super Factory Manager"
+        );
+
         public static List<LocalizationEntry> getEntries() {
             // use reflection to get all the public static LocalizationEntry fields
             var rtn = new ArrayList<LocalizationEntry>();
@@ -220,6 +242,14 @@ public class Constants {
         ) {
             public LocalizationEntry(String key, String value) {
                 this(() -> key, () -> value);
+            }
+
+            public String getString() {
+                return I18n.get(key.get());
+            }
+
+            public String getString(Object... args) {
+                return I18n.get(key.get(), args);
             }
 
             public TranslatableContents get(Object... args) {

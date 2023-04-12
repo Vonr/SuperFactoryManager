@@ -1,18 +1,15 @@
 package ca.teamdman.sfm.common.blockentity;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.menu.ManagerMenu;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
@@ -23,28 +20,30 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.gametest.ForgeGameTestHooks;
 
-import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int                    STATE_DATA_ACCESS_KEY     = 0;
+    public static final int                    TICK_TIME_DATA_ACCESS_KEY = 1;
+    public static final int                    LATEST_TICK_INDEX         = 21;
     private final       NonNullList<ItemStack> ITEMS                     = NonNullList.withSize(1, ItemStack.EMPTY);
     private             Program                program                   = null;
     private             int                    tick                      = 0;
-    private final       ContainerData          DATA_ACCESS               = new ContainerData() {
+    private             int                    unprocessedRedstonePulses = 0; // used by redstone trigger
+    private             boolean                shouldRebuildProgram      = false;
+    private             int                    tickIndex                 = 0;
+
+    private final long[]        tickNanoTimes = new long[20];
+    private final ContainerData DATA_ACCESS   = new ContainerData() {
         @Override
         public int get(int key) {
-            return switch (key) {
-                case STATE_DATA_ACCESS_KEY -> ManagerBlockEntity.this
-                        .getState()
-                        .ordinal();
-                default -> 0;
-            };
+            if (key == STATE_DATA_ACCESS_KEY) return ManagerBlockEntity.this.getState().ordinal();
+            if (key >= 1 && key <= 20) return (int) ManagerBlockEntity.this.tickNanoTimes[key - 1];
+            if (key == LATEST_TICK_INDEX) return ManagerBlockEntity.this.tickIndex;
+            return 0;
         }
 
         @Override
@@ -53,12 +52,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
         @Override
         public int getCount() {
-            return 1;
+            return 2 + tickNanoTimes.length;
         }
     };
-    private             int                    unprocessedRedstonePulses = 0; // used by redstone trigger
-
-    private boolean shouldRebuildProgram = false;
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
@@ -72,14 +68,11 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             tile.shouldRebuildProgram = false;
         }
         if (tile.program != null) {
-            tile.program.tick(tile);
-        }
-        if (!FMLEnvironment.production) {
-            long durationNs = System.nanoTime() - start;
-            if (durationNs > 100000) {
-                NumberFormat formatter         = NumberFormat.getInstance();
-                String       formattedDuration = formatter.format(durationNs);
-                SFM.LOGGER.info("Manager tick took {}ns", formattedDuration);
+            boolean didSomething = tile.program.tick(tile);
+            if (didSomething) {
+                long nanoTimePassed = System.nanoTime() - start;
+                tile.tickNanoTimes[tile.tickIndex] = nanoTimePassed;
+                                                     tile.tickIndex = (tile.tickIndex + 1) % tile.tickNanoTimes.length;
             }
         }
     }
@@ -90,6 +83,14 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public Program getProgram() {
         return program;
+    }
+
+    public void setProgram(String program) {
+        getDisk().ifPresent(disk -> {
+            DiskItem.setProgram(disk, program);
+            rebuildProgramAndUpdateDisk();
+            setChanged();
+        });
     }
 
     public void trackRedstonePulseUnprocessed() {
@@ -104,14 +105,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return unprocessedRedstonePulses;
     }
 
-    public void setProgram(String program) {
-        getDisk().ifPresent(disk -> {
-            DiskItem.setProgram(disk, program);
-            rebuildProgramAndUpdateDisk();
-            setChanged();
-        });
-    }
-
     public State getState() {
         if (getDisk().isEmpty()) return State.NO_DISK;
         if (getProgramString().isEmpty()) return State.NO_PROGRAM;
@@ -120,9 +113,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public Optional<String> getProgramString() {
-        return getDisk()
-                .map(DiskItem::getProgram)
-                .filter(prog -> !prog.isBlank());
+        return getDisk().map(DiskItem::getProgram).filter(prog -> !prog.isBlank());
     }
 
     public Set<String> getReferencedLabels() {
@@ -230,25 +221,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         ContainerHelper.loadAllItems(tag, ITEMS);
-        if (ForgeGameTestHooks.isGametestEnabled()) {
-            var lastKnownPos = NbtUtils.readBlockPos(tag.getCompound("LastKnownPos"));
-            if (!lastKnownPos.equals(getBlockPos())) {
-                var diff = getBlockPos().subtract(lastKnownPos);
-                SFM.LOGGER.debug(
-                        "Manager at {} was moved from {} ({} offset), updating labels",
-                        getBlockPos(),
-                        lastKnownPos,
-                        diff
-                );
-                getDisk().ifPresent(disk -> {
-                    disk = disk.copy();
-                    SFMLabelNBTHelper.offsetPositions(disk, diff);
-                    setItem(0, disk);
-                    setChanged();
-                });
-                setChanged();
-            }
-        }
         this.shouldRebuildProgram = true;
     }
 
@@ -256,9 +228,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         ContainerHelper.saveAllItems(tag, ITEMS);
-        if (ForgeGameTestHooks.isGametestEnabled()) {
-            tag.put("LastKnownPos", NbtUtils.writeBlockPos(getBlockPos()));
-        }
     }
 
 
@@ -276,10 +245,13 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public enum State {
-        NO_PROGRAM(ChatFormatting.RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_PROGRAM),
-        NO_DISK(ChatFormatting.RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_DISK),
-        RUNNING(ChatFormatting.GREEN, Constants.LocalizationKeys.MANAGER_GUI_STATE_RUNNING),
-        INVALID_PROGRAM(ChatFormatting.DARK_RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_INVALID_PROGRAM);
+        NO_PROGRAM(
+                ChatFormatting.RED,
+                Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_PROGRAM
+        ), NO_DISK(ChatFormatting.RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_DISK), RUNNING(
+                ChatFormatting.GREEN,
+                Constants.LocalizationKeys.MANAGER_GUI_STATE_RUNNING
+        ), INVALID_PROGRAM(ChatFormatting.DARK_RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_INVALID_PROGRAM);
 
         public final ChatFormatting                               COLOR;
         public final Constants.LocalizationKeys.LocalizationEntry LOC;
