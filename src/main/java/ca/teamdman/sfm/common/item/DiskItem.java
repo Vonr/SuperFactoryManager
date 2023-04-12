@@ -105,6 +105,16 @@ public class DiskItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
+        long handle = Minecraft.getInstance().getWindow().getWindow();
+        boolean showProgram = InputConstants.isKeyDown(
+                handle,
+                SFMKeyMappings.MORE_INFO_TOOLTIP_KEY
+                        .get()
+                        .getKey()
+                        .getValue()
+        );
+        if (showProgram) return super.getName(stack);
+
         var name = getProgramName(stack);
         if (name.isEmpty()) return super.getName(stack);
         return Component.literal(name).withStyle(ChatFormatting.AQUA);
@@ -144,6 +154,32 @@ public class DiskItem extends Item {
             } else {
                 var program = getProgram(stack);
                 if (!program.isEmpty()) {
+                    var start = Component.empty();
+                    ChatFormatting[] rainbowColors = new ChatFormatting[]{
+                            ChatFormatting.DARK_RED,
+                            ChatFormatting.RED,
+                            ChatFormatting.GOLD,
+                            ChatFormatting.YELLOW,
+                            ChatFormatting.DARK_GREEN,
+                            ChatFormatting.GREEN,
+                            ChatFormatting.DARK_AQUA,
+                            ChatFormatting.AQUA,
+                            ChatFormatting.DARK_BLUE,
+                            ChatFormatting.BLUE,
+                            ChatFormatting.DARK_PURPLE,
+                            ChatFormatting.LIGHT_PURPLE
+                    };
+                    int rainbowColorsLength = rainbowColors.length;
+                    int fullCycleLength = 2 * rainbowColorsLength - 2;
+                    for (int i = 0; i < getName(stack).getString().length() - 2; i++) {
+                        int cyclePosition = i % fullCycleLength;
+                        int adjustedIndex = cyclePosition < rainbowColorsLength
+                                            ? cyclePosition
+                                            : fullCycleLength - cyclePosition;
+                        ChatFormatting color = rainbowColors[adjustedIndex];
+                        start = start.append(Component.literal("=").withStyle(color));
+                    }
+                    list.add(start);
                     ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(program).forEach(list::add);
                 }
             }

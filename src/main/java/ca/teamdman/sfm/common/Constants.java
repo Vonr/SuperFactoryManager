@@ -152,19 +152,19 @@ public class Constants {
                 "gui.sfm.manager.state.no_program",
                 "no program"
         );
-        public static LocalizationEntry MANAGER_GUI_STATE                               = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATE = new LocalizationEntry(
                 "gui.sfm.manager.state",
                 "State: %s"
         );
-        public static LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME            = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME = new LocalizationEntry(
                 "gui.sfm.manager.peak_tick_time",
-                "Peak tick time: %s us"
+                "Peak tick time: %s μs"
         );
-        public static LocalizationEntry MANAGER_GUI_STATE_NO_DISK             = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATE_NO_DISK = new LocalizationEntry(
                 "gui.sfm.manager.state.no_disk",
                 "missing disk"
         );
-        public static LocalizationEntry MANAGER_GUI_STATE_RUNNING                       = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATE_RUNNING = new LocalizationEntry(
                 "gui.sfm.manager.state.running",
                 "running"
         );
@@ -176,15 +176,37 @@ public class Constants {
                 "gui.sfm.manager.button.import_clipboard",
                 "Import clipboard"
         );
-        public static LocalizationEntry MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD             = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD = new LocalizationEntry(
                 "gui.sfm.manager.button.export_clipboard",
                 "Export clipboard"
         );
-        public static LocalizationEntry MANAGER_GUI_BUTTON_RESET                        = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_BUTTON_RESET = new LocalizationEntry(
                 "gui.sfm.manager.button.reset",
                 "Reset"
         );
-        public static LocalizationEntry MANAGER_GUI_WARNING_BUTTON_TOOLTIP              = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_BUTTON_POWER_OFF = new LocalizationEntry(
+                "gui.sfm.manager.button.power_off",
+                "Turn off"
+        );
+        public static LocalizationEntry MANAGER_GUI_BUTTON_POWER_OFF_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.manager.button.power_off.tooltip",
+                "The manager is currently running. Click to turn off."
+        );
+        public static LocalizationEntry MANAGER_GUI_BUTTON_POWER_ON = new LocalizationEntry(
+                "gui.sfm.manager.button.power_on",
+                "Turn on"
+        );
+        public static LocalizationEntry MANAGER_GUI_BUTTON_POWER_ON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.manager.button.power_on.tooltip",
+                "The manager is currently powered off. Click to turn on."
+        );
+
+        public static LocalizationEntry MANAGER_GUI_BUTTON_POWER_BUTTON_TOOLTIP_RUNNING = new LocalizationEntry(
+                "gui.sfm.manager.button.power_tooltip",
+                "Turn on"
+        );
+
+        public static LocalizationEntry MANAGER_GUI_WARNING_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.button.warning.tooltip",
                 "Click to copy code with warnings and errors.\nShift-click to attempt to fix warnings."
         );
@@ -192,7 +214,7 @@ public class Constants {
                 "gui.sfm.manager.status.loaded_clipboard",
                 "Loaded from clipboard!"
         );
-        public static LocalizationEntry MANAGER_GUI_STATUS_SAVED_CLIPBOARD  = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATUS_SAVED_CLIPBOARD = new LocalizationEntry(
                 "gui.sfm.manager.status.saved_clipboard",
                 "Saved to clipboard!"
         );

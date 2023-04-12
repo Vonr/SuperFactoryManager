@@ -32,10 +32,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
             SFM.MOD_ID,
             "textures/gui/container/manager.png"
     );
-    private final        float            STATUS_DURATION             = 40;
-    private              Component        status                      = Component.empty();
-    private              float            statusCountdown             = 0;
-    private              ExtendedButton   diagButton;
+    private final float STATUS_DURATION = 40;
+    private Component status = Component.empty();
+    private float statusCountdown = 0;
+    private ExtendedButton diagButton;
 
 
     public ManagerScreen(ManagerMenu menu, Inventory inv, Component title) {
@@ -58,7 +58,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                         pose,
                         font.split(
                                 MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(width / 2 - 43, 170)
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
                         ),
                         mx,
                         my
@@ -85,7 +90,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                         pose,
                         font.split(
                                 MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(width / 2 - 43, 170)
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
                         ),
                         mx,
                         my
@@ -108,7 +118,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                         pose,
                         font.split(
                                 MANAGER_GUI_WARNING_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(width / 2 - 43, 170)
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
                         ),
                         mx,
                         my
@@ -121,7 +136,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION
         ));
-        status          = MANAGER_GUI_STATUS_RESET.getComponent();
+        status = MANAGER_GUI_STATUS_RESET.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
@@ -130,7 +145,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION
         ));
-        status          = MANAGER_GUI_STATUS_FIX.getComponent();
+        status = MANAGER_GUI_STATUS_FIX.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
@@ -140,15 +155,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.BLOCK_ENTITY_POSITION,
                 program
         ));
-        menu.program    = program;
-        status          = MANAGER_GUI_STATUS_LOADED_CLIPBOARD.getComponent();
+        menu.program = program;
+        status = MANAGER_GUI_STATUS_LOADED_CLIPBOARD.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
     private void onSaveClipboard() {
         try {
             Minecraft.getInstance().keyboardHandler.setClipboard(menu.program);
-            status          = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
+            status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -158,7 +173,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     private boolean shouldShowDiagButton() {
         var disk = menu.CONTAINER.getItem(0);
         if (!(disk.getItem() instanceof DiskItem)) return false;
-        var errors   = DiskItem.getErrors(disk);
+        var errors = DiskItem.getErrors(disk);
         var warnings = DiskItem.getWarnings(disk);
         return !errors.isEmpty() || !warnings.isEmpty();
     }
@@ -191,7 +206,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
             }
 
             Minecraft.getInstance().keyboardHandler.setClipboard(content.toString());
-            status          = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
+            status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -227,8 +242,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
 
         // draw state string
         var states = ManagerBlockEntity.State.values();
-        var key    = menu.CONTAINER_DATA.get(ManagerBlockEntity.STATE_DATA_ACCESS_KEY);
-        var state  = states[key];
+        var key = menu.CONTAINER_DATA.get(ManagerBlockEntity.STATE_DATA_ACCESS_KEY);
+        var state = states[key];
         this.font.draw(
                 poseStack,
                 MANAGER_GUI_STATE.getComponent(state.LOC.getComponent().withStyle(state.COLOR)),
@@ -242,8 +257,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
             this.font.draw(
                     poseStack,
                     status,
-                    titleLabelX,
-                    20f + font.lineHeight + 0.1f,
+                    inventoryLabelX + font.width(playerInventoryTitle.getString()) + 5,
+                    inventoryLabelY,
                     0
             );
         }
@@ -259,8 +274,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         var format = NumberFormat.getInstance(Locale.getDefault());
         this.font.draw(
                 poseStack,
-                MANAGER_GUI_PEAK_TICK_TIME.getComponent((peakTickTime > 25_000_000 ? "§c" : "§a") + format.format(
-                        peakTickTime)),
+                MANAGER_GUI_PEAK_TICK_TIME.getComponent((peakTickTime > 25_000_000 ? "§c" : "§a")
+                                                        + format.format(peakTickTime)),
                 titleLabelX,
                 20f + font.lineHeight + 0.1f,
                 0
@@ -268,9 +283,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
 
 
         // Constants for the plot size and position
-        final int plotX      = titleLabelX + 50;
-        final int plotY      = 50;
-        final int plotWidth  = 100;
+        final int plotX = titleLabelX + 50;
+        final int plotY = 50;
+        final int plotWidth = 100;
         final int plotHeight = 50;
 
 
@@ -279,38 +294,35 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        Tesselator    tesselator    = Tesselator.getInstance();
+        Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferbuilder = tesselator.getBuilder();
-        bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         Matrix4f pose = poseStack.last().pose();
 
         // Draw lines for each data point
         int latestTickIndex = menu.CONTAINER_DATA.get(ManagerBlockEntity.LATEST_TICK_INDEX);
         for (int i = 0; i < 19; i++) {
-            for (int j = 0; j < 2; j++) {
-                int dataIndex = (latestTickIndex + i + j + 1)
-                                % 20; // Calculate the data index based on the latest tick index
-                int tickTimeNanos = menu.CONTAINER_DATA.get(ManagerBlockEntity.TICK_TIME_DATA_ACCESS_KEY + dataIndex);
-                if (tickTimeNanos == 0) {
-                    tickTimeNanos = 10000; // force min value
-                }
-                float normalizedTickTime = (float) (Math.log10(tickTimeNanos) / Math.log10(peakTickTime));
-                int   plotPosY           = plotY + plotHeight - (int) (normalizedTickTime * plotHeight);
-
-                int plotPosX = plotX + (18 - i - j) * plotWidth / 18;
-
-                // Color the lines based on their tick times (green to red)
-                float red   = Math.min((float) tickTimeNanos / (50_000_000), 1.0f); // 50ms in nanoseconds
-                float green = 1.0f - red;
-
-                bufferbuilder
-                        .vertex(pose, (float) plotPosX, (float) plotPosY, (float) getBlitOffset())
-                        .color(red, green, 0, 1f)
-                        .endVertex();
+            int dataIndex = (latestTickIndex + i) % 20; // Calculate the data index based on the latest tick index
+            int tickTimeNanos = menu.CONTAINER_DATA.get(ManagerBlockEntity.TICK_TIME_DATA_ACCESS_KEY + dataIndex);
+            if (tickTimeNanos == 0) {
+                tickTimeNanos = 10000; // force min value
             }
+            float normalizedTickTime = (float) (Math.log10(tickTimeNanos) / Math.log10(peakTickTime));
+            int plotPosY = plotY + plotHeight - (int) (normalizedTickTime * plotHeight);
+
+            int plotPosX = plotX + (18 - i) * plotWidth / 18;
+
+            // Color the lines based on their tick times (green to red)
+            float red = Math.min((float) tickTimeNanos / (50_000_000), 1.0f); // 50ms in nanoseconds
+            float green = 1.0f - red;
+
+            bufferbuilder
+                    .vertex(pose, (float) plotPosX, (float) plotPosY, (float) getBlitOffset())
+                    .color(red, green, 0, 1f)
+                    .endVertex();
         }
 
-// Finish rendering
+        // Finish rendering
         tesselator.end();
         RenderSystem.disableBlend();
         RenderSystem.enableTexture();

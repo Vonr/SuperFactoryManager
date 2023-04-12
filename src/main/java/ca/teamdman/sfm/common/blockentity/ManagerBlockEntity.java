@@ -26,22 +26,21 @@ import java.util.Optional;
 import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
-    public static final int                    STATE_DATA_ACCESS_KEY     = 0;
-    public static final int                    TICK_TIME_DATA_ACCESS_KEY = 1;
-    public static final int                    LATEST_TICK_INDEX         = 21;
-    private final       NonNullList<ItemStack> ITEMS                     = NonNullList.withSize(1, ItemStack.EMPTY);
-    private             Program                program                   = null;
-    private             int                    tick                      = 0;
-    private             int                    unprocessedRedstonePulses = 0; // used by redstone trigger
-    private             boolean                shouldRebuildProgram      = false;
-    private             int                    tickIndex                 = 0;
-
-    private final long[]        tickNanoTimes = new long[20];
-    private final ContainerData DATA_ACCESS   = new ContainerData() {
+    public static final int STATE_DATA_ACCESS_KEY = 0;
+    public static final int TICK_TIME_DATA_ACCESS_KEY = 1;
+    public static final int LATEST_TICK_INDEX = 21;
+    private final NonNullList<ItemStack> ITEMS = NonNullList.withSize(1, ItemStack.EMPTY);
+    private final int[] tickNanoTimes = new int[20];
+    private Program program = null;
+    private int tick = 0;
+    private int unprocessedRedstonePulses = 0; // used by redstone trigger
+    private boolean shouldRebuildProgram = false;
+    private int tickIndex = 0;
+    private final ContainerData DATA_ACCESS = new ContainerData() {
         @Override
         public int get(int key) {
             if (key == STATE_DATA_ACCESS_KEY) return ManagerBlockEntity.this.getState().ordinal();
-            if (key >= 1 && key <= 20) return (int) ManagerBlockEntity.this.tickNanoTimes[key - 1];
+            if (key >= 1 && key <= 20) return ManagerBlockEntity.this.tickNanoTimes[key - 1];
             if (key == LATEST_TICK_INDEX) return ManagerBlockEntity.this.tickIndex;
             return 0;
         }
@@ -59,7 +58,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
     }
-
     public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
         long start = System.nanoTime();
         tile.tick++;
@@ -70,9 +68,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         if (tile.program != null) {
             boolean didSomething = tile.program.tick(tile);
             if (didSomething) {
-                long nanoTimePassed = System.nanoTime() - start;
-                tile.tickNanoTimes[tile.tickIndex] = nanoTimePassed;
-                                                     tile.tickIndex = (tile.tickIndex + 1) % tile.tickNanoTimes.length;
+                long nanoTimePassed = Long.min(System.nanoTime() - start, Integer.MAX_VALUE);
+                tile.tickNanoTimes[tile.tickIndex] = (int) nanoTimePassed;
+                tile.tickIndex = (tile.tickIndex + 1) % tile.tickNanoTimes.length;
             }
         }
     }
@@ -248,17 +246,20 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         NO_PROGRAM(
                 ChatFormatting.RED,
                 Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_PROGRAM
-        ), NO_DISK(ChatFormatting.RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_DISK), RUNNING(
-                ChatFormatting.GREEN,
-                Constants.LocalizationKeys.MANAGER_GUI_STATE_RUNNING
-        ), INVALID_PROGRAM(ChatFormatting.DARK_RED, Constants.LocalizationKeys.MANAGER_GUI_STATE_INVALID_PROGRAM);
+        ), NO_DISK(
+                ChatFormatting.RED,
+                Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_DISK
+        ), RUNNING(ChatFormatting.GREEN, Constants.LocalizationKeys.MANAGER_GUI_STATE_RUNNING), INVALID_PROGRAM(
+                ChatFormatting.DARK_RED,
+                Constants.LocalizationKeys.MANAGER_GUI_STATE_INVALID_PROGRAM
+        );
 
-        public final ChatFormatting                               COLOR;
+        public final ChatFormatting COLOR;
         public final Constants.LocalizationKeys.LocalizationEntry LOC;
 
         State(ChatFormatting color, Constants.LocalizationKeys.LocalizationEntry loc) {
             COLOR = color;
-            LOC   = loc;
+            LOC = loc;
         }
     }
 
