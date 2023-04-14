@@ -265,6 +265,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         for (int i = 0; i < menu.tickTimeNanos.length; i++) {
             peakTickTime = Long.max(peakTickTime, menu.tickTimeNanos[i]);
         }
+        long yMax = Long.max(peakTickTime, 50000000); // Start with max at 50ms but allow it to grow
 
         // Constants for the plot size and position
         final int plotX = titleLabelX + 45;
@@ -299,7 +300,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         int mouseTickTimeIndex = -1;
         for (int i = 0; i < menu.tickTimeNanos.length; i++) {
             long y = menu.tickTimeNanos[i];
-            float normalizedTickTime = y == 0 ? 0 : (float) (Math.log10(y) / Math.log10(peakTickTime));
+            float normalizedTickTime = y == 0 ? 0 : (float) (Math.log10(y) / Math.log10(yMax));
             int plotPosY = plotY + plotHeight - (int) (normalizedTickTime * plotHeight);
 
             int plotPosX = plotX + spaceBetweenPoints * i;
