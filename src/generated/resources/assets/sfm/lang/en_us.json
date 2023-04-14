@@ -5,7 +5,7 @@
   "block.sfm.water_tank.tooltip.1": "Requires two adjacent water sources",
   "block.sfm.water_tank.tooltip.2": "More effective when also adjacent to other water tanks",
   "container.sfm.manager": "Factory Manager",
-  "gui.sfm.advanced.tooltip.hint": "§7Hold §bShift§7 for more info",
+  "gui.sfm.advanced.tooltip.hint": "§7Hold §b%s§7 for more info",
   "gui.sfm.label.labelgun.placeholder": "Label",
   "gui.sfm.manager.button.export_clipboard": "Export clipboard",
   "gui.sfm.manager.button.import_clipboard": "Import clipboard",

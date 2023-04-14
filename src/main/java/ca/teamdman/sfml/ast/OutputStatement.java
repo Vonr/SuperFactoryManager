@@ -124,8 +124,8 @@ public record OutputStatement(
                 .resourceLimits()
                 .stream()
                 .map(ResourceLimit::resourceId)
-                .distinct()
-                .map(ResourceIdentifier::getResourceType);
+                .map((ResourceIdentifier x) -> x.getResourceType())
+                .distinct();
 
         if (each) {
             for (var type : (Iterable<ResourceType>) types::iterator) {
