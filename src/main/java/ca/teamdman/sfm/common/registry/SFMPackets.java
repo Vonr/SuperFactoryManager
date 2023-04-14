@@ -36,19 +36,26 @@ public class SFMPackets {
                 MANAGER_CHANNEL,
                 0,
                 ServerboundManagerProgramPacket.class,
-                new ServerboundManagerProgramPacket.ResetPacketHandler()
+                new ServerboundManagerProgramPacket.PacketHandler()
         );
         register(
                 MANAGER_CHANNEL,
                 1,
                 ServerboundManagerResetPacket.class,
-                new ServerboundManagerResetPacket.ResetPacketHandler()
+                new ServerboundManagerResetPacket.PacketHandler()
         );
         register(
                 MANAGER_CHANNEL,
                 2,
                 ServerboundManagerFixPacket.class,
-                new ServerboundManagerFixPacket.ResetPacketHandler()
+                new ServerboundManagerFixPacket.PacketHandler()
+        );
+        MANAGER_CHANNEL.registerMessage(
+                3,
+                ClientboundManagerGuiPacket.class,
+                ClientboundManagerGuiPacket::encode,
+                ClientboundManagerGuiPacket::decode,
+                ClientboundManagerGuiPacket::handle
         );
 
 

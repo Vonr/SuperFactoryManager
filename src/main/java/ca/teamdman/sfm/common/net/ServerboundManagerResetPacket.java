@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -11,9 +11,9 @@ public class ServerboundManagerResetPacket extends MenuPacket {
         super(windowId, pos);
     }
 
-    public static class ResetPacketHandler extends MenuPacketHandler<ManagerMenu, ManagerBlockEntity, ServerboundManagerResetPacket> {
-        public ResetPacketHandler() {
-            super(ManagerMenu.class, ManagerBlockEntity.class);
+    public static class PacketHandler extends MenuPacketHandler<ManagerContainerMenu, ManagerBlockEntity, ServerboundManagerResetPacket> {
+        public PacketHandler() {
+            super(ManagerContainerMenu.class, ManagerBlockEntity.class);
         }
 
         @Override
@@ -30,7 +30,7 @@ public class ServerboundManagerResetPacket extends MenuPacket {
         @Override
         public void handle(
                 ServerboundManagerResetPacket msg,
-                ManagerMenu menu,
+                ManagerContainerMenu menu,
                 ManagerBlockEntity blockEntity
         ) {
             blockEntity.reset();

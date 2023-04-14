@@ -160,6 +160,10 @@ public class Constants {
                 "gui.sfm.manager.peak_tick_time",
                 "Peak tick time: %s μs"
         );
+        public static LocalizationEntry MANAGER_GUI_HOVERED_TICK_TIME = new LocalizationEntry(
+                "gui.sfm.manager.hovered_tick_time",
+                "Hovered tick time: %s μs"
+        );
         public static LocalizationEntry MANAGER_GUI_STATE_NO_DISK = new LocalizationEntry(
                 "gui.sfm.manager.state.no_disk",
                 "missing disk"
@@ -168,7 +172,7 @@ public class Constants {
                 "gui.sfm.manager.state.running",
                 "running"
         );
-        public static LocalizationEntry MANAGER_GUI_STATE_INVALID_PROGRAM               = new LocalizationEntry(
+        public static LocalizationEntry MANAGER_GUI_STATE_INVALID_PROGRAM = new LocalizationEntry(
                 "gui.sfm.manager.state.invalid_program",
                 "invalid program"
         );

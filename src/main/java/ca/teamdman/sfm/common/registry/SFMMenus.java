@@ -2,7 +2,7 @@ package ca.teamdman.sfm.common.registry;
 
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -18,10 +18,10 @@ public class SFMMenus {
         MENU_TYPES.register(bus);
     }
 
-    public static final RegistryObject<MenuType<ManagerMenu>> MANAGER_MENU = MENU_TYPES
+    public static final RegistryObject<MenuType<ManagerContainerMenu>> MANAGER_MENU = MENU_TYPES
             .register(
                     "manager",
-                    () -> IForgeMenuType.create(ManagerMenu::new)
+                    () -> IForgeMenuType.create(ManagerContainerMenu::new)
             );
 
 

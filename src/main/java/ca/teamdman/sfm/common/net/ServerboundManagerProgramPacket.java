@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -14,9 +14,9 @@ public class ServerboundManagerProgramPacket extends MenuPacket {
         PROGRAM = program;
     }
 
-    public static class ResetPacketHandler extends MenuPacketHandler<ManagerMenu, ManagerBlockEntity, ServerboundManagerProgramPacket> {
-        public ResetPacketHandler() {
-            super(ManagerMenu.class, ManagerBlockEntity.class);
+    public static class PacketHandler extends MenuPacketHandler<ManagerContainerMenu, ManagerBlockEntity, ServerboundManagerProgramPacket> {
+        public PacketHandler() {
+            super(ManagerContainerMenu.class, ManagerBlockEntity.class);
         }
 
         @Override
@@ -34,7 +34,7 @@ public class ServerboundManagerProgramPacket extends MenuPacket {
         @Override
         public void handle(
                 ServerboundManagerProgramPacket msg,
-                ManagerMenu menu,
+                ManagerContainerMenu menu,
                 ManagerBlockEntity blockEntity
         ) {
             blockEntity.setProgram(msg.PROGRAM);

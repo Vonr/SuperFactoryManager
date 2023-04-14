@@ -1,9 +1,12 @@
 package ca.teamdman.sfm.common.blockentity;
 
 import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfm.common.net.ClientboundManagerGuiPacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.registry.SFMPackets;
+import ca.teamdman.sfm.common.util.OpenContainerTracker;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
@@ -15,49 +18,30 @@ import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
-    public static final int STATE_DATA_ACCESS_KEY = 0;
-    public static final int TICK_TIME_DATA_ACCESS_KEY = 1;
-    public static final int LATEST_TICK_INDEX = 21;
+    public static final int TICK_TIME_HISTORY_SIZE = 20;
     private final NonNullList<ItemStack> ITEMS = NonNullList.withSize(1, ItemStack.EMPTY);
-    private final int[] tickNanoTimes = new int[20];
+    private final long[] tickTimeNanos = new long[TICK_TIME_HISTORY_SIZE];
     private Program program = null;
     private int tick = 0;
     private int unprocessedRedstonePulses = 0; // used by redstone trigger
     private boolean shouldRebuildProgram = false;
     private int tickIndex = 0;
-    private final ContainerData DATA_ACCESS = new ContainerData() {
-        @Override
-        public int get(int key) {
-            if (key == STATE_DATA_ACCESS_KEY) return ManagerBlockEntity.this.getState().ordinal();
-            if (key >= 1 && key <= 20) return ManagerBlockEntity.this.tickNanoTimes[key - 1];
-            if (key == LATEST_TICK_INDEX) return ManagerBlockEntity.this.tickIndex;
-            return 0;
-        }
-
-        @Override
-        public void set(int key, int val) {
-        }
-
-        @Override
-        public int getCount() {
-            return 2 + tickNanoTimes.length;
-        }
-    };
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
     }
+
     public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
         long start = System.nanoTime();
         tile.tick++;
@@ -69,10 +53,24 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             boolean didSomething = tile.program.tick(tile);
             if (didSomething) {
                 long nanoTimePassed = Long.min(System.nanoTime() - start, Integer.MAX_VALUE);
-                tile.tickNanoTimes[tile.tickIndex] = (int) nanoTimePassed;
-                tile.tickIndex = (tile.tickIndex + 1) % tile.tickNanoTimes.length;
+                tile.tickTimeNanos[tile.tickIndex] = (int) nanoTimePassed;
+                tile.tickIndex = (tile.tickIndex + 1) % tile.tickTimeNanos.length;
+                tile.sendUpdatePacket();
             }
         }
+    }
+
+    private void sendUpdatePacket() {
+        OpenContainerTracker.getPlayersWithOpenContainer(ManagerContainerMenu.class)
+                .filter(entry -> entry.getValue().BLOCK_ENTITY_POSITION.equals(getBlockPos()))
+                .forEach(entry -> SFMPackets.MANAGER_CHANNEL.send(
+                        PacketDistributor.PLAYER.with(entry::getKey),
+                        new ClientboundManagerGuiPacket(
+                                entry.getValue().containerId,
+                                getState(),
+                                getTickTimeNanos()
+                        )
+                ));
     }
 
     public int getTick() {
@@ -148,6 +146,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 DiskItem.setErrors(disk, Collections.emptyList());
             });
         });
+        sendUpdatePacket();
     }
 
     @Override
@@ -157,7 +156,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
-        return new ManagerMenu(windowId, inv, this, getBlockPos(), this.DATA_ACCESS, getProgramString().orElse(""));
+        return new ManagerContainerMenu(windowId, inv, this);
     }
 
     @Override
@@ -240,6 +239,14 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
             setItem(0, disk);
             setChanged();
         });
+    }
+
+    public long[] getTickTimeNanos() {
+        // tickTimeNanos is used as a cyclical buffer, transform it to have the first index be the most recent tick
+        long[] result = new long[tickTimeNanos.length];
+        System.arraycopy(tickTimeNanos, tickIndex, result, 0, tickTimeNanos.length - tickIndex);
+        System.arraycopy(tickTimeNanos, 0, result, tickTimeNanos.length - tickIndex, tickIndex);
+        return result;
     }
 
     public enum State {

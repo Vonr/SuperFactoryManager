@@ -3,8 +3,8 @@ package ca.teamdman.sfm.common.block;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICable;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
-import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -95,11 +95,8 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
             InteractionHand hand,
             BlockHitResult hit
     ) {
-        if (level.getBlockEntity(pos) instanceof ManagerBlockEntity tile && player instanceof ServerPlayer sp) {
-            NetworkHooks.openScreen(sp, tile, buf -> {
-                buf.writeBlockPos(tile.getBlockPos());
-                buf.writeUtf(tile.getProgramString().orElse(""), Program.MAX_PROGRAM_LENGTH);
-            });
+        if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager && player instanceof ServerPlayer sp) {
+            NetworkHooks.openScreen(sp, manager, buf -> ManagerContainerMenu.encode(manager, buf));
             return InteractionResult.CONSUME;
         }
         return InteractionResult.SUCCESS;

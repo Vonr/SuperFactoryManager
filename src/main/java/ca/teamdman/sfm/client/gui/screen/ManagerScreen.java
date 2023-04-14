@@ -1,9 +1,8 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.menu.ManagerMenu;
 import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
@@ -27,7 +26,7 @@ import java.util.Locale;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
 
-public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
+public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu> {
     private static final ResourceLocation BACKGROUND_TEXTURE_LOCATION = new ResourceLocation(
             SFM.MOD_ID,
             "textures/gui/container/manager.png"
@@ -38,7 +37,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     private ExtendedButton diagButton;
 
 
-    public ManagerScreen(ManagerMenu menu, Inventory inv, Component title) {
+    public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
     }
 
@@ -241,9 +240,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         super.renderLabels(poseStack, mx, my);
 
         // draw state string
-        var states = ManagerBlockEntity.State.values();
-        var key = menu.CONTAINER_DATA.get(ManagerBlockEntity.STATE_DATA_ACCESS_KEY);
-        var state = states[key];
+        var state = menu.state;
         this.font.draw(
                 poseStack,
                 MANAGER_GUI_STATE.getComponent(state.LOC.getComponent().withStyle(state.COLOR)),
@@ -265,28 +262,16 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
 
         // Find the maximum tick time for normalization
         long peakTickTime = 0;
-        for (int i = 0; i < 20; i++) {
-            int tickTimeNanos = menu.CONTAINER_DATA.get(ManagerBlockEntity.TICK_TIME_DATA_ACCESS_KEY + i);
-            peakTickTime = Math.max(peakTickTime, tickTimeNanos);
+        for (int i = 0; i < menu.tickTimeNanos.length; i++) {
+            peakTickTime = Long.max(peakTickTime, menu.tickTimeNanos[i]);
         }
 
-        // Draw the label for the largest value
-        var format = NumberFormat.getInstance(Locale.getDefault());
-        this.font.draw(
-                poseStack,
-                MANAGER_GUI_PEAK_TICK_TIME.getComponent((peakTickTime > 25_000_000 ? "§c" : "§a")
-                                                        + format.format(peakTickTime)),
-                titleLabelX,
-                20f + font.lineHeight + 0.1f,
-                0
-        );
-
-
         // Constants for the plot size and position
-        final int plotX = titleLabelX + 50;
-        final int plotY = 50;
-        final int plotWidth = 100;
-        final int plotHeight = 50;
+        final int plotX = titleLabelX + 45;
+        final int plotY = 40;
+        final int spaceBetweenPoints = 6;
+        final int plotWidth = spaceBetweenPoints * (menu.tickTimeNanos.length - 1);
+        final int plotHeight = 30;
 
 
         // Set up rendering
@@ -295,39 +280,95 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tesselator.getBuilder();
-        bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         Matrix4f pose = poseStack.last().pose();
+        BufferBuilder bufferbuilder;
+
+        // Draw the plot background
+        bufferbuilder = tesselator.getBuilder();
+        bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder.vertex(pose, plotX, plotY, 0).color(0, 0, 0, 0.5f).endVertex();
+        bufferbuilder.vertex(pose, plotX + plotWidth, plotY, 0).color(0, 0, 0, 0.5f).endVertex();
+        bufferbuilder.vertex(pose, plotX + plotWidth, plotY + plotHeight, 0).color(0, 0, 0, 0.5f).endVertex();
+        bufferbuilder.vertex(pose, plotX, plotY + plotHeight, 0).color(0, 0, 0, 0.5f).endVertex();
+        bufferbuilder.vertex(pose, plotX, plotY, 0).color(0, 0, 0, 0.5f).endVertex();
+        tesselator.end();
 
         // Draw lines for each data point
-        int latestTickIndex = menu.CONTAINER_DATA.get(ManagerBlockEntity.LATEST_TICK_INDEX);
-        for (int i = 0; i < 19; i++) {
-            int dataIndex = (latestTickIndex + i) % 20; // Calculate the data index based on the latest tick index
-            int tickTimeNanos = menu.CONTAINER_DATA.get(ManagerBlockEntity.TICK_TIME_DATA_ACCESS_KEY + dataIndex);
-            if (tickTimeNanos == 0) {
-                tickTimeNanos = 10000; // force min value
-            }
-            float normalizedTickTime = (float) (Math.log10(tickTimeNanos) / Math.log10(peakTickTime));
+        bufferbuilder = tesselator.getBuilder();
+        bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        int mouseTickTimeIndex = -1;
+        for (int i = 0; i < menu.tickTimeNanos.length; i++) {
+            long y = menu.tickTimeNanos[i];
+            float normalizedTickTime = y == 0 ? 0 : (float) (Math.log10(y) / Math.log10(peakTickTime));
             int plotPosY = plotY + plotHeight - (int) (normalizedTickTime * plotHeight);
 
-            int plotPosX = plotX + (18 - i) * plotWidth / 18;
+            int plotPosX = plotX + spaceBetweenPoints * i;
 
             // Color the lines based on their tick times (green to red)
-            float red = Math.min((float) tickTimeNanos / (50_000_000), 1.0f); // 50ms in nanoseconds
+            float red = Math.min((float) y / (50_000_000), 1.0f); // 50ms in nanoseconds
             float green = 1.0f - red;
 
             bufferbuilder
                     .vertex(pose, (float) plotPosX, (float) plotPosY, (float) getBlitOffset())
                     .color(red, green, 0, 1f)
                     .endVertex();
+
+            // Check if the mouse is hovering over this line
+            if (mx - leftPos >= plotPosX - spaceBetweenPoints / 2
+                && mx - leftPos <= plotPosX + spaceBetweenPoints / 2
+                && my - topPos >= plotY - 2
+                && my - topPos <= plotY + plotHeight + 2) {
+                mouseTickTimeIndex = i;
+            }
+        }
+        tesselator.end();
+
+        // Draw the tick time text
+        var format = NumberFormat.getInstance(Locale.getDefault());
+        if (mouseTickTimeIndex != -1) { // We are hovering over the plot
+            // Draw the tick time text for the hovered point instead of peak
+            long hoveredY = menu.tickTimeNanos[mouseTickTimeIndex];
+            this.font.draw(
+                    poseStack,
+                    MANAGER_GUI_HOVERED_TICK_TIME.getComponent((hoveredY > 25_000_000 ? "§c" : "§a")
+                                                               + format.format(hoveredY)),
+                    titleLabelX,
+                    20f + font.lineHeight + 0.1f,
+                    0
+            );
+
+            // draw a vertical line
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            tesselator = Tesselator.getInstance();
+            bufferbuilder = tesselator.getBuilder();
+            bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+            pose = poseStack.last().pose();
+
+            int x = plotX + spaceBetweenPoints * mouseTickTimeIndex;
+            bufferbuilder
+                    .vertex(pose, (float) x, (float) plotY, (float) getBlitOffset())
+                    .color(1f, 1f, 1f, 1f)
+                    .endVertex();
+            bufferbuilder
+                    .vertex(pose, (float) x, (float) plotY + plotHeight, (float) getBlitOffset())
+                    .color(1f, 1f, 1f, 1f)
+                    .endVertex();
+            tesselator.end();
+        } else {
+            // Draw the tick time text for peak value
+            this.font.draw(
+                    poseStack,
+                    MANAGER_GUI_PEAK_TICK_TIME.getComponent((peakTickTime > 25_000_000 ? "§c" : "§a")
+                                                            + format.format(peakTickTime)),
+                    titleLabelX,
+                    20f + font.lineHeight + 0.1f,
+                    0
+            );
         }
 
-        // Finish rendering
-        tesselator.end();
+        // Restore stuff
         RenderSystem.disableBlend();
         RenderSystem.enableTexture();
-
-
     }
 
     @Override
