@@ -10,7 +10,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class SFMKeyMappings {
     public static final Lazy<KeyMapping> MORE_INFO_TOOLTIP_KEY = Lazy.of(() -> new KeyMapping(
-            Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT.key().get(),
+            Constants.LocalizationKeys.KEY_MORE_INFO.key().get(),
             KeyConflictContext.GUI,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_LEFT_SHIFT,

@@ -150,7 +150,9 @@ public class DiskItem extends Item {
                         .map(MutableComponent::create)
                         .map(line -> line.withStyle(ChatFormatting.YELLOW))
                         .forEach(list::add);
-                list.add(Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT.getComponent());
+                list.add(Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
+                                 .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getKey().getDisplayName())
+                                 .withStyle(ChatFormatting.AQUA));
             } else {
                 var program = getProgram(stack);
                 if (!program.isEmpty()) {

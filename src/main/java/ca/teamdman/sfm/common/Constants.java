@@ -233,7 +233,7 @@ public class Constants {
 
         public static LocalizationEntry GUI_ADVANCED_TOOLTIP_HINT = new LocalizationEntry(
                 "gui.sfm.advanced.tooltip.hint",
-                ChatFormatting.GRAY + "Hold " + ChatFormatting.AQUA + "Shift" + ChatFormatting.GRAY + " for more info"
+                ChatFormatting.GRAY + "Hold " + ChatFormatting.AQUA + "%s" + ChatFormatting.GRAY + " for more info"
         );
 
         public static LocalizationEntry KEY_MORE_INFO = new LocalizationEntry(
