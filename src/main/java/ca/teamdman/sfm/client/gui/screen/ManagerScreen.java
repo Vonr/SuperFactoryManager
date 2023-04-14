@@ -129,6 +129,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         my
                 )
         ));
+        diagButton.visible = shouldShowDiagButton();
     }
 
     private void sendReset() {
