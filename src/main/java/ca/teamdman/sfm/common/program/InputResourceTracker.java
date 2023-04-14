@@ -4,12 +4,12 @@ import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 
-public class InputResourceMatcher<STACK, CAP> extends ResourceMatcher<STACK, CAP> {
+public class InputResourceTracker<STACK, ITEM, CAP> extends ResourceTracker<STACK, ITEM, CAP> {
 
     private final Long2LongMap PROMISED      = new Long2LongOpenHashMap();
     private       int          promisedCount = 0;
 
-    public InputResourceMatcher(ResourceLimit<STACK, CAP> limit) {
+    public InputResourceTracker(ResourceLimit<STACK, ITEM, CAP> limit) {
         super(limit);
     }
 

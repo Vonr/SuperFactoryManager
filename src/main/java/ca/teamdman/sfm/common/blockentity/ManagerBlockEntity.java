@@ -1,71 +1,93 @@
 package ca.teamdman.sfm.common.blockentity;
 
-import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.menu.ManagerMenu;
+import ca.teamdman.sfm.common.net.ClientboundManagerGuiPacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.registry.SFMPackets;
+import ca.teamdman.sfm.common.util.OpenContainerTracker;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.gametest.ForgeGameTestHooks;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
-    public static final int                    STATE_DATA_ACCESS_KEY     = 0;
-    private final       NonNullList<ItemStack> ITEMS                     = NonNullList.withSize(1, ItemStack.EMPTY);
-    private             Program                program                   = null;
-    private final       ContainerData          DATA_ACCESS               = new ContainerData() {
-        @Override
-        public int get(int key) {
-            return switch (key) {
-                case STATE_DATA_ACCESS_KEY -> ManagerBlockEntity.this
-                        .getState()
-                        .ordinal();
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int key, int val) {
-        }
-
-        @Override
-        public int getCount() {
-            return 1;
-        }
-    };
-    private             int                    unprocessedRedstonePulses = 0; // used by redstone trigger
+    public static final int TICK_TIME_HISTORY_SIZE = 20;
+    private final NonNullList<ItemStack> ITEMS = NonNullList.withSize(1, ItemStack.EMPTY);
+    private final long[] tickTimeNanos = new long[TICK_TIME_HISTORY_SIZE];
+    private Program program = null;
+    private int tick = 0;
+    private int unprocessedRedstonePulses = 0; // used by redstone trigger
+    private boolean shouldRebuildProgram = false;
+    private int tickIndex = 0;
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
-        if (tile.program != null) {
-            tile.program.tick(tile);
+        long start = System.nanoTime();
+        tile.tick++;
+        if (tile.shouldRebuildProgram) {
+            tile.rebuildProgramAndUpdateDisk();
+            tile.shouldRebuildProgram = false;
         }
+        if (tile.program != null) {
+            boolean didSomething = tile.program.tick(tile);
+            if (didSomething) {
+                long nanoTimePassed = Long.min(System.nanoTime() - start, Integer.MAX_VALUE);
+                tile.tickTimeNanos[tile.tickIndex] = (int) nanoTimePassed;
+                tile.tickIndex = (tile.tickIndex + 1) % tile.tickTimeNanos.length;
+                tile.sendUpdatePacket();
+            }
+        }
+    }
+
+    private void sendUpdatePacket() {
+        OpenContainerTracker.getPlayersWithOpenContainer(ManagerContainerMenu.class)
+                .filter(entry -> entry.getValue().BLOCK_ENTITY_POSITION.equals(getBlockPos()))
+                .forEach(entry -> SFMPackets.MANAGER_CHANNEL.send(
+                        PacketDistributor.PLAYER.with(entry::getKey),
+                        new ClientboundManagerGuiPacket(
+                                entry.getValue().containerId,
+                                getProgramString().orElse(""),
+                                getState(),
+                                getTickTimeNanos()
+                        )
+                ));
+    }
+
+    public int getTick() {
+        return tick;
     }
 
     public Program getProgram() {
         return program;
+    }
+
+    public void setProgram(String program) {
+        getDisk().ifPresent(disk -> {
+            DiskItem.setProgram(disk, program);
+            rebuildProgramAndUpdateDisk();
+            setChanged();
+        });
     }
 
     public void trackRedstonePulseUnprocessed() {
@@ -80,14 +102,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return unprocessedRedstonePulses;
     }
 
-    public void setProgram(String program) {
-        getDisk().ifPresent(disk -> {
-            DiskItem.setProgram(disk, program);
-            rebuildProgramAndUpdateDisk();
-            setChanged();
-        });
-    }
-
     public State getState() {
         if (getDisk().isEmpty()) return State.NO_DISK;
         if (getProgramString().isEmpty()) return State.NO_PROGRAM;
@@ -96,9 +110,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public Optional<String> getProgramString() {
-        return getDisk()
-                .map(DiskItem::getProgram)
-                .filter(prog -> !prog.isBlank());
+        return getDisk().map(DiskItem::getProgram).filter(prog -> !prog.isBlank());
     }
 
     public Set<String> getReferencedLabels() {
@@ -135,16 +147,17 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 DiskItem.setErrors(disk, Collections.emptyList());
             });
         });
+        sendUpdatePacket();
     }
 
     @Override
     protected Component getDefaultName() {
-        return Component.translatable("container.sfm.manager");
+        return Constants.LocalizationKeys.MANAGER_CONTAINER.getComponent();
     }
 
     @Override
     protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
-        return new ManagerMenu(windowId, inv, this, getBlockPos(), this.DATA_ACCESS, getProgramString().orElse(""));
+        return new ManagerContainerMenu(windowId, inv, this);
     }
 
     @Override
@@ -206,34 +219,13 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         ContainerHelper.loadAllItems(tag, ITEMS);
-        if (ForgeGameTestHooks.isGametestEnabled()) {
-            var lastKnownPos = NbtUtils.readBlockPos(tag.getCompound("LastKnownPos"));
-            if (!lastKnownPos.equals(getBlockPos())) {
-                var diff = getBlockPos().subtract(lastKnownPos);
-                SFM.LOGGER.debug(
-                        "Manager at {} was moved from {} ({} offset), updating labels",
-                        getBlockPos(),
-                        lastKnownPos,
-                        diff
-                );
-                getDisk().ifPresent(disk -> {
-                    disk = disk.copy();
-                    SFMLabelNBTHelper.offsetPositions(disk, diff);
-                    setItem(0, disk);
-                    setChanged();
-                });
-            }
-        }
-        rebuildProgramAndUpdateDisk();
+        this.shouldRebuildProgram = true;
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         ContainerHelper.saveAllItems(tag, ITEMS);
-        if (ForgeGameTestHooks.isGametestEnabled()) {
-            tag.put("LastKnownPos", NbtUtils.writeBlockPos(getBlockPos()));
-        }
     }
 
 
@@ -250,16 +242,32 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         });
     }
 
+    public long[] getTickTimeNanos() {
+        // tickTimeNanos is used as a cyclical buffer, transform it to have the first index be the most recent tick
+        long[] result = new long[tickTimeNanos.length];
+        System.arraycopy(tickTimeNanos, tickIndex, result, 0, tickTimeNanos.length - tickIndex);
+        System.arraycopy(tickTimeNanos, 0, result, tickTimeNanos.length - tickIndex, tickIndex);
+        return result;
+    }
+
     public enum State {
-        NO_PROGRAM(ChatFormatting.RED),
-        NO_DISK(ChatFormatting.RED),
-        RUNNING(ChatFormatting.GREEN),
-        INVALID_PROGRAM(ChatFormatting.DARK_RED);
+        NO_PROGRAM(
+                ChatFormatting.RED,
+                Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_PROGRAM
+        ), NO_DISK(
+                ChatFormatting.RED,
+                Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_DISK
+        ), RUNNING(ChatFormatting.GREEN, Constants.LocalizationKeys.MANAGER_GUI_STATE_RUNNING), INVALID_PROGRAM(
+                ChatFormatting.DARK_RED,
+                Constants.LocalizationKeys.MANAGER_GUI_STATE_INVALID_PROGRAM
+        );
 
         public final ChatFormatting COLOR;
+        public final Constants.LocalizationKeys.LocalizationEntry LOC;
 
-        State(ChatFormatting color) {
+        State(ChatFormatting color, Constants.LocalizationKeys.LocalizationEntry loc) {
             COLOR = color;
+            LOC = loc;
         }
     }
 

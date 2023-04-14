@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.program.ProgramContext;
@@ -9,12 +10,14 @@ import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -22,7 +25,7 @@ public record Program(
         String name,
         List<Trigger> triggers,
         Set<String> referencedLabels,
-        Set<ResourceIdentifier<?, ?>> referencedResources
+        Set<ResourceIdentifier<?, ?, ?>> referencedResources
 ) implements ASTNode {
     public static final int MAX_PROGRAM_LENGTH = 8096;
 
@@ -48,46 +51,37 @@ public record Program(
                     String msg,
                     RecognitionException e
             ) {
-                errors.add(new TranslatableContents(
-                        "program.sfm.error.literal",
-                        null,
-                        new Object[]{
-                                "line " + line + ":" + charPositionInLine + " " + msg
-                        }
-                ));
+                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get("line "
+                                                                                + line
+                                                                                + ":"
+                                                                                + charPositionInLine
+                                                                                + " "
+                                                                                + msg));
             }
         });
 
-        var context     = parser.program();
+        var     context = parser.program();
         Program program = null;
 
         try {
             program = new ASTBuilder().visitProgram(context);
             // make sure all referenced resources exist now during compilation instead of waiting for the program to tick
         } catch (ResourceLocationException | IllegalArgumentException | AssertionError e) {
-            errors.add(new TranslatableContents("program.sfm.error.literal", null, new Object[]{e.getMessage()}));
+            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
         } catch (Throwable t) {
-            errors.add(new TranslatableContents("program.sfm.error.compile_failed", null, new Object[]{}));
+            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
             t.printStackTrace();
-            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage(), null, new Object[]{}));
+            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage()));
         }
 
-        for (ResourceIdentifier<?, ?> referencedResource : program.referencedResources) {
+        for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {
             try {
-                ResourceType<?, ?> resourceType = referencedResource.getResourceType();
+                ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
                 if (resourceType == null) {
-                    errors.add(new TranslatableContents(
-                            "program.sfm.error.unknown_resource_type",
-                            null,
-                            new Object[]{referencedResource}
-                    ));
+                    errors.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(referencedResource));
                 }
             } catch (ResourceLocationException e) {
-                errors.add(new TranslatableContents(
-                        "program.sfm.error.malformed_resource_type",
-                        null,
-                        new Object[]{referencedResource}
-                ));
+                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(referencedResource));
             }
         }
 
@@ -108,7 +102,7 @@ public record Program(
                     .findAny()
                     .isPresent();
             if (!isUsed) {
-                warnings.add(new TranslatableContents("program.sfm.warnings.unused_label", null, new Object[]{label}));
+                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_LABEL.get(label));
             }
         }
 
@@ -116,11 +110,7 @@ public record Program(
         SFMLabelNBTHelper.getPositionLabels(disk)
                 .values().stream().distinct()
                 .filter(x -> !referencedLabels.contains(x))
-                .forEach(label -> warnings.add(new TranslatableContents(
-                        "program.sfm.warnings.undefined_label",
-                        null,
-                        new Object[]{label}
-                )));
+                .forEach(label -> warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNDEFINED_LABEL.get(label)));
 
         // labels in world but not connected via cables
         CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
@@ -130,22 +120,24 @@ public record Program(
                 var inNetwork = network.isInNetwork(pos);
                 var adjacent  = network.hasCableNeighbour(pos);
                 if (!inNetwork && !adjacent) {
-                    warnings.add(new TranslatableContents(
-                            "program.sfm.warnings.disconnected_label",
-                            null,
-                            new Object[]{
-                                    label,
-                                    String.format("[%d,%d,%d]", pos.getX(), pos.getY(), pos.getZ())
-                            }
+                    warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
+                            label,
+                            String.format(
+                                    "[%d,%d,%d]",
+                                    pos.getX(),
+                                    pos.getY(),
+                                    pos.getZ()
+                            )
                     ));
                 } else if (!inNetwork && adjacent) {
-                    warnings.add(new TranslatableContents(
-                            "program.sfm.warnings.adjacent_but_disconnected_label",
-                            null,
-                            new Object[]{
-                                    label,
-                                    String.format("[%d,%d,%d]", pos.getX(), pos.getY(), pos.getZ())
-                            }
+                    warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
+                            label,
+                            String.format(
+                                    "[%d,%d,%d]",
+                                    pos.getX(),
+                                    pos.getY(),
+                                    pos.getZ()
+                            )
                     ));
                 }
             }
@@ -154,30 +146,24 @@ public record Program(
         // try and validate that references resources exist
         for (var resource : referencedResources) {
             // skip regex resources
-            var loc = resource.getLocation();
-            if (!loc.isPresent()) continue;
+            Optional<ResourceLocation> loc = resource.getLocation();
+            if (loc.isEmpty()) continue;
 
             // make sure resource type is registered
             var type = resource.getResourceType();
             if (type == null) {
-                warnings.add(new TranslatableContents(
-                        "program.sfm.warnings.unknown_resource_type",
-                        null,
-                        new Object[]{
-                                resource.resourceTypeNamespace() + ":" + resource.resourceTypeName(),
-                                resource.toString()
-                        }
+                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
+                        resource.resourceTypeNamespace()
+                        + ":"
+                        + resource.resourceTypeName(),
+                        resource
                 ));
                 continue;
             }
 
             // make sure resource exists in the registry
             if (!type.registryKeyExists(loc.get())) {
-                warnings.add(new TranslatableContents(
-                        "program.sfm.warnings.unknown_resource_id",
-                        null,
-                        new Object[]{resource}
-                ));
+                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_ID.get(resource));
             }
         }
         return warnings;
@@ -206,27 +192,23 @@ public record Program(
         return referencedLabels;
     }
 
-    public void tick(ManagerBlockEntity manager) {
+    public boolean tick(ManagerBlockEntity manager) {
         var context = new ProgramContext(manager);
 
         // update warnings on disk item every 20 seconds
-        if (manager
-                    .getLevel()
-                    .getGameTime() % 20 == 0) {
+        if (manager.getTick() % 20 == 0) {
             manager
                     .getDisk()
                     .ifPresent(disk -> gatherWarnings(disk, manager));
         }
+        boolean didSomething = false;
         for (Trigger t : triggers) {
             if (t.shouldTick(context)) {
-//                var start = System.nanoTime();
                 t.tick(context.fork());
-//                var end  = System.nanoTime();
-//                var diff = end - start;
-//                SFM.LOGGER.debug("Took {}ms ({}us)", diff / 1000000, diff);
+                didSomething = true;
             }
         }
         manager.clearRedstonePulseQueue();
-
+        return didSomething;
     }
 }

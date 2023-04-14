@@ -7,18 +7,14 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class ServerboundLabelGunUpdatePacket {
-    private final String          LABEL;
-    private final InteractionHand HAND;
-
-    public ServerboundLabelGunUpdatePacket(String label, InteractionHand hand) {
-        LABEL = label;
-        HAND  = hand;
-    }
+public record ServerboundLabelGunUpdatePacket(
+        String label,
+        InteractionHand hand
+) {
 
     public static void encode(ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket msg, FriendlyByteBuf buf) {
-        buf.writeUtf(msg.LABEL, 80);
-        buf.writeEnum(msg.HAND);
+        buf.writeUtf(msg.label, 80);
+        buf.writeEnum(msg.hand);
     }
 
     public static ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket decode(
@@ -28,20 +24,15 @@ public class ServerboundLabelGunUpdatePacket {
     }
 
     public static void handle(
-            ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket msg,
-            Supplier<NetworkEvent.Context> ctx
+            ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket msg, Supplier<NetworkEvent.Context> ctx
     ) {
-        ctx
-                .get()
-                .enqueueWork(() -> {
-                    var sender = ctx
-                            .get()
-                            .getSender();
-                    var stack = sender.getItemInHand(msg.HAND);
-                    LabelGunItem.setLabel(stack, msg.LABEL);
-                });
-        ctx
-                .get()
-                .setPacketHandled(true);
+        ctx.get().enqueueWork(() -> {
+            var sender = ctx.get().getSender();
+            var stack = sender.getItemInHand(msg.hand);
+            if (stack.getItem() instanceof LabelGunItem) {
+                LabelGunItem.setLabel(stack, msg.label);
+            }
+        });
+        ctx.get().setPacketHandled(true);
     }
 }

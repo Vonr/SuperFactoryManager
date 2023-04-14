@@ -10,22 +10,16 @@ import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CableNetwork {
 
-    private final Level                              LEVEL;
-    private final Set<BlockPos>                      CABLES               = new HashSet<>();
-    private final Map<BlockPos, ICapabilityProvider> CAPABILITY_PROVIDERS = new HashMap<>();
+    protected final Level                              LEVEL;
+    protected final Set<BlockPos>                      CABLES               = new HashSet<>();
+    protected final Map<BlockPos, ICapabilityProvider> CAPABILITY_PROVIDERS = new HashMap<>();
 
     public CableNetwork(Level level) {
         this.LEVEL = level;
-    }
-
-    private CableNetwork(Level level, Collection<BlockPos> init) {
-        this(level);
-        CABLES.addAll(init);
     }
 
     /**
@@ -63,7 +57,6 @@ public class CableNetwork {
         }
         return isNewMember;
     }
-
 
     public Level getLevel() {
         return LEVEL;
@@ -121,76 +114,6 @@ public class CableNetwork {
         return false;
     }
 
-    /**
-     * Discover connected cables using only known cable positions.
-     * Used during network fragmentation.
-     */
-    private Set<BlockPos> discoverKnownCables(BlockPos start) {
-        return SFMUtil
-                .getRecursiveStream((current, next, results) -> {
-                    if (!containsCableLocation(current)) return;
-                    results.accept(current);
-                    for (Direction direction : Direction.values()) {
-                        BlockPos offset = current.offset(direction.getNormal());
-                        next.accept(offset);
-                    }
-                }, start)
-                .collect(Collectors.toSet());
-    }
-
-    /**
-     * Takes the pos out of the network, and returns the networks that result.
-     * <p>
-     * Removing a position may cause the network to split in two, and will return both networks.
-     *
-     * @param pos Cable bridge position
-     * @return List of positions that need to become new networks
-     */
-    public Set<CableNetwork> remove(BlockPos pos) {
-        CABLES.remove(pos);
-        if (isEmpty()) return Collections.emptySet();
-
-        // Discover branches
-        Set<CableNetwork> networks = new HashSet<>();
-        for (var direction : Direction.values()) {
-            var offset = pos.offset(direction.getNormal());
-            var branch = discoverKnownCables(offset);
-            if (!branch.isEmpty()) {
-                var network = getDerivativeNetwork(branch);
-                networks.add(network);
-            }
-        }
-
-        return networks;
-    }
-
-    /**
-     * Creates a new network using the given positions and already known inventories
-     */
-    private CableNetwork getDerivativeNetwork(Set<BlockPos> positions) {
-        var network = new CableNetwork(getLevel(), positions);
-
-        // get all cable neighbours
-        Set<BlockPos> validInvPositions = positions
-                .stream()
-
-                .flatMap(pos -> Arrays
-                        .stream(Direction.values())
-                        .map(Direction::getNormal)
-                        .map(pos::offset))
-                .collect(Collectors.toSet());
-
-        // get all inventories occupying a neighbour spot
-        // add them to the new network
-        CAPABILITY_PROVIDERS
-                .entrySet()
-                .stream()
-                .filter(entry -> validInvPositions.contains(entry.getKey()))
-                .forEach(entry -> network.CAPABILITY_PROVIDERS.put(entry.getKey(), entry.getValue()));
-
-        return network;
-    }
-
     public boolean containsCableLocation(BlockPos pos) {
         return CABLES.contains(pos);
     }
@@ -228,5 +151,22 @@ public class CableNetwork {
 
     public Set<BlockPos> getCables() {
         return Collections.unmodifiableSet(CABLES);
+    }
+
+    /**
+     * Discover what networks would exist if this network did not have a cable at cablePos
+     */
+    protected List<CableNetwork> withoutCable(BlockPos cablePos) {
+        List<CableNetwork> branches = new ArrayList<>();
+        for (var direction : Direction.values()) {
+            var offsetPos = cablePos.offset(direction.getNormal());
+            if (!isCable(getLevel(), offsetPos)) continue;
+            // make sure that a branch network doesn't already contain this cable
+            if (branches.stream().anyMatch(n -> n.containsCableLocation(offsetPos))) continue;
+            var branchNetwork = new CableNetwork(this.getLevel());
+            branchNetwork.rebuildNetwork(offsetPos);
+            branches.add(branchNetwork);
+        }
+        return branches;
     }
 }

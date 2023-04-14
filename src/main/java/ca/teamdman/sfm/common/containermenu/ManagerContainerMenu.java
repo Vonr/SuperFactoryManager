@@ -1,5 +1,6 @@
-package ca.teamdman.sfm.common.menu;
+package ca.teamdman.sfm.common.containermenu;
 
+import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.registry.SFMMenus;
 import ca.teamdman.sfml.ast.Program;
@@ -10,34 +11,35 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class ManagerMenu extends AbstractContainerMenu {
-    public final ContainerData CONTAINER_DATA;
-    public final Container     CONTAINER;
-    public final Inventory     INVENTORY;
-    public final BlockPos      BLOCK_ENTITY_POSITION;
-    public       String        program;
+public class ManagerContainerMenu extends AbstractContainerMenu {
+    public final Container CONTAINER;
+    public final Inventory INVENTORY;
+    public final BlockPos BLOCK_ENTITY_POSITION;
+    public String program;
+    public ManagerBlockEntity.State state;
+    public long[] tickTimeNanos;
 
-    public ManagerMenu(
+
+    public ManagerContainerMenu(
             int windowId,
             Inventory inv,
             Container container,
             BlockPos blockEntityPos,
-            ContainerData dataAccess,
-            String program
+            String program,
+            ManagerBlockEntity.State state,
+            long[] tickTimeNanos
     ) {
         super(SFMMenus.MANAGER_MENU.get(), windowId);
         checkContainerSize(container, 1);
-        checkContainerDataCount(dataAccess, 1);
-        CONTAINER_DATA        = dataAccess;
-        CONTAINER             = container;
-        INVENTORY             = inv;
-        BLOCK_ENTITY_POSITION = blockEntityPos;
-        this.program          = program;
+        this.CONTAINER = container;
+        this.INVENTORY = inv;
+        this.BLOCK_ENTITY_POSITION = blockEntityPos;
+        this.program = program;
+        this.state = state;
+        this.tickTimeNanos = tickTimeNanos;
 
         this.addSlot(new Slot(container, 0, 15, 47) {
             @Override
@@ -51,7 +53,6 @@ public class ManagerMenu extends AbstractContainerMenu {
             }
         });
 
-        this.addDataSlots(dataAccess);
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 9; ++j) {
                 this.addSlot(new Slot(inv, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
@@ -63,16 +64,37 @@ public class ManagerMenu extends AbstractContainerMenu {
         }
     }
 
-    public ManagerMenu(int windowId, Inventory inventory, FriendlyByteBuf buf) {
+    public ManagerContainerMenu(int windowId, Inventory inventory, FriendlyByteBuf buf) {
         this(
                 windowId,
                 inventory,
                 new SimpleContainer(1),
                 buf.readBlockPos(),
-                new SimpleContainerData(1),
-                buf.readUtf(Program.MAX_PROGRAM_LENGTH)
+                buf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                buf.readEnum(ManagerBlockEntity.State.class),
+                buf.readLongArray(null, ManagerBlockEntity.TICK_TIME_HISTORY_SIZE)
         );
     }
+
+    public ManagerContainerMenu(int windowId, Inventory inventory, ManagerBlockEntity manager) {
+        this(
+                windowId,
+                inventory,
+                manager,
+                manager.getBlockPos(),
+                manager.getProgramString().orElse(""),
+                manager.getState(),
+                manager.getTickTimeNanos()
+        );
+    }
+
+    public static void encode(ManagerBlockEntity manager, FriendlyByteBuf buf) {
+        buf.writeBlockPos(manager.getBlockPos());
+        buf.writeUtf(manager.getProgramString().orElse(""), Program.MAX_PROGRAM_LENGTH);
+        buf.writeEnum(manager.getState());
+        buf.writeLongArray(manager.getTickTimeNanos());
+    }
+
 
     @Override
     public boolean stillValid(Player player) {
@@ -88,7 +110,7 @@ public class ManagerMenu extends AbstractContainerMenu {
         var inventoryEnd = this.slots.size();
 
         var contents = slot.getItem();
-        var result   = contents.copy();
+        var result = contents.copy();
 
         if (slotIndex < containerEnd) {
             // clicked slot in container

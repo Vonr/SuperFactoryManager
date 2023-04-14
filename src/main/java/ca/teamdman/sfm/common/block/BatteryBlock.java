@@ -1,0 +1,55 @@
+package ca.teamdman.sfm.common.block;
+
+import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.blockentity.BatteryBlockEntity;
+import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+
+public class BatteryBlock extends Block implements EntityBlock {
+    public BatteryBlock() {
+        super(BlockBehaviour.Properties.of(Material.METAL).strength(5.0F, 6.0F));
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return SFMBlockEntities.BATTERY_BLOCK_ENTITY
+                .get()
+                .create(pos, state);
+    }
+
+    @Override
+    public InteractionResult use(
+            BlockState pState,
+            Level pLevel,
+            BlockPos pPos,
+            Player pPlayer,
+            InteractionHand pHand,
+            BlockHitResult pHit
+    ) {
+        BlockEntity be = pLevel.getBlockEntity(pPos);
+        if (be instanceof BatteryBlockEntity bbe) {
+            var cap = bbe.getCapability(ForgeCapabilities.ENERGY, pHit.getDirection());
+            cap.ifPresent(c -> {
+                if (pPlayer.isShiftKeyDown()) {
+                    c.extractEnergy(1000, false);
+                } else {
+                    c.receiveEnergy(1000, false);
+                }
+                SFM.LOGGER.info("Energy stored: {}", c.getEnergyStored());
+            });
+        }
+        return InteractionResult.SUCCESS;
+    }
+}

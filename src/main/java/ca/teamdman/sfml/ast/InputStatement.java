@@ -1,17 +1,17 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.program.InputResourceMatcher;
+import ca.teamdman.sfm.common.program.InputResourceTracker;
 import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.program.ProgramContext;
-import ca.teamdman.sfm.common.program.ResourceMatcher;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public record InputStatement<STACK, CAP>(
+public record InputStatement(
         LabelAccess labelAccess,
-        Matchers<STACK, CAP> matchers,
+        ResourceLimits resourceLimits,
         boolean each
 ) implements Statement {
 
@@ -20,36 +20,69 @@ public record InputStatement<STACK, CAP>(
         context.addInput(this);
     }
 
-    public Stream<LimitedInputSlot<STACK, CAP>> getSlots(ProgramContext context) {
-        var handlers = matchers
-                .createInputMatchers()
+    public Stream<LimitedInputSlot<?, ?, ?>> getSlots(ProgramContext context) {
+        Stream.Builder<LimitedInputSlot<?, ?, ?>> rtn = Stream.builder();
+
+        Stream<ResourceType> types = resourceLimits
+                .resourceLimits()
                 .stream()
-                .map(ResourceMatcher::getLimit)
                 .map(ResourceLimit::resourceId)
-                .map(ResourceIdentifier::getResourceType)
-                .flatMap(t -> t.getCaps(context, labelAccess));
-        var types = matchers
-                .createInputMatchers()
-                .stream()
-                .map(ResourceMatcher::getLimit)
-                .map(ResourceLimit::resourceId)
-                .map(ResourceIdentifier::getResourceType)
-                .collect(Collectors.toSet());
-        var                                    rtn      = Stream.<LimitedInputSlot<STACK, CAP>>builder();
-        List<InputResourceMatcher<STACK, CAP>> matchers = null;
-        for (var cap : (Iterable<CAP>) handlers::iterator) {
-            if (matchers == null || each) matchers = this.matchers.createInputMatchers();
-            for (var type : types) {
-                if (!type.matchesCapType(cap)) continue;
-                for (int slot = 0; slot < type.getSlots(cap); slot++) {
-                    if (labelAccess.slots().contains(slot)) {
-                        for (var matcher : matchers) {
-                            rtn.add(new LimitedInputSlot<>(this, cap, slot, matcher));
+                .map((ResourceIdentifier x) -> x.getResourceType())
+                .distinct();
+
+        if (each) {
+            for (ResourceType type : (Iterable<ResourceType>) types::iterator) {
+                for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
+                    // create a new matcher for each capability
+                    List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
+//                    if (type.matchesCapType(cap)) {
+                    getSlots((ResourceType<Object, Object, Object>) type, cap, inputTrackers).forEach(rtn::add);
+//                    }
+                }
+            }
+        } else {
+            // create a single matcher to be shared by all capabilities
+            List<InputResourceTracker<?, ?, ?>> inputMatchers = resourceLimits.createInputTrackers();
+            for (var type : (Iterable<ResourceType>) types::iterator) {
+                for (var capability : (Iterable) type.getCapabilities(context, labelAccess)::iterator) {
+//                    if (type.matchesCapType(capability)) {
+                    getSlots(
+                            (ResourceType<Object, Object, Object>) type,
+                            capability,
+                            inputMatchers
+                    ).forEach(rtn::add);
+//                    }
+                }
+            }
+        }
+        return rtn.build();
+    }
+
+    private <STACK, ITEM, CAP> List<LimitedInputSlot<STACK, ITEM, CAP>> getSlots(
+            ResourceType<STACK, ITEM, CAP> type,
+            CAP capability,
+            List<InputResourceTracker<?, ?, ?>> trackers
+    ) {
+        List<LimitedInputSlot<STACK, ITEM, CAP>> rtn = new ArrayList<>();
+        for (int slot = 0; slot < type.getSlots(capability); slot++) {
+            if (labelAccess.slots().contains(slot)) {
+                STACK stack = type.getStackInSlot(capability, slot);
+                if (!type.isEmpty(stack)) {
+                    for (InputResourceTracker<?, ?, ?> tracker : trackers) {
+                        if (tracker.getLimit().resourceId().getResourceType().matchesCapabilityType(capability)
+                            && tracker.test(stack)) {
+                            var x = new LimitedInputSlot<>(
+                                    this,
+                                    capability,
+                                    slot,
+                                    (InputResourceTracker<STACK, ITEM, CAP>) tracker
+                            );
+                            rtn.add(x);
                         }
                     }
                 }
             }
         }
-        return rtn.build();
+        return rtn;
     }
 }

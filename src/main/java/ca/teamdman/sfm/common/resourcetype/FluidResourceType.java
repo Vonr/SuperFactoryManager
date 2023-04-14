@@ -1,24 +1,25 @@
 package ca.teamdman.sfm.common.resourcetype;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.IForgeRegistry;
 
-public class FluidResourceType extends ResourceType<FluidStack, IFluidHandler> {
+public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHandler> {
     public FluidResourceType() {
         super(ForgeCapabilities.FLUID_HANDLER);
     }
 
     @Override
-    public boolean registryKeyExists(ResourceLocation location) {
-        return ForgeRegistries.FLUIDS.containsKey(location);
+    public IForgeRegistry<Fluid> getRegistry() {
+        return ForgeRegistries.FLUIDS;
     }
 
     @Override
-    public ResourceLocation getRegistryKey(FluidStack stack) {
-        return ForgeRegistries.FLUIDS.getKey(stack.getFluid());
+    public Fluid getItem(FluidStack fluidStack) {
+        return fluidStack.getFluid();
     }
 
     @Override
@@ -48,7 +49,7 @@ public class FluidResourceType extends ResourceType<FluidStack, IFluidHandler> {
     }
 
     @Override
-    public boolean matchesCapType(Object o) {
+    public boolean matchesCapabilityType(Object o) {
         return o instanceof IFluidHandler;
     }
 

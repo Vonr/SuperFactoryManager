@@ -1,15 +1,16 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.menu.ManagerMenu;
 import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix4f;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Tooltip;
@@ -22,51 +23,87 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
-public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
+import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
+
+public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu> {
     private static final ResourceLocation BACKGROUND_TEXTURE_LOCATION = new ResourceLocation(
             SFM.MOD_ID,
             "textures/gui/container/manager.png"
     );
-    private final        float            STATUS_DURATION             = 40;
-    private              Component        status                      = Component.empty();
-    private              float            statusCountdown             = 0;
-    private              ExtendedButton   DiagButton;
+    private final float STATUS_DURATION = 40;
+    private Component status = Component.empty();
+    private float statusCountdown = 0;
+    private ExtendedButton diagButton;
 
-    public ManagerScreen(ManagerMenu menu, Inventory inv, Component title) {
+
+    public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addRenderableWidget(new ExtendedButton(
-                (this.width - this.imageWidth) / 2 + 70,
-                (this.height - this.imageHeight) / 2 + 37,
+        this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                (this.width - this.imageWidth) / 2
+                - 24
+                - font.width(MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent()),
+                (this.height - this.imageHeight) / 2 + 16,
                 100,
                 16,
-                Component.translatable("gui.sfm.manager.button.import_clipboard"),
-                button -> this.onLoadClipboard()
+                MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent(),
+                button -> this.onLoadClipboard(),
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
+                        ),
+                        mx,
+                        my
+                )
         ));
         this.addRenderableWidget(new ExtendedButton(
-                (this.width - this.imageWidth) / 2 + 70,
-                (this.height - this.imageHeight) / 2 + 37 + 20,
+                (this.width - this.imageWidth) / 2
+                - 22
+                - font.width(MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent()),
+                (this.height - this.imageHeight) / 2 + 128,
                 100,
                 16,
-                Component.translatable("gui.sfm.manager.button.export_clipboard"),
+                MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent(),
                 button -> this.onSaveClipboard()
         ));
-        this.addRenderableWidget(new ExtendedButton(
+        this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
                 (this.height - this.imageHeight) / 2 + 10,
                 50,
                 12,
-                Component.translatable("gui.sfm.manager.button.reset"),
-                button -> sendReset()
+                MANAGER_GUI_BUTTON_RESET.getComponent(),
+                button -> sendReset(),
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
+                        ),
+                        mx,
+                        my
+                )
         ));
-        this.addRenderableWidget(DiagButton = new ExtendedButtonWithTooltip(
+        this.addRenderableWidget(diagButton = new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
                 (this.height - this.imageHeight) / 2 + 48,
                 12,
@@ -79,7 +116,21 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                         this.onSaveDiagClipboard();
                     }
                 },
-                Tooltip.create(Component.translatable("gui.sfm.manager.button.warning.tooltip"))
+//                Tooltip.create(Component.translatable("gui.sfm.manager.button.warning.tooltip"))
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_GUI_WARNING_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
+                        ),
+                        mx,
+                        my
+                )
         ));
     }
 
@@ -88,7 +139,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION
         ));
-        status          = Component.translatable("gui.sfm.manager.status.reset");
+        status = MANAGER_GUI_STATUS_RESET.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
@@ -97,7 +148,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.containerId,
                 menu.BLOCK_ENTITY_POSITION
         ));
-        status          = Component.translatable("gui.sfm.manager.status.fix");
+        status = MANAGER_GUI_STATUS_FIX.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
@@ -107,15 +158,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
                 menu.BLOCK_ENTITY_POSITION,
                 program
         ));
-        menu.program    = program;
-        status          = Component.translatable("gui.sfm.manager.status.loaded_clipboard");
+        menu.program = program;
+        status = MANAGER_GUI_STATUS_LOADED_CLIPBOARD.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
     private void onSaveClipboard() {
         try {
             Minecraft.getInstance().keyboardHandler.setClipboard(menu.program);
-            status          = Component.translatable("gui.sfm.manager.status.saved_clipboard");
+            status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -125,7 +176,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     private boolean shouldShowDiagButton() {
         var disk = menu.CONTAINER.getItem(0);
         if (!(disk.getItem() instanceof DiskItem)) return false;
-        var errors   = DiskItem.getErrors(disk);
+        var errors = DiskItem.getErrors(disk);
         var warnings = DiskItem.getWarnings(disk);
         return !errors.isEmpty() || !warnings.isEmpty();
     }
@@ -158,7 +209,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
             }
 
             Minecraft.getInstance().keyboardHandler.setClipboard(content.toString());
-            status          = Component.translatable("gui.sfm.manager.status.saved_clipboard");
+            status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -188,33 +239,155 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
     }
 
     @Override
-    protected void renderLabels(PoseStack matrixStack, int mx, int my) {
-        super.renderLabels(matrixStack, mx, my);
-        var states = ManagerBlockEntity.State.values();
-        var key    = menu.CONTAINER_DATA.get(ManagerBlockEntity.STATE_DATA_ACCESS_KEY);
-        var state  = states[key];
+    protected void renderLabels(PoseStack poseStack, int mx, int my) {
+        // draw title
+        super.renderLabels(poseStack, mx, my);
+
+        // draw state string
+        var state = menu.state;
         this.font.draw(
-                matrixStack,
-                Component.translatable(
-                        "gui.sfm.manager.state",
-                        Component.translatable("gui.sfm.manager.state." + state
-                                .name()
-                                .toLowerCase(
-                                        Locale.ROOT)).withStyle(state.COLOR)
-                ),
+                poseStack,
+                MANAGER_GUI_STATE.getComponent(state.LOC.getComponent().withStyle(state.COLOR)),
                 titleLabelX,
                 20,
                 0
         );
-        DiagButton.visible = shouldShowDiagButton();
-        if (statusCountdown <= 0) return;
-        this.font.draw(
-                matrixStack,
-                status,
-                titleLabelX,
-                20f + font.lineHeight + 0.1f,
-                0
-        );
+
+        // draw status string
+        if (statusCountdown > 0) {
+            this.font.draw(
+                    poseStack,
+                    status,
+                    inventoryLabelX + font.width(playerInventoryTitle.getString()) + 5,
+                    inventoryLabelY,
+                    0
+            );
+        }
+
+        // Find the maximum tick time for normalization
+        long peakTickTime = 0;
+        for (int i = 0; i < menu.tickTimeNanos.length; i++) {
+            peakTickTime = Long.max(peakTickTime, menu.tickTimeNanos[i]);
+        }
+        long yMax = Long.max(peakTickTime, 50000000); // Start with max at 50ms but allow it to grow
+
+        // Constants for the plot size and position
+        final int plotX = titleLabelX + 45;
+        final int plotY = 40;
+        final int spaceBetweenPoints = 6;
+        final int plotWidth = spaceBetweenPoints * (menu.tickTimeNanos.length - 1);
+        final int plotHeight = 30;
+
+
+        // Set up rendering
+        RenderSystem.disableTexture();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        Tesselator tesselator = Tesselator.getInstance();
+        Matrix4f pose = poseStack.last().pose();
+        BufferBuilder bufferbuilder;
+
+        // Draw the plot background
+        bufferbuilder = tesselator.getBuilder();
+        bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder.vertex(pose, plotX, plotY, 0).color(0, 0, 0, 0.5f).endVertex();
+        bufferbuilder.vertex(pose, plotX + plotWidth, plotY, 0).color(0, 0, 0, 0.5f).endVertex();
+        bufferbuilder.vertex(pose, plotX + plotWidth, plotY + plotHeight, 0).color(0, 0, 0, 0.5f).endVertex();
+        bufferbuilder.vertex(pose, plotX, plotY + plotHeight, 0).color(0, 0, 0, 0.5f).endVertex();
+        bufferbuilder.vertex(pose, plotX, plotY, 0).color(0, 0, 0, 0.5f).endVertex();
+        tesselator.end();
+
+        // Draw lines for each data point
+        bufferbuilder = tesselator.getBuilder();
+        bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        int mouseTickTimeIndex = -1;
+        for (int i = 0; i < menu.tickTimeNanos.length; i++) {
+            long y = menu.tickTimeNanos[i];
+            float normalizedTickTime = y == 0 ? 0 : (float) (Math.log10(y) / Math.log10(yMax));
+            int plotPosY = plotY + plotHeight - (int) (normalizedTickTime * plotHeight);
+
+            int plotPosX = plotX + spaceBetweenPoints * i;
+
+            // Color the lines based on their tick times (green to red)
+            var c = getNanoColour(y);
+            float red = ((c.getColor() >> 16) & 0xFF) / 255f;
+            float green = ((c.getColor() >> 8) & 0xFF) / 255f;
+            float blue = (c.getColor() & 0xFF) / 255f;
+
+            bufferbuilder
+                    .vertex(pose, (float) plotPosX, (float) plotPosY, (float) getBlitOffset())
+                    .color(red, green, blue, 1f)
+                    .endVertex();
+
+            // Check if the mouse is hovering over this line
+            if (mx - leftPos >= plotPosX - spaceBetweenPoints / 2
+                && mx - leftPos <= plotPosX + spaceBetweenPoints / 2
+                && my - topPos >= plotY - 2
+                && my - topPos <= plotY + plotHeight + 2) {
+                mouseTickTimeIndex = i;
+            }
+        }
+        tesselator.end();
+
+        // Draw the tick time text
+        var format = NumberFormat.getInstance(Locale.getDefault());
+        if (mouseTickTimeIndex != -1) { // We are hovering over the plot
+            // Draw the tick time text for the hovered point instead of peak
+            long hoveredY = menu.tickTimeNanos[mouseTickTimeIndex];
+            this.font.draw(
+                    poseStack,
+                    MANAGER_GUI_HOVERED_TICK_TIME.getComponent(Component
+                                                                       .literal(format.format(hoveredY))
+                                                                       .withStyle(getNanoColour(hoveredY))),
+                    titleLabelX,
+                    20f + font.lineHeight + 0.1f,
+                    0
+            );
+
+            // draw a vertical line
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            tesselator = Tesselator.getInstance();
+            bufferbuilder = tesselator.getBuilder();
+            bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+            pose = poseStack.last().pose();
+
+            int x = plotX + spaceBetweenPoints * mouseTickTimeIndex;
+            bufferbuilder
+                    .vertex(pose, (float) x, (float) plotY, (float) getBlitOffset())
+                    .color(1f, 1f, 1f, 1f)
+                    .endVertex();
+            bufferbuilder
+                    .vertex(pose, (float) x, (float) plotY + plotHeight, (float) getBlitOffset())
+                    .color(1f, 1f, 1f, 1f)
+                    .endVertex();
+            tesselator.end();
+        } else {
+            // Draw the tick time text for peak value
+            this.font.draw(
+                    poseStack,
+                    MANAGER_GUI_PEAK_TICK_TIME.getComponent(Component
+                                                                    .literal(format.format(peakTickTime))
+                                                                    .withStyle(getNanoColour(peakTickTime))),
+                    titleLabelX,
+                    20f + font.lineHeight + 0.1f,
+                    0
+            );
+        }
+
+        // Restore stuff
+        RenderSystem.disableBlend();
+        RenderSystem.enableTexture();
+    }
+
+    public ChatFormatting getNanoColour(long nano) {
+        if (nano <= 5_000_000) {
+            return ChatFormatting.GREEN;
+        } else if (nano <= 15_000_000) {
+            return ChatFormatting.YELLOW;
+        } else {
+            return ChatFormatting.RED;
+        }
     }
 
     @Override
@@ -222,6 +395,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
         this.renderBackground(poseStack);
         super.render(poseStack, mx, my, partialTicks);
         this.renderTooltip(poseStack, mx, my);
+
+        // update diag button visibility
+        diagButton.visible = shouldShowDiagButton();
+
+        // update status countdown
         statusCountdown -= partialTicks;
     }
 //
@@ -229,6 +407,18 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerMenu> {
 //    protected void renderTooltip(PoseStack pose, int mx, int my) {
 //        super.renderTooltip(pose, mx, my);
 //        DiagButton.renderToolTip(pose, mx, my);
+//    }
+
+
+//    @Override
+//    protected void renderTooltip(PoseStack pose, int mx, int my) {
+//        super.renderTooltip(pose, mx, my);
+//        this.renderables
+//                .stream()
+//                .filter(ExtendedButtonWithTooltip.class::isInstance)
+//                .map(ExtendedButtonWithTooltip.class::cast)
+//                .forEach(x -> x.renderToolTip(pose, mx, my));
+//
 //    }
 
     @Override

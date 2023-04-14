@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.util;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfml.ast.Label;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -69,11 +70,12 @@ public class SFMLabelNBTHelper {
 
     public static List<Component> getHoverText(ItemStack stack) {
         var rtn = new ArrayList<Component>();
-        rtn.add(Component.translatable("item.sfm.disk.tooltip.label.header").withStyle(ChatFormatting.UNDERLINE));
+        rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL_HEADER
+                        .getComponent()
+                        .withStyle(ChatFormatting.UNDERLINE));
         var dict = getLabelDict(stack);
         for (var label : dict.getAllKeys()) {
-            rtn.add(Component.translatable(
-                    "item.sfm.disk.tooltip.label",
+            rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL.getComponent(
                     label,
                     dict.getList(label, Tag.TAG_LONG).size()
             ).withStyle(ChatFormatting.GRAY));

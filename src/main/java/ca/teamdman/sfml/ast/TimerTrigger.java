@@ -8,10 +8,7 @@ public record TimerTrigger(
 ) implements Trigger {
     @Override
     public boolean shouldTick(ProgramContext context) {
-        return context
-                       .getManager()
-                       .getLevel()
-                       .getGameTime() % interval.getTicks() == 0;
+        return context.getManager().getTick() % interval.getTicks() == 0;
     }
 
     @Override

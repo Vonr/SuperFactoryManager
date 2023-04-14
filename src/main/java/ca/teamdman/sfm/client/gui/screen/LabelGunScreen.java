@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.client.gui.screen;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -8,7 +9,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
@@ -21,7 +21,7 @@ public class LabelGunScreen extends Screen {
     private       Button          doneButton;
 
     public LabelGunScreen(ItemStack labelGunStack, InteractionHand hand) {
-        super(Component.translatable("gui.sfm.title.labelgun"));
+        super(Constants.LocalizationKeys.LABEL_GUN_GUI_TITLE.getComponent());
         ITEM_STACK = labelGunStack;
         HAND       = hand;
     }
@@ -36,7 +36,7 @@ public class LabelGunScreen extends Screen {
                 50,
                 300,
                 20,
-                Component.translatable("gui.sfm.labels.labelgun.placeholder")
+                Constants.LocalizationKeys.LABEL_GUN_GUI_LABEL_PLACEHOLDER.getComponent()
         ));
         labelField.setFocused(true);
         this.setFocused(labelField);

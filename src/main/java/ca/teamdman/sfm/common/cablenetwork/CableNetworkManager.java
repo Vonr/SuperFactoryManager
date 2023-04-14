@@ -1,15 +1,10 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,14 +27,10 @@ import java.util.stream.Collectors;
  */
 public class CableNetworkManager {
 
-    private static final Multimap<ResourceKey<Level>, CableNetwork> NETWORKS = ArrayListMultimap.create();
+    private static final Map<Level, List<CableNetwork>> NETWORKS = new WeakHashMap<>();
 
     public static void printDebugInfo() {
 //        SFM.LOGGER.debug(SFMUtil.getMarker(CableNetworkManager.class), "{} networks now", size());
-    }
-
-    public static int size() {
-        return NETWORKS.size();
     }
 
     /**
@@ -47,11 +38,9 @@ public class CableNetworkManager {
      */
     public static void unregister(Level level, BlockPos cablePos) {
         getNetwork(level, cablePos).ifPresent(network -> {
-            var branches = network.remove(cablePos);
-            // remove old network
             removeNetwork(network);
-            // add all branch networks
-            branches.forEach(CableNetworkManager::addNetwork);
+            var newNetworks = network.withoutCable(cablePos);
+            newNetworks.forEach(CableNetworkManager::addNetwork);
         });
     }
 
@@ -61,25 +50,19 @@ public class CableNetworkManager {
 
     private static Optional<CableNetwork> getNetwork(Level level, BlockPos pos) {
         return NETWORKS
-                .get(level.dimension())
+                .getOrDefault(level, Collections.emptyList())
                 .stream()
-                .filter(net -> net
-                                       .getLevel()
-                                       .isClientSide() == level.isClientSide())
+                .filter(net -> net.getLevel().isClientSide() == level.isClientSide())
                 .filter(net -> net.containsCableLocation(pos))
                 .findFirst();
     }
 
-    private static boolean removeNetwork(CableNetwork network) {
-        return NETWORKS.remove(network
-                                       .getLevel()
-                                       .dimension(), network);
+    private static void removeNetwork(CableNetwork network) {
+        NETWORKS.getOrDefault(network.getLevel(), Collections.emptyList()).remove(network);
     }
 
-    private static boolean addNetwork(CableNetwork network) {
-        return NETWORKS.put(network
-                                    .getLevel()
-                                    .dimension(), network);
+    private static void addNetwork(CableNetwork network) {
+        NETWORKS.computeIfAbsent(network.getLevel(), k -> new ArrayList<>()).add(network);
     }
 
     /**
@@ -87,11 +70,9 @@ public class CableNetworkManager {
      */
     private static Set<CableNetwork> getCandidateNetworks(Level level, BlockPos pos) {
         return NETWORKS
-                .get(level.dimension())
+                .getOrDefault(level, Collections.emptyList())
                 .stream()
-                .filter(net -> net
-                                       .getLevel()
-                                       .isClientSide() == level.isClientSide)
+                .filter(net -> net.getLevel().isClientSide() == level.isClientSide)
                 .filter(net -> net.hasCableNeighbour(pos))
                 .collect(Collectors.toSet());
     }
@@ -125,8 +106,13 @@ public class CableNetworkManager {
     /**
      * Gets the cable network object. If none exists and one should, it will create and populate
      * one.
+     * <p>
+     * Networks should only exist on the server side.
      */
     public static Optional<CableNetwork> getOrRegisterNetwork(Level level, BlockPos pos) {
+        if (level == null) return Optional.empty();
+        if (level.isClientSide()) return Optional.empty();
+
         // only cables define the main spine of a network
         if (!CableNetwork.isCable(level, pos)) return Optional.empty();
 
@@ -143,9 +129,7 @@ public class CableNetworkManager {
         // one candidate exists, add the cable to it
         if (candidates.size() == 1) {
             // Only one network matches this cable, add cable as member
-            CableNetwork network = candidates
-                    .iterator()
-                    .next();
+            CableNetwork network = candidates.iterator().next();
             network.addCable(pos);
             return Optional.of(network);
         }
