@@ -12,12 +12,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BarrelBlockEntity;
+import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
 
 @SuppressWarnings("DataFlowIssue")
-//@GameTestHolder(SFM.MOD_ID)
+@GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMLaggyGameTests extends SFMGameTests {
     @GameTest(template = "25x3x25", batch = "laggy")
@@ -85,13 +86,13 @@ public class SFMLaggyGameTests extends SFMGameTests {
                 }
             });
 
-            // remove all the items to speed up retests
-            destBlocks.forEach(pos -> {
-                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-                for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    barrel.setItem(i, ItemStack.EMPTY);
-                }
-            });
+//            // remove all the items to speed up retests
+//            destBlocks.forEach(pos -> {
+//                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
+//                for (int i = 0; i < barrel.getContainerSize(); i++) {
+//                    barrel.setItem(i, ItemStack.EMPTY);
+//                }
+//            });
             helper.succeed();
 
         });
