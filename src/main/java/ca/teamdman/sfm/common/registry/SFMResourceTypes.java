@@ -1,7 +1,6 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.registry.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.resourcetype.FluidResourceType;
 import ca.teamdman.sfm.common.resourcetype.ForgeEnergyResourceType;
 import ca.teamdman.sfm.common.resourcetype.ItemResourceType;
@@ -14,7 +13,6 @@ import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -37,20 +35,20 @@ public class SFMResourceTypes {
             "item",
             ItemResourceType::new
     );
-    public static final  RegistryObject<ResourceType<FluidStack, Fluid, IFluidHandler>>        FLUID          = TYPES.register(
+    public static final RegistryObject<ResourceType<FluidStack, Fluid, IFluidHandler>> FLUID = TYPES.register(
             "fluid",
             FluidResourceType::new
     );
-    public static final  RegistryObject<ResourceType<Integer, Class<Integer>, IEnergyStorage>> FORGE_ENERGY   = TYPES.register(
+    public static final RegistryObject<ResourceType<Integer, Class<Integer>, IEnergyStorage>> FORGE_ENERGY = TYPES.register(
             "forge_energy",
             ForgeEnergyResourceType::new
     );
 
-    static {
-        if (ModList.get().getModContainerById("mekanism").isPresent()) {
-            SFMMekanismCompat.register(TYPES);
-        }
-    }
+//    static {
+//        if (ModList.get().getModContainerById("mekanism").isPresent()) {
+//            SFMMekanismCompat.register(TYPES);
+//        }
+//    }
 
     public static void register(IEventBus bus) {
         TYPES.register(bus);

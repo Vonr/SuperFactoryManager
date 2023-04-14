@@ -39,7 +39,7 @@
   "item.sfm.labelgun.tooltip.1": "Right click a Factory Manager to push labels.",
   "item.sfm.labelgun.tooltip.2": "Right click a Factory Manager while sneaking to pull labels.",
   "item.sfm.labelgun.with_label": "Label Gun: \"%s\"",
-  "itemGroup.sfm": "Super Factory Manager",
+  "item_group.sfm.main": "Super Factory Manager",
   "key.categories.sfm": "Super Factory Manager",
   "key.sfm.more_info": "Press for more info key",
   "mod.name": "Super Factory Manager",

@@ -7,7 +7,7 @@ import net.minecraftforge.common.data.LanguageProvider;
 
 public class SFMLanguageProvider extends LanguageProvider {
     public SFMLanguageProvider(DataGenerator gen) {
-        super(gen, SFM.MOD_ID, "en_us");
+        super(gen.getPackOutput(), SFM.MOD_ID, "en_us");
     }
 
     @Override

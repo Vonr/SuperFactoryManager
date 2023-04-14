@@ -23,7 +23,7 @@ public class Constants {
 
 
         public static LocalizationEntry ITEM_GROUP       = new LocalizationEntry(
-                "itemGroup.sfm",
+                "item_group.sfm.main",
                 "Super Factory Manager"
         );
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
@@ -279,11 +279,11 @@ public class Constants {
             }
 
             public TranslatableContents get(Object... args) {
-                return new TranslatableContents(key.get(), args);
+                return new TranslatableContents(key.get(), null, args);
             }
 
             public TranslatableContents get() {
-                return new TranslatableContents(key.get());
+                return new TranslatableContents(key.get(), null, new Object[]{});
             }
 
             public MutableComponent getComponent() {

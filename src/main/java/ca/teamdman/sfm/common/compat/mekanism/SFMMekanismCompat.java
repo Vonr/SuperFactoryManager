@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.registry.compat;
+package ca.teamdman.sfm.common.compat.mekanism;
 
 import ca.teamdman.sfm.common.resourcetype.*;
 import net.minecraftforge.registries.DeferredRegister;

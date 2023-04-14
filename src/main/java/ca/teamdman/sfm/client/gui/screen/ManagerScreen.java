@@ -9,10 +9,8 @@ import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix4f;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -22,6 +20,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
+import org.joml.Matrix4f;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -56,20 +55,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent(),
                 button -> this.onLoadClipboard(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                Tooltip.create(MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent())
         ));
         this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2
@@ -88,20 +74,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 12,
                 MANAGER_GUI_BUTTON_RESET.getComponent(),
                 button -> sendReset(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                Tooltip.create(MANAGER_RESET_BUTTON_TOOLTIP.getComponent())
         ));
         this.addRenderableWidget(diagButton = new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
@@ -116,21 +89,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         this.onSaveDiagClipboard();
                     }
                 },
-//                Tooltip.create(Component.translatable("gui.sfm.manager.button.warning.tooltip"))
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_GUI_WARNING_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                Tooltip.create(MANAGER_GUI_WARNING_BUTTON_TOOLTIP.getComponent())
         ));
     }
 
@@ -280,7 +239,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
 
         // Set up rendering
-        RenderSystem.disableTexture();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
@@ -316,7 +274,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             float blue = (c.getColor() & 0xFF) / 255f;
 
             bufferbuilder
-                    .vertex(pose, (float) plotPosX, (float) plotPosY, (float) getBlitOffset())
+                    .vertex(pose, (float) plotPosX, (float) plotPosY, 0f)
                     .color(red, green, blue, 1f)
                     .endVertex();
 
@@ -354,11 +312,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
             int x = plotX + spaceBetweenPoints * mouseTickTimeIndex;
             bufferbuilder
-                    .vertex(pose, (float) x, (float) plotY, (float) getBlitOffset())
+                    .vertex(pose, (float) x, (float) plotY, 0f)
                     .color(1f, 1f, 1f, 1f)
                     .endVertex();
             bufferbuilder
-                    .vertex(pose, (float) x, (float) plotY + plotHeight, (float) getBlitOffset())
+                    .vertex(pose, (float) x, (float) plotY + plotHeight, 0f)
                     .color(1f, 1f, 1f, 1f)
                     .endVertex();
             tesselator.end();
@@ -377,7 +335,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
         // Restore stuff
         RenderSystem.disableBlend();
-        RenderSystem.enableTexture();
     }
 
     public ChatFormatting getNanoColour(long nano) {

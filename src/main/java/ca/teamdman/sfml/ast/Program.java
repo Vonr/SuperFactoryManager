@@ -71,7 +71,7 @@ public record Program(
         } catch (Throwable t) {
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
             t.printStackTrace();
-            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage()));
+            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage(), null, new Object[]{}));
         }
 
         for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {

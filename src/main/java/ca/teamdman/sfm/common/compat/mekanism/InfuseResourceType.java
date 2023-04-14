@@ -1,5 +1,6 @@
-package ca.teamdman.sfm.common.resourcetype;
+package ca.teamdman.sfm.common.compat.mekanism;
 
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.infuse.IInfusionHandler;
