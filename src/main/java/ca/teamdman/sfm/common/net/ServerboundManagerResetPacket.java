@@ -2,38 +2,37 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
-public class ServerboundManagerResetPacket extends MenuPacket {
+import java.util.function.Supplier;
 
-    public ServerboundManagerResetPacket(int windowId, BlockPos pos) {
-        super(windowId, pos);
+public record ServerboundManagerResetPacket(
+        int windowId,
+        BlockPos pos
+) {
+    public static void encode(ServerboundManagerResetPacket msg, FriendlyByteBuf friendlyByteBuf) {
+        friendlyByteBuf.writeVarInt(msg.windowId());
+        friendlyByteBuf.writeBlockPos(msg.pos());
     }
 
-    public static class PacketHandler extends MenuPacketHandler<ManagerContainerMenu, ManagerBlockEntity, ServerboundManagerResetPacket> {
-        public PacketHandler() {
-            super(ManagerContainerMenu.class, ManagerBlockEntity.class);
-        }
+    public static ServerboundManagerResetPacket decode(FriendlyByteBuf friendlyByteBuf) {
+        return new ServerboundManagerResetPacket(
+                friendlyByteBuf.readVarInt(),
+                friendlyByteBuf.readBlockPos()
+        );
+    }
 
-        @Override
-        public void encode(
-                ServerboundManagerResetPacket msg, FriendlyByteBuf buf
-        ) {
-        }
-
-        @Override
-        public ServerboundManagerResetPacket decode(int containerId, BlockPos pos, FriendlyByteBuf buf) {
-            return new ServerboundManagerResetPacket(containerId, pos);
-        }
-
-        @Override
-        public void handle(
-                ServerboundManagerResetPacket msg,
-                ManagerContainerMenu menu,
-                ManagerBlockEntity blockEntity
-        ) {
-            blockEntity.reset();
-        }
+    public static void handle(ServerboundManagerResetPacket msg, Supplier<NetworkEvent.Context> contextSupplier) {
+        SFMPackets.handleServerboundContainerPacket(
+                contextSupplier,
+                ManagerContainerMenu.class,
+                ManagerBlockEntity.class,
+                msg.pos,
+                msg.windowId,
+                (menu, manager) -> manager.reset()
+        );
     }
 }

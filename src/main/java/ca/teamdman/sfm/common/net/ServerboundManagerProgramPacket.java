@@ -2,42 +2,42 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
-public class ServerboundManagerProgramPacket extends MenuPacket {
-    private final String PROGRAM;
+import java.util.function.Supplier;
 
-    public ServerboundManagerProgramPacket(int windowId, BlockPos pos, String program) {
-        super(windowId, pos);
-        PROGRAM = program;
+public record ServerboundManagerProgramPacket(
+        int windowId,
+        BlockPos pos,
+        String program
+) {
+
+    public static void encode(ServerboundManagerProgramPacket msg, FriendlyByteBuf friendlyByteBuf) {
+        friendlyByteBuf.writeVarInt(msg.windowId());
+        friendlyByteBuf.writeBlockPos(msg.pos());
+        friendlyByteBuf.writeUtf(msg.program(), Program.MAX_PROGRAM_LENGTH);
     }
 
-    public static class PacketHandler extends MenuPacketHandler<ManagerContainerMenu, ManagerBlockEntity, ServerboundManagerProgramPacket> {
-        public PacketHandler() {
-            super(ManagerContainerMenu.class, ManagerBlockEntity.class);
-        }
+    public static ServerboundManagerProgramPacket decode(FriendlyByteBuf friendlyByteBuf) {
+        return new ServerboundManagerProgramPacket(
+                friendlyByteBuf.readVarInt(),
+                friendlyByteBuf.readBlockPos(),
+                friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH)
+        );
+    }
 
-        @Override
-        public void encode(
-                ServerboundManagerProgramPacket msg, FriendlyByteBuf buf
-        ) {
-            buf.writeUtf(msg.PROGRAM, Program.MAX_PROGRAM_LENGTH);
-        }
-
-        @Override
-        public ServerboundManagerProgramPacket decode(int containerId, BlockPos pos, FriendlyByteBuf buf) {
-            return new ServerboundManagerProgramPacket(containerId, pos, buf.readUtf(Program.MAX_PROGRAM_LENGTH));
-        }
-
-        @Override
-        public void handle(
-                ServerboundManagerProgramPacket msg,
-                ManagerContainerMenu menu,
-                ManagerBlockEntity blockEntity
-        ) {
-            blockEntity.setProgram(msg.PROGRAM);
-        }
+    public static void handle(ServerboundManagerProgramPacket msg, Supplier<NetworkEvent.Context> contextSupplier) {
+        SFMPackets.handleServerboundContainerPacket(
+                contextSupplier,
+                ManagerContainerMenu.class,
+                ManagerBlockEntity.class,
+                msg.pos,
+                msg.windowId,
+                (menu, manager) -> manager.setProgram(msg.program())
+        );
     }
 }
