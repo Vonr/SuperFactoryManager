@@ -67,6 +67,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                         PacketDistributor.PLAYER.with(entry::getKey),
                         new ClientboundManagerGuiPacket(
                                 entry.getValue().containerId,
+                                getProgramString().orElse(""),
                                 getState(),
                                 getTickTimeNanos()
                         )
