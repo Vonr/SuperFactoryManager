@@ -10,6 +10,7 @@ import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -306,12 +307,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             int plotPosX = plotX + spaceBetweenPoints * i;
 
             // Color the lines based on their tick times (green to red)
-            float red = Math.min((float) y / (50_000_000), 1.0f); // 50ms in nanoseconds
-            float green = 1.0f - red;
+            var c = getNanoColour(y);
+            float red = ((c.getColor() >> 16) & 0xFF) / 255f;
+            float green = ((c.getColor() >> 8) & 0xFF) / 255f;
+            float blue = (c.getColor() & 0xFF) / 255f;
 
             bufferbuilder
                     .vertex(pose, (float) plotPosX, (float) plotPosY, (float) getBlitOffset())
-                    .color(red, green, 0, 1f)
+                    .color(red, green, blue, 1f)
                     .endVertex();
 
             // Check if the mouse is hovering over this line
@@ -331,8 +334,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             long hoveredY = menu.tickTimeNanos[mouseTickTimeIndex];
             this.font.draw(
                     poseStack,
-                    MANAGER_GUI_HOVERED_TICK_TIME.getComponent((hoveredY > 25_000_000 ? "§c" : "§a")
-                                                               + format.format(hoveredY)),
+                    MANAGER_GUI_HOVERED_TICK_TIME.getComponent(Component
+                                                                       .literal(format.format(hoveredY))
+                                                                       .withStyle(getNanoColour(hoveredY))),
                     titleLabelX,
                     20f + font.lineHeight + 0.1f,
                     0
@@ -359,8 +363,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             // Draw the tick time text for peak value
             this.font.draw(
                     poseStack,
-                    MANAGER_GUI_PEAK_TICK_TIME.getComponent((peakTickTime > 25_000_000 ? "§c" : "§a")
-                                                            + format.format(peakTickTime)),
+                    MANAGER_GUI_PEAK_TICK_TIME.getComponent(Component
+                                                                    .literal(format.format(peakTickTime))
+                                                                    .withStyle(getNanoColour(peakTickTime))),
                     titleLabelX,
                     20f + font.lineHeight + 0.1f,
                     0
@@ -370,6 +375,16 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         // Restore stuff
         RenderSystem.disableBlend();
         RenderSystem.enableTexture();
+    }
+
+    public ChatFormatting getNanoColour(long nano) {
+        if (nano <= 5_000_000) {
+            return ChatFormatting.GREEN;
+        } else if (nano <= 15_000_000) {
+            return ChatFormatting.YELLOW;
+        } else {
+            return ChatFormatting.RED;
+        }
     }
 
     @Override
