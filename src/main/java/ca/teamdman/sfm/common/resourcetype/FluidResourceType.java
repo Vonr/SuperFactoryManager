@@ -59,6 +59,11 @@ public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHan
     }
 
     @Override
+    public long getMaxStackSize(FluidStack fluidStack) {
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
     public FluidStack insert(IFluidHandler handler, int slot, FluidStack stack, boolean simulate) {
         //todo: PR to forge to add a method that takes tank slot index
         var x = handler.fill(stack, simulate ? IFluidHandler.FluidAction.SIMULATE : IFluidHandler.FluidAction.EXECUTE);
@@ -71,5 +76,10 @@ public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHan
     @Override
     public boolean isEmpty(FluidStack stack) {
         return stack.isEmpty();
+    }
+
+    @Override
+    public FluidStack getEmptyStack() {
+        return FluidStack.EMPTY;
     }
 }

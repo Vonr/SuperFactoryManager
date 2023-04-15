@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
     private static final Map<String, Predicate<String>> patternCache = new Object2ObjectOpenHashMap<>();
+    private final Map<ITEM, ResourceLocation> registryKeyCache = new Object2ObjectOpenHashMap<>();
 
     static {
         patternCache.put(".*", s -> true);
@@ -53,10 +54,14 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract int getSlots(CAP handler);
 
+    public abstract long getMaxStackSize(STACK stack);
+
 
     public abstract STACK insert(CAP cap, int slot, STACK stack, boolean simulate);
 
     public abstract boolean isEmpty(STACK stack);
+
+    public abstract STACK getEmptyStack();
 
     public abstract boolean matchesStackType(Object o);
 
@@ -122,8 +127,12 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     }
 
     public ResourceLocation getRegistryKey(STACK stack) {
-        // we tried caching this and it wasn't worth it
-        return getRegistry().getKey(getItem(stack));
+        ITEM item = getItem(stack);
+        var found = registryKeyCache.get(item);
+        if (found != null) return found;
+        found = getRegistry().getKey(item);
+        registryKeyCache.put(item, found);
+        return found;
     }
 
     public abstract IForgeRegistry<ITEM> getRegistry();

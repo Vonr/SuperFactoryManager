@@ -40,6 +40,11 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     }
 
     @Override
+    public long getMaxStackSize(InfusionStack stack) {
+        return Long.MAX_VALUE;
+    }
+
+    @Override
     public InfusionStack insert(
             IInfusionHandler handler,
             int slot,
@@ -52,6 +57,11 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     @Override
     public boolean isEmpty(InfusionStack stack) {
         return stack.isEmpty();
+    }
+
+    @Override
+    public InfusionStack getEmptyStack() {
+        return InfusionStack.EMPTY;
     }
 
     @Override
