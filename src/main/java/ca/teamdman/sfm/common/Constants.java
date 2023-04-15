@@ -158,11 +158,11 @@ public class Constants {
         );
         public static LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME = new LocalizationEntry(
                 "gui.sfm.manager.peak_tick_time",
-                "Peak tick time: %s μs"
+                "Peak tick time: %s ns"
         );
         public static LocalizationEntry MANAGER_GUI_HOVERED_TICK_TIME = new LocalizationEntry(
                 "gui.sfm.manager.hovered_tick_time",
-                "Hovered tick time: %s μs"
+                "Hovered tick time: %s ns"
         );
         public static LocalizationEntry MANAGER_GUI_STATE_NO_DISK = new LocalizationEntry(
                 "gui.sfm.manager.state.no_disk",
