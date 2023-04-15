@@ -175,10 +175,10 @@ public class SFMGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
-                                       EVERY 20 TICKS DO
-                                           INPUT RETAIN 5 FROM a
-                                           OUTPUT TO b
-                                       END
+                                   EVERY 20 TICKS DO
+                                      INPUT RETAIN 5 FROM a
+                                      OUTPUT TO b
+                                   END
                                    """);
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));

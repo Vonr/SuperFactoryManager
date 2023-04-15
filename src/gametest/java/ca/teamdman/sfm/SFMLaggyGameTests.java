@@ -10,7 +10,6 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -30,7 +29,7 @@ public class SFMLaggyGameTests extends SFMGameTests {
 //            for (int z = 0; z < 25; z++) {
             for (int z = 0; z < 24; z++) {
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
-                helper.setBlock(new BlockPos(x, 3, z), Blocks.BARREL);
+                helper.setBlock(new BlockPos(x, 3, z), SFMBlocks.TEST_BARREL_BLOCK.get());
                 if (z % 2 == 0) {
                     sourceBlocks.add(new BlockPos(x, 3, z));
                     // fill the source chests with ingots
@@ -107,7 +106,7 @@ public class SFMLaggyGameTests extends SFMGameTests {
 //            for (int z = 0; z < 25; z++) {
             for (int z = 0; z < 24; z++) {
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
-                helper.setBlock(new BlockPos(x, 3, z), Blocks.BARREL);
+                helper.setBlock(new BlockPos(x, 3, z), SFMBlocks.TEST_BARREL_BLOCK.get());
                 if (z % 2 == 0) {
                     sourceBlocks.add(new BlockPos(x, 3, z));
                 } else {
@@ -129,7 +128,7 @@ public class SFMLaggyGameTests extends SFMGameTests {
 
         // create the program
         var program = """
-                    NAME "many inventory lag test"
+                    NAME "move many full"
                                     
                     EVERY 20 TICKS DO
                         INPUT FROM a
@@ -187,7 +186,7 @@ public class SFMLaggyGameTests extends SFMGameTests {
                 // place a cable below
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
                 // place the barrel on top
-                helper.setBlock(new BlockPos(x, 3, z), Blocks.BARREL);
+                helper.setBlock(new BlockPos(x, 3, z), SFMBlocks.TEST_BARREL_BLOCK.get());
                 if (z % 2 == 0) {
                     sourceBlocks.add(new BlockPos(x, 3, z));
                 } else {
@@ -197,9 +196,9 @@ public class SFMLaggyGameTests extends SFMGameTests {
                 // fill the source chests with ingots
                 BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(x, 3, z));
                 for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    if (z % 3 == 0) {
+                    if (i % 3 == 0) {
                         barrel.setItem(i, new ItemStack(Items.IRON_INGOT, 64));
-                    } else if (z % 3 == 1) {
+                    } else if (i % 3 == 1) {
                         barrel.setItem(i, new ItemStack(Items.GOLD_INGOT, 64));
                     } else {
                         barrel.setItem(i, new ItemStack(Items.DIAMOND, 64));
@@ -215,7 +214,7 @@ public class SFMLaggyGameTests extends SFMGameTests {
 
         // create the program
         var program = """
-                    NAME "many inventory regex test"
+                    NAME "move many regex"
                                     
                     EVERY 20 TICKS DO
                         INPUT *:*_ingot FROM a
