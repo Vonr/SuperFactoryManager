@@ -7,7 +7,9 @@ import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.LongStream;
@@ -73,7 +75,9 @@ public abstract class SFMGameTestBase {
                 runnable.run();
                 SFMGameTestBase.assertTrue(
                         endTime.get() - startTime.get() < 1000000000,
-                        "Program took too long to run: took " + (endTime.get() - startTime.get()) + "ms"
+                        "Program took too long to run: took " + NumberFormat
+                                .getInstance(Locale.getDefault())
+                                .format(endTime.get() - startTime.get()) + "ns"
                 );
                 helper.succeed();
                 hasExecuted.set(false);
