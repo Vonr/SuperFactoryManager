@@ -2,37 +2,54 @@ package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfml.ast.ResourceLimit;
 
-public class OutputResourceTracker<STACK, ITEM, CAP> extends ResourceTracker<STACK, ITEM, CAP> {
-    private long seen = 0;
+import java.util.function.Predicate;
+
+public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
+    protected final ResourceLimit<STACK, ITEM, CAP> LIMIT;
+    protected long transferred = 0;
+    private long retentionObligationProgress = 0;
 
     public OutputResourceTracker(ResourceLimit<STACK, ITEM, CAP> resourceLimit) {
-        super(resourceLimit);
+        this.LIMIT = resourceLimit;
     }
 
+    /**
+     * Done when we have reached the transfer limit, or when the retention is satisfied
+     */
+    public boolean isDone() {
+        return transferred >= LIMIT.limit().quantity() || retentionObligationProgress >= LIMIT.limit().retention();
+    }
+
+    /**
+     * Update obligation progress as new limited slots are prepared
+     */
     public void visit(LimitedOutputSlot<STACK, ITEM, CAP> slot) {
         var stack = slot.getStackInSlot();
         if (test(stack)) {
-            seen += slot.TYPE.getCount(stack);
+            retentionObligationProgress += slot.type.getCount(stack);
         }
     }
 
-    @Override
-    public boolean isDone() {
-        return false;
-    }
-
-    private long getRemainingRoom() {
-        return LIMIT.limit().retention() - seen;
-    }
-
-    @Override
     public void trackTransfer(long amount) {
-        super.trackTransfer(amount);
-        seen += amount;
+        transferred += amount;
+        retentionObligationProgress += amount;
+    }
+
+    /**
+     * How much more are we allowed to move
+     */
+    public long getMaxTransferable() {
+        long remainingRetentionRoom = LIMIT.limit().retention() - retentionObligationProgress;
+        long unusedQuantity = LIMIT.limit().quantity() - transferred;
+        return Math.min(unusedQuantity, remainingRetentionRoom);
+    }
+
+    public boolean matchesCapabilityType(Object capability) {
+        return LIMIT.resourceId().getResourceType().matchesCapabilityType(capability);
     }
 
     @Override
-    public long getMaxTransferable() {
-        return Math.min(super.getMaxTransferable(), getRemainingRoom());
+    public boolean test(Object stack) {
+        return LIMIT.test(stack);
     }
 }

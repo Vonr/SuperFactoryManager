@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
     private static final Map<String, Predicate<String>> patternCache = new Object2ObjectOpenHashMap<>();
+    private final Map<ITEM, ResourceLocation> registryKeyCache = new Object2ObjectOpenHashMap<>();
 
     static {
         patternCache.put(".*", s -> true);
@@ -53,10 +54,14 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract int getSlots(CAP handler);
 
+    public abstract long getMaxStackSize(STACK stack);
+
 
     public abstract STACK insert(CAP cap, int slot, STACK stack, boolean simulate);
 
     public abstract boolean isEmpty(STACK stack);
+
+    public abstract STACK getEmptyStack();
 
     public abstract boolean matchesStackType(Object o);
 
@@ -65,15 +70,15 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         if (isEmpty((STACK) stack)) return false;
         var stackId = getRegistryKey((STACK) stack);
         if (stackId == null) return false;
-        Predicate<String> namespacePredicate = patternCache.get(id.resourceNamespace());
+        Predicate<String> namespacePredicate = patternCache.get(id.resourceNamespace);
         if (namespacePredicate == null) {
-            namespacePredicate = buildPredicate(id.resourceNamespace());
-            patternCache.put(id.resourceNamespace(), namespacePredicate);
+            namespacePredicate = buildPredicate(id.resourceNamespace);
+            patternCache.put(id.resourceNamespace, namespacePredicate);
         }
-        Predicate<String> namePredicate = patternCache.get(id.resourceName());
+        Predicate<String> namePredicate = patternCache.get(id.resourceName);
         if (namePredicate == null) {
-            namePredicate = buildPredicate(id.resourceName());
-            patternCache.put(id.resourceName(), namePredicate);
+            namePredicate = buildPredicate(id.resourceName);
+            patternCache.put(id.resourceName, namePredicate);
         }
         return namespacePredicate.test(stackId.getNamespace()) && namePredicate.test(stackId.getPath());
     }
@@ -122,8 +127,12 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     }
 
     public ResourceLocation getRegistryKey(STACK stack) {
-        // we tried caching this and it wasn't worth it
-        return getRegistry().getKey(getItem(stack));
+        ITEM item = getItem(stack);
+        var found = registryKeyCache.get(item);
+        if (found != null) return found;
+        found = getRegistry().getKey(item);
+        registryKeyCache.put(item, found);
+        return found;
     }
 
     public abstract IForgeRegistry<ITEM> getRegistry();

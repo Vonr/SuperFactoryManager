@@ -1,6 +1,7 @@
-// 1.19.4	2023-03-25T12:47:53.6558477	Block States: sfm
+// 1.19.2	2023-04-15T11:42:04.2798386	Block States: sfm
 f303dc233cde263e111cfdb2e2cbc48b93521724 assets/sfm/blockstates/cable.json
 01e9d7d54169b7f6bbd287f4b896629f66f25305 assets/sfm/blockstates/manager.json
+9be344941a18ad0d8dccbcd6536d52bf7295c1c8 assets/sfm/blockstates/test_barrel.json
 f3c25839c6554e631061f91277bc687aebc38fd7 assets/sfm/blockstates/water_tank.json
 a76567fd4e65d191d69cf166b98776786d47a8e2 assets/sfm/models/block/cable.json
 953313d31931040aa2bd9a8742d4a54a2c632b8d assets/sfm/models/block/manager.json

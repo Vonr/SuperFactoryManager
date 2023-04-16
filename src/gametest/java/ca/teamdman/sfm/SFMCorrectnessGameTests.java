@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
 @SuppressWarnings("DataFlowIssue")
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
-public class SFMGameTests extends SFMGameTestBase {
+public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
     /**
      * Ensure that the manager state gets updated as the disk is inserted and the program is set
@@ -175,10 +175,10 @@ public class SFMGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
-                                       EVERY 20 TICKS DO
-                                           INPUT RETAIN 5 FROM a
-                                           OUTPUT TO b
-                                       END
+                                   EVERY 20 TICKS DO
+                                      INPUT RETAIN 5 FROM a
+                                      OUTPUT TO b
+                                   END
                                    """);
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
@@ -334,7 +334,7 @@ public class SFMGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "25x3x25")
+    @GameTest(template = "25x4x25")
     public static void cable_spiral(GameTestHelper helper) {
         BlockPos start = new BlockPos(0, 2, 0);
         BlockPos end   = new BlockPos(12, 2, 12);
@@ -457,12 +457,7 @@ public class SFMGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "25x3x25")
-    public static void gather_supplies(GameTestHelper helper) {
-        helper.succeed();
-    }
-
-    @GameTest(template = "25x3x25") // start with empty platform
+    @GameTest(template = "25x4x25") // start with empty platform
     public static void CableNetworkFormation(GameTestHelper helper) {
         // create a row of cables
         for (int i = 0; i < 10; i++) {

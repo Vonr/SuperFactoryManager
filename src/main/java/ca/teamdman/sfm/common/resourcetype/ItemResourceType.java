@@ -17,6 +17,7 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
         return ForgeRegistries.ITEMS;
     }
 
+
     @Override
     public Item getItem(ItemStack itemStack) {
         return itemStack.getItem();
@@ -53,6 +54,11 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
         return handler.getSlots();
     }
 
+    @Override
+    public long getMaxStackSize(ItemStack itemStack) {
+        return itemStack.getMaxStackSize();
+    }
+
     /**
      * @param handler
      * @param slot
@@ -68,6 +74,11 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     @Override
     public boolean isEmpty(ItemStack stack) {
         return stack.isEmpty();
+    }
+
+    @Override
+    public ItemStack getEmptyStack() {
+        return ItemStack.EMPTY;
     }
 
 }

@@ -1,9 +1,12 @@
 package ca.teamdman.sfml.ast;
 
-import java.util.List;
-
-public record NumberRangeSet(List<NumberRange> ranges) implements ASTNode {
+public record NumberRangeSet(NumberRange[] ranges) implements ASTNode {
     public boolean contains(int value) {
-        return ranges.stream().anyMatch(r -> r.contains(value));
+        for (NumberRange range : ranges) {
+            if (range.contains(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

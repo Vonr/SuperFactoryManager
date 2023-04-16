@@ -91,6 +91,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 },
                 Tooltip.create(MANAGER_GUI_WARNING_BUTTON_TOOLTIP.getComponent())
         ));
+        diagButton.visible = shouldShowDiagButton();
     }
 
     private void sendReset() {

@@ -3,11 +3,9 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -15,18 +13,30 @@ import java.util.regex.PatternSyntaxException;
 
 // resourceTypeName resourceNamespace, resourceTypeName name, resource resourceNamespace, resource name
 // sfm:item:minecraft:stone
-public record ResourceIdentifier<STACK, ITEM, CAP>(
-        String resourceTypeNamespace,
-        String resourceTypeName,
-        String resourceNamespace,
-        String resourceName
-) implements ASTNode, Predicate<Object> {
+public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<Object> {
 
-    public static final  ResourceIdentifier<?, ?, ?>                     MATCH_ALL   = new ResourceIdentifier<>(
+    public static final ResourceIdentifier<?, ?, ?> MATCH_ALL = new ResourceIdentifier<>(
             ".*",
             ".*"
     );
-    private static final Map<String, Map<String, ResourceType<?, ?, ?>>> lookupCache = new Object2ObjectOpenHashMap<>();
+
+    public final String resourceTypeNamespace;
+    public final String resourceTypeName;
+    public final String resourceNamespace;
+    public final String resourceName;
+    private ResourceType<STACK, ITEM, CAP> resourceTypeCache = null;
+
+    public ResourceIdentifier(
+            String resourceTypeNamespace,
+            String resourceTypeName,
+            String resourceNamespace,
+            String resourceName
+    ) {
+        this.resourceTypeNamespace = resourceTypeNamespace;
+        this.resourceTypeName = resourceTypeName;
+        this.resourceNamespace = resourceNamespace;
+        this.resourceName = resourceName;
+    }
 
     public ResourceIdentifier(String value) {
         this(SFM.MOD_ID, "item", "minecraft", value);
@@ -80,19 +90,12 @@ public record ResourceIdentifier<STACK, ITEM, CAP>(
     }
 
     public ResourceType<STACK, ITEM, CAP> getResourceType() {
-        var namespaceMap = lookupCache.get(this.resourceTypeNamespace);
-        if (namespaceMap == null) {
-            namespaceMap = new Object2ObjectOpenHashMap<>();
-            lookupCache.put(this.resourceTypeNamespace, namespaceMap);
-        }
-        var type = namespaceMap.get(this.resourceTypeName);
-        if (type == null) {
-            type = SFMResourceTypes.DEFERRED_TYPES
+        if (resourceTypeCache == null) {
+            resourceTypeCache = (ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.DEFERRED_TYPES
                     .get()
                     .getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
-            namespaceMap.put(this.resourceTypeName, type);
         }
-        return (ResourceType<STACK, ITEM, CAP>) type;
+        return resourceTypeCache;
     }
 
     @Override

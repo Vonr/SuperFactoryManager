@@ -41,6 +41,11 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     }
 
     @Override
+    public long getMaxStackSize(PigmentStack stack) {
+        return Long.MAX_VALUE;
+    }
+
+    @Override
     public PigmentStack insert(
             IPigmentHandler handler,
             int slot,
@@ -53,6 +58,11 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     @Override
     public boolean isEmpty(PigmentStack stack) {
         return stack.isEmpty();
+    }
+
+    @Override
+    public PigmentStack getEmptyStack() {
+        return PigmentStack.EMPTY;
     }
 
     @Override

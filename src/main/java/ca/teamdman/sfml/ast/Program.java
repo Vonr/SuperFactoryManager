@@ -3,6 +3,7 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
@@ -153,9 +154,9 @@ public record Program(
             var type = resource.getResourceType();
             if (type == null) {
                 warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
-                        resource.resourceTypeNamespace()
+                        resource.resourceTypeNamespace
                         + ":"
-                        + resource.resourceTypeName(),
+                        + resource.resourceTypeName,
                         resource
                 ));
                 continue;
@@ -185,7 +186,7 @@ public record Program(
         });
 
         // update warnings
-        gatherWarnings(disk, manager);
+        DiskItem.setWarnings(disk, gatherWarnings(disk, manager));
     }
 
     public Set<String> getReferencedLabels() {
@@ -199,7 +200,7 @@ public record Program(
         if (manager.getTick() % 20 == 0) {
             manager
                     .getDisk()
-                    .ifPresent(disk -> gatherWarnings(disk, manager));
+                    .ifPresent(disk -> DiskItem.setWarnings(disk, gatherWarnings(disk, manager)));
         }
         boolean didSomething = false;
         for (Trigger t : triggers) {

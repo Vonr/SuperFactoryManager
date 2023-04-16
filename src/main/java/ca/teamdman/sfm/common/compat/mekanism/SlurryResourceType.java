@@ -41,6 +41,11 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
+    public long getMaxStackSize(SlurryStack stack) {
+        return Long.MAX_VALUE;
+    }
+
+    @Override
     public SlurryStack insert(
             ISlurryHandler handler,
             int slot,
@@ -53,6 +58,11 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     @Override
     public boolean isEmpty(SlurryStack stack) {
         return stack.isEmpty();
+    }
+
+    @Override
+    public SlurryStack getEmptyStack() {
+        return SlurryStack.EMPTY;
     }
 
     @Override

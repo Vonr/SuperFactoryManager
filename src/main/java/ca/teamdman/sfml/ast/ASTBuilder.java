@@ -312,8 +312,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public NumberRangeSet visitRangeset(SFMLParser.RangesetContext ctx) {
-        if (ctx == null) return new NumberRangeSet(List.of(new NumberRange(Long.MIN_VALUE, Long.MAX_VALUE)));
-        return new NumberRangeSet(ctx.range().stream().map(this::visitRange).collect(Collectors.toList()));
+        if (ctx == null) return new NumberRangeSet(new NumberRange[]{new NumberRange(Long.MIN_VALUE, Long.MAX_VALUE)});
+        return new NumberRangeSet(ctx.range().stream().map(this::visitRange).toArray(NumberRange[]::new));
     }
 
     @Override
