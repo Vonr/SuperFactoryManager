@@ -8,7 +8,6 @@ import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class ProgramContext {
     private final ManagerBlockEntity   MANAGER;
@@ -51,8 +50,8 @@ public class ProgramContext {
         INPUTS.add(input);
     }
 
-    public Stream<InputStatement> getInputs() {
-        return INPUTS.stream();
+    public List<InputStatement> getInputs() {
+        return INPUTS;
     }
 
 

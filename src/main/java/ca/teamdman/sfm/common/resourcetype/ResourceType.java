@@ -70,15 +70,15 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         if (isEmpty((STACK) stack)) return false;
         var stackId = getRegistryKey((STACK) stack);
         if (stackId == null) return false;
-        Predicate<String> namespacePredicate = patternCache.get(id.resourceNamespace());
+        Predicate<String> namespacePredicate = patternCache.get(id.resourceNamespace);
         if (namespacePredicate == null) {
-            namespacePredicate = buildPredicate(id.resourceNamespace());
-            patternCache.put(id.resourceNamespace(), namespacePredicate);
+            namespacePredicate = buildPredicate(id.resourceNamespace);
+            patternCache.put(id.resourceNamespace, namespacePredicate);
         }
-        Predicate<String> namePredicate = patternCache.get(id.resourceName());
+        Predicate<String> namePredicate = patternCache.get(id.resourceName);
         if (namePredicate == null) {
-            namePredicate = buildPredicate(id.resourceName());
-            patternCache.put(id.resourceName(), namePredicate);
+            namePredicate = buildPredicate(id.resourceName);
+            patternCache.put(id.resourceName, namePredicate);
         }
         return namespacePredicate.test(stackId.getNamespace()) && namePredicate.test(stackId.getPath());
     }

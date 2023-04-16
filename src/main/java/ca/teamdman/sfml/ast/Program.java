@@ -154,9 +154,9 @@ public record Program(
             var type = resource.getResourceType();
             if (type == null) {
                 warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
-                        resource.resourceTypeNamespace()
+                        resource.resourceTypeNamespace
                         + ":"
-                        + resource.resourceTypeName(),
+                        + resource.resourceTypeName,
                         resource
                 ));
                 continue;

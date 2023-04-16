@@ -478,7 +478,21 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
             // load the program
             manager.setProgram(program);
 
-            assertManagerRunning(manager);
+            assertManagerFirstTickSub1Second(helper, manager, () -> {
+                // the inventory should be stocked with a stack of each item
+                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
+                for (Item item : items) {
+                    for (int slot = 0; slot < barrel.getContainerSize(); slot++) {
+                        ItemStack stack = barrel.getItem(slot);
+                        if (stack.getItem() == item) {
+                            assertTrue(
+                                    stack.getCount() == stack.getMaxStackSize(),
+                                    "Item " + item + " is not fully stocked"
+                            );
+                        }
+                    }
+                }
+            });
         }
 
 

@@ -1,34 +1,56 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfml.ast.ResourceLimit;
-import it.unimi.dsi.fastutil.longs.Long2LongMap;
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 
-public class InputResourceTracker<STACK, ITEM, CAP> extends ResourceTracker<STACK, ITEM, CAP> {
+import java.util.function.Predicate;
 
-    private final Long2LongMap PROMISED      = new Long2LongOpenHashMap();
-    private       int          promisedCount = 0;
+public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
+
+    protected final ResourceLimit<STACK, ITEM, CAP> LIMIT;
+    private final Int2LongArrayMap RETENTION_OBLIGATIONS = new Int2LongArrayMap();
+    protected long transferred = 0;
+    private int retentionObligationProgress = 0;
 
     public InputResourceTracker(ResourceLimit<STACK, ITEM, CAP> limit) {
-        super(limit);
+        this.LIMIT = limit;
     }
 
     public boolean isDone() {
-        return transferred >= LIMIT.limit().quantity() - LIMIT.limit().retention();
+        return transferred >= LIMIT.limit().quantity();
     }
 
-    public long getExistingPromise(int slot) {
-        return PROMISED.getOrDefault(slot, 0);
+    public long getExistingRetentionObligation(int slot) {
+        return RETENTION_OBLIGATIONS.getOrDefault(slot, 0);
     }
 
-    public long getRemainingPromise() {
-        long needed = LIMIT.limit().retention() - promisedCount;
-        return needed;
+    public long getRemainingRetentionObligation() {
+        return LIMIT.limit().retention() - retentionObligationProgress;
     }
 
-    public void track(long slot, long transferred, long promise) {
-        this.transferred += transferred;
-        this.promisedCount += promise;
-        this.PROMISED.merge(slot, promise, Long::sum);
+    public void trackRetentionObligation(int slot, long promise) {
+        this.retentionObligationProgress += promise;
+        this.RETENTION_OBLIGATIONS.merge(slot, promise, Long::sum);
+    }
+
+    public ResourceLimit<STACK, ITEM, CAP> getLimit() {
+        return LIMIT;
+    }
+
+    public long getMaxTransferable() {
+        return LIMIT.limit().quantity() - transferred;
+    }
+
+    public void trackTransfer(long amount) {
+        transferred += amount;
+    }
+
+    @Override
+    public boolean test(Object stack) {
+        return LIMIT.test(stack);
+    }
+
+    public boolean matchesCapabilityType(Object capability) {
+        return LIMIT.resourceId().getResourceType().matchesCapabilityType(capability);
     }
 }
