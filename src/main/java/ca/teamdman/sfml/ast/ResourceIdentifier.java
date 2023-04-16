@@ -97,4 +97,9 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         }
         return resourceTypeCache;
     }
+
+    @Override
+    public String toString() {
+        return resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+    }
 }
