@@ -246,9 +246,11 @@ dependencies {
 // just add to run/mods because patchouli mixins are borked
 
 
+    gametestImplementation fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
     runtimeOnly fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
 //https://github.com/mekanism/Mekanism
     compileOnly "mekanism:Mekanism:1.19.2-10.3.8.477:api"
+    gametestImplementation "mekanism:Mekanism:1.19.2-10.3.8.477:api"
 
     // If you want to test/use Mekanism & its modules during `runClient` invocation, use the following
 //    compileOnly fg.deobf("mekanism:Mekanism:1.19.2-10.3.8.477:all")// core

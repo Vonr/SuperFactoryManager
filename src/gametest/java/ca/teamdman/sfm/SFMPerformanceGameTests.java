@@ -73,7 +73,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())
         );
 
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             // ensure all the source chests are empty
             sourceBlocks.forEach(pos -> {
                 BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
@@ -151,7 +151,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())
         );
 
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             // ensure all the source chests are full
             sourceBlocks.forEach(pos -> {
                 BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
@@ -238,7 +238,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
 
         // load the program
         manager.setProgram(program);
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             // ensure the source chests only have the non-ingot items
             sourceBlocks.forEach(pos -> {
                 BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
@@ -348,7 +348,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
         // load the program
         manager.setProgram(program);
 
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
 
         });
     }
@@ -478,7 +478,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
             // load the program
             manager.setProgram(program);
 
-            assertManagerFirstTickSub1Second(helper, manager, () -> {
+            succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
                 // the inventory should be stocked with a stack of each item
                 BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
                 for (Item item : items) {

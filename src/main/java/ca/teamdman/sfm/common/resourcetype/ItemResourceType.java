@@ -59,6 +59,11 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
         return itemStack.getMaxStackSize();
     }
 
+    @Override
+    public long getMaxStackSize(IItemHandler handler, int slot) {
+        return handler.getSlotLimit(slot);
+    }
+
     /**
      * @param handler
      * @param slot

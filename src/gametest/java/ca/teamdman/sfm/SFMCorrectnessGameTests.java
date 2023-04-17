@@ -94,7 +94,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
 
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt did not move");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt did not move");
             helper.succeed();
@@ -136,7 +136,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
 
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(
                     IntStream.range(0, leftChest.getSlots()).allMatch(slot -> leftChest.getStackInSlot(slot).isEmpty()),
                     "Dirt did not leave"
@@ -184,7 +184,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
 
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(
                     leftChest.getStackInSlot(0).getCount() == 5,
                     "Dirt did not move"
@@ -236,7 +236,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
 
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64 - 2, "Iron ingots did not retain");
             assertTrue(leftChest.getStackInSlot(1).getCount() == 64 - 10, "Stone did not retain");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 2, "Iron ingots did not move");
@@ -278,7 +278,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(
                     right,
@@ -323,7 +323,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(
                     right,
@@ -385,7 +385,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             // ensure item arrived
             assertTrue(endChest.getItem(0).getCount() == 64, "Items did not move");
             // ensure item left
@@ -439,7 +439,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(front, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(
                     back,
@@ -659,7 +659,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setProgram(program);
 
         assertManagerRunning(manager);
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(right, s -> s.getBlock() == Blocks.LAVA_CAULDRON, () -> "cauldron didn't fill");
             helper.succeed();
@@ -702,7 +702,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
 
-        assertManagerFirstTickSub1Second(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "slot 0 did not leave");
             assertTrue(leftChest.getStackInSlot(1).isEmpty(), "slot 1 did not leave");
             assertTrue(leftChest.getStackInSlot(3).isEmpty(), "slot 3 did not leave");

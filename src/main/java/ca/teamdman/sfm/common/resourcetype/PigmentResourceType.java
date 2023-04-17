@@ -45,6 +45,11 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     }
 
     @Override
+    public long getMaxStackSize(IPigmentHandler handler, int slot) {
+        return handler.getTankCapacity(slot);
+    }
+
+    @Override
     public PigmentStack insert(
             IPigmentHandler handler,
             int slot,
