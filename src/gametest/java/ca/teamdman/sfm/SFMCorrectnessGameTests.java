@@ -53,7 +53,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a
                                            OUTPUT TO b
                                        END
-                                   """);
+                                   """.stripIndent());
         assertManagerRunning(manager);
         helper.succeed();
     }
@@ -88,7 +88,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a
                                            OUTPUT TO b
                                        END
-                                   """);
+                                   """.stripIndent());
 
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
@@ -131,7 +131,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a
                                            OUTPUT TO b
                                        END
-                                   """);
+                                   """.stripIndent());
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
@@ -179,7 +179,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                       INPUT RETAIN 5 FROM a
                                       OUTPUT TO b
                                    END
-                                   """);
+                                   """.stripIndent());
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
@@ -231,7 +231,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                                RETAIN 10 stone
                                            TO b
                                        END
-                                   """);
+                                   """.stripIndent());
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
@@ -261,21 +261,20 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // create the program
-        var program = """
-                    NAME "cauldron water test"
-                                    
-                    EVERY 20 TICKS DO
-                        INPUT fluid:minecraft:water FROM a
-                        OUTPUT fluid:*:* TO b
-                    END
-                """;
 
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(right));
 
         // load the program
-        manager.setProgram(program);
+        manager.setProgram("""
+                                       NAME "cauldron water test"
+                                                       
+                                       EVERY 20 TICKS DO
+                                           INPUT fluid:minecraft:water FROM a
+                                           OUTPUT fluid:*:* TO b
+                                       END
+                                   """.stripIndent());
 
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -306,21 +305,20 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // create the program
-        var program = """
-                    NAME "cauldron lava test"
-                                    
-                    EVERY 20 TICKS DO
-                        INPUT fluid:minecraft:lava FROM a
-                        OUTPUT fluid:*:* TO b
-                    END
-                """;
 
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(right));
 
         // load the program
-        manager.setProgram(program);
+        manager.setProgram("""
+                                       NAME "cauldron lava test"
+                                                       
+                                       EVERY 20 TICKS DO
+                                           INPUT fluid:minecraft:lava FROM a
+                                           OUTPUT fluid:*:* TO b
+                                       END
+                                   """.stripIndent());
 
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -337,10 +335,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     @GameTest(template = "25x4x25")
     public static void cable_spiral(GameTestHelper helper) {
         BlockPos start = new BlockPos(0, 2, 0);
-        BlockPos end   = new BlockPos(12, 2, 12);
+        BlockPos end = new BlockPos(12, 2, 12);
 
-        var len     = 24;
-        var dir     = Direction.EAST;
+        var len = 24;
+        var dir = Direction.EAST;
         var current = start;
         while (len > 0) {
             // fill len blocks
@@ -368,21 +366,20 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // create the program
-        var program = """
-                    NAME "long cable test"
-                                    
-                    EVERY 20 TICKS DO
-                        INPUT FROM a
-                        OUTPUT TO b
-                    END
-                """;
 
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(start));
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(end));
 
         // load the program
-        manager.setProgram(program);
+        manager.setProgram("""
+                                       NAME "long cable test"
+                                                       
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripIndent());
 
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -420,14 +417,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // create the program
-        var program = """
-                    NAME "water crash test"
-                                    
-                    every 20 ticks do
-                        INPUT  item:minecraft:stick, fluid:minecraft:water FROM a
-                        OUTPUT stick, fluid:minecraft:water TO b
-                    end
-                """;
 
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
@@ -436,7 +425,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(back));
 
         // load the program
-        manager.setProgram(program);
+        manager.setProgram("""
+                                       NAME "water crash test"
+                                                       
+                                       every 20 ticks do
+                                           INPUT  item:minecraft:stick, fluid:minecraft:water FROM a
+                                           OUTPUT stick, fluid:minecraft:water TO b
+                                       end
+                                   """.stripIndent());
 
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -696,7 +692,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a TOP SIDE SLOTS 0,1,3-4,5
                                            OUTPUT TO a SLOTS 2
                                        END
-                                   """);
+                                   """.stripIndent());
 
         // set the labels
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));

@@ -36,6 +36,8 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     @Override
     public ItemStack extract(IItemHandler handler, int slot, long amount, boolean simulate) {
         int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
+        // Mekanism bin intentionally only returns 64x stacks without going past the max stack size
+        // https://github.com/mekanism/Mekanism/blob/f92b48a49e0766cd3aa78e95c9c4a47ba90402f5/src/main/java/mekanism/common/inventory/slot/BasicInventorySlot.java#L174-L175
         return handler.extractItem(slot, finalAmount, simulate);
     }
 
