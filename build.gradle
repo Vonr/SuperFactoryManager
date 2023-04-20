@@ -36,6 +36,7 @@ sourceSets {
     gametest {
         java {
             srcDir "src/gametest/java"
+            exclude "ca/teamdman/sfm/compat" // disable until the mods update
         }
         compileClasspath += main.output
 //        runtimeClasspath += sourceSets.main.output
