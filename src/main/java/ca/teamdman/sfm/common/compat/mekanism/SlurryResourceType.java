@@ -46,6 +46,11 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
+    public long getMaxStackSize(ISlurryHandler handler, int slot) {
+        return handler.getTankCapacity(slot);
+    }
+
+    @Override
     public SlurryStack insert(
             ISlurryHandler handler,
             int slot,

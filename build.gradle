@@ -61,7 +61,7 @@ static void extendConfigurations(Configuration base, Configuration... configurat
 }
 
 
-version = '4.7.1'
+version = '4.7.2'
 group = 'ca.teamdman.sfm' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'SuperFactoryManager-1.19.4'
 
@@ -108,6 +108,9 @@ minecraft {
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', 'sfm'
 
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
 //            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
 //            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
             jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
@@ -129,6 +132,9 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             property 'forge.enabledGameTestNamespaces', 'sfm'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
 //            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
 //            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
@@ -153,6 +159,10 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             property 'forge.enabledGameTestNamespaces', 'sfm'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
             ideaModule "${project.name}.gametest"
 
 //            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
@@ -173,6 +183,9 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
 
             property 'forge.logging.console.level', 'debug'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             args '--mod', 'sfm', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
@@ -228,9 +241,21 @@ dependencies {
 //    runtimeOnly fg.deobf("curse.maven:the-one-probe-245211:3927520") //TheOneProbe - 1.19-6.2.1
 //    runtimeOnly fg.deobf("curse.maven:ato-405593:4046926") // alltheores-2.0.2-1.19.2-43.1.3.jar
 
+//    runtimeOnly fg.deobf("curse.maven:industrial-foregoing-266515:4459182")// industrial-foregoing-1.19.2-3.3.2.3-5.jar
+//    runtimeOnly fg.deobf("curse.maven:titanium-287342:4152837") //titanium-1.19.2-3.7.1-24.jar
+//    runtimeOnly fg.deobf("curse.maven:patchouli-306770:4031402") //Patchouli-1.19.2-77.jar
+//    gametestImplementation fg.deobf("curse.maven:industrial-foregoing-266515:4459182")
+//// industrial-foregoing-1.19.2-3.3.2.3-5.jar
+//    gametestImplementation fg.deobf("curse.maven:titanium-287342:4152837") //titanium-1.19.2-3.7.1-24.jar
+//    gametestImplementation fg.deobf("curse.maven:patchouli-306770:4031402") //Patchouli-1.19.2-77.jar
+//// just add to run/mods because patchouli mixins are borked
+//
+//
+//    gametestImplementation fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
 //    runtimeOnly fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
-////https://github.com/mekanism/Mekanism
-//    compileOnly "mekanism:Mekanism:1.19.2-10.3.8.477:api"
+//
+//    compileOnly "mekanism:Mekanism:1.19.2-10.3.8.477:api" //https://github.com/mekanism/Mekanism
+//    gametestImplementation "mekanism:Mekanism:1.19.2-10.3.8.477:api"
 
     // If you want to test/use Mekanism & its modules during `runClient` invocation, use the following
 //    compileOnly fg.deobf("mekanism:Mekanism:1.19.2-10.3.8.477:all")// core

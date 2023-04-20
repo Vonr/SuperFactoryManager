@@ -21,17 +21,29 @@ public abstract class SFMGameTestBase {
         }
     }
 
-    protected static void assertManagerFirstTickSub1Second(
+    protected static void succeedIfManagerDidThingWithoutLagging(
             GameTestHelper helper,
             ManagerBlockEntity manager,
-            Runnable runnable
+            Runnable assertion
+    ) {
+        assertManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertion.run();
+            helper.succeed();
+        });
+    }
+
+
+    protected static void assertManagerDidThingWithoutLagging(
+            GameTestHelper helper,
+            ManagerBlockEntity manager,
+            Runnable assertion
     ) {
         SFMGameTestBase.assertManagerRunning(manager); // the program should already be compiled so we can monkey patch it
-        var           hasExecuted     = new AtomicBoolean(false);
-        var           startTime       = new AtomicLong();
-        var           endTime         = new AtomicLong();
-        List<Trigger> triggers        = manager.getProgram().triggers();
-        var           oldFirstTrigger = triggers.get(0);
+        var hasExecuted = new AtomicBoolean(false);
+        var startTime = new AtomicLong();
+        var endTime = new AtomicLong();
+        List<Trigger> triggers = manager.getProgram().triggers();
+        var oldFirstTrigger = triggers.get(0);
         long          timeoutTicks    = 200;
 
         Trigger startTimerTrigger = new Trigger() {
@@ -68,19 +80,20 @@ public abstract class SFMGameTestBase {
         triggers.add(0, startTimerTrigger);
         triggers.add(endTimerTrigger);
 
-        LongStream.range(0, timeoutTicks).forEach(i -> helper.runAtTickTime(i, () -> {
-            if (hasExecuted.get()) {
-                triggers.remove(startTimerTrigger);
-                triggers.remove(endTimerTrigger);
-                runnable.run();
-                SFMGameTestBase.assertTrue(
-                        endTime.get() - startTime.get() < 1000000000,
-                        "Program took too long to run: took " + NumberFormat
-                                .getInstance(Locale.getDefault())
-                                .format(endTime.get() - startTime.get()) + "ns"
-                );
-                helper.succeed();
-                hasExecuted.set(false);
+        LongStream
+                .range(helper.getTick() + 1, timeoutTicks - helper.getTick())
+                .forEach(i -> helper.runAfterDelay(i, () -> {
+                    if (hasExecuted.get()) {
+                        triggers.remove(startTimerTrigger);
+                        triggers.remove(endTimerTrigger);
+                        assertion.run();
+                        SFMGameTestBase.assertTrue(
+                                endTime.get() - startTime.get() < 50_000_000,
+                                "Program took too long to run: took " + NumberFormat
+                                        .getInstance(Locale.getDefault())
+                                        .format(endTime.get() - startTime.get()) + "ns"
+                        );
+                        hasExecuted.set(false); // prevent the assertion from running again
             }
         }));
     }
@@ -91,4 +104,5 @@ public abstract class SFMGameTestBase {
                 "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())
         );
     }
+
 }

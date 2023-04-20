@@ -76,6 +76,9 @@ public final class OutputStatement implements Statement {
 
         // apply input constraints
         toMove = Math.min(toMove, source.tracker.getMaxTransferable());
+
+        // apply resource constraints
+        toMove = Math.min(toMove, source.type.getMaxStackSize(potential));
         if (toMove <= 0) return;
 
         // extract item for real

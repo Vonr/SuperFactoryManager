@@ -56,6 +56,8 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract long getMaxStackSize(STACK stack);
 
+    public abstract long getMaxStackSize(CAP cap, int slot);
+
 
     public abstract STACK insert(CAP cap, int slot, STACK stack, boolean simulate);
 

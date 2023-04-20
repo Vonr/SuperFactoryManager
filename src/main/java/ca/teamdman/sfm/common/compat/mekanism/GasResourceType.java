@@ -46,6 +46,11 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     }
 
     @Override
+    public long getMaxStackSize(IGasHandler handler, int slot) {
+        return handler.getTankCapacity(slot);
+    }
+
+    @Override
     public GasStack insert(IGasHandler handler, int slot, GasStack gasStack, boolean simulate) {
         return handler.insertChemical(slot, gasStack, simulate ? Action.SIMULATE : Action.EXECUTE);
     }
