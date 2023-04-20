@@ -67,6 +67,18 @@ public record Program(
         try {
             program = new ASTBuilder().visitProgram(context);
             // make sure all referenced resources exist now during compilation instead of waiting for the program to tick
+
+            for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {
+                try {
+                    ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
+                    if (resourceType == null) {
+                        errors.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
+                                referencedResource));
+                    }
+                } catch (ResourceLocationException e) {
+                    errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(referencedResource));
+                }
+            }
         } catch (ResourceLocationException | IllegalArgumentException | AssertionError e) {
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
         } catch (Throwable t) {
@@ -75,16 +87,6 @@ public record Program(
             if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage()));
         }
 
-        for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {
-            try {
-                ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
-                if (resourceType == null) {
-                    errors.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(referencedResource));
-                }
-            } catch (ResourceLocationException e) {
-                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(referencedResource));
-            }
-        }
 
         if (errors.isEmpty()) {
             onSuccess.accept(program);
