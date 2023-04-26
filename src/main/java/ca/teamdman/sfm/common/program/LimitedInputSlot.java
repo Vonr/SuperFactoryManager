@@ -35,6 +35,7 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
     }
 
     public STACK extract(long amount) {
+        extractSimulateCache = null;
         return type.extract(handler, slot, amount, false);
     }
 
