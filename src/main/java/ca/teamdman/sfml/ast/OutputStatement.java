@@ -124,18 +124,20 @@ public final class OutputStatement implements Statement {
         lastOutputCapacity = outputSlots.size();
 
         // try and move resources from input slots to output slots
-        for (var in : inputSlots) {
-            if (in.isDone()) {
-                InputStatement.releaseSlot(in);
+        var inIt = inputSlots.iterator();
+        while (inIt.hasNext()) {
+            var in = inIt.next();
+            if (in.isDone()) { // this slot is no longer useful
+                inIt.remove(); // ensure we only release slots once
+                InputStatement.releaseSlot(in); // release the slot to the object pool
                 continue;
             }
             var outIt = outputSlots.iterator();
             while (outIt.hasNext()) {
                 var out = outIt.next();
-                if (out.isDone()) {
-                    outIt.remove();
-                    OutputStatement.releaseSlot(out);
-                    if (outputSlots.isEmpty()) return;
+                if (out.isDone()) { // this slot is no longer useful
+                    outIt.remove(); // ensure we only release slots once
+                    OutputStatement.releaseSlot(out); // release the slot to the object pool
                     continue;
                 }
                 moveTo(in, out);
