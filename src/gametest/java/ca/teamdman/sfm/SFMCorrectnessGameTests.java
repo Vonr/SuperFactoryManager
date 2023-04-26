@@ -153,6 +153,89 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
+
+    @GameTest(template = "3x4x3")
+    public static void many_outputs(GameTestHelper helper) {
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        BlockPos sourcePos = new BlockPos(1, 3, 1);
+        BlockPos dest1Pos = new BlockPos(2, 2, 1);
+        BlockPos dest2Pos = new BlockPos(0, 2, 1);
+
+        // set up inventories
+        helper.setBlock(sourcePos, Blocks.CHEST);
+        helper.setBlock(dest1Pos, Blocks.CHEST);
+        helper.setBlock(dest2Pos, Blocks.CHEST);
+
+
+        var sourceInv = (helper.getBlockEntity(sourcePos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var dest1Inv = (helper.getBlockEntity(dest1Pos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var dest2Inv = (helper.getBlockEntity(dest2Pos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        for (int i = 0; i < sourceInv.getSlots(); i++) {
+            sourceInv.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
+        }
+
+        // set up manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM source
+                                           OUTPUT 64 dirt TO EACH dest
+                                       END
+                                   """.stripIndent());
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "source", helper.absolutePos(sourcePos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "dest", helper.absolutePos(dest1Pos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "dest", helper.absolutePos(dest2Pos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            int found = IntStream
+                    .range(0, sourceInv.getSlots())
+                    .mapToObj(sourceInv::getStackInSlot)
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            assertTrue(
+                    found == 64 * (sourceInv.getSlots() - 2),
+                    "Dirt did not leave (found " + found + " (" + (
+                            found > 64
+                            ? found / 64 + "x stacks + " + found % 64
+                            : found
+                    ) + " dirt))"
+            );
+            int total;
+            total = 0;
+            for (int i = 0; i < dest1Inv.getSlots(); i++) {
+                ItemStack x = dest1Inv.getStackInSlot(i);
+                if (x.is(Items.DIRT)) {
+                    total += dest1Inv.getStackInSlot(i).getCount();
+                }
+            }
+            assertTrue(total == 64, "Dirt did not arrive properly 1");
+            total = 0;
+            for (int i = 0; i < dest2Inv.getSlots(); i++) {
+                ItemStack x = dest2Inv.getStackInSlot(i);
+                if (x.is(Items.DIRT)) {
+                    total += dest2Inv.getStackInSlot(i).getCount();
+                }
+            }
+            assertTrue(total == 64, "Dirt did not arrive properly 2");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "3x2x1")
     public static void retain_5(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());

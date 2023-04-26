@@ -9,7 +9,7 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
     public int slot;
     public InputResourceTracker<STACK, ITEM, CAP> tracker;
     private boolean done = false;
-    private STACK peekCache = null;
+    private STACK extractSimulateCache = null;
 
     public LimitedInputSlot(
             CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker
@@ -19,33 +19,24 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
 
     public boolean isDone() {
         if (done) return true;
+        // we don't bother setting done because if this returns true it should be the last time this is called
         if (tracker.isDone()) {
-            setDone();
             return true;
         }
         STACK stack = peekExtractPotential();
         if (type.isEmpty(stack)) {
-            setDone();
             return true;
         }
-        if (!tracker.test(stack)) {
-            setDone();
-            return true;
-        }
-        return false;
+        return !tracker.test(stack);
     }
 
     public void setDone() {
         this.done = true;
     }
 
-    public STACK getStackInSlot() {
-        return type.getStackInSlot(handler, slot);
-    }
-
-    public STACK extract(long amount, boolean simulate) {
-        peekCache = null;
-        return type.extract(handler, slot, amount, simulate);
+    public STACK extract(long amount) {
+        extractSimulateCache = null;
+        return type.extract(handler, slot, amount, false);
     }
 
     /**
@@ -55,20 +46,15 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
      * This value is cached for performance.
      */
     public STACK peekExtractPotential() {
-        if (peekCache == null) {
-            peekCache = type.extract(handler, slot, Long.MAX_VALUE, true);
+        if (extractSimulateCache == null) {
+            extractSimulateCache = type.extract(handler, slot, Long.MAX_VALUE, true);
         }
-        return peekCache;
-    }
-
-    public STACK insert(STACK stack, boolean simulate) {
-        peekCache = null;
-        return type.insert(handler, slot, stack, simulate);
+        return extractSimulateCache;
     }
 
     public void init(CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker) {
         this.done = false;
-        this.peekCache = null;
+        this.extractSimulateCache = null;
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;

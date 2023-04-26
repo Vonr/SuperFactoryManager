@@ -220,6 +220,12 @@ public class Constants {
                 "gui.sfm.manager.button.warning.tooltip",
                 "Click to copy code with warnings and errors.\nShift-click to attempt to fix warnings."
         );
+
+        public static LocalizationEntry MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY = new LocalizationEntry(
+                "gui.sfm.manager.button.warning.tooltip.read_only",
+                "Click to copy code with warnings and errors."
+        );
+
         public static LocalizationEntry MANAGER_GUI_STATUS_LOADED_CLIPBOARD = new LocalizationEntry(
                 "gui.sfm.manager.status.loaded_clipboard",
                 "Loaded from clipboard!"

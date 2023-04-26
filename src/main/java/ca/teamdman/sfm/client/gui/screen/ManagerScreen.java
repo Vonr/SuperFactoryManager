@@ -43,39 +43,46 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         super(menu, inv, title);
     }
 
+    public boolean isReadOnly() {
+        return Minecraft.getInstance().player.isSpectator();
+    }
+
     @Override
     protected void init() {
         super.init();
-        this.addRenderableWidget(new ExtendedButtonWithTooltip(
-                (this.width - this.imageWidth) / 2
-                - 24
-                - font.width(MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent()),
-                (this.height - this.imageHeight) / 2 + 16,
-                100,
-                16,
-                MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent(),
-                button -> this.onLoadClipboard(),
-                Tooltip.create(MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent())
-        ));
-        this.addRenderableWidget(new ExtendedButton(
-                (this.width - this.imageWidth) / 2
-                - 22
-                - font.width(MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent()),
-                (this.height - this.imageHeight) / 2 + 128,
-                100,
-                16,
-                MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent(),
-                button -> this.onSaveClipboard()
-        ));
-        this.addRenderableWidget(new ExtendedButtonWithTooltip(
-                (this.width - this.imageWidth) / 2 + 120,
-                (this.height - this.imageHeight) / 2 + 10,
-                50,
-                12,
-                MANAGER_GUI_BUTTON_RESET.getComponent(),
-                button -> sendReset(),
-                Tooltip.create(MANAGER_RESET_BUTTON_TOOLTIP.getComponent())
-        ));
+        if (!isReadOnly()) {
+            this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                    (this.width - this.imageWidth) / 2
+                    - 24
+                    - font.width(MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent()),
+                    (this.height - this.imageHeight) / 2 + 16,
+                    100,
+                    16,
+                    MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent(),
+                    button -> this.onLoadClipboard(),
+                    Tooltip.create(MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent())
+            ));
+            this.addRenderableWidget(new ExtendedButton(
+                    (this.width - this.imageWidth) / 2
+                    - 22
+                    - font.width(MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent()),
+                    (this.height - this.imageHeight) / 2 + 128,
+                    100,
+                    16,
+                    MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent(),
+                    button -> this.onSaveClipboard()
+            ));
+            this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                    (this.width - this.imageWidth) / 2 + 120,
+                    (this.height - this.imageHeight) / 2 + 10,
+                    50,
+                    12,
+                    MANAGER_GUI_BUTTON_RESET.getComponent(),
+                    button -> sendReset(),
+                    Tooltip.create(MANAGER_RESET_BUTTON_TOOLTIP.getComponent())
+            ));
+        }
+
         this.addRenderableWidget(diagButton = new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
                 (this.height - this.imageHeight) / 2 + 48,
@@ -83,13 +90,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 14,
                 Component.translatable("!"),
                 button -> {
-                    if (Screen.hasShiftDown()) {
+                    if (Screen.hasShiftDown() && !isReadOnly()) {
                         sendAttemptFix();
                     } else {
                         this.onSaveDiagClipboard();
                     }
                 },
-                Tooltip.create(MANAGER_GUI_WARNING_BUTTON_TOOLTIP.getComponent())
+                Tooltip.create((isReadOnly()
+                                ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
+                                : MANAGER_GUI_WARNING_BUTTON_TOOLTIP).getComponent())
         ));
         diagButton.visible = shouldShowDiagButton();
     }
@@ -360,24 +369,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         // update status countdown
         statusCountdown -= partialTicks;
     }
-//
-//    @Override
-//    protected void renderTooltip(PoseStack pose, int mx, int my) {
-//        super.renderTooltip(pose, mx, my);
-//        DiagButton.renderToolTip(pose, mx, my);
-//    }
-
-
-//    @Override
-//    protected void renderTooltip(PoseStack pose, int mx, int my) {
-//        super.renderTooltip(pose, mx, my);
-//        this.renderables
-//                .stream()
-//                .filter(ExtendedButtonWithTooltip.class::isInstance)
-//                .map(ExtendedButtonWithTooltip.class::cast)
-//                .forEach(x -> x.renderToolTip(pose, mx, my));
-//
-//    }
 
     @Override
     protected void renderBg(PoseStack matrixStack, float partialTicks, int mx, int my) {

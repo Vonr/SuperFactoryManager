@@ -125,6 +125,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public void rebuildProgramAndUpdateDisk() {
+        if (level.isClientSide()) return;
         getProgramString().ifPresentOrElse(programString -> {
             Program.compile(programString, success -> {
                 this.program = success;

@@ -93,6 +93,7 @@ public class SFMPackets {
         ctx.enqueueWork(() -> {
             var sender = ctx.getSender();
             if (sender == null) return;
+            if (sender.isSpectator()) return; // ignore packets from spectators
 
             var menu = sender.containerMenu;
             if (!menuClass.isInstance(menu)) return;

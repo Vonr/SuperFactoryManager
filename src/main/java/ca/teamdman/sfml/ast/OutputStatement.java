@@ -82,12 +82,13 @@ public final class OutputStatement implements Statement {
         if (toMove <= 0) return;
 
         // extract item for real
-        STACK extracted = source.extract(toMove, false);
+        STACK extracted = source.extract(toMove);
         // insert item for real
         remainder = destination.insert(extracted, false);
+        var moved = source.type.getCount(extracted) - source.type.getCount(remainder);
         // track transfer amounts
-        source.tracker.trackTransfer(toMove);
-        destination.tracker.trackTransfer(toMove);
+        source.tracker.trackTransfer(moved);
+        destination.tracker.trackTransfer(moved);
 
         // if remainder exists, someone lied.
         // this should never happen
@@ -111,35 +112,40 @@ public final class OutputStatement implements Statement {
 
     @Override
     public void tick(ProgramContext context) {
-        // gather the input slots from all the input statements
-        List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity);
+        // gather the input slots from all the input statements, +27 to hopefully avoid resizing
+        List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity + 27);
         for (var inputStatement : context.getInputs()) {
             inputStatement.gatherSlots(context, inputSlots::add);
         }
+        if (inputSlots.isEmpty()) return; // stop if we have nothing to move
         lastInputCapacity = inputSlots.size();
 
-        // collect the output slots
-        List<LimitedOutputSlot> outputSlots = new ArrayList<>(lastOutputCapacity);
+        // collect the output slots, +27 to hopefully avoid resizing
+        List<LimitedOutputSlot> outputSlots = new ArrayList<>(lastOutputCapacity + 27);
         gatherSlots(context, outputSlots::add);
         lastOutputCapacity = outputSlots.size();
 
         // try and move resources from input slots to output slots
-        for (var in : inputSlots) {
-            if (in.isDone()) {
-                InputStatement.releaseSlot(in);
+        var inIt = inputSlots.iterator();
+        while (inIt.hasNext()) {
+            var in = inIt.next();
+            if (in.isDone()) { // this slot is no longer useful
+                inIt.remove(); // ensure we only release slots once
+                InputStatement.releaseSlot(in); // release the slot to the object pool
                 continue;
             }
             var outIt = outputSlots.iterator();
             while (outIt.hasNext()) {
                 var out = outIt.next();
-                if (out.isDone()) {
-                    outIt.remove();
-                    OutputStatement.releaseSlot(out);
-                    if (outputSlots.isEmpty()) return;
+                if (out.isDone()) { // this slot is no longer useful
+                    outIt.remove(); // ensure we only release slots once
+                    OutputStatement.releaseSlot(out); // release the slot to the object pool
                     continue;
                 }
-                moveTo(in, out);
+                moveTo(in, out); // move the contents from the "in" slot to the "out" slot
+                if (in.isDone()) break; // stop processing output slots if we have nothing to move
             }
+            if (outputSlots.isEmpty()) break; // stop processing input slots if we have no output slots
         }
 
         OutputStatement.releaseSlots(outputSlots);
@@ -174,8 +180,8 @@ public final class OutputStatement implements Statement {
         } else {
             for (var type : (Iterable<ResourceType>) types::iterator) {
                 for (var cap : (Iterable<?>) type.getCapabilities(context, LABEL_ACCESS)::iterator) {
-                    List<OutputResourceTracker<?, ?, ?>> outputMatchers = RESOURCE_LIMITS.createOutputTrackers();
-                    gatherSlots((ResourceType<Object, Object, Object>) type, cap, outputMatchers, acceptor);
+                    List<OutputResourceTracker<?, ?, ?>> outputTracker = RESOURCE_LIMITS.createOutputTrackers();
+                    gatherSlots((ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
                 }
             }
         }
