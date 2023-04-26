@@ -85,9 +85,10 @@ public final class OutputStatement implements Statement {
         STACK extracted = source.extract(toMove);
         // insert item for real
         remainder = destination.insert(extracted, false);
+        var moved = source.type.getCount(extracted) - source.type.getCount(remainder);
         // track transfer amounts
-        source.tracker.trackTransfer(toMove);
-        destination.tracker.trackTransfer(toMove);
+        source.tracker.trackTransfer(moved);
+        destination.tracker.trackTransfer(moved);
 
         // if remainder exists, someone lied.
         // this should never happen
@@ -179,8 +180,8 @@ public final class OutputStatement implements Statement {
         } else {
             for (var type : (Iterable<ResourceType>) types::iterator) {
                 for (var cap : (Iterable<?>) type.getCapabilities(context, LABEL_ACCESS)::iterator) {
-                    List<OutputResourceTracker<?, ?, ?>> outputMatchers = RESOURCE_LIMITS.createOutputTrackers();
-                    gatherSlots((ResourceType<Object, Object, Object>) type, cap, outputMatchers, acceptor);
+                    List<OutputResourceTracker<?, ?, ?>> outputTracker = RESOURCE_LIMITS.createOutputTrackers();
+                    gatherSlots((ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
                 }
             }
         }

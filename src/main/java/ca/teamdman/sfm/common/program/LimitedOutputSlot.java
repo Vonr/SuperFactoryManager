@@ -17,25 +17,19 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
     }
 
     public boolean isDone() {
-        // this is done in an order that aims to be as efficient as possible
         if (done) return true;
+        if (tracker.isDone()) {
+            return true;
+        }
+        // we don't bother setting done because if this returns true it should be the last time this is called
         STACK stack = getStackInSlot();
         long count = type.getCount(stack);
         if (count >= type.getMaxStackSize(capability, slot)) {
             // if the maxStackSize is different, that will be handled by moveTo
             // for the general case, it will be faster to just assume 64 is the max stack size
-            setDone();
             return true;
         }
-        if (tracker.isDone()) {
-            setDone();
-            return true;
-        }
-        if (count != 0 && !tracker.test(stack)) {
-            setDone();
-            return true;
-        }
-        return false;
+        return count != 0 && !tracker.test(stack);
     }
 
     public void setDone() {
