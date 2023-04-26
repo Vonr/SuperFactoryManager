@@ -49,13 +49,8 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         return stackInSlotCache;
     }
 
-    public STACK extract(long amount, boolean simulate) {
-        stackInSlotCache = null;
-        return type.extract(capability, slot, amount, simulate);
-    }
-
     public STACK insert(STACK stack, boolean simulate) {
-        stackInSlotCache = null;
+        if (!simulate) stackInSlotCache = null;
         return type.insert(capability, slot, stack, simulate);
     }
 

@@ -82,7 +82,7 @@ public final class OutputStatement implements Statement {
         if (toMove <= 0) return;
 
         // extract item for real
-        STACK extracted = source.extract(toMove, false);
+        STACK extracted = source.extract(toMove);
         // insert item for real
         remainder = destination.insert(extracted, false);
         // track transfer amounts
@@ -111,15 +111,16 @@ public final class OutputStatement implements Statement {
 
     @Override
     public void tick(ProgramContext context) {
-        // gather the input slots from all the input statements
-        List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity);
+        // gather the input slots from all the input statements, +27 to hopefully avoid resizing
+        List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity + 27);
         for (var inputStatement : context.getInputs()) {
             inputStatement.gatherSlots(context, inputSlots::add);
         }
+        if (inputSlots.isEmpty()) return; // stop if we have nothing to move
         lastInputCapacity = inputSlots.size();
 
-        // collect the output slots
-        List<LimitedOutputSlot> outputSlots = new ArrayList<>(lastOutputCapacity);
+        // collect the output slots, +27 to hopefully avoid resizing
+        List<LimitedOutputSlot> outputSlots = new ArrayList<>(lastOutputCapacity + 27);
         gatherSlots(context, outputSlots::add);
         lastOutputCapacity = outputSlots.size();
 
@@ -140,8 +141,10 @@ public final class OutputStatement implements Statement {
                     OutputStatement.releaseSlot(out); // release the slot to the object pool
                     continue;
                 }
-                moveTo(in, out);
+                moveTo(in, out); // move the contents from the "in" slot to the "out" slot
+                if (in.isDone()) break; // stop processing output slots if we have nothing to move
             }
+            if (outputSlots.isEmpty()) break; // stop processing input slots if we have no output slots
         }
 
         OutputStatement.releaseSlots(outputSlots);
