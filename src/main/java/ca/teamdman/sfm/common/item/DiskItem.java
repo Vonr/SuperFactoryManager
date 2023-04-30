@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.item;
 
+import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
@@ -19,6 +20,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -105,16 +108,9 @@ public class DiskItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
-        long handle = Minecraft.getInstance().getWindow().getWindow();
-        boolean showProgram = InputConstants.isKeyDown(
-                handle,
-                SFMKeyMappings.MORE_INFO_TOOLTIP_KEY
-                        .get()
-                        .getKey()
-                        .getValue()
-        );
-        if (showProgram) return super.getName(stack);
-
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            if (ClientStuff.isMoreInfoKeyDown()) return super.getName(stack);
+        }
         var name = getProgramName(stack);
         if (name.isEmpty()) return super.getName(stack);
         return Component.literal(name).withStyle(ChatFormatting.AQUA);
