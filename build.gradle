@@ -241,7 +241,10 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
     runtimeOnly fg.deobf("curse.maven:the-one-probe-245211:3927520") //TheOneProbe - 1.19-6.2.1
-    runtimeOnly fg.deobf("curse.maven:jei-238222:3944627") //jei-1.19.2-forge-11.2.0.256.jar
+
+    compileOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.2.0.246')
+    runtimeOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.2.0.246')
+//    runtimeOnly fg.deobf("curse.maven:jei-238222:3944627") //jei-1.19.2-forge-11.2.0.256.jar
 
     runtimeOnly fg.deobf("curse.maven:ato-405593:4046926") // alltheores-2.0.2-1.19.2-43.1.3.jar
 

@@ -1,12 +1,16 @@
 package ca.teamdman.sfm.datagen;
 
+import ca.teamdman.sfm.common.recipe.PrintingPressFinishedRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 
@@ -83,5 +87,62 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("gpg")
                 .pattern("gbg")
                 .save(consumer);
+
+
+        ShapedRecipeBuilder
+                .shaped(SFMItems.PRINTING_PRESS_ITEM.get())
+                .define('a', Items.ANVIL)
+                .define('i', Items.INK_SAC)
+                .define('p', Items.LIGHT_WEIGHTED_PRESSURE_PLATE)
+                .define('s', Items.STONE)
+                .define('x', Items.PISTON)
+                .define('g', Items.IRON_BARS)
+                .unlockedBy("has_iron", RecipeProvider.has(Items.IRON_INGOT))
+                .pattern("pip")
+                .pattern("sas")
+                .pattern("gxg")
+                .save(consumer);
+
+        addPrintingPressRecipe(
+                consumer,
+                new ResourceLocation("sfm", "written_book_copy"),
+                Ingredient.of(Items.WRITTEN_BOOK),
+                Ingredient.of(ItemTags.create(new ResourceLocation("forge", "dyes/black"))),
+                Ingredient.of(Items.BOOK)
+        );
+
+        addPrintingPressRecipe(
+                consumer,
+                new ResourceLocation("sfm", "enchanted_book_copy"),
+                Ingredient.of(Items.ENCHANTED_BOOK),
+                Ingredient.of(Items.EXPERIENCE_BOTTLE),
+                Ingredient.of(Items.BOOK)
+        );
+
+        addPrintingPressRecipe(
+                consumer,
+                new ResourceLocation("sfm", "map_copy"),
+                Ingredient.of(Items.MAP),
+                Ingredient.of(Items.COMPASS),
+                Ingredient.of(Items.PAPER)
+        );
+
+        addPrintingPressRecipe(
+                consumer,
+                new ResourceLocation("sfm", "program_copy"),
+                Ingredient.of(SFMItems.DISK_ITEM.get()),
+                Ingredient.of(Items.INK_SAC),
+                Ingredient.of(Items.PAPER)
+        );
+    }
+
+    private void addPrintingPressRecipe(
+            Consumer<FinishedRecipe> consumer,
+            ResourceLocation id,
+            Ingredient form,
+            Ingredient ink,
+            Ingredient paper
+    ) {
+        consumer.accept(new PrintingPressFinishedRecipe(id, form, ink, paper));
     }
 }

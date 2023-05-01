@@ -7,7 +7,6 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -126,13 +125,8 @@ public class DiskItem extends Item {
             // reference for finding out if key is pressed in manager gui
             // for some reason, it worked in inventory but not manager GUI using the normal methods
             // https://github.com/mekanism/Mekanism/blob/f92b48a49e0766cd3aa78e95c9c4a47ba90402f5/src/main/java/mekanism/client/key/MekKeyHandler.java
-            long    handle      = Minecraft.getInstance().getWindow().getWindow();
-            boolean showProgram = InputConstants.isKeyDown(handle,
-                                                           SFMKeyMappings.MORE_INFO_TOOLTIP_KEY
-                                                                   .get()
-                                                                   .getKey()
-                                                                   .getValue()
-            );
+            long handle = Minecraft.getInstance().getWindow().getWindow();
+            boolean showProgram = ClientStuff.isMoreInfoKeyDown();
 
             if (!showProgram) {
                 list.addAll(SFMLabelNBTHelper.getHoverText(stack));

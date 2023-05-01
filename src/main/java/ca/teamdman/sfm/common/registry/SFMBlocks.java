@@ -12,6 +12,10 @@ import net.minecraftforge.registries.RegistryObject;
 public class SFMBlocks {
     private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, SFM.MOD_ID);
     public static final RegistryObject<Block> MANAGER_BLOCK = BLOCKS.register("manager", ManagerBlock::new);
+    public static final RegistryObject<Block> PRINTING_PRESS_BLOCK = BLOCKS.register(
+            "printing_press",
+            PrintingPressBlock::new
+    );
     public static final RegistryObject<Block> WATER_TANK_BLOCK = BLOCKS.register("water_tank", WaterTankBlock::new);
     public static final RegistryObject<Block> CABLE_BLOCK = BLOCKS.register("cable", CableBlock::new);
     public static final RegistryObject<Block> BATTERY_BLOCK = BLOCKS.register("battery", BatteryBlock::new);

@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.item.FormItem;
 import ca.teamdman.sfm.common.item.LabelGunItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -24,12 +25,18 @@ public class SFMItems {
             ForgeRegistries.ITEMS,
             SFM.MOD_ID
     );
-    public static final  RegistryObject<Item>   MANAGER_ITEM    = register("manager", SFMBlocks.MANAGER_BLOCK);
-    public static final  RegistryObject<Item>   CABLE_ITEM      = register("cable", SFMBlocks.CABLE_BLOCK);
-//    public static final  RegistryObject<Item>   BATTERY_ITEM    = register("battery", SFMBlocks.BATTERY_BLOCK);
-    public static final  RegistryObject<Item>   WATER_TANK_ITEM = register("water_tank", SFMBlocks.WATER_TANK_BLOCK);
-    public static final  RegistryObject<Item>   DISK_ITEM       = ITEMS.register("disk", DiskItem::new);
-    public static final  RegistryObject<Item>   LABEL_GUN_ITEM  = ITEMS.register("labelgun", LabelGunItem::new);
+    public static final RegistryObject<Item> MANAGER_ITEM = register("manager", SFMBlocks.MANAGER_BLOCK);
+    public static final RegistryObject<Item> CABLE_ITEM = register("cable", SFMBlocks.CABLE_BLOCK);
+    public static final RegistryObject<Item> PRINTING_PRESS_ITEM = register(
+            "printing_press",
+            SFMBlocks.PRINTING_PRESS_BLOCK
+    );
+    //    public static final  RegistryObject<Item>   BATTERY_ITEM    = register("battery", SFMBlocks.BATTERY_BLOCK);
+    public static final RegistryObject<Item> WATER_TANK_ITEM = register("water_tank", SFMBlocks.WATER_TANK_BLOCK);
+    public static final RegistryObject<Item> DISK_ITEM = ITEMS.register("disk", DiskItem::new);
+    public static final RegistryObject<Item> LABEL_GUN_ITEM = ITEMS.register("labelgun", LabelGunItem::new);
+
+    public static final RegistryObject<Item> FORM_ITEM = ITEMS.register("form", FormItem::new);
 
     public static void register(IEventBus bus) {
         ITEMS.register(bus);

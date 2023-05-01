@@ -37,6 +37,16 @@ public class Constants {
                 () -> SFMBlocks.MANAGER_BLOCK.get().getDescriptionId(),
                 () -> "Factory Manager"
         );
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry PRINTING_PRESS_BLOCK = new LocalizationEntry(
+                () -> SFMBlocks.PRINTING_PRESS_BLOCK.get().getDescriptionId(),
+                () -> "Printing Press"
+        );
+
+        public static LocalizationEntry PRINTING_PRESS_JEI_CATEGORY_TITLE = new LocalizationEntry(
+                "gui.jei.category.sfm.printing_press",
+                "Printing Press"
+        );
 
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
         public static LocalizationEntry TEST_BARREL_BLOCK = new LocalizationEntry(
@@ -53,6 +63,12 @@ public class Constants {
         public static LocalizationEntry DISK_ITEM = new LocalizationEntry(
                 () -> SFMItems.DISK_ITEM.get().getDescriptionId(),
                 () -> "Factory Manager Program Disk"
+        );
+
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry FORM_ITEM = new LocalizationEntry(
+                () -> SFMItems.FORM_ITEM.get().getDescriptionId(),
+                () -> "Printing Form"
         );
 
         public static LocalizationEntry DISK_ITEM_TOOLTIP_LABEL_HEADER = new LocalizationEntry(
@@ -115,6 +131,10 @@ public class Constants {
         public static LocalizationEntry MANAGER_CONTAINER = new LocalizationEntry(
                 "container.sfm.manager",
                 "Factory Manager"
+        );
+        public static LocalizationEntry PRINTING_PRESS_CONTAINER = new LocalizationEntry(
+                "container.sfm.printing_press",
+                "Printing Press"
         );
         public static LocalizationEntry PROGRAM_WARNING_UNUSED_LABEL = new LocalizationEntry(
                 "program.sfm.warnings.unused_label",

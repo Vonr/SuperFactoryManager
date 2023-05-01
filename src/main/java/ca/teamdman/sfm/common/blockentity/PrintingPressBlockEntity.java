@@ -1,0 +1,199 @@
+package ca.teamdman.sfm.common.blockentity;
+
+import ca.teamdman.sfm.common.recipe.NotContainer;
+import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.registry.SFMRecipeTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.wrapper.CombinedInvWrapper;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+/**
+ * Accepts a paper item and a form item.
+ * When a piston is pressed on top of this block, it will print the form onto the paper.
+ */
+public class PrintingPressBlockEntity extends BlockEntity implements NotContainer {
+    private final ItemStackHandler PAPER = new ItemStackHandler(1) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return 1;
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return getLevel().getRecipeManager()
+                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.PAPER.test(stack));
+        }
+    };
+    private final ItemStackHandler INK = new ItemStackHandler(1) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return getLevel().getRecipeManager()
+                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.INK.test(stack));
+        }
+    };
+
+    private final ItemStackHandler FORM = new ItemStackHandler(1) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return 1;
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return getLevel().getRecipeManager()
+                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.FORM.test(stack));
+        }
+    };
+
+    private final LazyOptional<IItemHandler> ITEMS_CAPABILITY = LazyOptional.of(() -> new CombinedInvWrapper(PAPER,
+                                                                                                             INK, FORM
+    ));
+
+    public PrintingPressBlockEntity(
+            BlockPos pPos, BlockState pBlockState
+    ) {
+        super(SFMBlockEntities.PRINTING_PRESS_BLOCK_ENTITY.get(), pPos, pBlockState);
+    }
+
+    @Override
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        readItems(tag);
+    }
+
+
+    @Override
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        writeItems(tag);
+    }
+
+    private void writeItems(CompoundTag tag) {
+        tag.put("dye", INK.serializeNBT());
+        tag.put("paper", PAPER.serializeNBT());
+        tag.put("form", FORM.serializeNBT());
+    }
+
+    private void readItems(CompoundTag tag) {
+        INK.deserializeNBT(tag.getCompound("dye"));
+        PAPER.deserializeNBT(tag.getCompound("paper"));
+        FORM.deserializeNBT(tag.getCompound("form"));
+    }
+
+    @Override
+    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+        if (cap == ForgeCapabilities.ITEM_HANDLER) {
+            return ITEMS_CAPABILITY.cast();
+        }
+        return super.getCapability(cap, side);
+    }
+
+    public ItemStack acceptStack(ItemStack stack) {
+        ItemStack remainder;
+        if (!stack.isEmpty()) {
+            remainder = PAPER.insertItem(0, stack.copy(), false);
+            stack.shrink(stack.getCount() - remainder.getCount());
+            remainder = INK.insertItem(0, stack.copy(), false);
+            stack.shrink(stack.getCount() - remainder.getCount());
+            remainder = FORM.insertItem(0, stack.copy(), false);
+            stack.shrink(stack.getCount() - remainder.getCount());
+        } else {
+            ItemStack found;
+            found = FORM.extractItem(0, 64, false);
+            if (!found.isEmpty()) {
+                return found;
+            }
+            found = INK.extractItem(0, 64, false);
+            if (!found.isEmpty()) {
+                return found;
+            }
+            found = PAPER.extractItem(0, 64, false);
+            if (!found.isEmpty()) {
+                return found;
+            }
+        }
+        return stack;
+    }
+
+    @Override
+    public CompoundTag getUpdateTag() {
+        var tag = super.getUpdateTag();
+        writeItems(tag);
+        return tag;
+    }
+
+    @Nullable
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        super.onDataPacket(net, pkt);
+        readItems(pkt.getTag());
+    }
+
+    public ItemStack getPaper() {
+        return PAPER.getStackInSlot(0);
+    }
+
+    public ItemStack getInk() {
+        return INK.getStackInSlot(0);
+    }
+
+    public ItemStack getForm() {
+        return FORM.getStackInSlot(0);
+    }
+
+    public void performPrint() {
+        RecipeManager recipeManager = getLevel().getRecipeManager();
+        recipeManager.getRecipeFor(SFMRecipeTypes.PRINTING_PRESS.get(), this, getLevel()).ifPresent(recipe -> {
+            ItemStack paper = getPaper();
+            ItemStack dye = getInk();
+            ItemStack form = getForm();
+            if (paper.isEmpty() || dye.isEmpty() || form.isEmpty()) {
+                return;
+            }
+            paper = recipe.assemble(this);
+            PAPER.setStackInSlot(0, paper);
+            dye.shrink(1);
+            INK.setStackInSlot(0, dye);
+        });
+    }
+}
