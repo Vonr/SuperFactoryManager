@@ -98,7 +98,7 @@ public class SFMRecipes extends RecipeProvider {
         ShapedRecipeBuilder
                 .shaped(SFMItems.PRINTING_PRESS_ITEM.get())
                 .define('a', Items.ANVIL)
-                .define('i', Items.INK_SAC)
+                .define('i', Tags.Items.DYES_BLACK)
                 .define('p', Items.LIGHT_WEIGHTED_PRESSURE_PLATE)
                 .define('s', Items.STONE)
                 .define('x', Items.PISTON)

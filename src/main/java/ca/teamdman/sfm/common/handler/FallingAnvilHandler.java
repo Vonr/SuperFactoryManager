@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class AnvilFallHandler {
+public class FallingAnvilHandler {
     @SubscribeEvent
     public static void onLeave(EntityLeaveLevelEvent event) {
         if (event.getEntity() instanceof FallingBlockEntity fbe) {
