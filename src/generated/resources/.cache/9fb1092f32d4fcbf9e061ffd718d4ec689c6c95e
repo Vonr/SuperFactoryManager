@@ -1,4 +1,4 @@
-// 1.19.2	2023-05-01T10:34:58.0217785	Recipes
+// 1.19.2	2023-05-01T14:13:20.145487	Recipes
 347a9db1dc51c336dab23358554282348afd7a8f data/sfm/advancements/recipes/sfm/cable.json
 3812a02ebe30dcd7536c329803d6a65d05a14800 data/sfm/advancements/recipes/sfm/disk.json
 616162c2b792f2ef012fa3c1a0f7c737c73dfa80 data/sfm/advancements/recipes/sfm/labelgun.json
@@ -12,7 +12,7 @@ ce43b2a22f3ad72b5360ec9203dbfb1e91a4a671 data/sfm/recipes/disk.json
 cb3c415ab589fda8a1a8d1a3ab6b22fcf534a20d data/sfm/recipes/labelgun.json
 306641bbc2f89d40e9dc83cf126ee696ecc40300 data/sfm/recipes/manager.json
 4432751f9842cae951f8b9dc8e405317ea4dc08f data/sfm/recipes/map_copy.json
-3deeefb6c5d01c8cb0bf36c9d363b7dd519354ab data/sfm/recipes/printing_press.json
+1a9269513043bf3a11b46bf4e7e2069dbb5fead4 data/sfm/recipes/printing_press.json
 ba7da1ba1466172a0c01a861667f7aa599593002 data/sfm/recipes/program_copy.json
 4130f20d6edb6d452e60d593f29020f10bd23087 data/sfm/recipes/water_tank.json
 4a9fab7ad8327b3a1cfd6122f86016738542e32c data/sfm/recipes/written_book_copy.json

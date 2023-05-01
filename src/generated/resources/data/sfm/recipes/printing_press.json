@@ -8,7 +8,7 @@
       "item": "minecraft:iron_bars"
     },
     "i": {
-      "item": "minecraft:ink_sac"
+      "tag": "forge:dyes/black"
     },
     "p": {
       "item": "minecraft:light_weighted_pressure_plate"
