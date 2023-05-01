@@ -1,11 +1,13 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_ink": {
+    "has_experience_shard": {
       "conditions": {
         "items": [
           {
-            "tag": "forge:dyes/black"
+            "items": [
+              "sfm:xp_shard"
+            ]
           }
         ]
       },
@@ -13,20 +15,20 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "sfm:labelgun"
+        "recipe": "sfm:xp_goop"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
-      "has_ink",
+      "has_experience_shard",
       "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
-      "sfm:labelgun"
+      "sfm:xp_goop"
     ]
   }
 }

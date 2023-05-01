@@ -28,6 +28,8 @@ public class SFMItemModels extends ItemModelProvider {
         justParent(SFMItems.WATER_TANK_ITEM, SFMBlocks.WATER_TANK_BLOCK, "_active");
         basicItem(SFMItems.DISK_ITEM);
         basicItem(SFMItems.LABEL_GUN_ITEM);
+        basicItem(SFMItems.EXPERIENCE_GOOP_ITEM);
+        basicItem(SFMItems.EXPERIENCE_SHARD_ITEM);
 
         // force custom renderer
         getBuilder(SFMItems.FORM_ITEM.getId().toString())

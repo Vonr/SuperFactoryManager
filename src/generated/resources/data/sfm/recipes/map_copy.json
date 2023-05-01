@@ -1,12 +1,12 @@
 {
   "type": "sfm:printing_press",
   "form": {
-    "item": "minecraft:map"
+    "item": "minecraft:filled_map"
   },
   "ink": {
-    "item": "minecraft:compass"
+    "tag": "forge:dyes/black"
   },
   "paper": {
-    "item": "minecraft:paper"
+    "item": "minecraft:map"
   }
 }

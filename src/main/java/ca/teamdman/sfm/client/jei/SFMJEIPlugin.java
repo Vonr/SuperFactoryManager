@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,10 @@ public class SFMJEIPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        registration.addRecipeCategories(new PrintingPressJEICategory(registration.getJeiHelpers()));
+        registration.addRecipeCategories(
+                new PrintingPressJEICategory(registration.getJeiHelpers()),
+                new FallingAnvilJEICategory(registration.getJeiHelpers())
+        );
     }
 
     @Override
@@ -35,15 +39,26 @@ public class SFMJEIPlugin implements IModPlugin {
                 new ItemStack(SFMBlocks.PRINTING_PRESS_BLOCK.get()),
                 PrintingPressJEICategory.RECIPE_TYPE
         );
+        registration.addRecipeCatalyst(
+                new ItemStack(Blocks.ANVIL),
+                FallingAnvilJEICategory.RECIPE_TYPE
+        );
     }
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         List<PrintingPressRecipe> printingPressRecipes = new ArrayList<>();
+        List<FallingAnvilRecipe> fallingAnvilRecipes = new ArrayList<>();
         var level = Minecraft.getInstance().level;
         assert level != null;
         RecipeManager recipeManager = level.getRecipeManager();
-        recipeManager.getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).forEach(printingPressRecipes::add);
+        recipeManager.getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).forEach(r -> {
+            printingPressRecipes.add(r);
+            fallingAnvilRecipes.add(new FallingAnvilFormRecipe(r));
+        });
+        fallingAnvilRecipes.add(new FallingAnvilDisenchantRecipe());
+        fallingAnvilRecipes.add(new FallingAnvilExperienceShardRecipe());
         registration.addRecipes(PrintingPressJEICategory.RECIPE_TYPE, printingPressRecipes);
+        registration.addRecipes(FallingAnvilJEICategory.RECIPE_TYPE, fallingAnvilRecipes);
     }
 }
