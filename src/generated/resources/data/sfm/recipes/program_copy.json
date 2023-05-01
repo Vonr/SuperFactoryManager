@@ -4,9 +4,9 @@
     "item": "sfm:disk"
   },
   "ink": {
-    "item": "minecraft:ink_sac"
+    "tag": "forge:dyes/black"
   },
   "paper": {
-    "item": "minecraft:paper"
+    "item": "sfm:disk"
   }
 }

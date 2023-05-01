@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.world.item.ItemStack;
 
 public class PrintingPressBlockEntityRenderer implements BlockEntityRenderer<PrintingPressBlockEntity> {
     public PrintingPressBlockEntityRenderer(BlockEntityRendererProvider.Context pContext) {
@@ -27,59 +28,28 @@ public class PrintingPressBlockEntityRenderer implements BlockEntityRenderer<Pri
         var dye = blockEntity.getInk();
         var form = blockEntity.getForm();
         var depthAxis = new Vector3f(1, 0, 0);
-        if (!dye.isEmpty()) {
-            poseStack.pushPose();
-            poseStack.translate(0.5, 1.055, 0.6);
-            poseStack.mulPose(depthAxis.rotationDegrees(-90));
-            Minecraft
-                    .getInstance()
-                    .getItemRenderer()
-                    .renderStatic(
-                            dye,
-                            ItemTransforms.TransformType.GROUND,
-                            packedLight,
-                            packedOverlay,
-                            poseStack,
-                            buf,
-                            (int) blockEntity.getBlockPos().asLong()
-                    );
-            poseStack.popPose();
+        poseStack.pushPose();
+        poseStack.translate(0.5, 1, 0.6);
+        poseStack.mulPose(depthAxis.rotationDegrees(-90));
+
+        for (var stack : new ItemStack[]{form, paper, dye}) {
+            if (!stack.isEmpty()) {
+                Minecraft
+                        .getInstance()
+                        .getItemRenderer()
+                        .renderStatic(
+                                stack,
+                                ItemTransforms.TransformType.GROUND,
+                                packedLight,
+                                packedOverlay,
+                                poseStack,
+                                buf,
+                                (int) blockEntity.getBlockPos().asLong()
+                        );
+                poseStack.translate(0.01, 0.01, 0.03);
+            }
         }
-        if (!paper.isEmpty()) {
-            poseStack.pushPose();
-            poseStack.translate(0.5, 1.025, 0.6);
-            poseStack.mulPose(depthAxis.rotationDegrees(-90));
-            Minecraft
-                    .getInstance()
-                    .getItemRenderer()
-                    .renderStatic(
-                            paper,
-                            ItemTransforms.TransformType.GROUND,
-                            packedLight,
-                            packedOverlay,
-                            poseStack,
-                            buf,
-                            (int) blockEntity.getBlockPos().asLong()
-                    );
-            poseStack.popPose();
-        }
-        if (!form.isEmpty()) {
-            poseStack.pushPose();
-            poseStack.translate(0.5, 1.083, 0.6);
-            poseStack.mulPose(depthAxis.rotationDegrees(-90));
-            Minecraft
-                    .getInstance()
-                    .getItemRenderer()
-                    .renderStatic(
-                            form,
-                            ItemTransforms.TransformType.GROUND,
-                            packedLight,
-                            packedOverlay,
-                            poseStack,
-                            buf,
-                            (int) blockEntity.getBlockPos().asLong()
-                    );
-            poseStack.popPose();
-        }
+        poseStack.popPose();
+
     }
 }

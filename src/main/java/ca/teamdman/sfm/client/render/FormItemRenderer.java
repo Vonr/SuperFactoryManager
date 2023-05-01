@@ -4,7 +4,6 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.item.FormItem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -52,14 +51,14 @@ public class FormItemRenderer extends BlockEntityWithoutLevelRenderer {
         poseStack.pushPose();
 
         if (transformType != ItemTransforms.TransformType.FIXED && transformType != ItemTransforms.TransformType.GUI) {
-            poseStack.translate(0.60, 0.5, 0.25);
-            poseStack.scale(0.5F, 0.5F, 0.5F);
-            poseStack.mulPose(Vector3f.YP.rotationDegrees(-65));
+            poseStack.scale(0.5F, 0.5F, 1F);
+            poseStack.translate(0.5, 0.5, 0);
+//            poseStack.mulPose(Vector3f.YP.rotationDegrees(-65));
         }
 
         if (ClientStuff.isMoreInfoKeyDown()) {
             poseStack.pushPose();
-            poseStack.translate(0, 0.5f, 0.5f);
+            poseStack.translate(0, 0.5f, 0.3f);
             poseStack.scale(0.5f, 0.5f, 0.5f);
             renderer.renderModelLists(baseModel, stack, packedLight, packedOverlay, poseStack, buffer);
             poseStack.popPose();

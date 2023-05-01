@@ -8,7 +8,6 @@ import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
@@ -55,7 +54,7 @@ public class SFMRecipes extends RecipeProvider {
                 .define('B', Tags.Items.DYES_BLACK)
                 .define('L', Tags.Items.DYES_BLUE)
                 .define('C', Items.OAK_SIGN)
-                .unlockedBy("has_ink", RecipeProvider.has(Items.INK_SAC))
+                .unlockedBy("has_ink", RecipeProvider.has(Tags.Items.DYES_BLACK))
                 .pattern(" LC")
                 .pattern(" SB")
                 .pattern("S  ")
@@ -107,7 +106,7 @@ public class SFMRecipes extends RecipeProvider {
                 consumer,
                 new ResourceLocation("sfm", "written_book_copy"),
                 Ingredient.of(Items.WRITTEN_BOOK),
-                Ingredient.of(ItemTags.create(new ResourceLocation("forge", "dyes/black"))),
+                Ingredient.of(Tags.Items.DYES_BLACK),
                 Ingredient.of(Items.BOOK)
         );
 
@@ -122,17 +121,17 @@ public class SFMRecipes extends RecipeProvider {
         addPrintingPressRecipe(
                 consumer,
                 new ResourceLocation("sfm", "map_copy"),
-                Ingredient.of(Items.MAP),
-                Ingredient.of(Items.COMPASS),
-                Ingredient.of(Items.PAPER)
+                Ingredient.of(Items.FILLED_MAP),
+                Ingredient.of(Tags.Items.DYES_BLACK),
+                Ingredient.of(Items.MAP)
         );
 
         addPrintingPressRecipe(
                 consumer,
                 new ResourceLocation("sfm", "program_copy"),
                 Ingredient.of(SFMItems.DISK_ITEM.get()),
-                Ingredient.of(Items.INK_SAC),
-                Ingredient.of(Items.PAPER)
+                Ingredient.of(Tags.Items.DYES_BLACK),
+                Ingredient.of(SFMItems.DISK_ITEM.get())
         );
     }
 

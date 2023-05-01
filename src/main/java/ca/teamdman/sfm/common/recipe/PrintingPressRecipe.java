@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.recipe;
 
 import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
+import ca.teamdman.sfm.common.item.FormItem;
 import ca.teamdman.sfm.common.registry.SFMRecipeSerializers;
 import ca.teamdman.sfm.common.registry.SFMRecipeTypes;
 import com.google.gson.JsonObject;
@@ -42,12 +43,13 @@ public class PrintingPressRecipe implements Recipe<PrintingPressBlockEntity> {
 
     @Override
     public boolean matches(PrintingPressBlockEntity pContainer, Level pLevel) {
-        return PAPER.test(pContainer.getPaper()) && INK.test(pContainer.getInk()) && FORM.test(pContainer.getForm());
+        return PAPER.test(pContainer.getPaper()) && INK.test(pContainer.getInk()) && FORM.test(FormItem.getReference(
+                pContainer.getForm()));
     }
 
     @Override
     public ItemStack assemble(PrintingPressBlockEntity pContainer) {
-        ItemStack rtn = pContainer.getForm().copy();
+        ItemStack rtn = FormItem.getReference(pContainer.getForm());
         rtn.setCount(pContainer.getPaper().getCount());
         return rtn;
     }
