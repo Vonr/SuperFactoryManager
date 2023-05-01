@@ -3,12 +3,7 @@ package ca.teamdman.sfm.datagen;
 import ca.teamdman.sfm.common.recipe.PrintingPressFinishedRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import net.minecraft.data.PackOutput;
-import net.minecraft.data.recipes.FinishedRecipe;
-import net.minecraft.data.recipes.RecipeCategory;
-import net.minecraft.data.recipes.RecipeProvider;
-import net.minecraft.data.recipes.ShapedRecipeBuilder;
-import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.data.recipes.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -90,14 +85,14 @@ public class SFMRecipes extends RecipeProvider {
                 .save(consumer);
 
         ShapelessRecipeBuilder
-                .shapeless(SFMItems.EXPERIENCE_GOOP_ITEM.get())
+                .shapeless(RecipeCategory.MISC, SFMItems.EXPERIENCE_GOOP_ITEM.get())
                 .requires(SFMItems.EXPERIENCE_SHARD_ITEM.get(), 9)
                 .unlockedBy("has_experience_shard", RecipeProvider.has(SFMItems.EXPERIENCE_SHARD_ITEM.get()))
                 .save(consumer);
 
 
         ShapedRecipeBuilder
-                .shaped(SFMItems.PRINTING_PRESS_ITEM.get())
+                .shaped(RecipeCategory.MISC, SFMItems.PRINTING_PRESS_ITEM.get())
                 .define('a', Items.ANVIL)
                 .define('i', Tags.Items.DYES_BLACK)
                 .define('p', Items.LIGHT_WEIGHTED_PRESSURE_PLATE)
