@@ -4,16 +4,15 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import net.minecraft.core.Direction;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
 
 public class SFMBlockStatesAndModels extends BlockStateProvider {
-    public SFMBlockStatesAndModels(DataGenerator gen, ExistingFileHelper exFileHelper) {
-        super(gen, SFM.MOD_ID, exFileHelper);
+    public SFMBlockStatesAndModels(GatherDataEvent event) {
+        super(event.getGenerator(), SFM.MOD_ID, event.getExistingFileHelper());
     }
 
 

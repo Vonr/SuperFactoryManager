@@ -3,7 +3,6 @@ package ca.teamdman.sfm.datagen;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -12,6 +11,7 @@ import net.minecraft.world.level.storage.loot.LootTables;
 import net.minecraft.world.level.storage.loot.ValidationContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSet;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraftforge.data.event.GatherDataEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,8 +22,8 @@ import java.util.function.Supplier;
 
 public class SFMLootTables extends LootTableProvider {
 
-    public SFMLootTables(DataGenerator dataGeneratorIn) {
-        super(dataGeneratorIn);
+    public SFMLootTables(GatherDataEvent event) {
+        super(event.getGenerator());
     }
 
     @Override

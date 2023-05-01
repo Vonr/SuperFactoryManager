@@ -2,14 +2,13 @@ package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.tags.BlockTagsProvider;
 import net.minecraft.tags.BlockTags;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
 
 public class SFMBlockTags extends BlockTagsProvider {
-    public SFMBlockTags(DataGenerator datagen, ExistingFileHelper helper) {
-        super(datagen, SFM.MOD_ID, helper);
+    public SFMBlockTags(GatherDataEvent event) {
+        super(event.getGenerator(), SFM.MOD_ID, event.getExistingFileHelper());
     }
 
     @Override

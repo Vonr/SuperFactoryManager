@@ -2,8 +2,8 @@ package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
-import net.minecraft.data.DataGenerator;
 import net.minecraftforge.common.data.LanguageProvider;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Set;
 
 public class SFMLanguageProvider extends LanguageProvider {
-    public SFMLanguageProvider(DataGenerator gen) {
-        super(gen, SFM.MOD_ID, "en_us");
+    public SFMLanguageProvider(GatherDataEvent event) {
+        super(event.getGenerator(), SFM.MOD_ID, "en_us");
     }
 
     @Override

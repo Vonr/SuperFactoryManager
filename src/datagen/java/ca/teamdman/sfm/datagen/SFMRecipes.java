@@ -3,7 +3,6 @@ package ca.teamdman.sfm.datagen;
 import ca.teamdman.sfm.common.recipe.PrintingPressFinishedRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
@@ -13,13 +12,13 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.data.event.GatherDataEvent;
 
 import java.util.function.Consumer;
 
 public class SFMRecipes extends RecipeProvider {
-
-    public SFMRecipes(DataGenerator generatorIn) {
-        super(generatorIn);
+    public SFMRecipes(GatherDataEvent event) {
+        super(event.getGenerator());
     }
 
     @Override
