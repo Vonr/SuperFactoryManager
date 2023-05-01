@@ -1,0 +1,12 @@
+{
+  "type": "sfm:printing_press",
+  "form": {
+    "item": "minecraft:enchanted_book"
+  },
+  "ink": {
+    "item": "minecraft:experience_bottle"
+  },
+  "paper": {
+    "item": "minecraft:book"
+  }
+}

@@ -3,6 +3,7 @@ package ca.teamdman.sfm.datagen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -29,7 +30,9 @@ public class SFMItemModels extends ItemModelProvider {
         basicItem(SFMItems.LABEL_GUN_ITEM);
 
         // force custom renderer
-        getBuilder(SFMItems.FORM_ITEM.getId().toString()).parent(new ModelFile.UncheckedModelFile("builtin/entity"));
+        getBuilder(SFMItems.FORM_ITEM.getId().toString())
+                .parent(new ModelFile.UncheckedModelFile("builtin/entity"))
+                .guiLight(BlockModel.GuiLight.FRONT);
         getBuilder("form_base")
                 .parent(new ModelFile.UncheckedModelFile("item/generated"))
                 .texture("layer0", modLoc("item/form"));

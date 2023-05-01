@@ -1,0 +1,12 @@
+{
+  "type": "sfm:printing_press",
+  "form": {
+    "item": "minecraft:map"
+  },
+  "ink": {
+    "item": "minecraft:compass"
+  },
+  "paper": {
+    "item": "minecraft:paper"
+  }
+}
