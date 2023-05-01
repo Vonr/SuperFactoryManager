@@ -1,5 +1,6 @@
 {
   "credit": "Made with Blockbench",
+  "parent": "minecraft:block/cube_bottom_top",
   "texture_size": [
     32,
     32
@@ -148,14 +149,5 @@
         }
       }
     }
-  ],
-  "display": {
-    "thirdperson_righthand": {
-      "scale": [
-        0.4,
-        0.4,
-        0.4
-      ]
-    }
-  }
+  ]
 }

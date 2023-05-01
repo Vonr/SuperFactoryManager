@@ -11,8 +11,8 @@ import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
-public class SFMBlockStates extends BlockStateProvider {
-    public SFMBlockStates(DataGenerator gen, ExistingFileHelper exFileHelper) {
+public class SFMBlockStatesAndModels extends BlockStateProvider {
+    public SFMBlockStatesAndModels(DataGenerator gen, ExistingFileHelper exFileHelper) {
         super(gen, SFM.MOD_ID, exFileHelper);
     }
 
