@@ -58,6 +58,12 @@ public class FormItemRenderer extends BlockEntityWithoutLevelRenderer {
         }
 
         if (ClientStuff.isMoreInfoKeyDown()) {
+            poseStack.pushPose();
+            poseStack.translate(0, 0.5f, 0.5f);
+            poseStack.scale(0.5f, 0.5f, 0.5f);
+            renderer.renderModelLists(baseModel, stack, packedLight, packedOverlay, poseStack, buffer);
+            poseStack.popPose();
+
             var reference = FormItem.getReference(stack);
             if (!reference.isEmpty()) {
                 var model = renderer.getItemModelShaper().getItemModel(reference.getItem());

@@ -70,10 +70,11 @@ public class SFMLabelNBTHelper {
 
     public static List<Component> getHoverText(ItemStack stack) {
         var rtn = new ArrayList<Component>();
+        var dict = getLabelDict(stack);
+        if (dict.isEmpty()) return rtn;
         rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL_HEADER
                         .getComponent()
                         .withStyle(ChatFormatting.UNDERLINE));
-        var dict = getLabelDict(stack);
         for (var label : dict.getAllKeys()) {
             rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL.getComponent(
                     label,
