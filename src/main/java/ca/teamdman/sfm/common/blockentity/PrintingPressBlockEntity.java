@@ -202,7 +202,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
             if (paper.isEmpty() || ink.isEmpty() || form.isEmpty()) {
                 return;
             }
-            paper = recipe.assemble(this);
+            paper = recipe.assemble(this, getLevel().registryAccess());
             PAPER.setStackInSlot(0, paper);
             ink.shrink(1);
             INK.setStackInSlot(0, ink);

@@ -20,7 +20,7 @@ public class SFMDatagen {
             gen.addProvider(event.includeClient(), new SFMRecipes(gen));
             gen.addProvider(
                     event.includeClient(),
-                    new SFMBlockStates(gen.getPackOutput(), event.getExistingFileHelper())
+                    new SFMBlockStatesAndModels(gen.getPackOutput(), event.getExistingFileHelper())
             );
             gen.addProvider(
                     event.includeClient(),

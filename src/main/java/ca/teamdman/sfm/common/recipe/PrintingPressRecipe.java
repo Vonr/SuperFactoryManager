@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.item.FormItem;
 import ca.teamdman.sfm.common.registry.SFMRecipeSerializers;
 import ca.teamdman.sfm.common.registry.SFMRecipeTypes;
 import com.google.gson.JsonObject;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -48,7 +49,7 @@ public class PrintingPressRecipe implements Recipe<PrintingPressBlockEntity> {
     }
 
     @Override
-    public ItemStack assemble(PrintingPressBlockEntity pContainer) {
+    public ItemStack assemble(PrintingPressBlockEntity pContainer, RegistryAccess p_267165_) {
         ItemStack rtn = FormItem.getReference(pContainer.getForm());
         rtn.setCount(pContainer.getPaper().getCount());
         return rtn;
@@ -60,9 +61,11 @@ public class PrintingPressRecipe implements Recipe<PrintingPressBlockEntity> {
     }
 
     @Override
-    public ItemStack getResultItem() {
+    public ItemStack getResultItem(RegistryAccess p_267052_) {
         return ItemStack.EMPTY;
+
     }
+
 
     @Override
     public ResourceLocation getId() {

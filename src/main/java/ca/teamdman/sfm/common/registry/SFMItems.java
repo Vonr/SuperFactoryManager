@@ -1,11 +1,9 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.item.LabelGunItem;
+import ca.teamdman.sfm.common.item.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import ca.teamdman.sfm.common.item.*;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -22,33 +20,18 @@ import net.minecraftforge.registries.RegistryObject;
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class SFMItems {
 
-    private static final DeferredRegister<Item> ITEMS           = DeferredRegister.create(
-            ForgeRegistries.ITEMS,
-            SFM.MOD_ID
-    );
-    public static final  RegistryObject<Item>   MANAGER_ITEM    = register("manager", SFMBlocks.MANAGER_BLOCK);
-    public static final  RegistryObject<Item>   CABLE_ITEM      = register("cable", SFMBlocks.CABLE_BLOCK);
-//    public static final  RegistryObject<Item>   BATTERY_ITEM    = register("battery", SFMBlocks.BATTERY_BLOCK);
-    public static final  RegistryObject<Item>   WATER_TANK_ITEM = register("water_tank", SFMBlocks.WATER_TANK_BLOCK);
-    public static final  RegistryObject<Item>   DISK_ITEM       = ITEMS.register("disk", DiskItem::new);
-    public static final  RegistryObject<Item>   LABEL_GUN_ITEM  = ITEMS.register("labelgun", LabelGunItem::new);
-    public static final CreativeModeTab TAB = new CreativeModeTab(SFM.MOD_ID) {
-        @Override
-        public ItemStack makeIcon() {
-            return new ItemStack(SFMBlocks.MANAGER_BLOCK.get());
-        }
-    };
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, SFM.MOD_ID);
     public static final RegistryObject<Item> MANAGER_ITEM = register("manager", SFMBlocks.MANAGER_BLOCK);
     public static final RegistryObject<Item> CABLE_ITEM = register("cable", SFMBlocks.CABLE_BLOCK);
-    public static final RegistryObject<Item> PRINTING_PRESS_ITEM = ITEMS.register(
-            "printing_press",
-            PrintingPressBlockItem::new
-    );
     //    public static final  RegistryObject<Item>   BATTERY_ITEM    = register("battery", SFMBlocks.BATTERY_BLOCK);
     public static final RegistryObject<Item> WATER_TANK_ITEM = register("water_tank", SFMBlocks.WATER_TANK_BLOCK);
     public static final RegistryObject<Item> DISK_ITEM = ITEMS.register("disk", DiskItem::new);
     public static final RegistryObject<Item> LABEL_GUN_ITEM = ITEMS.register("labelgun", LabelGunItem::new);
+
+    public static final RegistryObject<Item> PRINTING_PRESS_ITEM = ITEMS.register(
+            "printing_press",
+            PrintingPressBlockItem::new
+    );
 
     public static final RegistryObject<Item> FORM_ITEM = ITEMS.register("form", FormItem::new);
     public static final RegistryObject<Item> EXPERIENCE_SHARD_ITEM = ITEMS.register("xp_shard", ExperienceShard::new);
@@ -72,10 +55,11 @@ public class SFMItems {
                         // Set icon of creative tab
                         .icon(() -> new ItemStack(SFMBlocks.MANAGER_BLOCK.get()))
                         // Add default items to tab
-                        .displayItems((params, output) -> output.acceptAll(ITEMS.getEntries().stream()
+                        .displayItems((params, output) -> output.acceptAll(ITEMS
+                                                                                   .getEntries()
+                                                                                   .stream()
                                                                                    .map(RegistryObject::get)
                                                                                    .map(ItemStack::new)
-                                                                                   .toList()))
-        );
+                                                                                   .toList())));
     }
 }

@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 
 public class FormItem extends Item {
     public FormItem() {
-        super(new Item.Properties().tab(SFMItems.TAB));
+        super(new Item.Properties());
     }
 
     public static ItemStack getForm(ItemStack stack) {

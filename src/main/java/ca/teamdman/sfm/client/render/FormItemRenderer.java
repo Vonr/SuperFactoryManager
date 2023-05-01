@@ -8,9 +8,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
@@ -37,7 +37,7 @@ public class FormItemRenderer extends BlockEntityWithoutLevelRenderer {
     @Override
     public void renderByItem(
             ItemStack stack,
-            ItemTransforms.TransformType transformType,
+            ItemDisplayContext transformType,
             PoseStack poseStack,
             MultiBufferSource multiBuffer,
             int packedLight,
@@ -50,7 +50,7 @@ public class FormItemRenderer extends BlockEntityWithoutLevelRenderer {
         var buffer = ItemRenderer.getFoilBufferDirect(multiBuffer, renderType, true, stack.hasFoil());
         poseStack.pushPose();
 
-        if (transformType != ItemTransforms.TransformType.FIXED && transformType != ItemTransforms.TransformType.GUI) {
+        if (transformType != ItemDisplayContext.FIXED && transformType != ItemDisplayContext.GUI) {
             poseStack.scale(0.5F, 0.5F, 1F);
             poseStack.translate(0.5, 0.5, 0);
 //            poseStack.mulPose(Vector3f.YP.rotationDegrees(-65));
