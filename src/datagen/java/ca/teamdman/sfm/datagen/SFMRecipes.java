@@ -14,18 +14,17 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.data.event.GatherDataEvent;
 
 import java.util.function.Consumer;
 
 public class SFMRecipes extends RecipeProvider {
-
-
-    public SFMRecipes(PackOutput pOutput) {
-        super(pOutput);
+    public SFMRecipes(GatherDataEvent event) {
+        super(event.getGenerator().getPackOutput());
     }
 
     @Override
-    protected void buildRecipes(Consumer<FinishedRecipe> writer) {
+    protected void buildRecipes(Consumer<FinishedRecipe> consumer) {
         ShapedRecipeBuilder
                 .shaped(RecipeCategory.REDSTONE, SFMBlocks.CABLE_BLOCK.get(), 16)
                 .define('D', Tags.Items.DYES_BLACK)
@@ -37,7 +36,7 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("DGD")
                 .unlockedBy("has_iron_ingot", RecipeProvider.has(Items.IRON_INGOT))
                 .unlockedBy("has_chest", RecipeProvider.has(Tags.Items.CHESTS))
-                .save(writer);
+                .save(consumer);
 
         ShapedRecipeBuilder
                 .shaped(RecipeCategory.REDSTONE, SFMBlocks.MANAGER_BLOCK.get())
@@ -49,7 +48,7 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("ABA")
                 .pattern("BCB")
                 .pattern("ABA")
-                .save(writer);
+                .save(consumer);
 
         ShapedRecipeBuilder
                 .shaped(RecipeCategory.REDSTONE, SFMItems.LABEL_GUN_ITEM.get())
@@ -61,7 +60,7 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern(" LC")
                 .pattern(" SB")
                 .pattern("S  ")
-                .save(writer);
+                .save(consumer);
 
 
         ShapedRecipeBuilder
@@ -77,7 +76,7 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("pbp")
                 .pattern("aRc")
                 .pattern("ede")
-                .save(writer);
+                .save(consumer);
 
         ShapedRecipeBuilder
                 .shaped(RecipeCategory.REDSTONE, SFMItems.WATER_TANK_ITEM.get())
@@ -88,13 +87,13 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("gbg")
                 .pattern("gpg")
                 .pattern("gbg")
-                .save(writer);
+                .save(consumer);
 
         ShapelessRecipeBuilder
                 .shapeless(SFMItems.EXPERIENCE_GOOP_ITEM.get())
                 .requires(SFMItems.EXPERIENCE_SHARD_ITEM.get(), 9)
                 .unlockedBy("has_experience_shard", RecipeProvider.has(SFMItems.EXPERIENCE_SHARD_ITEM.get()))
-                .save(writer);
+                .save(consumer);
 
 
         ShapedRecipeBuilder
@@ -109,10 +108,10 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("pip")
                 .pattern("sas")
                 .pattern("gxg")
-                .save(writer);
+                .save(consumer);
 
         addPrintingPressRecipe(
-                writer,
+                consumer,
                 new ResourceLocation("sfm", "written_book_copy"),
                 Ingredient.of(Items.WRITTEN_BOOK),
                 Ingredient.of(Tags.Items.DYES_BLACK),
@@ -120,7 +119,7 @@ public class SFMRecipes extends RecipeProvider {
         );
 
         addPrintingPressRecipe(
-                writer,
+                consumer,
                 new ResourceLocation("sfm", "enchanted_book_copy"),
                 Ingredient.of(Items.ENCHANTED_BOOK),
                 Ingredient.of(SFMItems.EXPERIENCE_GOOP_ITEM.get()),
@@ -128,7 +127,7 @@ public class SFMRecipes extends RecipeProvider {
         );
 
         addPrintingPressRecipe(
-                writer,
+                consumer,
                 new ResourceLocation("sfm", "map_copy"),
                 Ingredient.of(Items.FILLED_MAP),
                 Ingredient.of(Tags.Items.DYES_BLACK),
@@ -136,7 +135,7 @@ public class SFMRecipes extends RecipeProvider {
         );
 
         addPrintingPressRecipe(
-                writer,
+                consumer,
                 new ResourceLocation("sfm", "program_copy"),
                 Ingredient.of(SFMItems.DISK_ITEM.get()),
                 Ingredient.of(Tags.Items.DYES_BLACK),
@@ -145,12 +144,12 @@ public class SFMRecipes extends RecipeProvider {
     }
 
     private void addPrintingPressRecipe(
-            Consumer<FinishedRecipe> writer,
+            Consumer<FinishedRecipe> consumer,
             ResourceLocation id,
             Ingredient form,
             Ingredient ink,
             Ingredient paper
     ) {
-        writer.accept(new PrintingPressFinishedRecipe(id, form, ink, paper));
+        consumer.accept(new PrintingPressFinishedRecipe(id, form, ink, paper));
     }
 }

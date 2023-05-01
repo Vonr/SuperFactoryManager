@@ -9,11 +9,11 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
 
 public class SFMBlockStatesAndModels extends BlockStateProvider {
-    public SFMBlockStatesAndModels(PackOutput output, ExistingFileHelper exFileHelper) {
-        super(output, SFM.MOD_ID, exFileHelper);
+    public SFMBlockStatesAndModels(GatherDataEvent event) {
+        super(event.getGenerator().getPackOutput(), SFM.MOD_ID, event.getExistingFileHelper());
     }
 
     @Override
