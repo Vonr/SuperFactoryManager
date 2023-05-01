@@ -1,8 +1,11 @@
 package ca.teamdman.sfm;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.item.FormItem;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
@@ -10,16 +13,28 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
@@ -31,7 +46,7 @@ import java.util.stream.IntStream;
 // https://github.com/MinecraftForge/MinecraftForge/blob/d7b137d1446377bfd1958f8a0e24f63819b81bfc/src/test/java/net/minecraftforge/debug/misc/GameTestTest.java#L155
 // https://docs.minecraftforge.net/en/1.19.x/misc/gametest/
 // https://github.com/MinecraftForge/MinecraftForge/blob/1.19.x/src/test/java/net/minecraftforge/debug/misc/GameTestTest.java#LL101-L116C6
-
+// https://github.com/XFactHD/FramedBlocks/blob/1.19.4/src/main/java/xfacthd/framedblocks/api/test/TestUtils.java#L65-L87
 @SuppressWarnings("DataFlowIssue")
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -73,11 +88,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .resolve()
                 .get();
-        var leftChest = helper
-                .getBlockEntity(leftPos)
-                .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .resolve()
-                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
@@ -110,10 +121,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, Blocks.CHEST);
 
 
-        var leftChest = (helper.getBlockEntity(leftPos))
-                .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .resolve()
-                .get();
+        var leftChest = (helper.getBlockEntity(leftPos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -172,15 +180,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 .resolve()
                 .get();
 
-        var dest1Inv = (helper.getBlockEntity(dest1Pos))
-                .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .resolve()
-                .get();
+        var dest1Inv = (helper.getBlockEntity(dest1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
 
-        var dest2Inv = (helper.getBlockEntity(dest2Pos))
-                .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .resolve()
-                .get();
+        var dest2Inv = (helper.getBlockEntity(dest2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
 
         for (int i = 0; i < sourceInv.getSlots(); i++) {
             sourceInv.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
@@ -207,14 +209,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                     .mapToObj(sourceInv::getStackInSlot)
                     .mapToInt(ItemStack::getCount)
                     .sum();
-            assertTrue(
-                    found == 64 * (sourceInv.getSlots() - 2),
-                    "Dirt did not leave (found " + found + " (" + (
-                            found > 64
-                            ? found / 64 + "x stacks + " + found % 64
-                            : found
-                    ) + " dirt))"
-            );
+            assertTrue(found == 64 * (sourceInv.getSlots() - 2), "Dirt did not leave (found " + found + " (" + (
+                    found > 64 ? found / 64 + "x stacks + " + found % 64 : found
+            ) + " dirt))");
             int total;
             total = 0;
             for (int i = 0; i < dest1Inv.getSlots(); i++) {
@@ -248,10 +245,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .resolve()
                 .get();
-        var leftChest = (helper.getBlockEntity(leftPos))
-                .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .resolve()
-                .get();
+        var leftChest = (helper.getBlockEntity(leftPos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
@@ -268,14 +262,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            assertTrue(
-                    leftChest.getStackInSlot(0).getCount() == 5,
-                    "Dirt did not move"
-            );
-            assertTrue(
-                    rightChest.getStackInSlot(0).getCount() == 64 - 5,
-                    "Dirt did not move"
-            );
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 5, "Dirt did not move");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64 - 5, "Dirt did not move");
             helper.succeed();
         });
     }
@@ -288,10 +276,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos leftPos = new BlockPos(2, 2, 0);
         helper.setBlock(leftPos, Blocks.CHEST);
 
-        var leftChest = (helper.getBlockEntity(leftPos))
-                .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .resolve()
-                .get();
+        var leftChest = (helper.getBlockEntity(leftPos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .resolve()
@@ -406,11 +391,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
-            helper.assertBlockState(
-                    right,
-                    s -> s.getBlock() == Blocks.LAVA_CAULDRON,
-                    () -> "cauldron didn't fill"
-            );
+            helper.assertBlockState(right, s -> s.getBlock() == Blocks.LAVA_CAULDRON, () -> "cauldron didn't fill");
             helper.succeed();
         });
     }
@@ -757,10 +738,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .resolve()
                 .get();
-        var leftChest = (helper.getBlockEntity(leftPos))
-                .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .resolve()
-                .get();
+        var leftChest = (helper.getBlockEntity(leftPos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
 
         leftChest.insertItem(0, new ItemStack(Items.DIAMOND, 5), false);
         leftChest.insertItem(1, new ItemStack(Items.DIAMOND, 5), false);
@@ -788,15 +766,575 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(4).isEmpty(), "slot 4 did not leave");
             assertTrue(leftChest.getStackInSlot(5).isEmpty(), "slot 5 did not leave");
             assertTrue(leftChest.getStackInSlot(2).getCount() == 25, "Items did not transfer to slot 2");
-            assertTrue(
-                    IntStream
-                            .range(0, rightChest.getSlots())
-                            .allMatch(slot -> rightChest.getStackInSlot(slot).isEmpty()),
-                    "Chest b is not empty"
-            );
+            assertTrue(IntStream
+                               .range(0, rightChest.getSlots())
+                               .allMatch(slot -> rightChest.getStackInSlot(slot).isEmpty()), "Chest b is not empty");
             helper.succeed();
         });
     }
 
 
+    @GameTest(template = "3x4x3")
+    public static void printing_press_clone_program(GameTestHelper helper) {
+        var printingPos = new BlockPos(1, 2, 1);
+        var pistonPos = new BlockPos(1, 4, 1);
+        var woodPos = new BlockPos(0, 4, 1);
+        var buttonPos = new BlockPos(0, 4, 0);
+        var chestPos = new BlockPos(0, 2, 1);
+
+        helper.setBlock(printingPos, SFMBlocks.PRINTING_PRESS_BLOCK.get());
+        helper.setBlock(pistonPos, Blocks.PISTON.defaultBlockState().setValue(DirectionalBlock.FACING, Direction.DOWN));
+        helper.setBlock(woodPos, Blocks.OAK_PLANKS);
+        helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
+        helper.setBlock(chestPos, Blocks.CHEST);
+
+        var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
+        Player player = helper.makeMockPlayer();
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BLACK_DYE));
+        BlockState pressState = helper.getBlockState(printingPos);
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(printingPos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(printingPos),
+                        false
+                )
+        );
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(SFMItems.DISK_ITEM.get()));
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(printingPos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(printingPos),
+                        false
+                )
+        );
+        var disk = new ItemStack(SFMItems.DISK_ITEM.get());
+        DiskItem.setProgram(disk, """
+                    EVERY 20 TICKS DO
+                        INPUT FROM a TOP SIDE SLOTS 0,1,3-4,5
+                        OUTPUT TO a SLOTS 2
+                    END
+                """.stripIndent());
+        player.setItemInHand(InteractionHand.MAIN_HAND, FormItem.getForm(disk));
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(printingPos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(printingPos),
+                        false
+                )
+        );
+
+        BlockState buttonState = helper.getBlockState(buttonPos);
+        buttonState.getBlock().use(
+                buttonState,
+                helper.getLevel(),
+                helper.absolutePos(buttonPos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(printingPos),
+                        false
+                )
+        );
+
+        helper.runAfterDelay(5, () -> {
+            pressState.getBlock().use(
+                    pressState,
+                    helper.getLevel(),
+                    helper.absolutePos(printingPos),
+                    player,
+                    InteractionHand.MAIN_HAND,
+                    new BlockHitResult(
+                            new Vec3(0.5, 0.5, 0.5),
+                            Direction.UP,
+                            helper.absolutePos(printingPos),
+                            false
+                    )
+            );
+            ItemStack held = player.getMainHandItem();
+            if (held.is(SFMItems.DISK_ITEM.get()) && DiskItem.getProgram(held).equals(DiskItem.getProgram(disk))) {
+                helper
+                        .getBlockEntity(chestPos)
+                        .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                        .ifPresent(c -> c.insertItem(0, held, false));
+                assertTrue(printingPress.getInk().isEmpty(), "Ink was not consumed");
+                assertTrue(printingPress.getPaper().isEmpty(), "Paper was not consumed");
+                assertTrue(!printingPress.getForm().isEmpty(), "Form should not be consumed");
+                helper.succeed();
+            } else {
+                helper.fail("Disk was not cloned");
+            }
+        });
+    }
+
+    @GameTest(template = "1x2x1")
+    public static void printing_press_insertion_extraction(GameTestHelper helper) {
+        var pos = new BlockPos(0, 2, 0);
+        helper.setBlock(pos, SFMBlocks.PRINTING_PRESS_BLOCK.get());
+        var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(pos);
+        var player = helper.makeMockPlayer();
+        // put black dye in player hand
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BLACK_DYE, 23));
+        // right click on printing press
+        BlockState pressState = helper.getBlockState(pos);
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(pos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(pos),
+                        false
+                )
+        );
+        // assert the ink was inserted
+        assertTrue(!printingPress.getInk().isEmpty(), "Ink was not inserted");
+        assertTrue(player.getMainHandItem().isEmpty(), "Ink was not taken from hand");
+        // put book in player hand
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOOK));
+        // right click on printing press
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(pos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(pos),
+                        false
+                )
+        );
+        // assert the book was inserted
+        assertTrue(!printingPress.getPaper().isEmpty(), "Paper was not inserted");
+        assertTrue(player.getMainHandItem().isEmpty(), "Paper was not taken from hand");
+        // put form in player hand
+        var form = FormItem.getForm(new ItemStack(Items.WRITTEN_BOOK));
+        player.setItemInHand(InteractionHand.MAIN_HAND, form.copy());
+        // right click on printing press
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(pos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(pos),
+                        false
+                )
+        );
+        // assert the form was inserted
+        assertTrue(!printingPress.getForm().isEmpty(), "Form was not inserted");
+        assertTrue(player.getMainHandItem().isEmpty(), "Form was not taken from hand");
+
+        // pull out item
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        // right click on printing press
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(pos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(pos),
+                        false
+                )
+        );
+        // assert the paper was extracted
+        assertTrue(printingPress.getPaper().isEmpty(), "Paper was not extracted");
+        assertTrue(!player.getMainHandItem().isEmpty(), "Paper was not given to player");
+        assertTrue(player.getMainHandItem().is(Items.BOOK), "Paper doesn't match");
+        assertTrue(player.getMainHandItem().getCount() == 1, "Paper wrong count");
+
+        // pull out an item
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        // right click on printing press
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(pos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(pos),
+                        false
+                )
+        );
+        // assert the form was extracted
+        assertTrue(printingPress.getForm().isEmpty(), "Form was not extracted");
+        assertTrue(!player.getMainHandItem().isEmpty(), "Form was not given to player");
+        assertTrue(ItemStack.isSameItemSameTags(player.getMainHandItem(), form), "Form doesn't match");
+        // pull out item
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        // right click on printing press
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(pos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(pos),
+                        false
+                )
+        );
+        // assert the ink was extracted
+        assertTrue(printingPress.getInk().isEmpty(), "Ink was not extracted");
+        assertTrue(!player.getMainHandItem().isEmpty(), "Ink was not given to player");
+        assertTrue(player.getMainHandItem().is(Items.BLACK_DYE), "Ink doesn't match");
+        assertTrue(player.getMainHandItem().getCount() == 23, "Ink wrong count");
+        // try to pull out another item
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        // right click on printing press
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(pos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(pos),
+                        false
+                )
+        );
+        // assert nothing was extracted
+        assertTrue(player.getMainHandItem().isEmpty(), "Nothing should have been extracted");
+        helper.succeed();
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void printing_press_clone_enchantment(GameTestHelper helper) {
+        var printingPos = new BlockPos(1, 2, 1);
+        var pistonPos = new BlockPos(1, 4, 1);
+        var woodPos = new BlockPos(0, 4, 1);
+        var buttonPos = new BlockPos(0, 4, 0);
+        var chestPos = new BlockPos(0, 2, 1);
+
+        helper.setBlock(printingPos, SFMBlocks.PRINTING_PRESS_BLOCK.get());
+        helper.setBlock(pistonPos, Blocks.PISTON.defaultBlockState().setValue(DirectionalBlock.FACING, Direction.DOWN));
+        helper.setBlock(woodPos, Blocks.OAK_PLANKS);
+        helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
+        helper.setBlock(chestPos, Blocks.CHEST);
+
+        var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
+        Player player = helper.makeMockPlayer();
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(SFMItems.EXPERIENCE_GOOP_ITEM.get(), 10));
+        BlockState pressState = helper.getBlockState(printingPos);
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(printingPos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(printingPos),
+                        false
+                )
+        );
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOOK));
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(printingPos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(printingPos),
+                        false
+                )
+        );
+        ItemStack reference = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
+                Enchantments.SHARPNESS,
+                3
+        ));
+        player.setItemInHand(InteractionHand.MAIN_HAND, FormItem.getForm(reference));
+        pressState.getBlock().use(
+                pressState,
+                helper.getLevel(),
+                helper.absolutePos(printingPos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(printingPos),
+                        false
+                )
+        );
+
+        BlockState buttonState = helper.getBlockState(buttonPos);
+        buttonState.getBlock().use(
+                buttonState,
+                helper.getLevel(),
+                helper.absolutePos(buttonPos),
+                player,
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(
+                        new Vec3(0.5, 0.5, 0.5),
+                        Direction.UP,
+                        helper.absolutePos(printingPos),
+                        false
+                )
+        );
+
+        helper.runAfterDelay(5, () -> {
+            pressState.getBlock().use(
+                    pressState,
+                    helper.getLevel(),
+                    helper.absolutePos(printingPos),
+                    player,
+                    InteractionHand.MAIN_HAND,
+                    new BlockHitResult(
+                            new Vec3(0.5, 0.5, 0.5),
+                            Direction.UP,
+                            helper.absolutePos(printingPos),
+                            false
+                    )
+            );
+            ItemStack held = player.getMainHandItem();
+            if (ItemStack.isSameItemSameTags(held, reference)) {
+                helper
+                        .getBlockEntity(chestPos)
+                        .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                        .ifPresent(c -> c.insertItem(0, held, false));
+                assertTrue(printingPress.getInk().getCount() == 9, "Ink was not consumed properly");
+                assertTrue(printingPress.getPaper().isEmpty(), "Paper was not consumed");
+                assertTrue(!printingPress.getForm().isEmpty(), "Form should not be consumed");
+                helper.succeed();
+            } else {
+                helper.fail("cloned item wasnt same");
+            }
+        });
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void falling_anvil_program_form(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 1), Blocks.IRON_BLOCK);
+        var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
+        ItemStack disk = new ItemStack(SFMItems.DISK_ITEM.get());
+        DiskItem.setProgram(disk, """
+                    NAME "falling anvil test"
+                    EVERY 20 TICKS DO
+                        INPUT FROM a TOP SIDE SLOTS 0,1,3-4,5
+                        OUTPUT TO a SLOTS 2
+                    END
+                """.stripIndent());
+        helper
+                .getLevel()
+                .addFreshEntity(new ItemEntity(
+                        helper.getLevel(),
+                        pos.x, pos.y, pos.z,
+                        disk,
+                        0, 0, 0
+                ));
+        helper.setBlock(new BlockPos(1, 4, 1), Blocks.ANVIL);
+        helper.runAfterDelay(20, () -> {
+            List<ItemEntity> found = helper
+                    .getLevel()
+                    .getEntitiesOfClass(
+                            ItemEntity.class,
+                            new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
+                    );
+            if (found.stream().anyMatch(e -> ItemStack.isSameItemSameTags(e.getItem(), FormItem.getForm(disk)))) {
+                helper.succeed();
+            } else {
+                helper.fail("no form found");
+            }
+        });
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void falling_anvil_enchantment_form(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 1), Blocks.IRON_BLOCK);
+        var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
+        ItemStack reference = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
+                Enchantments.SHARPNESS,
+                3
+        ));
+        helper
+                .getLevel()
+                .addFreshEntity(new ItemEntity(
+                        helper.getLevel(),
+                        pos.x, pos.y, pos.z,
+                        reference,
+                        0, 0, 0
+                ));
+        helper.setBlock(new BlockPos(1, 4, 1), Blocks.ANVIL);
+        helper.runAfterDelay(20, () -> {
+            List<ItemEntity> found = helper
+                    .getLevel()
+                    .getEntitiesOfClass(
+                            ItemEntity.class,
+                            new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
+                    );
+            if (found.stream().anyMatch(e -> ItemStack.isSameItemSameTags(e.getItem(), FormItem.getForm(reference)))) {
+                helper.succeed();
+            } else {
+                helper.fail("no form found");
+            }
+        });
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void falling_anvil_disenchant(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 1), Blocks.OBSIDIAN);
+        var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
+        helper
+                .getLevel()
+                .addFreshEntity(new ItemEntity(
+                        helper.getLevel(),
+                        pos.x, pos.y, pos.z,
+                        new ItemStack(Items.BOOK, 16),
+                        0, 0, 0
+                ));
+        var axe = new ItemStack(Items.GOLDEN_AXE);
+        axe.enchant(Enchantments.BLOCK_EFFICIENCY, 3);
+        axe.enchant(Enchantments.SHARPNESS, 2);
+        helper.getLevel().addFreshEntity(new ItemEntity(
+                helper.getLevel(),
+                pos.x, pos.y, pos.z,
+                axe,
+                0, 0, 0
+        ));
+        helper.setBlock(new BlockPos(1, 4, 1), Blocks.ANVIL);
+        helper.runAfterDelay(20, () -> {
+            List<ItemEntity> found = helper
+                    .getLevel()
+                    .getEntitiesOfClass(
+                            ItemEntity.class,
+                            new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
+                    );
+            boolean foundDisenchantedAxe = found
+                    .stream()
+                    .anyMatch(e -> ItemStack.isSameItemSameTags(e.getItem(), new ItemStack(Items.GOLDEN_AXE)));
+            boolean foundEfficiencyBook = found
+                    .stream()
+                    .anyMatch(e -> ItemStack.isSameItemSameTags(
+                            e.getItem(),
+                            EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
+                                    Enchantments.BLOCK_EFFICIENCY,
+                                    3
+                            ))
+                    ));
+            boolean foundSharpnessBook = found
+                    .stream()
+                    .anyMatch(e -> ItemStack.isSameItemSameTags(
+                            e.getItem(),
+                            EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 2))
+                    ));
+            boolean foundRemainingBooks = found
+                                                  .stream()
+                                                  .filter(e -> e.getItem().is(Items.BOOK))
+                                                  .mapToInt(e -> e.getItem().getCount())
+                                                  .sum() == 16 - 2;
+            if (foundDisenchantedAxe && foundEfficiencyBook && foundSharpnessBook && foundRemainingBooks) {
+                helper.succeed();
+            } else {
+                helper.fail("disenchant failed");
+            }
+        });
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void falling_anvil_xp_shard(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 1), Blocks.OBSIDIAN);
+        var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
+        helper
+                .getLevel()
+                .addFreshEntity(new ItemEntity(
+                        helper.getLevel(),
+                        pos.x, pos.y, pos.z,
+                        EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
+                                Enchantments.SHARPNESS,
+                                3
+                        )),
+                        0, 0, 0
+                ));
+        helper.setBlock(new BlockPos(1, 4, 1), Blocks.ANVIL);
+        helper.runAfterDelay(20, () -> {
+            List<ItemEntity> found = helper
+                    .getLevel()
+                    .getEntitiesOfClass(
+                            ItemEntity.class,
+                            new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
+                    );
+            assertTrue(found.size() == 1, "should only be one item");
+            assertTrue(found.get(0).getItem().is(SFMItems.EXPERIENCE_SHARD_ITEM.get()), "should be an xp shard");
+            assertTrue(found.get(0).getItem().getCount() == 1, "should only be one");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void falling_anvil_xp_shard_many(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 1), Blocks.OBSIDIAN);
+        var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
+        ItemStack enchBook = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
+                Enchantments.SHARPNESS,
+                3
+        ));
+        for (int i = 0; i < 10; i++) {
+            helper
+                    .getLevel()
+                    .addFreshEntity(new ItemEntity(
+                            helper.getLevel(),
+                            pos.x, pos.y, pos.z,
+                            enchBook,
+                            0, 0, 0
+                    ));
+        }
+        helper.setBlock(new BlockPos(1, 4, 1), Blocks.ANVIL);
+        helper.runAfterDelay(20, () -> {
+            List<ItemEntity> found = helper
+                    .getLevel()
+                    .getEntitiesOfClass(
+                            ItemEntity.class,
+                            new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
+                    );
+            assertTrue(
+                    found.stream().allMatch(e -> e.getItem().is(SFMItems.EXPERIENCE_SHARD_ITEM.get())),
+                    "should only be xp shards"
+            );
+            assertTrue(found.stream().mapToInt(e -> e.getItem().getCount()).sum() == 10, "bad count");
+            helper.succeed();
+        });
+    }
 }

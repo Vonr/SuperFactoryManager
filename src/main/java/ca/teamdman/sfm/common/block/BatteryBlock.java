@@ -13,13 +13,18 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 public class BatteryBlock extends Block implements EntityBlock {
+    public static IntegerProperty LEVEL = IntegerProperty.create("level", 0, 10);
+
     public BatteryBlock() {
         super(BlockBehaviour.Properties.of(Material.METAL).strength(5.0F, 6.0F));
+        this.registerDefaultState(this.getStateDefinition().any().setValue(LEVEL, 0));
     }
 
     @Override
@@ -27,6 +32,11 @@ public class BatteryBlock extends Block implements EntityBlock {
         return SFMBlockEntities.BATTERY_BLOCK_ENTITY
                 .get()
                 .create(pos, state);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(LEVEL);
     }
 
     @Override

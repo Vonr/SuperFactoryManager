@@ -23,6 +23,8 @@ public class SFM {
         SFMBlockEntities.register(bus);
         SFMCapabilityProviderMappers.register(bus);
         SFMMenus.register(bus);
+        SFMRecipeTypes.register(bus);
+        SFMRecipeSerializers.register(bus);
         bus.addListener((FMLClientSetupEvent e) -> SFMScreens.register());
         bus.addListener((FMLCommonSetupEvent e) -> SFMPackets.register());
     }

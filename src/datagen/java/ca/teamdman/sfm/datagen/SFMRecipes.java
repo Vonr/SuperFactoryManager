@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.datagen;
 
+import ca.teamdman.sfm.common.recipe.PrintingPressFinishedRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.data.PackOutput;
@@ -7,7 +8,10 @@ import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 
@@ -53,7 +57,7 @@ public class SFMRecipes extends RecipeProvider {
                 .define('B', Tags.Items.DYES_BLACK)
                 .define('L', Tags.Items.DYES_BLUE)
                 .define('C', Items.OAK_SIGN)
-                .unlockedBy("has_ink", RecipeProvider.has(Items.INK_SAC))
+                .unlockedBy("has_ink", RecipeProvider.has(Tags.Items.DYES_BLACK))
                 .pattern(" LC")
                 .pattern(" SB")
                 .pattern("S  ")
@@ -85,5 +89,68 @@ public class SFMRecipes extends RecipeProvider {
                 .pattern("gpg")
                 .pattern("gbg")
                 .save(writer);
+
+        ShapelessRecipeBuilder
+                .shapeless(SFMItems.EXPERIENCE_GOOP_ITEM.get())
+                .requires(SFMItems.EXPERIENCE_SHARD_ITEM.get(), 9)
+                .unlockedBy("has_experience_shard", RecipeProvider.has(SFMItems.EXPERIENCE_SHARD_ITEM.get()))
+                .save(writer);
+
+
+        ShapedRecipeBuilder
+                .shaped(SFMItems.PRINTING_PRESS_ITEM.get())
+                .define('a', Items.ANVIL)
+                .define('i', Tags.Items.DYES_BLACK)
+                .define('p', Items.LIGHT_WEIGHTED_PRESSURE_PLATE)
+                .define('s', Items.STONE)
+                .define('x', Items.PISTON)
+                .define('g', Items.IRON_BARS)
+                .unlockedBy("has_iron", RecipeProvider.has(Items.IRON_INGOT))
+                .pattern("pip")
+                .pattern("sas")
+                .pattern("gxg")
+                .save(writer);
+
+        addPrintingPressRecipe(
+                writer,
+                new ResourceLocation("sfm", "written_book_copy"),
+                Ingredient.of(Items.WRITTEN_BOOK),
+                Ingredient.of(Tags.Items.DYES_BLACK),
+                Ingredient.of(Items.BOOK)
+        );
+
+        addPrintingPressRecipe(
+                writer,
+                new ResourceLocation("sfm", "enchanted_book_copy"),
+                Ingredient.of(Items.ENCHANTED_BOOK),
+                Ingredient.of(SFMItems.EXPERIENCE_GOOP_ITEM.get()),
+                Ingredient.of(Items.BOOK)
+        );
+
+        addPrintingPressRecipe(
+                writer,
+                new ResourceLocation("sfm", "map_copy"),
+                Ingredient.of(Items.FILLED_MAP),
+                Ingredient.of(Tags.Items.DYES_BLACK),
+                Ingredient.of(Items.MAP)
+        );
+
+        addPrintingPressRecipe(
+                writer,
+                new ResourceLocation("sfm", "program_copy"),
+                Ingredient.of(SFMItems.DISK_ITEM.get()),
+                Ingredient.of(Tags.Items.DYES_BLACK),
+                Ingredient.of(SFMItems.DISK_ITEM.get())
+        );
+    }
+
+    private void addPrintingPressRecipe(
+            Consumer<FinishedRecipe> writer,
+            ResourceLocation id,
+            Ingredient form,
+            Ingredient ink,
+            Ingredient paper
+    ) {
+        writer.accept(new PrintingPressFinishedRecipe(id, form, ink, paper));
     }
 }

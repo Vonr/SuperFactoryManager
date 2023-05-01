@@ -12,6 +12,9 @@ import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
+public class SFMBlockStatesAndModels extends BlockStateProvider {
+    public SFMBlockStatesAndModels(DataGenerator gen, ExistingFileHelper exFileHelper) {
+        super(gen, SFM.MOD_ID, exFileHelper);
 public class SFMBlockStates extends BlockStateProvider {
     public SFMBlockStates(PackOutput output, ExistingFileHelper exFileHelper) {
         super(output, SFM.MOD_ID, exFileHelper);
@@ -27,6 +30,7 @@ public class SFMBlockStates extends BlockStateProvider {
         ).texture("particle", "#top"));
 
         simpleBlock(SFMBlocks.CABLE_BLOCK.get());
+        simpleBlock(SFMBlocks.PRINTING_PRESS_BLOCK.get(), models().getExistingFile(modLoc("block/printing_press")));
 
 
         ModelFile waterIntakeModelActive = models()

@@ -39,6 +39,35 @@ public class Constants {
                 () -> SFMBlocks.MANAGER_BLOCK.get().getDescriptionId(),
                 () -> "Factory Manager"
         );
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry PRINTING_PRESS_BLOCK = new LocalizationEntry(
+                () -> SFMBlocks.PRINTING_PRESS_BLOCK.get().getDescriptionId(),
+                () -> "Printing Press"
+        );
+
+        public static LocalizationEntry PRINTING_PRESS_JEI_CATEGORY_TITLE = new LocalizationEntry(
+                "gui.jei.category.sfm.printing_press",
+                "Printing Press"
+        );
+
+        public static LocalizationEntry FALLING_ANVIL_JEI_CATEGORY_TITLE = new LocalizationEntry(
+                "gui.jei.category.sfm.falling_anvil",
+                "Falling Anvil"
+        );
+
+        public static LocalizationEntry FALLING_ANVIL_JEI_CONSUMED = new LocalizationEntry(
+                "gui.jei.category.sfm.falling_anvil.consumed",
+                "Gets consumed"
+        );
+        public static LocalizationEntry FALLING_ANVIL_JEI_NOT_CONSUMED = new LocalizationEntry(
+                "gui.jei.category.sfm.falling_anvil.not_consumed",
+                "Not consumed"
+        );
+
+        public static LocalizationEntry PRINTING_PRESS_TOOLTIP = new LocalizationEntry(
+                () -> SFMItems.PRINTING_PRESS_ITEM.get().getDescriptionId() + ".tooltip",
+                () -> "Place with an air gap below a downward facing piston. Extend the piston to use."
+        );
 
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
         public static LocalizationEntry TEST_BARREL_BLOCK = new LocalizationEntry(
@@ -52,9 +81,31 @@ public class Constants {
                 () -> "Water Tank"
         );
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry BATTERY_BLOCK = new LocalizationEntry(
+                () -> SFMBlocks.BATTERY_BLOCK.get().getDescriptionId(),
+                () -> "Battery (WIP)"
+        );
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
         public static LocalizationEntry DISK_ITEM = new LocalizationEntry(
                 () -> SFMItems.DISK_ITEM.get().getDescriptionId(),
                 () -> "Factory Manager Program Disk"
+        );
+
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry EXPERIENCE_GOOP_ITEM = new LocalizationEntry(
+                () -> SFMItems.EXPERIENCE_GOOP_ITEM.get().getDescriptionId(),
+                () -> "Experience Goop"
+        );
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry EXPERIENCE_SHARD_ITEM = new LocalizationEntry(
+                () -> SFMItems.EXPERIENCE_SHARD_ITEM.get().getDescriptionId(),
+                () -> "Experience Shard"
+        );
+
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry FORM_ITEM = new LocalizationEntry(
+                () -> SFMItems.FORM_ITEM.get().getDescriptionId(),
+                () -> "Printing Form"
         );
 
         public static LocalizationEntry DISK_ITEM_TOOLTIP_LABEL_HEADER = new LocalizationEntry(
@@ -117,6 +168,10 @@ public class Constants {
         public static LocalizationEntry MANAGER_CONTAINER = new LocalizationEntry(
                 "container.sfm.manager",
                 "Factory Manager"
+        );
+        public static LocalizationEntry PRINTING_PRESS_CONTAINER = new LocalizationEntry(
+                "container.sfm.printing_press",
+                "Printing Press"
         );
         public static LocalizationEntry PROGRAM_WARNING_UNUSED_LABEL = new LocalizationEntry(
                 "program.sfm.warnings.unused_label",

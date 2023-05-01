@@ -1,12 +1,12 @@
 package ca.teamdman.sfm.common.item;
 
+import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -19,6 +19,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -105,16 +107,9 @@ public class DiskItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
-        long handle = Minecraft.getInstance().getWindow().getWindow();
-        boolean showProgram = InputConstants.isKeyDown(
-                handle,
-                SFMKeyMappings.MORE_INFO_TOOLTIP_KEY
-                        .get()
-                        .getKey()
-                        .getValue()
-        );
-        if (showProgram) return super.getName(stack);
-
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            if (ClientStuff.isMoreInfoKeyDown()) return super.getName(stack);
+        }
         var name = getProgramName(stack);
         if (name.isEmpty()) return super.getName(stack);
         return Component.literal(name).withStyle(ChatFormatting.AQUA);
@@ -128,13 +123,8 @@ public class DiskItem extends Item {
             // reference for finding out if key is pressed in manager gui
             // for some reason, it worked in inventory but not manager GUI using the normal methods
             // https://github.com/mekanism/Mekanism/blob/f92b48a49e0766cd3aa78e95c9c4a47ba90402f5/src/main/java/mekanism/client/key/MekKeyHandler.java
-            long    handle      = Minecraft.getInstance().getWindow().getWindow();
-            boolean showProgram = InputConstants.isKeyDown(handle,
-                                                           SFMKeyMappings.MORE_INFO_TOOLTIP_KEY
-                                                                   .get()
-                                                                   .getKey()
-                                                                   .getValue()
-            );
+            long handle = Minecraft.getInstance().getWindow().getWindow();
+            boolean showProgram = ClientStuff.isMoreInfoKeyDown();
 
             if (!showProgram) {
                 list.addAll(SFMLabelNBTHelper.getHoverText(stack));

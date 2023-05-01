@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "minecraft:ink_sac"
-            ]
+            "tag": "forge:dyes/black"
           }
         ]
       },

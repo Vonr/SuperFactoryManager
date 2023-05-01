@@ -34,12 +34,27 @@ public class SFMLootTables extends LootTableProvider {
     public static class SFMBlockLootProvider implements LootTableSubProvider {
 
         @Override
+        protected void addTables() {
+            dropSelf(SFMBlocks.MANAGER_BLOCK.get());
+            dropSelf(SFMBlocks.CABLE_BLOCK.get());
+            dropSelf(SFMBlocks.PRINTING_PRESS_BLOCK.get());
+            dropSelf(SFMBlocks.WATER_TANK_BLOCK.get());
+        }
         public void generate(BiConsumer<ResourceLocation, LootTable.Builder> writer) {
             dropSelf(SFMBlocks.MANAGER_BLOCK, writer);
             dropSelf(SFMBlocks.CABLE_BLOCK, writer);
             dropSelf(SFMBlocks.WATER_TANK_BLOCK, writer);
         }
 
+        @Override
+        protected Iterable<Block> getKnownBlocks() {
+            return Arrays.asList(
+                    SFMBlocks.MANAGER_BLOCK.get(),
+                    SFMBlocks.CABLE_BLOCK.get(),
+                    SFMBlocks.WATER_TANK_BLOCK.get(),
+                    SFMBlocks.PRINTING_PRESS_BLOCK.get()
+            );
+        }
         private void dropSelf(RegistryObject<Block> block, BiConsumer<ResourceLocation, LootTable.Builder> writer) {
             var pool = LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1))
