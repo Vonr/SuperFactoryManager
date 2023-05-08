@@ -5,10 +5,12 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.item.DiskItem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -19,6 +21,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -183,15 +186,22 @@ public class ProgramEditScreen extends Screen {
 
         @Override
         protected void renderContents(PoseStack poseStack, int mx, int my, float partialTicks) {
-            var matrix4f = poseStack.last().pose();
-            var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-
-            var components = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(this.textField.value());
+            Matrix4f matrix4f = poseStack.last().pose();
+            List<MutableComponent> components = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(this.textField.value());
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
-            int lineX = this.x + this.innerPadding(), lineY = this.y
-                                                              + this.innerPadding(), charCount = 0, cursorX = 0, cursorY = 0;
+            int lineX = this.x + this.innerPadding();
+            int lineY = this.y + this.innerPadding();
+            int charCount = 0;
+            int cursorX = 0;
+            int cursorY = 0;
+            MultilineTextField.StringView selectedRange = this.textField.getSelected();
+            int selectionStart = selectedRange.beginIndex();
+            int selectionEnd = selectedRange.endIndex();
+            int currentCharIndex = 0;
+
+
             for (int line = 0; line < components.size(); ++line) {
                 var component = components.get(line);
                 int lineLength = component.getString().length();
@@ -199,10 +209,13 @@ public class ProgramEditScreen extends Screen {
                 boolean cursorOnThisLine = isCursorVisible
                                            && cursorIndex >= charCount
                                            && cursorIndex <= charCount + lineLength;
+                var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+
                 if (cursorOnThisLine) {
 //                    component = insertStringAt(component, "_", cursorIndex - charCount);
                     isCursorAtEndOfLine = cursorIndex == charCount + lineLength;
                     cursorY = lineY;
+
                     cursorX = this.font.drawInBatch(
                             substring(component, 0, cursorIndex - charCount),
                             lineX,
@@ -241,12 +254,29 @@ public class ProgramEditScreen extends Screen {
                             LightTexture.FULL_BRIGHT
                     );
                 }
+                buffer.endBatch();
+
+                // Check if the selection is within the current line
+                if (selectionStart <= charCount + lineLength && selectionEnd > charCount) {
+                    int lineSelectionStart = Math.max(selectionStart - charCount, 0);
+                    int lineSelectionEnd = Math.min(selectionEnd - charCount, lineLength);
+
+                    int highlightStartX = this.font.width(substring(component, 0, lineSelectionStart));
+                    int highlightEndX = this.font.width(substring(component, 0, lineSelectionEnd));
+
+                    this.renderHighlight(
+                            poseStack,
+                            lineX + highlightStartX,
+                            lineY,
+                            lineX + highlightEndX,
+                            lineY + lineHeight
+                    );
+                }
+
                 lineY += lineHeight;
                 charCount += lineLength + 1;
             }
-            buffer.endBatch();
 
-            // this has to happen AFTER endBatch since it starts a new batch
             if (isCursorAtEndOfLine) {
                 this.font.drawShadow(poseStack, "_", cursorX, cursorY, -1);
             } else {
