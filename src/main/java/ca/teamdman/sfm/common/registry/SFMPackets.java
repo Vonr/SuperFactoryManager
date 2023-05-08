@@ -15,18 +15,25 @@ import java.util.function.Supplier;
 
 public class SFMPackets {
     public static final String MANAGER_CHANNEL_VERSION = "1";
-    public static final String LABEL_GUN_CHANNEL_VERSION = "1";
+    public static final String LABEL_GUN_ITEM_CHANNEL_VERSION = "1";
+    public static final String DISK_ITEM_CHANNEL_VERSION = "1";
     public static final SimpleChannel MANAGER_CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(SFM.MOD_ID, "manager"),
-            LABEL_GUN_CHANNEL_VERSION::toString,
-            LABEL_GUN_CHANNEL_VERSION::equals,
-            LABEL_GUN_CHANNEL_VERSION::equals
+            MANAGER_CHANNEL_VERSION::toString,
+            MANAGER_CHANNEL_VERSION::equals,
+            MANAGER_CHANNEL_VERSION::equals
     );
-    public static final SimpleChannel LABEL_GUN_CHANNEL = NetworkRegistry.newSimpleChannel(
+    public static final SimpleChannel LABEL_GUN_ITEM_CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(SFM.MOD_ID, "labelgun"),
-            LABEL_GUN_CHANNEL_VERSION::toString,
-            LABEL_GUN_CHANNEL_VERSION::equals,
-            LABEL_GUN_CHANNEL_VERSION::equals
+            LABEL_GUN_ITEM_CHANNEL_VERSION::toString,
+            LABEL_GUN_ITEM_CHANNEL_VERSION::equals,
+            LABEL_GUN_ITEM_CHANNEL_VERSION::equals
+    );
+    public static final SimpleChannel DISK_ITEM_CHANNEL = NetworkRegistry.newSimpleChannel(
+            new ResourceLocation(SFM.MOD_ID, "disk"),
+            DISK_ITEM_CHANNEL_VERSION::toString,
+            DISK_ITEM_CHANNEL_VERSION::equals,
+            DISK_ITEM_CHANNEL_VERSION::equals
     );
 
     public static <MSG extends MenuPacket> void register(
@@ -69,12 +76,20 @@ public class SFMPackets {
         );
 
 
-        LABEL_GUN_CHANNEL.registerMessage(
+        LABEL_GUN_ITEM_CHANNEL.registerMessage(
                 0,
                 ServerboundLabelGunUpdatePacket.class,
                 ServerboundLabelGunUpdatePacket::encode,
                 ServerboundLabelGunUpdatePacket::decode,
                 ServerboundLabelGunUpdatePacket::handle
+        );
+
+        DISK_ITEM_CHANNEL.registerMessage(
+                0,
+                ServerboundDiskItemSetProgramPacket.class,
+                ServerboundDiskItemSetProgramPacket::encode,
+                ServerboundDiskItemSetProgramPacket::decode,
+                ServerboundDiskItemSetProgramPacket::handle
         );
     }
 

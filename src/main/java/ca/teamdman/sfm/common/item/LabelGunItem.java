@@ -28,11 +28,11 @@ public class LabelGunItem extends Item {
     public static void setLabel(ItemStack stack, String label) {
         stack
                 .getOrCreateTag()
-                .putString("sfm:label", label);
+                .putString("sfm:programString", label);
     }
 
     public static String getLabel(ItemStack stack) {
-        return !stack.hasTag() ? "" : stack.getTag().getString("sfm:label");
+        return !stack.hasTag() ? "" : stack.getTag().getString("sfm:programString");
     }
 
     public static String getNextLabel(ItemStack gun, int change) {

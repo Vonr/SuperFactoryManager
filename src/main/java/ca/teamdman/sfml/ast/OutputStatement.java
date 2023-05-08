@@ -154,7 +154,7 @@ public final class OutputStatement implements Statement {
 
     /**
      * The output statement contains labels.
-     * Each block in the world can have more than one label.
+     * Each block in the world can have more than one programString.
      * Each block can have a block entity.
      * Each block entity can have 0 or more slots.
      * <p>

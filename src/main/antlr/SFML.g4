@@ -96,6 +96,7 @@ label           : IDENTIFIER #RawLabel
 resourceid      : IDENTIFIER (COLON IDENTIFIER (COLON IDENTIFIER (COLON IDENTIFIER)?)?)? # Resource
                 | string                             # StringResource
                 ;
+
 // GENERAL
 string: STRING ;
 number: NUMBER ;
@@ -181,7 +182,8 @@ NUMBER          : [0-9]+ ;
 
 STRING : '"' (~'"'|'\\"')* '"' ;
 
-LINE_COMMENT : '--' ~[\r\n]* (EOF|'\r'? '\n') -> skip ;
+LINE_COMMENT : '--' ~[\r\n]* -> channel(HIDDEN);
+//LINE_COMMENT : '--' ~[\r\n]* (EOF|'\r'? '\n');
 
 WS
         :   [ \r\t\n]+ -> channel(HIDDEN)

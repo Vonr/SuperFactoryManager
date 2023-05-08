@@ -1,7 +1,9 @@
 package ca.teamdman.sfml;
 
+import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
+import net.minecraft.network.chat.Component;
 import org.antlr.v4.runtime.*;
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.junit.jupiter.api.Test;
@@ -12,16 +14,17 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SFML {
     public ArrayList<String> getCompileErrors(String input) {
-        var lexer   = new SFMLLexer(CharStreams.fromString(input));
-        var tokens  = new CommonTokenStream(lexer);
-        var parser  = new SFMLParser(tokens);
+        var lexer = new SFMLLexer(CharStreams.fromString(input));
+        var tokens = new CommonTokenStream(lexer);
+        var parser = new SFMLParser(tokens);
         var builder = new ASTBuilder();
-        var errors  = new ArrayList<String>();
+        var errors = new ArrayList<String>();
         parser.removeErrorListeners();
         parser.addErrorListener(new BaseErrorListener() {
             @Override
@@ -186,6 +189,47 @@ public class SFML {
         assertFalse(errors.isEmpty());
     }
 
+
+    @Test
+    public void comments() {
+        var input = """
+                EVERY 20 TICKS DO
+                    INPUT FROM a -- hehehehaw
+                    OUTPUT "minecraft":"redstone" to b
+                END
+                """;
+        var errors = getCompileErrors(input);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
+    public void syntaxHighlighting() {
+        var input = """
+                EVERY 20 TICKS DO
+                                
+                    INPUT FROM a -- hehehehaw
+                    
+                    -- we want to test to make sure whitespace is preserved
+                    -- in the
+                    
+                    -- syntax highlighting
+                    
+                    INPUT FROM hehehehehehehehehhe
+                    
+                    OUTPUT stone to b
+                END
+                """.stripIndent();
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var colourLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(input);
+        var lines = input.split("\n", -1);
+        assertEquals(input, colourLines.stream().map(Component::getString).collect(Collectors.joining("\n")));
+        assertEquals(lines.length, colourLines.size());
+        for (int i = 0; i < lines.length; i++) {
+            assertEquals(lines[i], colourLines.get(i).getString());
+        }
+    }
+
     @Test
     public void booleanHasOperator() {
         var input = """
@@ -226,14 +270,14 @@ public class SFML {
 
     @Test
     public void demos() throws IOException {
-        var rootDir     = System.getProperty("user.dir");
+        var rootDir = System.getProperty("user.dir");
         var examplesDir = Paths.get(rootDir, "examples").toFile();
-        var found       = 0;
+        var found = 0;
         for (var entry : examplesDir.listFiles()) {
             if (!FileNameUtils.getExtension(entry.getPath()).equals("sfm")) continue;
             System.out.println("Reading " + entry);
             var content = Files.readString(entry.toPath());
-            var errors  = getCompileErrors(content);
+            var errors = getCompileErrors(content);
             assertTrue(errors.isEmpty());
             found++;
         }

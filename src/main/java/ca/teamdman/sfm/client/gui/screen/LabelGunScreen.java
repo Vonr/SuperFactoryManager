@@ -60,7 +60,7 @@ public class LabelGunScreen extends Screen {
     }
 
     public void onDone() {
-        SFMPackets.LABEL_GUN_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
+        SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
                 labelField.getValue(),
                 HAND
         ));
