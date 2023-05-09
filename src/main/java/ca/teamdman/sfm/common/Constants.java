@@ -14,6 +14,15 @@ import java.util.function.Supplier;
 
 public class Constants {
     public static final class LocalizationKeys {
+        public static final LocalizationEntry PROGRAM_EDIT_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.text_editor.title",
+                "Text Editor"
+        );
+        public static final LocalizationEntry PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.text_editor.done_button.tooltip",
+                "Shift+Enter to submit"
+        );
+
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
         public static LocalizationEntry MOD_NAME = new LocalizationEntry(
                 "mod.name",
@@ -109,11 +118,11 @@ public class Constants {
         );
 
         public static LocalizationEntry DISK_ITEM_TOOLTIP_LABEL_HEADER = new LocalizationEntry(
-                () -> SFMItems.DISK_ITEM.get().getDescriptionId() + ".tooltip.label.header",
+                () -> SFMItems.DISK_ITEM.get().getDescriptionId() + ".tooltip.programString.header",
                 () -> "Labels"
         );
         public static LocalizationEntry DISK_ITEM_TOOLTIP_LABEL = new LocalizationEntry(
-                () -> SFMItems.DISK_ITEM.get().getDescriptionId() + ".tooltip.label",
+                () -> SFMItems.DISK_ITEM.get().getDescriptionId() + ".tooltip.programString",
                 () -> " - %s: %d blocks"
         );
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
@@ -154,16 +163,24 @@ public class Constants {
                 "Label Gun"
         );
         public static LocalizationEntry LABEL_GUN_GUI_LABEL_PLACEHOLDER = new LocalizationEntry(
-                "gui.sfm.label.labelgun.placeholder",
+                "gui.sfm.programString.labelgun.placeholder",
                 "Label"
         );
         public static LocalizationEntry MANAGER_GUI_PASTE_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.tooltip.paste",
                 "Press Ctrl+V to paste."
         );
+        public static LocalizationEntry MANAGER_GUI_EDIT_BUTTON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.manager.edit_button.tooltip",
+                "Press Ctrl+E to edit."
+        );
+        public static LocalizationEntry MANAGER_GUI_EDIT_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.edit_button",
+                "Edit"
+        );
         public static LocalizationEntry MANAGER_RESET_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.tooltip.reset",
-                "Wipes program AND label data."
+                "Wipes program AND programString data."
         );
         public static LocalizationEntry MANAGER_CONTAINER = new LocalizationEntry(
                 "container.sfm.manager",

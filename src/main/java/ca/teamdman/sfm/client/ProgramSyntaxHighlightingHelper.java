@@ -15,38 +15,62 @@ public class ProgramSyntaxHighlightingHelper {
 
 
     public static List<MutableComponent> withSyntaxHighlighting(String programString) {
-        SFMLLexer              lexer          = new SFMLLexer(CharStreams.fromString(programString));
-        CommonTokenStream      tokens         = new CommonTokenStream(lexer);
+        SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
+        lexer.INCLUDE_UNUSED = true;
+        CommonTokenStream tokens = new CommonTokenStream(lexer) {
+            // This is a hack to make hidden tokens show up in the token stream
+            @Override
+            public List<Token> getHiddenTokensToRight(int tokenIndex, int channel) {
+                if (channel == Token.DEFAULT_CHANNEL) {
+                    return getHiddenTokensToRight(tokenIndex, Token.HIDDEN_CHANNEL);
+                } else {
+                    return super.getHiddenTokensToRight(tokenIndex, channel);
+                }
+            }
+        };
         List<MutableComponent> textComponents = new ArrayList<>();
+        MutableComponent lineComponent = Component.empty();
 
-
-        int              currentLine      = tokens.LT(1).getLine();
-        MutableComponent lineComponent    = Component.empty();
-        int              previousTokenEnd = 0;
-
-        for (Token token = tokens.LT(1); ; token = tokens.LT(1)) {
-            if (tokens.LA(1) == Token.EOF) break;
-            if (token.getLine() != currentLine) {
-                // Add the completed line to textComponents and start a new lineComponent
-                textComponents.add(lineComponent);
-                lineComponent    = Component.empty();
-                currentLine      = token.getLine();
-                previousTokenEnd = 0;
+        for (Token token = tokens.LT(1); tokens.LA(1) != Token.EOF; token = tokens.LT(1)) {
+            // the token may contain newlines in it, so we need to split it up
+            String[] lines = token.getText().split("\n", -1);
+            for (int i = 0; i < lines.length; i++) {
+                if (i != 0) {
+                    textComponents.add(lineComponent);
+                    lineComponent = Component.empty();
+                }
+                String line = lines[i];
+                if (!line.isEmpty()) {
+                    var text = Component.literal(line).withStyle(getStyle(token));
+                    lineComponent = lineComponent.append(text);
+                }
             }
-
-            // Add whitespace between tokens based on char position
-            int whitespaceCount = token.getCharPositionInLine() - previousTokenEnd;
-            if (whitespaceCount > 0) {
-                lineComponent = lineComponent.append(Component.literal(" ".repeat(whitespaceCount)));
+            List<Token> hiddenTokens = tokens.getHiddenTokensToRight(tokens.index(), Token.DEFAULT_CHANNEL);
+            if (hiddenTokens != null) {
+                for (Token hiddenToken : hiddenTokens) {
+                    // the whitespace token often contains newlines, so we need to split it up
+                    var whitespace = hiddenToken.getText();
+                    String[] wsLines = whitespace.split("\n", -1);
+                    for (int i = 0; i < wsLines.length; i++) {
+                        if (i != 0) {
+                            textComponents.add(lineComponent);
+                            lineComponent = Component.empty();
+                        }
+                        String wsLine = wsLines[i];
+                        if (!wsLine.isEmpty()) {
+                            var ws = Component.literal(wsLine).withStyle(getStyle(hiddenToken));
+                            lineComponent = lineComponent.append(ws);
+                        }
+                    }
+                }
             }
-
-            lineComponent    = lineComponent.append(Component.literal(token.getText()).withStyle(getStyle(token)));
-            previousTokenEnd = token.getCharPositionInLine() + token.getText().length();
             tokens.consume();
         }
 
-// Add the last lineComponent to textComponents
+        // Add the last lineComponent to textComponents
+//        if (!lineComponent.equals(Component.empty())) {
         textComponents.add(lineComponent);
+//        }
 
         return textComponents;
     }
@@ -60,6 +84,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.SOUTH:
             case SFMLLexer.EAST:
             case SFMLLexer.WEST:
+            case SFMLLexer.EACH:
                 return ChatFormatting.DARK_PURPLE;
             case SFMLLexer.LINE_COMMENT:
                 return ChatFormatting.GRAY;
@@ -68,6 +93,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.TO:
             case SFMLLexer.OUTPUT:
                 return ChatFormatting.LIGHT_PURPLE;
+            case SFMLLexer.NAME:
             case SFMLLexer.EVERY:
             case SFMLLexer.END:
             case SFMLLexer.DO:
@@ -75,12 +101,15 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.ELSE:
                 return ChatFormatting.BLUE;
             case SFMLLexer.IDENTIFIER:
+            case SFMLLexer.STRING:
                 return ChatFormatting.GREEN;
             case SFMLLexer.TICKS:
             case SFMLLexer.SLOTS:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
                 return ChatFormatting.AQUA;
+            case SFMLLexer.UNUSED:
+                return ChatFormatting.RED;
             default:
                 return ChatFormatting.WHITE;
         }

@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
@@ -20,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
+import org.lwjgl.glfw.GLFW;
 import org.joml.Matrix4f;
 
 import java.text.NumberFormat;
@@ -62,16 +64,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                     button -> this.onLoadClipboard(),
                     Tooltip.create(MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent())
             ));
-            this.addRenderableWidget(new ExtendedButton(
-                    (this.width - this.imageWidth) / 2
-                    - 22
-                    - font.width(MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent()),
-                    (this.height - this.imageHeight) / 2 + 128,
-                    100,
-                    16,
-                    MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent(),
-                    button -> this.onSaveClipboard()
-            ));
             this.addRenderableWidget(new ExtendedButtonWithTooltip(
                     (this.width - this.imageWidth) / 2 + 120,
                     (this.height - this.imageHeight) / 2 + 10,
@@ -79,9 +71,57 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                     12,
                     MANAGER_GUI_BUTTON_RESET.getComponent(),
                     button -> sendReset(),
-                    Tooltip.create(MANAGER_RESET_BUTTON_TOOLTIP.getComponent())
+                    (btn, pose, mx, my) -> renderTooltip(
+                            pose,
+                            font.split(
+                                    MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
+                                    Math.max(
+                                            width
+                                            / 2
+                                            - 43,
+                                            170
+                                    )
+                            ),
+                            mx,
+                            my
+                    )
+            ));
+            this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                    (this.width - this.imageWidth) / 2
+                    - 24
+                    - font.width(MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent()),
+                    (this.height - this.imageHeight) / 2 + 16 + 50,
+                    100,
+                    16,
+                    MANAGER_GUI_EDIT_BUTTON.getComponent(),
+                    button -> onEdit(),
+                    (btn, pose, mx, my) -> renderTooltip(
+                            pose,
+                            font.split(
+                                    MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent(),
+                                    Math.max(
+                                            width
+                                            / 2
+                                            - 43,
+                                            170
+                                    )
+                            ),
+                            mx,
+                            my
+                    )
             ));
         }
+
+        this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2
+                - 22
+                - font.width(MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent()),
+                (this.height - this.imageHeight) / 2 + 128,
+                100,
+                16,
+                MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent(),
+                button -> this.onSaveClipboard()
+        ));
 
         this.addRenderableWidget(diagButton = new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
@@ -101,6 +141,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                                 : MANAGER_GUI_WARNING_BUTTON_TOOLTIP).getComponent())
         ));
         diagButton.visible = shouldShowDiagButton();
+    }
+
+    private void onEdit() {
+        ClientStuff.showTextEditorScreen(menu.CONTAINER.getItem(0), this::sendProgram);
     }
 
     private void sendReset() {
@@ -195,16 +239,18 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
-    public boolean keyPressed(int p_97765_, int p_97766_, int p_97767_) {
-        if (super.keyPressed(p_97765_, p_97766_, p_97767_)) return true;
-        if (Screen.isPaste(p_97765_)) {
+    public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
+        if (Screen.isPaste(pKeyCode)) {
             onLoadClipboard();
             return true;
-        } else if (Screen.isCopy(p_97765_)) {
+        } else if (Screen.isCopy(pKeyCode)) {
             onSaveClipboard();
             return true;
+        } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown()) {
+            onEdit();
+            return true;
         }
-        return false;
+        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
 
     @Override

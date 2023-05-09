@@ -28,41 +28,26 @@ public record Program(
         Set<String> referencedLabels,
         Set<ResourceIdentifier<?, ?, ?>> referencedResources
 ) implements ASTNode {
-    public static final int MAX_PROGRAM_LENGTH = 8096;
+    public static final int MAX_PROGRAM_LENGTH = 80960;
 
     public static void compile(
-            String programString,
-            Consumer<Program> onSuccess,
-            Consumer<List<TranslatableContents>> onFailure
+            String programString, Consumer<Program> onSuccess, Consumer<List<TranslatableContents>> onFailure
     ) {
         var lexer = new SFMLLexer(CharStreams.fromString(programString));
-        lexer.removeErrorListeners();
         var tokens = new CommonTokenStream(lexer);
         var parser = new SFMLParser(tokens);
-
+        lexer.removeErrorListeners();
         parser.removeErrorListeners();
         List<TranslatableContents> errors = new ArrayList<>();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(
-                    Recognizer<?, ?> recognizer,
-                    Object offendingSymbol,
-                    int line,
-                    int charPositionInLine,
-                    String msg,
-                    RecognitionException e
-            ) {
-                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get("line "
-                                                                                + line
-                                                                                + ":"
-                                                                                + charPositionInLine
-                                                                                + " "
-                                                                                + msg));
-            }
-        });
+        List<String> buildErrors = new ArrayList<>();
+        ListErrorListener listener = new ListErrorListener(buildErrors);
+        lexer.addErrorListener(listener);
+        parser.addErrorListener(listener);
 
-        var     context = parser.program();
+        var context = parser.program();
         Program program = null;
+
+        buildErrors.stream().map(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL::get).forEach(errors::add);
 
         try {
             program = new ASTBuilder().visitProgram(context);
@@ -100,28 +85,28 @@ public record Program(
 
         // labels in code but not in world
         for (String label : referencedLabels) {
-            var isUsed = SFMLabelNBTHelper
-                    .getLabelPositions(disk, label)
-                    .findAny()
-                    .isPresent();
+            var isUsed = SFMLabelNBTHelper.getLabelPositions(disk, label).findAny().isPresent();
             if (!isUsed) {
                 warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_LABEL.get(label));
             }
         }
 
         // labels used in world but not defined in code
-        SFMLabelNBTHelper.getPositionLabels(disk)
-                .values().stream().distinct()
+        SFMLabelNBTHelper
+                .getPositionLabels(disk)
+                .values()
+                .stream()
+                .distinct()
                 .filter(x -> !referencedLabels.contains(x))
                 .forEach(label -> warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNDEFINED_LABEL.get(label)));
 
         // labels in world but not connected via cables
         CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
             for (var entry : SFMLabelNBTHelper.getPositionLabels(disk).entries()) {
-                var label     = entry.getValue();
-                var pos       = entry.getKey();
+                var label = entry.getValue();
+                var pos = entry.getKey();
                 var inNetwork = network.isInNetwork(pos);
-                var adjacent  = network.hasCableNeighbour(pos);
+                var adjacent = network.hasCableNeighbour(pos);
                 if (!inNetwork && !adjacent) {
                     warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
                             label,
@@ -174,15 +159,20 @@ public record Program(
 
     public void fixWarnings(ItemStack disk, ManagerBlockEntity manager) {
         // remove labels not defined in code
-        SFMLabelNBTHelper.getPositionLabels(disk)
-                .values().stream().distinct()
+        SFMLabelNBTHelper
+                .getPositionLabels(disk)
+                .values()
+                .stream()
+                .distinct()
                 .filter(label -> !referencedLabels.contains(label))
                 .forEach(label -> SFMLabelNBTHelper.removeLabel(disk, label));
 
         // remove labels not connected via cables
         CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
-            SFMLabelNBTHelper.getPositionLabels(disk)
-                    .entries().stream()
+            SFMLabelNBTHelper
+                    .getPositionLabels(disk)
+                    .entries()
+                    .stream()
                     .filter(e -> !network.isInNetwork(e.getKey()))
                     .forEach(e -> SFMLabelNBTHelper.removeLabel(disk, e.getValue(), e.getKey()));
         });
@@ -200,9 +190,7 @@ public record Program(
 
         // update warnings on disk item every 20 seconds
         if (manager.getTick() % 20 == 0) {
-            manager
-                    .getDisk()
-                    .ifPresent(disk -> DiskItem.setWarnings(disk, gatherWarnings(disk, manager)));
+            manager.getDisk().ifPresent(disk -> DiskItem.setWarnings(disk, gatherWarnings(disk, manager)));
         }
         boolean didSomething = false;
         for (Trigger t : triggers) {
@@ -213,5 +201,25 @@ public record Program(
         }
         manager.clearRedstonePulseQueue();
         return didSomething;
+    }
+
+    public static class ListErrorListener extends BaseErrorListener {
+        private final List<String> errors;
+
+        public ListErrorListener(List<String> errors) {
+            this.errors = errors;
+        }
+
+        @Override
+        public void syntaxError(
+                Recognizer<?, ?> recognizer,
+                Object offendingSymbol,
+                int line,
+                int charPositionInLine,
+                String msg,
+                RecognitionException e
+        ) {
+            errors.add("line " + line + ":" + charPositionInLine + " " + msg);
+        }
     }
 }

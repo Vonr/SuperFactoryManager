@@ -38,7 +38,7 @@ public class SFMLParser extends Parser {
 			"outputstatement", "inputmatchers", "outputmatchers", "movement", "resourcelimit", 
 			"limit", "quantity", "retention", "sidequalifier", "side", "slotqualifier", 
 			"rangeset", "range", "ifstatement", "boolexpr", "resourcecomparison", 
-			"comparisonOp", "setOp", "labelaccess", "label", "resourceid", "string", 
+			"comparisonOp", "setOp", "labelaccess", "programString", "resourceid", "string",
 			"number"
 		};
 	}

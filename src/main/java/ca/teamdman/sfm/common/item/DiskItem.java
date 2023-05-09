@@ -4,7 +4,9 @@ import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.ChatFormatting;
@@ -15,6 +17,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -35,6 +40,23 @@ public class DiskItem extends Item {
         return stack
                 .getOrCreateTag()
                 .getString("sfm:program");
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+        if (pLevel.isClientSide) {
+            var stack = pPlayer.getItemInHand(pUsedHand);
+            if (stack.is(SFMItems.DISK_ITEM.get())) {
+                ClientStuff.showTextEditorScreen(
+                        stack,
+                        programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
+                                programString,
+                                pUsedHand
+                        ))
+                );
+            }
+        }
+        return InteractionResultHolder.sidedSuccess(pPlayer.getItemInHand(pUsedHand), pLevel.isClientSide());
     }
 
     public static void setProgram(ItemStack stack, String program) {
@@ -120,9 +142,6 @@ public class DiskItem extends Item {
             ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag detail
     ) {
         if (stack.hasTag()) {
-            // reference for finding out if key is pressed in manager gui
-            // for some reason, it worked in inventory but not manager GUI using the normal methods
-            // https://github.com/mekanism/Mekanism/blob/f92b48a49e0766cd3aa78e95c9c4a47ba90402f5/src/main/java/mekanism/client/key/MekKeyHandler.java
             long handle = Minecraft.getInstance().getWindow().getWindow();
             boolean showProgram = ClientStuff.isMoreInfoKeyDown();
 

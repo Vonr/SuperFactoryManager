@@ -1,4 +1,7 @@
 grammar SFML;
+@lexer::members {
+    public boolean INCLUDE_UNUSED = false; // we want syntax highlighting to not break on unexpected tokens
+}
 
 program : name? trigger* EOF;
 
@@ -96,6 +99,7 @@ label           : IDENTIFIER #RawLabel
 resourceid      : IDENTIFIER (COLON IDENTIFIER (COLON IDENTIFIER (COLON IDENTIFIER)?)?)? # Resource
                 | string                             # StringResource
                 ;
+
 // GENERAL
 string: STRING ;
 number: NUMBER ;
@@ -181,10 +185,15 @@ NUMBER          : [0-9]+ ;
 
 STRING : '"' (~'"'|'\\"')* '"' ;
 
-LINE_COMMENT : '--' ~[\r\n]* (EOF|'\r'? '\n') -> skip ;
+LINE_COMMENT : '--' ~[\r\n]* -> channel(HIDDEN);
+//LINE_COMMENT : '--' ~[\r\n]* (EOF|'\r'? '\n');
 
 WS
         :   [ \r\t\n]+ -> channel(HIDDEN)
+        ;
+
+UNUSED
+        :   {INCLUDE_UNUSED}? . -> channel(HIDDEN)
         ;
 
 fragment A  :('a' | 'A') ;

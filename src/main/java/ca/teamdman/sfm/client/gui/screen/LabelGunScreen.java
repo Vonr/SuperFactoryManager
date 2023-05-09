@@ -56,7 +56,7 @@ public class LabelGunScreen extends Screen {
     }
 
     public void onDone() {
-        SFMPackets.LABEL_GUN_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
+        SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
                 labelField.getValue(),
                 HAND
         ));
@@ -65,8 +65,8 @@ public class LabelGunScreen extends Screen {
 
     @Override
     public void resize(Minecraft mc, int x, int y) {
-        init(mc, x, y);
         var prev = this.labelField.getValue();
+        init(mc, x, y);
         super.resize(mc, x, y);
         this.labelField.setValue(prev);
     }

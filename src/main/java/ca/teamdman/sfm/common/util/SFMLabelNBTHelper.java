@@ -132,7 +132,7 @@ public class SFMLabelNBTHelper {
 
     /**
      * Offsets all positions in the disk by the given diff
-     * Used by game tests to fix label positions since structures use relative positioning
+     * Used by game tests to fix programString positions since structures use relative positioning
      */
     public static void offsetPositions(ItemStack disk, BlockPos diff) {
         var dict = getLabelDict(disk);

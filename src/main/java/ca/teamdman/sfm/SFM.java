@@ -25,7 +25,7 @@ public class SFM {
         SFMMenus.register(bus);
         SFMRecipeTypes.register(bus);
         SFMRecipeSerializers.register(bus);
-        bus.addListener((FMLClientSetupEvent e) -> SFMScreens.register());
+        bus.addListener((FMLClientSetupEvent e) -> SFMMenuScreens.register());
         bus.addListener((FMLCommonSetupEvent e) -> SFMPackets.register());
     }
 }

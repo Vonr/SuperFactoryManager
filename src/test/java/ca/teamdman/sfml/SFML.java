@@ -1,8 +1,12 @@
 package ca.teamdman.sfml;
 
+import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfml.ast.ASTBuilder;
+import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
-import org.antlr.v4.runtime.*;
+import net.minecraft.network.chat.Component;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.junit.jupiter.api.Test;
 
@@ -12,30 +16,21 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SFML {
     public ArrayList<String> getCompileErrors(String input) {
-        var lexer   = new SFMLLexer(CharStreams.fromString(input));
-        var tokens  = new CommonTokenStream(lexer);
-        var parser  = new SFMLParser(tokens);
+        var lexer = new SFMLLexer(CharStreams.fromString(input));
+        var tokens = new CommonTokenStream(lexer);
+        var parser = new SFMLParser(tokens);
         var builder = new ASTBuilder();
-        var errors  = new ArrayList<String>();
+        var errors = new ArrayList<String>();
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new Program.ListErrorListener(errors));
         parser.removeErrorListeners();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(
-                    Recognizer<?, ?> recognizer,
-                    Object offendingSymbol,
-                    int line,
-                    int charPositionInLine,
-                    String msg,
-                    RecognitionException e
-            ) {
-                errors.add("build syntax error: line " + line + ":" + charPositionInLine + " " + msg);
-            }
-        });
+        parser.addErrorListener(new Program.ListErrorListener(errors));
         var context = parser.program();
         if (errors.isEmpty()) { // don't build if syntax errors present
             try {
@@ -186,6 +181,152 @@ public class SFML {
         assertFalse(errors.isEmpty());
     }
 
+
+    @Test
+    public void comments() {
+        var input = """
+                EVERY 20 TICKS DO
+                    INPUT FROM a -- hehehehaw
+                    OUTPUT "minecraft":"redstone" to b
+                END
+                """;
+        var errors = getCompileErrors(input);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
+    public void syntaxHighlighting1() {
+        var rawInput = """
+                EVERY 20 TICKS DO
+                                
+                    INPUT FROM a''" -- hehehehaw
+                    -- we want there to be no issues highlighting even if errors are present
+                    "'''''
+                    
+                    -- we want to test to make sure whitespace is preserved
+                    -- in the
+                    
+                    -- syntax highlighting
+                    
+                    INPUT FROM hehehehehehehehehhe
+                    
+                    OUTPUT stone to b
+                END
+                """.stripIndent();
+        var errors = getCompileErrors(rawInput);
+        var lines = rawInput.split("\n", -1);
+
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+        assertEquals(rawInput, colouredInput);
+
+        // newlines should not be present
+        // instead, each line should be its own component
+        assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+        assertEquals(lines.length, colouredLines.size());
+        for (int i = 0; i < lines.length; i++) {
+            assertEquals(lines[i], colouredLines.get(i).getString());
+        }
+    }
+
+
+    @Test
+    public void syntaxHighlighting2() {
+        var rawInput = """
+                EVERY 20 TICKS DO
+                                
+                    INPUT FROM a
+                    INPUT FROM hehehehehehehehehhe
+                    
+                    OUTPUT stone to b
+                END
+                """.stripIndent();
+        var errors = getCompileErrors(rawInput);
+        var lines = rawInput.split("\n", -1);
+
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+        assertEquals(rawInput, colouredInput);
+
+        // newlines should not be present
+        // instead, each line should be its own component
+        assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+        assertEquals(lines.length, colouredLines.size());
+        for (int i = 0; i < lines.length; i++) {
+            assertEquals(lines[i], colouredLines.get(i).getString());
+        }
+    }
+
+
+    @Test
+    public void syntaxHighlighting3() {
+        var rawRawInput = """
+                EVERY 20 TICKS DO
+                                
+                    INPUT FROM a
+                    INPUT FROM hehehehehehehehehhe
+                    
+                    OUTPUT stone to b
+                END
+                """.stripIndent();
+        String[] rawRawLines = rawRawInput.split("\n");
+        for (int i = 0; i < rawRawLines.length; i++) {
+            var rawInput = java.util.Arrays.stream(rawRawLines, 0, i)
+                    .collect(Collectors.joining("\n"));
+            var lines = rawInput.split("\n", -1);
+
+            var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+            String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+            assertEquals(rawInput, colouredInput);
+
+            // newlines should not be present
+            // instead, each line should be its own component
+            assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+            assertEquals(lines.length, colouredLines.size());
+            for (int j = 0; j < lines.length; j++) {
+                assertEquals(lines[j], colouredLines.get(j).getString());
+            }
+        }
+    }
+
+
+    @Test
+    public void syntaxHighlightingUnusedToken() {
+        var rawInput = """
+                EVERY 20 TICKS DO
+                                
+                    INPUT FROM a
+                    INPUT FROM hehehehehehehehehhe=
+                    
+                    OUTPUT stone to b
+                END
+                """.stripIndent();
+        var errors = getCompileErrors(rawInput);
+        assertFalse(errors.isEmpty());
+        var lines = rawInput.split("\n", -1);
+
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+        assertEquals(rawInput, colouredInput);
+
+        // newlines should not be present
+        // instead, each line should be its own component
+        assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+        assertEquals(lines.length, colouredLines.size());
+        for (int i = 0; i < lines.length; i++) {
+            assertEquals(lines[i], colouredLines.get(i).getString());
+        }
+    }
+
+
     @Test
     public void booleanHasOperator() {
         var input = """
@@ -226,14 +367,14 @@ public class SFML {
 
     @Test
     public void demos() throws IOException {
-        var rootDir     = System.getProperty("user.dir");
+        var rootDir = System.getProperty("user.dir");
         var examplesDir = Paths.get(rootDir, "examples").toFile();
-        var found       = 0;
+        var found = 0;
         for (var entry : examplesDir.listFiles()) {
             if (!FileNameUtils.getExtension(entry.getPath()).equals("sfm")) continue;
             System.out.println("Reading " + entry);
             var content = Files.readString(entry.toPath());
-            var errors  = getCompileErrors(content);
+            var errors = getCompileErrors(content);
             assertTrue(errors.isEmpty());
             found++;
         }
