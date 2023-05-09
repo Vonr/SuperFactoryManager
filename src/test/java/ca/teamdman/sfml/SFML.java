@@ -2,9 +2,11 @@ package ca.teamdman.sfml;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfml.ast.ASTBuilder;
+import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
 import net.minecraft.network.chat.Component;
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.junit.jupiter.api.Test;
 
@@ -25,20 +27,10 @@ public class SFML {
         var parser = new SFMLParser(tokens);
         var builder = new ASTBuilder();
         var errors = new ArrayList<String>();
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new Program.ListErrorListener(errors));
         parser.removeErrorListeners();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(
-                    Recognizer<?, ?> recognizer,
-                    Object offendingSymbol,
-                    int line,
-                    int charPositionInLine,
-                    String msg,
-                    RecognitionException e
-            ) {
-                errors.add("build syntax error: line " + line + ":" + charPositionInLine + " " + msg);
-            }
-        });
+        parser.addErrorListener(new Program.ListErrorListener(errors));
         var context = parser.program();
         if (errors.isEmpty()) { // don't build if syntax errors present
             try {
@@ -301,9 +293,39 @@ public class SFML {
                 assertEquals(lines[j], colouredLines.get(j).getString());
             }
         }
-
-
     }
+
+
+    @Test
+    public void syntaxHighlightingUnusedToken() {
+        var rawInput = """
+                EVERY 20 TICKS DO
+                                
+                    INPUT FROM a
+                    INPUT FROM hehehehehehehehehhe=
+                    
+                    OUTPUT stone to b
+                END
+                """.stripIndent();
+        var errors = getCompileErrors(rawInput);
+        assertFalse(errors.isEmpty());
+        var lines = rawInput.split("\n", -1);
+
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+        assertEquals(rawInput, colouredInput);
+
+        // newlines should not be present
+        // instead, each line should be its own component
+        assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+        assertEquals(lines.length, colouredLines.size());
+        for (int i = 0; i < lines.length; i++) {
+            assertEquals(lines[i], colouredLines.get(i).getString());
+        }
+    }
+
 
     @Test
     public void booleanHasOperator() {

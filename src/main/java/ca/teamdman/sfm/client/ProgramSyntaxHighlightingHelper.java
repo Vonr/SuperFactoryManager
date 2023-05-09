@@ -16,6 +16,7 @@ public class ProgramSyntaxHighlightingHelper {
 
     public static List<MutableComponent> withSyntaxHighlighting(String programString) {
         SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
+        lexer.INCLUDE_UNUSED = true;
         CommonTokenStream tokens = new CommonTokenStream(lexer) {
             // This is a hack to make hidden tokens show up in the token stream
             @Override

@@ -1,4 +1,7 @@
 grammar SFML;
+@lexer::members {
+    public boolean INCLUDE_UNUSED = false; // we want syntax highlighting to not break on unexpected tokens
+}
 
 program : name? trigger* EOF;
 
@@ -190,7 +193,7 @@ WS
         ;
 
 UNUSED
-        :   . -> channel(HIDDEN)
+        :   {INCLUDE_UNUSED}? . -> channel(HIDDEN)
         ;
 
 fragment A  :('a' | 'A') ;
