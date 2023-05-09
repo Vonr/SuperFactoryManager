@@ -84,6 +84,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.SOUTH:
             case SFMLLexer.EAST:
             case SFMLLexer.WEST:
+            case SFMLLexer.EACH:
                 return ChatFormatting.DARK_PURPLE;
             case SFMLLexer.LINE_COMMENT:
                 return ChatFormatting.GRAY;
