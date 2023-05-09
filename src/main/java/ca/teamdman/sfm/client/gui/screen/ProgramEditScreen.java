@@ -21,6 +21,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,6 +34,8 @@ public class ProgramEditScreen extends Screen {
     private final ItemStack DISK_STACK;
     private MultiLineEditBox textarea;
     private Button doneButton;
+    private String lastProgram = "";
+    private List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
 
     public ProgramEditScreen(ItemStack diskStack, Consumer<String> callback) {
         super(Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TITLE.getComponent());
@@ -149,8 +152,8 @@ public class ProgramEditScreen extends Screen {
 
     @Override
     public void resize(Minecraft mc, int x, int y) {
-        init(mc, x, y);
         var prev = this.textarea.getValue();
+        init(mc, x, y);
         super.resize(mc, x, y);
         this.textarea.setValue(prev);
     }
@@ -187,7 +190,16 @@ public class ProgramEditScreen extends Screen {
         @Override
         protected void renderContents(PoseStack poseStack, int mx, int my, float partialTicks) {
             Matrix4f matrix4f = poseStack.last().pose();
-            List<MutableComponent> components = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(this.textField.value());
+            if (!lastProgram.equals(this.textField.value())) {
+                lastProgram = this.textField.value();
+                lastProgramWithSyntaxHighlighting = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(lastProgram);
+            }
+            List<MutableComponent> lines = lastProgramWithSyntaxHighlighting;
+//            List<MutableComponent> rawLines = Arrays
+//                    .stream(lastProgram.split("\n", -1))
+//                    .map(Component::literal)
+//                    .toList();
+
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
@@ -202,9 +214,11 @@ public class ProgramEditScreen extends Screen {
             int currentCharIndex = 0;
 
 
-            for (int line = 0; line < components.size(); ++line) {
-                var component = components.get(line);
-                int lineLength = component.getString().length();
+            for (int line = 0; line < lines.size(); ++line) {
+                var componentColoured = lines.get(line);
+//                var componentRaw = rawLines.get(line);
+//                int lineLength = componentRaw.getString().length();
+                int lineLength = componentColoured.getString().length();
                 int lineHeight = this.font.lineHeight + (line == 0 ? 2 : 0);
                 boolean cursorOnThisLine = isCursorVisible
                                            && cursorIndex >= charCount
@@ -212,12 +226,12 @@ public class ProgramEditScreen extends Screen {
                 var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
 
                 if (cursorOnThisLine) {
-//                    component = insertStringAt(component, "_", cursorIndex - charCount);
                     isCursorAtEndOfLine = cursorIndex == charCount + lineLength;
                     cursorY = lineY;
-
+                    // we draw the raw before coloured in case of token recognition errors
+                    // draw before cursor
                     cursorX = this.font.drawInBatch(
-                            substring(component, 0, cursorIndex - charCount),
+                            substring(componentColoured, 0, cursorIndex - charCount),
                             lineX,
                             lineY,
                             -1,
@@ -228,8 +242,34 @@ public class ProgramEditScreen extends Screen {
                             0,
                             LightTexture.FULL_BRIGHT
                     ) - 1;
+//                    this.font.drawInBatch(
+//                            substring(componentColoured, 0, cursorIndex - charCount),
+//                            lineX,
+//                            lineY,
+//                            -1,
+//                            true,
+//                            matrix4f,
+//                            buffer,
+//                            false,
+//                            0,
+//                            LightTexture.FULL_BRIGHT
+//                    );
+
+                    // draw after
+//                    this.font.drawInBatch(
+//                            substring(componentRaw, cursorIndex - charCount, lineLength),
+//                            cursorX,
+//                            lineY,
+//                            -1,
+//                            true,
+//                            matrix4f,
+//                            buffer,
+//                            false,
+//                            0,
+//                            LightTexture.FULL_BRIGHT
+//                    );
                     this.font.drawInBatch(
-                            substring(component, cursorIndex - charCount, lineLength),
+                            substring(componentColoured, cursorIndex - charCount, lineLength),
                             cursorX,
                             lineY,
                             -1,
@@ -241,8 +281,20 @@ public class ProgramEditScreen extends Screen {
                             LightTexture.FULL_BRIGHT
                     );
                 } else {
+//                    this.font.drawInBatch(
+//                            componentRaw,
+//                            lineX,
+//                            lineY,
+//                            -1,
+//                            true,
+//                            matrix4f,
+//                            buffer,
+//                            false,
+//                            0,
+//                            LightTexture.FULL_BRIGHT
+//                    );
                     this.font.drawInBatch(
-                            component,
+                            componentColoured,
                             lineX,
                             lineY,
                             -1,
@@ -261,8 +313,8 @@ public class ProgramEditScreen extends Screen {
                     int lineSelectionStart = Math.max(selectionStart - charCount, 0);
                     int lineSelectionEnd = Math.min(selectionEnd - charCount, lineLength);
 
-                    int highlightStartX = this.font.width(substring(component, 0, lineSelectionStart));
-                    int highlightEndX = this.font.width(substring(component, 0, lineSelectionEnd));
+                    int highlightStartX = this.font.width(substring(componentColoured, 0, lineSelectionStart));
+                    int highlightEndX = this.font.width(substring(componentColoured, 0, lineSelectionEnd));
 
                     this.renderHighlight(
                             poseStack,

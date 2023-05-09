@@ -36,32 +36,16 @@ public record Program(
             Consumer<List<TranslatableContents>> onFailure
     ) {
         var lexer = new SFMLLexer(CharStreams.fromString(programString));
-        lexer.removeErrorListeners();
         var tokens = new CommonTokenStream(lexer);
         var parser = new SFMLParser(tokens);
-
+        lexer.removeErrorListeners();
         parser.removeErrorListeners();
         List<TranslatableContents> errors = new ArrayList<>();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(
-                    Recognizer<?, ?> recognizer,
-                    Object offendingSymbol,
-                    int line,
-                    int charPositionInLine,
-                    String msg,
-                    RecognitionException e
-            ) {
-                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get("line "
-                                                                                + line
-                                                                                + ":"
-                                                                                + charPositionInLine
-                                                                                + " "
-                                                                                + msg));
-            }
-        });
+        ListErrorListener listener = new ListErrorListener(errors);
+        lexer.addErrorListener(listener);
+        parser.addErrorListener(listener);
 
-        var     context = parser.program();
+        var context = parser.program();
         Program program = null;
 
         try {
@@ -213,5 +197,30 @@ public record Program(
         }
         manager.clearRedstonePulseQueue();
         return didSomething;
+    }
+
+    public static class ListErrorListener extends BaseErrorListener {
+        private final List<TranslatableContents> errors;
+
+        public ListErrorListener(List<TranslatableContents> errors) {
+            this.errors = errors;
+        }
+
+        @Override
+        public void syntaxError(
+                Recognizer<?, ?> recognizer,
+                Object offendingSymbol,
+                int line,
+                int charPositionInLine,
+                String msg,
+                RecognitionException e
+        ) {
+            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get("line "
+                                                                            + line
+                                                                            + ":"
+                                                                            + charPositionInLine
+                                                                            + " "
+                                                                            + msg));
+        }
     }
 }

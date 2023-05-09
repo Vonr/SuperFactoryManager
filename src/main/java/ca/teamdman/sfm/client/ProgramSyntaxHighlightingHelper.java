@@ -31,10 +31,23 @@ public class ProgramSyntaxHighlightingHelper {
         MutableComponent lineComponent = Component.empty();
 
         for (Token token = tokens.LT(1); tokens.LA(1) != Token.EOF; token = tokens.LT(1)) {
-            lineComponent = lineComponent.append(Component.literal(token.getText()).withStyle(getStyle(token)));
+            // the token may contain newlines in it, so we need to split it up
+            String[] lines = token.getText().split("\n", -1);
+            for (int i = 0; i < lines.length; i++) {
+                if (i != 0) {
+                    textComponents.add(lineComponent);
+                    lineComponent = Component.empty();
+                }
+                String line = lines[i];
+                if (!line.isEmpty()) {
+                    var text = Component.literal(line).withStyle(getStyle(token));
+                    lineComponent = lineComponent.append(text);
+                }
+            }
             List<Token> hiddenTokens = tokens.getHiddenTokensToRight(tokens.index(), Token.DEFAULT_CHANNEL);
             if (hiddenTokens != null) {
                 for (Token hiddenToken : hiddenTokens) {
+                    // the whitespace token often contains newlines, so we need to split it up
                     var whitespace = hiddenToken.getText();
                     String[] wsLines = whitespace.split("\n", -1);
                     for (int i = 0; i < wsLines.length; i++) {
@@ -78,6 +91,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.TO:
             case SFMLLexer.OUTPUT:
                 return ChatFormatting.LIGHT_PURPLE;
+            case SFMLLexer.NAME:
             case SFMLLexer.EVERY:
             case SFMLLexer.END:
             case SFMLLexer.DO:
@@ -85,12 +99,15 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.ELSE:
                 return ChatFormatting.BLUE;
             case SFMLLexer.IDENTIFIER:
+            case SFMLLexer.STRING:
                 return ChatFormatting.GREEN;
             case SFMLLexer.TICKS:
             case SFMLLexer.SLOTS:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
                 return ChatFormatting.AQUA;
+            case SFMLLexer.UNUSED:
+                return ChatFormatting.RED;
             default:
                 return ChatFormatting.WHITE;
         }

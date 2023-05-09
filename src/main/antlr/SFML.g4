@@ -189,6 +189,10 @@ WS
         :   [ \r\t\n]+ -> channel(HIDDEN)
         ;
 
+UNUSED
+        :   . -> channel(HIDDEN)
+        ;
+
 fragment A  :('a' | 'A') ;
 fragment B  :('b' | 'B') ;
 fragment C  :('c' | 'C') ;

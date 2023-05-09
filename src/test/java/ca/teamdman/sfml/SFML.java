@@ -203,11 +203,13 @@ public class SFML {
     }
 
     @Test
-    public void syntaxHighlighting() {
-        var input = """
+    public void syntaxHighlighting1() {
+        var rawInput = """
                 EVERY 20 TICKS DO
                                 
-                    INPUT FROM a -- hehehehaw
+                    INPUT FROM a''" -- hehehehaw
+                    -- we want there to be no issues highlighting even if errors are present
+                    "'''''
                     
                     -- we want to test to make sure whitespace is preserved
                     -- in the
@@ -219,15 +221,88 @@ public class SFML {
                     OUTPUT stone to b
                 END
                 """.stripIndent();
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
-        var colourLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(input);
-        var lines = input.split("\n", -1);
-        assertEquals(input, colourLines.stream().map(Component::getString).collect(Collectors.joining("\n")));
-        assertEquals(lines.length, colourLines.size());
+        var errors = getCompileErrors(rawInput);
+        var lines = rawInput.split("\n", -1);
+
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+        assertEquals(rawInput, colouredInput);
+
+        // newlines should not be present
+        // instead, each line should be its own component
+        assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+        assertEquals(lines.length, colouredLines.size());
         for (int i = 0; i < lines.length; i++) {
-            assertEquals(lines[i], colourLines.get(i).getString());
+            assertEquals(lines[i], colouredLines.get(i).getString());
         }
+    }
+
+
+    @Test
+    public void syntaxHighlighting2() {
+        var rawInput = """
+                EVERY 20 TICKS DO
+                                
+                    INPUT FROM a
+                    INPUT FROM hehehehehehehehehhe
+                    
+                    OUTPUT stone to b
+                END
+                """.stripIndent();
+        var errors = getCompileErrors(rawInput);
+        var lines = rawInput.split("\n", -1);
+
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+        assertEquals(rawInput, colouredInput);
+
+        // newlines should not be present
+        // instead, each line should be its own component
+        assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+        assertEquals(lines.length, colouredLines.size());
+        for (int i = 0; i < lines.length; i++) {
+            assertEquals(lines[i], colouredLines.get(i).getString());
+        }
+    }
+
+
+    @Test
+    public void syntaxHighlighting3() {
+        var rawRawInput = """
+                EVERY 20 TICKS DO
+                                
+                    INPUT FROM a
+                    INPUT FROM hehehehehehehehehhe
+                    
+                    OUTPUT stone to b
+                END
+                """.stripIndent();
+        String[] rawRawLines = rawRawInput.split("\n");
+        for (int i = 0; i < rawRawLines.length; i++) {
+            var rawInput = java.util.Arrays.stream(rawRawLines, 0, i)
+                    .collect(Collectors.joining("\n"));
+            var lines = rawInput.split("\n", -1);
+
+            var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+            String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+            assertEquals(rawInput, colouredInput);
+
+            // newlines should not be present
+            // instead, each line should be its own component
+            assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+            assertEquals(lines.length, colouredLines.size());
+            for (int j = 0; j < lines.length; j++) {
+                assertEquals(lines[j], colouredLines.get(j).getString());
+            }
+        }
+
+
     }
 
     @Test
