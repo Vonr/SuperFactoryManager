@@ -56,7 +56,7 @@
   "item.sfm.labelgun.with_label": "Label Gun: \"%s\"",
   "item.sfm.xp_goop": "Experience Goop",
   "item.sfm.xp_shard": "Experience Shard",
-  "itemGroup.sfm": "Super Factory Manager",
+  "item_group.sfm.main": "Super Factory Manager",
   "key.categories.sfm": "Super Factory Manager",
   "key.sfm.more_info": "Press for more info key",
   "mod.name": "Super Factory Manager",

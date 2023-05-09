@@ -1,5 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "misc",
   "key": {
     "a": {
       "item": "minecraft:anvil"
@@ -27,5 +28,6 @@
   ],
   "result": {
     "item": "sfm:printing_press"
-  }
+  },
+  "show_notification": true
 }
