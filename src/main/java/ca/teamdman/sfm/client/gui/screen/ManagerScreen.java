@@ -21,8 +21,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
-import org.lwjgl.glfw.GLFW;
 import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -71,20 +71,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                     12,
                     MANAGER_GUI_BUTTON_RESET.getComponent(),
                     button -> sendReset(),
-                    (btn, pose, mx, my) -> renderTooltip(
-                            pose,
-                            font.split(
-                                    MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
-                                    Math.max(
-                                            width
-                                            / 2
-                                            - 43,
-                                            170
-                                    )
-                            ),
-                            mx,
-                            my
-                    )
+                    Tooltip.create(MANAGER_RESET_BUTTON_TOOLTIP.getComponent())
             ));
             this.addRenderableWidget(new ExtendedButtonWithTooltip(
                     (this.width - this.imageWidth) / 2
@@ -95,20 +82,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                     16,
                     MANAGER_GUI_EDIT_BUTTON.getComponent(),
                     button -> onEdit(),
-                    (btn, pose, mx, my) -> renderTooltip(
-                            pose,
-                            font.split(
-                                    MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent(),
-                                    Math.max(
-                                            width
-                                            / 2
-                                            - 43,
-                                            170
-                                    )
-                            ),
-                            mx,
-                            my
-                    )
+                    Tooltip.create(MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent())
             ));
         }
 
@@ -128,7 +102,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 (this.height - this.imageHeight) / 2 + 48,
                 12,
                 14,
-                Component.translatable("!"),
+                Component.literal("!"),
                 button -> {
                     if (Screen.hasShiftDown() && !isReadOnly()) {
                         sendAttemptFix();
@@ -136,9 +110,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         this.onSaveDiagClipboard();
                     }
                 },
-                Tooltip.create((isReadOnly()
-                                ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
-                                : MANAGER_GUI_WARNING_BUTTON_TOOLTIP).getComponent())
+                Tooltip.create((
+                                       isReadOnly()
+                                       ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
+                                       : MANAGER_GUI_WARNING_BUTTON_TOOLTIP
+                               ).getComponent())
         ));
         diagButton.visible = shouldShowDiagButton();
     }

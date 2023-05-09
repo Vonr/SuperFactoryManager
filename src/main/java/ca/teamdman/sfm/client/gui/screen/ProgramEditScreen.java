@@ -5,12 +5,13 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.item.DiskItem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -19,6 +20,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Collections;
@@ -99,32 +101,18 @@ public class ProgramEditScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
         this.textarea = this.addRenderableWidget(new MyMultiLineEditBox());
         textarea.setValue(DiskItem.getProgram(DISK_STACK));
         this.setInitialFocus(textarea);
 
-        this.doneButton = this.addRenderableWidget(new Button(
+        this.doneButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 this.width / 2 - 2 - 150,
                 this.height / 2 - 100 + 195,
                 300,
                 20,
                 CommonComponents.GUI_DONE,
                 (p_97691_) -> this.onDone(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                Tooltip.create(PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP.getComponent())
         ));
     }
 
@@ -203,8 +191,8 @@ public class ProgramEditScreen extends Screen {
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
-            int lineX = this.x + this.innerPadding();
-            int lineY = this.y + this.innerPadding();
+            int lineX = this.getX() + this.innerPadding();
+            int lineY = this.getY() + this.innerPadding();
             int charCount = 0;
             int cursorX = 0;
             int cursorY = 0;
@@ -238,7 +226,7 @@ public class ProgramEditScreen extends Screen {
                             true,
                             matrix4f,
                             buffer,
-                            false,
+                            Font.DisplayMode.NORMAL,
                             0,
                             LightTexture.FULL_BRIGHT
                     ) - 1;
@@ -276,7 +264,7 @@ public class ProgramEditScreen extends Screen {
                             true,
                             matrix4f,
                             buffer,
-                            false,
+                            Font.DisplayMode.NORMAL,
                             0,
                             LightTexture.FULL_BRIGHT
                     );
@@ -301,7 +289,7 @@ public class ProgramEditScreen extends Screen {
                             true,
                             matrix4f,
                             buffer,
-                            false,
+                            Font.DisplayMode.NORMAL,
                             0,
                             LightTexture.FULL_BRIGHT
                     );
