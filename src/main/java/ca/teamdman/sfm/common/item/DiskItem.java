@@ -63,7 +63,7 @@ public class DiskItem extends Item {
     public static void setProgram(ItemStack stack, String program) {
         stack
                 .getOrCreateTag()
-                .putString("sfm:program", program);
+                .putString("sfm:program", program.replaceAll("\r", ""));
 
     }
 
