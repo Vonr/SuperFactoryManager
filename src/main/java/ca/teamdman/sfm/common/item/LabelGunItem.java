@@ -38,7 +38,7 @@ public class LabelGunItem extends Item {
 
     public static String getNextLabel(ItemStack gun, int change) {
         var dict = gun.getOrCreateTag().getCompound("sfm:labels");
-        var keys = dict.getAllKeys().toArray(String[]::new);
+        var keys = dict.getAllKeys().stream().sorted().toArray(String[]::new);
         if (keys.length == 0) return "";
         var currentLabel = getLabel(gun);
 
