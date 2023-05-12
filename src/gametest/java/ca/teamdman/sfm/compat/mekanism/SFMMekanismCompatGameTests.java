@@ -31,6 +31,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import java.util.ArrayList;
 import java.util.Objects;
 
+@SuppressWarnings({"OptionalGetWithoutIsPresent", "DuplicatedCode", "DataFlowIssue"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMMekanismCompatGameTests extends SFMGameTestBase {

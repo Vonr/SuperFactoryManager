@@ -30,11 +30,13 @@ public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
                 .create(pos, state);
     }
 
+    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void neighborChanged(
             BlockState pState,
             Level pLevel,
@@ -53,6 +55,7 @@ public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public InteractionResult use(
             BlockState state,
             Level level,
@@ -68,6 +71,7 @@ public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
         return InteractionResult.SUCCESS;
     }
 
+    @SuppressWarnings("deprecation")
     public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
         if (!pState.is(pNewState.getBlock())) {
             BlockEntity blockentity = pLevel.getBlockEntity(pPos);

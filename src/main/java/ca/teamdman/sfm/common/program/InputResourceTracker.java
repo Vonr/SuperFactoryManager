@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.program;
 
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 
@@ -51,6 +52,7 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
     }
 
     public boolean matchesCapabilityType(Object capability) {
-        return LIMIT.resourceId().getResourceType().matchesCapabilityType(capability);
+        ResourceType<STACK, ITEM, CAP> resourceType = LIMIT.resourceId().getResourceType();
+        return resourceType != null && resourceType.matchesCapabilityType(capability);
     }
 }

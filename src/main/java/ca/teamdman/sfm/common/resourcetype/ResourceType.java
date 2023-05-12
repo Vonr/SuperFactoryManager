@@ -63,15 +63,16 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract boolean isEmpty(STACK stack);
 
+    @SuppressWarnings("unused")
     public abstract STACK getEmptyStack();
 
     public abstract boolean matchesStackType(Object o);
 
-    public boolean test(ResourceIdentifier<STACK, ITEM, CAP> id, Object stack) {
-        if (!matchesStackType(stack)) return false;
-        if (isEmpty((STACK) stack)) return false;
-        var stackId = getRegistryKey((STACK) stack);
-        if (stackId == null) return false;
+    public boolean test(ResourceIdentifier<STACK, ITEM, CAP> id, Object other) {
+        if (!matchesStackType(other)) return false;
+        @SuppressWarnings("unchecked") STACK stack = (STACK) other;
+        if (isEmpty(stack)) return false;
+        var stackId = getRegistryKey(stack);
         Predicate<String> namespacePredicate = patternCache.get(id.resourceNamespace);
         if (namespacePredicate == null) {
             namespacePredicate = buildPredicate(id.resourceNamespace);
@@ -87,16 +88,12 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract boolean matchesCapabilityType(Object o);
 
-
-    public Optional<CAP> asCapability(Object o) {
-        return matchesCapabilityType(o) ? Optional.of((CAP) o) : Optional.empty();
-    }
-
     public Stream<CAP> getCapabilities(
             ProgramContext programContext, LabelAccess labelAccess
     ) {
         var disk = programContext.getManager().getDisk();
         if (disk.isEmpty()) return Stream.empty();
+        //noinspection DataFlowIssue,ConstantValue
         return SFMLabelNBTHelper
                 .getPositions(disk.get(), labelAccess.labels())
                 .map(programContext.getNetwork()::getCapabilityProvider)
@@ -133,6 +130,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         var found = registryKeyCache.get(item);
         if (found != null) return found;
         found = getRegistry().getKey(item);
+        assert found != null;
         registryKeyCache.put(item, found);
         return found;
     }

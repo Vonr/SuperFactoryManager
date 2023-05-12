@@ -13,6 +13,7 @@ public record ResourceComparer<STACK, ITEM, CAP>(
     public BoolExpr toBooleanExpression(SetOperator setOp, LabelAccess labelAccess) {
         return new BoolExpr(context -> {
             ResourceType<STACK, ITEM, CAP> type = res.getResourceType();
+            if (type == null) return false;
             // get the inventories to check
 
             var handlers = type.getCapabilities(context, labelAccess);

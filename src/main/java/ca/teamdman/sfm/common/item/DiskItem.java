@@ -26,6 +26,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -43,7 +44,7 @@ public class DiskItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
         if (pLevel.isClientSide) {
             var stack = pPlayer.getItemInHand(pUsedHand);
             if (stack.is(SFMItems.DISK_ITEM.get())) {
@@ -144,7 +145,7 @@ public class DiskItem extends Item {
     ) {
 
         if (stack.hasTag()) {
-            boolean showProgram = DistExecutor.<Boolean>safeRunForDist(
+            boolean showProgram = DistExecutor.unsafeRunForDist(
                     () -> ClientStuff::isMoreInfoKeyDown,
                     () -> () -> false
             );
@@ -192,7 +193,7 @@ public class DiskItem extends Item {
                         start = start.append(Component.literal("=").withStyle(color));
                     }
                     list.add(start);
-                    ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(program).forEach(list::add);
+                    list.addAll(ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(program));
                 }
             }
         }

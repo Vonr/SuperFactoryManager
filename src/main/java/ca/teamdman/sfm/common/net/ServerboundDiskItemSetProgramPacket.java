@@ -29,6 +29,9 @@ public record ServerboundDiskItemSetProgramPacket(
     ) {
         ctx.get().enqueueWork(() -> {
             var sender = ctx.get().getSender();
+            if (sender == null) {
+                return;
+            }
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof DiskItem) {
                 DiskItem.setProgram(stack, msg.programString);

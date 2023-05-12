@@ -23,14 +23,16 @@ public record InputStatement(
 
     private static final LimitedInputSlotObjectPool SLOT_POOL = new LimitedInputSlotObjectPool();
 
+    @SuppressWarnings("rawtypes")
     public static void releaseSlots(List<LimitedInputSlot> slots) {
         SLOT_POOL.release(slots);
     }
 
-    public static void releaseSlot(LimitedInputSlot slot) {
+    public static void releaseSlot(LimitedInputSlot<?, ?, ?> slot) {
         SLOT_POOL.release(slot);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
     public void gatherSlots(ProgramContext context, Consumer<LimitedInputSlot<?, ?, ?>> acceptor) {
         Stream<ResourceType> types = resourceLimits
                 .resourceLimits()
@@ -69,6 +71,7 @@ public record InputStatement(
                 if (!type.isEmpty(stack)) {
                     for (InputResourceTracker<?, ?, ?> tracker : trackers) {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
+                            //noinspection unchecked
                             acceptor.accept(SLOT_POOL.acquire(
                                     capability,
                                     slot,

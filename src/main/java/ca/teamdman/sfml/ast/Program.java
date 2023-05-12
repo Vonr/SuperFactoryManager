@@ -107,26 +107,28 @@ public record Program(
                 var pos = entry.getKey();
                 var inNetwork = network.isInNetwork(pos);
                 var adjacent = network.hasCableNeighbour(pos);
-                if (!inNetwork && !adjacent) {
-                    warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
-                            label,
-                            String.format(
-                                    "[%d,%d,%d]",
-                                    pos.getX(),
-                                    pos.getY(),
-                                    pos.getZ()
-                            )
-                    ));
-                } else if (!inNetwork && adjacent) {
-                    warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
-                            label,
-                            String.format(
-                                    "[%d,%d,%d]",
-                                    pos.getX(),
-                                    pos.getY(),
-                                    pos.getZ()
-                            )
-                    ));
+                if (!inNetwork) {
+                    if (adjacent) {
+                        warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
+                                label,
+                                String.format(
+                                        "[%d,%d,%d]",
+                                        pos.getX(),
+                                        pos.getY(),
+                                        pos.getZ()
+                                )
+                        ));
+                    } else {
+                        warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
+                                label,
+                                String.format(
+                                        "[%d,%d,%d]",
+                                        pos.getX(),
+                                        pos.getY(),
+                                        pos.getZ()
+                                )
+                        ));
+                    }
                 }
             }
         });
@@ -168,14 +170,12 @@ public record Program(
                 .forEach(label -> SFMLabelNBTHelper.removeLabel(disk, label));
 
         // remove labels not connected via cables
-        CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
-            SFMLabelNBTHelper
-                    .getPositionLabels(disk)
-                    .entries()
-                    .stream()
-                    .filter(e -> !network.isInNetwork(e.getKey()))
-                    .forEach(e -> SFMLabelNBTHelper.removeLabel(disk, e.getValue(), e.getKey()));
-        });
+        CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> SFMLabelNBTHelper
+                .getPositionLabels(disk)
+                .entries()
+                .stream()
+                .filter(e -> !network.isInNetwork(e.getKey()))
+                .forEach(e -> SFMLabelNBTHelper.removeLabel(disk, e.getValue(), e.getKey())));
 
         // update warnings
         DiskItem.setWarnings(disk, gatherWarnings(disk, manager));

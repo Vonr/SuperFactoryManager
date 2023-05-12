@@ -28,6 +28,9 @@ public record ServerboundLabelGunUpdatePacket(
     ) {
         ctx.get().enqueueWork(() -> {
             var sender = ctx.get().getSender();
+            if (sender == null) {
+                return;
+            }
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof LabelGunItem) {
                 LabelGunItem.setLabel(stack, msg.label);

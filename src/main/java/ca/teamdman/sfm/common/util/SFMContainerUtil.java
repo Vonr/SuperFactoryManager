@@ -6,6 +6,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 public class SFMContainerUtil {
     public static boolean stillValid(BlockEntity blockEntity, Player player) {
         var level = blockEntity.getLevel();
+        if (level == null) return false;
         var pos   = blockEntity.getBlockPos();
         if (level.getBlockEntity(pos) != blockEntity) return false;
         double dist = player.distanceToSqr(

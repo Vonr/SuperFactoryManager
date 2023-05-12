@@ -67,10 +67,6 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     }
 
     /**
-     * @param handler
-     * @param slot
-     * @param stack
-     * @param simulate
      * @return remaining stack that was not inserted
      */
     @Override

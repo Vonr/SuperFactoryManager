@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@SuppressWarnings("DataFlowIssue")
+@SuppressWarnings({"DataFlowIssue", "OptionalGetWithoutIsPresent", "DuplicatedCode"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMPerformanceGameTests extends SFMGameTestBase {
@@ -89,15 +89,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 }
             });
 
-//            // remove all the items to speed up retests
-//            destBlocks.forEach(pos -> {
-//                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
-//                for (int i = 0; i < barrel.getContainerSize(); i++) {
-//                    barrel.setItem(i, ItemStack.EMPTY);
-//                }
-//            });
             helper.succeed();
-
         });
     }
 

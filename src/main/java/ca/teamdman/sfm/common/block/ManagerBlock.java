@@ -45,12 +45,14 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         builder.add(TRIGGERED);
     }
 
+    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
 
 
     @Override
+    @SuppressWarnings("deprecation")
     public void neighborChanged(
             BlockState state,
             Level level,
@@ -87,6 +89,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public InteractionResult use(
             BlockState state,
             Level level,
@@ -114,12 +117,13 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
         CableNetworkManager.getOrRegisterNetwork(world, pos);
-        CableNetworkManager.printDebugInfo();
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
             if (level.getBlockEntity(pos) instanceof Container container) {
@@ -127,7 +131,6 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
                 level.updateNeighbourForOutputSignal(pos, this);
             }
             CableNetworkManager.unregister(level, pos);
-            CableNetworkManager.printDebugInfo();
             super.onRemove(state, level, pos, newState, isMoving);
         }
     }

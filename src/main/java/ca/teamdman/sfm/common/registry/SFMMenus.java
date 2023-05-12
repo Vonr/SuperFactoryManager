@@ -49,7 +49,7 @@ public class SFMMenus {
                                 int windowId,
                                 Inventory inv
                         ) {
-                            return DistExecutor.safeRunForDist(
+                            return DistExecutor.unsafeRunForDist(
                                     () -> () -> {
                                         BlockEntity be = ClientStuff.getLookBlockEntity();
                                         if (!(be instanceof ManagerBlockEntity mbe))

@@ -19,9 +19,11 @@ public class ProgramContext {
 
     public ProgramContext(ManagerBlockEntity manager) {
         this.MANAGER    = manager;
+        //noinspection OptionalGetWithoutIsPresent // program shouldn't be ticking if the network is bad
         NETWORK         = CableNetworkManager
                 .getOrRegisterNetwork(MANAGER)
                 .get();
+        assert MANAGER.getLevel() != null;
         LEVEL           = MANAGER.getLevel();
         REDSTONE_PULSES = MANAGER.getUnprocessedRedstonePulseCount();
     }

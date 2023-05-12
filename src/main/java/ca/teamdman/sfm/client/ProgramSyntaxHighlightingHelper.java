@@ -46,6 +46,7 @@ public class ProgramSyntaxHighlightingHelper {
                 }
             }
             List<Token> hiddenTokens = tokens.getHiddenTokensToRight(tokens.index(), Token.DEFAULT_CHANNEL);
+            //noinspection ConstantValue
             if (hiddenTokens != null) {
                 for (Token hiddenToken : hiddenTokens) {
                     // the whitespace token often contains newlines, so we need to split it up
@@ -76,6 +77,7 @@ public class ProgramSyntaxHighlightingHelper {
     }
 
     private static ChatFormatting getStyle(Token token) {
+        //noinspection EnhancedSwitchMigration
         switch (token.getType()) {
             case SFMLLexer.SIDE:
             case SFMLLexer.TOP:

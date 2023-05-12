@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -24,7 +25,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     public final String resourceTypeName;
     public final String resourceNamespace;
     public final String resourceName;
-    private ResourceType<STACK, ITEM, CAP> resourceTypeCache = null;
+    private @Nullable ResourceType<STACK, ITEM, CAP> resourceTypeCache = null;
 
     public ResourceIdentifier(
             String resourceTypeNamespace,
@@ -86,10 +87,12 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     }
 
     public boolean test(Object other) {
-        return getResourceType().test(this, other);
+        ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
+        return resourceType != null && resourceType.test(this, other);
     }
 
-    public ResourceType<STACK, ITEM, CAP> getResourceType() {
+    @SuppressWarnings("unchecked")
+    public @Nullable ResourceType<STACK, ITEM, CAP> getResourceType() {
         if (resourceTypeCache == null) {
             resourceTypeCache = (ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.DEFERRED_TYPES
                     .get()

@@ -9,13 +9,14 @@ import java.util.List;
  * This assumes that the pool will be used in a single thread.
  */
 public class LimitedInputSlotObjectPool {
+    @SuppressWarnings("rawtypes")
     private LimitedInputSlot[] pool = new LimitedInputSlot[1];
     private int index = -1;
 
     /**
      * Acquire a {@link LimitedInputSlot} from the pool, or creates a new one if none available
      */
-    public <STACK, ITEM, CAP> LimitedInputSlot acquire(
+    public <STACK, ITEM, CAP> LimitedInputSlot<STACK, ITEM, CAP> acquire(
             CAP handler,
             int slot,
             InputResourceTracker<STACK, ITEM, CAP> tracker
@@ -23,7 +24,7 @@ public class LimitedInputSlotObjectPool {
         if (index == -1) {
             return new LimitedInputSlot<>(handler, slot, tracker);
         } else {
-            LimitedInputSlot obj = pool[index];
+            @SuppressWarnings("unchecked") LimitedInputSlot<STACK, ITEM, CAP> obj = pool[index];
             index--;
             obj.init(handler, slot, tracker);
             return obj;
@@ -33,7 +34,7 @@ public class LimitedInputSlotObjectPool {
     /**
      * Release a {@link LimitedInputSlot} back into the pool for it to be reused instead of garbage collected
      */
-    public void release(LimitedInputSlot obj) {
+    public void release(LimitedInputSlot<?, ?, ?> obj) {
         if (index == pool.length - 1) {
             // we need to grow the array
             pool = Arrays.copyOf(pool, pool.length * 2);
@@ -44,6 +45,7 @@ public class LimitedInputSlotObjectPool {
     /**
      * Release a {@link LimitedInputSlot} back into the pool for it to be reused instead of garbage collected
      */
+    @SuppressWarnings("rawtypes")
     public void release(List<LimitedInputSlot> slots) {
         // handle resizing
         if (index + slots.size() >= pool.length) {

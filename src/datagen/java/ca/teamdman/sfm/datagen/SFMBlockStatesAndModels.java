@@ -57,32 +57,34 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
                     .forAllStates(state -> {
                         Direction facing = state.getValue(BlockStateProperties.FACING);
                         boolean open = state.getValue(BlockStateProperties.OPEN);
-                        int x = 0;
-                        int y = 0;
+                        int x;
+                        int y;
 
                         switch (facing) {
-                            case DOWN:
+                            case DOWN -> {
                                 x = 180;
-                                break;
-                            case UP:
-                                x = 0;
-                                break;
-                            case NORTH:
+                                y = 0;
+                            }
+                            case NORTH -> {
                                 x = 90;
                                 y = 0;
-                                break;
-                            case SOUTH:
+                            }
+                            case SOUTH -> {
                                 x = 90;
                                 y = 180;
-                                break;
-                            case WEST:
+                            }
+                            case WEST -> {
                                 x = 90;
                                 y = 270;
-                                break;
-                            case EAST:
+                            }
+                            case EAST -> {
                                 x = 90;
                                 y = 90;
-                                break;
+                            }
+                            default -> { // up
+                                x = 0;
+                                y = 0;
+                            }
                         }
 
                         return ConfiguredModel.builder()

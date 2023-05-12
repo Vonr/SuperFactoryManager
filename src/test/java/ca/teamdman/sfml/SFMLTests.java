@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SFML {
+public class SFMLTests {
     public ArrayList<String> getCompileErrors(String input) {
         var lexer = new SFMLLexer(CharStreams.fromString(input));
         var tokens = new CommonTokenStream(lexer);
@@ -214,6 +214,7 @@ public class SFML {
                 END
                 """.stripIndent();
         var errors = getCompileErrors(rawInput);
+        assertFalse(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
@@ -244,6 +245,7 @@ public class SFML {
                 END
                 """.stripIndent();
         var errors = getCompileErrors(rawInput);
+        assertTrue(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
@@ -370,6 +372,7 @@ public class SFML {
         var rootDir = System.getProperty("user.dir");
         var examplesDir = Paths.get(rootDir, "examples").toFile();
         var found = 0;
+        //noinspection DataFlowIssue
         for (var entry : examplesDir.listFiles()) {
             if (!FileNameUtils.getExtension(entry.getPath()).equals("sfm")) continue;
             System.out.println("Reading " + entry);

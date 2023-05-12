@@ -46,6 +46,7 @@ public class FormItemRenderer extends BlockEntityWithoutLevelRenderer {
         if (!(stack.getItem() instanceof FormItem)) return;
         var renderer = Minecraft.getInstance().getItemRenderer();
         var baseModel = renderer.getItemModelShaper().getModelManager().getModel(BASE_MODEL);
+        @SuppressWarnings("deprecation")
         var renderType = ItemBlockRenderTypes.getRenderType(stack, true);
         var buffer = ItemRenderer.getFoilBufferDirect(multiBuffer, renderType, true, stack.hasFoil());
         poseStack.pushPose();

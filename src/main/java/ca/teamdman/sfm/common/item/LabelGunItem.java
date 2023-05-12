@@ -32,6 +32,7 @@ public class LabelGunItem extends Item {
     }
 
     public static String getLabel(ItemStack stack) {
+        //noinspection DataFlowIssue
         return !stack.hasTag() ? "" : stack.getTag().getString("sfm:programString");
     }
 
@@ -64,16 +65,19 @@ public class LabelGunItem extends Item {
         if (level.isClientSide) return InteractionResult.SUCCESS;
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager) {
             manager.getDisk().ifPresent(disk -> {
-                if (ctx.getPlayer().isShiftKeyDown()) {
+                Player player = ctx.getPlayer();
+                if (player != null && player.isShiftKeyDown()) {
                     SFMLabelNBTHelper.copyLabels(disk, stack);
                     var scriptLabels = manager.getReferencedLabels();
                     SFMLabelNBTHelper.addLabels(stack, scriptLabels);
-                    ctx.getPlayer().sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
+                    player.sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
                 } else {
                     SFMLabelNBTHelper.copyLabels(stack, disk);
                     manager.rebuildProgramAndUpdateDisk();
                     manager.setChanged();
-                    ctx.getPlayer().sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PUSHED.getComponent());
+                    if (player != null) {
+                        player.sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PUSHED.getComponent());
+                    }
                 }
             });
             return InteractionResult.CONSUME;
@@ -81,7 +85,7 @@ public class LabelGunItem extends Item {
 
         var label = getLabel(stack);
         if (label.isEmpty()) return InteractionResult.SUCCESS;
-        if (ctx.getPlayer().isShiftKeyDown())
+        if (ctx.getPlayer() != null && ctx.getPlayer().isShiftKeyDown())
             SFMLabelNBTHelper.clearLabels(stack, pos);
         else
             SFMLabelNBTHelper.toggleLabel(stack, label, pos);

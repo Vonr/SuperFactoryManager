@@ -4,8 +4,7 @@
 
 ![image](https://user-images.githubusercontent.com/9356891/226213625-14a2b253-8c71-43ff-a566-47de7e9b846e.png)
 
-
-Check out [the examples folder](./examples/) for sample scripts.
+Check out [the examples folder](./examples) for sample scripts.
 
 More info to come here soon™
 

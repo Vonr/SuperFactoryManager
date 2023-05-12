@@ -2,13 +2,17 @@ package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
+import javax.annotation.Nullable;
+
 public class LimitedOutputSlot<STACK, ITEM, CAP> {
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public ResourceType<STACK, ITEM, CAP> type;
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public CAP capability;
     public int slot;
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public OutputResourceTracker<STACK, ITEM, CAP> tracker;
-    private STACK stackInSlotCache = null;
-    private boolean done = false;
+    private @Nullable STACK stackInSlotCache = null;
 
     public LimitedOutputSlot(
             CAP capability, int slot, OutputResourceTracker<STACK, ITEM, CAP> tracker
@@ -17,11 +21,9 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
     }
 
     public boolean isDone() {
-        if (done) return true;
         if (tracker.isDone()) {
             return true;
         }
-        // we don't bother setting done because if this returns true it should be the last time this is called
         STACK stack = getStackInSlot();
         long count = type.getCount(stack);
         if (count >= type.getMaxStackSize(capability, slot)) {
@@ -30,10 +32,6 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
             return true;
         }
         return count != 0 && !tracker.test(stack);
-    }
-
-    public void setDone() {
-        this.done = true;
     }
 
     public STACK getStackInSlot() {
@@ -49,12 +47,13 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
     }
 
     public void init(CAP handler, int slot, OutputResourceTracker<STACK, ITEM, CAP> tracker) {
-        this.done = false;
         this.stackInSlotCache = null;
         this.capability = handler;
         this.tracker = tracker;
         this.slot = slot;
+        //noinspection DataFlowIssue
         this.type = tracker.LIMIT.resourceId().getResourceType();
+        assert type != null;
         this.tracker.visit(this);
     }
 }

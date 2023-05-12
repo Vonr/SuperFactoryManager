@@ -32,7 +32,11 @@ public record ServerboundManagerFixPacket(
                 ManagerBlockEntity.class,
                 msg.pos,
                 msg.windowId,
-                (menu, manager) -> manager.getDisk().ifPresent(disk -> manager.getProgram().fixWarnings(disk, manager))
+                (menu, manager) -> manager
+                        .getDisk()
+                        .ifPresent(disk -> manager
+                                .getProgram()
+                                .ifPresent(program -> program.fixWarnings(disk, manager)))
         );
     }
 }

@@ -5,21 +5,20 @@ import net.minecraftforge.registries.DeferredRegister;
 
 public class SFMMekanismCompat {
     public static void register(DeferredRegister<ResourceType<?, ?, ?>> types) {
-        var gases = types.register(
+        types.register(
                 "gas",
                 GasResourceType::new
         );
-        var infusions = types.register(
+        types.register(
                 "infusion",
                 InfuseResourceType::new
         );
 
-        var pigments = types.register(
+        types.register(
                 "pigment",
                 PigmentResourceType::new
         );
-
-        var slurries = types.register(
+        types.register(
                 "slurry",
                 SlurryResourceType::new
         );

@@ -42,9 +42,9 @@ public abstract class SFMGameTestBase {
         var hasExecuted = new AtomicBoolean(false);
         var startTime = new AtomicLong();
         var endTime = new AtomicLong();
-        List<Trigger> triggers = manager.getProgram().triggers();
+        @SuppressWarnings("OptionalGetWithoutIsPresent") List<Trigger> triggers = manager.getProgram().get().triggers();
         var oldFirstTrigger = triggers.get(0);
-        long          timeoutTicks    = 200;
+        long timeoutTicks = 200;
 
         Trigger startTimerTrigger = new Trigger() {
             @Override
@@ -94,11 +94,12 @@ public abstract class SFMGameTestBase {
                                         .format(endTime.get() - startTime.get()) + "ns"
                         );
                         hasExecuted.set(false); // prevent the assertion from running again
-            }
-        }));
+                    }
+                }));
     }
 
     protected static void assertManagerRunning(ManagerBlockEntity manager) {
+        SFMGameTestBase.assertTrue(manager.getDisk().isPresent(), "No disk in manager");
         SFMGameTestBase.assertTrue(
                 manager.getState() == ManagerBlockEntity.State.RUNNING,
                 "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())

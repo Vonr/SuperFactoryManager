@@ -74,8 +74,7 @@ public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHan
         var x = handler.fill(stack, simulate ? IFluidHandler.FluidAction.SIMULATE : IFluidHandler.FluidAction.EXECUTE);
 
         // convert units to find amount NOT inserted
-        var rtn = new FluidStack(stack.getFluid(), stack.getAmount() - x);
-        return rtn;
+        return new FluidStack(stack.getFluid(), stack.getAmount() - x);
     }
 
     @Override

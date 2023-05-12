@@ -35,7 +35,6 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 // https://github.dev/CompactMods/CompactMachines
@@ -47,7 +46,7 @@ import java.util.stream.IntStream;
 // https://docs.minecraftforge.net/en/1.19.x/misc/gametest/
 // https://github.com/MinecraftForge/MinecraftForge/blob/1.19.x/src/test/java/net/minecraftforge/debug/misc/GameTestTest.java#LL101-L116C6
 // https://github.com/XFactHD/FramedBlocks/blob/1.19.4/src/main/java/xfacthd/framedblocks/api/test/TestUtils.java#L65-L87
-@SuppressWarnings("DataFlowIssue")
+@SuppressWarnings({"DataFlowIssue", "deprecation", "OptionalGetWithoutIsPresent", "DuplicatedCode"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMCorrectnessGameTests extends SFMGameTestBase {
@@ -152,7 +151,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             int count = rightChest.getSlots() * 64;
             int total = 0;
             for (int i = 0; i < rightChest.getSlots(); i++) {
-                if (((Predicate<ItemStack>) x -> x.is(Items.DIRT)).test(rightChest.getStackInSlot(i))) {
+                ItemStack x = rightChest.getStackInSlot(i);
+                if (x.is(Items.DIRT)) {
                     total += rightChest.getStackInSlot(i).getCount();
                 }
             }

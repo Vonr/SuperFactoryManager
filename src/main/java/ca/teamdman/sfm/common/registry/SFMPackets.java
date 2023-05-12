@@ -10,6 +10,7 @@ import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
+import javax.annotation.Nullable;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -35,15 +36,6 @@ public class SFMPackets {
             DISK_ITEM_CHANNEL_VERSION::equals,
             DISK_ITEM_CHANNEL_VERSION::equals
     );
-
-    public static <MSG extends MenuPacket> void register(
-            SimpleChannel channel,
-            int id,
-            Class<MSG> clazz,
-            MenuPacket.MenuPacketHandler<?, ?, MSG> handler
-    ) {
-        channel.registerMessage(id, clazz, handler::_encode, handler::_decode, handler::_handle);
-    }
 
     public static void register() {
         MANAGER_CHANNEL.registerMessage(
@@ -94,7 +86,7 @@ public class SFMPackets {
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(
-            Supplier<NetworkEvent.Context> ctxSupplier,
+            @Nullable Supplier<NetworkEvent.Context> ctxSupplier,
             Class<MENU> menuClass,
             Class<BE> blockEntityClass,
             BlockPos pos,
@@ -115,11 +107,13 @@ public class SFMPackets {
             if (menu.containerId != containerId) return;
 
             var level = sender.getLevel();
+            //noinspection ConstantValue
             if (level == null) return;
             if (!level.isLoaded(pos)) return;
 
             var blockEntity = level.getBlockEntity(pos);
             if (!blockEntityClass.isInstance(blockEntity)) return;
+            //noinspection unchecked
             callback.accept((MENU) menu, (BE) blockEntity);
         });
     }

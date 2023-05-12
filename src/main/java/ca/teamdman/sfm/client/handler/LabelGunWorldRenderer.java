@@ -24,12 +24,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-/**
+/*
  * This class uses code from tasgon's "observable" mod, also using MPLv2
  * https://github.com/tasgon/observable/blob/master/common/src/main/kotlin/observable/client/Overlay.kt
  */
 public class LabelGunWorldRenderer {
     private static final int          BUFFER_SIZE = 256;
+    @SuppressWarnings("deprecation")
     private static final RenderType   RENDER_TYPE = RenderType.create(
             "sfmlabels",
             DefaultVertexFormat.POSITION_COLOR,
@@ -71,7 +72,6 @@ public class LabelGunWorldRenderer {
         var labelGun = player.getMainHandItem();
         if (!(labelGun.getItem() instanceof LabelGunItem)) labelGun = player.getOffhandItem();
         if (!(labelGun.getItem() instanceof LabelGunItem)) return;
-        var playerPosition = player.position();
         var labelPositions = SFMLabelNBTHelper.getPositionLabels(labelGun);
 
         var poseStack    = event.getPoseStack();
@@ -104,6 +104,7 @@ public class LabelGunWorldRenderer {
                 poseStack.pushPose();
                 poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
 
+                //noinspection DataFlowIssue
                 vbo.drawWithShader(
                         poseStack.last().pose(),
                         event.getProjectionMatrix(),

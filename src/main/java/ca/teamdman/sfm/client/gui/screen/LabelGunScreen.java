@@ -15,10 +15,10 @@ import org.lwjgl.glfw.GLFW;
 
 public class LabelGunScreen extends Screen {
     private final InteractionHand HAND;
+    @SuppressWarnings("FieldCanBeLocal")
     private final ItemStack       ITEM_STACK;
-    private final String          label = "";
+    @SuppressWarnings("NotNullFieldNotInitialized")
     private       EditBox         labelField;
-    private       Button          doneButton;
 
     public LabelGunScreen(ItemStack labelGunStack, InteractionHand hand) {
         super(Constants.LocalizationKeys.LABEL_GUN_GUI_TITLE.getComponent());
@@ -29,6 +29,7 @@ public class LabelGunScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        assert this.minecraft != null;
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
         this.labelField = addRenderableWidget(new EditBox(
                 this.font,
@@ -40,8 +41,7 @@ public class LabelGunScreen extends Screen {
         ));
         this.setInitialFocus(labelField);
         this.labelField.setFocus(true);
-
-        this.doneButton = this.addRenderableWidget(new Button(
+        this.addRenderableWidget(new Button(
                 this.width / 2 - 2 - 150,
                 this.height / 4 + 120 + 12,
                 300,

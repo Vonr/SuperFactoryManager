@@ -2,14 +2,19 @@ package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
+import javax.annotation.Nullable;
+
 public class LimitedInputSlot<STACK, ITEM, CAP> {
 
+    @SuppressWarnings("NotNullFieldNotInitialized")
     public ResourceType<STACK, ITEM, CAP> type;
+    @SuppressWarnings("NotNullFieldNotInitialized")
     public CAP handler;
     public int slot;
+    @SuppressWarnings("NotNullFieldNotInitialized")
     public InputResourceTracker<STACK, ITEM, CAP> tracker;
     private boolean done = false;
-    private STACK extractSimulateCache = null;
+    private @Nullable STACK extractSimulateCache = null;
 
     public LimitedInputSlot(
             CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker
@@ -58,6 +63,8 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
+        //noinspection DataFlowIssue
         this.type = tracker.LIMIT.resourceId().getResourceType();
+        assert type != null;
     }
 }

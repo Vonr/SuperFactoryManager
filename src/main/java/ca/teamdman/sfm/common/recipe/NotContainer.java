@@ -13,6 +13,7 @@ import java.util.function.Predicate;
  * I don't want to use a Container when the block has no GUI.
  * This is a hack to make the recipe stuff happy.
  */
+@SuppressWarnings("RedundantMethodOverride")
 public interface NotContainer extends Container {
 
     @Override
