@@ -19,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Blocks;
@@ -1336,5 +1337,42 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(found.stream().mapToInt(e -> e.getItem().getCount()).sum() == 10, "bad count");
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "1x2x1")
+    public static void disk_item_clientside_regression(GameTestHelper helper) {
+        var stack = new ItemStack(SFMItems.DISK_ITEM.get());
+        stack.getDisplayName();
+        stack.getHoverName();
+        stack.getItem().getName(stack);
+        stack.getItem().appendHoverText(stack, helper.getLevel(), new ArrayList<>(), TooltipFlag.Default.NORMAL);
+        Vec3 pos = helper.absoluteVec(new Vec3(0.5, 1, 0.5));
+        ItemEntity itemEntity = new ItemEntity(helper.getLevel(), pos.x, pos.y, pos.z, stack, 0, 0, 0);
+        helper.getLevel().addFreshEntity(itemEntity);
+    }
+
+    @GameTest(template = "1x2x1")
+    public static void program_crlf_line_endings_conversion(GameTestHelper helper) {
+        var managerPos = new BlockPos(0, 2, 0);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        String program = """
+                NAME "line endings test"
+                EVERY 20 TICKS DO
+                    INPUT FROM a
+                    OUTPUT TO b
+                END
+                """.stripIndent();
+        String programWithWindowsLineEndings = program.replaceAll("\n", "\r\n");
+        manager.setProgram(programWithWindowsLineEndings);
+        if (manager.getProgramString().get().equals(program)) {
+            helper.succeed();
+        } else {
+            helper.fail(String.format(
+                    "program string was not converted correctly: %s",
+                    manager.getProgramString().get()
+            ));
+        }
     }
 }
