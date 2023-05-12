@@ -3,7 +3,6 @@ package ca.teamdman.sfm.common;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -350,14 +349,6 @@ public class Constants {
         ) {
             public LocalizationEntry(String key, String value) {
                 this(() -> key, () -> value);
-            }
-
-            public String getString() {
-                return I18n.get(key.get());
-            }
-
-            public String getString(Object... args) {
-                return I18n.get(key.get(), args);
             }
 
             public TranslatableContents get(Object... args) {

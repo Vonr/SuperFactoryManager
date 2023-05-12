@@ -1,9 +1,8 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfml.ast.Program;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -37,14 +36,7 @@ public record ClientboundManagerGuiPacket(
     public static void handle(
             ClientboundManagerGuiPacket msg, Supplier<NetworkEvent.Context> contextSupplier
     ) {
-        contextSupplier.get().enqueueWork(() -> {
-            var container = Minecraft.getInstance().player.containerMenu;
-            if (container instanceof ManagerContainerMenu menu && container.containerId == msg.windowId()) {
-                menu.tickTimeNanos = msg.tickTimes();
-                menu.state = msg.state();
-                menu.program = msg.program();
-            }
-        });
+        contextSupplier.get().enqueueWork(() -> ClientStuff.updateMenu(msg));
         contextSupplier.get().setPacketHandled(true);
     }
 }

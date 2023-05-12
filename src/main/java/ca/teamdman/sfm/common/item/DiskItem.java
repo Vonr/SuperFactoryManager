@@ -10,7 +10,6 @@ import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -25,6 +24,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import javax.annotation.Nullable;
@@ -144,9 +144,10 @@ public class DiskItem extends Item {
     ) {
 
         if (stack.hasTag()) {
-            long handle = Minecraft.getInstance().getWindow().getWindow();
-            boolean showProgram = ClientStuff.isMoreInfoKeyDown();
-
+            boolean showProgram = DistExecutor.<Boolean>safeRunForDist(
+                    () -> ClientStuff::isMoreInfoKeyDown,
+                    () -> () -> false
+            );
             if (!showProgram) {
                 list.addAll(SFMLabelNBTHelper.getHoverText(stack));
                 getErrors(stack)
