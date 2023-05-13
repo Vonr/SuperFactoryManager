@@ -1349,6 +1349,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         Vec3 pos = helper.absoluteVec(new Vec3(0.5, 1, 0.5));
         ItemEntity itemEntity = new ItemEntity(helper.getLevel(), pos.x, pos.y, pos.z, stack, 0, 0, 0);
         helper.getLevel().addFreshEntity(itemEntity);
+        helper.succeed();
     }
 
     @GameTest(template = "1x2x1")
