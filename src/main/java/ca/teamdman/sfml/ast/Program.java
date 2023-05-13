@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -80,7 +81,7 @@ public record Program(
         }
     }
 
-    public ArrayList<TranslatableContents> gatherWarnings(ItemStack disk, ManagerBlockEntity manager) {
+    public ArrayList<TranslatableContents> gatherWarnings(ItemStack disk, @Nullable ManagerBlockEntity manager) {
         var warnings = new ArrayList<TranslatableContents>();
 
         // labels in code but not in world
@@ -100,38 +101,40 @@ public record Program(
                 .filter(x -> !referencedLabels.contains(x))
                 .forEach(label -> warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNDEFINED_LABEL.get(label)));
 
-        // labels in world but not connected via cables
-        CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
-            for (var entry : SFMLabelNBTHelper.getPositionLabels(disk).entries()) {
-                var label = entry.getValue();
-                var pos = entry.getKey();
-                var inNetwork = network.isInNetwork(pos);
-                var adjacent = network.hasCableNeighbour(pos);
-                if (!inNetwork) {
-                    if (adjacent) {
-                        warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
-                                label,
-                                String.format(
-                                        "[%d,%d,%d]",
-                                        pos.getX(),
-                                        pos.getY(),
-                                        pos.getZ()
-                                )
-                        ));
-                    } else {
-                        warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
-                                label,
-                                String.format(
-                                        "[%d,%d,%d]",
-                                        pos.getX(),
-                                        pos.getY(),
-                                        pos.getZ()
-                                )
-                        ));
+        if (manager != null) {
+            // labels in world but not connected via cables
+            CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
+                for (var entry : SFMLabelNBTHelper.getPositionLabels(disk).entries()) {
+                    var label = entry.getValue();
+                    var pos = entry.getKey();
+                    var inNetwork = network.isInNetwork(pos);
+                    var adjacent = network.hasCableNeighbour(pos);
+                    if (!inNetwork) {
+                        if (adjacent) {
+                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
+                                    label,
+                                    String.format(
+                                            "[%d,%d,%d]",
+                                            pos.getX(),
+                                            pos.getY(),
+                                            pos.getZ()
+                                    )
+                            ));
+                        } else {
+                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
+                                    label,
+                                    String.format(
+                                            "[%d,%d,%d]",
+                                            pos.getX(),
+                                            pos.getY(),
+                                            pos.getZ()
+                                    )
+                            ));
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // try and validate that references resources exist
         for (var resource : referencedResources) {

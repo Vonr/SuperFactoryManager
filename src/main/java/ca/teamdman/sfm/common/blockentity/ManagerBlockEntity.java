@@ -132,29 +132,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public void rebuildProgramAndUpdateDisk() {
         if (level != null && level.isClientSide()) return;
-        //noinspection CodeBlock2Expr
-        getProgramString().ifPresentOrElse(programString -> {
-            Program.compile(programString, success -> {
-                this.program = success;
-                getDisk().ifPresent(disk -> {
-                    DiskItem.setProgramName(disk, success.name());
-                    DiskItem.setWarnings(disk, success.gatherWarnings(disk, this));
-                    DiskItem.setErrors(disk, Collections.emptyList());
-                });
-            }, failure -> {
-                program = null;
-                getDisk().ifPresent(disk -> {
-                    DiskItem.setWarnings(disk, Collections.emptyList());
-                    DiskItem.setErrors(disk, failure);
-                });
-            });
-        }, () -> {
-            program = null;
-            getDisk().ifPresent(disk -> {
-                DiskItem.setWarnings(disk, Collections.emptyList());
-                DiskItem.setErrors(disk, Collections.emptyList());
-            });
-        });
+        this.program = getDisk()
+                .flatMap(itemStack -> DiskItem.updateDetails(itemStack, this))
+                .orElse(null);
         sendUpdatePacket();
     }
 

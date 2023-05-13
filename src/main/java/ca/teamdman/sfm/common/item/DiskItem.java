@@ -4,11 +4,13 @@ import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -29,7 +31,10 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class DiskItem extends Item {
@@ -43,21 +48,22 @@ public class DiskItem extends Item {
                 .getString("sfm:program");
     }
 
-    @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        if (pLevel.isClientSide) {
-            var stack = pPlayer.getItemInHand(pUsedHand);
-            if (stack.is(SFMItems.DISK_ITEM.get())) {
-                ClientStuff.showTextEditorScreen(
-                        stack,
-                        programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
-                                programString,
-                                pUsedHand
-                        ))
-                );
-            }
-        }
-        return InteractionResultHolder.sidedSuccess(pPlayer.getItemInHand(pUsedHand), pLevel.isClientSide());
+    public static Optional<Program> updateDetails(ItemStack stack, @Nullable ManagerBlockEntity manager) {
+        AtomicReference<Program> rtn = new AtomicReference<>(null);
+        Program.compile(
+                getProgram(stack),
+                success -> {
+                    setProgramName(stack, success.name());
+                    setWarnings(stack, success.gatherWarnings(stack, manager));
+                    setErrors(stack, Collections.emptyList());
+                    rtn.set(success);
+                },
+                failure -> {
+                    setWarnings(stack, Collections.emptyList());
+                    setErrors(stack, failure);
+                }
+        );
+        return Optional.ofNullable(rtn.get());
     }
 
     public static void setProgram(ItemStack stack, String program) {
@@ -65,6 +71,21 @@ public class DiskItem extends Item {
                 .getOrCreateTag()
                 .putString("sfm:program", program.replaceAll("\r", ""));
 
+    }
+
+    @Override
+    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+        var stack = pPlayer.getItemInHand(pUsedHand);
+        if (pLevel.isClientSide) {
+            ClientStuff.showProgramEditScreen(
+                    stack,
+                    programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
+                            programString,
+                            pUsedHand
+                    ))
+            );
+        }
+        return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
     }
 
     public static void setErrors(ItemStack stack, List<TranslatableContents> errors) {

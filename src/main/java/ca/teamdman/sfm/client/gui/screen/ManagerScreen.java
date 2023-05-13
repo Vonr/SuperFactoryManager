@@ -174,7 +174,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onEdit() {
-        ClientStuff.showTextEditorScreen(menu.CONTAINER.getItem(0), this::sendProgram);
+        ClientStuff.showProgramEditScreen(menu.CONTAINER.getItem(0), this::sendProgram);
     }
 
     private void sendReset() {

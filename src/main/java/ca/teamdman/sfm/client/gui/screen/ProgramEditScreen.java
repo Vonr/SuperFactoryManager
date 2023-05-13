@@ -93,8 +93,8 @@ public class ProgramEditScreen extends Screen {
     }
 
     public void onDone() {
-        onClose();
         CALLBACK.accept(textarea.getValue());
+        onClose();
     }
 
     @Override

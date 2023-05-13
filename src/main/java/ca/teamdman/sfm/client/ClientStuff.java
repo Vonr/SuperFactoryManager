@@ -33,10 +33,16 @@ public class ClientStuff {
                 .setScreen(new LabelGunScreen(stack, hand));
     }
 
-    public static void showTextEditorScreen(ItemStack diskItem, Consumer<String> programSetter) {
-        Minecraft
-                .getInstance()
-                .pushGuiLayer(new ProgramEditScreen(diskItem, programSetter));
+    public static void showProgramEditScreen(ItemStack diskItem, Consumer<String> programSetter) {
+        if (Minecraft.getInstance().screen == null) {
+            Minecraft
+                    .getInstance()
+                    .setScreen(new ProgramEditScreen(diskItem, programSetter));
+        } else {
+            Minecraft
+                    .getInstance()
+                    .pushGuiLayer(new ProgramEditScreen(diskItem, programSetter));
+        }
     }
 
     @SubscribeEvent
