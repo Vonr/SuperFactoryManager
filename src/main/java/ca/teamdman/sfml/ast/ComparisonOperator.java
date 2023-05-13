@@ -19,11 +19,11 @@ public enum ComparisonOperator implements ASTNode, BiPredicate<Long, Long> {
 
     public static ComparisonOperator from(String text) {
         return switch (text.toUpperCase(Locale.ROOT)) {
-            case "GT" -> GREATER;
-            case "LT" -> LESSER;
-            case "EQ" -> EQUALS;
-            case "LE" -> LESSER_OR_EQUAL;
-            case "GE" -> GREATER_OR_EQUAL;
+            case "GT", ">" -> GREATER;
+            case "LT", "<" -> LESSER;
+            case "EQ", "==" -> EQUALS;
+            case "LE", "<=" -> LESSER_OR_EQUAL;
+            case "GE", ">=" -> GREATER_OR_EQUAL;
             default -> NEVER;
         };
     }

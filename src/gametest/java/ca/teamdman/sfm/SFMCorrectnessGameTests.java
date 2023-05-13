@@ -1376,4 +1376,130 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             ));
         }
     }
+
+    @GameTest(template = "3x2x1")
+    public static void comparison_gt(GameTestHelper helper) {
+        var leftPos = new BlockPos(2, 2, 0);
+        var rightPos = new BlockPos(0, 2, 0);
+        var managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
+        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        left.setItem(0, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(1, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(2, new ItemStack(Items.IRON_INGOT, 12));
+        right.setItem(0, new ItemStack(Items.STICK, 13));
+        right.setItem(1, new ItemStack(Items.STICK, 64));
+        right.setItem(2, new ItemStack(Items.DIRT, 1));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   NAME "comparison test"
+                                   EVERY 20 TICKS DO
+                                       IF left HAS GT 100 diamond THEN
+                                           -- should happen
+                                           INPUT diamond FROM left
+                                           OUTPUT diamond TO right
+                                       END
+                                       IF left HAS GT 300 iron_ingot THEN
+                                           -- should not happen
+                                           INPUT iron_ingot FROM left
+                                           OUTPUT iron_ingot TO right
+                                       END
+                                       IF right HAS > 10 stick THEN
+                                           -- should happen
+                                           INPUT stick FROM right
+                                           OUTPUT stick TO left
+                                       END
+                                       if right has > 0 dirt then
+                                           -- should happen
+                                           input dirt from right
+                                           output dirt to left
+                                       end
+                                   END
+                                   """);
+
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            int leftDiamondCount = IntStream
+                    .range(0, left.getContainerSize())
+                    .mapToObj(left::getItem)
+                    .filter(stack -> stack.is(Items.DIAMOND))
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            int leftIronCount = IntStream
+                    .range(0, left.getContainerSize())
+                    .mapToObj(left::getItem)
+                    .filter(stack -> stack.is(Items.IRON_INGOT))
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            int leftStickCount = IntStream
+                    .range(0, left.getContainerSize())
+                    .mapToObj(left::getItem)
+                    .filter(stack -> stack.is(Items.STICK))
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            int leftDirtCount = IntStream
+                    .range(0, left.getContainerSize())
+                    .mapToObj(left::getItem)
+                    .filter(stack -> stack.is(Items.DIRT))
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            int rightDiamondCount = IntStream
+                    .range(0, right.getContainerSize())
+                    .mapToObj(right::getItem)
+                    .filter(stack -> stack.is(Items.DIAMOND))
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            int rightIronCount = IntStream
+                    .range(0, right.getContainerSize())
+                    .mapToObj(right::getItem)
+                    .filter(stack -> stack.is(Items.IRON_INGOT))
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            int rightStickCount = IntStream
+                    .range(0, right.getContainerSize())
+                    .mapToObj(right::getItem)
+                    .filter(stack -> stack.is(Items.STICK))
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            int rightDirtCount = IntStream
+                    .range(0, right.getContainerSize())
+                    .mapToObj(right::getItem)
+                    .filter(stack -> stack.is(Items.DIRT))
+                    .mapToInt(ItemStack::getCount)
+                    .sum();
+            // the diamonds should have moved from left to right
+            assertTrue(leftDiamondCount == 0, "left should have no diamonds");
+            assertTrue(rightDiamondCount == 64 * 2, "right should have 100 diamonds");
+            // the iron should have stayed in left
+            assertTrue(leftIronCount == 12, "left should have 12 iron ingots");
+            assertTrue(rightIronCount == 0, "right should have no iron ingots");
+            // the sticks should have moved from right to left
+            assertTrue(rightStickCount == 0, "right should have no sticks");
+            assertTrue(leftStickCount == 77, "left should have 77 sticks");
+            // the dirt should have moved from right to left
+            assertTrue(rightDirtCount == 0, "right should have no dirt");
+            assertTrue(leftDirtCount == 1, "left should have 1 dirt");
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void comparison_ge(GameTestHelper helper) {
+        var leftPos = new BlockPos(2, 2, 0);
+        var rightPos = new BlockPos(0, 2, 0);
+        var managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
+        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+
+    }
 }

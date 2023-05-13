@@ -101,6 +101,8 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.DO:
             case SFMLLexer.IF:
             case SFMLLexer.ELSE:
+            case SFMLLexer.THEN:
+            case SFMLLexer.HAS:
                 return ChatFormatting.BLUE;
             case SFMLLexer.IDENTIFIER:
             case SFMLLexer.STRING:
@@ -109,6 +111,16 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.SLOTS:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
+            case SFMLLexer.GT:
+            case SFMLLexer.LT:
+            case SFMLLexer.EQ:
+            case SFMLLexer.GE:
+            case SFMLLexer.LE:
+            case SFMLLexer.GT_SYMBOL:
+            case SFMLLexer.LT_SYMBOL:
+            case SFMLLexer.EQ_SYMBOL:
+            case SFMLLexer.GE_SYMBOL:
+            case SFMLLexer.LE_SYMBOL:
                 return ChatFormatting.AQUA;
             case SFMLLexer.UNUSED:
                 return ChatFormatting.RED;
