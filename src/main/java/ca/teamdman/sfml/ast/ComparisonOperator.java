@@ -8,8 +8,7 @@ public enum ComparisonOperator implements ASTNode, BiPredicate<Long, Long> {
     LESSER((a, b) -> a < b),
     EQUALS(Long::equals),
     LESSER_OR_EQUAL((a, b) -> a <= b),
-    GREATER_OR_EQUAL((a, b) -> a >= b),
-    NEVER((a, b) -> false);
+    GREATER_OR_EQUAL((a, b) -> a >= b);
 
     private final BiPredicate<Long, Long> PRED;
 
@@ -21,10 +20,10 @@ public enum ComparisonOperator implements ASTNode, BiPredicate<Long, Long> {
         return switch (text.toUpperCase(Locale.ROOT)) {
             case "GT", ">" -> GREATER;
             case "LT", "<" -> LESSER;
-            case "EQ", "==" -> EQUALS;
+            case "EQ", "=" -> EQUALS;
             case "LE", "<=" -> LESSER_OR_EQUAL;
             case "GE", ">=" -> GREATER_OR_EQUAL;
-            default -> NEVER;
+            default -> throw new IllegalArgumentException("Invalid comparison operator: " + text);
         };
     }
 
