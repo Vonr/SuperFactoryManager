@@ -21,7 +21,21 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     private final Map<ITEM, ResourceLocation> registryKeyCache = new Object2ObjectOpenHashMap<>();
 
     static {
-        patternCache.put(".*", s -> true);
+        // we want to make common match-all patterns fast
+        // resource names are lowercase alphanumeric with underscores
+        String[] matchAny = new String[]{
+                ".",
+                "[a-z0-9/._-]",
+                };
+        String[] suffixes = new String[]{"+", "*"};
+        for (String s : matchAny) {
+            for (String suffix : suffixes) {
+                patternCache.put(s + suffix, s1 -> true);
+                patternCache.put("^" + s + suffix, s1 -> true);
+                patternCache.put("^" + s + suffix + "$", s1 -> true);
+                patternCache.put(s + suffix + "$", s1 -> true);
+            }
+        }
     }
 
     public final Capability<CAP> CAPABILITY;
