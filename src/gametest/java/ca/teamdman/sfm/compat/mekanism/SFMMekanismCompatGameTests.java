@@ -18,13 +18,16 @@ import mekanism.common.tile.TileEntityChemicalTank;
 import mekanism.common.tile.TileEntityEnergyCube;
 import mekanism.common.util.UnitDisplayUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -486,6 +489,60 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             assertTrue(found == 1000 * 25 * 24, "Not all fluids were moved (found " + found + ")");
             helper.succeed();
 
+        });
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void multi_fluid(GameTestHelper helper) {
+        var a1Pos = new BlockPos(2, 2, 1);
+        var a2Pos = new BlockPos(1, 2, 0);
+        var b1Pos = new BlockPos(1, 2, 2);
+        var b2Pos = new BlockPos(0, 2, 1);
+        var managerPos = new BlockPos(1, 2, 1);
+        helper.setBlock(a1Pos, MekanismBlocks.BASIC_FLUID_TANK.getBlock());
+        helper.setBlock(a2Pos, MekanismBlocks.BASIC_FLUID_TANK.getBlock());
+        helper.setBlock(b1Pos, MekanismBlocks.BASIC_FLUID_TANK.getBlock());
+        helper.setBlock(b2Pos, MekanismBlocks.BASIC_FLUID_TANK.getBlock());
+        var a1 = helper
+                .getBlockEntity(a1Pos)
+                .getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.NORTH)
+                .orElse(null);
+        var a2 = helper
+                .getBlockEntity(a2Pos)
+                .getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.NORTH)
+                .orElse(null);
+        var b1 = helper
+                .getBlockEntity(b1Pos)
+                .getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.NORTH)
+                .orElse(null);
+        var b2 = helper
+                .getBlockEntity(b2Pos)
+                .getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.NORTH)
+                .orElse(null);
+
+        a1.fill(new FluidStack(Fluids.WATER, 3000), IFluidHandler.FluidAction.EXECUTE);
+        a2.fill(new FluidStack(Fluids.LAVA, 3000), IFluidHandler.FluidAction.EXECUTE);
+
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   EVERY 20 TICKS DO
+                                     INPUT fluid:: FROM a NORTH SIDE
+                                     OUTPUT fluid:: TO b TOP SIDE
+                                   END
+                                   """.stripIndent());
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(a1Pos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(a2Pos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(b1Pos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(b2Pos));
+
+        assertManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(a1.getFluidInTank(0).isEmpty(), "a1 did not empty");
+            assertTrue(a2.getFluidInTank(0).isEmpty(), "a2 did not empty");
+            assertTrue(b1.getFluidInTank(0).getFluid() == Fluids.WATER, "b1 did not fill with water");
+            assertTrue(b2.getFluidInTank(0).getFluid() == Fluids.LAVA, "b2 did not fill with lava");
+            helper.succeed();
         });
     }
 }

@@ -7,6 +7,7 @@ import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -40,7 +41,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     }
 
     public ResourceIdentifier(String value) {
-        this(SFM.MOD_ID, "item", "minecraft", value);
+        this(SFM.MOD_ID, "item", ".*", value);
     }
 
     public ResourceIdentifier(String namespace, String value) {
@@ -62,7 +63,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         } else if (parts.length == 4) {
             return new ResourceIdentifier<>(parts[0], parts[1], parts[2], parts[3]);
         } else {
-            throw new IllegalArgumentException("bad resource id");
+            throw new IllegalArgumentException("bad resource id: " + string);
         }
     }
 
@@ -104,5 +105,24 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     @Override
     public String toString() {
         return resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ResourceIdentifier<?, ?, ?> that = (ResourceIdentifier<?, ?, ?>) o;
+        return Objects.equals(resourceTypeNamespace, that.resourceTypeNamespace) && Objects.equals(
+                resourceTypeName,
+                that.resourceTypeName
+        ) && Objects.equals(resourceNamespace, that.resourceNamespace) && Objects.equals(
+                resourceName,
+                that.resourceName
+        );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(resourceTypeNamespace, resourceTypeName, resourceNamespace, resourceName);
     }
 }

@@ -121,7 +121,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public Set<String> getReferencedLabels() {
         if (program == null) return Collections.emptySet();
-        return program.getReferencedLabels();
+        return program.referencedLabels();
     }
 
     public Optional<ItemStack> getDisk() {

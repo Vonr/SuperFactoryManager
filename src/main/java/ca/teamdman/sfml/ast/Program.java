@@ -184,10 +184,6 @@ public record Program(
         DiskItem.setWarnings(disk, gatherWarnings(disk, manager));
     }
 
-    public Set<String> getReferencedLabels() {
-        return referencedLabels;
-    }
-
     public boolean tick(ManagerBlockEntity manager) {
         var context = new ProgramContext(manager);
 

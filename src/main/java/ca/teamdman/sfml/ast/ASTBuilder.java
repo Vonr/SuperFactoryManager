@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
-    private final Set<Label>                       USED_LABELS    = new HashSet<>();
+    private final Set<Label> USED_LABELS = new HashSet<>();
     private final Set<ResourceIdentifier<?, ?, ?>> USED_RESOURCES = new HashSet<>();
 
 
@@ -23,10 +23,12 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitResource(SFMLParser.ResourceContext ctx) {
         var str = ctx
-                .IDENTIFIER()
+                .children
                 .stream()
                 .map(ParseTree::getText)
-                .collect(Collectors.joining(":"))
+                .collect(Collectors.joining())
+                .replaceAll("::", ":*:")
+                .replaceAll(":$", ":*")
                 .replaceAll("\\*", ".*");
         var rtn = ResourceIdentifier.fromString(str);
         USED_RESOURCES.add(rtn);
@@ -89,10 +91,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitBooleanRedstone(SFMLParser.BooleanRedstoneContext ctx) {
         ComparisonOperator comp = ComparisonOperator.GREATER_OR_EQUAL;
-        Quantity           num  = new Quantity(0);
+        Quantity num = new Quantity(0);
         if (ctx.comparisonOp() != null && ctx.number() != null) {
             comp = visitComparisonOp(ctx.comparisonOp());
-            num  = visitNumber(ctx.number());
+            num = visitNumber(ctx.number());
         }
 
         ComparisonOperator finalComp = comp;
@@ -150,16 +152,16 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
-        var matchers    = visitInputmatchers(ctx.inputmatchers());
-        var each        = ctx.EACH() != null;
+        var matchers = visitInputmatchers(ctx.inputmatchers());
+        var each = ctx.EACH() != null;
         return new InputStatement(labelAccess, matchers, each);
     }
 
     @Override
     public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
-        var matchers    = visitOutputmatchers(ctx.outputmatchers());
-        var each        = ctx.EACH() != null;
+        var matchers = visitOutputmatchers(ctx.outputmatchers());
+        var each = ctx.EACH() != null;
         return new OutputStatement(labelAccess, matchers, each);
     }
 
@@ -196,9 +198,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public BoolExpr visitBooleanHas(SFMLParser.BooleanHasContext ctx) {
-        var setOp       = visitSetOp(ctx.setOp());
+        var setOp = visitSetOp(ctx.setOp());
         var labelAccess = visitLabelaccess(ctx.labelaccess());
-        var comparison  = visitResourcecomparison(ctx.resourcecomparison());
+        var comparison = visitResourcecomparison(ctx.resourcecomparison());
         return comparison.toBooleanExpression(setOp, labelAccess);
     }
 
@@ -223,14 +225,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public BoolExpr visitBooleanConjunction(SFMLParser.BooleanConjunctionContext ctx) {
-        var left  = (BoolExpr) visit(ctx.boolexpr(0));
+        var left = (BoolExpr) visit(ctx.boolexpr(0));
         var right = (BoolExpr) visit(ctx.boolexpr(1));
         return new BoolExpr(left.and(right));
     }
 
     @Override
     public BoolExpr visitBooleanDisjunction(SFMLParser.BooleanDisjunctionContext ctx) {
-        var left  = (BoolExpr) visit(ctx.boolexpr(0));
+        var left = (BoolExpr) visit(ctx.boolexpr(0));
         var right = (BoolExpr) visit(ctx.boolexpr(1));
         return new BoolExpr(left.or(right));
     }
@@ -254,7 +256,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Limit visitQuantityRetentionLimit(SFMLParser.QuantityRetentionLimitContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
-        var retain   = visitRetention(ctx.retention());
+        var retain = visitRetention(ctx.retention());
         return new Limit(quantity.value(), retain.value());
     }
 
@@ -319,7 +321,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public NumberRange visitRange(SFMLParser.RangeContext ctx) {
-        var iter  = ctx.number().stream().map(this::visitNumber).mapToLong(Quantity::value).iterator();
+        var iter = ctx.number().stream().map(this::visitNumber).mapToLong(Quantity::value).iterator();
         var start = iter.next();
         if (iter.hasNext()) {
             var end = iter.next();
