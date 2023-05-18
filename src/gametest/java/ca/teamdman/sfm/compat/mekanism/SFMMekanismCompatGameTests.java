@@ -529,7 +529,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         manager.setProgram("""
                                    EVERY 20 TICKS DO
                                      INPUT fluid:: FROM a NORTH SIDE
-                                     OUTPUT fluid:: TO b TOP SIDE
+                                     OUTPUT fluid::lava, fluid::water TO b TOP SIDE
                                    END
                                    """.stripIndent());
         SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(a1Pos));
