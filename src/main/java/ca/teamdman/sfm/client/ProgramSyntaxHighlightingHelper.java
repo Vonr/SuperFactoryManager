@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProgramSyntaxHighlightingHelper {
-
-
     public static List<MutableComponent> withSyntaxHighlighting(String programString) {
         SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
         lexer.INCLUDE_UNUSED = true;
@@ -27,11 +25,21 @@ public class ProgramSyntaxHighlightingHelper {
                     return super.getHiddenTokensToRight(tokenIndex, channel);
                 }
             }
+
+            @Override
+            public List<Token> getHiddenTokensToLeft(int tokenIndex, int channel) {
+                if (channel == Token.DEFAULT_CHANNEL) {
+                    return getHiddenTokensToLeft(tokenIndex, Token.HIDDEN_CHANNEL);
+                } else {
+                    return super.getHiddenTokensToLeft(tokenIndex, channel);
+                }
+            }
         };
         List<MutableComponent> textComponents = new ArrayList<>();
         MutableComponent lineComponent = Component.empty();
-
-        for (Token token = tokens.LT(1); tokens.LA(1) != Token.EOF; token = tokens.LT(1)) {
+        tokens.fill();
+        for (Token token : tokens.getTokens()) {
+            if (token.getType() == SFMLLexer.EOF) break;
             // the token may contain newlines in it, so we need to split it up
             String[] lines = token.getText().split("\n", -1);
             for (int i = 0; i < lines.length; i++) {
@@ -45,33 +53,8 @@ public class ProgramSyntaxHighlightingHelper {
                     lineComponent = lineComponent.append(text);
                 }
             }
-            List<Token> hiddenTokens = tokens.getHiddenTokensToRight(tokens.index(), Token.DEFAULT_CHANNEL);
-            //noinspection ConstantValue
-            if (hiddenTokens != null) {
-                for (Token hiddenToken : hiddenTokens) {
-                    // the whitespace token often contains newlines, so we need to split it up
-                    var whitespace = hiddenToken.getText();
-                    String[] wsLines = whitespace.split("\n", -1);
-                    for (int i = 0; i < wsLines.length; i++) {
-                        if (i != 0) {
-                            textComponents.add(lineComponent);
-                            lineComponent = Component.empty();
-                        }
-                        String wsLine = wsLines[i];
-                        if (!wsLine.isEmpty()) {
-                            var ws = Component.literal(wsLine).withStyle(getStyle(hiddenToken));
-                            lineComponent = lineComponent.append(ws);
-                        }
-                    }
-                }
-            }
-            tokens.consume();
         }
-
-        // Add the last lineComponent to textComponents
-//        if (!lineComponent.equals(Component.empty())) {
         textComponents.add(lineComponent);
-//        }
 
         return textComponents;
     }

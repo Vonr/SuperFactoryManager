@@ -483,6 +483,62 @@ public class SFMLTests {
         }
     }
 
+    @Test
+    public void syntaxHighlightingWhitespaceRegression1() {
+        // the empty newline is important
+        var rawInput = """
+                    EVERY 20 TICKS DO
+                --test
+                        INPUT FROM a
+                        OUTPUT TO b
+                    END""";
+        var errors = getCompileErrors(rawInput);
+        assertTrue(errors.isEmpty());
+        var lines = rawInput.split("\n", -1);
+
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+        assertEquals(rawInput, colouredInput);
+
+        // newlines should not be present
+        // instead, each line should be its own component
+        assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+        assertEquals(lines.length, colouredLines.size());
+        for (int i = 0; i < lines.length; i++) {
+            assertEquals(lines[i], colouredLines.get(i).getString());
+        }
+    }
+
+    @Test
+    public void syntaxHighlightingWhitespaceRegression2() {
+        // the empty newline is important
+        var rawInput = """
+                    
+                EVERY 20 TICKS DO
+                    INPUT FROM a
+                    OUTPUT TO b
+                END""";
+        var errors = getCompileErrors(rawInput);
+        assertTrue(errors.isEmpty());
+        var lines = rawInput.split("\n", -1);
+
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
+
+        assertEquals(rawInput, colouredInput);
+
+        // newlines should not be present
+        // instead, each line should be its own component
+        assertFalse(colouredLines.stream().anyMatch(x -> x.getString().contains("\n")));
+
+        assertEquals(lines.length, colouredLines.size());
+        for (int i = 0; i < lines.length; i++) {
+            assertEquals(lines[i], colouredLines.get(i).getString());
+        }
+    }
+
 
     @Test
     public void syntaxHighlighting3() {
