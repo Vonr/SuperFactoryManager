@@ -8,7 +8,6 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.components.Tooltip;
@@ -130,11 +129,39 @@ public class ProgramEditScreen extends Screen {
         }
 
         @Override
-        public boolean mouseClicked(double p_239101_, double p_239102_, int p_239103_) {
-            try {
-                return super.mouseClicked(p_239101_, p_239102_, p_239103_);
-            } catch (Exception e) {
-                e.printStackTrace();
+        public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
+            // we need to override the default behaviour because Mojang broke it
+            // if it's not scrolling, it should return false for cursor click movement
+            boolean rtn;
+            if (!this.visible) {
+                rtn = false;
+            } else {
+                boolean flag = this.withinContentAreaPoint(pMouseX, pMouseY);
+                boolean flag1 = this.scrollbarVisible()
+                                && pMouseX >= (double) (this.getX() + this.width)
+                                && pMouseX <= (double) (this.getX() + this.width + 8)
+                                && pMouseY >= (double) this.getY()
+                                && pMouseY < (double) (this.getY() + this.height);
+                if (flag1 && pButton == 0) {
+                    this.scrolling = true;
+                    rtn = true;
+                } else {
+                    //1.19.4 behaviour:
+                    //rtn=flag || flag1;
+                    // instead, we want to return false if we're not scrolling
+                    // (like how it was in 1.19.2)
+                    // https://bugs.mojang.com/browse/MC-262754
+                    rtn = false;
+                }
+            }
+
+            if (rtn) {
+                return true;
+            } else if (this.withinContentAreaPoint(pMouseX, pMouseY) && pButton == 0) {
+                this.textField.setSelecting(Screen.hasShiftDown());
+                this.seekCursorScreen(pMouseX, pMouseY);
+                return true;
+            } else {
                 return false;
             }
         }
