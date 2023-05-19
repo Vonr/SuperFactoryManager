@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("unchecked")
 public class SFMLTests {
     public ArrayList<String> getCompileErrors(String input) {
         var lexer = new SFMLLexer(CharStreams.fromString(input));
