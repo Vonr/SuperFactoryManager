@@ -4,7 +4,11 @@ import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
+import com.google.common.collect.Sets;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.compress.utils.FileNameUtils;
@@ -20,7 +24,8 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SFML {
+@SuppressWarnings("unchecked")
+public class SFMLTests {
     public ArrayList<String> getCompileErrors(String input) {
         var lexer = new SFMLLexer(CharStreams.fromString(input));
         var tokens = new CommonTokenStream(lexer);
@@ -51,6 +56,15 @@ public class SFML {
         return errors;
     }
 
+    public Program compile(String input) {
+        var lexer = new SFMLLexer(CharStreams.fromString(input));
+        var tokens = new CommonTokenStream(lexer);
+        var parser = new SFMLParser(tokens);
+        var builder = new ASTBuilder();
+        var context = parser.program();
+        return builder.visitProgram(context);
+    }
+
     @Test
     public void simpleComparisons() {
         var input = """
@@ -71,6 +85,212 @@ public class SFML {
                 """;
         var errors = getCompileErrors(input);
         assertTrue(errors.isEmpty());
+    }
+
+
+    @Test
+    public void resource1() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input item:minecraft:stick from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", "minecraft", "stick")),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void resource2() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input item::stick from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void resource3() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input item::stick from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void resource4() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input stick from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void resource5() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input fluid::water from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("fluid", ".*", "water")),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void resource6() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input fluid:minecraft:water from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
+                        "fluid",
+                        "minecraft",
+                        "water"
+                )),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void resource7() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input fluid:: from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("fluid", ".*", ".*")),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void badResource() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input :fluid:: from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
+    public void resource8() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input forge_energy:forge:energy from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
+                        "forge_energy",
+                        "forge",
+                        "energy"
+                )),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void resource9() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input forge_energy:forge:energy from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
+                        "forge_energy",
+                        "forge",
+                        "energy"
+                )),
+                program.referencedResources()
+        );
+    }
+
+    @Test
+    public void resource10() {
+        var input = """
+                    name "hello world"
+                                    
+                    every 20 ticks do
+                        input gas::ethylene from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+        var program = compile(input);
+        assertEquals(
+                Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("gas", ".*", "ethylene")),
+                program.referencedResources()
+        );
     }
 
     @Test
@@ -214,6 +434,7 @@ public class SFML {
                 END
                 """.stripIndent();
         var errors = getCompileErrors(rawInput);
+        assertFalse(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
@@ -244,6 +465,7 @@ public class SFML {
                 END
                 """.stripIndent();
         var errors = getCompileErrors(rawInput);
+        assertTrue(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
@@ -361,7 +583,7 @@ public class SFML {
     @Test
     public void basicResourceIdentifier() {
         var identifier = ResourceIdentifier.fromString("wool");
-        assertEquals("sfm:item:minecraft:wool", identifier.toString());
+        assertEquals("sfm:item:.*:wool", identifier.toString());
     }
 
 
@@ -370,6 +592,7 @@ public class SFML {
         var rootDir = System.getProperty("user.dir");
         var examplesDir = Paths.get(rootDir, "examples").toFile();
         var found = 0;
+        //noinspection DataFlowIssue
         for (var entry : examplesDir.listFiles()) {
             if (!FileNameUtils.getExtension(entry.getPath()).equals("sfm")) continue;
             System.out.println("Reading " + entry);

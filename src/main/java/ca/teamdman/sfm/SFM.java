@@ -1,5 +1,6 @@
 package ca.teamdman.sfm;
 
+import ca.teamdman.sfm.client.registry.SFMMenuScreens;
 import ca.teamdman.sfm.common.registry.*;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;

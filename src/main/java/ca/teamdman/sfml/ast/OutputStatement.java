@@ -102,14 +102,16 @@ public final class OutputStatement implements Statement {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     public static void releaseSlots(List<LimitedOutputSlot> slots) {
         SLOT_POOL.release(slots);
     }
 
-    public static void releaseSlot(LimitedOutputSlot slot) {
+    public static void releaseSlot(LimitedOutputSlot<?, ?, ?> slot) {
         SLOT_POOL.release(slot);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public void tick(ProgramContext context) {
         // gather the input slots from all the input statements, +27 to hopefully avoid resizing
@@ -160,6 +162,7 @@ public final class OutputStatement implements Statement {
      * <p>
      * We want collect the slots from all the labelled blocks.
      */
+    @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
     public void gatherSlots(ProgramContext context, Consumer<LimitedOutputSlot<?, ?, ?>> acceptor) {
         // find all the types referenced in the output statement
         Stream<ResourceType> types = RESOURCE_LIMITS
@@ -197,6 +200,7 @@ public final class OutputStatement implements Statement {
             if (LABEL_ACCESS.slots().contains(slot)) {
                 for (OutputResourceTracker<?, ?, ?> tracker : trackers) {
                     if (tracker.matchesCapabilityType(capability)) {
+                        //noinspection unchecked
                         acceptor.accept(SLOT_POOL.acquire(
                                 capability,
                                 slot,

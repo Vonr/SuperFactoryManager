@@ -21,37 +21,27 @@ import java.util.List;
 
 public class LabelGunItem extends Item {
     public LabelGunItem() {
-        super(new Properties());
-    }
-
-    public static void setLabel(ItemStack stack, String label) {
-        stack
-                .getOrCreateTag()
-                .putString("sfm:programString", label);
-    }
-
-    public static String getLabel(ItemStack stack) {
-        return !stack.hasTag() ? "" : stack.getTag().getString("sfm:programString");
+        super(new Properties().stacksTo(1));
     }
 
     public static String getNextLabel(ItemStack gun, int change) {
-        var dict = gun.getOrCreateTag().getCompound("sfm:labels");
-        var keys = dict.getAllKeys().toArray(String[]::new);
-        if (keys.length == 0) return "";
-        var currentLabel = getLabel(gun);
+        var labels = SFMLabelNBTHelper.getLabels(gun);
+        if (labels.size() == 0) return "";
+        var currentLabel = SFMLabelNBTHelper.getLabelGunActiveLabel(gun);
 
         int currentLabelIndex = 0;
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[i].equals(currentLabel)) {
+        for (int i = 0; i < labels.size(); i++) {
+            if (labels.get(i).equals(currentLabel)) {
                 currentLabelIndex = i;
                 break;
             }
         }
 
         int nextLabelIndex = currentLabelIndex + change;
-        nextLabelIndex = ((nextLabelIndex % keys.length) + keys.length) % keys.length;
+        // ensure going negative wraps around
+        nextLabelIndex = ((nextLabelIndex % labels.size()) + labels.size()) % labels.size();
 
-        return keys[nextLabelIndex];
+        return labels.get(nextLabelIndex);
     }
 
     @Override
@@ -63,24 +53,27 @@ public class LabelGunItem extends Item {
         if (level.isClientSide) return InteractionResult.SUCCESS;
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager) {
             manager.getDisk().ifPresent(disk -> {
-                if (ctx.getPlayer().isShiftKeyDown()) {
+                Player player = ctx.getPlayer();
+                if (player != null && player.isShiftKeyDown()) {
                     SFMLabelNBTHelper.copyLabels(disk, stack);
                     var scriptLabels = manager.getReferencedLabels();
                     SFMLabelNBTHelper.addLabels(stack, scriptLabels);
-                    ctx.getPlayer().sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
+                    player.sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
                 } else {
                     SFMLabelNBTHelper.copyLabels(stack, disk);
                     manager.rebuildProgramAndUpdateDisk();
                     manager.setChanged();
-                    ctx.getPlayer().sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PUSHED.getComponent());
+                    if (player != null) {
+                        player.sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PUSHED.getComponent());
+                    }
                 }
             });
             return InteractionResult.CONSUME;
         }
 
-        var label = getLabel(stack);
+        var label = SFMLabelNBTHelper.getLabelGunActiveLabel(stack);
         if (label.isEmpty()) return InteractionResult.SUCCESS;
-        if (ctx.getPlayer().isShiftKeyDown())
+        if (ctx.getPlayer() != null && ctx.getPlayer().isShiftKeyDown())
             SFMLabelNBTHelper.clearLabels(stack, pos);
         else
             SFMLabelNBTHelper.toggleLabel(stack, label, pos);
@@ -111,7 +104,7 @@ public class LabelGunItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
-        var name = getLabel(stack);
+        var name = SFMLabelNBTHelper.getLabelGunActiveLabel(stack);
         if (name.isEmpty()) return super.getName(stack);
         return Constants.LocalizationKeys.LABEL_GUN_ITEM_NAME_WITH_LABEL
                 .getComponent(name)

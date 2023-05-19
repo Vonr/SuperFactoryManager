@@ -1,8 +1,7 @@
 package ca.teamdman.sfm.common.item;
 
-import ca.teamdman.sfm.client.render.FormItemRenderer;
+import ca.teamdman.sfm.client.render.FormItemExtensions;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -31,14 +30,7 @@ public class FormItem extends Item {
 
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-        consumer.accept(new IClientItemExtensions() {
-            private final BlockEntityWithoutLevelRenderer RENDERER = new FormItemRenderer();
-
-            @Override
-            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
-                return RENDERER;
-            }
-        });
+        consumer.accept(new FormItemExtensions());
     }
 
     @Override

@@ -6,7 +6,6 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
-import cofh.thermal.expansion.block.entity.machine.MachineFurnaceTile;
 import mekanism.common.registries.MekanismBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -22,6 +21,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 
+@SuppressWarnings({"OptionalGetWithoutIsPresent", "DataFlowIssue"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMThermalCompatGameTests extends SFMGameTestBase {
@@ -36,9 +36,10 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
 
         // set up power
         helper.setBlock(powerPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        helper.getBlockEntity(powerPos).getCapability(ForgeCapabilities.ENERGY, Direction.UP).ifPresent(energy -> {
-            energy.receiveEnergy(Integer.MAX_VALUE, false);
-        });
+        helper
+                .getBlockEntity(powerPos)
+                .getCapability(ForgeCapabilities.ENERGY, Direction.UP)
+                .ifPresent(energy -> energy.receiveEnergy(Integer.MAX_VALUE, false));
 
         // set up furnaces
         var furnaceBlock = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("thermal", "machine_furnace"));
@@ -46,7 +47,7 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
             for (int z = 1; z < 25; z++) {
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
                 helper.setBlock(new BlockPos(x, 3, z), furnaceBlock);
-                MachineFurnaceTile furnace = (MachineFurnaceTile) helper.getBlockEntity(new BlockPos(x, 3, z));
+//                MachineFurnaceTile furnace = (MachineFurnaceTile) helper.getBlockEntity(new BlockPos(x, 3, z));
 //                furnace.openGui()
                 sourceBlocks.add(new BlockPos(x, 3, z));
             }
@@ -89,7 +90,6 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
         // load the program
         manager.setProgram(program.stripIndent());
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            helper.succeed();
         });
     }
 }

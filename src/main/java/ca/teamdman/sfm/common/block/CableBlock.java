@@ -19,6 +19,7 @@ public class CableBlock extends Block implements ICable {
                       .sound(SoundType.METAL));
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void neighborChanged(
             BlockState state,
@@ -35,15 +36,15 @@ public class CableBlock extends Block implements ICable {
                 .ifPresent(network -> network.rebuildAdjacentInventories(pos));
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
         CableNetworkManager.getOrRegisterNetwork(world, pos);
-        CableNetworkManager.printDebugInfo();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         CableNetworkManager.unregister(level, pos);
-        CableNetworkManager.printDebugInfo();
     }
 }

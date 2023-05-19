@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -25,7 +26,7 @@ public class CableNetwork {
     /**
      * Only cable blocks are valid network members
      */
-    public static boolean isCable(Level world, BlockPos cablePos) {
+    public static boolean isCable(@Nullable Level world, BlockPos cablePos) {
         if (world == null) return false;
         return world
                 .getBlockState(cablePos)
@@ -50,12 +51,11 @@ public class CableNetwork {
         }, startPos);
     }
 
-    public boolean addCable(BlockPos pos) {
+    public void addCable(BlockPos pos) {
         boolean isNewMember = CABLES.add(pos);
         if (isNewMember) {
             rebuildAdjacentInventories(pos);
         }
-        return isNewMember;
     }
 
     public Level getLevel() {
@@ -88,6 +88,7 @@ public class CableNetwork {
      * @param pos block position be checked
      * @return {@link Optional} containing the {@link CapabilityProvider} if one was found
      */
+    @SuppressWarnings("UnstableApiUsage") // for the javadoc lol
     public Optional<Pair<BlockPos, ICapabilityProvider>> discoverCapabilityProvider(BlockPos pos) {
         return SFMCapabilityProviderMappers.DEFERRED_MAPPERS
                 .get()
@@ -145,6 +146,7 @@ public class CableNetwork {
         return CABLES.isEmpty();
     }
 
+    @SuppressWarnings("unused")
     public Map<BlockPos, ICapabilityProvider> getCapabilityProviders() {
         return Collections.unmodifiableMap(CAPABILITY_PROVIDERS);
     }

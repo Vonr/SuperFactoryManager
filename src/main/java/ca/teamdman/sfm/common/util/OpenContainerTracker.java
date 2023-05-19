@@ -17,6 +17,7 @@ import static net.minecraftforge.event.entity.player.PlayerContainerEvent.Open;
 public class OpenContainerTracker {
     private static final Map<ServerPlayer, AbstractContainerMenu> OPEN_CONTAINERS = new WeakHashMap<>();
 
+    @SuppressWarnings("unchecked")
     public static <T extends AbstractContainerMenu> Stream<Map.Entry<ServerPlayer, T>> getPlayersWithOpenContainer(Class<T> menuClass) {
         return OPEN_CONTAINERS.entrySet().stream()
                 .filter(e -> menuClass.isInstance(e.getValue()))

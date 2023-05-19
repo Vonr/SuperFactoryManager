@@ -88,7 +88,7 @@ public class FallingAnvilHandler {
                         for (ItemEntity enchItemEntity : enchanted) {
                             ItemStack enchStack = enchItemEntity.getItem();
                             int enchStackSize = enchStack.getCount();
-                            Map<Enchantment, Integer> enchantments = enchStack.getAllEnchantments();
+                            Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(enchStack);
                             var enchIter = enchantments.entrySet().iterator();
                             while (enchIter.hasNext()) {
                                 var entry = enchIter.next();

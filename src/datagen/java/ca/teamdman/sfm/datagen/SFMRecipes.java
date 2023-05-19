@@ -3,6 +3,8 @@ package ca.teamdman.sfm.datagen;
 import ca.teamdman.sfm.common.recipe.PrintingPressFinishedRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.common.registry.SFMRecipeSerializers;
+import net.minecraft.data.recipes.*;
 import net.minecraft.data.recipes.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
@@ -136,6 +138,10 @@ public class SFMRecipes extends RecipeProvider {
                 Ingredient.of(Tags.Items.DYES_BLACK),
                 Ingredient.of(SFMItems.DISK_ITEM.get())
         );
+
+        SpecialRecipeBuilder
+                .special(SFMRecipeSerializers.DISK_RESET.get())
+                .save(consumer, SFMRecipeSerializers.DISK_RESET.getId().getPath());
     }
 
     private void addPrintingPressRecipe(

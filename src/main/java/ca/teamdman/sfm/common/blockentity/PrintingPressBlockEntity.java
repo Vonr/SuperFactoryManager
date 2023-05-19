@@ -35,7 +35,8 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+            if (level != null)
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
 
         @Override
@@ -53,11 +54,13 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+            if (level != null)
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
+            if (getLevel() == null) return false;
             return getLevel().getRecipeManager()
                     .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.INK.test(stack));
         }
@@ -67,7 +70,8 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+            if (level != null)
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
 
         @Override
@@ -77,6 +81,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
+            if (getLevel() == null) return false;
             return getLevel().getRecipeManager()
                     .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.PAPER.test(stack));
         }
@@ -178,7 +183,9 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
     @Override
     public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
         super.onDataPacket(net, pkt);
-        readItems(pkt.getTag());
+        CompoundTag tag = pkt.getTag();
+        if (tag != null)
+            readItems(tag);
     }
 
     public ItemStack getPaper() {
@@ -194,6 +201,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
     }
 
     public void performPrint() {
+        if (getLevel() == null) return;
         RecipeManager recipeManager = getLevel().getRecipeManager();
         recipeManager.getRecipeFor(SFMRecipeTypes.PRINTING_PRESS.get(), this, getLevel()).ifPresent(recipe -> {
             ItemStack paper = getPaper();

@@ -33,7 +33,7 @@ import java.util.Optional;
 
 public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, BucketPickup, LiquidBlockContainer {
     public static final BooleanProperty      IN_WATER = BooleanProperty.create("in_water");
-    private             WaterTankBlockEntity offset;
+
 
     public WaterTankBlock() {
         super(BlockBehaviour.Properties.of(Material.PISTON).destroyTime(2).sound(SoundType.WOOD));
@@ -42,6 +42,7 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
 
 
     @Override
+    @SuppressWarnings("deprecation")
     public void onPlace(BlockState pState, Level pLevel, BlockPos pPos, BlockState pOldState, boolean pIsMoving) {
         super.onPlace(pState, pLevel, pPos, pOldState, pIsMoving);
         for (Direction direction : Direction.values()) {
@@ -50,6 +51,7 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
         super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
         for (Direction direction : Direction.values()) {
@@ -78,14 +80,15 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
             results.accept(current);
             for (var d : Direction.values()) {
                 var offset = current.getBlockPos().offset(d.getNormal());
-                if (!(level.getBlockEntity(offset) instanceof WaterTankBlockEntity bruh)) continue;
-                next.accept(bruh);
+                if (!(level.getBlockEntity(offset) instanceof WaterTankBlockEntity blockEntity)) continue;
+                next.accept(blockEntity);
             }
         }, be).toList();
         tanks.forEach(t -> t.setConnectedCount(tanks.size()));
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
@@ -124,6 +127,7 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void neighborChanged(
             BlockState state,
             Level level,

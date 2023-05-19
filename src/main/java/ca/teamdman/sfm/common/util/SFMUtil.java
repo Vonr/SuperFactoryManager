@@ -5,8 +5,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -16,17 +14,6 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class SFMUtil {
-
-	/**
-	 * Gets the marker used for logging purposes
-	 *
-	 * @param clazz The class used for naming the marker
-	 * @return Logging marker
-	 */
-	public static Marker getMarker(Class<?> clazz) {
-		String[] x = clazz.getName().split("\\.");
-		return MarkerManager.getMarker(x[x.length - 1]);
-	}
 
 	/**
 	 * Gets a stream using a self-feeding mapping function. Prevents the
@@ -84,6 +71,4 @@ public class SFMUtil {
 				.toArray();
 		return new TranslatableContents(key, null, args);
 	}
-
-
 }

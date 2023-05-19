@@ -38,12 +38,10 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
     );
     private final IDrawable background;
     private final IDrawable icon;
-    private final IDrawable slot;
 
     public FallingAnvilJEICategory(IJeiHelpers jeiHelpers) {
         background = jeiHelpers.getGuiHelper().createBlankDrawable(80, 54);
         icon = jeiHelpers.getGuiHelper().createDrawableItemStack(new ItemStack(Blocks.ANVIL));
-        slot = jeiHelpers.getGuiHelper().getSlotDrawable();
     }
 
     @Override
@@ -86,7 +84,7 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
             builder
                     .addSlot(RecipeIngredientRole.OUTPUT, 50, 18)
                     .addItemStacks(Arrays.stream(formRecipe.PARENT.FORM.getItems()).map(FormItem::getForm).toList());
-        } else if (recipe instanceof FallingAnvilDisenchantRecipe disenchantRecipe) {
+        } else if (recipe instanceof FallingAnvilDisenchantRecipe) {
             Collection<Enchantment> enchants = ForgeRegistries.ENCHANTMENTS.getValues();
 
             var tools = List.of(
@@ -159,7 +157,7 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
             obsidian.getOrCreateTag().put("display", displayTag);
             builder.addSlot(RecipeIngredientRole.INPUT, 8, 36).addItemStack(obsidian);
             builder.addSlot(RecipeIngredientRole.OUTPUT, 50, 18).addItemStacks(books);
-        } else if (recipe instanceof FallingAnvilExperienceShardRecipe xpRecipe) {
+        } else if (recipe instanceof FallingAnvilExperienceShardRecipe) {
             builder.addSlot(RecipeIngredientRole.CATALYST, 0, 0).addItemStacks(anvil);
             builder.addSlot(RecipeIngredientRole.INPUT, 0, 18).addIngredients(Ingredient.of(Items.ENCHANTED_BOOK));
             ItemStack obsidian = new ItemStack(Blocks.OBSIDIAN);

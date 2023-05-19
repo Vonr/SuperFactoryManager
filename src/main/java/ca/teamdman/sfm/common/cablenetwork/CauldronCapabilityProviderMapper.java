@@ -63,7 +63,7 @@ public class CauldronCapabilityProviderMapper implements CapabilityProviderMappe
         public @NotNull FluidStack getFluidInTank(int tank) {
             var state = level.getBlockState(pos);
             if (state.getBlock() == Blocks.WATER_CAULDRON) {
-                var level = state.getValue(LayeredCauldronBlock.LEVEL);
+                int level = state.getValue(LayeredCauldronBlock.LEVEL);
                 if (level == 0) {
                     return FluidStack.EMPTY;
                 }

@@ -46,6 +46,7 @@ public class ProgramSyntaxHighlightingHelper {
                 }
             }
             List<Token> hiddenTokens = tokens.getHiddenTokensToRight(tokens.index(), Token.DEFAULT_CHANNEL);
+            //noinspection ConstantValue
             if (hiddenTokens != null) {
                 for (Token hiddenToken : hiddenTokens) {
                     // the whitespace token often contains newlines, so we need to split it up
@@ -76,6 +77,7 @@ public class ProgramSyntaxHighlightingHelper {
     }
 
     private static ChatFormatting getStyle(Token token) {
+        //noinspection EnhancedSwitchMigration
         switch (token.getType()) {
             case SFMLLexer.SIDE:
             case SFMLLexer.TOP:
@@ -99,6 +101,8 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.DO:
             case SFMLLexer.IF:
             case SFMLLexer.ELSE:
+            case SFMLLexer.THEN:
+            case SFMLLexer.HAS:
                 return ChatFormatting.BLUE;
             case SFMLLexer.IDENTIFIER:
             case SFMLLexer.STRING:
@@ -107,6 +111,16 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.SLOTS:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
+            case SFMLLexer.GT:
+            case SFMLLexer.LT:
+            case SFMLLexer.EQ:
+            case SFMLLexer.GE:
+            case SFMLLexer.LE:
+            case SFMLLexer.GT_SYMBOL:
+            case SFMLLexer.LT_SYMBOL:
+            case SFMLLexer.EQ_SYMBOL:
+            case SFMLLexer.GE_SYMBOL:
+            case SFMLLexer.LE_SYMBOL:
                 return ChatFormatting.AQUA;
             case SFMLLexer.UNUSED:
                 return ChatFormatting.RED;

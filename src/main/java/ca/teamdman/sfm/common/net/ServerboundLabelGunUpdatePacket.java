@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.item.LabelGunItem;
+import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraftforge.network.NetworkEvent;
@@ -11,16 +12,17 @@ public record ServerboundLabelGunUpdatePacket(
         String label,
         InteractionHand hand
 ) {
+    public static final int MAX_LABEL_LENGTH = 80;
 
     public static void encode(ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket msg, FriendlyByteBuf buf) {
-        buf.writeUtf(msg.label, 80);
+        buf.writeUtf(msg.label, MAX_LABEL_LENGTH);
         buf.writeEnum(msg.hand);
     }
 
     public static ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket decode(
             FriendlyByteBuf buf
     ) {
-        return new ServerboundLabelGunUpdatePacket(buf.readUtf(80), buf.readEnum(InteractionHand.class));
+        return new ServerboundLabelGunUpdatePacket(buf.readUtf(MAX_LABEL_LENGTH), buf.readEnum(InteractionHand.class));
     }
 
     public static void handle(
@@ -28,9 +30,12 @@ public record ServerboundLabelGunUpdatePacket(
     ) {
         ctx.get().enqueueWork(() -> {
             var sender = ctx.get().getSender();
+            if (sender == null) {
+                return;
+            }
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof LabelGunItem) {
-                LabelGunItem.setLabel(stack, msg.label);
+                SFMLabelNBTHelper.setLabelGunActiveLabel(stack, msg.label);
             }
         });
         ctx.get().setPacketHandled(true);

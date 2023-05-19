@@ -21,7 +21,10 @@ public record ServerboundDiskItemSetProgramPacket(
     public static ServerboundDiskItemSetProgramPacket decode(
             FriendlyByteBuf buf
     ) {
-        return new ServerboundDiskItemSetProgramPacket(buf.readUtf(80), buf.readEnum(InteractionHand.class));
+        return new ServerboundDiskItemSetProgramPacket(
+                buf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                buf.readEnum(InteractionHand.class)
+        );
     }
 
     public static void handle(
@@ -29,10 +32,15 @@ public record ServerboundDiskItemSetProgramPacket(
     ) {
         ctx.get().enqueueWork(() -> {
             var sender = ctx.get().getSender();
+            if (sender == null) {
+                return;
+            }
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof DiskItem) {
                 DiskItem.setProgram(stack, msg.programString);
+                DiskItem.updateDetails(stack, null);
             }
+
         });
         ctx.get().setPacketHandled(true);
     }

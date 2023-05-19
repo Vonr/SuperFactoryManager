@@ -9,13 +9,14 @@ import java.util.List;
  * This assumes that the pool will be used in a single thread.
  */
 public class LimitedOutputSlotObjectPool {
+    @SuppressWarnings("rawtypes")
     private LimitedOutputSlot[] pool = new LimitedOutputSlot[1];
     private int index = -1;
 
     /**
      * Acquire a {@link LimitedOutputSlot} from the pool, or creates a new one if none available
      */
-    public <STACK, ITEM, CAP> LimitedOutputSlot acquire(
+    public <STACK, ITEM, CAP> LimitedOutputSlot<STACK, ITEM, CAP> acquire(
             CAP handler,
             int slot,
             OutputResourceTracker<STACK, ITEM, CAP> tracker
@@ -23,7 +24,7 @@ public class LimitedOutputSlotObjectPool {
         if (index == -1) {
             return new LimitedOutputSlot<>(handler, slot, tracker);
         } else {
-            LimitedOutputSlot obj = pool[index];
+            @SuppressWarnings("unchecked") LimitedOutputSlot<STACK, ITEM, CAP> obj = pool[index];
             index--;
             obj.init(handler, slot, tracker);
             return obj;
@@ -33,7 +34,7 @@ public class LimitedOutputSlotObjectPool {
     /**
      * Release a {@link LimitedOutputSlot} back into the pool for it to be reused instead of garbage collected
      */
-    public void release(LimitedOutputSlot obj) {
+    public void release(LimitedOutputSlot<?, ?, ?> obj) {
         if (index == pool.length - 1) {
             // we need to grow the array
             pool = Arrays.copyOf(pool, pool.length * 2);
@@ -44,6 +45,7 @@ public class LimitedOutputSlotObjectPool {
     /**
      * Release a {@link LimitedOutputSlot} back into the pool for it to be reused instead of garbage collected
      */
+    @SuppressWarnings("rawtypes")
     public void release(List<LimitedOutputSlot> slots) {
         // handle resizing
         if (index + slots.size() >= pool.length) {
@@ -52,7 +54,7 @@ public class LimitedOutputSlotObjectPool {
             pool = Arrays.copyOf(pool, newLength);
         }
         // add to pool
-        for (LimitedOutputSlot slot : slots) {
+        for (LimitedOutputSlot<?, ?, ?> slot : slots) {
             index++;
             pool[index] = slot;
         }

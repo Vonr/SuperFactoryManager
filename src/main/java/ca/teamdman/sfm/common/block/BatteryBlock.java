@@ -20,7 +20,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 public class BatteryBlock extends Block implements EntityBlock {
-    public static IntegerProperty LEVEL = IntegerProperty.create("level", 0, 10);
+    public static final IntegerProperty LEVEL = IntegerProperty.create("level", 0, 10);
 
     public BatteryBlock() {
         super(BlockBehaviour.Properties.of(Material.METAL).strength(5.0F, 6.0F));
@@ -39,6 +39,7 @@ public class BatteryBlock extends Block implements EntityBlock {
         builder.add(LEVEL);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public InteractionResult use(
             BlockState pState,

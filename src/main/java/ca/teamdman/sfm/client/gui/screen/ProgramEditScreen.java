@@ -34,8 +34,8 @@ import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCR
 public class ProgramEditScreen extends Screen {
     private final Consumer<String> CALLBACK;
     private final ItemStack DISK_STACK;
+    @SuppressWarnings("NotNullFieldNotInitialized")
     private MultiLineEditBox textarea;
-    private Button doneButton;
     private String lastProgram = "";
     private List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
 
@@ -61,51 +61,15 @@ public class ProgramEditScreen extends Screen {
         return rtn;
     }
 
-    public static MutableComponent insertStringAt(MutableComponent component, String seq, int position) {
-        var rtn = Component.empty();
-        int currentPosition = 0;
-        for (Component sibling : component.getSiblings()) {
-            String siblingText = sibling.getString();
-            int siblingLength = siblingText.length();
-
-            if (currentPosition + siblingLength <= position) {
-                rtn.append(sibling);
-                currentPosition += siblingLength;
-            } else {
-                int insertPositionInSibling = position - currentPosition;
-
-                String beforeInsert = siblingText.substring(0, insertPositionInSibling);
-                String afterInsert = siblingText.substring(insertPositionInSibling);
-
-                if (!beforeInsert.isEmpty()) {
-                    rtn.append(Component.literal(beforeInsert).withStyle(sibling.getStyle()));
-                }
-                rtn.append(Component.literal(seq).withStyle(sibling.getStyle()));
-                if (!afterInsert.isEmpty()) {
-                    rtn.append(Component.literal(afterInsert).withStyle(sibling.getStyle()));
-                }
-
-                currentPosition = position + 1;
-                break;
-            }
-        }
-
-        // Append the remaining siblings after the inserted sequence
-        for (int i = currentPosition; i < component.getSiblings().size(); i++) {
-            rtn.append(component.getSiblings().get(i));
-        }
-
-        return rtn;
-    }
-
     @Override
     protected void init() {
         super.init();
+        assert this.minecraft != null;
         this.textarea = this.addRenderableWidget(new MyMultiLineEditBox());
         textarea.setValue(DiskItem.getProgram(DISK_STACK));
         this.setInitialFocus(textarea);
 
-        this.doneButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
+        this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 this.width / 2 - 2 - 150,
                 this.height / 2 - 100 + 195,
                 300,
@@ -117,8 +81,8 @@ public class ProgramEditScreen extends Screen {
     }
 
     public void onDone() {
-        onClose();
         CALLBACK.accept(textarea.getValue());
+        onClose();
     }
 
     @Override
@@ -183,11 +147,6 @@ public class ProgramEditScreen extends Screen {
                 lastProgramWithSyntaxHighlighting = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(lastProgram);
             }
             List<MutableComponent> lines = lastProgramWithSyntaxHighlighting;
-//            List<MutableComponent> rawLines = Arrays
-//                    .stream(lastProgram.split("\n", -1))
-//                    .map(Component::literal)
-//                    .toList();
-
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
@@ -199,13 +158,9 @@ public class ProgramEditScreen extends Screen {
             MultilineTextField.StringView selectedRange = this.textField.getSelected();
             int selectionStart = selectedRange.beginIndex();
             int selectionEnd = selectedRange.endIndex();
-            int currentCharIndex = 0;
-
 
             for (int line = 0; line < lines.size(); ++line) {
                 var componentColoured = lines.get(line);
-//                var componentRaw = rawLines.get(line);
-//                int lineLength = componentRaw.getString().length();
                 int lineLength = componentColoured.getString().length();
                 int lineHeight = this.font.lineHeight + (line == 0 ? 2 : 0);
                 boolean cursorOnThisLine = isCursorVisible
@@ -230,32 +185,6 @@ public class ProgramEditScreen extends Screen {
                             0,
                             LightTexture.FULL_BRIGHT
                     ) - 1;
-//                    this.font.drawInBatch(
-//                            substring(componentColoured, 0, cursorIndex - charCount),
-//                            lineX,
-//                            lineY,
-//                            -1,
-//                            true,
-//                            matrix4f,
-//                            buffer,
-//                            false,
-//                            0,
-//                            LightTexture.FULL_BRIGHT
-//                    );
-
-                    // draw after
-//                    this.font.drawInBatch(
-//                            substring(componentRaw, cursorIndex - charCount, lineLength),
-//                            cursorX,
-//                            lineY,
-//                            -1,
-//                            true,
-//                            matrix4f,
-//                            buffer,
-//                            false,
-//                            0,
-//                            LightTexture.FULL_BRIGHT
-//                    );
                     this.font.drawInBatch(
                             substring(componentColoured, cursorIndex - charCount, lineLength),
                             cursorX,
@@ -269,18 +198,6 @@ public class ProgramEditScreen extends Screen {
                             LightTexture.FULL_BRIGHT
                     );
                 } else {
-//                    this.font.drawInBatch(
-//                            componentRaw,
-//                            lineX,
-//                            lineY,
-//                            -1,
-//                            true,
-//                            matrix4f,
-//                            buffer,
-//                            false,
-//                            0,
-//                            LightTexture.FULL_BRIGHT
-//                    );
                     this.font.drawInBatch(
                             componentColoured,
                             lineX,

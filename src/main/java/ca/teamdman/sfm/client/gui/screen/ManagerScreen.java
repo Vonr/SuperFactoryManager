@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -38,6 +39,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private final float STATUS_DURATION = 40;
     private Component status = Component.empty();
     private float statusCountdown = 0;
+    @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton diagButton;
 
 
@@ -46,7 +48,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     public boolean isReadOnly() {
-        return Minecraft.getInstance().player.isSpectator();
+        LocalPlayer player = Minecraft.getInstance().player;
+        return player == null || player.isSpectator();
     }
 
     @Override
@@ -120,7 +123,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onEdit() {
-        ClientStuff.showTextEditorScreen(menu.CONTAINER.getItem(0), this::sendProgram);
+        ClientStuff.showProgramEditScreen(menu.CONTAINER.getItem(0), this::sendProgram);
     }
 
     private void sendReset() {
@@ -301,6 +304,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
             // Color the lines based on their tick times (green to red)
             var c = getNanoColour(y);
+            //noinspection DataFlowIssue
             float red = ((c.getColor() >> 16) & 0xFF) / 255f;
             float green = ((c.getColor() >> 8) & 0xFF) / 255f;
             float blue = (c.getColor() & 0xFF) / 255f;

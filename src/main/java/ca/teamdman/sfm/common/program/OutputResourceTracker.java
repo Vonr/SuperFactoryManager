@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.program;
 
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.ResourceLimit;
 
 import java.util.function.Predicate;
@@ -45,7 +46,8 @@ public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object
     }
 
     public boolean matchesCapabilityType(Object capability) {
-        return LIMIT.resourceId().getResourceType().matchesCapabilityType(capability);
+        ResourceType<STACK, ITEM, CAP> resourceType = LIMIT.resourceId().getResourceType();
+        return resourceType != null && resourceType.matchesCapabilityType(capability);
     }
 
     @Override

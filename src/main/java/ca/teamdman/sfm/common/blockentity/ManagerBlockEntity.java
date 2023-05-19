@@ -24,6 +24,7 @@ import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -32,7 +33,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int TICK_TIME_HISTORY_SIZE = 20;
     private final NonNullList<ItemStack> ITEMS = NonNullList.withSize(1, ItemStack.EMPTY);
     private final long[] tickTimeNanos = new long[TICK_TIME_HISTORY_SIZE];
-    private Program program = null;
+    private @Nullable Program program = null;
     private int tick = 0;
     private int unprocessedRedstonePulses = 0; // used by redstone trigger
     private boolean shouldRebuildProgram = false;
@@ -42,7 +43,12 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
     }
 
-    public static void serverTick(Level level, BlockPos pos, BlockState state, ManagerBlockEntity tile) {
+    public static void serverTick(
+            @SuppressWarnings("unused") Level level,
+            @SuppressWarnings("unused") BlockPos pos,
+            @SuppressWarnings("unused") BlockState state,
+            ManagerBlockEntity tile
+    ) {
         long start = System.nanoTime();
         tile.tick++;
         if (tile.shouldRebuildProgram) {
@@ -78,8 +84,8 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return tick;
     }
 
-    public Program getProgram() {
-        return program;
+    public Optional<Program> getProgram() {
+        return Optional.ofNullable(program);
     }
 
     public void setProgram(String program) {
@@ -115,7 +121,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public Set<String> getReferencedLabels() {
         if (program == null) return Collections.emptySet();
-        return program.getReferencedLabels();
+        return program.referencedLabels();
     }
 
     public Optional<ItemStack> getDisk() {
@@ -125,29 +131,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public void rebuildProgramAndUpdateDisk() {
-        if (level.isClientSide()) return;
-        getProgramString().ifPresentOrElse(programString -> {
-            Program.compile(programString, success -> {
-                this.program = success;
-                getDisk().ifPresent(disk -> {
-                    DiskItem.setProgramName(disk, success.name());
-                    DiskItem.setWarnings(disk, success.gatherWarnings(disk, this));
-                    DiskItem.setErrors(disk, Collections.emptyList());
-                });
-            }, failure -> {
-                program = null;
-                getDisk().ifPresent(disk -> {
-                    DiskItem.setWarnings(disk, Collections.emptyList());
-                    DiskItem.setErrors(disk, failure);
-                });
-            });
-        }, () -> {
-            program = null;
-            getDisk().ifPresent(disk -> {
-                DiskItem.setWarnings(disk, Collections.emptyList());
-                DiskItem.setErrors(disk, Collections.emptyList());
-            });
-        });
+        if (level != null && level.isClientSide()) return;
+        this.program = getDisk()
+                .flatMap(itemStack -> DiskItem.updateDetails(itemStack, this))
+                .orElse(null);
         sendUpdatePacket();
     }
 

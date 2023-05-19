@@ -6,12 +6,16 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 public abstract class SFMGameTestBase {
@@ -42,9 +46,9 @@ public abstract class SFMGameTestBase {
         var hasExecuted = new AtomicBoolean(false);
         var startTime = new AtomicLong();
         var endTime = new AtomicLong();
-        List<Trigger> triggers = manager.getProgram().triggers();
+        @SuppressWarnings("OptionalGetWithoutIsPresent") List<Trigger> triggers = manager.getProgram().get().triggers();
         var oldFirstTrigger = triggers.get(0);
-        long          timeoutTicks    = 200;
+        long timeoutTicks = 200;
 
         Trigger startTimerTrigger = new Trigger() {
             @Override
@@ -94,15 +98,23 @@ public abstract class SFMGameTestBase {
                                         .format(endTime.get() - startTime.get()) + "ns"
                         );
                         hasExecuted.set(false); // prevent the assertion from running again
-            }
-        }));
+                    }
+                }));
     }
 
     protected static void assertManagerRunning(ManagerBlockEntity manager) {
+        SFMGameTestBase.assertTrue(manager.getDisk().isPresent(), "No disk in manager");
         SFMGameTestBase.assertTrue(
                 manager.getState() == ManagerBlockEntity.State.RUNNING,
                 "Program did not start running " + DiskItem.getErrors(manager.getDisk().get())
         );
     }
 
+    protected static int count(ChestBlockEntity chest, Item item) {
+        return IntStream.range(0, chest.getContainerSize())
+                .mapToObj(chest::getItem)
+                .filter(stack -> stack.getItem() == item)
+                .mapToInt(ItemStack::getCount)
+                .sum();
+    }
 }

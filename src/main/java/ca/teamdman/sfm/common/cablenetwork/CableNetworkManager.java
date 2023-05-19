@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,10 +29,6 @@ import java.util.stream.Collectors;
 public class CableNetworkManager {
 
     private static final Map<Level, List<CableNetwork>> NETWORKS = new WeakHashMap<>();
-
-    public static void printDebugInfo() {
-//        SFM.LOGGER.debug(SFMUtil.getMarker(CableNetworkManager.class), "{} networks now", size());
-    }
 
     /**
      * Remove a block from any networks it is in. Then, prune any empty networks.
@@ -109,7 +106,7 @@ public class CableNetworkManager {
      * <p>
      * Networks should only exist on the server side.
      */
-    public static Optional<CableNetwork> getOrRegisterNetwork(Level level, BlockPos pos) {
+    public static Optional<CableNetwork> getOrRegisterNetwork(@Nullable Level level, BlockPos pos) {
         if (level == null) return Optional.empty();
         if (level.isClientSide()) return Optional.empty();
 

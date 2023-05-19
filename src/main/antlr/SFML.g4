@@ -75,6 +75,11 @@ comparisonOp    : GT
                 | EQ
                 | LE
                 | GE
+                | GT_SYMBOL
+                | LT_SYMBOL
+                | EQ_SYMBOL
+                | LE_SYMBOL
+                | GE_SYMBOL
                 ;
 setOp           : OVERALL
                 | SOME
@@ -96,7 +101,7 @@ label           : IDENTIFIER #RawLabel
                 | string    #StringLabel
                 ;
 
-resourceid      : IDENTIFIER (COLON IDENTIFIER (COLON IDENTIFIER (COLON IDENTIFIER)?)?)? # Resource
+resourceid      : IDENTIFIER (COLON IDENTIFIER? (COLON IDENTIFIER? (COLON IDENTIFIER?)?)?)? # Resource
                 | string                             # StringResource
                 ;
 
@@ -130,11 +135,16 @@ AND     : A N D ;
 OR      : O R ;
 
 // QUANTITY LOGIC
-GT      : G T ;
-LT      : L T ;
-EQ      : E Q ;
-LE      : L E ;
-GE      : G E ;
+GT        : G T ;
+GT_SYMBOL : '>' ;
+LT        : L T ;
+LT_SYMBOL : '<' ;
+EQ        : E Q ;
+EQ_SYMBOL : '=' ;
+LE        : L E ;
+LE_SYMBOL : '<=' ;
+GE        : G E ;
+GE_SYMBOL : '>=' ;
 
 // IO LOGIC
 MOVE    : M O V E ;

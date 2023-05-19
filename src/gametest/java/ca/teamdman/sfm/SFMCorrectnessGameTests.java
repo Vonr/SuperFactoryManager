@@ -19,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Blocks;
@@ -35,7 +36,6 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 // https://github.dev/CompactMods/CompactMachines
@@ -47,7 +47,7 @@ import java.util.stream.IntStream;
 // https://docs.minecraftforge.net/en/1.19.x/misc/gametest/
 // https://github.com/MinecraftForge/MinecraftForge/blob/1.19.x/src/test/java/net/minecraftforge/debug/misc/GameTestTest.java#LL101-L116C6
 // https://github.com/XFactHD/FramedBlocks/blob/1.19.4/src/main/java/xfacthd/framedblocks/api/test/TestUtils.java#L65-L87
-@SuppressWarnings("DataFlowIssue")
+@SuppressWarnings({"DataFlowIssue", "deprecation", "OptionalGetWithoutIsPresent", "DuplicatedCode"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMCorrectnessGameTests extends SFMGameTestBase {
@@ -152,7 +152,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             int count = rightChest.getSlots() * 64;
             int total = 0;
             for (int i = 0; i < rightChest.getSlots(); i++) {
-                if (((Predicate<ItemStack>) x -> x.is(Items.DIRT)).test(rightChest.getStackInSlot(i))) {
+                ItemStack x = rightChest.getStackInSlot(i);
+                if (x.is(Items.DIRT)) {
                     total += rightChest.getStackInSlot(i).getCount();
                 }
             }
@@ -1334,6 +1335,517 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                     "should only be xp shards"
             );
             assertTrue(found.stream().mapToInt(e -> e.getItem().getCount()).sum() == 10, "bad count");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "1x2x1")
+    public static void disk_item_clientside_regression(GameTestHelper helper) {
+        var stack = new ItemStack(SFMItems.DISK_ITEM.get());
+        stack.getDisplayName();
+        stack.getHoverName();
+        stack.getItem().getName(stack);
+        stack.getItem().appendHoverText(stack, helper.getLevel(), new ArrayList<>(), TooltipFlag.Default.NORMAL);
+        Vec3 pos = helper.absoluteVec(new Vec3(0.5, 1, 0.5));
+        ItemEntity itemEntity = new ItemEntity(helper.getLevel(), pos.x, pos.y, pos.z, stack, 0, 0, 0);
+        helper.getLevel().addFreshEntity(itemEntity);
+        helper.succeed();
+    }
+
+    @GameTest(template = "1x2x1")
+    public static void program_crlf_line_endings_conversion(GameTestHelper helper) {
+        var managerPos = new BlockPos(0, 2, 0);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        String program = """
+                NAME "line endings test"
+                EVERY 20 TICKS DO
+                    INPUT FROM a
+                    OUTPUT TO b
+                END
+                """.stripIndent();
+        String programWithWindowsLineEndings = program.replaceAll("\n", "\r\n");
+        manager.setProgram(programWithWindowsLineEndings);
+        if (manager.getProgramString().get().equals(program)) {
+            helper.succeed();
+        } else {
+            helper.fail(String.format(
+                    "program string was not converted correctly: %s",
+                    manager.getProgramString().get()
+            ));
+        }
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void comparison_gt(GameTestHelper helper) {
+        var leftPos = new BlockPos(2, 2, 0);
+        var rightPos = new BlockPos(0, 2, 0);
+        var managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
+        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        left.setItem(0, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(1, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(2, new ItemStack(Items.IRON_INGOT, 12));
+        right.setItem(0, new ItemStack(Items.STICK, 13));
+        right.setItem(1, new ItemStack(Items.STICK, 64));
+        right.setItem(2, new ItemStack(Items.DIRT, 1));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   NAME "comparison_gt test"
+                                   EVERY 20 TICKS DO
+                                       IF left HAS GT 100 diamond THEN
+                                           -- should happen
+                                           INPUT diamond FROM left
+                                           OUTPUT diamond TO right
+                                       END
+                                       IF left HAS GT 300 iron_ingot THEN
+                                           -- should not happen
+                                           INPUT iron_ingot FROM left
+                                           OUTPUT iron_ingot TO right
+                                       END
+                                       IF right HAS > 10 stick THEN
+                                           -- should happen
+                                           INPUT stick FROM right
+                                           OUTPUT stick TO left
+                                       END
+                                       if right has > 0 dirt then
+                                           -- should happen
+                                           input dirt from right
+                                           output dirt to left
+                                       end
+                                   END
+                                   """);
+
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            int leftDiamondCount = count(left, Items.DIAMOND);
+            int leftIronCount = count(left, Items.IRON_INGOT);
+            int leftStickCount = count(left, Items.STICK);
+            int leftDirtCount = count(left, Items.DIRT);
+            int rightDiamondCount = count(right, Items.DIAMOND);
+            int rightIronCount = count(right, Items.IRON_INGOT);
+            int rightStickCount = count(right, Items.STICK);
+            int rightDirtCount = count(right, Items.DIRT);
+            // the diamonds should have moved from left to right
+            assertTrue(leftDiamondCount == 0, "left should have no diamonds");
+            assertTrue(rightDiamondCount == 64 * 2, "right should have 100 diamonds");
+            // the iron should have stayed in left
+            assertTrue(leftIronCount == 12, "left should have 12 iron ingots");
+            assertTrue(rightIronCount == 0, "right should have no iron ingots");
+            // the sticks should have moved from right to left
+            assertTrue(rightStickCount == 0, "right should have no sticks");
+            assertTrue(leftStickCount == 77, "left should have 77 sticks");
+            // the dirt should have moved from right to left
+            assertTrue(rightDirtCount == 0, "right should have no dirt");
+            assertTrue(leftDirtCount == 1, "left should have 1 dirt");
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void comparison_ge(GameTestHelper helper) {
+        var leftPos = new BlockPos(2, 2, 0);
+        var rightPos = new BlockPos(0, 2, 0);
+        var managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
+        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        left.setItem(0, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(1, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(2, new ItemStack(Items.IRON_INGOT, 12));
+        right.setItem(0, new ItemStack(Items.STICK, 13));
+        right.setItem(1, new ItemStack(Items.STICK, 64));
+        right.setItem(2, new ItemStack(Items.DIRT, 1));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   NAME "comparison_ge test"
+                                   EVERY 20 TICKS DO
+                                       IF left HAS GE 129 diamond THEN
+                                           -- should not happen
+                                           INPUT diamond FROM left
+                                           OUTPUT diamond TO right
+                                       END
+                                       IF left HAS GE 12 iron_ingot THEN
+                                           -- should happen
+                                           INPUT iron_ingot FROM left
+                                           OUTPUT iron_ingot TO right
+                                       END
+                                       IF right HAS >= 13 stick THEN
+                                           -- should happen
+                                           INPUT stick FROM right
+                                           OUTPUT stick TO left
+                                       END
+                                       if right has >= 1 dirt then
+                                           -- should happen
+                                           input dirt from right
+                                           output dirt to left
+                                       end
+                                   END
+                                   """);
+
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            int leftDiamondCount = count(left, Items.DIAMOND);
+            int leftIronCount = count(left, Items.IRON_INGOT);
+            int leftStickCount = count(left, Items.STICK);
+            int leftDirtCount = count(left, Items.DIRT);
+            int rightDiamondCount = count(right, Items.DIAMOND);
+            int rightIronCount = count(right, Items.IRON_INGOT);
+            int rightStickCount = count(right, Items.STICK);
+            int rightDirtCount = count(right, Items.DIRT);
+            // the diamonds should have moved from left to right
+            assertTrue(leftDiamondCount == 64 * 2, "left should have 128 diamonds");
+            assertTrue(rightDiamondCount == 0, "right should have no diamonds");
+            // the iron should have moved from left to right
+            assertTrue(leftIronCount == 0, "left should have no iron ingots");
+            assertTrue(rightIronCount == 12, "right should have 12 iron ingots");
+            // the sticks should have moved from right to left
+            assertTrue(rightStickCount == 0, "right should have no sticks");
+            assertTrue(leftStickCount == 77, "left should have 77 sticks");
+            // the dirt should have moved from right to left
+            assertTrue(rightDirtCount == 0, "right should have no dirt");
+            assertTrue(leftDirtCount == 1, "left should have 1 dirt");
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void comparison_eq(GameTestHelper helper) {
+        var leftPos = new BlockPos(2, 2, 0);
+        var rightPos = new BlockPos(0, 2, 0);
+        var managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
+        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        left.setItem(0, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(1, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(2, new ItemStack(Items.IRON_INGOT, 12));
+        right.setItem(0, new ItemStack(Items.STICK, 13));
+        right.setItem(1, new ItemStack(Items.STICK, 64));
+        right.setItem(2, new ItemStack(Items.DIRT, 1));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   NAME "comparison_eq test"
+                                   EVERY 20 TICKS DO
+                                       IF left HAS eq 129 diamond THEN
+                                           -- should not happen
+                                           INPUT diamond FROM left
+                                           OUTPUT diamond TO right
+                                       END
+                                       IF left HAS = 12 iron_ingot THEN
+                                           -- should happen
+                                           INPUT iron_ingot FROM left
+                                           OUTPUT iron_ingot TO right
+                                       END
+                                       IF right HAS eq 77 stick THEN
+                                           -- should happen
+                                           INPUT stick FROM right
+                                           OUTPUT stick TO left
+                                       END
+                                       if right has = 1 dirt then
+                                           -- should happen
+                                           input dirt from right
+                                           output dirt to left
+                                       end
+                                   END
+                                   """);
+
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            int leftDiamondCount = count(left, Items.DIAMOND);
+            int leftIronCount = count(left, Items.IRON_INGOT);
+            int leftStickCount = count(left, Items.STICK);
+            int leftDirtCount = count(left, Items.DIRT);
+            int rightDiamondCount = count(right, Items.DIAMOND);
+            int rightIronCount = count(right, Items.IRON_INGOT);
+            int rightStickCount = count(right, Items.STICK);
+            int rightDirtCount = count(right, Items.DIRT);
+            // the diamonds should have moved from left to right
+            assertTrue(leftDiamondCount == 64 * 2, "left should have 128 diamonds");
+            assertTrue(rightDiamondCount == 0, "right should have no diamonds");
+            // the iron should have moved from left to right
+            assertTrue(leftIronCount == 0, "left should have no iron ingots");
+            assertTrue(rightIronCount == 12, "right should have 12 iron ingots");
+            // the sticks should have moved from right to left
+            assertTrue(rightStickCount == 0, "right should have no sticks");
+            assertTrue(leftStickCount == 77, "left should have 77 sticks");
+            // the dirt should have moved from right to left
+            assertTrue(rightDirtCount == 0, "right should have no dirt");
+            assertTrue(leftDirtCount == 1, "left should have 1 dirt");
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void comparison_lt(GameTestHelper helper) {
+        var leftPos = new BlockPos(2, 2, 0);
+        var rightPos = new BlockPos(0, 2, 0);
+        var managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
+        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        left.setItem(0, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(1, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(2, new ItemStack(Items.IRON_INGOT, 12));
+        right.setItem(0, new ItemStack(Items.STICK, 13));
+        right.setItem(1, new ItemStack(Items.STICK, 64));
+        right.setItem(2, new ItemStack(Items.DIRT, 1));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   NAME "comparison_lt test"
+                                   EVERY 20 TICKS DO
+                                       IF left HAS lt 10 diamond THEN
+                                           -- should not happen
+                                           INPUT diamond FROM left
+                                           OUTPUT diamond TO right
+                                       END
+                                       IF left HAS < 200 iron_ingot THEN
+                                           -- should happen
+                                           INPUT iron_ingot FROM left
+                                           OUTPUT iron_ingot TO right
+                                       END
+                                       IF right HAS < 78 stick THEN
+                                           -- should happen
+                                           INPUT stick FROM right
+                                           OUTPUT stick TO left
+                                       END
+                                       if right has < 3 dirt then
+                                           -- should happen
+                                           input dirt from right
+                                           output dirt to left
+                                       end
+                                   END
+                                   """);
+
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            int leftDiamondCount = count(left, Items.DIAMOND);
+            int leftIronCount = count(left, Items.IRON_INGOT);
+            int leftStickCount = count(left, Items.STICK);
+            int leftDirtCount = count(left, Items.DIRT);
+            int rightDiamondCount = count(right, Items.DIAMOND);
+            int rightIronCount = count(right, Items.IRON_INGOT);
+            int rightStickCount = count(right, Items.STICK);
+            int rightDirtCount = count(right, Items.DIRT);
+            // the diamonds should have moved from left to right
+            assertTrue(leftDiamondCount == 64 * 2, "left should have 128 diamonds");
+            assertTrue(rightDiamondCount == 0, "right should have no diamonds");
+            // the iron should have moved from left to right
+            assertTrue(leftIronCount == 0, "left should have no iron ingots");
+            assertTrue(rightIronCount == 12, "right should have 12 iron ingots");
+            // the sticks should have moved from right to left
+            assertTrue(rightStickCount == 0, "right should have no sticks");
+            assertTrue(leftStickCount == 77, "left should have 77 sticks");
+            // the dirt should have moved from right to left
+            assertTrue(rightDirtCount == 0, "right should have no dirt");
+            assertTrue(leftDirtCount == 1, "left should have 1 dirt");
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void comparison_le(GameTestHelper helper) {
+        var leftPos = new BlockPos(2, 2, 0);
+        var rightPos = new BlockPos(0, 2, 0);
+        var managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
+        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        left.setItem(0, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(1, new ItemStack(Items.DIAMOND, 64));
+        left.setItem(2, new ItemStack(Items.IRON_INGOT, 12));
+        right.setItem(0, new ItemStack(Items.STICK, 13));
+        right.setItem(1, new ItemStack(Items.STICK, 64));
+        right.setItem(2, new ItemStack(Items.DIRT, 1));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   NAME "comparison_le test"
+                                   EVERY 20 TICKS DO
+                                       IF left HAS le 10 diamond THEN
+                                           -- should not happen
+                                           INPUT diamond FROM left
+                                           OUTPUT diamond TO right
+                                       END
+                                       IF left HAS <= 12 iron_ingot THEN
+                                           -- should happen
+                                           INPUT iron_ingot FROM left
+                                           OUTPUT iron_ingot TO right
+                                       END
+                                       IF right HAS le 77 stick THEN
+                                           -- should happen
+                                           INPUT stick FROM right
+                                           OUTPUT stick TO left
+                                       END
+                                       if right has <= 1 dirt then
+                                           -- should happen
+                                           input dirt from right
+                                           output dirt to left
+                                       end
+                                   END
+                                   """);
+
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            int leftDiamondCount = count(left, Items.DIAMOND);
+            int leftIronCount = count(left, Items.IRON_INGOT);
+            int leftStickCount = count(left, Items.STICK);
+            int leftDirtCount = count(left, Items.DIRT);
+            int rightDiamondCount = count(right, Items.DIAMOND);
+            int rightIronCount = count(right, Items.IRON_INGOT);
+            int rightStickCount = count(right, Items.STICK);
+            int rightDirtCount = count(right, Items.DIRT);
+            // the diamonds should have moved from left to right
+            assertTrue(leftDiamondCount == 64 * 2, "left should have 128 diamonds");
+            assertTrue(rightDiamondCount == 0, "right should have no diamonds");
+            // the iron should have moved from left to right
+            assertTrue(leftIronCount == 0, "left should have no iron ingots");
+            assertTrue(rightIronCount == 12, "right should have 12 iron ingots");
+            // the sticks should have moved from right to left
+            assertTrue(rightStickCount == 0, "right should have no sticks");
+            assertTrue(leftStickCount == 77, "left should have 77 sticks");
+            // the dirt should have moved from right to left
+            assertTrue(rightDirtCount == 0, "right should have no dirt");
+            assertTrue(leftDirtCount == 1, "left should have 1 dirt");
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void pattern_cache_regression_1(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           -- pattern caching behaviour should not short circuit this to match all
+                                           -- since underscores wouldn't be matched by this
+                                           INPUT "[a-z]*" FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripIndent());
+
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
+            assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void pattern_cache_regression_2(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           -- pattern caching behaviour should not short circuit this to match all
+                                           -- since underscores wouldn't be matched by this
+                                           INPUT "[a-zA-Z]*" FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripIndent());
+
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
+            assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void pattern_cache_regression_3(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, Blocks.CHEST);
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, Blocks.CHEST);
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           -- pattern caching behaviour should not short circuit this to match all
+                                           -- since underscores wouldn't be matched by this
+                                           INPUT "[a-z0-9]*" FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripIndent());
+
+        // set the labels
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
+        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
+            assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
             helper.succeed();
         });
     }
