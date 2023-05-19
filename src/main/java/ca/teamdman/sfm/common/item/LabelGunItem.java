@@ -22,7 +22,7 @@ import java.util.List;
 
 public class LabelGunItem extends Item {
     public LabelGunItem() {
-        super(new Properties().tab(SFMItems.TAB));
+        super(new Properties().stacksTo(1).tab(SFMItems.TAB));
     }
 
     public static void setLabel(ItemStack stack, String label) {
