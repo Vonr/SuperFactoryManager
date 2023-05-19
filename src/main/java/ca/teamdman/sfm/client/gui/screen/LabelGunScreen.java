@@ -43,44 +43,32 @@ public class LabelGunScreen extends Screen {
         ));
         this.setInitialFocus(labelField);
         this.setFocused(labelField);
-        this.labelField.setFocus(true);
 
-        this.addRenderableWidget(new Button(
-                this.width / 2 - 210,
-                50,
-                50,
-                20,
-                Constants.LocalizationKeys.LABEL_GUN_GUI_CLEAR_BUTTON.getComponent(),
-                (btn) -> {
-                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunClearPacket(HAND));
-                    SFMLabelNBTHelper.clearLabels(LABEL_GUN_STACK);
-                    shouldRebuildWidgets = true;
-                }
-        ));
-        this.addRenderableWidget(new Button(
-                this.width / 2 + 160,
-                50,
-                50,
-                20,
+        this.addRenderableWidget(new Button.Builder(
+                                         Constants.LocalizationKeys.LABEL_GUN_GUI_CLEAR_BUTTON.getComponent(),
+                                         __ -> {
+                                             SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunClearPacket(HAND));
+                                             SFMLabelNBTHelper.clearLabels(LABEL_GUN_STACK);
+                                             shouldRebuildWidgets = true;
+                                         }
+                                 )
+                                         .pos(this.width / 2 - 210, 50)
+                                         .size(50, 20).build()
+        );
+        this.addRenderableWidget(new Button.Builder(
                 Constants.LocalizationKeys.LABEL_GUN_GUI_PRUNE_BUTTON.getComponent(),
                 (btn) -> {
                     SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunPrunePacket(HAND));
                     SFMLabelNBTHelper.pruneLabels(LABEL_GUN_STACK);
                     shouldRebuildWidgets = true;
                 }
-        ));
-        this.doneButton = new Button.Builder(CommonComponents.GUI_DONE, __ -> this.onDone())
-                .pos(this.width / 2 - 2 - 150, this.height / 4 + 120 + 12)
-                .size(300, 20)
-                .build();
-        this.addRenderableWidget(new Button(
-                this.width / 2 - 2 - 150,
-                this.height - 50,
-                300,
-                20,
-                CommonComponents.GUI_DONE,
-                (p_97691_) -> this.onDone()
-        ));
+        )
+                                         .pos(this.width / 2 + 160, 50)
+                                         .size(50, 20).build());
+        this.addRenderableWidget(new Button.Builder(CommonComponents.GUI_DONE, __ -> this.onDone())
+                                         .pos(this.width / 2 - 2 - 150, this.height - 50)
+                                         .size(300, 20)
+                                         .build());
         {
             var labels = SFMLabelNBTHelper.getLabels(this.LABEL_GUN_STACK);
             int i = 0;
@@ -106,17 +94,16 @@ public class LabelGunScreen extends Screen {
                 );
                 int y = 80 + (i / buttonsPerRow) * (buttonHeight + paddingY);
                 int count = ((int) SFMLabelNBTHelper.getLabelPositions(LABEL_GUN_STACK, label).count());
-                this.addRenderableWidget(new Button(
-                        x,
-                        y,
-                        buttonWidth,
-                        buttonHeight,
-                        Constants.LocalizationKeys.LABEL_GUN_GUI_LABEL_BUTTON.getComponent(label, count),
-                        (btn) -> {
-                            this.labelField.setValue(label);
-                            this.onDone();
-                        }
-                ));
+                this.addRenderableWidget(new Button.Builder(
+                                                 Constants.LocalizationKeys.LABEL_GUN_GUI_LABEL_BUTTON.getComponent(label, count),
+                                                 (btn) -> {
+                                                     this.labelField.setValue(label);
+                                                     this.onDone();
+                                                 }
+                                         )
+                                                 .pos(x, y)
+                                                 .size(buttonWidth, buttonHeight).build()
+                );
                 i++;
             }
         }

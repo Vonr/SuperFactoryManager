@@ -3,9 +3,11 @@ package ca.teamdman.sfm.common.recipe;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMRecipeSerializers;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
@@ -14,8 +16,8 @@ import net.minecraft.world.level.Level;
  * Printing press copies a form using ink and paper.
  */
 public class DiskResetRecipe extends CustomRecipe {
-    public DiskResetRecipe(ResourceLocation pId) {
-        super(pId);
+    public DiskResetRecipe(ResourceLocation pId, CraftingBookCategory pGroup) {
+        super(pId, pGroup);
     }
 
     @Override
@@ -33,7 +35,7 @@ public class DiskResetRecipe extends CustomRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer pContainer) {
+    public ItemStack assemble(CraftingContainer pContainer, RegistryAccess registryAccess) {
         int foundDisks = 0;
         for (int i = 0; i < pContainer.getContainerSize(); i++) {
             ItemStack stack = pContainer.getItem(i);

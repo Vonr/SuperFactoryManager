@@ -4,7 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.recipe.DiskResetRecipe;
 import ca.teamdman.sfm.common.recipe.PrintingPressRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.SimpleRecipeSerializer;
+import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -21,9 +21,9 @@ public class SFMRecipeSerializers {
             PrintingPressRecipe.Serializer::new
     );
 
-    public static final RegistryObject<SimpleRecipeSerializer<DiskResetRecipe>> DISK_RESET = RECIPE_SERIALIZERS.register(
+    public static final RegistryObject<SimpleCraftingRecipeSerializer<DiskResetRecipe>> DISK_RESET = RECIPE_SERIALIZERS.register(
             "disk_reset",
-            () -> new SimpleRecipeSerializer<>(DiskResetRecipe::new)
+            () -> new SimpleCraftingRecipeSerializer<>(DiskResetRecipe::new)
     );
 
     public static void register(IEventBus bus) {
