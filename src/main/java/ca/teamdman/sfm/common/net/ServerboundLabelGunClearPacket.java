@@ -8,25 +8,23 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record ServerboundLabelGunUpdatePacket(
-        String label,
+public record ServerboundLabelGunClearPacket(
         InteractionHand hand
 ) {
     public static final int MAX_LABEL_LENGTH = 80;
 
-    public static void encode(ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket msg, FriendlyByteBuf buf) {
-        buf.writeUtf(msg.label, MAX_LABEL_LENGTH);
+    public static void encode(ServerboundLabelGunClearPacket msg, FriendlyByteBuf buf) {
         buf.writeEnum(msg.hand);
     }
 
-    public static ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket decode(
+    public static ServerboundLabelGunClearPacket decode(
             FriendlyByteBuf buf
     ) {
-        return new ServerboundLabelGunUpdatePacket(buf.readUtf(MAX_LABEL_LENGTH), buf.readEnum(InteractionHand.class));
+        return new ServerboundLabelGunClearPacket(buf.readEnum(InteractionHand.class));
     }
 
     public static void handle(
-            ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket msg, Supplier<NetworkEvent.Context> ctx
+            ServerboundLabelGunClearPacket msg, Supplier<NetworkEvent.Context> ctx
     ) {
         ctx.get().enqueueWork(() -> {
             var sender = ctx.get().getSender();
@@ -35,7 +33,7 @@ public record ServerboundLabelGunUpdatePacket(
             }
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof LabelGunItem) {
-                SFMLabelNBTHelper.setLabelGunActiveLabel(stack, msg.label);
+                SFMLabelNBTHelper.clearLabels(stack);
             }
         });
         ctx.get().setPacketHandled(true);

@@ -115,11 +115,11 @@ public class Constants {
         );
 
         public static final LocalizationEntry DISK_ITEM_TOOLTIP_LABEL_HEADER = new LocalizationEntry(
-                () -> SFMItems.DISK_ITEM.get().getDescriptionId() + ".tooltip.programString.header",
+                () -> SFMItems.DISK_ITEM.get().getDescriptionId() + ".tooltip.label_section.header",
                 () -> "Labels"
         );
         public static final LocalizationEntry DISK_ITEM_TOOLTIP_LABEL = new LocalizationEntry(
-                () -> SFMItems.DISK_ITEM.get().getDescriptionId() + ".tooltip.programString",
+                () -> SFMItems.DISK_ITEM.get().getDescriptionId() + ".tooltip.label_section.entry",
                 () -> " - %s: %d blocks"
         );
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
@@ -160,9 +160,23 @@ public class Constants {
                 "Label Gun"
         );
         public static final LocalizationEntry LABEL_GUN_GUI_LABEL_PLACEHOLDER = new LocalizationEntry(
-                "gui.sfm.programString.labelgun.placeholder",
+                "gui.sfm.label_gun.placeholder",
                 "Label"
         );
+        public static final LocalizationEntry LABEL_GUN_GUI_LABEL_BUTTON = new LocalizationEntry(
+                "gui.sfm.label_gun.label_button",
+                "%s (%d)"
+        );
+
+        public static final LocalizationEntry LABEL_GUN_GUI_PRUNE_BUTTON = new LocalizationEntry(
+                "gui.sfm.label_gun.prune_button",
+                "Prune"
+        );
+        public static final LocalizationEntry LABEL_GUN_GUI_CLEAR_BUTTON = new LocalizationEntry(
+                "gui.sfm.label_gun.clear_button",
+                "Clear"
+        );
+
         public static final LocalizationEntry MANAGER_GUI_PASTE_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.tooltip.paste",
                 "Press Ctrl+V to paste."
@@ -177,7 +191,7 @@ public class Constants {
         );
         public static final LocalizationEntry MANAGER_RESET_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.tooltip.reset",
-                "Wipes program AND programString data."
+                "Wipes ALL disk data."
         );
         public static final LocalizationEntry MANAGER_CONTAINER = new LocalizationEntry(
                 "container.sfm.manager",

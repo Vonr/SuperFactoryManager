@@ -75,6 +75,20 @@ public class SFMPackets {
                 ServerboundLabelGunUpdatePacket::decode,
                 ServerboundLabelGunUpdatePacket::handle
         );
+        LABEL_GUN_ITEM_CHANNEL.registerMessage(
+                1,
+                ServerboundLabelGunPrunePacket.class,
+                ServerboundLabelGunPrunePacket::encode,
+                ServerboundLabelGunPrunePacket::decode,
+                ServerboundLabelGunPrunePacket::handle
+        );
+        LABEL_GUN_ITEM_CHANNEL.registerMessage(
+                2,
+                ServerboundLabelGunClearPacket.class,
+                ServerboundLabelGunClearPacket::encode,
+                ServerboundLabelGunClearPacket::decode,
+                ServerboundLabelGunClearPacket::handle
+        );
 
         DISK_ITEM_CHANNEL.registerMessage(
                 0,

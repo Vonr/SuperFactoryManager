@@ -7,15 +7,15 @@ import com.google.common.collect.Multimap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SFMLabelNBTHelper {
@@ -34,7 +34,7 @@ public class SFMLabelNBTHelper {
     }
 
     public static void addLabel(ItemStack stack, String label, BlockPos position) {
-        var tag  = stack.getOrCreateTag();
+        var tag = stack.getOrCreateTag();
         var dict = tag.getCompound("sfm:labels");
         var list = dict.getList(label, Tag.TAG_LONG);
         list.add(LongTag.valueOf(position.asLong()));
@@ -43,7 +43,7 @@ public class SFMLabelNBTHelper {
     }
 
     public static void addLabels(ItemStack stack, Collection<String> labels) {
-        var tag  = stack.getOrCreateTag();
+        var tag = stack.getOrCreateTag();
         var dict = tag.getCompound("sfm:labels");
         for (String label : labels) {
             var list = dict.getList(label, Tag.TAG_LONG);
@@ -53,7 +53,7 @@ public class SFMLabelNBTHelper {
     }
 
     public static void removeLabel(ItemStack stack, String label, BlockPos pos) {
-        var tag  = stack.getOrCreateTag();
+        var tag = stack.getOrCreateTag();
         var dict = tag.getCompound("sfm:labels");
         var list = dict.getList(label, Tag.TAG_LONG);
         list.removeIf(LongTag.valueOf(pos.asLong())::equals);
@@ -62,7 +62,7 @@ public class SFMLabelNBTHelper {
     }
 
     public static void removeLabel(ItemStack stack, String label) {
-        var tag  = stack.getOrCreateTag();
+        var tag = stack.getOrCreateTag();
         var dict = tag.getCompound("sfm:labels");
         dict.remove(label);
         tag.put("sfm:labels", dict);
@@ -106,12 +106,39 @@ public class SFMLabelNBTHelper {
     }
 
     public static Multimap<BlockPos, String> getPositionLabels(ItemStack stack) {
-        var rtn  = HashMultimap.<BlockPos, String>create();
+        var rtn = HashMultimap.<BlockPos, String>create();
         var dict = getLabelDict(stack);
         for (var key : dict.getAllKeys()) {
             getPositions(dict, key).forEach(pos -> rtn.put(pos, key));
         }
         return rtn;
+    }
+
+    public static Map<String, List<BlockPos>> getLabelPositions(ItemStack stack) {
+        var rtn = new HashMap<String, List<BlockPos>>();
+        var dict = getLabelDict(stack);
+        for (var key : dict.getAllKeys()) {
+            rtn.put(key, getPositions(dict, key).collect(Collectors.toList()));
+        }
+        return rtn;
+    }
+
+    public static List<String> getLabels(ItemStack stack) {
+        ArrayList<String> rtn = new ArrayList<>(getLabelDict(stack).getAllKeys());
+        // sort alphabetically
+        rtn.sort(Comparator.naturalOrder());
+        return rtn;
+    }
+
+    public static String getLabelGunActiveLabel(ItemStack stack) {
+        //noinspection DataFlowIssue
+        return !stack.hasTag() ? "" : stack.getTag().getString("sfm:active_label");
+    }
+
+    public static void setLabelGunActiveLabel(ItemStack stack, String label) {
+        if (label.isEmpty()) return;
+        stack.getOrCreateTag().putString("sfm:active_label", label);
+        addLabels(stack, List.of(label));
     }
 
     @NotNull
@@ -143,5 +170,35 @@ public class SFMLabelNBTHelper {
                 list.set(i, LongTag.valueOf(BlockPos.of(tag.getAsLong()).offset(diff).asLong()));
             }
         }
+    }
+
+    public static void setLabels(ItemStack stack, Map<String, List<BlockPos>> labels) {
+        var tag = stack.getOrCreateTag();
+        var dict = new CompoundTag();
+        for (var entry : labels.entrySet()) {
+            var list = new ListTag();
+            list.addAll(entry
+                                .getValue()
+                                .stream()
+                                .mapToLong(BlockPos::asLong)
+                                .mapToObj(LongTag::valueOf)
+                                .toList());
+            dict.put(entry.getKey(), list);
+        }
+        tag.put("sfm:labels", dict);
+    }
+
+    /**
+     * Removes all labels that have no positions
+     */
+    public static void pruneLabels(ItemStack stack) {
+        Map<String, List<BlockPos>> labels = SFMLabelNBTHelper.getLabelPositions(stack);
+        // remove all entries that have zero size
+        labels.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+        SFMLabelNBTHelper.setLabels(stack, labels);
+    }
+
+    public static void clearLabels(ItemStack stack) {
+        stack.getOrCreateTag().remove("sfm:labels");
     }
 }
