@@ -18,7 +18,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class LabelGunScreen extends Screen {
     private final InteractionHand HAND;
-    @SuppressWarnings("FieldCanBeLocal")
     private final ItemStack LABEL_GUN_STACK;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private EditBox labelField;
