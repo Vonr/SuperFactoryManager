@@ -1360,7 +1360,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         stack.getHoverName();
         stack.getItem().getName(stack);
         stack.getItem().appendHoverText(stack, helper.getLevel(), new ArrayList<>(), TooltipFlag.Default.NORMAL);
-        Vec3 pos = helper.absoluteVec(new Vec3(0.5, 1, 0.5));
+        Vec3 pos = helper.absoluteVec(new Vec3(0.5, 2, 0.5));
         ItemEntity itemEntity = new ItemEntity(helper.getLevel(), pos.x, pos.y, pos.z, stack, 0, 0, 0);
         helper.getLevel().addFreshEntity(itemEntity);
         helper.succeed();
