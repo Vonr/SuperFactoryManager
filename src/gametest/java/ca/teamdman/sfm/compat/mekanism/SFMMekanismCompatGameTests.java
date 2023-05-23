@@ -3,9 +3,9 @@ package ca.teamdman.sfm.compat.mekanism;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import mekanism.api.chemical.infuse.InfusionStack;
 import mekanism.api.math.FloatingLong;
 import mekanism.common.registries.MekanismBlocks;
@@ -61,8 +61,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                       OUTPUT infusion:*:* TO b TOP SIDE -- mek can insert to top by default
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
 
         // ensure it can move into an empty tank
@@ -97,8 +101,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                       OUTPUT infusion:*:* TO b TOP SIDE -- mek can insert to top by default
                                    END
                                                            """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
 
         // ensure it can move when there's already some in the destination
@@ -133,8 +141,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT infusion:*:* TO b TOP SIDE -- mek can insert to top by default
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         // ensure it can move into a nearly full tank
         leftTank.getInfusionTank().setStack(new InfusionStack(MekanismInfuseTypes.REDSTONE.get(), 2_000_000L));
@@ -178,8 +190,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         left.getBinSlot().setStack(new ItemStack(Items.COAL, BinTier.ULTIMATE.getStorage()));
         right.getBinSlot().setEmpty();
@@ -215,8 +231,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         left.getBinSlot().setStack(new ItemStack(Items.DIAMOND, 100));
         right.getBinSlot().setStack(new ItemStack(Items.DIAMOND, 100));
@@ -252,8 +272,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         left.getBinSlot().setStack(new ItemStack(Items.STICK, BinTier.ULTIMATE.getStorage()));
         right.getBinSlot().setStack(new ItemStack(Items.STICK, BinTier.ULTIMATE.getStorage() - 32));
@@ -289,8 +313,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT forge_energy:forge:energy TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         left.setEnergy(0, EnergyCubeTier.ULTIMATE.getMaxEnergy());
         right.setEnergy(0, FloatingLong.ZERO);
@@ -325,8 +353,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT forge_energy:forge:energy TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         left.setEnergy(0, FloatingLong.create(1_000));
         right.setEnergy(0, FloatingLong.create(1_000));
@@ -361,8 +393,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT forge_energy:forge:energy TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         left.setEnergy(0, EnergyCubeTier.ULTIMATE.getMaxEnergy());
         right.setEnergy(0, EnergyCubeTier.ULTIMATE.getMaxEnergy().subtract(1_000));
@@ -400,8 +436,12 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT forge_energy:forge:energy TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         left.setEnergy(0, FloatingLong.create(100));
         right.setEnergy(0, FloatingLong.ZERO);
@@ -462,12 +502,10 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        sourceBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(
-                manager.getDisk().get(),
-                "source",
-                helper.absolutePos(pos)
-        ));
-        destBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "dest", helper.absolutePos(pos)));
+        LabelHolder.empty()
+                .addAll("source", sourceBlocks.stream().map(helper::absolutePos).toList())
+                .addAll("dest", destBlocks.stream().map(helper::absolutePos).toList())
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram(program);
@@ -532,10 +570,14 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                      OUTPUT fluid::lava, fluid::water TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(a1Pos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(a2Pos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(b1Pos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(b2Pos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(a1Pos))
+                .add("a", helper.absolutePos(a2Pos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .save(manager.getDisk().get());
 
         assertManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(a1.getFluidInTank(0).isEmpty(), "a1 did not empty");

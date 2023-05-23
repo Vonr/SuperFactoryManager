@@ -6,9 +6,9 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.item.FormItem;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -102,8 +102,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripIndent());
 
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt did not move");
@@ -141,8 +143,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripIndent());
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(
@@ -200,9 +204,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripIndent());
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "source", helper.absolutePos(sourcePos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "dest", helper.absolutePos(dest1Pos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "dest", helper.absolutePos(dest2Pos));
+        LabelHolder.empty()
+                .add("source", helper.absolutePos(sourcePos))
+                .add("dest", helper.absolutePos(dest1Pos))
+                .add("dest", helper.absolutePos(dest2Pos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             int found = IntStream
@@ -259,8 +265,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    END
                                    """.stripIndent());
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 5, "Dirt did not move");
@@ -302,8 +310,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripIndent());
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64 - 2, "Iron ingots did not retain");
@@ -329,11 +339,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
-        // create the program
-
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(right));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(left))
+                .add("b", helper.absolutePos(right))
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram("""
@@ -373,11 +383,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
-        // create the program
-
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(right));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(left))
+                .add("b", helper.absolutePos(right))
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram("""
@@ -430,11 +440,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
-        // create the program
-
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(start));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(end));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(start))
+                .add("b", helper.absolutePos(end))
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram("""
@@ -481,13 +491,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
-        // create the program
-
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(front));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(right));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(back));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(left))
+                .add("a", helper.absolutePos(front))
+                .add("b", helper.absolutePos(right))
+                .add("b", helper.absolutePos(back))
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram("""
@@ -713,8 +723,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(left));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(right));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(left))
+                .add("b", helper.absolutePos(right))
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram(program);
@@ -757,8 +769,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripIndent());
 
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "slot 0 did not leave");
@@ -1421,8 +1435,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    END
                                    """);
 
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+        // set the labels
+        LabelHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             int leftDiamondCount = count(left, Items.DIAMOND);
@@ -1493,8 +1510,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    END
                                    """);
 
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+        // set the labels
+        LabelHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             int leftDiamondCount = count(left, Items.DIAMOND);
@@ -1565,8 +1585,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    END
                                    """);
 
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+        // set the labels
+        LabelHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             int leftDiamondCount = count(left, Items.DIAMOND);
@@ -1637,8 +1660,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    END
                                    """);
 
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+        // set the labels
+        LabelHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             int leftDiamondCount = count(left, Items.DIAMOND);
@@ -1709,8 +1735,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    END
                                    """);
 
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "left", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "right", helper.absolutePos(rightPos));
+        // set the labels
+        LabelHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             int leftDiamondCount = count(left, Items.DIAMOND);
@@ -1764,8 +1793,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripIndent());
 
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
@@ -1802,8 +1833,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripIndent());
 
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
@@ -1840,8 +1873,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripIndent());
 
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");

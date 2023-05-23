@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.item.LabelGunItem;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraftforge.network.NetworkEvent;
@@ -11,8 +11,6 @@ import java.util.function.Supplier;
 public record ServerboundLabelGunPrunePacket(
         InteractionHand hand
 ) {
-    public static final int MAX_LABEL_LENGTH = 80;
-
     public static void encode(ServerboundLabelGunPrunePacket msg, FriendlyByteBuf buf) {
         buf.writeEnum(msg.hand);
     }
@@ -33,7 +31,7 @@ public record ServerboundLabelGunPrunePacket(
             }
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof LabelGunItem) {
-                SFMLabelNBTHelper.pruneLabels(stack);
+                LabelHolder.from(stack).prune().save(stack);
             }
         });
         ctx.get().setPacketHandled(true);

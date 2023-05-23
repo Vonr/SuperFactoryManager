@@ -4,8 +4,8 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunClearPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunPrunePacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -16,16 +16,18 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Comparator;
+
 public class LabelGunScreen extends Screen {
     private final InteractionHand HAND;
-    private final ItemStack LABEL_GUN_STACK;
+    private final LabelHolder LABEL_HOLDER;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private EditBox labelField;
     private boolean shouldRebuildWidgets = false;
 
     public LabelGunScreen(ItemStack labelGunStack, InteractionHand hand) {
         super(Constants.LocalizationKeys.LABEL_GUN_GUI_TITLE.getComponent());
-        LABEL_GUN_STACK = labelGunStack;
+        LABEL_HOLDER = LabelHolder.from(labelGunStack);
         HAND = hand;
     }
 
@@ -54,7 +56,7 @@ public class LabelGunScreen extends Screen {
                 Constants.LocalizationKeys.LABEL_GUN_GUI_CLEAR_BUTTON.getComponent(),
                 (btn) -> {
                     SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunClearPacket(HAND));
-                    SFMLabelNBTHelper.clearLabels(LABEL_GUN_STACK);
+                    LABEL_HOLDER.clear();
                     shouldRebuildWidgets = true;
                 }
         ));
@@ -66,7 +68,7 @@ public class LabelGunScreen extends Screen {
                 Constants.LocalizationKeys.LABEL_GUN_GUI_PRUNE_BUTTON.getComponent(),
                 (btn) -> {
                     SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunPrunePacket(HAND));
-                    SFMLabelNBTHelper.pruneLabels(LABEL_GUN_STACK);
+                    LABEL_HOLDER.prune();
                     shouldRebuildWidgets = true;
                 }
         ));
@@ -79,9 +81,9 @@ public class LabelGunScreen extends Screen {
                 (p_97691_) -> this.onDone()
         ));
         {
-            var labels = SFMLabelNBTHelper.getLabels(this.LABEL_GUN_STACK);
+            var labels = LABEL_HOLDER.get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
             int i = 0;
-            int buttonWidth = SFMLabelNBTHelper.getLabelPositions(LABEL_GUN_STACK)
+            int buttonWidth = LABEL_HOLDER.get()
                                       .entrySet()
                                       .stream()
                                       .map(entry -> Constants.LocalizationKeys.LABEL_GUN_GUI_LABEL_BUTTON.getComponent(
@@ -102,7 +104,7 @@ public class LabelGunScreen extends Screen {
                         + paddingX
                 );
                 int y = 80 + (i / buttonsPerRow) * (buttonHeight + paddingY);
-                int count = ((int) SFMLabelNBTHelper.getLabelPositions(LABEL_GUN_STACK, label).count());
+                int count = LABEL_HOLDER.getPositions(label).size();
                 this.addRenderableWidget(new Button(
                         x,
                         y,
