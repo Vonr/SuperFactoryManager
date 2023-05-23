@@ -4,9 +4,9 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import net.minecraft.ResourceLocationException;
@@ -83,57 +83,50 @@ public record Program(
 
     public ArrayList<TranslatableContents> gatherWarnings(ItemStack disk, @Nullable ManagerBlockEntity manager) {
         var warnings = new ArrayList<TranslatableContents>();
-
+        var labels = LabelHolder.from(disk);
         // labels in code but not in world
         for (String label : referencedLabels) {
-            var isUsed = SFMLabelNBTHelper.getLabelPositions(disk, label).findAny().isPresent();
+            var isUsed = labels.getPositions(label).size() > 0;
             if (!isUsed) {
                 warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_LABEL.get(label));
             }
         }
 
         // labels used in world but not defined in code
-        SFMLabelNBTHelper
-                .getPositionLabels(disk)
-                .values()
+        labels.get().keySet()
                 .stream()
-                .distinct()
                 .filter(x -> !referencedLabels.contains(x))
                 .forEach(label -> warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNDEFINED_LABEL.get(label)));
 
         if (manager != null) {
             // labels in world but not connected via cables
-            CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> {
-                for (var entry : SFMLabelNBTHelper.getPositionLabels(disk).entries()) {
-                    var label = entry.getValue();
-                    var pos = entry.getKey();
-                    var inNetwork = network.isInNetwork(pos);
-                    var adjacent = network.hasCableNeighbour(pos);
-                    if (!inNetwork) {
-                        if (adjacent) {
-                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
-                                    label,
-                                    String.format(
-                                            "[%d,%d,%d]",
-                                            pos.getX(),
-                                            pos.getY(),
-                                            pos.getZ()
-                                    )
-                            ));
-                        } else {
-                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
-                                    label,
-                                    String.format(
-                                            "[%d,%d,%d]",
-                                            pos.getX(),
-                                            pos.getY(),
-                                            pos.getZ()
-                                    )
-                            ));
-                        }
+            CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> labels.forEach((label, pos) -> {
+                var inNetwork = network.isInNetwork(pos);
+                var adjacent = network.hasCableNeighbour(pos);
+                if (!inNetwork) {
+                    if (adjacent) {
+                        warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
+                                label,
+                                String.format(
+                                        "[%d,%d,%d]",
+                                        pos.getX(),
+                                        pos.getY(),
+                                        pos.getZ()
+                                )
+                        ));
+                    } else {
+                        warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
+                                label,
+                                String.format(
+                                        "[%d,%d,%d]",
+                                        pos.getX(),
+                                        pos.getY(),
+                                        pos.getZ()
+                                )
+                        ));
                     }
                 }
-            });
+            }));
         }
 
         // try and validate that references resources exist
@@ -163,22 +156,15 @@ public record Program(
     }
 
     public void fixWarnings(ItemStack disk, ManagerBlockEntity manager) {
+        var labels = LabelHolder.from(disk);
         // remove labels not defined in code
-        SFMLabelNBTHelper
-                .getPositionLabels(disk)
-                .values()
-                .stream()
-                .distinct()
-                .filter(label -> !referencedLabels.contains(label))
-                .forEach(label -> SFMLabelNBTHelper.removeLabel(disk, label));
+        labels.removeIf((label, pos) -> !referencedLabels.contains(label));
 
         // remove labels not connected via cables
-        CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> SFMLabelNBTHelper
-                .getPositionLabels(disk)
-                .entries()
-                .stream()
-                .filter(e -> !network.isInNetwork(e.getKey()))
-                .forEach(e -> SFMLabelNBTHelper.removeLabel(disk, e.getValue(), e.getKey())));
+        CableNetworkManager
+                .getOrRegisterNetwork(manager)
+                .ifPresent(network -> labels.removeIf((label, pos) -> !network.isInNetwork(pos)));
+        labels.save(disk);
 
         // update warnings
         DiskItem.setWarnings(disk, gatherWarnings(disk, manager));

@@ -2,9 +2,9 @@ package ca.teamdman.sfm;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -63,8 +63,10 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        sourceBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(pos)));
-        destBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(pos)));
+        LabelHolder.empty()
+                .addAll("a", sourceBlocks.stream().map(helper::absolutePos).toList())
+                .addAll("b", destBlocks.stream().map(helper::absolutePos).toList())
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram(program);
@@ -97,7 +99,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
     public static void move_many_full(GameTestHelper helper) {
         // fill the platform with cables and barrels
         var sourceBlocks = new ArrayList<BlockPos>();
-        var destBlocks   = new ArrayList<BlockPos>();
+        var destBlocks = new ArrayList<BlockPos>();
         for (int x = 0; x < 25; x++) {
 //            for (int z = 0; z < 25; z++) {
             for (int z = 0; z < 24; z++) {
@@ -133,8 +135,10 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        sourceBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(pos)));
-        destBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(pos)));
+        LabelHolder.empty()
+                .addAll("a", sourceBlocks.stream().map(helper::absolutePos).toList())
+                .addAll("b", destBlocks.stream().map(helper::absolutePos).toList())
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram(program);
@@ -225,8 +229,10 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        sourceBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(pos)));
-        destBlocks.forEach(pos -> SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(pos)));
+        LabelHolder.empty()
+                .addAll("a", sourceBlocks.stream().map(helper::absolutePos).toList())
+                .addAll("b", destBlocks.stream().map(helper::absolutePos).toList())
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram(program);
@@ -332,10 +338,12 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(aPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(bPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "c", helper.absolutePos(cPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "d", helper.absolutePos(dPos));
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(aPos))
+                .add("b", helper.absolutePos(bPos))
+                .add("c", helper.absolutePos(cPos))
+                .add("d", helper.absolutePos(dPos))
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram(program);
@@ -462,10 +470,10 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                     """;
 
             // set the labels
-            for (BlockPos pos : storage) {
-                SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "storage", helper.absolutePos(pos));
-            }
-            SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "chest", helper.absolutePos(new BlockPos(0, 2, 0)));
+            LabelHolder.empty()
+                    .addAll("storage", storage.stream().map(helper::absolutePos).toList())
+                    .add("chest", helper.absolutePos(new BlockPos(0, 2, 0)))
+                    .save(manager.getDisk().get());
 
             // load the program
             manager.setProgram(program);

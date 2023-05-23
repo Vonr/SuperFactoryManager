@@ -3,7 +3,8 @@ package ca.teamdman.sfm.common.item;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
+import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -17,6 +18,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
+import java.util.Comparator;
 import java.util.List;
 
 public class LabelGunItem extends Item {
@@ -24,10 +26,21 @@ public class LabelGunItem extends Item {
         super(new Properties().stacksTo(1));
     }
 
+    public static void setActiveLabel(ItemStack gun, String label) {
+        if (label.isEmpty()) return;
+        LabelHolder.from(gun).addReferencedLabel(label).save(gun);
+        gun.getOrCreateTag().putString("sfm:active_label", label);
+    }
+
+    public static String getActiveLabel(ItemStack stack) {
+        //noinspection DataFlowIssue
+        return !stack.hasTag() ? "" : stack.getTag().getString("sfm:active_label");
+    }
+
     public static String getNextLabel(ItemStack gun, int change) {
-        var labels = SFMLabelNBTHelper.getLabels(gun);
+        var labels = LabelHolder.from(gun).get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
         if (labels.size() == 0) return "";
-        var currentLabel = SFMLabelNBTHelper.getLabelGunActiveLabel(gun);
+        var currentLabel = getActiveLabel(gun);
 
         int currentLabelIndex = 0;
         for (int i = 0; i < labels.size(); i++) {
@@ -46,21 +59,26 @@ public class LabelGunItem extends Item {
 
     @Override
     public InteractionResult onItemUseFirst(
-            ItemStack stack, UseOnContext ctx
+            ItemStack gun, UseOnContext ctx
     ) {
-        var pos   = ctx.getClickedPos();
         var level = ctx.getLevel();
         if (level.isClientSide) return InteractionResult.SUCCESS;
+
+        var gunLabels = LabelHolder.from(gun);
+        var pos = ctx.getClickedPos();
+
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager) {
             manager.getDisk().ifPresent(disk -> {
                 Player player = ctx.getPlayer();
                 if (player != null && player.isShiftKeyDown()) {
-                    SFMLabelNBTHelper.copyLabels(disk, stack);
-                    var scriptLabels = manager.getReferencedLabels();
-                    SFMLabelNBTHelper.addLabels(stack, scriptLabels);
+                    // copy labels from disk to gun and also add referenced labels from scripts
+                    var diskLabels = LabelHolder.from(disk);
+                    manager.getReferencedLabels().forEach(diskLabels::addReferencedLabel);
+                    diskLabels.save(gun);
                     player.sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
                 } else {
-                    SFMLabelNBTHelper.copyLabels(stack, disk);
+                    // copy labels from gun to disk
+                    gunLabels.save(disk);
                     manager.rebuildProgramAndUpdateDisk();
                     manager.setChanged();
                     if (player != null) {
@@ -71,12 +89,15 @@ public class LabelGunItem extends Item {
             return InteractionResult.CONSUME;
         }
 
-        var label = SFMLabelNBTHelper.getLabelGunActiveLabel(stack);
+        var label = getActiveLabel(gun);
         if (label.isEmpty()) return InteractionResult.SUCCESS;
+
         if (ctx.getPlayer() != null && ctx.getPlayer().isShiftKeyDown())
-            SFMLabelNBTHelper.clearLabels(stack, pos);
+            gunLabels.remove(pos);
         else
-            SFMLabelNBTHelper.toggleLabel(stack, label, pos);
+            gunLabels.toggle(label, pos);
+        gunLabels.save(gun);
+
         return InteractionResult.CONSUME;
     }
 
@@ -86,7 +107,7 @@ public class LabelGunItem extends Item {
     ) {
         lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
         lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.addAll(SFMLabelNBTHelper.getHoverText(stack));
+        lines.addAll(LabelHolder.from(stack).asHoverText());
     }
 
     @Override
@@ -104,7 +125,7 @@ public class LabelGunItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
-        var name = SFMLabelNBTHelper.getLabelGunActiveLabel(stack);
+        var name = getActiveLabel(stack);
         if (name.isEmpty()) return super.getName(stack);
         return Constants.LocalizationKeys.LABEL_GUN_ITEM_NAME_WITH_LABEL
                 .getComponent(name)

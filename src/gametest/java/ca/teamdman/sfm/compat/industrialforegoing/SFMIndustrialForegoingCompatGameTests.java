@@ -3,9 +3,9 @@ package ca.teamdman.sfm.compat.industrialforegoing;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import com.buuz135.industrial.module.ModuleCore;
 import com.buuz135.industrial.module.ModuleTransportStorage;
 import com.buuz135.industrial.utils.BlockUtils;
@@ -45,8 +45,12 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
                                      OUTPUT TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         int fullCount = BlockUtils.getStackAmountByRarity(ModuleCore.SUPREME_RARITY);
         assertTrue(fullCount > 0, "expected full count to be greater than 0");
@@ -82,8 +86,12 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
                                      OUTPUT TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         // we need to insert a normal stack last for the rendering to work in IF
         assertTrue(left.insertItem(0, new ItemStack(Items.COAL, 5000 - 64), false).isEmpty(), "couldn't prep left");
@@ -122,8 +130,12 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
                                      OUTPUT TO b TOP SIDE
                                    END
                                    """.stripIndent());
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "a", helper.absolutePos(leftPos));
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "b", helper.absolutePos(rightPos));
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
 
         int fullCount = BlockUtils.getStackAmountByRarity(ModuleCore.SUPREME_RARITY);
         assertTrue(fullCount > 0, "expected full count to be greater than 0");

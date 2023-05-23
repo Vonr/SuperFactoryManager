@@ -1,16 +1,17 @@
 package ca.teamdman.sfm.common.resourcetype;
 
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -105,12 +106,12 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     public Stream<CAP> getCapabilities(
             ProgramContext programContext, LabelAccess labelAccess
     ) {
-        var disk = programContext.getManager().getDisk();
+        Optional<ItemStack> disk = programContext.getManager().getDisk();
         if (disk.isEmpty()) return Stream.empty();
-        //noinspection DataFlowIssue,ConstantValue
-        return SFMLabelNBTHelper
-                .getPositions(disk.get(), labelAccess.labels())
-                .map(programContext.getNetwork()::getCapabilityProvider)
+        LabelHolder labels = LabelHolder.from(disk.get());
+        CableNetwork network = programContext.getNetwork();
+        return labels.getPositions(labelAccess)
+                .map(network::getCapabilityProvider)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .flatMap((
@@ -119,8 +120,14 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                                          .stream()
                                          .map(direction -> prov.getCapability(CAPABILITY, direction))
                          ))
-                .map(x -> x.orElse(null))
-                .filter(Objects::nonNull);
+                .map(x -> {
+                    //noinspection DataFlowIssue
+                    return x.orElse(null);
+                })
+                .filter(x -> {
+                    //noinspection ConstantValue,Convert2MethodRef
+                    return x != null;
+                });
     }
 
     public Stream<STACK> collect(CAP cap, LabelAccess labelAccess) {

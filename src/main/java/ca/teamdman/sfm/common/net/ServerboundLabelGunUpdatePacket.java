@@ -1,7 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.item.LabelGunItem;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraftforge.network.NetworkEvent;
@@ -35,7 +34,7 @@ public record ServerboundLabelGunUpdatePacket(
             }
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof LabelGunItem) {
-                SFMLabelNBTHelper.setLabelGunActiveLabel(stack, msg.label);
+                LabelGunItem.setActiveLabel(stack, msg.label);
             }
         });
         ctx.get().setPacketHandled(true);

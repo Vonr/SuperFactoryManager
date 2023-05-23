@@ -6,9 +6,9 @@ import ca.teamdman.sfm.client.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
@@ -169,7 +169,7 @@ public class DiskItem extends Item {
                     () -> () -> false
             );
             if (!showProgram) {
-                list.addAll(SFMLabelNBTHelper.getHoverText(stack));
+                list.addAll(LabelHolder.from(stack).asHoverText());
                 getErrors(stack)
                         .stream()
                         .map(MutableComponent::create)

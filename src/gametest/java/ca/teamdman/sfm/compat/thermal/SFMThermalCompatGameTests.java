@@ -3,9 +3,9 @@ package ca.teamdman.sfm.compat.thermal;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.util.SFMLabelNBTHelper;
 import mekanism.common.registries.MekanismBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -79,13 +79,11 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        for (BlockPos sourceBlock : sourceBlocks) {
-            SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "source", helper.absolutePos(sourceBlock));
-        }
-        for (BlockPos pos : destBlocks) {
-            SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "dest", helper.absolutePos(pos));
-        }
-        SFMLabelNBTHelper.addLabel(manager.getDisk().get(), "power", helper.absolutePos(powerPos));
+        LabelHolder.empty()
+                .addAll("source", sourceBlocks.stream().map(helper::absolutePos).toList())
+                .addAll("dest", destBlocks.stream().map(helper::absolutePos).toList())
+                .add("power", powerPos)
+                .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram(program.stripIndent());
