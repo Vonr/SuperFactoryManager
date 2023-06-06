@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
+import net.minecraft.client.gui.components.Whence;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -33,7 +34,7 @@ public class ProgramEditScreen extends Screen {
     private final Consumer<String> CALLBACK;
     private final ItemStack DISK_STACK;
     @SuppressWarnings("NotNullFieldNotInitialized")
-    private MultiLineEditBox textarea;
+    private MyMultiLineEditBox textarea;
     private String lastProgram = "";
     private List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
 
@@ -97,6 +98,35 @@ public class ProgramEditScreen extends Screen {
         onClose();
     }
 
+    /**
+     * Remove a layer of indentation from a line of text
+     */
+    public static String leftTrim4(String s) {
+        int i = 0;
+        while (i < s.length() && s.charAt(i) == ' ' && i < 4) {
+            i++;
+        }
+        return s.substring(i);
+    }
+
+    public static int findStartOfLine(String content, int start) {
+        for (int i = start; i > 0; i--) {
+            if (content.charAt(i - 1) == '\n') {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    public static int findEndOfLine(String content, int start) {
+        for (int i = start; i < content.length(); i++) {
+            if (content.charAt(i) == '\n') {
+                return i;
+            }
+        }
+        return content.length();
+    }
+
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {
@@ -104,11 +134,77 @@ public class ProgramEditScreen extends Screen {
             return true;
         }
         if (pKeyCode == GLFW.GLFW_KEY_TAB) {
-//            textarea.charTyped('\t', pKeyCode);
-            textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-            textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-            textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-            textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+            // if tab pressed with no selection and not holding shift => insert 4 spaces
+            // if tab pressed with no selection and holding shift => de-indent current line
+            // if tab pressed with selection and not holding shift => de-indent lines containing selection 4 spaces
+            // if tab pressed with selection and holding shift => indent lines containing selection 4 spaces
+            String content = textarea.getValue();
+
+            this.textarea.getSelected().ifPresentOrElse(selectionView -> { // selection present
+                int oldSelectionStart = selectionView.beginIndex();
+                int oldSelectionEnd = selectionView.endIndex();
+                boolean cursorAtStart = textarea.getCursorPosition() == oldSelectionStart;
+                int startOfLine = findStartOfLine(content, selectionView.beginIndex());
+                String selection = content.substring(startOfLine, oldSelectionEnd);
+
+                if (Screen.hasShiftDown()) { // de-indent
+                    String[] selectionLines = selection.split("\n", -1);
+                    String[] newSelectionLines = new String[selectionLines.length];
+                    for (int i = 0; i < selectionLines.length; i++) {
+                        newSelectionLines[i] = leftTrim4(selectionLines[i]);
+                    }
+                    String newSelection = String.join("\n", newSelectionLines);
+                    String newContent = content.substring(0, startOfLine)
+                                        + newSelection
+                                        + content.substring(oldSelectionEnd);
+                    textarea.setValue(newContent);
+
+                    int removedFromFirstLine = selectionLines[0].length() - newSelectionLines[0].length();
+                    int newSelectionStart = Math.max(startOfLine, oldSelectionStart - removedFromFirstLine);
+                    int newSelectionEnd = startOfLine + newSelection.length();
+                    textarea.setSelected(newSelectionStart, newSelectionEnd, cursorAtStart);
+                } else { // indent
+                    String[] lines = selection.split("\n", -1);
+                    String[] newLines = new String[lines.length];
+                    for (int i = 0; i < lines.length; i++) {
+                        newLines[i] = "    " + lines[i];
+                    }
+                    String newSelection = String.join("\n", newLines);
+                    String newContent = content.substring(0, startOfLine)
+                                        + newSelection
+                                        + content.substring(oldSelectionEnd);
+                    textarea.setValue(newContent);
+                    // the first line always gets +4 when indenting
+                    textarea.setSelected(oldSelectionStart + 4, startOfLine + newSelection.length(), cursorAtStart);
+                }
+            }, () -> { // no selection
+                if (Screen.hasShiftDown()) { // de-indent
+                    int oldCursor = textarea.getCursorPosition();
+                    int startOfLine = findStartOfLine(content, textarea.getCursorPosition());
+
+                    // count up to 4 whitespace characters to remove
+                    int end = startOfLine;
+                    for (int i = 4; i > 0; i--) {
+                        if (content.substring(startOfLine, startOfLine + i).isBlank()) {
+                            end = startOfLine + i;
+                            break;
+                        }
+                    }
+                    if (end > startOfLine) {
+                        // commit new content
+                        String newContent = content.substring(0, startOfLine) + content.substring(end);
+                        textarea.setValue(newContent);
+                        textarea.setSelecting(false);
+                        int newCursor = Math.max(startOfLine, oldCursor - (end - startOfLine));
+                        textarea.seekCursor(Whence.ABSOLUTE, newCursor);
+                    }
+                } else { // insert 4 spaces
+                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+                }
+            });
             return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
@@ -141,6 +237,27 @@ public class ProgramEditScreen extends Screen {
             );
         }
 
+        public void seekCursor(Whence whence, int amount) {
+            this.textField.seekCursor(whence, amount);
+        }
+
+        public void setSelected(int start, int end, boolean cursorAtStart) {
+            if (cursorAtStart) {
+                // flip start and end
+                int x = start;
+                start = end;
+                end = x;
+            }
+            this.textField.setSelecting(false);
+            this.textField.seekCursor(Whence.ABSOLUTE, start);
+            this.textField.setSelecting(true);
+            this.textField.seekCursor(Whence.ABSOLUTE, end);
+        }
+
+        public int getCursorPosition() {
+            return this.textField.cursor();
+        }
+
         @Override
         public boolean mouseClicked(double p_239101_, double p_239102_, int p_239103_) {
             try {
@@ -149,6 +266,11 @@ public class ProgramEditScreen extends Screen {
                 e.printStackTrace();
                 return false;
             }
+        }
+
+        public Optional<MultilineTextField.StringView> getSelected() {
+            if (!this.textField.hasSelection()) return Optional.empty();
+            return Optional.of(this.textField.getSelected());
         }
 
         @Override
@@ -251,6 +373,10 @@ public class ProgramEditScreen extends Screen {
             } else {
                 GuiComponent.fill(poseStack, cursorX, cursorY - 1, cursorX + 1, cursorY + 1 + 9, -1);
             }
+        }
+
+        public void setSelecting(boolean selecting) {
+            this.textField.setSelecting(selecting);
         }
     }
 }
