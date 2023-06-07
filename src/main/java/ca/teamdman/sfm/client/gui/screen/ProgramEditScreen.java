@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
+import ca.teamdman.sfm.client.gui.IndentationUtils;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.item.DiskItem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -139,72 +140,97 @@ public class ProgramEditScreen extends Screen {
             // if tab pressed with selection and not holding shift => de-indent lines containing selection 4 spaces
             // if tab pressed with selection and holding shift => indent lines containing selection 4 spaces
             String content = textarea.getValue();
-
-            this.textarea.getSelected().ifPresentOrElse(selectionView -> { // selection present
-                int oldSelectionStart = selectionView.beginIndex();
-                int oldSelectionEnd = selectionView.endIndex();
-                boolean cursorAtStart = textarea.getCursorPosition() == oldSelectionStart;
-                int startOfLine = findStartOfLine(content, selectionView.beginIndex());
-                String selection = content.substring(startOfLine, oldSelectionEnd);
-
-                if (Screen.hasShiftDown()) { // de-indent
-                    String[] selectionLines = selection.split("\n", -1);
-                    String[] newSelectionLines = new String[selectionLines.length];
-                    for (int i = 0; i < selectionLines.length; i++) {
-                        newSelectionLines[i] = leftTrim4(selectionLines[i]);
-                    }
-                    String newSelection = String.join("\n", newSelectionLines);
-                    String newContent = content.substring(0, startOfLine)
-                                        + newSelection
-                                        + content.substring(oldSelectionEnd);
-                    textarea.setValue(newContent);
-
-                    int removedFromFirstLine = selectionLines[0].length() - newSelectionLines[0].length();
-                    int newSelectionStart = Math.max(startOfLine, oldSelectionStart - removedFromFirstLine);
-                    int newSelectionEnd = startOfLine + newSelection.length();
-                    textarea.setSelected(newSelectionStart, newSelectionEnd, cursorAtStart);
-                } else { // indent
-                    String[] lines = selection.split("\n", -1);
-                    String[] newLines = new String[lines.length];
-                    for (int i = 0; i < lines.length; i++) {
-                        newLines[i] = "    " + lines[i];
-                    }
-                    String newSelection = String.join("\n", newLines);
-                    String newContent = content.substring(0, startOfLine)
-                                        + newSelection
-                                        + content.substring(oldSelectionEnd);
-                    textarea.setValue(newContent);
-                    // the first line always gets +4 when indenting
-                    textarea.setSelected(oldSelectionStart + 4, startOfLine + newSelection.length(), cursorAtStart);
-                }
-            }, () -> { // no selection
-                if (Screen.hasShiftDown()) { // de-indent
-                    int oldCursor = textarea.getCursorPosition();
-                    int startOfLine = findStartOfLine(content, textarea.getCursorPosition());
-
-                    // count up to 4 whitespace characters to remove
-                    int end = startOfLine;
-                    for (int i = 4; i > 0; i--) {
-                        if (content.substring(startOfLine, startOfLine + i).isBlank()) {
-                            end = startOfLine + i;
-                            break;
-                        }
-                    }
-                    if (end > startOfLine) {
-                        // commit new content
-                        String newContent = content.substring(0, startOfLine) + content.substring(end);
-                        textarea.setValue(newContent);
-                        textarea.setSelecting(false);
-                        int newCursor = Math.max(startOfLine, oldCursor - (end - startOfLine));
-                        textarea.seekCursor(Whence.ABSOLUTE, newCursor);
-                    }
-                } else { // insert 4 spaces
-                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-                }
-            });
+            int cursor = textarea.getCursorPosition();
+            int selectionCursor = textarea.getSelectionCursorPosition();
+            IndentationUtils.IndentationResult result;
+            if (Screen.hasShiftDown()) { // de-indent
+                result = IndentationUtils.deindent(content, cursor, selectionCursor);
+            } else { // indent
+                result = IndentationUtils.indent(content, cursor, selectionCursor);
+            }
+            textarea.setValue(result.content());
+            textarea.setCursorPosition(result.cursorPosition());
+            textarea.setSelectionCursorPosition(result.selectionCursorPosition());
+//            this.textarea.getSelected().ifPresentOrElse(selectionView -> { // selection present
+//                int oldSelectionStart = selectionView.beginIndex();
+//                int oldSelectionEnd = selectionView.endIndex();
+//                int oldSelectionSize = oldSelectionEnd - oldSelectionStart;
+//                boolean cursorAtStart = textarea.getCursorPosition() == oldSelectionStart;
+//                int chunkStart = findStartOfLine(content, oldSelectionStart);
+//                int chunkEnd = findEndOfLine(content, oldSelectionEnd);
+//                String chunk = content.substring(chunkStart, chunkEnd);
+//                int chunkSelectionStart = oldSelectionStart - chunkStart;
+//                int chunkSelectionEnd = oldSelectionEnd - chunkStart;
+//                if (Screen.hasShiftDown()) { // de-indent
+//                    String[] chunkLines = chunk.split("\n", -1);
+//                    String[] newChunkLines = new String[chunkLines.length];
+//                    int totalRemoved = 0;
+//                    int removedFromSelectionStart = 0;
+//                    for (int i = 0; i < chunkLines.length; i++) {
+//                        newChunkLines[i] = leftTrim4(chunkLines[i]);
+//                        int removed = chunkLines[i].length() - newChunkLines[i].length();
+//                        if (i == 0) {
+//                            removedFromSelectionStart = Math.min(removed, chunkSelectionStart);
+//                        }
+//                        if (chunkSelectionStart < chunkLines[i].length() && chunkSelectionEnd > 0) {
+//                            totalRemoved += removed;
+//                        }
+//                    }
+//                    String newChunk = String.join("\n", newChunkLines);
+//                    String newContent = content.substring(0, chunkStart)
+//                                        + newChunk
+//                                        + content.substring(chunkEnd);
+//                    textarea.setValue(newContent);
+//
+//                    int newSelectionStart = oldSelectionStart - removedFromSelectionStart;
+//                    int newSelectionEnd = newSelectionStart + oldSelectionSize - totalRemoved;
+//                    textarea.setSelected(newSelectionStart, newSelectionEnd, cursorAtStart);
+//                } else { // indent
+//                    String[] chunkLines = chunk.split("\n", -1);
+//                    String[] newChunkLines = new String[chunkLines.length];
+//                    int added = 0;
+//                    for (int i = 0; i < chunkLines.length; i++) {
+//                        newChunkLines[i] = "    " + chunkLines[i];
+//                        added += 4;
+//                    }
+//                    String newChunk = String.join("\n", newChunkLines);
+//                    String newContent = content.substring(0, chunkStart)
+//                                        + newChunk
+//                                        + content.substring(chunkEnd);
+//                    textarea.setValue(newContent);
+//                    // the first line always gets +4 when indenting
+//                    int newSelectionStart = oldSelectionStart + 4;
+//                    int newSelectionEnd = oldSelectionEnd + added;
+//                    textarea.setSelected(newSelectionStart, newSelectionEnd, cursorAtStart);
+//                }
+//            }, () -> { // no selection
+//                if (Screen.hasShiftDown()) { // de-indent
+//                    int oldCursor = textarea.getCursorPosition();
+//                    int startOfLine = findStartOfLine(content, textarea.getCursorPosition());
+//
+//                    // count up to 4 whitespace characters to remove
+//                    int end = startOfLine;
+//                    for (int i = 4; i > 0; i--) {
+//                        if (content.substring(startOfLine, startOfLine + i).isBlank()) {
+//                            end = startOfLine + i;
+//                            break;
+//                        }
+//                    }
+//                    if (end > startOfLine) {
+//                        // commit new content
+//                        String newContent = content.substring(0, startOfLine) + content.substring(end);
+//                        textarea.setValue(newContent);
+//                        textarea.setSelecting(false);
+//                        int newCursor = Math.max(startOfLine, oldCursor - (end - startOfLine));
+//                        textarea.seekCursor(Whence.ABSOLUTE, newCursor);
+//                    }
+//                } else { // insert 4 spaces
+//                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+//                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+//                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+//                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
+//                }
+//            });
             return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
@@ -255,7 +281,15 @@ public class ProgramEditScreen extends Screen {
         }
 
         public int getCursorPosition() {
-            return this.textField.cursor();
+            return this.textField.cursor;
+        }
+
+        public void setCursorPosition(int cursor) {
+            this.textField.cursor = cursor;
+        }
+
+        public void setSelecting(boolean selecting) {
+            this.textField.setSelecting(selecting);
         }
 
         @Override
@@ -271,6 +305,14 @@ public class ProgramEditScreen extends Screen {
         public Optional<MultilineTextField.StringView> getSelected() {
             if (!this.textField.hasSelection()) return Optional.empty();
             return Optional.of(this.textField.getSelected());
+        }
+
+        public int getSelectionCursorPosition() {
+            return this.textField.selectCursor;
+        }
+
+        public void setSelectionCursorPosition(int cursor) {
+            this.textField.selectCursor = cursor;
         }
 
         @Override
@@ -375,9 +417,6 @@ public class ProgramEditScreen extends Screen {
             }
         }
 
-        public void setSelecting(boolean selecting) {
-            this.textField.setSelecting(selecting);
-        }
     }
 }
 
