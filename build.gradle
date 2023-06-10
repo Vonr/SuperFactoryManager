@@ -63,7 +63,7 @@ static void extendConfigurations(Configuration base, Configuration... configurat
 }
 
 
-version = '4.10.1'
+version = '4.10.2'
 group = 'ca.teamdman.sfm' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'SuperFactoryManager-1.19.4'
 
@@ -282,7 +282,9 @@ jar.finalizedBy('reobfJar')
 
 publishing {
     publications {
+        //noinspection GroovyAssignabilityCheck
         mavenJava(MavenPublication) {
+            //noinspection GroovyAssignabilityCheck
             artifact jar
         }
     }
