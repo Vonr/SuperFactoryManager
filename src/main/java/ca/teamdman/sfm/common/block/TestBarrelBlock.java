@@ -6,11 +6,10 @@ import net.minecraft.world.level.block.BarrelBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 
 public class TestBarrelBlock extends BarrelBlock {
     public TestBarrelBlock() {
-        super(BlockBehaviour.Properties.of(Material.WOOD).strength(2.5F).sound(SoundType.WOOD));
+        super(BlockBehaviour.Properties.of().strength(2.5F).sound(SoundType.WOOD));
     }
 
     @Override

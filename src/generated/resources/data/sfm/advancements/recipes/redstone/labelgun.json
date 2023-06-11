@@ -28,5 +28,6 @@
     "recipes": [
       "sfm:labelgun"
     ]
-  }
+  },
+  "sends_telemetry_event": false
 }

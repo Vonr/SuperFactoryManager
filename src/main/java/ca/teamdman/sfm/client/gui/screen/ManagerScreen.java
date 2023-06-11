@@ -9,9 +9,13 @@ import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -233,28 +237,30 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
-    protected void renderLabels(PoseStack poseStack, int mx, int my) {
+    protected void renderLabels(GuiGraphics graphics, int mx, int my) {
         // draw title
-        super.renderLabels(poseStack, mx, my);
+        super.renderLabels(graphics, mx, my);
 
         // draw state string
         var state = menu.state;
-        this.font.draw(
-                poseStack,
-                MANAGER_GUI_STATE.getComponent(state.LOC.getComponent().withStyle(state.COLOR)),
+        graphics.drawString(
+                this.font,
+                MANAGER_GUI_STATE.getComponent(state.LOC.getComponent().withStyle(state.COLOR)).withStyle(),
                 titleLabelX,
                 20,
-                0
+                0,
+                false
         );
 
         // draw status string
         if (statusCountdown > 0) {
-            this.font.draw(
-                    poseStack,
+            graphics.drawString(
+                    this.font,
                     status,
                     inventoryLabelX + font.width(playerInventoryTitle.getString()) + 5,
                     inventoryLabelY,
-                    0
+                    0,
+                    false
             );
         }
 
@@ -278,7 +284,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         Tesselator tesselator = Tesselator.getInstance();
-        Matrix4f pose = poseStack.last().pose();
+        Matrix4f pose = graphics.pose().last().pose();
         BufferBuilder bufferbuilder;
 
         // Draw the plot background
@@ -329,14 +335,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         if (mouseTickTimeIndex != -1) { // We are hovering over the plot
             // Draw the tick time text for the hovered point instead of peak
             long hoveredY = menu.tickTimeNanos[mouseTickTimeIndex];
-            this.font.draw(
-                    poseStack,
+            graphics.drawString(
+                    this.font,
                     MANAGER_GUI_HOVERED_TICK_TIME.getComponent(Component
                                                                        .literal(format.format(hoveredY))
                                                                        .withStyle(getNanoColour(hoveredY))),
                     titleLabelX,
-                    20f + font.lineHeight + 0.1f,
-                    0
+                    20 + font.lineHeight,
+                    0,
+                    false
             );
 
             // draw a vertical line
@@ -344,7 +351,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             tesselator = Tesselator.getInstance();
             bufferbuilder = tesselator.getBuilder();
             bufferbuilder.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
-            pose = poseStack.last().pose();
+            pose = graphics.pose().last().pose();
 
             int x = plotX + spaceBetweenPoints * mouseTickTimeIndex;
             bufferbuilder
@@ -358,14 +365,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             tesselator.end();
         } else {
             // Draw the tick time text for peak value
-            this.font.draw(
-                    poseStack,
+            graphics.drawString(
+                    this.font,
                     MANAGER_GUI_PEAK_TICK_TIME.getComponent(Component
                                                                     .literal(format.format(peakTickTime))
                                                                     .withStyle(getNanoColour(peakTickTime))),
                     titleLabelX,
-                    20f + font.lineHeight + 0.1f,
-                    0
+                    20 + font.lineHeight,
+                    0,
+                    false
             );
         }
 
@@ -384,10 +392,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
-    public void render(PoseStack poseStack, int mx, int my, float partialTicks) {
-        this.renderBackground(poseStack);
-        super.render(poseStack, mx, my, partialTicks);
-        this.renderTooltip(poseStack, mx, my);
+    public void render(GuiGraphics graphics, int mx, int my, float partialTicks) {
+        this.renderBackground(graphics);
+        super.render(graphics, mx, my, partialTicks);
+        this.renderTooltip(graphics, mx, my);
 
         // update diag button visibility
         diagButton.visible = shouldShowDiagButton();
@@ -397,13 +405,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int mx, int my) {
-        //        Lighting.setupForFlatItems();
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE_LOCATION);
+    protected void renderBg(GuiGraphics graphics, float partialTicks, int mx, int my) {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
-        blit(matrixStack, i, j, 0, 0, this.imageWidth, this.imageHeight);
+        graphics.blit(BACKGROUND_TEXTURE_LOCATION, i, j, 0, 0, this.imageWidth, this.imageHeight);
     }
 }

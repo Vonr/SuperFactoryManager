@@ -120,7 +120,7 @@ public class SFMPackets {
             if (!menuClass.isInstance(menu)) return;
             if (menu.containerId != containerId) return;
 
-            var level = sender.getLevel();
+            var level = sender.level();
             //noinspection ConstantValue
             if (level == null) return;
             if (!level.isLoaded(pos)) return;

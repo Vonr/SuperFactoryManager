@@ -41,5 +41,6 @@
     "recipes": [
       "sfm:cable"
     ]
-  }
+  },
+  "sends_telemetry_event": false
 }

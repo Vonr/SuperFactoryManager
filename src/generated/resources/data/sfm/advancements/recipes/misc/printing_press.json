@@ -30,5 +30,6 @@
     "recipes": [
       "sfm:printing_press"
     ]
-  }
+  },
+  "sends_telemetry_event": false
 }

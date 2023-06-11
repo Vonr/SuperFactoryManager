@@ -8,13 +8,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 public class CableBlock extends Block implements ICable {
 
     public CableBlock() {
-        super(Block.Properties
-                      .of(Material.METAL)
+        super(Block.Properties.of()
+                      .instrument(NoteBlockInstrument.BASS)
                       .destroyTime(1f)
                       .sound(SoundType.METAL));
     }

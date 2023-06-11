@@ -25,7 +25,6 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.material.Material;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -36,7 +35,7 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
 
 
     public WaterTankBlock() {
-        super(BlockBehaviour.Properties.of(Material.PISTON).destroyTime(2).sound(SoundType.WOOD));
+        super(BlockBehaviour.Properties.of().destroyTime(2).sound(SoundType.WOOD));
         registerDefaultState(getStateDefinition().any().setValue(IN_WATER, false));
     }
 
@@ -88,7 +87,6 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }

@@ -30,5 +30,6 @@
     "recipes": [
       "sfm:disk"
     ]
-  }
+  },
+  "sends_telemetry_event": false
 }

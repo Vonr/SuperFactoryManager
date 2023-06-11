@@ -6,8 +6,8 @@ import ca.teamdman.sfm.common.net.ServerboundLabelGunPrunePacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
 import ca.teamdman.sfm.common.program.LabelHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -136,14 +136,14 @@ public class LabelGunScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack poseStack, int mx, int my, float partialTicks) {
+    public void render(GuiGraphics graphics, int mx, int my, float partialTicks) {
         if (shouldRebuildWidgets) {
             // we delay this because focus gets reset _after_ the button event handler
             // we want to end with the label input field focused
             shouldRebuildWidgets = false;
             rebuildWidgets();
         }
-        this.renderBackground(poseStack);
-        super.render(poseStack, mx, my, partialTicks);
+        this.renderBackground(graphics);
+        super.render(graphics, mx, my, partialTicks);
     }
 }

@@ -30,5 +30,6 @@
     "recipes": [
       "sfm:xp_goop"
     ]
-  }
+  },
+  "sends_telemetry_event": false
 }

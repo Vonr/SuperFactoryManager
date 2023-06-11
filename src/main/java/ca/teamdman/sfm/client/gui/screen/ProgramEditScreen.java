@@ -4,15 +4,14 @@ import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.gui.IndentationUtils;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.item.DiskItem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
-import net.minecraft.client.gui.components.Whence;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.Whence;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -203,9 +202,9 @@ public class ProgramEditScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack poseStack, int mx, int my, float partialTicks) {
-        this.renderBackground(poseStack);
-        super.render(poseStack, mx, my, partialTicks);
+    public void render(GuiGraphics graphics, int mx, int my, float partialTicks) {
+        this.renderBackground(graphics);
+        super.render(graphics, mx, my, partialTicks);
     }
 
     private class MyMultiLineEditBox extends MultiLineEditBox {
@@ -302,8 +301,8 @@ public class ProgramEditScreen extends Screen {
         }
 
         @Override
-        protected void renderContents(PoseStack poseStack, int mx, int my, float partialTicks) {
-            Matrix4f matrix4f = poseStack.last().pose();
+        protected void renderContents(GuiGraphics graphics, int mx, int my, float partialTicks) {
+            Matrix4f matrix4f = graphics.pose().last().pose();
             if (!lastProgram.equals(this.textField.value())) {
                 lastProgram = this.textField.value();
                 lastProgramWithSyntaxHighlighting = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(lastProgram);
@@ -384,7 +383,7 @@ public class ProgramEditScreen extends Screen {
                     int highlightEndX = this.font.width(substring(componentColoured, 0, lineSelectionEnd));
 
                     this.renderHighlight(
-                            poseStack,
+                            graphics,
                             lineX + highlightStartX,
                             lineY,
                             lineX + highlightEndX,
@@ -397,9 +396,9 @@ public class ProgramEditScreen extends Screen {
             }
 
             if (isCursorAtEndOfLine) {
-                this.font.drawShadow(poseStack, "_", cursorX, cursorY, -1);
+                graphics.drawString(this.font, "_", cursorX, cursorY, -1);
             } else {
-                GuiComponent.fill(poseStack, cursorX, cursorY - 1, cursorX + 1, cursorY + 1 + 9, -1);
+                graphics.fill(cursorX, cursorY - 1, cursorX + 1, cursorY + 1 + 9, -1);
             }
         }
     }

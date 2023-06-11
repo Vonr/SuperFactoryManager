@@ -96,7 +96,7 @@ public class LabelGunWorldRenderer {
             RENDER_TYPE.setupRenderState();
 
             if (vbo == null) {
-                vbo = new VertexBuffer();
+                vbo = new VertexBuffer(VertexBuffer.Usage.STATIC);
                 vbo.bind();
                 vbo.upload(createShape());
             } else {

@@ -23,7 +23,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 
@@ -33,8 +32,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     public static final BooleanProperty TRIGGERED = BlockStateProperties.TRIGGERED;
 
     public ManagerBlock() {
-        super(BlockBehaviour.Properties
-                      .of(Material.PISTON)
+        super(BlockBehaviour.Properties.of()
                       .destroyTime(2)
                       .sound(SoundType.METAL));
         registerDefaultState(getStateDefinition().any().setValue(TRIGGERED, false));
@@ -45,7 +43,6 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         builder.add(TRIGGERED);
     }
 
-    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }

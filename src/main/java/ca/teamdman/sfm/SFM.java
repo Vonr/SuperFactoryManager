@@ -20,6 +20,7 @@ public class SFM {
                 .getModEventBus();
         SFMBlocks.register(bus);
         SFMItems.register(bus);
+        SFMCreativeTabs.register(bus);
         SFMResourceTypes.register(bus);
         SFMBlockEntities.register(bus);
         SFMCapabilityProviderMappers.register(bus);

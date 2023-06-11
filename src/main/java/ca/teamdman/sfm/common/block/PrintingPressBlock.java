@@ -13,13 +13,12 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 
 public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
 
     public PrintingPressBlock() {
-        super(BlockBehaviour.Properties.of(Material.METAL).strength(5.0F, 6.0F).noOcclusion());
+        super(BlockBehaviour.Properties.of().strength(5.0F, 6.0F).noOcclusion());
         this.registerDefaultState(this.defaultBlockState());
     }
 
@@ -30,7 +29,6 @@ public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
                 .create(pos, state);
     }
 
-    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
