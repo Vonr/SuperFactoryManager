@@ -27,20 +27,28 @@ public class IndentationUtils {
         StringBuilder sb = new StringBuilder(content);
         int lineStart = findLineStart(content, Math.min(cursorPos, selectionCursorPos));
         int lineEnd = findLineEnd(content, Math.max(cursorPos, selectionCursorPos));
-
-        while (lineStart < lineEnd) {
+        if (lineStart == lineEnd) {
             sb.insert(lineStart, "    ");
-            lineEnd += 4;
-            if (lineStart < cursorPos) {
+            if (lineStart <= cursorPos) {
                 cursorPos += 4;
             }
-            if (lineStart < selectionCursorPos) {
+            if (lineStart <= selectionCursorPos) {
                 selectionCursorPos += 4;
             }
-            lineStart = findLineEnd(sb.toString(), lineStart) + 1;
+        } else {
+            while (lineStart < lineEnd) {
+                sb.insert(lineStart, "    ");
+                lineEnd += 4;
+                if (lineStart < cursorPos) {
+                    cursorPos += 4;
+                }
+                if (lineStart < selectionCursorPos) {
+                    selectionCursorPos += 4;
+                }
+                lineStart = findLineEnd(sb.toString(), lineStart) + 1;
+            }
         }
         return new IndentationResult(sb.toString(), cursorPos, selectionCursorPos);
-
     }
 
     /**

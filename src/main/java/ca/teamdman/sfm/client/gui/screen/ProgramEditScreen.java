@@ -12,7 +12,6 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
-import net.minecraft.client.gui.components.Whence;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -99,35 +98,6 @@ public class ProgramEditScreen extends Screen {
         onClose();
     }
 
-    /**
-     * Remove a layer of indentation from a line of text
-     */
-    public static String leftTrim4(String s) {
-        int i = 0;
-        while (i < s.length() && s.charAt(i) == ' ' && i < 4) {
-            i++;
-        }
-        return s.substring(i);
-    }
-
-    public static int findStartOfLine(String content, int start) {
-        for (int i = start; i > 0; i--) {
-            if (content.charAt(i - 1) == '\n') {
-                return i;
-            }
-        }
-        return 0;
-    }
-
-    public static int findEndOfLine(String content, int start) {
-        for (int i = start; i < content.length(); i++) {
-            if (content.charAt(i) == '\n') {
-                return i;
-            }
-        }
-        return content.length();
-    }
-
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {
@@ -151,86 +121,6 @@ public class ProgramEditScreen extends Screen {
             textarea.setValue(result.content());
             textarea.setCursorPosition(result.cursorPosition());
             textarea.setSelectionCursorPosition(result.selectionCursorPosition());
-//            this.textarea.getSelected().ifPresentOrElse(selectionView -> { // selection present
-//                int oldSelectionStart = selectionView.beginIndex();
-//                int oldSelectionEnd = selectionView.endIndex();
-//                int oldSelectionSize = oldSelectionEnd - oldSelectionStart;
-//                boolean cursorAtStart = textarea.getCursorPosition() == oldSelectionStart;
-//                int chunkStart = findStartOfLine(content, oldSelectionStart);
-//                int chunkEnd = findEndOfLine(content, oldSelectionEnd);
-//                String chunk = content.substring(chunkStart, chunkEnd);
-//                int chunkSelectionStart = oldSelectionStart - chunkStart;
-//                int chunkSelectionEnd = oldSelectionEnd - chunkStart;
-//                if (Screen.hasShiftDown()) { // de-indent
-//                    String[] chunkLines = chunk.split("\n", -1);
-//                    String[] newChunkLines = new String[chunkLines.length];
-//                    int totalRemoved = 0;
-//                    int removedFromSelectionStart = 0;
-//                    for (int i = 0; i < chunkLines.length; i++) {
-//                        newChunkLines[i] = leftTrim4(chunkLines[i]);
-//                        int removed = chunkLines[i].length() - newChunkLines[i].length();
-//                        if (i == 0) {
-//                            removedFromSelectionStart = Math.min(removed, chunkSelectionStart);
-//                        }
-//                        if (chunkSelectionStart < chunkLines[i].length() && chunkSelectionEnd > 0) {
-//                            totalRemoved += removed;
-//                        }
-//                    }
-//                    String newChunk = String.join("\n", newChunkLines);
-//                    String newContent = content.substring(0, chunkStart)
-//                                        + newChunk
-//                                        + content.substring(chunkEnd);
-//                    textarea.setValue(newContent);
-//
-//                    int newSelectionStart = oldSelectionStart - removedFromSelectionStart;
-//                    int newSelectionEnd = newSelectionStart + oldSelectionSize - totalRemoved;
-//                    textarea.setSelected(newSelectionStart, newSelectionEnd, cursorAtStart);
-//                } else { // indent
-//                    String[] chunkLines = chunk.split("\n", -1);
-//                    String[] newChunkLines = new String[chunkLines.length];
-//                    int added = 0;
-//                    for (int i = 0; i < chunkLines.length; i++) {
-//                        newChunkLines[i] = "    " + chunkLines[i];
-//                        added += 4;
-//                    }
-//                    String newChunk = String.join("\n", newChunkLines);
-//                    String newContent = content.substring(0, chunkStart)
-//                                        + newChunk
-//                                        + content.substring(chunkEnd);
-//                    textarea.setValue(newContent);
-//                    // the first line always gets +4 when indenting
-//                    int newSelectionStart = oldSelectionStart + 4;
-//                    int newSelectionEnd = oldSelectionEnd + added;
-//                    textarea.setSelected(newSelectionStart, newSelectionEnd, cursorAtStart);
-//                }
-//            }, () -> { // no selection
-//                if (Screen.hasShiftDown()) { // de-indent
-//                    int oldCursor = textarea.getCursorPosition();
-//                    int startOfLine = findStartOfLine(content, textarea.getCursorPosition());
-//
-//                    // count up to 4 whitespace characters to remove
-//                    int end = startOfLine;
-//                    for (int i = 4; i > 0; i--) {
-//                        if (content.substring(startOfLine, startOfLine + i).isBlank()) {
-//                            end = startOfLine + i;
-//                            break;
-//                        }
-//                    }
-//                    if (end > startOfLine) {
-//                        // commit new content
-//                        String newContent = content.substring(0, startOfLine) + content.substring(end);
-//                        textarea.setValue(newContent);
-//                        textarea.setSelecting(false);
-//                        int newCursor = Math.max(startOfLine, oldCursor - (end - startOfLine));
-//                        textarea.seekCursor(Whence.ABSOLUTE, newCursor);
-//                    }
-//                } else { // insert 4 spaces
-//                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-//                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-//                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-//                    textarea.charTyped(' ', GLFW.GLFW_KEY_SPACE);
-//                }
-//            });
             return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
@@ -263,33 +153,12 @@ public class ProgramEditScreen extends Screen {
             );
         }
 
-        public void seekCursor(Whence whence, int amount) {
-            this.textField.seekCursor(whence, amount);
-        }
-
-        public void setSelected(int start, int end, boolean cursorAtStart) {
-            if (cursorAtStart) {
-                // flip start and end
-                int x = start;
-                start = end;
-                end = x;
-            }
-            this.textField.setSelecting(false);
-            this.textField.seekCursor(Whence.ABSOLUTE, start);
-            this.textField.setSelecting(true);
-            this.textField.seekCursor(Whence.ABSOLUTE, end);
-        }
-
         public int getCursorPosition() {
             return this.textField.cursor;
         }
 
         public void setCursorPosition(int cursor) {
             this.textField.cursor = cursor;
-        }
-
-        public void setSelecting(boolean selecting) {
-            this.textField.setSelecting(selecting);
         }
 
         @Override
@@ -300,11 +169,6 @@ public class ProgramEditScreen extends Screen {
                 e.printStackTrace();
                 return false;
             }
-        }
-
-        public Optional<MultilineTextField.StringView> getSelected() {
-            if (!this.textField.hasSelection()) return Optional.empty();
-            return Optional.of(this.textField.getSelected());
         }
 
         public int getSelectionCursorPosition() {
