@@ -159,6 +159,18 @@ public class Constants {
                 "gui.sfm.title.labelgun",
                 "Label Gun"
         );
+        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_WARNING_1 = new LocalizationEntry(
+                "gui.sfm.program_template_picker.warning1",
+                "Hitting \"Done\" will on the next screen will overwrite your existing program!"
+        );
+        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_WARNING_2 = new LocalizationEntry(
+                "gui.sfm.program_template_picker.warning2",
+                "Hit <esc> to cancel instead."
+        );
+        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_TITLE = new LocalizationEntry(
+                "gui.sfm.title.program_template_picker",
+                "Program Template Picker"
+        );
         public static final LocalizationEntry LABEL_GUN_GUI_LABEL_PLACEHOLDER = new LocalizationEntry(
                 "gui.sfm.label_gun.placeholder",
                 "Label"
@@ -273,6 +285,10 @@ public class Constants {
         public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON = new LocalizationEntry(
                 "gui.sfm.manager.button.view_examples",
                 "View examples"
+        );
+        public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.manager.button.view_examples.tooltip",
+                "Press Ctrl+Shift+E to view examples."
         );
         public static final LocalizationEntry MANAGER_GUI_RESET_BUTTON = new LocalizationEntry(
                 "gui.sfm.manager.button.reset",

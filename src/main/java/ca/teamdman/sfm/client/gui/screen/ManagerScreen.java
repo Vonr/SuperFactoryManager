@@ -129,13 +129,27 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         my
                 )
         ));
-        examplesButton = this.addRenderableWidget(new ExtendedButton(
+        examplesButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
                 (this.height - this.imageHeight) / 2 + 16 * 2 + 50,
                 buttonWidth,
                 16,
                 MANAGER_GUI_VIEW_EXAMPLES_BUTTON.getComponent(),
-                button -> this.onSaveClipboard()
+                button -> onShowExamples(),
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
+                        ),
+                        mx,
+                        my
+                )
         ));
 
         clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
@@ -206,6 +220,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     private void onEdit() {
         ClientStuff.showProgramEditScreen(menu.CONTAINER.getItem(0), this::sendProgram);
+    }
+
+    private void onShowExamples() {
+        Minecraft
+                .getInstance()
+                .pushGuiLayer(new ProgramTemplatePickerScreen(template -> ClientStuff.showProgramEditScreen(
+                        template,
+                        this::sendProgram
+                )));
     }
 
     private void sendReset() {
@@ -306,6 +329,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             return true;
         } else if (Screen.isCopy(pKeyCode) && clipboardCopyButton.visible) {
             onSaveClipboard();
+            return true;
+        } else if (pKeyCode == GLFW.GLFW_KEY_E
+                   && Screen.hasControlDown()
+                   && Screen.hasShiftDown()
+                   && examplesButton.visible) {
+            onShowExamples();
             return true;
         } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown() && editButton.visible) {
             onEdit();

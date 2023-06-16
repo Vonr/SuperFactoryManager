@@ -3,7 +3,6 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.gui.IndentationUtils;
 import ca.teamdman.sfm.common.Constants;
-import ca.teamdman.sfm.common.item.DiskItem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
@@ -19,7 +18,6 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Collections;
@@ -31,16 +29,16 @@ import java.util.function.Consumer;
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
 public class ProgramEditScreen extends Screen {
+    private final String INITIAL_CONTENT;
     private final Consumer<String> CALLBACK;
-    private final ItemStack DISK_STACK;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private MyMultiLineEditBox textarea;
     private String lastProgram = "";
     private List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
 
-    public ProgramEditScreen(ItemStack diskStack, Consumer<String> callback) {
+    public ProgramEditScreen(String initialContent, Consumer<String> callback) {
         super(Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TITLE.getComponent());
-        this.DISK_STACK = diskStack;
+        this.INITIAL_CONTENT = initialContent;
         this.CALLBACK = callback;
     }
 
@@ -66,7 +64,7 @@ public class ProgramEditScreen extends Screen {
         assert this.minecraft != null;
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
         this.textarea = this.addRenderableWidget(new MyMultiLineEditBox());
-        textarea.setValue(DiskItem.getProgram(DISK_STACK));
+        textarea.setValue(INITIAL_CONTENT);
         this.setInitialFocus(textarea);
 
         this.addRenderableWidget(new Button(
