@@ -5,6 +5,7 @@ import ca.teamdman.sfm.client.gui.screen.LabelGunScreen;
 import ca.teamdman.sfm.client.gui.screen.ProgramEditScreen;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiPacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -33,16 +34,20 @@ public class ClientStuff {
                 .setScreen(new LabelGunScreen(stack, hand));
     }
 
-    public static void showProgramEditScreen(ItemStack diskItem, Consumer<String> programSetter) {
+    public static void showProgramEditScreen(String initialContent, Consumer<String> callback) {
         if (Minecraft.getInstance().screen == null) {
             Minecraft
                     .getInstance()
-                    .setScreen(new ProgramEditScreen(diskItem, programSetter));
+                    .setScreen(new ProgramEditScreen(initialContent, callback));
         } else {
             Minecraft
                     .getInstance()
-                    .pushGuiLayer(new ProgramEditScreen(diskItem, programSetter));
+                    .pushGuiLayer(new ProgramEditScreen(initialContent, callback));
         }
+    }
+
+    public static void showProgramEditScreen(ItemStack diskItem, Consumer<String> callback) {
+        showProgramEditScreen(DiskItem.getProgram(diskItem), callback);
     }
 
     @SubscribeEvent

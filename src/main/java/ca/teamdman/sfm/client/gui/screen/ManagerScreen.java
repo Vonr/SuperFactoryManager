@@ -27,6 +27,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
@@ -41,7 +42,25 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private float statusCountdown = 0;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton diagButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton clipboardPasteButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton clipboardCopyButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton resetButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton editButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton examplesButton;
 
+    public List<ExtendedButton> getButtonsForJEIExclusionZones() {
+        return List.of(
+                clipboardPasteButton,
+                editButton,
+                examplesButton,
+                clipboardCopyButton
+        );
+    }
 
     public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -52,55 +71,107 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         return player == null || player.isSpectator();
     }
 
+    public void updateVisibilities() {
+        boolean diskPresent = menu.getSlot(0).hasItem();
+        diagButton.visible = shouldShowDiagButton();
+        clipboardCopyButton.visible = diskPresent;
+        clipboardPasteButton.visible = diskPresent && !isReadOnly();
+        resetButton.visible = diskPresent && !isReadOnly();
+        editButton.visible = diskPresent && !isReadOnly();
+    }
+
     @Override
     protected void init() {
         super.init();
-        if (!isReadOnly()) {
-            this.addRenderableWidget(new ExtendedButtonWithTooltip(
-                    (this.width - this.imageWidth) / 2
-                    - 24
-                    - font.width(MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent()),
-                    (this.height - this.imageHeight) / 2 + 16,
-                    100,
-                    16,
-                    MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent(),
-                    button -> this.onLoadClipboard(),
-                    Tooltip.create(MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent())
-            ));
-            this.addRenderableWidget(new ExtendedButtonWithTooltip(
-                    (this.width - this.imageWidth) / 2 + 120,
-                    (this.height - this.imageHeight) / 2 + 10,
-                    50,
-                    12,
-                    MANAGER_GUI_BUTTON_RESET.getComponent(),
-                    button -> sendReset(),
-                    Tooltip.create(MANAGER_RESET_BUTTON_TOOLTIP.getComponent())
-            ));
-            this.addRenderableWidget(new ExtendedButtonWithTooltip(
-                    (this.width - this.imageWidth) / 2
-                    - 24
-                    - font.width(MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD.getComponent()),
-                    (this.height - this.imageHeight) / 2 + 16 + 50,
-                    100,
-                    16,
-                    MANAGER_GUI_EDIT_BUTTON.getComponent(),
-                    button -> onEdit(),
-                    Tooltip.create(MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent())
-            ));
-        }
-
-        this.addRenderableWidget(new ExtendedButton(
-                (this.width - this.imageWidth) / 2
-                - 22
-                - font.width(MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent()),
-                (this.height - this.imageHeight) / 2 + 128,
-                100,
+        int buttonWidth = 120;
+        clipboardPasteButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16,
+                buttonWidth,
                 16,
-                MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD.getComponent(),
+                MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON.getComponent(),
+                button -> this.onLoadClipboard(),
+                Tooltip.create(MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent())
+        ));
+
+
+        editButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16 + 50,
+                buttonWidth,
+                16,
+                MANAGER_GUI_EDIT_BUTTON.getComponent(),
+                button -> onEdit(),
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
+                        ),
+                        mx,
+                        my
+                )
+        ));
+        examplesButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16 * 2 + 50,
+                buttonWidth,
+                16,
+                MANAGER_GUI_VIEW_EXAMPLES_BUTTON.getComponent(),
+                button -> onShowExamples(),
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
+                        ),
+                        mx,
+                        my
+                )
+        ));
+
+        clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 128,
+                buttonWidth,
+                16,
+                MANAGER_GUI_COPY_TO_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onSaveClipboard()
         ));
 
-        this.addRenderableWidget(diagButton = new ExtendedButtonWithTooltip(
+        resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                (this.width - this.imageWidth) / 2 + 120,
+                (this.height - this.imageHeight) / 2 + 10,
+                50,
+                12,
+                MANAGER_GUI_RESET_BUTTON.getComponent(),
+                button -> sendReset(),
+                (btn, pose, mx, my) -> renderTooltip(
+                        pose,
+                        font.split(
+                                MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
+                                Math.max(
+                                        width
+                                        / 2
+                                        - 43,
+                                        170
+                                )
+                        ),
+                        mx,
+                        my
+                )
+        ));
+        diagButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
                 (this.height - this.imageHeight) / 2 + 48,
                 12,
@@ -119,11 +190,20 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                                        : MANAGER_GUI_WARNING_BUTTON_TOOLTIP
                                ).getComponent())
         ));
-        diagButton.visible = shouldShowDiagButton();
+        updateVisibilities();
     }
 
     private void onEdit() {
         ClientStuff.showProgramEditScreen(menu.CONTAINER.getItem(0), this::sendProgram);
+    }
+
+    private void onShowExamples() {
+        Minecraft
+                .getInstance()
+                .pushGuiLayer(new ProgramTemplatePickerScreen(template -> ClientStuff.showProgramEditScreen(
+                        template,
+                        this::sendProgram
+                )));
     }
 
     private void sendReset() {
@@ -219,13 +299,19 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
-        if (Screen.isPaste(pKeyCode)) {
+        if (Screen.isPaste(pKeyCode) && clipboardPasteButton.visible) {
             onLoadClipboard();
             return true;
-        } else if (Screen.isCopy(pKeyCode)) {
+        } else if (Screen.isCopy(pKeyCode) && clipboardCopyButton.visible) {
             onSaveClipboard();
             return true;
-        } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown()) {
+        } else if (pKeyCode == GLFW.GLFW_KEY_E
+                   && Screen.hasControlDown()
+                   && Screen.hasShiftDown()
+                   && examplesButton.visible) {
+            onShowExamples();
+            return true;
+        } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown() && editButton.visible) {
             onEdit();
             return true;
         }
@@ -389,8 +475,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         super.render(poseStack, mx, my, partialTicks);
         this.renderTooltip(poseStack, mx, my);
 
-        // update diag button visibility
-        diagButton.visible = shouldShowDiagButton();
+        updateVisibilities();
 
         // update status countdown
         statusCountdown -= partialTicks;

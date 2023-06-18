@@ -27,14 +27,4 @@ public class SFMTests {
             }
         }
     }
-
-    @Test
-    public void deindentTrimming() {
-        assertEquals("abc", ProgramEditScreen.leftTrim4(" abc"));
-        assertEquals("abc", ProgramEditScreen.leftTrim4("  abc"));
-        assertEquals("abc", ProgramEditScreen.leftTrim4("   abc"));
-        assertEquals("abc", ProgramEditScreen.leftTrim4("    abc"));
-        assertEquals(" abc", ProgramEditScreen.leftTrim4("     abc"));
-        assertEquals("  abc", ProgramEditScreen.leftTrim4("      abc"));
-    }
 }

@@ -1,0 +1,14 @@
+name "Furnace Manager"
+
+every 20 ticks do
+    input from "to be smelted"
+    output 8 to each furnace top side
+end
+every 20 ticks do
+    input from fuel
+    output 1 to each furnace bottom side 
+end
+every 20 ticks do
+    input from furnace bottom side
+    output to results
+end
