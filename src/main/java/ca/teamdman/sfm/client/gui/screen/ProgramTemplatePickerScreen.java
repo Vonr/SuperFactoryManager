@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfml.ast.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -42,13 +43,22 @@ public class ProgramTemplatePickerScreen extends Screen {
         for (var entry : found.entrySet()) {
             try (BufferedReader reader = entry.getValue().openAsReader()) {
                 String program = reader.lines().collect(Collectors.joining("\n"));
+                if (program.contains("$REPLACE_RESOURCE_TYPES_HERE$")) {
+                    var replacement = SFMResourceTypes.DEFERRED_TYPES.get().getEntries()
+                            .stream()
+                            .map(e -> e.getKey().location().getPath())
+                            .map(e -> "INPUT " + e + ":: FROM a")
+                            .collect(Collectors.joining("\n    "));
+                    program = program.replace("$REPLACE_RESOURCE_TYPES_HERE$", replacement);
+                }
+                String finalProgram = program;
                 Program.compile(
                         program,
                         success -> templatePrograms.put(
                                 success.name().isBlank() ? entry.getKey().toString() : success.name(),
-                                program
+                                finalProgram
                         ),
-                        failure -> templatePrograms.put(entry.getKey().toString(), program)
+                        failure -> templatePrograms.put(entry.getKey().toString(), finalProgram)
                 );
             } catch (IOException ignored) {
             }
