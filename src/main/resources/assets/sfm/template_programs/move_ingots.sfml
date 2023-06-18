@@ -1,0 +1,6 @@
+name "Move Ingots"
+
+EVERY 20 TICKS DO
+    INPUT *ingot* FROM a
+    OUTPUT TO b
+END

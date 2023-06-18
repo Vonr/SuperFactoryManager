@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -144,6 +145,11 @@ public class LabelHolder {
 
     public LabelHolder removeIf(BiPredicate<String, BlockPos> predicate) {
         LABELS.forEach((key, value) -> value.removeIf(pos -> predicate.test(key, pos)));
+        return this;
+    }
+
+    public LabelHolder removeIf(Predicate<String> predicate) {
+        LABELS.keySet().removeIf(predicate);
         return this;
     }
 

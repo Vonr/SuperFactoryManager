@@ -1,0 +1,9 @@
+name "Redstone Item Move"
+
+EVERY 20 TICKS DO
+    -- redstone is a keyword
+    -- when we want to move the redstone item
+    -- we have to put it in quotes
+    input "redstone" from a
+    output to b
+END

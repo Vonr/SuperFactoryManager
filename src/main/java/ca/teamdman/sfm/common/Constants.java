@@ -161,6 +161,18 @@ public class Constants {
                 "gui.sfm.title.labelgun",
                 "Label Gun"
         );
+        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_WARNING_1 = new LocalizationEntry(
+                "gui.sfm.program_template_picker.warning1",
+                "Hitting \"Done\" will on the next screen will overwrite your existing program!"
+        );
+        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_WARNING_2 = new LocalizationEntry(
+                "gui.sfm.program_template_picker.warning2",
+                "Hit <esc> to cancel instead."
+        );
+        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_TITLE = new LocalizationEntry(
+                "gui.sfm.title.program_template_picker",
+                "Program Template Picker"
+        );
         public static final LocalizationEntry LABEL_GUN_GUI_LABEL_PLACEHOLDER = new LocalizationEntry(
                 "gui.sfm.label_gun.placeholder",
                 "Label"
@@ -179,7 +191,7 @@ public class Constants {
                 "Clear"
         );
 
-        public static final LocalizationEntry MANAGER_GUI_PASTE_BUTTON_TOOLTIP = new LocalizationEntry(
+        public static final LocalizationEntry MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.tooltip.paste",
                 "Press Ctrl+V to paste."
         );
@@ -191,7 +203,7 @@ public class Constants {
                 "gui.sfm.manager.edit_button",
                 "Edit"
         );
-        public static final LocalizationEntry MANAGER_RESET_BUTTON_TOOLTIP = new LocalizationEntry(
+        public static final LocalizationEntry MANAGER_GUI_RESET_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.tooltip.reset",
                 "Wipes ALL disk data."
         );
@@ -264,15 +276,23 @@ public class Constants {
                 "gui.sfm.manager.state.invalid_program",
                 "invalid program"
         );
-        public static final LocalizationEntry MANAGER_GUI_BUTTON_IMPORT_CLIPBOARD = new LocalizationEntry(
-                "gui.sfm.manager.button.import_clipboard",
-                "Import clipboard"
+        public static final LocalizationEntry MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.button.paste_clipboard",
+                "Paste from clipboard"
         );
-        public static final LocalizationEntry MANAGER_GUI_BUTTON_EXPORT_CLIPBOARD = new LocalizationEntry(
-                "gui.sfm.manager.button.export_clipboard",
-                "Export clipboard"
+        public static final LocalizationEntry MANAGER_GUI_COPY_TO_CLIPBOARD_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.button.copy_to_clipboard",
+                "Copy to clipboard"
         );
-        public static final LocalizationEntry MANAGER_GUI_BUTTON_RESET = new LocalizationEntry(
+        public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.button.view_examples",
+                "View examples"
+        );
+        public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.manager.button.view_examples.tooltip",
+                "Press Ctrl+Shift+E to view examples."
+        );
+        public static final LocalizationEntry MANAGER_GUI_RESET_BUTTON = new LocalizationEntry(
                 "gui.sfm.manager.button.reset",
                 "Reset"
         );

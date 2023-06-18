@@ -158,7 +158,7 @@ public record Program(
     public void fixWarnings(ItemStack disk, ManagerBlockEntity manager) {
         var labels = LabelHolder.from(disk);
         // remove labels not defined in code
-        labels.removeIf((label, pos) -> !referencedLabels.contains(label));
+        labels.removeIf(label -> !referencedLabels.contains(label));
 
         // remove labels not connected via cables
         CableNetworkManager

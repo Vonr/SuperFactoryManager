@@ -1,0 +1,6 @@
+name "Move Slots"
+
+every 20 ticks do
+    input from a top side slots 0,1,3-4,7-9,21
+    output to a slots 2
+end

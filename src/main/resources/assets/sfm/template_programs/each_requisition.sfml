@@ -1,0 +1,6 @@
+name "Each-Requisition"
+
+every 20 ticks do
+    input 5 from each a -- note the "each" keyword
+    output to b
+end

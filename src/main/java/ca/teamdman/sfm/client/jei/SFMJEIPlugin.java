@@ -1,15 +1,19 @@
 package ca.teamdman.sfm.client.jei;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.gui.screen.ManagerScreen;
 import ca.teamdman.sfm.common.recipe.PrintingPressRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMRecipeTypes;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.gui.handlers.IGuiContainerHandler;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -60,5 +64,20 @@ public class SFMJEIPlugin implements IModPlugin {
         fallingAnvilRecipes.add(new FallingAnvilExperienceShardRecipe());
         registration.addRecipes(PrintingPressJEICategory.RECIPE_TYPE, printingPressRecipes);
         registration.addRecipes(FallingAnvilJEICategory.RECIPE_TYPE, fallingAnvilRecipes);
+    }
+
+    @Override
+    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        registration.addGuiContainerHandler(ManagerScreen.class, new IGuiContainerHandler<>() {
+            @Override
+            public List<Rect2i> getGuiExtraAreas(ManagerScreen screen) {
+                var buttons = screen.getButtonsForJEIExclusionZones();
+                return buttons
+                        .stream()
+                        .filter(b -> b.visible)
+                        .map(b -> new Rect2i(b.x, b.y, b.getWidth(), b.getHeight()))
+                        .toList();
+            }
+        });
     }
 }
