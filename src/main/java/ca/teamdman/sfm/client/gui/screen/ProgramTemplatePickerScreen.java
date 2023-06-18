@@ -3,8 +3,8 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfml.ast.Program;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -106,26 +106,36 @@ public class ProgramTemplatePickerScreen extends Screen {
 
 
     @Override
-    public void render(PoseStack pPoseStack, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(pPoseStack);
-        this.renderBackground(pPoseStack);
-        this.renderBackground(pPoseStack);
-        super.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
+    public void render(GuiGraphics graphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.renderBackground(graphics);
+        this.renderBackground(graphics);
+        this.renderBackground(graphics);
+        super.render(graphics, pMouseX, pMouseY, pPartialTick);
         MutableComponent warning1 = Constants.LocalizationKeys.PROGRAM_TEMPLATE_PICKER_GUI_WARNING_1.getComponent();
-        this.font.draw(
-                pPoseStack,
+        graphics.drawString(
+                this.font,
                 warning1,
-                this.width / 2f - this.font.width(warning1) / 2f,
+                this.width / 2 - this.font.width(warning1) / 2,
                 20,
-                16777215
+                0xffffff,
+                false
+        );
+        graphics.drawString(
+                this.font,
+                warning1,
+                this.width / 2 - this.font.width(warning1) / 2,
+                20,
+                0xffffff,
+                false
         );
         MutableComponent warning2 = Constants.LocalizationKeys.PROGRAM_TEMPLATE_PICKER_GUI_WARNING_2.getComponent();
-        this.font.draw(
-                pPoseStack,
+        graphics.drawString(
+                this.font,
                 warning2,
-                this.width / 2f - this.font.width(warning2) / 2f,
+                this.width / 2 - this.font.width(warning2) / 2,
                 36,
-                16777215
+                0xffffff,
+                false
         );
     }
 }
