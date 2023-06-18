@@ -87,17 +87,18 @@ public class ProgramTemplatePickerScreen extends Screen {
                         + paddingX
                 );
                 int y = 50 + (i / buttonsPerRow) * (buttonHeight + paddingY);
-                this.addRenderableWidget(new Button(
-                        x,
-                        y,
-                        buttonWidth,
-                        buttonHeight,
-                        Component.literal(entry.getKey()),
-                        (btn) -> {
-                            onClose();
-                            CALLBACK.accept(entry.getValue());
-                        }
-                ));
+                addRenderableWidget(
+                        Button.builder(
+                                        Component.literal(entry.getKey()),
+                                        btn -> {
+                                            onClose();
+                                            CALLBACK.accept(entry.getValue());
+                                        }
+                                )
+                                .pos(x, y)
+                                .size(buttonWidth, buttonHeight)
+                                .build()
+                );
                 i++;
             }
         }

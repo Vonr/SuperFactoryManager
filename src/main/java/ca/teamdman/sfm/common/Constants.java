@@ -203,7 +203,7 @@ public class Constants {
                 "gui.sfm.manager.edit_button",
                 "Edit"
         );
-        public static final LocalizationEntry MANAGER_RESET_BUTTON_TOOLTIP = new LocalizationEntry(
+        public static final LocalizationEntry MANAGER_GUI_RESET_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.tooltip.reset",
                 "Wipes ALL disk data."
         );

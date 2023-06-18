@@ -91,10 +91,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onLoadClipboard(),
-                Tooltip.create(MANAGER_GUI_PASTE_BUTTON_TOOLTIP.getComponent())
+                Tooltip.create(MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP.getComponent())
         ));
-
-
         editButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
                 (this.height - this.imageHeight) / 2 + 16 + 50,
@@ -102,20 +100,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_EDIT_BUTTON.getComponent(),
                 button -> onEdit(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                Tooltip.create(MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent())
         ));
         examplesButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -124,22 +109,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_VIEW_EXAMPLES_BUTTON.getComponent(),
                 button -> onShowExamples(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                Tooltip.create(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP.getComponent())
         ));
-
         clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
                 (this.height - this.imageHeight) / 2 + 128,
@@ -148,7 +119,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 MANAGER_GUI_COPY_TO_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onSaveClipboard()
         ));
-
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
                 (this.height - this.imageHeight) / 2 + 10,
@@ -156,20 +126,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 12,
                 MANAGER_GUI_RESET_BUTTON.getComponent(),
                 button -> sendReset(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                Tooltip.create(MANAGER_GUI_RESET_BUTTON_TOOLTIP.getComponent())
         ));
         diagButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
@@ -489,6 +446,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE_LOCATION);
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
+        //noinspection SuspiciousNameCombination
         blit(matrixStack, i, j, 0, 0, this.imageWidth, this.imageHeight);
     }
 }
