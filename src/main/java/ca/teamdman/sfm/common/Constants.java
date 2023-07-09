@@ -189,6 +189,7 @@ public class Constants {
                 "Clear"
         );
 
+
         public static final LocalizationEntry MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.tooltip.paste",
                 "Press Ctrl+V to paste."
@@ -254,6 +255,21 @@ public class Constants {
                 "gui.sfm.manager.state",
                 "State: %s"
         );
+
+        public static final LocalizationEntry CONTAINER_INSPECTOR_SHOW_EXPORTS_BUTTON = new LocalizationEntry(
+                "gui.sfm.container_inspector.show_exports_button",
+                "Export Inspector"
+        );
+        public static final LocalizationEntry CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT = new LocalizationEntry(
+                "gui.sfm.container_inspector.container_slot_count",
+                "Container Slots: %d"
+        );
+        public static final LocalizationEntry CONTAINER_INSPECTOR_INVENTORY_SLOT_COUNT = new LocalizationEntry(
+                "gui.sfm.container_inspector.inventory_slot_count",
+                "Inventory Slots: %d"
+        );
+
+
         public static final LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME = new LocalizationEntry(
                 "gui.sfm.manager.peak_tick_time",
                 "Peak tick time: %s ns"
@@ -327,11 +343,15 @@ public class Constants {
                 ChatFormatting.GRAY + "Hold " + ChatFormatting.AQUA + "%s" + ChatFormatting.GRAY + " for more info"
         );
 
-        public static final LocalizationEntry KEY_MORE_INFO = new LocalizationEntry(
+        public static final LocalizationEntry MORE_HOVER_INFO_KEY = new LocalizationEntry(
                 "key.sfm.more_info",
-                "Press for more info key"
+                "Show More Item Hover Info"
         );
 
+        public static final LocalizationEntry CONTAINER_INSPECTOR_TOGGLE_KEY = new LocalizationEntry(
+                "key.sfm.container_inspector.activation_key",
+                "Toggle Container Inspector"
+        );
 
         public static final LocalizationEntry SFM_KEY_CATEGORY = new LocalizationEntry(
                 "key.categories.sfm",
