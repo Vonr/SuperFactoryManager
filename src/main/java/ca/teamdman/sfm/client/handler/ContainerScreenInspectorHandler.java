@@ -77,11 +77,11 @@ public class ContainerScreenInspectorHandler {
                 if (slot.container instanceof Inventory) {
                     //noinspection DataFlowIssue
                     colour = ChatFormatting.YELLOW.getColor();
-                    containerSlotCount++;
+                    inventorySlotCount++;
                 } else {
                     //noinspection DataFlowIssue
                     colour = 0xFFF;
-                    inventorySlotCount++;
+                    containerSlotCount++;
                 }
                 Minecraft.getInstance().font.draw(
                         poseStack,

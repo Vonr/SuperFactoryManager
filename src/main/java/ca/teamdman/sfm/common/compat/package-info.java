@@ -1,9 +1,8 @@
 
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @FieldsAreNonnullByDefault
-package ca.teamdman.sfm.common.registry.compat;
+package ca.teamdman.sfm.common.compat;
 
 import net.minecraft.FieldsAreNonnullByDefault;
 import net.minecraft.MethodsReturnNonnullByDefault;

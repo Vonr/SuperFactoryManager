@@ -287,7 +287,9 @@ dependencies {
     gametestImplementation fg.deobf("curse.maven:patchouli-306770:4031402") //Patchouli-1.19.2-77.jar
 
     gametestImplementation fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
+//    compileOnly fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar // lets depend on some non-api stuff to get sidedness spicyness
     runtimeOnly fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
+    implementation fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
     compileOnly "mekanism:Mekanism:1.19.2-10.3.8.477:api" //https://github.com/mekanism/Mekanism
     gametestImplementation "mekanism:Mekanism:1.19.2-10.3.8.477:api"
 

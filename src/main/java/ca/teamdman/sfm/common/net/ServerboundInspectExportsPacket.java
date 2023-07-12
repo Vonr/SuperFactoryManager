@@ -1,5 +1,8 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.compat.SFMCompat;
+import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -75,18 +78,22 @@ public record ServerboundInspectExportsPacket(
             sb.append("\n");
         }
 
+        if (SFMCompat.isMekanismLoaded()) {
+            sb.append(SFMMekanismCompat.gatherInspectionResults(be)).append("\n");
+        }
+
         return sb.toString();
     }
 
-    private static String directionToString(@Nullable Direction direction) {
+    public static String directionToString(@Nullable Direction direction) {
         if (direction == null) return "";
         return switch (direction) {
-            case UP -> " TOP SIDE";
-            case DOWN -> " BOTTOM SIDE";
-            case NORTH -> " NORTH SIDE";
-            case SOUTH -> " SOUTH SIDE";
-            case EAST -> " EAST SIDE";
-            case WEST -> " WEST SIDE";
+            case UP -> "TOP";
+            case DOWN -> "BOTTOM";
+            case NORTH -> "NORTH";
+            case SOUTH -> "SOUTH";
+            case EAST -> "EAST";
+            case WEST -> "WEST";
         };
     }
 
@@ -129,7 +136,7 @@ public record ServerboundInspectExportsPacket(
                     sb
                             .append(" FROM target")
                             .append(directionToString(direction))
-                            .append(" SLOTS ")
+                            .append(" SIDE SLOTS ")
                             .append(slot)
                             .append("\n");
                 });
@@ -155,9 +162,10 @@ public record ServerboundInspectExportsPacket(
                                 .append(",\n");
                     }
                 });
-                sb.append("FROM target").append(directionToString(direction));
+                sb.append("FROM target").append(directionToString(direction)).append(" SIDE");
             }
             sb.append("\n");
+
         });
         String result = sb.toString();
         if (!result.isBlank()) {
@@ -165,7 +173,10 @@ public record ServerboundInspectExportsPacket(
                     .getKey(be.getType())
                     .getNamespace()
                     .equals("mekanism")) {
-                return "-- MEKANISM BLOCKS ARE READ-ONLY FROM THE NULL DIRECTION!!!!!!\n" + result;
+                return "-- "
+                       + Constants.LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_NULL_DIRECTION_WARNING.getString()
+                       + "\n"
+                       + result;
             }
         }
         return result;

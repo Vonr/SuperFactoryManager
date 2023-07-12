@@ -1,7 +1,8 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.registry.compat.SFMMekanismCompat;
+import ca.teamdman.sfm.common.compat.SFMCompat;
+import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.resourcetype.FluidResourceType;
 import ca.teamdman.sfm.common.resourcetype.ForgeEnergyResourceType;
 import ca.teamdman.sfm.common.resourcetype.ItemResourceType;
@@ -14,7 +15,6 @@ import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -47,7 +47,7 @@ public class SFMResourceTypes {
     );
 
     static {
-        if (ModList.get().getModContainerById("mekanism").isPresent()) {
+        if (SFMCompat.isMekanismLoaded()) {
             SFMMekanismCompat.register(TYPES);
         }
     }

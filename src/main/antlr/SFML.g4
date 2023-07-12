@@ -34,7 +34,7 @@ inputstatement  : INPUT inputmatchers? FROM EACH? labelaccess;
 outputstatement : OUTPUT outputmatchers? TO EACH? labelaccess;
 inputmatchers   : movement; // separate for different defaults
 outputmatchers  : movement; // separate for different defaults
-movement        : resourcelimit (COMMA resourcelimit)*  #ResourceLimitMovement
+movement        : resourcelimit (COMMA resourcelimit)* COMMA?  #ResourceLimitMovement
                 | limit                         #LimitMovement
                 ;
 resourcelimit   : limit? resourceid;

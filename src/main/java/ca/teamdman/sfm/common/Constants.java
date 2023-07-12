@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -260,6 +261,19 @@ public class Constants {
                 "gui.sfm.container_inspector.show_exports_button",
                 "Export Inspector"
         );
+        public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_NULL_DIRECTION_WARNING = new LocalizationEntry(
+                "gui.sfm.container_inspector.mekanism_null_direction_warning",
+                "MEKANISM BLOCKS ARE READ-ONLY FROM THE NULL DIRECTION!!!!!!"
+        );
+        public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_MACHINE_INPUTS = new LocalizationEntry(
+                "gui.sfm.container_inspector.mekanism_machine_inputs",
+                "The following are based on the MACHINE'S input config"
+        );
+        public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_MACHINE_OUTPUTS = new LocalizationEntry(
+                "gui.sfm.container_inspector.mekanism_machine_outputs",
+                "The following are based on the MACHINE'S output config"
+        );
+
         public static final LocalizationEntry CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT = new LocalizationEntry(
                 "gui.sfm.container_inspector.container_slot_count",
                 "Container Slots: %d"
@@ -387,6 +401,14 @@ public class Constants {
 
             public TranslatableContents get() {
                 return new TranslatableContents(key.get());
+            }
+
+            public String getString() {
+                return I18n.get(key.get());
+            }
+
+            public String getString(Object... args) {
+                return I18n.get(key.get(), args);
             }
 
             public MutableComponent getComponent() {
