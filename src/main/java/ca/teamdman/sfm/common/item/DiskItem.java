@@ -2,12 +2,11 @@ package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
-import ca.teamdman.sfm.client.SFMKeyMappings;
+import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
 import ca.teamdman.sfm.common.program.LabelHolder;
-import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfml.ast.Program;

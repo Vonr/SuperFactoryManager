@@ -18,6 +18,7 @@ public class SFMPackets {
     public static final String MANAGER_CHANNEL_VERSION = "1";
     public static final String LABEL_GUN_ITEM_CHANNEL_VERSION = "1";
     public static final String DISK_ITEM_CHANNEL_VERSION = "1";
+    public static final String INSPECTION_CHANNEL_VERSION = "1";
     public static final SimpleChannel MANAGER_CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(SFM.MOD_ID, "manager"),
             MANAGER_CHANNEL_VERSION::toString,
@@ -35,6 +36,13 @@ public class SFMPackets {
             DISK_ITEM_CHANNEL_VERSION::toString,
             DISK_ITEM_CHANNEL_VERSION::equals,
             DISK_ITEM_CHANNEL_VERSION::equals
+    );
+
+    public static final SimpleChannel INSPECTION_CHANNEL = NetworkRegistry.newSimpleChannel(
+            new ResourceLocation(SFM.MOD_ID, "inspection"),
+            INSPECTION_CHANNEL_VERSION::toString,
+            INSPECTION_CHANNEL_VERSION::equals,
+            INSPECTION_CHANNEL_VERSION::equals
     );
 
     public static void register() {
@@ -96,6 +104,21 @@ public class SFMPackets {
                 ServerboundDiskItemSetProgramPacket::encode,
                 ServerboundDiskItemSetProgramPacket::decode,
                 ServerboundDiskItemSetProgramPacket::handle
+        );
+
+        INSPECTION_CHANNEL.registerMessage(
+                0,
+                ServerboundInspectExportsPacket.class,
+                ServerboundInspectExportsPacket::encode,
+                ServerboundInspectExportsPacket::decode,
+                ServerboundInspectExportsPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                1,
+                ClientboundInspectExportsResultPacket.class,
+                ClientboundInspectExportsResultPacket::encode,
+                ClientboundInspectExportsResultPacket::decode,
+                ClientboundInspectExportsResultPacket::handle
         );
     }
 
