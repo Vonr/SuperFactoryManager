@@ -3,10 +3,13 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -87,9 +90,31 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         }
     }
 
+    private static final Map<ResourceIdentifier<?, ?, ?>, List<ResourceIdentifier<?, ?, ?>>> expansionCache = new Object2ObjectOpenHashMap<>();
+
     public boolean test(Object other) {
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
-        return resourceType != null && resourceType.test(this, other);
+        return resourceType != null && resourceType.stackMatches(this, other);
+    }
+
+    public List<ResourceIdentifier<STACK, ITEM, CAP>> expand() {
+        if (expansionCache.containsKey(this)) {
+            //noinspection unchecked,rawtypes
+            return (List<ResourceIdentifier<STACK, ITEM, CAP>>) (List) expansionCache.get(this);
+        }
+        ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
+        //noinspection DataFlowIssue // if we get here, it should have a registry
+        List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().getEntries().stream()
+                .filter(e -> ResourceType.stackIdMatches(this, e.getKey().location()))
+                .map(e -> new ResourceIdentifier<STACK, ITEM, CAP>(
+                        resourceTypeNamespace,
+                        resourceTypeName,
+                        e.getKey().location().getNamespace(),
+                        e.getKey().location().getPath()
+                )).toList();
+        //noinspection unchecked,rawtypes
+        expansionCache.put(this, (List) rtn);
+        return rtn;
     }
 
     @SuppressWarnings("unchecked")

@@ -91,7 +91,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitBooleanRedstone(SFMLParser.BooleanRedstoneContext ctx) {
         ComparisonOperator comp = ComparisonOperator.GREATER_OR_EQUAL;
-        Quantity num = new Quantity(0);
+        Number num = new Number(0);
         if (ctx.comparisonOp() != null && ctx.number() != null) {
             comp = visitComparisonOp(ctx.comparisonOp());
             num = visitNumber(ctx.number());
@@ -121,8 +121,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public Quantity visitNumber(SFMLParser.NumberContext ctx) {
-        return new Quantity(Long.parseLong(ctx.getText()));
+    public Number visitNumber(SFMLParser.NumberContext ctx) {
+        return new Number(Long.parseLong(ctx.getText()));
     }
 
     @Override
@@ -215,9 +215,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ResourceComparer<?, ?, ?> visitResourcecomparison(SFMLParser.ResourcecomparisonContext ctx) {
         var op = visitComparisonOp(ctx.comparisonOp());
-        var num = visitNumber(ctx.number());
+        var quantity = visitQuantity(ctx.quantity());
         var item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
-        return new ResourceComparer<>(op, num, item);
+        return new ResourceComparer<>(op, quantity, item);
     }
 
     @Override
@@ -259,7 +259,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public Limit visitQuantityRetentionLimit(SFMLParser.QuantityRetentionLimitContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
         var retain = visitRetention(ctx.retention());
-        return new Limit(quantity.value(), retain.value());
+        return new Limit(quantity, retain);
     }
 
     @Override
@@ -276,10 +276,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ResourceLimits visitInputmatchers(@Nullable SFMLParser.InputmatchersContext ctx) {
         if (ctx == null) {
-            return new ResourceLimits(List.of(new ResourceLimit<>(
-                    new Limit(Long.MAX_VALUE, 0),
-                    ResourceIdentifier.MATCH_ALL
-            )), ResourceIdSet.EMPTY);
+            return new ResourceLimits(List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE), ResourceIdSet.EMPTY);
         }
         return ((ResourceLimits) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, 0);
     }
@@ -288,10 +285,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ResourceLimits visitOutputmatchers(@Nullable SFMLParser.OutputmatchersContext ctx) {
         if (ctx == null) {
-            return new ResourceLimits(List.of(new ResourceLimit<>(
-                    new Limit(Long.MAX_VALUE, Long.MAX_VALUE),
-                    ResourceIdentifier.MATCH_ALL
-            )), ResourceIdSet.EMPTY);
+            return new ResourceLimits(List.of(ResourceLimit.ACCEPT_ALL_WITHOUT_RESTRAINT), ResourceIdSet.EMPTY);
         }
         return ((ResourceLimits) visit(ctx.movement())).withDefaults(
                 Long.MAX_VALUE,
@@ -345,7 +339,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public NumberRange visitRange(SFMLParser.RangeContext ctx) {
-        var iter = ctx.number().stream().map(this::visitNumber).mapToLong(Quantity::value).iterator();
+        var iter = ctx.number().stream().map(this::visitNumber).mapToLong(Number::value).iterator();
         var start = iter.next();
         if (iter.hasNext()) {
             var end = iter.next();
@@ -359,25 +353,36 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Limit visitRetentionLimit(SFMLParser.RetentionLimitContext ctx) {
         var retain = visitRetention(ctx.retention());
-        return new Limit(-1, retain.value());
+        return new Limit(ResourceQuantity.UNSET, retain);
     }
 
     @Override
     public Limit visitQuantityLimit(SFMLParser.QuantityLimitContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
-        return new Limit(quantity.value(), -1);
+        return new Limit(quantity, ResourceQuantity.UNSET);
     }
 
     @Override
-    public Quantity visitRetention(@Nullable SFMLParser.RetentionContext ctx) {
-        if (ctx == null) return new Quantity(-1);
-        return visitNumber(ctx.number());
+    public ResourceQuantity visitRetention(@Nullable SFMLParser.RetentionContext ctx) {
+        if (ctx == null)
+            return ResourceQuantity.UNSET;
+        return new ResourceQuantity(
+                visitNumber(ctx.number()),
+                ctx.EACH() != null
+                ? ResourceQuantity.IdExpansionBehaviour.EXPAND
+                : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
+        );
     }
 
     @Override
-    public Quantity visitQuantity(@Nullable SFMLParser.QuantityContext ctx) {
-        if (ctx == null) return new Quantity(Long.MAX_VALUE);
-        return visitNumber(ctx.number());
+    public ResourceQuantity visitQuantity(@Nullable SFMLParser.QuantityContext ctx) {
+        if (ctx == null) return ResourceQuantity.MAX_QUANTITY;
+        return new ResourceQuantity(
+                visitNumber(ctx.number()),
+                ctx.EACH() != null
+                ? ResourceQuantity.IdExpansionBehaviour.EXPAND
+                : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
+        );
     }
 
     @Override

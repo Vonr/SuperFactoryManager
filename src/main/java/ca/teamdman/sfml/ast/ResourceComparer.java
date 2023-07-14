@@ -7,7 +7,7 @@ import java.util.List;
 
 public record ResourceComparer<STACK, ITEM, CAP>(
         ComparisonOperator op,
-        Quantity num,
+        ResourceQuantity quantity,
         ResourceIdentifier<STACK, ITEM, CAP> res
 ) implements ASTNode {
     public BoolExpr toBooleanExpression(SetOperator setOp, LabelAccess labelAccess) {
@@ -31,10 +31,10 @@ public record ResourceComparer<STACK, ITEM, CAP>(
                         overallCount += type.getCount(stack);
                     }
                 }
-                satisfiedSet.add(this.op.test(invCount, this.num.value()));
+                satisfiedSet.add(this.op.test(invCount, this.quantity.number().value()));
             }
-
-            var isOverallSatisfied = this.op.test(overallCount, this.num.value());
+            //todo: quantity EACH support
+            var isOverallSatisfied = this.op.test(overallCount, this.quantity.number().value());
             return setOp.test(isOverallSatisfied, satisfiedSet);
         });
     }

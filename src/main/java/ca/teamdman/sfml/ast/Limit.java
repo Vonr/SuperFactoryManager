@@ -1,21 +1,41 @@
 package ca.teamdman.sfml.ast;
 
+import static ca.teamdman.sfml.ast.ResourceQuantity.IdExpansionBehaviour.NO_EXPAND;
+
 public record Limit(
-        long quantity,
-        long retention
+        ResourceQuantity quantity,
+        ResourceQuantity retention
 ) implements ASTNode {
+    public static final Limit MAX_QUANTITY_NO_RETENTION = new Limit(
+            new ResourceQuantity(new Number(Long.MAX_VALUE), NO_EXPAND),
+            new ResourceQuantity(new Number(0), NO_EXPAND)
+    );
+    public static final Limit MAX_QUANTITY_MAX_RETENTION = new Limit(
+            new ResourceQuantity(new Number(Long.MAX_VALUE), NO_EXPAND),
+            new ResourceQuantity(new Number(Long.MAX_VALUE), NO_EXPAND)
+    );
 
     public Limit() {
-        this(-1, -1);
+        this(ResourceQuantity.UNSET, ResourceQuantity.UNSET);
     }
 
     public Limit withDefaults(long quantity, long retention) {
-        if (quantity() < 0 && retention() < 0)
-            return new Limit(quantity, retention);
-        else if (quantity() < 0)
-            return new Limit(quantity, retention());
-        else if (retention() < 0)
-            return new Limit(quantity(), retention);
+        if (quantity() == ResourceQuantity.UNSET && retention() == ResourceQuantity.UNSET) {
+            return new Limit(
+                    new ResourceQuantity(new Number(quantity), NO_EXPAND),
+                    new ResourceQuantity(new Number(retention), NO_EXPAND)
+            );
+        } else if (quantity() == ResourceQuantity.UNSET) {
+            return new Limit(
+                    new ResourceQuantity(new Number(quantity), NO_EXPAND),
+                    retention()
+            );
+        } else if (retention() == ResourceQuantity.UNSET) {
+            return new Limit(
+                    quantity(),
+                    new ResourceQuantity(new Number(retention), NO_EXPAND)
+            );
+        }
         return this;
     }
 }

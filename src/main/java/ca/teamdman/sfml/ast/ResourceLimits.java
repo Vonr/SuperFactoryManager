@@ -3,6 +3,7 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.common.program.InputResourceTracker;
 import ca.teamdman.sfm.common.program.OutputResourceTracker;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,17 +12,15 @@ public record ResourceLimits(
         ResourceIdSet exclusions
 ) implements ASTNode {
     public List<InputResourceTracker<?, ?, ?>> createInputTrackers() {
-        return resourceLimits
-                .stream()
-                .map(lim -> new InputResourceTracker<>(lim, exclusions))
-                .collect(Collectors.toList());
+        List<InputResourceTracker<?, ?, ?>> rtn = new ArrayList<>();
+        resourceLimits.forEach(rl -> rl.gatherInputTrackers(rtn::add, exclusions));
+        return rtn;
     }
 
     public List<OutputResourceTracker<?, ?, ?>> createOutputTrackers() {
-        return resourceLimits
-                .stream()
-                .map(lim -> new OutputResourceTracker<>(lim, exclusions))
-                .collect(Collectors.toList());
+        List<OutputResourceTracker<?, ?, ?>> rtn = new ArrayList<>();
+        resourceLimits.forEach(rl -> rl.gatherOutputTrackers(rtn::add, exclusions));
+        return rtn;
     }
 
     public ResourceLimits withDefaults(long quantity, long retention) {

@@ -9,6 +9,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraftforge.items.IItemHandler;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -113,6 +114,14 @@ public abstract class SFMGameTestBase {
     protected static int count(ChestBlockEntity chest, Item item) {
         return IntStream.range(0, chest.getContainerSize())
                 .mapToObj(chest::getItem)
+                .filter(stack -> stack.getItem() == item)
+                .mapToInt(ItemStack::getCount)
+                .sum();
+    }
+
+    protected static int count(IItemHandler chest, Item item) {
+        return IntStream.range(0, chest.getSlots())
+                .mapToObj(chest::getStackInSlot)
                 .filter(stack -> stack.getItem() == item)
                 .mapToInt(ItemStack::getCount)
                 .sum();

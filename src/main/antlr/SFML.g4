@@ -42,13 +42,14 @@ movement        : resourcelimit (COMMA resourcelimit)* COMMA?    #ResourceLimitM
 resourceexclusion       : EXCEPT resourceid (COMMA resourceid)* COMMA?;
 
 resourcelimit   : limit? resourceid;
+
 limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
                 | quantity              #QuantityLimit
                 ;
 
-quantity        : number;
-retention       : RETAIN number;
+quantity        : number EACH?;
+retention       : RETAIN number EACH?;
 
 sidequalifier   : side(COMMA side)* SIDE;
 side            : TOP
@@ -73,7 +74,7 @@ boolexpr        : TRUE                                  #BooleanTrue
                 | setOp? labelaccess HAS resourcecomparison #BooleanHas
                 | REDSTONE (comparisonOp number)?       #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp number resourceid ;
+resourcecomparison : comparisonOp quantity resourceid ;
 comparisonOp    : GT
                 | LT
                 | EQ

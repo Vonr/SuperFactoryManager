@@ -5,23 +5,31 @@ import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
 
-    protected final ResourceLimit<STACK, ITEM, CAP> LIMIT;
-    protected final ResourceIdSet EXCLUSIONS;
+    private final ResourceLimit<STACK, ITEM, CAP> LIMIT;
+    private final ResourceIdSet EXCLUSIONS;
     private final Int2LongArrayMap RETENTION_OBLIGATIONS = new Int2LongArrayMap();
-    protected long transferred = 0;
-    private int retentionObligationProgress = 0;
+    private final AtomicLong TRANSFERRED;
+    private final AtomicLong RETENTION_OBLIGATION_PROGRESS;
 
-    public InputResourceTracker(ResourceLimit<STACK, ITEM, CAP> limit, ResourceIdSet exclusions) {
+    public InputResourceTracker(
+            ResourceLimit<STACK, ITEM, CAP> limit,
+            ResourceIdSet exclusions,
+            AtomicLong transferred,
+            AtomicLong retentionObligationProgress
+    ) {
         this.LIMIT = limit;
         this.EXCLUSIONS = exclusions;
+        this.TRANSFERRED = transferred;
+        this.RETENTION_OBLIGATION_PROGRESS = retentionObligationProgress;
     }
 
     public boolean isDone() {
-        return transferred >= LIMIT.limit().quantity();
+        return TRANSFERRED.get() >= LIMIT.limit().quantity().number().value();
     }
 
     public long getExistingRetentionObligation(int slot) {
@@ -29,11 +37,11 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
     }
 
     public long getRemainingRetentionObligation() {
-        return LIMIT.limit().retention() - retentionObligationProgress;
+        return LIMIT.limit().retention().number().value() - RETENTION_OBLIGATION_PROGRESS.get();
     }
 
     public void trackRetentionObligation(int slot, long promise) {
-        this.retentionObligationProgress += promise;
+        this.RETENTION_OBLIGATION_PROGRESS.accumulateAndGet(promise, Long::sum);
         this.RETENTION_OBLIGATIONS.merge(slot, promise, Long::sum);
     }
 
@@ -42,11 +50,11 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
     }
 
     public long getMaxTransferable() {
-        return LIMIT.limit().quantity() - transferred;
+        return LIMIT.limit().quantity().number().value() - TRANSFERRED.get();
     }
 
     public void trackTransfer(long amount) {
-        transferred += amount;
+        TRANSFERRED.accumulateAndGet(amount, Long::sum);
     }
 
     @Override
