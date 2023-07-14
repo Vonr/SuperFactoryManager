@@ -153,16 +153,18 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
         var matchers = visitInputmatchers(ctx.inputmatchers());
+        var exclusions = visitResourceexclusion(ctx.resourceexclusion());
         var each = ctx.EACH() != null;
-        return new InputStatement(labelAccess, matchers, each);
+        return new InputStatement(labelAccess, matchers.withExclusions(exclusions), each);
     }
 
     @Override
     public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
         var matchers = visitOutputmatchers(ctx.outputmatchers());
+        var exclusions = visitResourceexclusion(ctx.resourceexclusion());
         var each = ctx.EACH() != null;
-        return new OutputStatement(labelAccess, matchers, each);
+        return new OutputStatement(labelAccess, matchers.withExclusions(exclusions), each);
     }
 
     @Override
@@ -261,39 +263,61 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
+    public ResourceIdSet visitResourceexclusion(@Nullable SFMLParser.ResourceexclusionContext ctx) {
+        if (ctx == null) return ResourceIdSet.EMPTY;
+        return new ResourceIdSet(ctx
+                                         .resourceid()
+                                         .stream()
+                                         .map(this::visit)
+                                         .map(ResourceIdentifier.class::cast)
+                                         .collect(HashSet::new, HashSet::add, HashSet::addAll));
+    }
+
+    @Override
     public ResourceLimits visitInputmatchers(@Nullable SFMLParser.InputmatchersContext ctx) {
-        if (ctx == null) return new ResourceLimits(List.of(new ResourceLimit<>(
-                new Limit(Long.MAX_VALUE, 0),
-                ResourceIdentifier.MATCH_ALL
-        )));
+        if (ctx == null) {
+            return new ResourceLimits(List.of(new ResourceLimit<>(
+                    new Limit(Long.MAX_VALUE, 0),
+                    ResourceIdentifier.MATCH_ALL
+            )), ResourceIdSet.EMPTY);
+        }
         return ((ResourceLimits) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, 0);
     }
 
 
     @Override
     public ResourceLimits visitOutputmatchers(@Nullable SFMLParser.OutputmatchersContext ctx) {
-        if (ctx == null)
+        if (ctx == null) {
             return new ResourceLimits(List.of(new ResourceLimit<>(
                     new Limit(Long.MAX_VALUE, Long.MAX_VALUE),
                     ResourceIdentifier.MATCH_ALL
-            )));
-        return ((ResourceLimits) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, Long.MAX_VALUE);
+            )), ResourceIdSet.EMPTY);
+        }
+        return ((ResourceLimits) visit(ctx.movement())).withDefaults(
+                Long.MAX_VALUE,
+                Long.MAX_VALUE
+        );
     }
 
     @Override
     public ASTNode visitResourceLimitMovement(SFMLParser.ResourceLimitMovementContext ctx) {
-
-        return new ResourceLimits(ctx.resourcelimit().stream()
-                                          .map(this::visitResourcelimit)
-                                          .collect(Collectors.toList()));
+        return new ResourceLimits(
+                ctx.resourcelimit().stream()
+                        .map(this::visitResourcelimit)
+                        .collect(Collectors.toList()),
+                ResourceIdSet.EMPTY
+        );
     }
 
     @Override
     public ResourceLimits visitLimitMovement(SFMLParser.LimitMovementContext ctx) {
-        return new ResourceLimits(List.of(new ResourceLimit<>(
-                (Limit) this.visit(ctx.limit()),
-                ResourceIdentifier.MATCH_ALL
-        )));
+        return new ResourceLimits(
+                List.of(new ResourceLimit<>(
+                        (Limit) this.visit(ctx.limit()),
+                        ResourceIdentifier.MATCH_ALL
+                )),
+                ResourceIdSet.EMPTY
+        );
     }
 
     @Override

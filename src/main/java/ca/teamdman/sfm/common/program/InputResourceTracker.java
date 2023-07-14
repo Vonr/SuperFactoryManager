@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 
@@ -9,12 +10,14 @@ import java.util.function.Predicate;
 public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
 
     protected final ResourceLimit<STACK, ITEM, CAP> LIMIT;
+    protected final ResourceIdSet EXCLUSIONS;
     private final Int2LongArrayMap RETENTION_OBLIGATIONS = new Int2LongArrayMap();
     protected long transferred = 0;
     private int retentionObligationProgress = 0;
 
-    public InputResourceTracker(ResourceLimit<STACK, ITEM, CAP> limit) {
+    public InputResourceTracker(ResourceLimit<STACK, ITEM, CAP> limit, ResourceIdSet exclusions) {
         this.LIMIT = limit;
+        this.EXCLUSIONS = exclusions;
     }
 
     public boolean isDone() {
@@ -48,7 +51,7 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
 
     @Override
     public boolean test(Object stack) {
-        return LIMIT.test(stack);
+        return LIMIT.test(stack) && !EXCLUSIONS.test(stack);
     }
 
     public boolean matchesCapabilityType(Object capability) {

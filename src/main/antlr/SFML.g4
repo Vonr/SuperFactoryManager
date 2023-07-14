@@ -30,13 +30,17 @@ statement       : inputstatement    #InputStatementStatement
                 ;
 
 // IO STATEMENT
-inputstatement  : INPUT inputmatchers? FROM EACH? labelaccess;
-outputstatement : OUTPUT outputmatchers? TO EACH? labelaccess;
+inputstatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess;
+outputstatement : OUTPUT outputmatchers? resourceexclusion? TO EACH? labelaccess;
 inputmatchers   : movement; // separate for different defaults
 outputmatchers  : movement; // separate for different defaults
-movement        : resourcelimit (COMMA resourcelimit)* COMMA?  #ResourceLimitMovement
-                | limit                         #LimitMovement
+
+movement        : resourcelimit (COMMA resourcelimit)* COMMA?    #ResourceLimitMovement
+                | limit                                          #LimitMovement
                 ;
+
+resourceexclusion       : EXCEPT resourceid (COMMA resourceid)* COMMA?;
+
 resourcelimit   : limit? resourceid;
 limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
@@ -156,6 +160,7 @@ WHERE   : W H E R E ;
 SLOTS   : S L O T S ;
 RETAIN  : R E T A I N ;
 EACH    : E A C H ;
+EXCEPT  : E X C E P T ;
 
 // SIDE LOGIC
 TOP     : T O P ;

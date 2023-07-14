@@ -1,17 +1,20 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
 
 import java.util.function.Predicate;
 
 public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
     protected final ResourceLimit<STACK, ITEM, CAP> LIMIT;
+    protected final ResourceIdSet EXCLUSIONS;
     protected long transferred = 0;
     private long retentionObligationProgress = 0;
 
-    public OutputResourceTracker(ResourceLimit<STACK, ITEM, CAP> resourceLimit) {
+    public OutputResourceTracker(ResourceLimit<STACK, ITEM, CAP> resourceLimit, ResourceIdSet exclusions) {
         this.LIMIT = resourceLimit;
+        this.EXCLUSIONS = exclusions;
     }
 
     /**
@@ -52,6 +55,6 @@ public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object
 
     @Override
     public boolean test(Object stack) {
-        return LIMIT.test(stack);
+        return LIMIT.test(stack) && !EXCLUSIONS.test(stack);
     }
 }
