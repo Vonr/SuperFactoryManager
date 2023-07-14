@@ -93,6 +93,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.TICKS:
             case SFMLLexer.SLOTS:
             case SFMLLexer.EXCEPT:
+            case SFMLLexer.RETAIN:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
             case SFMLLexer.GT:
