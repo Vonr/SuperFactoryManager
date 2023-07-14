@@ -21,6 +21,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public record ServerboundInspectExportsPacket(
         int windowId,
@@ -152,18 +153,22 @@ public record ServerboundInspectExportsPacket(
                 FROM target TOP SIDE
                  */
                 sb.append("INPUT\n");
+                StringBuilder lines = new StringBuilder();
                 slotContents.forEach((slot, stack) -> {
                     if (typeKey.equals(SFMResourceTypes.ITEM.getKey())) {
-                        sb.append("    ").append(type.getRegistryKey(stack)).append(",\n");
+                        lines.append("    ").append(type.getRegistryKey(stack)).append(",\n");
                     } else if (typeKey.equals(SFMResourceTypes.FORGE_ENERGY.getKey())) {
-                        sb.append("    forge_energy::").append(",\n");
+                        lines.append("    forge_energy::").append(",\n");
                     } else {
-                        sb.append("    ").append(typeKey.location().toString().replaceFirst("^sfm:", ""))
+                        lines.append("    ").append(typeKey.location().toString().replaceFirst("^sfm:", ""))
                                 .append(":")
                                 .append(type.getRegistryKey(stack))
                                 .append(",\n");
                     }
                 });
+                // remove duplicate lines and append
+                sb.append(lines.toString().lines().distinct().sorted().collect(Collectors.joining("\n"))).append("\n");
+
                 if (direction == null) {
                     sb.append("FROM target");
                 } else {
