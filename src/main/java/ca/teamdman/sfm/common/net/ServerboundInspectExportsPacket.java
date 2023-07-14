@@ -65,7 +65,7 @@ public record ServerboundInspectExportsPacket(
         dirs[dirs.length - 1] = null;
         for (Direction direction : dirs) {
             sb.append("-- ").append(direction).append("\n");
-            //noinspection unchecked
+            //noinspection unchecked,rawtypes
             SFMResourceTypes.DEFERRED_TYPES
                     .get()
                     .getEntries()
@@ -133,10 +133,12 @@ public record ServerboundInspectExportsPacket(
                                 .append(":")
                                 .append(type.getRegistryKey(stack));
                     }
-                    sb
-                            .append(" FROM target")
-                            .append(directionToString(direction))
-                            .append(" SIDE SLOTS ")
+                    sb.append(" FROM target ");
+                    if (direction != null) {
+                        sb.append(directionToString(direction))
+                                .append(" SIDE ");
+                    }
+                    sb.append("SLOTS ")
                             .append(slot)
                             .append("\n");
                 });
@@ -162,13 +164,18 @@ public record ServerboundInspectExportsPacket(
                                 .append(",\n");
                     }
                 });
-                sb.append("FROM target").append(directionToString(direction)).append(" SIDE");
+                if (direction == null) {
+                    sb.append("FROM target");
+                } else {
+                    sb.append("FROM target ").append(directionToString(direction)).append(" SIDE");
+                }
             }
             sb.append("\n");
 
         });
         String result = sb.toString();
         if (!result.isBlank()) {
+            //noinspection DataFlowIssue
             if (direction == null && ForgeRegistries.BLOCK_ENTITY_TYPES
                     .getKey(be.getType())
                     .getNamespace()
