@@ -10,6 +10,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -63,12 +64,13 @@ public class ContainerScreenInspectorHandler {
             AbstractContainerMenu menu = acs.getMenu();
             int containerSlotCount = 0;
             int inventorySlotCount = 0;
-            PoseStack poseStack = event.getPoseStack();
+            GuiGraphics graphics = event.getGuiGraphics();
+            PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
             poseStack.translate(0, 0, 350); // render text over the items but under the tooltips
 
             // draw the button
-            exportInspectorButton.render(poseStack, event.getMouseX(), event.getMouseY(), event.getPartialTick());
+            exportInspectorButton.render(graphics, event.getMouseX(), event.getMouseY(), event.getPartialTick());
 
 
             // draw index on each slot
@@ -83,18 +85,19 @@ public class ContainerScreenInspectorHandler {
                     colour = 0xFFF;
                     containerSlotCount++;
                 }
-                Minecraft.getInstance().font.draw(
-                        poseStack,
+                graphics.drawString(
+                        Minecraft.getInstance().font,
                         Component.literal(Integer.toString(slot.getSlotIndex())),
                         acs.getGuiLeft() + slot.x,
                         acs.getGuiTop() + slot.y,
-                        colour
+                        colour,
+                        false
                 );
             }
 
             // draw text for slot totals
-            Minecraft.getInstance().font.drawShadow(
-                    poseStack,
+            graphics.drawString(
+                    Minecraft.getInstance().font,
                     Constants.LocalizationKeys.CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT.getComponent(Component
                                                                                                              .literal(
                                                                                                                      String.valueOf(
@@ -103,10 +106,11 @@ public class ContainerScreenInspectorHandler {
                                                                                                                      ChatFormatting.BLUE)),
                     5,
                     5,
-                    0xFFFFFF
+                    0xFFFFFF,
+                    true
             );
-            Minecraft.getInstance().font.drawShadow(
-                    poseStack,
+            graphics.drawString(
+                    Minecraft.getInstance().font,
                     Constants.LocalizationKeys.CONTAINER_INSPECTOR_INVENTORY_SLOT_COUNT.getComponent(Component
                                                                                                              .literal(
                                                                                                                      String.valueOf(
@@ -115,7 +119,8 @@ public class ContainerScreenInspectorHandler {
                                                                                                                      ChatFormatting.YELLOW)),
                     5,
                     25,
-                    0xFFFFFF
+                    0xFFFFFF,
+                    true
             );
             poseStack.popPose();
         }
