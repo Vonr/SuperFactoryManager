@@ -25,6 +25,20 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .collect(Collectors.toList());
     }
 
+    public Optional<ASTNode> getNodeAtIndex(int index) {
+        if (index < 0 || index >= NODE_CONTEXTS.size()) return Optional.empty();
+        return Optional.ofNullable(NODE_CONTEXTS.get(index).a);
+    }
+
+    public int getIndexForNode(ASTNode node) {
+        return NODE_CONTEXTS
+                .stream()
+                .filter(pair -> pair.a == node)
+                .map(NODE_CONTEXTS::indexOf)
+                .findFirst()
+                .orElse(-1);
+    }
+
     @Override
     public StringHolder visitName(@Nullable SFMLParser.NameContext ctx) {
         if (ctx == null) return new StringHolder("");
@@ -427,7 +441,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public NumberRangeSet visitRangeset(@Nullable SFMLParser.RangesetContext ctx) {
-        if (ctx == null) return new NumberRangeSet(new NumberRange[]{new NumberRange(Long.MIN_VALUE, Long.MAX_VALUE)});
+        if (ctx == null) return new NumberRangeSet(new NumberRange[]{NumberRange.MAX_RANGE});
         NumberRangeSet numberRangeSet = new NumberRangeSet(ctx
                                                                    .range()
                                                                    .stream()

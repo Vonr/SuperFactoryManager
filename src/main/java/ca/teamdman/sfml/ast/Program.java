@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public record Program(
@@ -33,11 +34,16 @@ public record Program(
     public static final int MAX_LABEL_LENGTH = 256;
 
     public static void compile(
-            String programString, Consumer<Program> onSuccess, Consumer<List<TranslatableContents>> onFailure
+            String programString,
+            BiConsumer<Program, ASTBuilder> onSuccess,
+            Consumer<List<TranslatableContents>> onFailure
     ) {
-        var lexer = new SFMLLexer(CharStreams.fromString(programString));
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new SFMLParser(tokens);
+        SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        SFMLParser parser = new SFMLParser(tokens);
+        ASTBuilder builder = new ASTBuilder();
+
+        // set up error capturing
         lexer.removeErrorListeners();
         parser.removeErrorListeners();
         List<TranslatableContents> errors = new ArrayList<>();
@@ -46,13 +52,14 @@ public record Program(
         lexer.addErrorListener(listener);
         parser.addErrorListener(listener);
 
-        var context = parser.program();
-        Program program = null;
-
+        // initial parse
+        SFMLParser.ProgramContext context = parser.program();
         buildErrors.stream().map(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL::get).forEach(errors::add);
 
+        // build AST
+        Program program = null;
         try {
-            program = new ASTBuilder().visitProgram(context);
+            program = builder.visitProgram(context);
             // make sure all referenced resources exist now during compilation instead of waiting for the program to tick
 
             for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {
@@ -76,7 +83,7 @@ public record Program(
 
 
         if (errors.isEmpty()) {
-            onSuccess.accept(program);
+            onSuccess.accept(program, builder);
         } else {
             onFailure.accept(errors);
         }

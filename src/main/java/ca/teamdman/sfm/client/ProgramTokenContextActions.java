@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.client;
 
+import ca.teamdman.sfm.common.net.ServerboundInputInspectionRequestPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelInspectionRequestPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.SFMLLexer;
@@ -31,7 +32,7 @@ public class ProgramTokenContextActions {
                                     .getNodesUnderCursor(cursorPosition - 1)
                                     .stream()
                     )
-                    .map(ProgramTokenContextActions::getContextAction)
+                    .map(node -> getContextAction(programString, builder, node))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .findFirst();
@@ -40,7 +41,7 @@ public class ProgramTokenContextActions {
         }
     }
 
-    public static Optional<Runnable> getContextAction(ASTNode node) {
+    public static Optional<Runnable> getContextAction(String programString, ASTBuilder builder, ASTNode node) {
         System.out.println("CONTEXT ACTION " + node);
         if (node instanceof ResourceIdentifier<?, ?, ?> rid) {
             return Optional.of(() -> {
@@ -57,15 +58,11 @@ public class ProgramTokenContextActions {
                     label.name()
             )));
         } else if (node instanceof InputStatement) {
-            return Optional.of(() -> {
-                InputStatement inputStatement = (InputStatement) node;
-                System.out.println("SHOWING " + inputStatement
-                        .resourceLimits()
-                        .resourceLimits()
-                        .stream()
-                        .map(rl -> rl.resourceId().toString())
-                        .collect(Collectors.joining(", ")));
-            });
+            int index = builder.getIndexForNode(node);
+            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundInputInspectionRequestPacket(
+                    programString,
+                    index
+            )));
         }
         return Optional.empty();
     }

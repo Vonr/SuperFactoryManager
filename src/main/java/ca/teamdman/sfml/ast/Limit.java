@@ -38,4 +38,13 @@ public record Limit(
         }
         return this;
     }
+
+    @Override
+    public String toString() {
+        if (retention.number().value() != 0) {
+            return quantity + " RETAIN " + retention;
+        } else {
+            return quantity.toString();
+        }
+    }
 }

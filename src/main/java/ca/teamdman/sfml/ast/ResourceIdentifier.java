@@ -133,17 +133,23 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     }
 
     public String toStringCondensed() {
+        String rtn;
         if (getResourceType() == SFMResourceTypes.ITEM.get()) {
-            return getLocation().map(ResourceLocation::toString).orElse("malformed resource");
+            if (resourceNamespace.equals(".*")) {
+                rtn = resourceName;
+            } else {
+                rtn = resourceNamespace + ":" + resourceName;
+            }
         } else if (getResourceType() == SFMResourceTypes.FORGE_ENERGY.get() && getLocation()
                 .filter(rl -> rl.equals(new ResourceLocation("forge", "energy")))
                 .isPresent()) {
-            return "forge_energy::";
+            rtn = "forge_energy::";
         } else if (resourceTypeNamespace.equals(SFM.MOD_ID)) {
-            return resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            rtn = resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
         } else {
-            return resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            rtn = resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
         }
+        return "\"" + rtn + "\"";
     }
 
     @Override

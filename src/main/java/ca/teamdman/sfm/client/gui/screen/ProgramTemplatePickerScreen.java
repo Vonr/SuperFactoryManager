@@ -53,8 +53,8 @@ public class ProgramTemplatePickerScreen extends Screen {
                 String finalProgram = program;
                 Program.compile(
                         program,
-                        success -> templatePrograms.put(
-                                success.name().isBlank() ? entry.getKey().toString() : success.name(),
+                        (successProgram, builder) -> templatePrograms.put(
+                                successProgram.name().isBlank() ? entry.getKey().toString() : successProgram.name(),
                                 finalProgram
                         ),
                         failure -> templatePrograms.put(entry.getKey().toString(), finalProgram)

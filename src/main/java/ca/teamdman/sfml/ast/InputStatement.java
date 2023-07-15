@@ -83,4 +83,9 @@ public record InputStatement(
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return "INPUT " + resourceLimits + " FROM " + (each ? "EACH " : "") + labelAccess;
+    }
 }

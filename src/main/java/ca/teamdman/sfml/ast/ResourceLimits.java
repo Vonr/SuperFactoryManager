@@ -33,4 +33,9 @@ public record ResourceLimits(
     public ResourceLimits withExclusions(ResourceIdSet exclusions) {
         return new ResourceLimits(resourceLimits, exclusions);
     }
+
+    @Override
+    public String toString() {
+        return resourceLimits.stream().map(Object::toString).collect(Collectors.joining(",\n"));
+    }
 }

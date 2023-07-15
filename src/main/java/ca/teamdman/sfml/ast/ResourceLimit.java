@@ -129,4 +129,9 @@ public record ResourceLimit<STACK, ITEM, CAP>(
     public boolean test(Object stack) {
         return resourceId.test(stack);
     }
+
+    @Override
+    public String toString() {
+        return limit + " " + resourceId.toStringCondensed();
+    }
 }

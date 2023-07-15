@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfml.ast.DirectionQualifier;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.core.BlockPos;
@@ -89,18 +90,6 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         return sb.toString();
     }
 
-    public static String directionToString(@Nullable Direction direction) {
-        if (direction == null) return "";
-        return switch (direction) {
-            case UP -> "TOP";
-            case DOWN -> "BOTTOM";
-            case NORTH -> "NORTH";
-            case SOUTH -> "SOUTH";
-            case EAST -> "EAST";
-            case WEST -> "WEST";
-        };
-    }
-
     private static <STACK, ITEM, CAP> String buildInspectionResults(
             ResourceKey<ResourceType<STACK, ITEM, CAP>> typeKey,
             ResourceType<STACK, ITEM, CAP> type,
@@ -139,7 +128,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                     }
                     sb.append(" FROM target ");
                     if (direction != null) {
-                        sb.append(directionToString(direction))
+                        sb.append(DirectionQualifier.directionToString(direction))
                                 .append(" SIDE ");
                     }
                     sb.append("SLOTS ")
@@ -175,7 +164,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                 if (direction == null) {
                     sb.append("FROM target");
                 } else {
-                    sb.append("FROM target ").append(directionToString(direction)).append(" SIDE");
+                    sb.append("FROM target ").append(DirectionQualifier.directionToString(direction)).append(" SIDE");
                 }
             }
             sb.append("\n");

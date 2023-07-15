@@ -15,4 +15,9 @@ public record ResourceQuantity(
         EXPAND,
         NO_EXPAND
     }
+
+    @Override
+    public String toString() {
+        return number + (idExpansionBehaviour == IdExpansionBehaviour.EXPAND ? " EACH" : "");
+    }
 }

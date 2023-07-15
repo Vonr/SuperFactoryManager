@@ -2,9 +2,9 @@ package ca.teamdman.sfm.common.compat;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
-import ca.teamdman.sfm.common.net.ServerboundContainerExportsInspectionRequestPacket;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.*;
+import ca.teamdman.sfml.ast.DirectionQualifier;
 import mekanism.api.RelativeSide;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.tile.component.TileComponentConfig;
@@ -65,7 +65,7 @@ public class SFMMekanismCompat {
                                 sb.append("INPUT ").append(resourceTypeKey.location()).append(":: FROM target ");
                                 sb.append(outputSides
                                                   .stream()
-                                                  .map(ServerboundContainerExportsInspectionRequestPacket::directionToString)
+                                                  .map(DirectionQualifier::directionToString)
                                                   .collect(Collectors.joining(", ")));
                                 sb.append(" SIDE\n");
                             }
@@ -88,7 +88,7 @@ public class SFMMekanismCompat {
                                 sb.append("OUTPUT ").append(resourceTypeKey.location()).append(":: TO target ");
                                 sb.append(inputSides
                                                   .stream()
-                                                  .map(ServerboundContainerExportsInspectionRequestPacket::directionToString)
+                                                  .map(DirectionQualifier::directionToString)
                                                   .collect(Collectors.joining(", ")));
                                 sb.append(" SIDE\n");
                             }
