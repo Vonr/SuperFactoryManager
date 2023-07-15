@@ -33,7 +33,6 @@ public record ResourceComparer<STACK, ITEM, CAP>(
                 }
                 satisfiedSet.add(this.op.test(invCount, this.quantity.number().value()));
             }
-            //todo: quantity EACH support
             var isOverallSatisfied = this.op.test(overallCount, this.quantity.number().value());
             return setOp.test(isOverallSatisfied, satisfiedSet);
         });

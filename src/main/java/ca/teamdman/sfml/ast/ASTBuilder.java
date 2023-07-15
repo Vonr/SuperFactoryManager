@@ -214,9 +214,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public ResourceComparer<?, ?, ?> visitResourcecomparison(SFMLParser.ResourcecomparisonContext ctx) {
-        var op = visitComparisonOp(ctx.comparisonOp());
-        var quantity = visitQuantity(ctx.quantity());
-        var item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
+        ComparisonOperator op = visitComparisonOp(ctx.comparisonOp());
+        Number num = visitNumber(ctx.number());
+        ResourceQuantity quantity = new ResourceQuantity(num, ResourceQuantity.IdExpansionBehaviour.NO_EXPAND);
+        ResourceIdentifier<?, ?, ?> item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
         return new ResourceComparer<>(op, quantity, item);
     }
 

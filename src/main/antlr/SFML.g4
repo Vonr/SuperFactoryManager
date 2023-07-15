@@ -74,7 +74,7 @@ boolexpr        : TRUE                                  #BooleanTrue
                 | setOp? labelaccess HAS resourcecomparison #BooleanHas
                 | REDSTONE (comparisonOp number)?       #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp quantity resourceid ;
+resourcecomparison : comparisonOp number resourceid ;
 comparisonOp    : GT
                 | LT
                 | EQ

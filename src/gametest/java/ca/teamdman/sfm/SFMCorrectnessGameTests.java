@@ -68,7 +68,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
         assertManagerRunning(manager);
         helper.succeed();
     }
@@ -99,7 +99,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -141,7 +141,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
         // set the labels
         LabelHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
@@ -202,7 +202,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM source
                                            OUTPUT 64 dirt TO EACH dest
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
         // set the labels
         LabelHolder.empty()
                 .add("source", helper.absolutePos(sourcePos))
@@ -263,7 +263,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                       INPUT RETAIN 5 FROM a
                                       OUTPUT TO b
                                    END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
         // set the labels
         LabelHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
@@ -308,7 +308,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                                RETAIN 10 stone
                                            TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
         // set the labels
         LabelHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
@@ -353,7 +353,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT fluid:minecraft:water FROM a
                                            OUTPUT fluid:*:* TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -397,7 +397,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT fluid:minecraft:lava FROM a
                                            OUTPUT fluid:*:* TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -454,7 +454,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -507,7 +507,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT  item:minecraft:stick, fluid:minecraft:water FROM a
                                            OUTPUT stick, fluid:minecraft:water TO b
                                        end
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         assertManagerRunning(manager);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -766,7 +766,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT FROM a TOP SIDE SLOTS 0,1,3-4,5
                                            OUTPUT TO a SLOTS 2
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -840,7 +840,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                         INPUT FROM a TOP SIDE SLOTS 0,1,3-4,5
                         OUTPUT TO a SLOTS 2
                     END
-                """.stripIndent());
+                """.stripTrailing().stripIndent());
         player.setItemInHand(InteractionHand.MAIN_HAND, FormItem.getForm(disk));
         pressState.getBlock().use(
                 pressState,
@@ -1171,7 +1171,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                         INPUT FROM a TOP SIDE SLOTS 0,1,3-4,5
                         OUTPUT TO a SLOTS 2
                     END
-                """.stripIndent());
+                """.stripTrailing().stripIndent());
         helper
                 .getLevel()
                 .addFreshEntity(new ItemEntity(
@@ -1378,7 +1378,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                     INPUT FROM a
                     OUTPUT TO b
                 END
-                """.stripIndent();
+                """.stripTrailing().stripIndent();
         String programWithWindowsLineEndings = program.replaceAll("\n", "\r\n");
         manager.setProgram(programWithWindowsLineEndings);
         if (manager.getProgramString().get().equals(program)) {
@@ -1433,7 +1433,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            output dirt to left
                                        end
                                    END
-                                   """);
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1508,7 +1508,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            output dirt to left
                                        end
                                    END
-                                   """);
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1583,7 +1583,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            output dirt to left
                                        end
                                    END
-                                   """);
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1658,7 +1658,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            output dirt to left
                                        end
                                    END
-                                   """);
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1733,7 +1733,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            output dirt to left
                                        end
                                    END
-                                   """);
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1790,7 +1790,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT "[a-z]*" FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1830,7 +1830,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT "[a-zA-Z]*" FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1870,7 +1870,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT "[a-z0-9]*" FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1910,7 +1910,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT 2 EACH *ingot* FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -1958,7 +1958,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT 2 EACH RETAIN 2 *ingot* FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -2004,7 +2004,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT 2 EACH RETAIN 2 EACH *ingot* FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
@@ -2051,7 +2051,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            INPUT RETAIN 2 EACH *ingot* FROM a
                                            OUTPUT TO b
                                        END
-                                   """.stripIndent());
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelHolder.empty()
