@@ -108,17 +108,31 @@ public class SFMPackets {
 
         INSPECTION_CHANNEL.registerMessage(
                 0,
-                ServerboundInspectExportsPacket.class,
-                ServerboundInspectExportsPacket::encode,
-                ServerboundInspectExportsPacket::decode,
-                ServerboundInspectExportsPacket::handle
+                ServerboundContainerExportsInspectionRequestPacket.class,
+                ServerboundContainerExportsInspectionRequestPacket::encode,
+                ServerboundContainerExportsInspectionRequestPacket::decode,
+                ServerboundContainerExportsInspectionRequestPacket::handle
         );
         INSPECTION_CHANNEL.registerMessage(
                 1,
-                ClientboundInspectExportsResultPacket.class,
-                ClientboundInspectExportsResultPacket::encode,
-                ClientboundInspectExportsResultPacket::decode,
-                ClientboundInspectExportsResultPacket::handle
+                ClientboundContainerExportsInspectionResultsPacket.class,
+                ClientboundContainerExportsInspectionResultsPacket::encode,
+                ClientboundContainerExportsInspectionResultsPacket::decode,
+                ClientboundContainerExportsInspectionResultsPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                2,
+                ServerboundLabelInspectionRequestPacket.class,
+                ServerboundLabelInspectionRequestPacket::encode,
+                ServerboundLabelInspectionRequestPacket::decode,
+                ServerboundLabelInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                3,
+                ClientboundLabelInspectionResultsPacket.class,
+                ClientboundLabelInspectionResultsPacket::encode,
+                ClientboundLabelInspectionResultsPacket::decode,
+                ClientboundLabelInspectionResultsPacket::handle
         );
     }
 

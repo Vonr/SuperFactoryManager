@@ -2,6 +2,8 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.Nullable;
@@ -12,12 +14,23 @@ import java.util.stream.Stream;
 public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     private final Set<Label> USED_LABELS = new HashSet<>();
     private final Set<ResourceIdentifier<?, ?, ?>> USED_RESOURCES = new HashSet<>();
+    private final List<Pair<ASTNode, ParserRuleContext>> NODE_CONTEXTS = new LinkedList<>();
 
+    public List<ASTNode> getNodesUnderCursor(int cursorPos) {
+        return NODE_CONTEXTS
+                .stream()
+                .filter(pair -> pair.b != null)
+                .filter(pair -> pair.b.start.getStartIndex() <= cursorPos && pair.b.stop.getStopIndex() >= cursorPos)
+                .map(pair -> pair.a)
+                .collect(Collectors.toList());
+    }
 
     @Override
     public StringHolder visitName(@Nullable SFMLParser.NameContext ctx) {
         if (ctx == null) return new StringHolder("");
-        return visitString(ctx.string());
+        StringHolder name = visitString(ctx.string());
+        NODE_CONTEXTS.add(new Pair<>(name, ctx));
+        return name;
     }
 
     @Override
@@ -33,6 +46,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var rtn = ResourceIdentifier.fromString(str);
         USED_RESOURCES.add(rtn);
         rtn.assertValid();
+        NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
 
@@ -41,26 +55,41 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var rtn = ResourceIdentifier.fromString(visitString(ctx.string()).value());
         USED_RESOURCES.add(rtn);
         rtn.assertValid();
+        NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
 
     @Override
     public StringHolder visitString(SFMLParser.StringContext ctx) {
         var content = ctx.getText();
-        return new StringHolder(content.substring(1, content.length() - 1));
+        StringHolder str = new StringHolder(content.substring(1, content.length() - 1));
+        NODE_CONTEXTS.add(new Pair<>(str, ctx));
+        return str;
     }
 
     @Override
     public Label visitRawLabel(SFMLParser.RawLabelContext ctx) {
         var label = new Label(ctx.getText());
+        if (label.name().length() > Program.MAX_LABEL_LENGTH) {
+            throw new IllegalArgumentException("Label name cannot be longer than "
+                                               + Program.MAX_LABEL_LENGTH
+                                               + " characters.");
+        }
         USED_LABELS.add(label);
+        NODE_CONTEXTS.add(new Pair<>(label, ctx));
         return label;
     }
 
     @Override
     public Label visitStringLabel(SFMLParser.StringLabelContext ctx) {
         var label = new Label(visitString(ctx.string()).value());
+        if (label.name().length() > Program.MAX_LABEL_LENGTH) {
+            throw new IllegalArgumentException("Label name cannot be longer than "
+                                               + Program.MAX_LABEL_LENGTH
+                                               + " characters.");
+        }
         USED_LABELS.add(label);
+        NODE_CONTEXTS.add(new Pair<>(label, ctx));
         return label;
     }
 
@@ -77,7 +106,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .stream()
                 .map(Label::name)
                 .collect(Collectors.toSet());
-        return new Program(name.value(), triggers, labels, USED_RESOURCES);
+        Program program = new Program(name.value(), triggers, labels, USED_RESOURCES);
+        NODE_CONTEXTS.add(new Pair<>(program, ctx));
+        return program;
     }
 
     @Override
@@ -85,7 +116,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var time = (Interval) visit(ctx.interval());
         if (time.getSeconds() < 1) throw new IllegalArgumentException("Minimum trigger interval is 1 second.");
         var block = visitBlock(ctx.block());
-        return new TimerTrigger(time, block);
+        TimerTrigger timerTrigger = new TimerTrigger(time, block);
+        NODE_CONTEXTS.add(new Pair<>(timerTrigger, ctx));
+        return timerTrigger;
     }
 
     @Override
@@ -101,7 +134,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         assert num.value() <= Integer.MAX_VALUE;
         int finalNum = (int) num.value();
         //noinspection DataFlowIssue // if the program is ticking, level shouldn't be null
-        return new BoolExpr(
+        BoolExpr boolExpr = new BoolExpr(
                 programContext -> finalComp.test(
                         (long) programContext
                                 .getManager()
@@ -112,41 +145,55 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                         (long) finalNum
                 )
         );
+        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        return boolExpr;
     }
 
     @Override
     public ASTNode visitPulseTrigger(SFMLParser.PulseTriggerContext ctx) {
         var block = visitBlock(ctx.block());
-        return new RedstoneTrigger(block);
+        RedstoneTrigger redstoneTrigger = new RedstoneTrigger(block);
+        NODE_CONTEXTS.add(new Pair<>(redstoneTrigger, ctx));
+        return redstoneTrigger;
     }
 
     @Override
     public Number visitNumber(SFMLParser.NumberContext ctx) {
-        return new Number(Long.parseLong(ctx.getText()));
+        Number number = new Number(Long.parseLong(ctx.getText()));
+        NODE_CONTEXTS.add(new Pair<>(number, ctx));
+        return number;
     }
 
     @Override
     public Interval visitTicks(SFMLParser.TicksContext ctx) {
         var num = visitNumber(ctx.number());
         assert num.value() <= Integer.MAX_VALUE;
-        return Interval.fromTicks((int) num.value());
+        Interval interval = Interval.fromTicks((int) num.value());
+        NODE_CONTEXTS.add(new Pair<>(interval, ctx));
+        return interval;
     }
 
     @Override
     public Interval visitSeconds(SFMLParser.SecondsContext ctx) {
         var num = visitNumber(ctx.number());
         assert num.value() <= Integer.MAX_VALUE;
-        return Interval.fromSeconds((int) num.value());
+        Interval interval = Interval.fromSeconds((int) num.value());
+        NODE_CONTEXTS.add(new Pair<>(interval, ctx));
+        return interval;
     }
 
     @Override
     public InputStatement visitInputStatementStatement(SFMLParser.InputStatementStatementContext ctx) {
-        return (InputStatement) visit(ctx.inputstatement());
+        InputStatement input = (InputStatement) visit(ctx.inputstatement());
+        NODE_CONTEXTS.add(new Pair<>(input, ctx));
+        return input;
     }
 
     @Override
     public OutputStatement visitOutputStatementStatement(SFMLParser.OutputStatementStatementContext ctx) {
-        return (OutputStatement) visit(ctx.outputstatement());
+        OutputStatement output = (OutputStatement) visit(ctx.outputstatement());
+        NODE_CONTEXTS.add(new Pair<>(output, ctx));
+        return output;
     }
 
     @Override
@@ -155,7 +202,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var matchers = visitInputmatchers(ctx.inputmatchers());
         var exclusions = visitResourceexclusion(ctx.resourceexclusion());
         var each = ctx.EACH() != null;
-        return new InputStatement(labelAccess, matchers.withExclusions(exclusions), each);
+        InputStatement inputStatement = new InputStatement(labelAccess, matchers.withExclusions(exclusions), each);
+        NODE_CONTEXTS.add(new Pair<>(inputStatement, ctx));
+        return inputStatement;
     }
 
     @Override
@@ -164,16 +213,20 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var matchers = visitOutputmatchers(ctx.outputmatchers());
         var exclusions = visitResourceexclusion(ctx.resourceexclusion());
         var each = ctx.EACH() != null;
-        return new OutputStatement(labelAccess, matchers.withExclusions(exclusions), each);
+        OutputStatement outputStatement = new OutputStatement(labelAccess, matchers.withExclusions(exclusions), each);
+        NODE_CONTEXTS.add(new Pair<>(outputStatement, ctx));
+        return outputStatement;
     }
 
     @Override
     public LabelAccess visitLabelaccess(SFMLParser.LabelaccessContext ctx) {
-        return new LabelAccess(
+        LabelAccess labelAccess = new LabelAccess(
                 ctx.label().stream().map(this::visit).map(Label.class::cast).collect(Collectors.toList()),
                 visitSidequalifier(ctx.sidequalifier()),
                 visitSlotqualifier(ctx.slotqualifier())
         );
+        NODE_CONTEXTS.add(new Pair<>(labelAccess, ctx));
+        return labelAccess;
     }
 
     @Override
@@ -185,17 +238,23 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .map(BoolExpr.class::cast)
                 .collect(Collectors.toList());
         var blocks = ctx.block().stream().map(this::visitBlock).collect(Collectors.toList());
-        return new IfStatement(expressions, blocks);
+        IfStatement ifStatement = new IfStatement(expressions, blocks);
+        NODE_CONTEXTS.add(new Pair<>(ifStatement, ctx));
+        return ifStatement;
     }
 
     @Override
     public IfStatement visitIfStatementStatement(SFMLParser.IfStatementStatementContext ctx) {
-        return visitIfstatement(ctx.ifstatement());
+        IfStatement ifStatement = visitIfstatement(ctx.ifstatement());
+        NODE_CONTEXTS.add(new Pair<>(ifStatement, ctx));
+        return ifStatement;
     }
 
     @Override
     public BoolExpr visitBooleanTrue(SFMLParser.BooleanTrueContext ctx) {
-        return new BoolExpr(__ -> true);
+        BoolExpr boolExpr = new BoolExpr(__ -> true);
+        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        return boolExpr;
     }
 
     @Override
@@ -203,13 +262,17 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var setOp = visitSetOp(ctx.setOp());
         var labelAccess = visitLabelaccess(ctx.labelaccess());
         var comparison = visitResourcecomparison(ctx.resourcecomparison());
-        return comparison.toBooleanExpression(setOp, labelAccess);
+        BoolExpr booleanExpression = comparison.toBooleanExpression(setOp, labelAccess);
+        NODE_CONTEXTS.add(new Pair<>(booleanExpression, ctx));
+        return booleanExpression;
     }
 
     @Override
     public SetOperator visitSetOp(@Nullable SFMLParser.SetOpContext ctx) {
         if (ctx == null) return SetOperator.OVERALL;
-        return SetOperator.from(ctx.getText());
+        SetOperator from = SetOperator.from(ctx.getText());
+        NODE_CONTEXTS.add(new Pair<>(from, ctx));
+        return from;
     }
 
     @Override
@@ -218,60 +281,78 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         Number num = visitNumber(ctx.number());
         ResourceQuantity quantity = new ResourceQuantity(num, ResourceQuantity.IdExpansionBehaviour.NO_EXPAND);
         ResourceIdentifier<?, ?, ?> item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
-        return new ResourceComparer<>(op, quantity, item);
+        ResourceComparer<?, ?, ?> resourceComparer = new ResourceComparer<>(op, quantity, item);
+        NODE_CONTEXTS.add(new Pair<>(resourceComparer, ctx));
+        return resourceComparer;
     }
 
     @Override
     public ComparisonOperator visitComparisonOp(SFMLParser.ComparisonOpContext ctx) {
-        return ComparisonOperator.from(ctx.getText());
+        ComparisonOperator from = ComparisonOperator.from(ctx.getText());
+        NODE_CONTEXTS.add(new Pair<>(from, ctx));
+        return from;
     }
 
     @Override
     public BoolExpr visitBooleanConjunction(SFMLParser.BooleanConjunctionContext ctx) {
         var left = (BoolExpr) visit(ctx.boolexpr(0));
         var right = (BoolExpr) visit(ctx.boolexpr(1));
-        return new BoolExpr(left.and(right));
+        BoolExpr boolExpr = new BoolExpr(left.and(right));
+        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        return boolExpr;
     }
 
     @Override
     public BoolExpr visitBooleanDisjunction(SFMLParser.BooleanDisjunctionContext ctx) {
         var left = (BoolExpr) visit(ctx.boolexpr(0));
         var right = (BoolExpr) visit(ctx.boolexpr(1));
-        return new BoolExpr(left.or(right));
+        BoolExpr boolExpr = new BoolExpr(left.or(right));
+        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        return boolExpr;
     }
 
     @Override
     public BoolExpr visitBooleanFalse(SFMLParser.BooleanFalseContext ctx) {
-        return new BoolExpr(__ -> false);
+        BoolExpr boolExpr = new BoolExpr(__ -> false);
+        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        return boolExpr;
     }
 
     @Override
     public BoolExpr visitBooleanParen(SFMLParser.BooleanParenContext ctx) {
-        return (BoolExpr) visit(ctx.boolexpr());
+        BoolExpr expr = (BoolExpr) visit(ctx.boolexpr());
+        NODE_CONTEXTS.add(new Pair<>(expr, ctx));
+        return expr;
     }
 
     @Override
     public BoolExpr visitBooleanNegation(SFMLParser.BooleanNegationContext ctx) {
         var x = (BoolExpr) visit(ctx.boolexpr());
-        return new BoolExpr(x.negate());
+        BoolExpr boolExpr = new BoolExpr(x.negate());
+        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        return boolExpr;
     }
 
     @Override
     public Limit visitQuantityRetentionLimit(SFMLParser.QuantityRetentionLimitContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
         var retain = visitRetention(ctx.retention());
-        return new Limit(quantity, retain);
+        Limit limit = new Limit(quantity, retain);
+        NODE_CONTEXTS.add(new Pair<>(limit, ctx));
+        return limit;
     }
 
     @Override
     public ResourceIdSet visitResourceexclusion(@Nullable SFMLParser.ResourceexclusionContext ctx) {
         if (ctx == null) return ResourceIdSet.EMPTY;
-        return new ResourceIdSet(ctx
-                                         .resourceid()
-                                         .stream()
-                                         .map(this::visit)
-                                         .map(ResourceIdentifier.class::cast)
-                                         .collect(HashSet::new, HashSet::add, HashSet::addAll));
+        ResourceIdSet resourceIdSet = new ResourceIdSet(ctx
+                                                                .resourceid()
+                                                                .stream()
+                                                                .map(this::visit)
+                                                                .map(ResourceIdentifier.class::cast)
+                                                                .collect(HashSet::new, HashSet::add, HashSet::addAll));
+        NODE_CONTEXTS.add(new Pair<>(resourceIdSet, ctx));
+        return resourceIdSet;
     }
 
     @Override
@@ -279,7 +360,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (ctx == null) {
             return new ResourceLimits(List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE), ResourceIdSet.EMPTY);
         }
-        return ((ResourceLimits) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, 0);
+        ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, 0);
+        NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
+        return resourceLimits;
     }
 
 
@@ -288,31 +371,37 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (ctx == null) {
             return new ResourceLimits(List.of(ResourceLimit.ACCEPT_ALL_WITHOUT_RESTRAINT), ResourceIdSet.EMPTY);
         }
-        return ((ResourceLimits) visit(ctx.movement())).withDefaults(
+        ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(
                 Long.MAX_VALUE,
                 Long.MAX_VALUE
         );
+        NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
+        return resourceLimits;
     }
 
     @Override
     public ASTNode visitResourceLimitMovement(SFMLParser.ResourceLimitMovementContext ctx) {
-        return new ResourceLimits(
+        ResourceLimits resourceLimits = new ResourceLimits(
                 ctx.resourcelimit().stream()
                         .map(this::visitResourcelimit)
                         .collect(Collectors.toList()),
                 ResourceIdSet.EMPTY
         );
+        NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
+        return resourceLimits;
     }
 
     @Override
     public ResourceLimits visitLimitMovement(SFMLParser.LimitMovementContext ctx) {
-        return new ResourceLimits(
+        ResourceLimits resourceLimits = new ResourceLimits(
                 List.of(new ResourceLimit<>(
                         (Limit) this.visit(ctx.limit()),
                         ResourceIdentifier.MATCH_ALL
                 )),
                 ResourceIdSet.EMPTY
         );
+        NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
+        return resourceLimits;
     }
 
     @Override
@@ -324,18 +413,28 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             return new ResourceLimit<>(res);
 
         var limit = (Limit) visit(ctx.limit());
-        return new ResourceLimit<>(limit, res);
+        ResourceLimit<?, ?, ?> resourceLimit = new ResourceLimit<>(limit, res);
+        NODE_CONTEXTS.add(new Pair<>(resourceLimit, ctx));
+        return resourceLimit;
     }
 
     @Override
     public NumberRangeSet visitSlotqualifier(@Nullable SFMLParser.SlotqualifierContext ctx) {
-        return visitRangeset(ctx == null ? null : ctx.rangeset());
+        NumberRangeSet numberRangeSet = visitRangeset(ctx == null ? null : ctx.rangeset());
+        NODE_CONTEXTS.add(new Pair<>(numberRangeSet, ctx));
+        return numberRangeSet;
     }
 
     @Override
     public NumberRangeSet visitRangeset(@Nullable SFMLParser.RangesetContext ctx) {
         if (ctx == null) return new NumberRangeSet(new NumberRange[]{new NumberRange(Long.MIN_VALUE, Long.MAX_VALUE)});
-        return new NumberRangeSet(ctx.range().stream().map(this::visitRange).toArray(NumberRange[]::new));
+        NumberRangeSet numberRangeSet = new NumberRangeSet(ctx
+                                                                   .range()
+                                                                   .stream()
+                                                                   .map(this::visitRange)
+                                                                   .toArray(NumberRange[]::new));
+        NODE_CONTEXTS.add(new Pair<>(numberRangeSet, ctx));
+        return numberRangeSet;
     }
 
     @Override
@@ -344,9 +443,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var start = iter.next();
         if (iter.hasNext()) {
             var end = iter.next();
-            return new NumberRange(start, end);
+            NumberRange numberRange = new NumberRange(start, end);
+            NODE_CONTEXTS.add(new Pair<>(numberRange, ctx));
+            return numberRange;
         } else {
-            return new NumberRange(start, start);
+            NumberRange numberRange = new NumberRange(start, start);
+            NODE_CONTEXTS.add(new Pair<>(numberRange, ctx));
+            return numberRange;
         }
     }
 
@@ -354,48 +457,60 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Limit visitRetentionLimit(SFMLParser.RetentionLimitContext ctx) {
         var retain = visitRetention(ctx.retention());
-        return new Limit(ResourceQuantity.UNSET, retain);
+        Limit limit = new Limit(ResourceQuantity.UNSET, retain);
+        NODE_CONTEXTS.add(new Pair<>(limit, ctx));
+        return limit;
     }
 
     @Override
     public Limit visitQuantityLimit(SFMLParser.QuantityLimitContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
-        return new Limit(quantity, ResourceQuantity.UNSET);
+        Limit limit = new Limit(quantity, ResourceQuantity.UNSET);
+        NODE_CONTEXTS.add(new Pair<>(limit, ctx));
+        return limit;
     }
 
     @Override
     public ResourceQuantity visitRetention(@Nullable SFMLParser.RetentionContext ctx) {
         if (ctx == null)
             return ResourceQuantity.UNSET;
-        return new ResourceQuantity(
+        ResourceQuantity quantity = new ResourceQuantity(
                 visitNumber(ctx.number()),
                 ctx.EACH() != null
                 ? ResourceQuantity.IdExpansionBehaviour.EXPAND
                 : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
         );
+        NODE_CONTEXTS.add(new Pair<>(quantity, ctx));
+        return quantity;
     }
 
     @Override
     public ResourceQuantity visitQuantity(@Nullable SFMLParser.QuantityContext ctx) {
         if (ctx == null) return ResourceQuantity.MAX_QUANTITY;
-        return new ResourceQuantity(
+        ResourceQuantity quantity = new ResourceQuantity(
                 visitNumber(ctx.number()),
                 ctx.EACH() != null
                 ? ResourceQuantity.IdExpansionBehaviour.EXPAND
                 : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
         );
+        NODE_CONTEXTS.add(new Pair<>(quantity, ctx));
+        return quantity;
     }
 
     @Override
     public DirectionQualifier visitSidequalifier(@Nullable SFMLParser.SidequalifierContext ctx) {
         if (ctx == null) return new DirectionQualifier(Stream.empty());
         var sides = ctx.side().stream().map(this::visitSide);
-        return new DirectionQualifier(sides);
+        DirectionQualifier directionQualifier = new DirectionQualifier(sides);
+        NODE_CONTEXTS.add(new Pair<>(directionQualifier, ctx));
+        return directionQualifier;
     }
 
     @Override
     public Side visitSide(SFMLParser.SideContext ctx) {
-        return Side.valueOf(ctx.getText().toUpperCase(Locale.ROOT));
+        Side side = Side.valueOf(ctx.getText().toUpperCase(Locale.ROOT));
+        NODE_CONTEXTS.add(new Pair<>(side, ctx));
+        return side;
     }
 
     @Override
@@ -407,6 +522,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .map(this::visit)
                 .map(Statement.class::cast)
                 .collect(Collectors.toList());
-        return new Block(statements);
+        Block block = new Block(statements);
+        NODE_CONTEXTS.add(new Pair<>(block, ctx));
+        return block;
     }
 }

@@ -214,7 +214,7 @@ public class DiskItem extends Item {
                         start = start.append(Component.literal("=").withStyle(color));
                     }
                     list.add(start);
-                    list.addAll(ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(program));
+                    list.addAll(ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(program, false));
                 }
             }
         }

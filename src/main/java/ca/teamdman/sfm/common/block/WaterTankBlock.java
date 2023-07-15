@@ -88,7 +88,6 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }

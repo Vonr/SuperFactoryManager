@@ -234,7 +234,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private void sendReset() {
         SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerResetPacket(
                 menu.containerId,
-                menu.BLOCK_ENTITY_POSITION
+                menu.MANAGER_POSITION
         ));
         status = MANAGER_GUI_STATUS_RESET.getComponent();
         statusCountdown = STATUS_DURATION;
@@ -243,7 +243,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private void sendAttemptFix() {
         SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerFixPacket(
                 menu.containerId,
-                menu.BLOCK_ENTITY_POSITION
+                menu.MANAGER_POSITION
         ));
         status = MANAGER_GUI_STATUS_FIX.getComponent();
         statusCountdown = STATUS_DURATION;
@@ -252,7 +252,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private void sendProgram(String program) {
         SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerProgramPacket(
                 menu.containerId,
-                menu.BLOCK_ENTITY_POSITION,
+                menu.MANAGER_POSITION,
                 program
         ));
         menu.program = program;

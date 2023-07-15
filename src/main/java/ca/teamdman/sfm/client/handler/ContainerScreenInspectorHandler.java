@@ -4,7 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
-import ca.teamdman.sfm.common.net.ServerboundInspectExportsPacket;
+import ca.teamdman.sfm.common.net.ServerboundContainerExportsInspectionRequestPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -37,7 +37,7 @@ public class ContainerScreenInspectorHandler {
             (button) -> {
                 BlockEntity lookBlockEntity = ClientStuff.getLookBlockEntity();
                 if (lastScreen != null && lookBlockEntity != null) {
-                    SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundInspectExportsPacket(
+                    SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundContainerExportsInspectionRequestPacket(
                             lastScreen.getMenu().containerId,
                             lookBlockEntity.getBlockPos()
                     ));
@@ -79,7 +79,6 @@ public class ContainerScreenInspectorHandler {
                     colour = ChatFormatting.YELLOW.getColor();
                     inventorySlotCount++;
                 } else {
-                    //noinspection DataFlowIssue
                     colour = 0xFFF;
                     containerSlotCount++;
                 }

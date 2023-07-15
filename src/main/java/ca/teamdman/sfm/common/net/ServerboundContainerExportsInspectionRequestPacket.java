@@ -23,23 +23,26 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public record ServerboundInspectExportsPacket(
+public record ServerboundContainerExportsInspectionRequestPacket(
         int windowId,
         BlockPos pos
 ) {
-    public static void encode(ServerboundInspectExportsPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(ServerboundContainerExportsInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
     }
 
-    public static ServerboundInspectExportsPacket decode(FriendlyByteBuf friendlyByteBuf) {
-        return new ServerboundInspectExportsPacket(
+    public static ServerboundContainerExportsInspectionRequestPacket decode(FriendlyByteBuf friendlyByteBuf) {
+        return new ServerboundContainerExportsInspectionRequestPacket(
                 friendlyByteBuf.readVarInt(),
                 friendlyByteBuf.readBlockPos()
         );
     }
 
-    public static void handle(ServerboundInspectExportsPacket msg, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handle(
+            ServerboundContainerExportsInspectionRequestPacket msg,
+            Supplier<NetworkEvent.Context> contextSupplier
+    ) {
         SFMPackets.handleServerboundContainerPacket(
                 contextSupplier,
                 AbstractContainerMenu.class,
@@ -50,7 +53,7 @@ public record ServerboundInspectExportsPacket(
                     String payload = buildInspectionResults(blockEntity);
                     SFMPackets.INSPECTION_CHANNEL.send(
                             PacketDistributor.PLAYER.with(contextSupplier.get()::getSender),
-                            new ClientboundInspectExportsResultPacket(
+                            new ClientboundContainerExportsInspectionResultsPacket(
                                     msg.windowId,
                                     payload
                             )

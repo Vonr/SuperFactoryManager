@@ -2,7 +2,7 @@ package ca.teamdman.sfm.common.compat;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
-import ca.teamdman.sfm.common.net.ServerboundInspectExportsPacket;
+import ca.teamdman.sfm.common.net.ServerboundContainerExportsInspectionRequestPacket;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.*;
 import mekanism.api.RelativeSide;
@@ -51,49 +51,49 @@ public class SFMMekanismCompat {
         sb.append("-- Mekanism stuff\n");
         TileComponentConfig config = sideConfiguration.getConfig();
         for (TransmissionType type : TransmissionType.values()) {
-            getResourceType(type).ifPresent(resourceType -> {
-                SFMResourceTypes.DEFERRED_TYPES.get().getResourceKey(resourceType).ifPresent(resourceTypeKey -> {
-                    ConfigInfo info = config.getConfig(type);
-                    if (info != null) {
-                        Set<Direction> outputSides = info.getSides(DataType::canOutput);
-                        if (!outputSides.isEmpty()) {
-                            sb
-                                    .append("-- ")
-                                    .append(Constants.LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_MACHINE_OUTPUTS.getString())
-                                    .append("\n");
-                            sb.append("INPUT ").append(resourceTypeKey.location()).append(":: FROM target ");
-                            sb.append(outputSides
-                                              .stream()
-                                              .map(ServerboundInspectExportsPacket::directionToString)
-                                              .collect(Collectors.joining(", ")));
-                            sb.append(" SIDE\n");
-                        }
+            getResourceType(type)
+                    .flatMap(resourceType -> SFMResourceTypes.DEFERRED_TYPES.get().getResourceKey(resourceType))
+                    .ifPresent(resourceTypeKey -> {
+                        ConfigInfo info = config.getConfig(type);
+                        if (info != null) {
+                            Set<Direction> outputSides = info.getSides(DataType::canOutput);
+                            if (!outputSides.isEmpty()) {
+                                sb
+                                        .append("-- ")
+                                        .append(Constants.LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_MACHINE_OUTPUTS.getString())
+                                        .append("\n");
+                                sb.append("INPUT ").append(resourceTypeKey.location()).append(":: FROM target ");
+                                sb.append(outputSides
+                                                  .stream()
+                                                  .map(ServerboundContainerExportsInspectionRequestPacket::directionToString)
+                                                  .collect(Collectors.joining(", ")));
+                                sb.append(" SIDE\n");
+                            }
 
-                        Set<Direction> inputSides = new HashSet<>();
-                        for (RelativeSide side : RelativeSide.values()) {
-                            DataType dataType = info.getDataType(side);
-                            if (dataType == DataType.INPUT
-                                || dataType == DataType.INPUT_1
-                                || dataType == DataType.INPUT_2
-                                || dataType == DataType.INPUT_OUTPUT) {
-                                inputSides.add(side.getDirection(sideConfiguration.getDirection()));
+                            Set<Direction> inputSides = new HashSet<>();
+                            for (RelativeSide side : RelativeSide.values()) {
+                                DataType dataType = info.getDataType(side);
+                                if (dataType == DataType.INPUT
+                                    || dataType == DataType.INPUT_1
+                                    || dataType == DataType.INPUT_2
+                                    || dataType == DataType.INPUT_OUTPUT) {
+                                    inputSides.add(side.getDirection(sideConfiguration.getDirection()));
+                                }
+                            }
+                            if (!inputSides.isEmpty()) {
+                                sb
+                                        .append("-- ")
+                                        .append(Constants.LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_MACHINE_INPUTS.getString())
+                                        .append("\n");
+                                sb.append("OUTPUT ").append(resourceTypeKey.location()).append(":: TO target ");
+                                sb.append(inputSides
+                                                  .stream()
+                                                  .map(ServerboundContainerExportsInspectionRequestPacket::directionToString)
+                                                  .collect(Collectors.joining(", ")));
+                                sb.append(" SIDE\n");
                             }
                         }
-                        if (!inputSides.isEmpty()) {
-                            sb
-                                    .append("-- ")
-                                    .append(Constants.LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_MACHINE_INPUTS.getString())
-                                    .append("\n");
-                            sb.append("OUTPUT ").append(resourceTypeKey.location()).append(":: TO target ");
-                            sb.append(inputSides
-                                              .stream()
-                                              .map(ServerboundInspectExportsPacket::directionToString)
-                                              .collect(Collectors.joining(", ")));
-                            sb.append(" SIDE\n");
-                        }
-                    }
-                });
-            });
+                    });
         }
         return sb.toString();
     }

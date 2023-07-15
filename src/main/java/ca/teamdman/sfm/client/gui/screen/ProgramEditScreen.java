@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
+import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.client.gui.IndentationUtils;
 import ca.teamdman.sfm.common.Constants;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -97,6 +98,24 @@ public class ProgramEditScreen extends Screen {
     }
 
     @Override
+    public boolean keyReleased(int pKeyCode, int pScanCode, int pModifiers) {
+        if (pKeyCode == GLFW.GLFW_KEY_LEFT_CONTROL || pKeyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
+            // if control released => update syntax highlighting
+            textarea.rebuild(Screen.hasControlDown());
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(char pCodePoint, int pModifiers) {
+        if (Screen.hasControlDown() && pCodePoint == ' ') {
+            return true;
+        }
+        return super.charTyped(pCodePoint, pModifiers);
+    }
+
+    @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {
             onDone();
@@ -119,6 +138,22 @@ public class ProgramEditScreen extends Screen {
             textarea.setValue(result.content());
             textarea.setCursorPosition(result.cursorPosition());
             textarea.setSelectionCursorPosition(result.selectionCursorPosition());
+            return true;
+        }
+        if (pKeyCode == GLFW.GLFW_KEY_LEFT_CONTROL || pKeyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
+            // if control pressed => update syntax highlighting
+            textarea.rebuild(Screen.hasControlDown());
+            return true;
+        }
+        if (pKeyCode == GLFW.GLFW_KEY_SPACE && Screen.hasControlDown()) {
+            ProgramTokenContextActions.getContextAction(
+                            textarea.getValue(),
+                            textarea.getCursorPosition()
+                    )
+                    .ifPresent(Runnable::run);
+
+            // disable the underline since it doesn't refresh when the context action closes
+            textarea.rebuild(false);
             return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
@@ -177,12 +212,19 @@ public class ProgramEditScreen extends Screen {
             this.textField.selectCursor = cursor;
         }
 
+        private void rebuild(boolean showContextActionHints) {
+            lastProgram = this.textField.value();
+            lastProgramWithSyntaxHighlighting = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(
+                    lastProgram,
+                    showContextActionHints
+            );
+        }
+
         @Override
         protected void renderContents(PoseStack poseStack, int mx, int my, float partialTicks) {
             Matrix4f matrix4f = poseStack.last().pose();
             if (!lastProgram.equals(this.textField.value())) {
-                lastProgram = this.textField.value();
-                lastProgramWithSyntaxHighlighting = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(lastProgram);
+                rebuild(Screen.hasControlDown());
             }
             List<MutableComponent> lines = lastProgramWithSyntaxHighlighting;
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;

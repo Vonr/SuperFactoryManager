@@ -30,6 +30,7 @@ public record Program(
         Set<ResourceIdentifier<?, ?, ?>> referencedResources
 ) implements ASTNode {
     public static final int MAX_PROGRAM_LENGTH = 80960;
+    public static final int MAX_LABEL_LENGTH = 256;
 
     public static void compile(
             String programString, Consumer<Program> onSuccess, Consumer<List<TranslatableContents>> onFailure

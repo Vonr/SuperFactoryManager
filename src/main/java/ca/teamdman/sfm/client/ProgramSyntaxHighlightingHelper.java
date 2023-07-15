@@ -4,6 +4,7 @@ import ca.teamdman.sfml.SFMLLexer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
@@ -12,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProgramSyntaxHighlightingHelper {
-    public static List<MutableComponent> withSyntaxHighlighting(String programString) {
+
+    public static List<MutableComponent> withSyntaxHighlighting(String programString, boolean showContextActionHints) {
         SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
         lexer.INCLUDE_UNUSED = true;
         CommonTokenStream tokens = new CommonTokenStream(lexer) {
@@ -49,7 +51,7 @@ public class ProgramSyntaxHighlightingHelper {
                 }
                 String line = lines[i];
                 if (!line.isEmpty()) {
-                    var text = Component.literal(line).withStyle(getStyle(token));
+                    var text = Component.literal(line).withStyle(getStyle(token, showContextActionHints));
                     lineComponent = lineComponent.append(text);
                 }
             }
@@ -59,7 +61,16 @@ public class ProgramSyntaxHighlightingHelper {
         return textComponents;
     }
 
-    private static ChatFormatting getStyle(Token token) {
+    private static Style getStyle(Token token, boolean showContextActionHints) {
+        Style style = Style.EMPTY;
+        style = style.withColor(getColour(token));
+        if (showContextActionHints && ProgramTokenContextActions.hasContextAction(token)) {
+            style = style.withUnderlined(true);
+        }
+        return style;
+    }
+
+    private static ChatFormatting getColour(Token token) {
         //noinspection EnhancedSwitchMigration
         switch (token.getType()) {
             case SFMLLexer.SIDE:
