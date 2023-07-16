@@ -6,7 +6,9 @@ import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfml.ast.DirectionQualifier;
+import ca.teamdman.sfml.ast.InputStatement;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.core.BlockPos;
@@ -91,49 +93,36 @@ public record ServerboundContainerExportsInspectionRequestPacket(
     }
 
     private static <STACK, ITEM, CAP> String buildInspectionResults(
-            ResourceKey<ResourceType<STACK, ITEM, CAP>> typeKey,
-            ResourceType<STACK, ITEM, CAP> type,
+            ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey,
+            ResourceType<STACK, ITEM, CAP> resourceType,
             BlockEntity be,
             @Nullable
             Direction direction
     ) {
         StringBuilder sb = new StringBuilder();
-        be.getCapability(type.CAPABILITY, direction).ifPresent(cap -> {
-            int slots = type.getSlots(cap);
+        be.getCapability(resourceType.CAPABILITY, direction).ifPresent(cap -> {
+            int slots = resourceType.getSlots(cap);
             Int2ObjectMap<STACK> slotContents = new Int2ObjectArrayMap<>(slots);
             for (int slot = 0; slot < slots; slot++) {
-                STACK stack = type.getStackInSlot(cap, slot);
-                if (!type.isEmpty(stack)) {
+                STACK stack = resourceType.getStackInSlot(cap, slot);
+                if (!resourceType.isEmpty(stack)) {
                     slotContents.put(slot, stack);
                 }
             }
 
             if (!slotContents.isEmpty()) {
-                sb.append("-- ").append(typeKey.location()).append("\n");
+                sb.append("-- ").append(resourceTypeResourceKey.location()).append("\n");
                 slotContents.forEach((slot, stack) -> {
-                    // example:
-                    // INPUT 5 item:minecraft:iron_ingot FROM target TOP SIDE SLOTS 0
-                    sb
-                            .append("INPUT ")
-                            .append(type.getCount(stack))
-                            .append(" ");
-                    if (typeKey.equals(SFMResourceTypes.ITEM.getKey())) {
-                        sb.append(type.getRegistryKey(stack));
-                    } else if (typeKey.equals(SFMResourceTypes.FORGE_ENERGY.getKey())) {
-                        sb.append("forge_energy::");
-                    } else {
-                        sb.append(typeKey.location().toString().replaceFirst("^sfm:", ""))
-                                .append(":")
-                                .append(type.getRegistryKey(stack));
-                    }
-                    sb.append(" FROM target ");
-                    if (direction != null) {
-                        sb.append(DirectionQualifier.directionToString(direction))
-                                .append(" SIDE ");
-                    }
-                    sb.append("SLOTS ")
-                            .append(slot)
-                            .append("\n");
+                    InputStatement inputStatement = SFMUtil.getInputStatementForStack(
+                            resourceTypeResourceKey,
+                            resourceType,
+                            stack,
+                            "target",
+                            slot,
+                            false,
+                            direction
+                    );
+                    sb.append(inputStatement).append("\n");
                 });
                 sb.append("\n");
                 /*
@@ -147,14 +136,16 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                 sb.append("INPUT\n");
                 StringBuilder lines = new StringBuilder();
                 slotContents.forEach((slot, stack) -> {
-                    if (typeKey.equals(SFMResourceTypes.ITEM.getKey())) {
-                        lines.append("    ").append(type.getRegistryKey(stack)).append(",\n");
-                    } else if (typeKey.equals(SFMResourceTypes.FORGE_ENERGY.getKey())) {
+                    if (resourceTypeResourceKey.equals(SFMResourceTypes.ITEM.getKey())) {
+                        lines.append("    ").append(resourceType.getRegistryKey(stack)).append(",\n");
+                    } else if (resourceTypeResourceKey.equals(SFMResourceTypes.FORGE_ENERGY.getKey())) {
                         lines.append("    forge_energy::").append(",\n");
                     } else {
-                        lines.append("    ").append(typeKey.location().toString().replaceFirst("^sfm:", ""))
+                        lines
+                                .append("    ")
+                                .append(resourceTypeResourceKey.location().toString().replaceFirst("^sfm:", ""))
                                 .append(":")
-                                .append(type.getRegistryKey(stack))
+                                .append(resourceType.getRegistryKey(stack))
                                 .append(",\n");
                     }
                 });

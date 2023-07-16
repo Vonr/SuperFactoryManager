@@ -5,6 +5,10 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 public record RedstoneTrigger(
         Block block
 ) implements Trigger {
+    @Override
+    public Block getBlock() {
+        return block;
+    }
 
     @Override
     public void tick(ProgramContext context) {

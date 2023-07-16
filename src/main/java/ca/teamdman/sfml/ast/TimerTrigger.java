@@ -7,6 +7,11 @@ public record TimerTrigger(
         Block block
 ) implements Trigger {
     @Override
+    public Block getBlock() {
+        return block;
+    }
+
+    @Override
     public boolean shouldTick(ProgramContext context) {
         return context.getManager().getTick() % interval.getTicks() == 0;
     }

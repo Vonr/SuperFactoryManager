@@ -3,6 +3,7 @@ package ca.teamdman.sfm;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfml.ast.Block;
 import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -63,6 +64,12 @@ public abstract class SFMGameTestBase {
             public void tick(ProgramContext context) {
                 startTime.set(System.nanoTime());
             }
+
+            @Override
+            public Block getBlock() {
+                //noinspection DataFlowIssue
+                return null;
+            }
         };
 
         Trigger endTimerTrigger = new Trigger() {
@@ -79,6 +86,12 @@ public abstract class SFMGameTestBase {
                     hasExecuted.set(true);
                     endTime.set(System.nanoTime());
                 }
+            }
+
+            @Override
+            public Block getBlock() {
+                //noinspection DataFlowIssue
+                return null;
             }
         };
 

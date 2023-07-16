@@ -14,6 +14,7 @@ public record LabelAccess(
         StringBuilder builder = new StringBuilder();
         builder.append(labels.stream().map(Objects::toString).collect(Collectors.joining(", ")));
         if (!directions.directions().isEmpty()) {
+            builder.append(" ");
             builder
                     .append(directions
                                     .stream()
@@ -22,7 +23,7 @@ public record LabelAccess(
                     .append(" SIDE");
         }
         if (slots.ranges().length > 0) {
-            if (slots.ranges().length != 1 || slots.ranges()[0] != NumberRange.MAX_RANGE) {
+            if (slots.ranges().length != 1 || !slots.ranges()[0].equals(NumberRange.MAX_RANGE)) {
                 builder.append(" SLOTS");
                 for (NumberRange range : slots.ranges()) {
                     builder.append(" ").append(range);
