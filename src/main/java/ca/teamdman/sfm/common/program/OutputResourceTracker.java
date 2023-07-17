@@ -39,7 +39,7 @@ public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object
     public void visit(LimitedOutputSlot<STACK, ITEM, CAP> slot) {
         var stack = slot.getStackInSlot();
         if (test(stack)) {
-            RETENTION_OBLIGATION_PROGRESS.accumulateAndGet(slot.type.getCount(stack), Long::sum);
+            RETENTION_OBLIGATION_PROGRESS.accumulateAndGet(slot.type.getAmount(stack), Long::sum);
         }
     }
 

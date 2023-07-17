@@ -61,7 +61,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         return false;
     }
 
-    public abstract long getCount(STACK stack);
+    public abstract long getAmount(STACK stack);
 
     public abstract STACK getStackInSlot(CAP cap, int slot);
 
@@ -166,4 +166,13 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     public abstract IForgeRegistry<ITEM> getRegistry();
 
     public abstract ITEM getItem(STACK stack);
+
+    public abstract STACK copy(STACK stack);
+
+    protected abstract STACK setCount(STACK stack, long amount);
+
+    @SuppressWarnings("unused")
+    public STACK withCount(STACK stack, long count) {
+        return setCount(copy(stack), count);
+    }
 }

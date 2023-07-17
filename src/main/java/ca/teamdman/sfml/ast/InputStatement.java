@@ -88,4 +88,9 @@ public record InputStatement(
     public String toString() {
         return "INPUT " + resourceLimits + " FROM " + (each ? "EACH " : "") + labelAccess;
     }
+
+    public String toStringCondensed() {
+        return "INPUT " + resourceLimits.toStringPretty(Limit.MAX_QUANTITY_NO_RETENTION)
+               + " FROM " + (each ? "EACH " : "") + labelAccess;
+    }
 }

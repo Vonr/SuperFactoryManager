@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.util;
 
+import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.Number;
@@ -72,6 +73,36 @@ public class SFMUtil {
         return new TranslatableContents(key, args);
     }
 
+    public static <STACK, ITEM, CAP> Optional<InputStatement> getInputStatementForSlot(
+            LimitedInputSlot<STACK, ITEM, CAP> slot,
+            LabelAccess labelAccess
+    ) {
+        return SFMResourceTypes.DEFERRED_TYPES
+                .get()
+                .getResourceKey(slot.type)
+                .map(x -> {
+                    //noinspection unchecked,rawtypes
+                    return (ResourceKey<ResourceType<STACK, ITEM, CAP>>) (ResourceKey) x;
+                })
+                .map((ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey) -> SFMUtil.getInputStatementForStack(
+                        resourceTypeResourceKey,
+                        slot.type,
+                        slot.peekExtractPotential(),
+                        "temp",
+                        slot.slot,
+                        false,
+                        null
+                ))
+                // update the labels
+                .map(inputStatement -> new InputStatement(new LabelAccess(
+                        labelAccess.labels(),
+                        labelAccess.directions(),
+                        inputStatement.labelAccess()
+                                .slots()
+                ), inputStatement.resourceLimits(), inputStatement.each()));
+    }
+
+
     public static <STACK, ITEM, CAP> InputStatement getInputStatementForStack(
             ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey,
             ResourceType<STACK, ITEM, CAP> resourceType,
@@ -93,7 +124,7 @@ public class SFMUtil {
         );
         Limit limit = new Limit(
                 new ResourceQuantity(
-                        new Number(resourceType.getCount(stack)),
+                        new Number(resourceType.getAmount(stack)),
                         ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
                 ),
                 new ResourceQuantity(
@@ -109,8 +140,7 @@ public class SFMUtil {
                 stackId.getPath()
         );
         ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
-                limit,
-                resourceIdentifier
+                resourceIdentifier, limit
         );
         ResourceLimits resourceLimits = new ResourceLimits(
                 List.of(resourceLimit),
@@ -121,24 +151,6 @@ public class SFMUtil {
                 resourceLimits,
                 each
         );
-    }
-
-    public static <STACK, ITEM, CAP> String getResourceId(
-            ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey,
-            ResourceType<STACK, ITEM, CAP> resourceType,
-            STACK stack
-    ) {
-        StringBuilder sb = new StringBuilder();
-        if (resourceTypeResourceKey.equals(SFMResourceTypes.ITEM.getKey())) {
-            sb.append(resourceType.getRegistryKey(stack));
-        } else if (resourceTypeResourceKey.equals(SFMResourceTypes.FORGE_ENERGY.getKey())) {
-            sb.append("forge_energy::");
-        } else {
-            sb.append(resourceTypeResourceKey.location().toString().replaceFirst("^sfm:", ""))
-                    .append(":")
-                    .append(resourceType.getRegistryKey(stack));
-        }
-        return sb.toString();
     }
 
     public interface RecursiveBuilder<T> {

@@ -157,13 +157,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ResourceIdentifier<?, ?, ?> that = (ResourceIdentifier<?, ?, ?>) o;
-        return Objects.equals(resourceTypeNamespace, that.resourceTypeNamespace) && Objects.equals(
-                resourceTypeName,
-                that.resourceTypeName
-        ) && Objects.equals(resourceNamespace, that.resourceNamespace) && Objects.equals(
-                resourceName,
-                that.resourceName
-        );
+        return Objects.equals(resourceTypeNamespace, that.resourceTypeNamespace)
+               && Objects.equals(resourceTypeName, that.resourceTypeName)
+               && Objects.equals(resourceNamespace, that.resourceNamespace)
+               && Objects.equals(resourceName, that.resourceName);
     }
 
     @Override

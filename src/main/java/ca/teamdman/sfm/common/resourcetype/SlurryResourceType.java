@@ -20,7 +20,7 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    public long getCount(SlurryStack stack) {
+    public long getAmount(SlurryStack stack) {
         return stack.getAmount();
     }
 
@@ -88,5 +88,16 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     @Override
     public Slurry getItem(SlurryStack stack) {
         return stack.getType();
+    }
+
+    @Override
+    public SlurryStack copy(SlurryStack stack) {
+        return stack.copy();
+    }
+
+    @Override
+    protected SlurryStack setCount(SlurryStack stack, long amount) {
+        stack.setAmount(amount);
+        return stack;
     }
 }

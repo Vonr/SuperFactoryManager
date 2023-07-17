@@ -19,6 +19,7 @@ public record RedstoneTrigger(
 
     @Override
     public boolean shouldTick(ProgramContext context) {
+        if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return true;
         return context.getManager().getUnprocessedRedstonePulseCount() > 0;
     }
 }

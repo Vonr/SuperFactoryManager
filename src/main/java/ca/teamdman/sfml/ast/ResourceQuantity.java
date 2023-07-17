@@ -11,6 +11,13 @@ public record ResourceQuantity(
             IdExpansionBehaviour.NO_EXPAND
     );
 
+    public ResourceQuantity add(ResourceQuantity quantity) {
+        return new ResourceQuantity(
+                number.add(quantity.number),
+                idExpansionBehaviour
+        );
+    }
+
     public enum IdExpansionBehaviour {
         EXPAND,
         NO_EXPAND

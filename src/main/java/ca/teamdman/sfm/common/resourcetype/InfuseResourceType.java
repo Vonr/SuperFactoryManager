@@ -20,7 +20,7 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     }
 
     @Override
-    public long getCount(InfusionStack stack) {
+    public long getAmount(InfusionStack stack) {
         return stack.getAmount();
     }
 
@@ -88,5 +88,16 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     @Override
     public InfuseType getItem(InfusionStack stack) {
         return stack.getType();
+    }
+
+    @Override
+    public InfusionStack copy(InfusionStack stack) {
+        return stack.copy();
+    }
+
+    @Override
+    protected InfusionStack setCount(InfusionStack stack, long amount) {
+        stack.setAmount(amount);
+        return stack;
     }
 }

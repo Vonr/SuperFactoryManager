@@ -148,6 +148,20 @@ public class SFMPackets {
                 ClientboundInputInspectionResultsPacket::decode,
                 ClientboundInputInspectionResultsPacket::handle
         );
+        INSPECTION_CHANNEL.registerMessage(
+                6,
+                ServerboundOutputInspectionRequestPacket.class,
+                ServerboundOutputInspectionRequestPacket::encode,
+                ServerboundOutputInspectionRequestPacket::decode,
+                ServerboundOutputInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                7,
+                ClientboundOutputInspectionResultsPacket.class,
+                ClientboundOutputInspectionResultsPacket::encode,
+                ClientboundOutputInspectionResultsPacket::decode,
+                ClientboundOutputInspectionResultsPacket::handle
+        );
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(

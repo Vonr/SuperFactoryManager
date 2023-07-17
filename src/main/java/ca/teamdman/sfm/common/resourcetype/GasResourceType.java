@@ -20,7 +20,7 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     }
 
     @Override
-    public long getCount(GasStack gasStack) {
+    public long getAmount(GasStack gasStack) {
         return gasStack.getAmount();
     }
 
@@ -83,5 +83,16 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     @Override
     public Gas getItem(GasStack gasStack) {
         return gasStack.getType();
+    }
+
+    @Override
+    public GasStack copy(GasStack gasStack) {
+        return gasStack.copy();
+    }
+
+    @Override
+    protected GasStack setCount(GasStack gasStack, long amount) {
+        gasStack.setAmount(amount);
+        return gasStack;
     }
 }

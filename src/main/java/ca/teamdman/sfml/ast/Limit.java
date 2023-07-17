@@ -19,21 +19,18 @@ public record Limit(
         this(ResourceQuantity.UNSET, ResourceQuantity.UNSET);
     }
 
-    public Limit withDefaults(long quantity, long retention) {
+    public Limit withDefaults(Limit limit) {
         if (quantity() == ResourceQuantity.UNSET && retention() == ResourceQuantity.UNSET) {
-            return new Limit(
-                    new ResourceQuantity(new Number(quantity), NO_EXPAND),
-                    new ResourceQuantity(new Number(retention), NO_EXPAND)
-            );
+            return limit;
         } else if (quantity() == ResourceQuantity.UNSET) {
             return new Limit(
-                    new ResourceQuantity(new Number(quantity), NO_EXPAND),
+                    limit.quantity(),
                     retention()
             );
         } else if (retention() == ResourceQuantity.UNSET) {
             return new Limit(
                     quantity(),
-                    new ResourceQuantity(new Number(retention), NO_EXPAND)
+                    limit.retention()
             );
         }
         return this;
@@ -41,7 +38,11 @@ public record Limit(
 
     @Override
     public String toString() {
-        if (retention.number().value() != 0) {
+        return quantity + " RETAIN " + retention;
+    }
+
+    public String toStringCondensed(Limit defaults) {
+        if (!retention.number().equals(defaults.retention().number())) {
             return quantity + " RETAIN " + retention;
         } else {
             return quantity.toString();

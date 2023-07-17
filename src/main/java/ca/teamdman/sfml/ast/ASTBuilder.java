@@ -14,10 +14,10 @@ import java.util.stream.Stream;
 public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     private final Set<Label> USED_LABELS = new HashSet<>();
     private final Set<ResourceIdentifier<?, ?, ?>> USED_RESOURCES = new HashSet<>();
-    private final List<Pair<ASTNode, ParserRuleContext>> NODE_CONTEXTS = new LinkedList<>();
+    private final List<Pair<ASTNode, ParserRuleContext>> AST_NODE_CONTEXTS = new LinkedList<>();
 
     public List<ASTNode> getNodesUnderCursor(int cursorPos) {
-        return NODE_CONTEXTS
+        return AST_NODE_CONTEXTS
                 .stream()
                 .filter(pair -> pair.b != null)
                 .filter(pair -> pair.b.start.getStartIndex() <= cursorPos && pair.b.stop.getStopIndex() >= cursorPos)
@@ -26,15 +26,15 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     public Optional<ASTNode> getNodeAtIndex(int index) {
-        if (index < 0 || index >= NODE_CONTEXTS.size()) return Optional.empty();
-        return Optional.ofNullable(NODE_CONTEXTS.get(index).a);
+        if (index < 0 || index >= AST_NODE_CONTEXTS.size()) return Optional.empty();
+        return Optional.ofNullable(AST_NODE_CONTEXTS.get(index).a);
     }
 
     public int getIndexForNode(ASTNode node) {
-        return NODE_CONTEXTS
+        return AST_NODE_CONTEXTS
                 .stream()
                 .filter(pair -> pair.a == node)
-                .map(NODE_CONTEXTS::indexOf)
+                .map(AST_NODE_CONTEXTS::indexOf)
                 .findFirst()
                 .orElse(-1);
     }
@@ -43,7 +43,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public StringHolder visitName(@Nullable SFMLParser.NameContext ctx) {
         if (ctx == null) return new StringHolder("");
         StringHolder name = visitString(ctx.string());
-        NODE_CONTEXTS.add(new Pair<>(name, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(name, ctx));
         return name;
     }
 
@@ -60,7 +60,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var rtn = ResourceIdentifier.fromString(str);
         USED_RESOURCES.add(rtn);
         rtn.assertValid();
-        NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
 
@@ -69,7 +69,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var rtn = ResourceIdentifier.fromString(visitString(ctx.string()).value());
         USED_RESOURCES.add(rtn);
         rtn.assertValid();
-        NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
 
@@ -77,7 +77,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public StringHolder visitString(SFMLParser.StringContext ctx) {
         var content = ctx.getText();
         StringHolder str = new StringHolder(content.substring(1, content.length() - 1));
-        NODE_CONTEXTS.add(new Pair<>(str, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(str, ctx));
         return str;
     }
 
@@ -90,7 +90,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                                                + " characters.");
         }
         USED_LABELS.add(label);
-        NODE_CONTEXTS.add(new Pair<>(label, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(label, ctx));
         return label;
     }
 
@@ -103,7 +103,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                                                + " characters.");
         }
         USED_LABELS.add(label);
-        NODE_CONTEXTS.add(new Pair<>(label, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(label, ctx));
         return label;
     }
 
@@ -121,7 +121,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .map(Label::name)
                 .collect(Collectors.toSet());
         Program program = new Program(name.value(), triggers, labels, USED_RESOURCES);
-        NODE_CONTEXTS.add(new Pair<>(program, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(program, ctx));
         return program;
     }
 
@@ -131,7 +131,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (time.getSeconds() < 1) throw new IllegalArgumentException("Minimum trigger interval is 1 second.");
         var block = visitBlock(ctx.block());
         TimerTrigger timerTrigger = new TimerTrigger(time, block);
-        NODE_CONTEXTS.add(new Pair<>(timerTrigger, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(timerTrigger, ctx));
         return timerTrigger;
     }
 
@@ -157,9 +157,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                                                                .getManager()
                                                                .getBlockPos()),
                         (long) finalNum
-                )
+                ),
+                ctx.getText()
         );
-        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
 
@@ -167,14 +168,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public ASTNode visitPulseTrigger(SFMLParser.PulseTriggerContext ctx) {
         var block = visitBlock(ctx.block());
         RedstoneTrigger redstoneTrigger = new RedstoneTrigger(block);
-        NODE_CONTEXTS.add(new Pair<>(redstoneTrigger, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(redstoneTrigger, ctx));
         return redstoneTrigger;
     }
 
     @Override
     public Number visitNumber(SFMLParser.NumberContext ctx) {
         Number number = new Number(Long.parseLong(ctx.getText()));
-        NODE_CONTEXTS.add(new Pair<>(number, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(number, ctx));
         return number;
     }
 
@@ -183,7 +184,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var num = visitNumber(ctx.number());
         assert num.value() <= Integer.MAX_VALUE;
         Interval interval = Interval.fromTicks((int) num.value());
-        NODE_CONTEXTS.add(new Pair<>(interval, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
         return interval;
     }
 
@@ -192,21 +193,21 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var num = visitNumber(ctx.number());
         assert num.value() <= Integer.MAX_VALUE;
         Interval interval = Interval.fromSeconds((int) num.value());
-        NODE_CONTEXTS.add(new Pair<>(interval, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
         return interval;
     }
 
     @Override
     public InputStatement visitInputStatementStatement(SFMLParser.InputStatementStatementContext ctx) {
         InputStatement input = (InputStatement) visit(ctx.inputstatement());
-        NODE_CONTEXTS.add(new Pair<>(input, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(input, ctx));
         return input;
     }
 
     @Override
     public OutputStatement visitOutputStatementStatement(SFMLParser.OutputStatementStatementContext ctx) {
         OutputStatement output = (OutputStatement) visit(ctx.outputstatement());
-        NODE_CONTEXTS.add(new Pair<>(output, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(output, ctx));
         return output;
     }
 
@@ -217,7 +218,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var exclusions = visitResourceexclusion(ctx.resourceexclusion());
         var each = ctx.EACH() != null;
         InputStatement inputStatement = new InputStatement(labelAccess, matchers.withExclusions(exclusions), each);
-        NODE_CONTEXTS.add(new Pair<>(inputStatement, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(inputStatement, ctx));
         return inputStatement;
     }
 
@@ -228,7 +229,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var exclusions = visitResourceexclusion(ctx.resourceexclusion());
         var each = ctx.EACH() != null;
         OutputStatement outputStatement = new OutputStatement(labelAccess, matchers.withExclusions(exclusions), each);
-        NODE_CONTEXTS.add(new Pair<>(outputStatement, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(outputStatement, ctx));
         return outputStatement;
     }
 
@@ -239,35 +240,62 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 visitSidequalifier(ctx.sidequalifier()),
                 visitSlotqualifier(ctx.slotqualifier())
         );
-        NODE_CONTEXTS.add(new Pair<>(labelAccess, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(labelAccess, ctx));
         return labelAccess;
     }
 
     @Override
     public IfStatement visitIfstatement(SFMLParser.IfstatementContext ctx) {
-        var expressions = ctx
+        var conditions = ctx
                 .boolexpr()
                 .stream()
                 .map(this::visit)
                 .map(BoolExpr.class::cast)
-                .collect(Collectors.toList());
-        var blocks = ctx.block().stream().map(this::visitBlock).collect(Collectors.toList());
-        IfStatement ifStatement = new IfStatement(expressions, blocks);
-        NODE_CONTEXTS.add(new Pair<>(ifStatement, ctx));
-        return ifStatement;
+                .collect(Collectors.toCollection(ArrayDeque::new));
+        var blocks = ctx.block().stream()
+                .map(this::visitBlock)
+                .collect(Collectors.toCollection(ArrayDeque::new));
+
+        IfStatement nestedStatement;
+        if (conditions.size() < blocks.size()) {
+            Block elseBlock = blocks.removeLast();
+            Block ifBlock = blocks.removeLast();
+            nestedStatement = new IfStatement(
+                    conditions.removeLast(),
+                    ifBlock,
+                    elseBlock
+            );
+        } else {
+            nestedStatement = new IfStatement(
+                    conditions.removeLast(),
+                    blocks.removeLast(),
+                    new Block(List.of())
+            );
+        }
+        while (!blocks.isEmpty()) {
+            nestedStatement = new IfStatement(
+                    conditions.removeLast(),
+                    blocks.removeLast(),
+                    new Block(List.of(nestedStatement))
+            );
+        }
+        assert conditions.isEmpty();
+
+        AST_NODE_CONTEXTS.add(new Pair<>(nestedStatement, ctx));
+        return nestedStatement;
     }
 
     @Override
     public IfStatement visitIfStatementStatement(SFMLParser.IfStatementStatementContext ctx) {
         IfStatement ifStatement = visitIfstatement(ctx.ifstatement());
-        NODE_CONTEXTS.add(new Pair<>(ifStatement, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(ifStatement, ctx));
         return ifStatement;
     }
 
     @Override
     public BoolExpr visitBooleanTrue(SFMLParser.BooleanTrueContext ctx) {
-        BoolExpr boolExpr = new BoolExpr(__ -> true);
-        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        BoolExpr boolExpr = new BoolExpr(__ -> true, "TRUE");
+        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
 
@@ -276,8 +304,12 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var setOp = visitSetOp(ctx.setOp());
         var labelAccess = visitLabelaccess(ctx.labelaccess());
         var comparison = visitResourcecomparison(ctx.resourcecomparison());
-        BoolExpr booleanExpression = comparison.toBooleanExpression(setOp, labelAccess);
-        NODE_CONTEXTS.add(new Pair<>(booleanExpression, ctx));
+        BoolExpr booleanExpression = comparison.toBooleanExpression(
+                setOp,
+                labelAccess,
+                setOp.name().toUpperCase() + " " + labelAccess + " HAS " + comparison
+        );
+        AST_NODE_CONTEXTS.add(new Pair<>(booleanExpression, ctx));
         return booleanExpression;
     }
 
@@ -285,7 +317,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public SetOperator visitSetOp(@Nullable SFMLParser.SetOpContext ctx) {
         if (ctx == null) return SetOperator.OVERALL;
         SetOperator from = SetOperator.from(ctx.getText());
-        NODE_CONTEXTS.add(new Pair<>(from, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(from, ctx));
         return from;
     }
 
@@ -296,14 +328,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         ResourceQuantity quantity = new ResourceQuantity(num, ResourceQuantity.IdExpansionBehaviour.NO_EXPAND);
         ResourceIdentifier<?, ?, ?> item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
         ResourceComparer<?, ?, ?> resourceComparer = new ResourceComparer<>(op, quantity, item);
-        NODE_CONTEXTS.add(new Pair<>(resourceComparer, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceComparer, ctx));
         return resourceComparer;
     }
 
     @Override
     public ComparisonOperator visitComparisonOp(SFMLParser.ComparisonOpContext ctx) {
         ComparisonOperator from = ComparisonOperator.from(ctx.getText());
-        NODE_CONTEXTS.add(new Pair<>(from, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(from, ctx));
         return from;
     }
 
@@ -311,8 +343,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public BoolExpr visitBooleanConjunction(SFMLParser.BooleanConjunctionContext ctx) {
         var left = (BoolExpr) visit(ctx.boolexpr(0));
         var right = (BoolExpr) visit(ctx.boolexpr(1));
-        BoolExpr boolExpr = new BoolExpr(left.and(right));
-        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        BoolExpr boolExpr = new BoolExpr(left.and(right), left.sourceCode() + " AND " + right.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
 
@@ -320,30 +352,30 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public BoolExpr visitBooleanDisjunction(SFMLParser.BooleanDisjunctionContext ctx) {
         var left = (BoolExpr) visit(ctx.boolexpr(0));
         var right = (BoolExpr) visit(ctx.boolexpr(1));
-        BoolExpr boolExpr = new BoolExpr(left.or(right));
-        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        BoolExpr boolExpr = new BoolExpr(left.or(right), left.sourceCode() + " OR " + right.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
 
     @Override
     public BoolExpr visitBooleanFalse(SFMLParser.BooleanFalseContext ctx) {
-        BoolExpr boolExpr = new BoolExpr(__ -> false);
-        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        BoolExpr boolExpr = new BoolExpr(__ -> false, "FALSE");
+        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
 
     @Override
     public BoolExpr visitBooleanParen(SFMLParser.BooleanParenContext ctx) {
         BoolExpr expr = (BoolExpr) visit(ctx.boolexpr());
-        NODE_CONTEXTS.add(new Pair<>(expr, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(expr, ctx));
         return expr;
     }
 
     @Override
     public BoolExpr visitBooleanNegation(SFMLParser.BooleanNegationContext ctx) {
         var x = (BoolExpr) visit(ctx.boolexpr());
-        BoolExpr boolExpr = new BoolExpr(x.negate());
-        NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
+        BoolExpr boolExpr = new BoolExpr(x.negate(), "NOT " + x.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
 
@@ -352,7 +384,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var quantity = visitQuantity(ctx.quantity());
         var retain = visitRetention(ctx.retention());
         Limit limit = new Limit(quantity, retain);
-        NODE_CONTEXTS.add(new Pair<>(limit, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(limit, ctx));
         return limit;
     }
 
@@ -365,7 +397,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                                                                 .map(this::visit)
                                                                 .map(ResourceIdentifier.class::cast)
                                                                 .collect(HashSet::new, HashSet::add, HashSet::addAll));
-        NODE_CONTEXTS.add(new Pair<>(resourceIdSet, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceIdSet, ctx));
         return resourceIdSet;
     }
 
@@ -374,8 +406,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (ctx == null) {
             return new ResourceLimits(List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE), ResourceIdSet.EMPTY);
         }
-        ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(Long.MAX_VALUE, 0);
-        NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
+        ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(Limit.MAX_QUANTITY_NO_RETENTION);
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
 
@@ -385,11 +417,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (ctx == null) {
             return new ResourceLimits(List.of(ResourceLimit.ACCEPT_ALL_WITHOUT_RESTRAINT), ResourceIdSet.EMPTY);
         }
-        ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(
-                Long.MAX_VALUE,
-                Long.MAX_VALUE
-        );
-        NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
+        ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(Limit.MAX_QUANTITY_MAX_RETENTION);
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
 
@@ -401,7 +430,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                         .collect(Collectors.toList()),
                 ResourceIdSet.EMPTY
         );
-        NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
 
@@ -409,12 +438,11 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public ResourceLimits visitLimitMovement(SFMLParser.LimitMovementContext ctx) {
         ResourceLimits resourceLimits = new ResourceLimits(
                 List.of(new ResourceLimit<>(
-                        (Limit) this.visit(ctx.limit()),
-                        ResourceIdentifier.MATCH_ALL
+                        ResourceIdentifier.MATCH_ALL, (Limit) this.visit(ctx.limit())
                 )),
                 ResourceIdSet.EMPTY
         );
-        NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
 
@@ -427,15 +455,15 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             return new ResourceLimit<>(res);
 
         var limit = (Limit) visit(ctx.limit());
-        ResourceLimit<?, ?, ?> resourceLimit = new ResourceLimit<>(limit, res);
-        NODE_CONTEXTS.add(new Pair<>(resourceLimit, ctx));
+        ResourceLimit<?, ?, ?> resourceLimit = new ResourceLimit<>(res, limit);
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceLimit, ctx));
         return resourceLimit;
     }
 
     @Override
     public NumberRangeSet visitSlotqualifier(@Nullable SFMLParser.SlotqualifierContext ctx) {
         NumberRangeSet numberRangeSet = visitRangeset(ctx == null ? null : ctx.rangeset());
-        NODE_CONTEXTS.add(new Pair<>(numberRangeSet, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(numberRangeSet, ctx));
         return numberRangeSet;
     }
 
@@ -447,7 +475,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                                                                    .stream()
                                                                    .map(this::visitRange)
                                                                    .toArray(NumberRange[]::new));
-        NODE_CONTEXTS.add(new Pair<>(numberRangeSet, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(numberRangeSet, ctx));
         return numberRangeSet;
     }
 
@@ -458,11 +486,11 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (iter.hasNext()) {
             var end = iter.next();
             NumberRange numberRange = new NumberRange(start, end);
-            NODE_CONTEXTS.add(new Pair<>(numberRange, ctx));
+            AST_NODE_CONTEXTS.add(new Pair<>(numberRange, ctx));
             return numberRange;
         } else {
             NumberRange numberRange = new NumberRange(start, start);
-            NODE_CONTEXTS.add(new Pair<>(numberRange, ctx));
+            AST_NODE_CONTEXTS.add(new Pair<>(numberRange, ctx));
             return numberRange;
         }
     }
@@ -472,7 +500,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public Limit visitRetentionLimit(SFMLParser.RetentionLimitContext ctx) {
         var retain = visitRetention(ctx.retention());
         Limit limit = new Limit(ResourceQuantity.UNSET, retain);
-        NODE_CONTEXTS.add(new Pair<>(limit, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(limit, ctx));
         return limit;
     }
 
@@ -480,7 +508,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public Limit visitQuantityLimit(SFMLParser.QuantityLimitContext ctx) {
         var quantity = visitQuantity(ctx.quantity());
         Limit limit = new Limit(quantity, ResourceQuantity.UNSET);
-        NODE_CONTEXTS.add(new Pair<>(limit, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(limit, ctx));
         return limit;
     }
 
@@ -494,7 +522,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 ? ResourceQuantity.IdExpansionBehaviour.EXPAND
                 : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
         );
-        NODE_CONTEXTS.add(new Pair<>(quantity, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(quantity, ctx));
         return quantity;
     }
 
@@ -507,7 +535,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 ? ResourceQuantity.IdExpansionBehaviour.EXPAND
                 : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
         );
-        NODE_CONTEXTS.add(new Pair<>(quantity, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(quantity, ctx));
         return quantity;
     }
 
@@ -516,14 +544,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (ctx == null) return new DirectionQualifier(Stream.empty());
         var sides = ctx.side().stream().map(this::visitSide);
         DirectionQualifier directionQualifier = new DirectionQualifier(sides);
-        NODE_CONTEXTS.add(new Pair<>(directionQualifier, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(directionQualifier, ctx));
         return directionQualifier;
     }
 
     @Override
     public Side visitSide(SFMLParser.SideContext ctx) {
         Side side = Side.valueOf(ctx.getText().toUpperCase(Locale.ROOT));
-        NODE_CONTEXTS.add(new Pair<>(side, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(side, ctx));
         return side;
     }
 
@@ -537,7 +565,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .map(Statement.class::cast)
                 .collect(Collectors.toList());
         Block block = new Block(statements);
-        NODE_CONTEXTS.add(new Pair<>(block, ctx));
+        AST_NODE_CONTEXTS.add(new Pair<>(block, ctx));
         return block;
     }
 }

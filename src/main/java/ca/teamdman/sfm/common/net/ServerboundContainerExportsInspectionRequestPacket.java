@@ -122,7 +122,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                             false,
                             direction
                     );
-                    sb.append(inputStatement).append("\n");
+                    sb.append(inputStatement.toStringCondensed()).append("\n");
                 });
                 sb.append("\n");
                 /*

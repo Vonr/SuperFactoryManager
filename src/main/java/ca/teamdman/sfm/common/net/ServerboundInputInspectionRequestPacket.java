@@ -2,22 +2,16 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
-import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfm.common.registry.SFMResourceTypes;
-import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import ca.teamdman.sfml.ast.InputStatement;
-import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 public record ServerboundInputInspectionRequestPacket(
@@ -34,35 +28,6 @@ public record ServerboundInputInspectionRequestPacket(
                 friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH),
                 friendlyByteBuf.readInt()
         );
-    }
-
-    private static <STACK, ITEM, CAP> Optional<InputStatement> getLine(
-            LimitedInputSlot<STACK, ITEM, CAP> slot,
-            LabelAccess labelAccess
-    ) {
-        return SFMResourceTypes.DEFERRED_TYPES
-                .get()
-                .getResourceKey(slot.type)
-                .map(x -> {
-                    //noinspection unchecked,rawtypes
-                    return (ResourceKey<ResourceType<STACK, ITEM, CAP>>) (ResourceKey) x;
-                })
-                .map((ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey) -> SFMUtil.getInputStatementForStack(
-                        resourceTypeResourceKey,
-                        slot.type,
-                        slot.peekExtractPotential(),
-                        "temp",
-                        slot.slot,
-                        false,
-                        null
-                ))
-                // update the labels
-                .map(inputStatement -> new InputStatement(new LabelAccess(
-                        labelAccess.labels(),
-                        labelAccess.directions(),
-                        inputStatement.labelAccess()
-                                .slots()
-                ), inputStatement.resourceLimits(), inputStatement.each()));
     }
 
     public static void handle(
@@ -99,12 +64,18 @@ public record ServerboundInputInspectionRequestPacket(
                                 StringBuilder payload = new StringBuilder();
                                 payload.append(inputStatement).append("\n-- peek results --\n");
 
-                                ProgramContext context = new ProgramContext(manager);
+                                ProgramContext context = new ProgramContext(
+                                        successProgram,
+                                        manager,
+                                        ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES
+                                );
                                 inputStatement.gatherSlots(
                                         context,
-                                        slot -> getLine(slot, inputStatement.labelAccess()).ifPresent(line -> payload
-                                                .append(line)
-                                                .append("\n"))
+                                        slot -> SFMUtil
+                                                .getInputStatementForSlot(slot, inputStatement.labelAccess())
+                                                .ifPresent(is -> payload
+                                                        .append(is.toStringCondensed())
+                                                        .append("\n"))
                                 );
 
                                 SFMPackets.INSPECTION_CHANNEL.send(

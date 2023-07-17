@@ -5,4 +5,8 @@ public record Number(long value) implements ASTNode {
     public String toString() {
         return String.valueOf(value);
     }
+
+    public Number add(Number number) {
+        return new Number(value + number.value);
+    }
 }

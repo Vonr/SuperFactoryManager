@@ -2,6 +2,7 @@ package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.common.net.ServerboundInputInspectionRequestPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelInspectionRequestPacket;
+import ca.teamdman.sfm.common.net.ServerboundOutputInspectionRequestPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
@@ -37,7 +38,9 @@ public class ProgramTokenContextActions {
                     .map(Optional::get)
                     .findFirst();
         } catch (Throwable t) {
-            return Optional.empty();
+            return Optional.of(() -> ClientStuff.showProgramEditScreen("-- Encountered error, program parse failed:\n--"
+                                                                       + t.getMessage(), next -> {
+            }));
         }
     }
 
@@ -58,10 +61,16 @@ public class ProgramTokenContextActions {
                     label.name()
             )));
         } else if (node instanceof InputStatement) {
-            int index = builder.getIndexForNode(node);
+            int nodeIndex = builder.getIndexForNode(node);
             return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundInputInspectionRequestPacket(
                     programString,
-                    index
+                    nodeIndex
+            )));
+        } else if (node instanceof OutputStatement) {
+            int nodeIndex = builder.getIndexForNode(node);
+            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundOutputInspectionRequestPacket(
+                    programString,
+                    nodeIndex
             )));
         }
         return Optional.empty();

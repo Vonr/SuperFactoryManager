@@ -12,7 +12,7 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public long getCount(Integer integer) {
+    public long getAmount(Integer integer) {
         return integer;
     }
 
@@ -87,5 +87,15 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     @Override
     public Class<Integer> getItem(Integer integer) {
         return Integer.class;
+    }
+
+    @Override
+    public Integer copy(Integer integer) {
+        return integer;
+    }
+
+    @Override
+    protected Integer setCount(Integer integer, long amount) {
+        return amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
     }
 }

@@ -20,7 +20,7 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     }
 
     @Override
-    public long getCount(PigmentStack stack) {
+    public long getAmount(PigmentStack stack) {
         return stack.getAmount();
     }
 
@@ -88,5 +88,16 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     @Override
     public Pigment getItem(PigmentStack stack) {
         return stack.getType();
+    }
+
+    @Override
+    public PigmentStack copy(PigmentStack stack) {
+        return stack.copy();
+    }
+
+    @Override
+    protected PigmentStack setCount(PigmentStack stack, long amount) {
+        stack.setAmount(amount);
+        return stack;
     }
 }
