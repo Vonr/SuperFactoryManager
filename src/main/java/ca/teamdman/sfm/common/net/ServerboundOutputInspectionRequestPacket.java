@@ -20,6 +20,7 @@ import org.antlr.v4.runtime.misc.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -198,17 +199,58 @@ public record ServerboundOutputInspectionRequestPacket(
                                                                 condensedResourceLimitList.set(i, newLimit);
                                                             }, () -> condensedResourceLimitList.add(resourceLimit));
                                                 }
+                                                {
+                                                    // prune items not covered by the output resource limits
+                                                    ListIterator<ResourceLimit<?, ?, ?>> iter = condensedResourceLimitList.listIterator();
+                                                    while (iter.hasNext()) {
+                                                        ResourceLimit<?, ?, ?> resourceLimit = iter.next();
+                                                        long accept = outputStatement
+                                                                .resourceLimits()
+                                                                .resourceLimits()
+                                                                .stream()
+                                                                .filter(rl -> ResourceType.stackIdMatches(
+                                                                        rl.resourceId(),
+                                                                        new ResourceLocation(
+                                                                                resourceLimit.resourceId().resourceNamespace,
+                                                                                resourceLimit.resourceId().resourceName
+                                                                        )
+                                                                ))
+                                                                .mapToLong(rl -> rl.limit().quantity().number().value())
+                                                                .max()
+                                                                .orElse(0);
+                                                        if (accept == 0) {
+                                                            iter.remove();
+                                                        } else {
+                                                            iter.set(resourceLimit.withLimit(new Limit(
+                                                                    new ResourceQuantity(new Number(Long.min(
+                                                                            accept,
+                                                                            resourceLimit
+                                                                                    .limit()
+                                                                                    .quantity()
+                                                                                    .number()
+                                                                                    .value()
+                                                                    )), resourceLimit.limit().quantity()
+                                                                                                 .idExpansionBehaviour()),
+                                                                    ResourceQuantity.MAX_QUANTITY
+                                                            )));
+                                                        }
+                                                    }
+                                                }
                                                 condensedResourceLimits = new ResourceLimits(
                                                         condensedResourceLimitList,
                                                         ResourceIdSet.EMPTY
                                                 );
                                             }
-                                            branchPayload
-                                                    .append(new OutputStatement(
-                                                            outputStatement.labelAccess(),
-                                                            condensedResourceLimits,
-                                                            outputStatement.each()
-                                                    ).toStringPretty());
+                                            if (condensedResourceLimits.resourceLimits().isEmpty()) {
+                                                branchPayload.append("none\n");
+                                            } else {
+                                                branchPayload
+                                                        .append(new OutputStatement(
+                                                                outputStatement.labelAccess(),
+                                                                condensedResourceLimits,
+                                                                outputStatement.each()
+                                                        ).toStringPretty());
+                                            }
 
                                         }
                                         branchPayload.append("\n");
