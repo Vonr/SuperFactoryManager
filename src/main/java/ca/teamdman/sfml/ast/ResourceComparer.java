@@ -43,6 +43,6 @@ public record ResourceComparer<STACK, ITEM, CAP>(
 
     @Override
     public String toString() {
-        return op().name().toUpperCase() + " " + quantity() + " " + res().toStringCondensed();
+        return op().getSourceCode() + " " + quantity() + " " + res().toStringCondensed();
     }
 }

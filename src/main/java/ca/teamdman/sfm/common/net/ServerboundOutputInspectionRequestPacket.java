@@ -108,6 +108,7 @@ public record ServerboundOutputInspectionRequestPacket(
                             .ifPresent(outputStatement -> {
                                 StringBuilder payload = new StringBuilder();
                                 payload.append(outputStatement.toStringPretty()).append("\n");
+                                payload.append("-- predictions may differ from actual execution results\n");
 
                                 successProgram.replaceOutputStatement(outputStatement, new OutputStatement(
                                         outputStatement.labelAccess(),
@@ -165,7 +166,7 @@ public record ServerboundOutputInspectionRequestPacket(
                                                     .forEach(branchPayload::append);
 
                                             branchPayload.append(
-                                                    "-- predicted outputs before considering output limits:\n");
+                                                    "-- predicted outputs:\n");
                                             ResourceLimits condensedResourceLimits;
                                             {
                                                 ResourceLimits resourceLimits = new ResourceLimits(

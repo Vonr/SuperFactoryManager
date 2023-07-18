@@ -130,7 +130,6 @@ OVERALL : O V E R A L L ;
 SOME    : S O M E ;
 ONE     : O N E ;
 LONE    : L O N E ;
-NO      : N O ;
 
 // BOOLEAN LOGIC
 TRUE    : T R U E ;
@@ -187,6 +186,7 @@ END             : E N D ;
 NAME            : N A M E ;
 
 // GENERAL SYMBOLS
+// used by triggers and as a set operator
 EVERY           : E V E R Y ;
 
 COMMA   : ',';

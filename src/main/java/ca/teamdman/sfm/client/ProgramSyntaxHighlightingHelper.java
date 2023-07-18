@@ -97,6 +97,9 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.ELSE:
             case SFMLLexer.THEN:
             case SFMLLexer.HAS:
+            case SFMLLexer.TRUE:
+            case SFMLLexer.FALSE:
+            case SFMLLexer.NOT:
                 return ChatFormatting.BLUE;
             case SFMLLexer.IDENTIFIER:
             case SFMLLexer.STRING:
@@ -105,6 +108,10 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.SLOTS:
             case SFMLLexer.EXCEPT:
             case SFMLLexer.RETAIN:
+            case SFMLLexer.LONE:
+            case SFMLLexer.ONE:
+            case SFMLLexer.OVERALL:
+            case SFMLLexer.SOME:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
             case SFMLLexer.GT:
