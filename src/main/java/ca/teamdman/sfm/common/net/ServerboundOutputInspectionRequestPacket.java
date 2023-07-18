@@ -39,7 +39,9 @@ public record ServerboundOutputInspectionRequestPacket(
         );
     }
 
-    private static <STACK, ITEM, CAP> ResourceLimit<STACK, ITEM, CAP> getSlotResource(LimitedInputSlot<STACK, ITEM, CAP> limitedInputSlot) {
+    private static <STACK, ITEM, CAP> ResourceLimit<STACK, ITEM, CAP> getSlotResource(
+            LimitedInputSlot<STACK, ITEM, CAP> limitedInputSlot
+    ) {
         ResourceType<STACK, ITEM, CAP> resourceType = limitedInputSlot.type;
         //noinspection OptionalGetWithoutIsPresent
         ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey = SFMResourceTypes.DEFERRED_TYPES
@@ -51,15 +53,15 @@ public record ServerboundOutputInspectionRequestPacket(
                 })
                 .get();
         STACK stack = limitedInputSlot.peekExtractPotential();
-        ResourceLocation stackId = resourceType.getRegistryKey(stack);
-
+        long amount = limitedInputSlot.type.getAmount(stack);
+        amount = Long.min(amount, limitedInputSlot.tracker.getResourceLimit().limit().quantity().number().value());
+        long remainingObligation = limitedInputSlot.tracker.getRemainingRetentionObligation();
+        amount -= Long.min(amount, remainingObligation);
         Limit amountLimit = new Limit(
-                new ResourceQuantity(
-                        new Number(limitedInputSlot.type.getAmount(stack)),
-                        ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
-                ),
+                new ResourceQuantity(new Number(amount), ResourceQuantity.IdExpansionBehaviour.NO_EXPAND),
                 ResourceQuantity.MAX_QUANTITY
         );
+        ResourceLocation stackId = resourceType.getRegistryKey(stack);
         ResourceIdentifier<STACK, ITEM, CAP> resourceIdentifier = new ResourceIdentifier<>(
                 resourceTypeResourceKey.location().getNamespace(),
                 resourceTypeResourceKey.location().getPath(),
@@ -105,7 +107,7 @@ public record ServerboundOutputInspectionRequestPacket(
                             .map(OutputStatement.class::cast)
                             .ifPresent(outputStatement -> {
                                 StringBuilder payload = new StringBuilder();
-                                payload.append(outputStatement.toStringPretty()).append("\n-- control flows --\n\n");
+                                payload.append(outputStatement.toStringPretty()).append("\n");
 
                                 successProgram.replaceOutputStatement(outputStatement, new OutputStatement(
                                         outputStatement.labelAccess(),
@@ -114,35 +116,56 @@ public record ServerboundOutputInspectionRequestPacket(
                                 ) {
                                     @Override
                                     public void tick(ProgramContext context) {
-                                        context.getExecutionPath().forEach(branch -> {
-                                            if (branch.wasTrue()) {
-                                                payload.append(branch.ifStatement().condition().sourceCode());
-                                            } else {
-                                                payload.append(branch.ifStatement().condition().negate().sourceCode());
-                                            }
-                                            payload.append("\n");
+                                        StringBuilder branchPayload = new StringBuilder();
 
-                                            StringBuilder branchPayload = new StringBuilder();
-                                            branchPayload.append("-- predicted inputs:\n");
-                                            List<Pair<LimitedInputSlot<?, ?, ?>, LabelAccess>> inputSlots = new ArrayList<>();
-                                            context
-                                                    .getInputs()
-                                                    .forEach(inputStatement -> inputStatement.gatherSlots(
-                                                            context,
-                                                            slot -> inputSlots.add(new Pair<>(
-                                                                    slot,
-                                                                    inputStatement.labelAccess()
-                                                            ))
-                                                    ));
-                                            inputSlots.stream()
-                                                    .map(slot -> SFMUtil.getInputStatementForSlot(slot.a, slot.b))
-                                                    .filter(Optional::isPresent)
-                                                    .map(Optional::get)
+                                        if (!context.getExecutionPath().isEmpty()) {
+                                            payload
+                                                    .append("-- POSSIBILITY ")
+                                                    .append(context.getExplorationBranchIndex())
+                                                    .append(" --\n");
+                                            context.getExecutionPath().forEach(branch -> {
+                                                if (branch.wasTrue()) {
+                                                    payload
+                                                            .append(branch.ifStatement().condition().sourceCode())
+                                                            .append(" -- true");
+                                                } else {
+                                                    payload.append(branch
+                                                                           .ifStatement()
+                                                                           .condition()
+                                                                           .negate()
+                                                                           .sourceCode());
+                                                }
+                                                payload.append("\n");
+                                            });
+                                            payload.append("\n");
+                                        }
+
+                                        branchPayload.append("-- predicted inputs:\n");
+                                        List<Pair<LimitedInputSlot<?, ?, ?>, LabelAccess>> inputSlots = new ArrayList<>();
+                                        context
+                                                .getInputs()
+                                                .forEach(inputStatement -> inputStatement.gatherSlots(
+                                                        context,
+                                                        slot -> inputSlots.add(new Pair<>(
+                                                                slot,
+                                                                inputStatement.labelAccess()
+                                                        ))
+                                                ));
+                                        List<InputStatement> inputStatements = inputSlots.stream()
+                                                .map(slot -> SFMUtil.getInputStatementForSlot(slot.a, slot.b))
+                                                .filter(Optional::isPresent)
+                                                .map(Optional::get)
+                                                .toList();
+                                        if (inputStatements.isEmpty()) {
+                                            branchPayload.append("none\n");
+                                        } else {
+                                            inputStatements.stream()
                                                     .map(InputStatement::toStringPretty)
                                                     .map(x -> x + "\n")
                                                     .forEach(branchPayload::append);
 
-                                            branchPayload.append("-- total predicted outputs before limits:\n");
+                                            branchPayload.append(
+                                                    "-- predicted outputs before considering output limits:\n");
                                             ResourceLimits condensedResourceLimits;
                                             {
                                                 ResourceLimits resourceLimits = new ResourceLimits(
@@ -184,10 +207,15 @@ public record ServerboundOutputInspectionRequestPacket(
                                                             outputStatement.labelAccess(),
                                                             condensedResourceLimits,
                                                             outputStatement.each()
-                                                    ).toStringPretty())
-                                                    .append("\n\n");
-                                            payload.append(branchPayload.toString().indent(1));
-                                        });
+                                                    ).toStringPretty());
+
+                                        }
+                                        branchPayload.append("\n");
+                                        if (successProgram.getConditionCount() == 0) {
+                                            payload.append(branchPayload);
+                                        } else {
+                                            payload.append(branchPayload.toString().indent(4));
+                                        }
                                     }
                                 });
 

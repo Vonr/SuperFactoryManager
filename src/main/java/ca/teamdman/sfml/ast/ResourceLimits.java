@@ -41,7 +41,7 @@ public record ResourceLimits(
     public String toStringPretty(Limit defaults) {
         return resourceLimits.stream()
                 .map(rl -> rl.toStringCondensed(defaults))
-                .map(x -> x + ",")
+                .map(x -> resourceLimits.size() == 1 ? x : x + ",")
                 .collect(Collectors.joining("\n"));
     }
 }

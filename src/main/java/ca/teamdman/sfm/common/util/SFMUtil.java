@@ -83,6 +83,15 @@ public class SFMUtil {
             LimitedInputSlot<STACK, ITEM, CAP> slot,
             LabelAccess labelAccess
     ) {
+        STACK potential = slot.peekExtractPotential();
+        if (slot.type.isEmpty(potential)) return Optional.empty();
+        long toMove = slot.type.getAmount(potential);
+        toMove = Long.min(toMove, slot.tracker.getResourceLimit().limit().quantity().number().value());
+        long remainingObligation = slot.tracker.getRemainingRetentionObligation();
+        toMove -= Long.min(toMove, remainingObligation);
+        potential = slot.type.withCount(potential, toMove);
+        STACK stack = potential;
+
         return SFMResourceTypes.DEFERRED_TYPES
                 .get()
                 .getResourceKey(slot.type)
@@ -93,7 +102,7 @@ public class SFMUtil {
                 .map((ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey) -> SFMUtil.getInputStatementForStack(
                         resourceTypeResourceKey,
                         slot.type,
-                        slot.peekExtractPotential(),
+                        stack,
                         "temp",
                         slot.slot,
                         false,

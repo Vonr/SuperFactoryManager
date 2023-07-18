@@ -64,7 +64,7 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
         this.tracker = tracker;
         this.slot = slot;
         //noinspection DataFlowIssue
-        this.type = tracker.getLimit().resourceId().getResourceType();
+        this.type = tracker.getResourceLimit().resourceId().getResourceType();
         assert type != null;
     }
 }

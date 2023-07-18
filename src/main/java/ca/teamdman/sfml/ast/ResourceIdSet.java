@@ -9,6 +9,11 @@ public record ResourceIdSet(
     public static final ResourceIdSet EMPTY = new ResourceIdSet(Set.of());
 
     public boolean test(Object stack) {
-        return resourceIds.stream().anyMatch(exclude -> exclude.test(stack));
+        for (ResourceIdentifier<?, ?, ?> exclude : resourceIds) {
+            if (exclude.test(stack)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

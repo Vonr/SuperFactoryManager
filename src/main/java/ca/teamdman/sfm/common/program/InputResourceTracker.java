@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 
 public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
 
-    private final ResourceLimit<STACK, ITEM, CAP> LIMIT;
+    private final ResourceLimit<STACK, ITEM, CAP> RESOURCE_LIMIT;
     private final ResourceIdSet EXCLUSIONS;
     private final Int2LongArrayMap RETENTION_OBLIGATIONS = new Int2LongArrayMap();
     private final AtomicLong TRANSFERRED;
@@ -22,14 +22,14 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
             AtomicLong transferred,
             AtomicLong retentionObligationProgress
     ) {
-        this.LIMIT = limit;
+        this.RESOURCE_LIMIT = limit;
         this.EXCLUSIONS = exclusions;
         this.TRANSFERRED = transferred;
         this.RETENTION_OBLIGATION_PROGRESS = retentionObligationProgress;
     }
 
     public boolean isDone() {
-        return TRANSFERRED.get() >= LIMIT.limit().quantity().number().value();
+        return TRANSFERRED.get() >= RESOURCE_LIMIT.limit().quantity().number().value();
     }
 
     public long getExistingRetentionObligation(int slot) {
@@ -37,7 +37,7 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
     }
 
     public long getRemainingRetentionObligation() {
-        return LIMIT.limit().retention().number().value() - RETENTION_OBLIGATION_PROGRESS.get();
+        return RESOURCE_LIMIT.limit().retention().number().value() - RETENTION_OBLIGATION_PROGRESS.get();
     }
 
     public void trackRetentionObligation(int slot, long promise) {
@@ -45,12 +45,12 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
         this.RETENTION_OBLIGATIONS.merge(slot, promise, Long::sum);
     }
 
-    public ResourceLimit<STACK, ITEM, CAP> getLimit() {
-        return LIMIT;
+    public ResourceLimit<STACK, ITEM, CAP> getResourceLimit() {
+        return RESOURCE_LIMIT;
     }
 
     public long getMaxTransferable() {
-        return LIMIT.limit().quantity().number().value() - TRANSFERRED.get();
+        return RESOURCE_LIMIT.limit().quantity().number().value() - TRANSFERRED.get();
     }
 
     public void trackTransfer(long amount) {
@@ -59,11 +59,11 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
 
     @Override
     public boolean test(Object stack) {
-        return LIMIT.test(stack) && !EXCLUSIONS.test(stack);
+        return RESOURCE_LIMIT.test(stack) && !EXCLUSIONS.test(stack);
     }
 
     public boolean matchesCapabilityType(Object capability) {
-        ResourceType<STACK, ITEM, CAP> resourceType = LIMIT.resourceId().getResourceType();
+        ResourceType<STACK, ITEM, CAP> resourceType = RESOURCE_LIMIT.resourceId().getResourceType();
         return resourceType != null && resourceType.matchesCapabilityType(capability);
     }
 }
