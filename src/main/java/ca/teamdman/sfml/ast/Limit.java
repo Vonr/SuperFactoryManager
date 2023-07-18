@@ -15,9 +15,10 @@ public record Limit(
             new ResourceQuantity(new Number(Long.MAX_VALUE), NO_EXPAND)
     );
 
-    public Limit() {
-        this(ResourceQuantity.UNSET, ResourceQuantity.UNSET);
-    }
+    public static final Limit UNSET = new Limit(
+            ResourceQuantity.UNSET,
+            ResourceQuantity.UNSET
+    );
 
     public Limit withDefaults(Limit limit) {
         if (quantity() == ResourceQuantity.UNSET && retention() == ResourceQuantity.UNSET) {
@@ -42,10 +43,14 @@ public record Limit(
     }
 
     public String toStringCondensed(Limit defaults) {
-        if (!retention.number().equals(defaults.retention().number())) {
-            return quantity + " RETAIN " + retention;
-        } else {
-            return quantity.toString();
+        StringBuilder sb = new StringBuilder();
+        if (!quantity.number().equals(defaults.quantity().number())) {
+            sb.append(quantity);
         }
+        if (!retention.number().equals(defaults.retention().number())) {
+            if (!sb.isEmpty()) sb.append(" ");
+            sb.append("RETAIN ").append(retention);
+        }
+        return sb.toString();
     }
 }

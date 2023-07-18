@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.ProgramContext;
@@ -31,8 +32,7 @@ public record ServerboundInputInspectionRequestPacket(
     }
 
     public static void handle(
-            ServerboundInputInspectionRequestPacket msg,
-            Supplier<NetworkEvent.Context> contextSupplier
+            ServerboundInputInspectionRequestPacket msg, Supplier<NetworkEvent.Context> contextSupplier
     ) {
         contextSupplier.get().enqueueWork(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
@@ -62,7 +62,9 @@ public record ServerboundInputInspectionRequestPacket(
                             .map(InputStatement.class::cast)
                             .ifPresent(inputStatement -> {
                                 StringBuilder payload = new StringBuilder();
-                                payload.append(inputStatement).append("\n-- peek results --\n");
+                                payload
+                                        .append(inputStatement.toStringPretty())
+                                        .append("\n-- peek results --\n");
 
                                 ProgramContext context = new ProgramContext(
                                         successProgram,
@@ -72,16 +74,34 @@ public record ServerboundInputInspectionRequestPacket(
                                 inputStatement.gatherSlots(
                                         context,
                                         slot -> SFMUtil
-                                                .getInputStatementForSlot(slot, inputStatement.labelAccess())
+                                                .getInputStatementForSlot(
+                                                        slot,
+                                                        inputStatement.labelAccess()
+                                                )
                                                 .ifPresent(is -> payload
-                                                        .append(is.toStringCondensed())
+                                                        .append(is.toStringPretty())
                                                         .append("\n"))
                                 );
-
-                                SFMPackets.INSPECTION_CHANNEL.send(
-                                        PacketDistributor.PLAYER.with(() -> player),
-                                        new ClientboundInputInspectionResultsPacket(payload.toString())
-                                );
+                                if (payload.length()
+                                    > ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH) {
+                                    SFM.LOGGER.info("Payload too big! (len={})", payload.length());
+                                    String truncationMsg = "\n...truncated";
+                                    SFMPackets.INSPECTION_CHANNEL.send(
+                                            PacketDistributor.PLAYER.with(() -> player),
+                                            new ClientboundInputInspectionResultsPacket(
+                                                    payload.substring(
+                                                            0,
+                                                            ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH
+                                                            - truncationMsg.length()
+                                                    ) + truncationMsg)
+                                    );
+                                } else {
+                                    SFMPackets.INSPECTION_CHANNEL.send(
+                                            PacketDistributor.PLAYER.with(() -> player),
+                                            new ClientboundInputInspectionResultsPacket(
+                                                    payload.toString())
+                                    );
+                                }
                             }),
                     failure -> {
                     }

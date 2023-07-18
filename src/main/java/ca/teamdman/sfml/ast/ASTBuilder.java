@@ -9,19 +9,17 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     private final Set<Label> USED_LABELS = new HashSet<>();
     private final Set<ResourceIdentifier<?, ?, ?>> USED_RESOURCES = new HashSet<>();
     private final List<Pair<ASTNode, ParserRuleContext>> AST_NODE_CONTEXTS = new LinkedList<>();
 
-    public List<ASTNode> getNodesUnderCursor(int cursorPos) {
+    public List<Pair<ASTNode, ParserRuleContext>> getNodesUnderCursor(int cursorPos) {
         return AST_NODE_CONTEXTS
                 .stream()
                 .filter(pair -> pair.b != null)
                 .filter(pair -> pair.b.start.getStartIndex() <= cursorPos && pair.b.stop.getStopIndex() >= cursorPos)
-                .map(pair -> pair.a)
                 .collect(Collectors.toList());
     }
 
@@ -452,7 +450,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var res = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
 
         if (ctx.limit() == null)
-            return new ResourceLimit<>(res);
+            return new ResourceLimit<>(res, Limit.UNSET);
 
         var limit = (Limit) visit(ctx.limit());
         ResourceLimit<?, ?, ?> resourceLimit = new ResourceLimit<>(res, limit);
@@ -469,7 +467,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public NumberRangeSet visitRangeset(@Nullable SFMLParser.RangesetContext ctx) {
-        if (ctx == null) return new NumberRangeSet(new NumberRange[]{NumberRange.MAX_RANGE});
+        if (ctx == null) return NumberRangeSet.MAX_RANGE;
         NumberRangeSet numberRangeSet = new NumberRangeSet(ctx
                                                                    .range()
                                                                    .stream()
@@ -541,9 +539,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public DirectionQualifier visitSidequalifier(@Nullable SFMLParser.SidequalifierContext ctx) {
-        if (ctx == null) return new DirectionQualifier(Stream.empty());
-        var sides = ctx.side().stream().map(this::visitSide);
-        DirectionQualifier directionQualifier = new DirectionQualifier(sides);
+        if (ctx == null) return DirectionQualifier.NULL_DIRECTION;
+        DirectionQualifier directionQualifier = new DirectionQualifier(
+                EnumSet.copyOf(ctx.side().stream()
+                                       .map(this::visitSide)
+                                       .map(DirectionQualifier::lookup)
+                                       .toList())
+        );
         AST_NODE_CONTEXTS.add(new Pair<>(directionQualifier, ctx));
         return directionQualifier;
     }

@@ -138,7 +138,7 @@ public record ServerboundOutputInspectionRequestPacket(
                                                     .map(slot -> SFMUtil.getInputStatementForSlot(slot.a, slot.b))
                                                     .filter(Optional::isPresent)
                                                     .map(Optional::get)
-                                                    .map(InputStatement::toStringCondensed)
+                                                    .map(InputStatement::toStringPretty)
                                                     .map(x -> x + "\n")
                                                     .forEach(branchPayload::append);
 
@@ -204,6 +204,8 @@ public record ServerboundOutputInspectionRequestPacket(
                                             branchIndex
                                     ));
                                 }
+
+
                                 SFMPackets.INSPECTION_CHANNEL.send(
                                         PacketDistributor.PLAYER.with(() -> player),
                                         new ClientboundOutputInspectionResultsPacket(payload.toString().strip())

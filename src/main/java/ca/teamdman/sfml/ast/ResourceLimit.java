@@ -21,10 +21,6 @@ public record ResourceLimit<STACK, ITEM, CAP>(
             ResourceIdentifier.MATCH_ALL, Limit.MAX_QUANTITY_MAX_RETENTION
     );
 
-    public ResourceLimit(ResourceIdentifier<STACK, ITEM, CAP> resourceId) {
-        this(resourceId, new Limit());
-    }
-
     public ResourceLimit<STACK, ITEM, CAP> withDefaults(Limit defaults) {
         return new ResourceLimit<>(resourceId, limit.withDefaults(defaults));
     }
@@ -138,6 +134,6 @@ public record ResourceLimit<STACK, ITEM, CAP>(
     }
 
     public String toStringCondensed(Limit defaults) {
-        return limit.toStringCondensed(defaults) + " " + resourceId.toStringCondensed();
+        return (limit.toStringCondensed(defaults) + " " + resourceId.toStringCondensed()).trim();
     }
 }

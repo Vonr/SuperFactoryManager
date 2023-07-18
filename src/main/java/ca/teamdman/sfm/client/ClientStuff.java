@@ -36,15 +36,17 @@ public class ClientStuff {
     }
 
     public static void showProgramEditScreen(String initialContent, Consumer<String> callback) {
+        ProgramEditScreen screen = new ProgramEditScreen(initialContent, callback);
         if (Minecraft.getInstance().screen == null) {
             Minecraft
                     .getInstance()
-                    .setScreen(new ProgramEditScreen(initialContent, callback));
+                    .setScreen(screen);
         } else {
             Minecraft
                     .getInstance()
-                    .pushGuiLayer(new ProgramEditScreen(initialContent, callback));
+                    .pushGuiLayer(screen);
         }
+        screen.scrollToTop();
     }
 
     public static void showProgramEditScreen(ItemStack diskItem, Consumer<String> callback) {

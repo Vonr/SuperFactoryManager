@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 public record ClientboundLabelInspectionResultsPacket(
         String results
 ) {
-    public static final int MAX_RESULTS_LENGTH = 10240;
+    public static final int MAX_RESULTS_LENGTH = 50_000;
 
     public static void encode(
             ClientboundLabelInspectionResultsPacket msg, FriendlyByteBuf friendlyByteBuf

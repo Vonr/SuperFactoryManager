@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.client;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.ServerboundInputInspectionRequestPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelInspectionRequestPacket;
 import ca.teamdman.sfm.common.net.ServerboundOutputInspectionRequestPacket;
@@ -9,6 +10,7 @@ import ca.teamdman.sfml.SFMLParser;
 import ca.teamdman.sfml.ast.*;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 
 import java.util.Optional;
@@ -24,7 +26,7 @@ public class ProgramTokenContextActions {
         var builder = new ASTBuilder();
         try {
             builder.visitProgram(parser.program());
-            System.out.println("hehaw");
+            SFM.LOGGER.info("Gathering context actions for cursor position " + cursorPosition);
             return Stream.concat(
                             builder
                                     .getNodesUnderCursor(cursorPosition)
@@ -33,7 +35,7 @@ public class ProgramTokenContextActions {
                                     .getNodesUnderCursor(cursorPosition - 1)
                                     .stream()
                     )
-                    .map(node -> getContextAction(programString, builder, node))
+                    .map(pair -> getContextAction(programString, builder, pair.a, pair.b, cursorPosition))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .findFirst();
@@ -44,9 +46,16 @@ public class ProgramTokenContextActions {
         }
     }
 
-    public static Optional<Runnable> getContextAction(String programString, ASTBuilder builder, ASTNode node) {
-        System.out.println("CONTEXT ACTION " + node);
+    public static Optional<Runnable> getContextAction(
+            String programString,
+            ASTBuilder builder,
+            ASTNode node,
+            ParserRuleContext parserRuleContext,
+            int cursorPosition
+    ) {
+        SFM.LOGGER.info("Checking if context action exists for node {} {}", node.getClass(), node);
         if (node instanceof ResourceIdentifier<?, ?, ?> rid) {
+            SFM.LOGGER.info("Found context action for resource identifier node");
             return Optional.of(() -> {
                 String expansion = rid
                         .expand()
@@ -57,16 +66,27 @@ public class ProgramTokenContextActions {
                 });
             });
         } else if (node instanceof Label label) {
+            SFM.LOGGER.info("Found context action for label node");
             return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundLabelInspectionRequestPacket(
                     label.name()
             )));
         } else if (node instanceof InputStatement) {
+            if (cursorPosition > parserRuleContext.getStart().getStartIndex() + "INPUT".length()) {
+                SFM.LOGGER.info("Found context action for input node, but the cursor isn't at the start of the node");
+                return Optional.empty();
+            }
+            SFM.LOGGER.info("Found context action for input node");
             int nodeIndex = builder.getIndexForNode(node);
             return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundInputInspectionRequestPacket(
                     programString,
                     nodeIndex
             )));
         } else if (node instanceof OutputStatement) {
+            if (cursorPosition > parserRuleContext.getStart().getStartIndex() + "OUTPUT".length()) {
+                SFM.LOGGER.info("Found context action for output node, but the cursor isn't at the start of the node");
+                return Optional.empty();
+            }
+            SFM.LOGGER.info("Found context action for output node");
             int nodeIndex = builder.getIndexForNode(node);
             return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundOutputInspectionRequestPacket(
                     programString,

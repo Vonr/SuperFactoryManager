@@ -115,6 +115,10 @@ public class ProgramEditScreen extends Screen {
         return super.charTyped(pCodePoint, pModifiers);
     }
 
+    public void scrollToTop() {
+        textarea.setScrollAmount(0d);
+    }
+
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {

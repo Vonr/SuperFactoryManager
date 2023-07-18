@@ -98,6 +98,13 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     }
 
     public List<ResourceIdentifier<STACK, ITEM, CAP>> expand() {
+        if (this.getResourceType() == SFMResourceTypes.FORGE_ENERGY.get())
+            return List.of(new ResourceIdentifier<>(
+                    this.resourceTypeNamespace,
+                    this.resourceTypeName,
+                    "forge",
+                    "energy"
+            ));
         if (expansionCache.containsKey(this)) {
             //noinspection unchecked,rawtypes
             return (List<ResourceIdentifier<STACK, ITEM, CAP>>) (List) expansionCache.get(this);
