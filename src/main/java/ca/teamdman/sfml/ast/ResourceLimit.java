@@ -82,23 +82,10 @@ public record ResourceLimit<STACK, ITEM, CAP>(
     public void gatherOutputTrackers(Consumer<OutputResourceTracker<?, ?, ?>> gatherer, ResourceIdSet exclusions) {
         if (limit.quantity().idExpansionBehaviour() == NO_EXPAND) {
             if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
-                // no sharing
+                // single tracker
                 gatherer.accept(new OutputResourceTracker<>(this, exclusions, new AtomicLong(0), new AtomicLong(0)));
             } else if (limit.retention().idExpansionBehaviour() == EXPAND) {
-                // retention count is shared
-                AtomicLong retained = new AtomicLong(0);
-                resourceId
-                        .expand()
-                        .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
-                                exclusions,
-                                new AtomicLong(0),
-                                retained
-                        )));
-            }
-        } else if (limit.quantity().idExpansionBehaviour() == EXPAND) {
-            if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
-                // quantity count is shared
+                // tracker for each retention, sharing quantity
                 AtomicLong quantity = new AtomicLong(0);
                 resourceId
                         .expand()
@@ -108,17 +95,28 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                                 quantity,
                                 new AtomicLong(0)
                         )));
-            } else if (limit.retention().idExpansionBehaviour() == EXPAND) {
-                // both counts are shared
-                AtomicLong quantity = new AtomicLong(0);
+            }
+        } else if (limit.quantity().idExpansionBehaviour() == EXPAND) {
+            if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
+                // tracker for each quantity, sharing retention
                 AtomicLong retained = new AtomicLong(0);
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
                                 new ResourceLimit<>(rid, limit),
                                 exclusions,
-                                quantity,
+                                new AtomicLong(0),
                                 retained
+                        )));
+            } else if (limit.retention().idExpansionBehaviour() == EXPAND) {
+                // expand both quantity and retention, no sharing
+                resourceId
+                        .expand()
+                        .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
+                                new ResourceLimit<>(rid, limit),
+                                exclusions,
+                                new AtomicLong(0),
+                                new AtomicLong(0)
                         )));
             }
         }
