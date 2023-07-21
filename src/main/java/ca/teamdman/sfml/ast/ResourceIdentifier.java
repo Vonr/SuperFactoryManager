@@ -124,9 +124,9 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         return rtn;
     }
 
-    @SuppressWarnings("unchecked")
     public @Nullable ResourceType<STACK, ITEM, CAP> getResourceType() {
         if (resourceTypeCache == null) {
+            //noinspection unchecked
             resourceTypeCache = (ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.DEFERRED_TYPES
                     .get()
                     .getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
@@ -141,15 +141,19 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
 
     public String toStringCondensed() {
         String rtn;
-        if (getResourceType() == SFMResourceTypes.ITEM.get()) {
+        if (resourceTypeNamespace.equals(SFM.MOD_ID) && resourceTypeName.equals("item")) {
             if (resourceNamespace.equals(".*")) {
                 rtn = resourceName;
             } else {
                 rtn = resourceNamespace + ":" + resourceName;
             }
-        } else if (getResourceType() == SFMResourceTypes.FORGE_ENERGY.get() && getLocation()
-                .filter(rl -> rl.equals(new ResourceLocation("forge", "energy")))
-                .isPresent()) {
+        } else if (
+                resourceTypeNamespace.equals(SFM.MOD_ID)
+                && resourceTypeName.equals("forge_energy")
+                && getLocation()
+                        .filter(rl -> rl.equals(new ResourceLocation("forge", "energy")))
+                        .isPresent()
+        ) {
             rtn = "forge_energy::";
         } else if (resourceTypeNamespace.equals(SFM.MOD_ID)) {
             rtn = resourceTypeName + ":" + resourceNamespace + ":" + resourceName;

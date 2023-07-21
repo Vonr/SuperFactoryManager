@@ -11,6 +11,9 @@ every 20 ticks do
     INPUT stone FROM a
     INPUT 3 stone FROM a
     INPUT 5 RETAIN 3 stone FROM a
+    INPUT 5 *ingot FROM a
+    INPUT 5 EACH *ingot FROM a
+    INPUT 5 RETAIN 1 EACH *ingot FROM a
 
     -- quantity and retention can both be expanded with the EACH keyword
     -- this only makes sense if your resource id is a pattern
