@@ -112,6 +112,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.ONE:
             case SFMLLexer.OVERALL:
             case SFMLLexer.SOME:
+            case SFMLLexer.AND:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
             case SFMLLexer.GT:
@@ -126,6 +127,8 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.LE_SYMBOL:
                 return ChatFormatting.AQUA;
             case SFMLLexer.UNUSED:
+            case SFMLLexer.REDSTONE:
+            case SFMLLexer.PULSE:
                 return ChatFormatting.RED;
             default:
                 return ChatFormatting.WHITE;
