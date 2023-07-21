@@ -76,6 +76,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         dirs[dirs.length - 1] = null;
         for (Direction direction : dirs) {
             sb.append("-- ").append(direction).append("\n");
+            int len = sb.length();
             //noinspection unchecked,rawtypes
             SFMResourceTypes.DEFERRED_TYPES
                     .get()
@@ -87,6 +88,9 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                             pos,
                             direction
                     )));
+            if (sb.length() == len) {
+                sb.append("No exports found");
+            }
             sb.append("\n");
         }
 
