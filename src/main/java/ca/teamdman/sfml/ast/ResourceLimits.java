@@ -33,15 +33,27 @@ public record ResourceLimits(
 
     @Override
     public String toString() {
-        return resourceLimits.stream()
+        String rtn = this.resourceLimits.stream()
                 .map(ResourceLimit::toString)
                 .collect(Collectors.joining(",\n"));
+        if (!exclusions.resourceIds().isEmpty()) {
+            rtn += "\nEXCEPT\n" + exclusions.resourceIds().stream()
+                    .map(ResourceIdentifier::toString)
+                    .collect(Collectors.joining(",\n"));
+        }
+        return rtn;
     }
 
     public String toStringPretty(Limit defaults) {
-        return resourceLimits.stream()
+        String rtn = resourceLimits.stream()
                 .map(rl -> rl.toStringCondensed(defaults))
                 .map(x -> resourceLimits.size() == 1 ? x : x + ",")
                 .collect(Collectors.joining("\n"));
+        if (!exclusions.resourceIds().isEmpty()) {
+            rtn += "\nEXCEPT\n" + exclusions.resourceIds().stream()
+                    .map(ResourceIdentifier::toStringCondensed)
+                    .collect(Collectors.joining(",\n"));
+        }
+        return rtn;
     }
 }
