@@ -204,17 +204,29 @@ public record ServerboundOutputInspectionRequestPacket(
                                                     ListIterator<ResourceLimit<?, ?, ?>> iter = condensedResourceLimitList.listIterator();
                                                     while (iter.hasNext()) {
                                                         ResourceLimit<?, ?, ?> resourceLimit = iter.next();
+                                                        // because these resource limits were generated from resource stacks
+                                                        // they should always be valid resource locations (not patterns)
+                                                        ResourceLocation resourceLimitLocation = new ResourceLocation(
+                                                                resourceLimit.resourceId().resourceNamespace,
+                                                                resourceLimit.resourceId().resourceName
+                                                        );
                                                         long accept = outputStatement
                                                                 .resourceLimits()
                                                                 .resourceLimits()
                                                                 .stream()
-                                                                .filter(rl -> ResourceType.stackIdMatches(
-                                                                        rl.resourceId(),
-                                                                        new ResourceLocation(
-                                                                                resourceLimit.resourceId().resourceNamespace,
-                                                                                resourceLimit.resourceId().resourceName
-                                                                        )
-                                                                ))
+                                                                .filter(outputResourceLimit -> ResourceType.stackIdMatches(
+                                                                        outputResourceLimit.resourceId(),
+                                                                        resourceLimitLocation
+                                                                ) && outputStatement
+                                                                                                       .resourceLimits()
+                                                                                                       .exclusions()
+                                                                                                       .resourceIds()
+                                                                                                       .stream()
+                                                                                                       .noneMatch(
+                                                                                                               exclusion -> ResourceType.stackIdMatches(
+                                                                                                                       exclusion,
+                                                                                                                       resourceLimitLocation
+                                                                                                               )))
                                                                 .mapToLong(rl -> rl.limit().quantity().number().value())
                                                                 .max()
                                                                 .orElse(0);
