@@ -1,5 +1,0 @@
-NAME "A Simple Move-All-Items Program"
-EVERY 20 TICKS DO
-    INPUT FROM a
-    OUTPUT TO b
-END

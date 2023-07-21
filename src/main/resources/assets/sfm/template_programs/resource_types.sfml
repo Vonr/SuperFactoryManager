@@ -1,28 +1,20 @@
-NAME "resource types"
+NAME "Resource types"
 
--- SFM uses the concept of "resource types"
--- the default resource type is sfm:item
--- so when you do INPUT stone FROM a
--- it's really doing INPUT sfm:item:*:stone FROM a
-
--- SFM has added support for multiple resource types
--- technically, other mods can add support too
--- I doubt that will happen, but that's why the sfm: prefix is there
--- just in case ;D
-
--- so if you want to move all fluids, you gotta do
 EVERY 20 TICKS DO
+    -- the default resource type is sfm:item
+    INPUT stone FROM a
+    -- is the same as
+    INPUT sfm:item:*:stone FROM a
+
+    -- so if you want to move all fluids, you gotta do
     INPUT fluid:: from a
     OUTPUT fluid:: to b
-END
--- this expands to INPUT sfm:fluid:*:* FROM a
--- we use the * to match anything for the mod and resource name
-EVERY 20 TICKS DO
-    -- the same
+    -- this expands to INPUT sfm:fluid:*:* FROM a
+
+    -- these are equivalent
     INPUT fluid::water FROM a
     INPUT sfm:fluid:*:water FROM a
 
-    -- the same
     INPUT iron_ingot FROM a
     INPUT sfm:item:*:iron_ingot FROM a
 
@@ -32,8 +24,6 @@ EVERY 20 TICKS DO
     -- this is no longer the case, since there isn't usually name conflicts
     -- if there are, you can just manually specify the mod id if you care
     INPUT totally_not_minecraft:iron_ingot FROM a
-
-    -- there's no outputs in this trigger, so nothing would happen :P
 END
 
 -- the following resource types are supported

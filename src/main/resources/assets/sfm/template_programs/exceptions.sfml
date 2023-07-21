@@ -1,6 +1,0 @@
-name "Exceptions"
-
-EVERY 20 TICKS DO
-    INPUT *ingot* EXCEPT iron_ingot, gold_ingot FROM a
-    OUTPUT 5 EXCEPT bronze_ingot TO b
-END

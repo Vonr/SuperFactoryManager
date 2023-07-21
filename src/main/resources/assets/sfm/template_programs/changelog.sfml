@@ -1,0 +1,13 @@
+NAME "Changelog"
+
+-- Official SFM Discord:
+-- https://discord.gg/5mbUY3mu6m
+
+-- 4.12.0
+---- add changelog to templates
+---- add ctrl+space hotkey for code inspection
+---- add `EACH` modifier on quantities and retentions
+---- add resource exclusion patterns
+---- add missing syntax highlighting
+---- cleaner templates
+---- improved export inspector output (Ctrl+I)
