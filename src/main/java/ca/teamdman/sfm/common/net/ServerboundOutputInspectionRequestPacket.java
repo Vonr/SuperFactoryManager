@@ -159,7 +159,7 @@ public record ServerboundOutputInspectionRequestPacket(
                                                 .map(Optional::get)
                                                 .toList();
                                         if (inputStatements.isEmpty()) {
-                                            branchPayload.append("none\n");
+                                            branchPayload.append("none\n-- predicted outputs:\nnone");
                                         } else {
                                             inputStatements.stream()
                                                     .map(InputStatement::toStringPretty)

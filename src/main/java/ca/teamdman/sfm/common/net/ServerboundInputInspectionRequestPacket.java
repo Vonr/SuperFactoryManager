@@ -71,6 +71,7 @@ public record ServerboundInputInspectionRequestPacket(
                                         manager,
                                         ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES
                                 );
+                                int preLen = payload.length();
                                 inputStatement.gatherSlots(
                                         context,
                                         slot -> SFMUtil
@@ -82,6 +83,9 @@ public record ServerboundInputInspectionRequestPacket(
                                                         .append(is.toStringPretty())
                                                         .append("\n"))
                                 );
+                                if (payload.length() == preLen) {
+                                    payload.append("none");
+                                }
                                 if (payload.length()
                                     > ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH) {
                                     SFM.LOGGER.info("Payload too big! (len={})", payload.length());
