@@ -11,3 +11,16 @@ NAME "Changelog"
 ---- add missing syntax highlighting
 ---- cleaner templates
 ---- improved export inspector output (Ctrl+I)
+
+-- NAME "SFM 4.12.0 change overview"
+EVERY 20 TICKS DO
+    INPUT fluid:: FROM a
+    INPUT 1 *log FROM a
+    INPUT EXCEPT *log FROM a
+    OUTPUT
+        1 EACH minecraft:*ingot,
+        1 EACH RETAIN 12 EACH minecraft:*stone,
+        *log,
+    EXCEPT cobblestone, iron_ingot,
+    TO b
+END
