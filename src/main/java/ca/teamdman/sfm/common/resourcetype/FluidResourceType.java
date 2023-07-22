@@ -23,7 +23,19 @@ public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHan
     }
 
     @Override
-    public long getCount(FluidStack stack) {
+    public FluidStack copy(FluidStack fluidStack) {
+        return fluidStack.copy();
+    }
+
+    @Override
+    protected FluidStack setCount(FluidStack fluidStack, long amount) {
+        int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
+        fluidStack.setAmount(finalAmount);
+        return fluidStack;
+    }
+
+    @Override
+    public long getAmount(FluidStack stack) {
         return stack.getAmount();
     }
 

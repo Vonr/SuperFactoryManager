@@ -1,6 +1,0 @@
-name "Basic Move"
-
-EVERY 20 TICKS DO
-    INPUT 5 stone, 3 iron_ingot, cobblestone FROM a
-    OUTPUT TO b
-END

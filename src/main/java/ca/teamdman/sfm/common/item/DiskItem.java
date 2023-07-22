@@ -51,11 +51,11 @@ public class DiskItem extends Item {
         AtomicReference<Program> rtn = new AtomicReference<>(null);
         Program.compile(
                 getProgram(stack),
-                success -> {
-                    setProgramName(stack, success.name());
-                    setWarnings(stack, success.gatherWarnings(stack, manager));
+                (successProgram, builder) -> {
+                    setProgramName(stack, successProgram.name());
+                    setWarnings(stack, successProgram.gatherWarnings(stack, manager));
                     setErrors(stack, Collections.emptyList());
-                    rtn.set(success);
+                    rtn.set(successProgram);
                 },
                 failure -> {
                     setWarnings(stack, Collections.emptyList());
@@ -211,7 +211,7 @@ public class DiskItem extends Item {
                         start = start.append(Component.literal("=").withStyle(color));
                     }
                     list.add(start);
-                    list.addAll(ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(program));
+                    list.addAll(ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(program, false));
                 }
             }
         }

@@ -1,24 +1,36 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
 
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
-    protected final ResourceLimit<STACK, ITEM, CAP> LIMIT;
-    protected long transferred = 0;
-    private long retentionObligationProgress = 0;
+    private final ResourceLimit<STACK, ITEM, CAP> LIMIT;
+    private final ResourceIdSet EXCLUSIONS;
+    private final AtomicLong TRANSFERRED;
+    private final AtomicLong RETENTION_OBLIGATION_PROGRESS;
 
-    public OutputResourceTracker(ResourceLimit<STACK, ITEM, CAP> resourceLimit) {
+    public OutputResourceTracker(
+            ResourceLimit<STACK, ITEM, CAP> resourceLimit,
+            ResourceIdSet exclusions,
+            AtomicLong transferred,
+            AtomicLong retentionObligationProgress
+    ) {
         this.LIMIT = resourceLimit;
+        this.EXCLUSIONS = exclusions;
+        this.TRANSFERRED = transferred;
+        this.RETENTION_OBLIGATION_PROGRESS = retentionObligationProgress;
     }
 
     /**
      * Done when we have reached the transfer limit, or when the retention is satisfied
      */
     public boolean isDone() {
-        return transferred >= LIMIT.limit().quantity() || retentionObligationProgress >= LIMIT.limit().retention();
+        return TRANSFERRED.get() >= LIMIT.limit().quantity().number().value()
+               || RETENTION_OBLIGATION_PROGRESS.get() >= LIMIT.limit().retention().number().value();
     }
 
     /**
@@ -27,21 +39,21 @@ public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object
     public void visit(LimitedOutputSlot<STACK, ITEM, CAP> slot) {
         var stack = slot.getStackInSlot();
         if (test(stack)) {
-            retentionObligationProgress += slot.type.getCount(stack);
+            RETENTION_OBLIGATION_PROGRESS.accumulateAndGet(slot.type.getAmount(stack), Long::sum);
         }
     }
 
     public void trackTransfer(long amount) {
-        transferred += amount;
-        retentionObligationProgress += amount;
+        TRANSFERRED.accumulateAndGet(amount, Long::sum);
+        RETENTION_OBLIGATION_PROGRESS.accumulateAndGet(amount, Long::sum);
     }
 
     /**
      * How much more are we allowed to move
      */
     public long getMaxTransferable() {
-        long remainingRetentionRoom = LIMIT.limit().retention() - retentionObligationProgress;
-        long unusedQuantity = LIMIT.limit().quantity() - transferred;
+        long remainingRetentionRoom = LIMIT.limit().retention().number().value() - RETENTION_OBLIGATION_PROGRESS.get();
+        long unusedQuantity = LIMIT.limit().quantity().number().value() - TRANSFERRED.get();
         return Math.min(unusedQuantity, remainingRetentionRoom);
     }
 
@@ -52,6 +64,10 @@ public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object
 
     @Override
     public boolean test(Object stack) {
-        return LIMIT.test(stack);
+        return LIMIT.test(stack) && !EXCLUSIONS.test(stack);
+    }
+
+    public ResourceLimit<STACK, ITEM, CAP> getLimit() {
+        return LIMIT;
     }
 }

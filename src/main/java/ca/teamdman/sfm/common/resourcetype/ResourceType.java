@@ -61,7 +61,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         return false;
     }
 
-    public abstract long getCount(STACK stack);
+    public abstract long getAmount(STACK stack);
 
     public abstract STACK getStackInSlot(CAP cap, int slot);
 
@@ -83,22 +83,29 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract boolean matchesStackType(Object o);
 
-    public boolean test(ResourceIdentifier<STACK, ITEM, CAP> id, Object other) {
+    public static <STACK, ITEM, CAP> boolean stackIdMatches(
+            ResourceIdentifier<STACK, ITEM, CAP> rid,
+            ResourceLocation stackId
+    ) {
+        Predicate<String> namespacePredicate = patternCache.get(rid.resourceNamespace);
+        if (namespacePredicate == null) {
+            namespacePredicate = buildPredicate(rid.resourceNamespace);
+            patternCache.put(rid.resourceNamespace, namespacePredicate);
+        }
+        Predicate<String> namePredicate = patternCache.get(rid.resourceName);
+        if (namePredicate == null) {
+            namePredicate = buildPredicate(rid.resourceName);
+            patternCache.put(rid.resourceName, namePredicate);
+        }
+        return namespacePredicate.test(stackId.getNamespace()) && namePredicate.test(stackId.getPath());
+    }
+
+    public boolean stackMatches(ResourceIdentifier<STACK, ITEM, CAP> rid, Object other) {
         if (!matchesStackType(other)) return false;
         @SuppressWarnings("unchecked") STACK stack = (STACK) other;
         if (isEmpty(stack)) return false;
         var stackId = getRegistryKey(stack);
-        Predicate<String> namespacePredicate = patternCache.get(id.resourceNamespace);
-        if (namespacePredicate == null) {
-            namespacePredicate = buildPredicate(id.resourceNamespace);
-            patternCache.put(id.resourceNamespace, namespacePredicate);
-        }
-        Predicate<String> namePredicate = patternCache.get(id.resourceName);
-        if (namePredicate == null) {
-            namePredicate = buildPredicate(id.resourceName);
-            patternCache.put(id.resourceName, namePredicate);
-        }
-        return namespacePredicate.test(stackId.getNamespace()) && namePredicate.test(stackId.getPath());
+        return stackIdMatches(rid, stackId);
     }
 
     public abstract boolean matchesCapabilityType(Object o);
@@ -159,4 +166,13 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     public abstract IForgeRegistry<ITEM> getRegistry();
 
     public abstract ITEM getItem(STACK stack);
+
+    public abstract STACK copy(STACK stack);
+
+    protected abstract STACK setCount(STACK stack, long amount);
+
+    @SuppressWarnings("unused")
+    public STACK withCount(STACK stack, long count) {
+        return setCount(copy(stack), count);
+    }
 }

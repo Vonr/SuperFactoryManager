@@ -24,7 +24,19 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     }
 
     @Override
-    public long getCount(ItemStack stack) {
+    public ItemStack copy(ItemStack stack) {
+        return stack.copy();
+    }
+
+    @Override
+    protected ItemStack setCount(ItemStack stack, long amount) {
+        int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
+        stack.setCount(finalAmount);
+        return stack;
+    }
+
+    @Override
+    public long getAmount(ItemStack stack) {
         return stack.getCount();
     }
 

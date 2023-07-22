@@ -6,24 +6,27 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class OutputStatement implements Statement {
-    private static final LimitedOutputSlotObjectPool SLOT_POOL = new LimitedOutputSlotObjectPool();
-    private final LabelAccess LABEL_ACCESS;
-    private final ResourceLimits RESOURCE_LIMITS;
-    private final boolean EACH;
+public class OutputStatement implements Statement {
+    private final LabelAccess labelAccess;
+    private final ResourceLimits resourceLimits;
+    private final boolean each;
+
     private int lastInputCapacity = 32;
     private int lastOutputCapacity = 32;
+
     public OutputStatement(
             LabelAccess labelAccess,
             ResourceLimits resourceLimits,
             boolean each
     ) {
-        this.LABEL_ACCESS = labelAccess;
-        this.RESOURCE_LIMITS = resourceLimits;
-        this.EACH = each;
+        this.labelAccess = labelAccess;
+        this.resourceLimits = resourceLimits;
+        this.each = each;
     }
 
     /**
@@ -52,7 +55,7 @@ public final class OutputStatement implements Statement {
         STACK remainder = destination.insert(potential, true);
 
         // how many can we move before accounting for limits
-        long toMove = source.type.getCount(potential) - source.type.getCount(remainder);
+        long toMove = source.type.getAmount(potential) - source.type.getAmount(remainder);
         if (toMove == 0) return;
 
         // how many have we promised to RETAIN in this slot
@@ -85,7 +88,7 @@ public final class OutputStatement implements Statement {
         STACK extracted = source.extract(toMove);
         // insert item for real
         remainder = destination.insert(extracted, false);
-        var moved = source.type.getCount(extracted) - source.type.getCount(remainder);
+        var moved = source.type.getAmount(extracted) - source.type.getAmount(remainder);
         // track transfer amounts
         source.tracker.trackTransfer(moved);
         destination.tracker.trackTransfer(moved);
@@ -102,18 +105,10 @@ public final class OutputStatement implements Statement {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    public static void releaseSlots(List<LimitedOutputSlot> slots) {
-        SLOT_POOL.release(slots);
-    }
-
-    public static void releaseSlot(LimitedOutputSlot<?, ?, ?> slot) {
-        SLOT_POOL.release(slot);
-    }
-
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public void tick(ProgramContext context) {
+        if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return;
         // gather the input slots from all the input statements, +27 to hopefully avoid resizing
         List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity + 27);
         for (var inputStatement : context.getInputs()) {
@@ -141,7 +136,7 @@ public final class OutputStatement implements Statement {
                 var out = outIt.next();
                 if (out.isDone()) { // this slot is no longer useful
                     outIt.remove(); // ensure we only release slots once
-                    OutputStatement.releaseSlot(out); // release the slot to the object pool
+                    LimitedOutputSlotObjectPool.INSTANCE.release(out); // release the slot to the object pool
                     continue;
                 }
                 moveTo(in, out); // move the contents from the "in" slot to the "out" slot
@@ -150,7 +145,7 @@ public final class OutputStatement implements Statement {
             if (outputSlots.isEmpty()) break; // stop processing input slots if we have no output slots
         }
 
-        OutputStatement.releaseSlots(outputSlots);
+        LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots);
         InputStatement.releaseSlots(inputSlots);
     }
 
@@ -165,25 +160,25 @@ public final class OutputStatement implements Statement {
     @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
     public void gatherSlots(ProgramContext context, Consumer<LimitedOutputSlot<?, ?, ?>> acceptor) {
         // find all the types referenced in the output statement
-        Stream<ResourceType> types = RESOURCE_LIMITS
+        Stream<ResourceType> types = resourceLimits
                 .resourceLimits()
                 .stream()
                 .map(ResourceLimit::resourceId)
                 .map((ResourceIdentifier x) -> x.getResourceType())
                 .distinct();
 
-        if (!EACH) {
+        if (!each) {
             // create a single matcher to be shared by all capabilities
-            List<OutputResourceTracker<?, ?, ?>> outputTracker = RESOURCE_LIMITS.createOutputTrackers();
+            List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
             for (var type : (Iterable<ResourceType>) types::iterator) {
-                for (var cap : (Iterable<?>) type.getCapabilities(context, LABEL_ACCESS)::iterator) {
+                for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
                     gatherSlots((ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
                 }
             }
         } else {
             for (var type : (Iterable<ResourceType>) types::iterator) {
-                for (var cap : (Iterable<?>) type.getCapabilities(context, LABEL_ACCESS)::iterator) {
-                    List<OutputResourceTracker<?, ?, ?>> outputTracker = RESOURCE_LIMITS.createOutputTrackers();
+                for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
+                    List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
                     gatherSlots((ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
                 }
             }
@@ -197,11 +192,11 @@ public final class OutputStatement implements Statement {
             Consumer<LimitedOutputSlot<?, ?, ?>> acceptor
     ) {
         for (int slot = 0; slot < type.getSlots(capability); slot++) {
-            if (LABEL_ACCESS.slots().contains(slot)) {
+            if (labelAccess.slots().contains(slot)) {
                 for (OutputResourceTracker<?, ?, ?> tracker : trackers) {
                     if (tracker.matchesCapabilityType(capability)) {
                         //noinspection unchecked
-                        acceptor.accept(SLOT_POOL.acquire(
+                        acceptor.accept(LimitedOutputSlotObjectPool.INSTANCE.acquire(
                                 capability,
                                 slot,
                                 (OutputResourceTracker<STACK, ITEM, CAP>) tracker
@@ -210,5 +205,56 @@ public final class OutputStatement implements Statement {
                 }
             }
         }
+    }
+
+    public LabelAccess labelAccess() {
+        return labelAccess;
+    }
+
+    public ResourceLimits resourceLimits() {
+        return resourceLimits;
+    }
+
+    public boolean each() {
+        return each;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (OutputStatement) obj;
+        return Objects.equals(this.labelAccess, that.labelAccess) &&
+               Objects.equals(this.resourceLimits, that.resourceLimits) &&
+               this.each == that.each;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(labelAccess, resourceLimits, each);
+    }
+
+    @Override
+    public String toString() {
+        return "OUTPUT " + resourceLimits + " TO " + (each ? "EACH " : "") + labelAccess;
+    }
+
+    public String toStringPretty() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("OUTPUT");
+        String rls = resourceLimits.toStringPretty(Limit.MAX_QUANTITY_MAX_RETENTION);
+        if (rls.lines().count() > 1) {
+            sb.append("\n");
+            sb.append(rls.lines().map(s -> "  " + s).collect(Collectors.joining("\n")));
+            sb.append("\n");
+        } else {
+            sb.append(" ");
+            sb.append(rls);
+            sb.append(" ");
+        }
+        sb.append("TO ");
+        sb.append(each ? "EACH " : "");
+        sb.append(labelAccess);
+        return sb.toString();
     }
 }

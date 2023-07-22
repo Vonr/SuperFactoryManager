@@ -4,6 +4,7 @@ import ca.teamdman.sfml.SFMLLexer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
@@ -12,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProgramSyntaxHighlightingHelper {
-    public static List<MutableComponent> withSyntaxHighlighting(String programString) {
+
+    public static List<MutableComponent> withSyntaxHighlighting(String programString, boolean showContextActionHints) {
         SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
         lexer.INCLUDE_UNUSED = true;
         CommonTokenStream tokens = new CommonTokenStream(lexer) {
@@ -49,7 +51,7 @@ public class ProgramSyntaxHighlightingHelper {
                 }
                 String line = lines[i];
                 if (!line.isEmpty()) {
-                    var text = Component.literal(line).withStyle(getStyle(token));
+                    var text = Component.literal(line).withStyle(getStyle(token, showContextActionHints));
                     lineComponent = lineComponent.append(text);
                 }
             }
@@ -59,7 +61,16 @@ public class ProgramSyntaxHighlightingHelper {
         return textComponents;
     }
 
-    private static ChatFormatting getStyle(Token token) {
+    private static Style getStyle(Token token, boolean showContextActionHints) {
+        Style style = Style.EMPTY;
+        style = style.withColor(getColour(token));
+        if (showContextActionHints && ProgramTokenContextActions.hasContextAction(token)) {
+            style = style.withUnderlined(true);
+        }
+        return style;
+    }
+
+    private static ChatFormatting getColour(Token token) {
         //noinspection EnhancedSwitchMigration
         switch (token.getType()) {
             case SFMLLexer.SIDE:
@@ -86,12 +97,22 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.ELSE:
             case SFMLLexer.THEN:
             case SFMLLexer.HAS:
+            case SFMLLexer.TRUE:
+            case SFMLLexer.FALSE:
+            case SFMLLexer.NOT:
                 return ChatFormatting.BLUE;
             case SFMLLexer.IDENTIFIER:
             case SFMLLexer.STRING:
                 return ChatFormatting.GREEN;
             case SFMLLexer.TICKS:
             case SFMLLexer.SLOTS:
+            case SFMLLexer.EXCEPT:
+            case SFMLLexer.RETAIN:
+            case SFMLLexer.LONE:
+            case SFMLLexer.ONE:
+            case SFMLLexer.OVERALL:
+            case SFMLLexer.SOME:
+            case SFMLLexer.AND:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
             case SFMLLexer.GT:
@@ -106,6 +127,8 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.LE_SYMBOL:
                 return ChatFormatting.AQUA;
             case SFMLLexer.UNUSED:
+            case SFMLLexer.REDSTONE:
+            case SFMLLexer.PULSE:
                 return ChatFormatting.RED;
             default:
                 return ChatFormatting.WHITE;

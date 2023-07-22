@@ -7,36 +7,42 @@ import java.util.List;
 
 public record ResourceComparer<STACK, ITEM, CAP>(
         ComparisonOperator op,
-        Quantity num,
+        ResourceQuantity quantity,
         ResourceIdentifier<STACK, ITEM, CAP> res
 ) implements ASTNode {
-    public BoolExpr toBooleanExpression(SetOperator setOp, LabelAccess labelAccess) {
-        return new BoolExpr(context -> {
-            ResourceType<STACK, ITEM, CAP> type = res.getResourceType();
-            if (type == null) return false;
-            // get the inventories to check
+    public BoolExpr toBooleanExpression(SetOperator setOp, LabelAccess labelAccess, String sourceCode) {
+        return new BoolExpr(
+                context -> {
+                    ResourceType<STACK, ITEM, CAP> type = res.getResourceType();
+                    if (type == null) return false;
+                    // get the inventories to check
 
-            var handlers = type.getCapabilities(context, labelAccess);
+                    var handlers = type.getCapabilities(context, labelAccess);
 
-            // track how many items seen
-            long overallCount = 0;
-            // track how many inventories satisfied the condition
-            List<Boolean> satisfiedSet = new ArrayList<>();
+                    // track how many items seen
+                    long overallCount = 0;
+                    // track how many inventories satisfied the condition
+                    List<Boolean> satisfiedSet = new ArrayList<>();
 
-            for (var cap : (Iterable<CAP>) handlers::iterator) {
-                long invCount = 0;
-                for (var stack : (Iterable<STACK>) type.collect(cap, labelAccess)::iterator) {
-                    if (this.res.test(stack)) {
-                        invCount += type.getCount(stack);
-                        overallCount += type.getCount(stack);
+                    for (var cap : (Iterable<CAP>) handlers::iterator) {
+                        long invCount = 0;
+                        for (var stack : (Iterable<STACK>) type.collect(cap, labelAccess)::iterator) {
+                            if (this.res.test(stack)) {
+                                invCount += type.getAmount(stack);
+                                overallCount += type.getAmount(stack);
+                            }
+                        }
+                        satisfiedSet.add(this.op.test(invCount, this.quantity.number().value()));
                     }
-                }
-                satisfiedSet.add(this.op.test(invCount, this.num.value()));
-            }
-
-            var isOverallSatisfied = this.op.test(overallCount, this.num.value());
-            return setOp.test(isOverallSatisfied, satisfiedSet);
-        });
+                    var isOverallSatisfied = this.op.test(overallCount, this.quantity.number().value());
+                    return setOp.test(isOverallSatisfied, satisfiedSet);
+                },
+                sourceCode
+        );
     }
 
+    @Override
+    public String toString() {
+        return op().getSourceCode() + " " + quantity() + " " + res().toStringCondensed();
+    }
 }

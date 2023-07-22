@@ -8,6 +8,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public record InputStatement(
@@ -82,5 +83,29 @@ public record InputStatement(
                 }
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "INPUT " + resourceLimits + " FROM " + (each ? "EACH " : "") + labelAccess;
+    }
+
+    public String toStringPretty() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("INPUT");
+        String rls = resourceLimits.toStringPretty(Limit.MAX_QUANTITY_NO_RETENTION);
+        if (rls.lines().count() > 1) {
+            sb.append("\n");
+            sb.append(rls.lines().map(s -> "  " + s).collect(Collectors.joining("\n")));
+            sb.append("\n");
+        } else {
+            sb.append(" ");
+            sb.append(rls);
+            sb.append(" ");
+        }
+        sb.append("FROM ");
+        sb.append(each ? "EACH " : "");
+        sb.append(labelAccess);
+        return sb.toString();
     }
 }

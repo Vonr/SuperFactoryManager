@@ -1,6 +1,0 @@
-name "Each-Distribution"
-
-every 20 ticks do
-    input from a 
-    output 5 to each b -- note the "each" keyword
-end

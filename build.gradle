@@ -62,7 +62,7 @@ static void extendConfigurations(Configuration base, Configuration... configurat
 }
 
 
-version = '4.11.0'
+version = '4.12.0'
 group = 'ca.teamdman.sfm' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'SuperFactoryManager-1.19.4'
 

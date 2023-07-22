@@ -39,7 +39,6 @@ public class ProgramTemplatePickerScreen extends Screen {
                 (path) -> path.getPath().endsWith(".sfml") || path.getPath().endsWith(".sfm")
         );
         Map<String, String> templatePrograms = new HashMap<>();
-        // sort alphabetically by name (key)
         for (var entry : found.entrySet()) {
             try (BufferedReader reader = entry.getValue().openAsReader()) {
                 String program = reader.lines().collect(Collectors.joining("\n"));
@@ -54,8 +53,8 @@ public class ProgramTemplatePickerScreen extends Screen {
                 String finalProgram = program;
                 Program.compile(
                         program,
-                        success -> templatePrograms.put(
-                                success.name().isBlank() ? entry.getKey().toString() : success.name(),
+                        (successProgram, builder) -> templatePrograms.put(
+                                successProgram.name().isBlank() ? entry.getKey().toString() : successProgram.name(),
                                 finalProgram
                         ),
                         failure -> templatePrograms.put(entry.getKey().toString(), finalProgram)

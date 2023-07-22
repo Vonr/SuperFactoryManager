@@ -17,10 +17,8 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public record Program(
@@ -28,15 +26,21 @@ public record Program(
         List<Trigger> triggers,
         Set<String> referencedLabels,
         Set<ResourceIdentifier<?, ?, ?>> referencedResources
-) implements ASTNode {
+) implements Statement {
     public static final int MAX_PROGRAM_LENGTH = 80960;
+    public static final int MAX_LABEL_LENGTH = 256;
 
     public static void compile(
-            String programString, Consumer<Program> onSuccess, Consumer<List<TranslatableContents>> onFailure
+            String programString,
+            BiConsumer<Program, ASTBuilder> onSuccess,
+            Consumer<List<TranslatableContents>> onFailure
     ) {
-        var lexer = new SFMLLexer(CharStreams.fromString(programString));
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new SFMLParser(tokens);
+        SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        SFMLParser parser = new SFMLParser(tokens);
+        ASTBuilder builder = new ASTBuilder();
+
+        // set up error capturing
         lexer.removeErrorListeners();
         parser.removeErrorListeners();
         List<TranslatableContents> errors = new ArrayList<>();
@@ -45,13 +49,14 @@ public record Program(
         lexer.addErrorListener(listener);
         parser.addErrorListener(listener);
 
-        var context = parser.program();
-        Program program = null;
-
+        // initial parse
+        SFMLParser.ProgramContext context = parser.program();
         buildErrors.stream().map(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL::get).forEach(errors::add);
 
+        // build AST
+        Program program = null;
         try {
-            program = new ASTBuilder().visitProgram(context);
+            program = builder.visitProgram(context);
             // make sure all referenced resources exist now during compilation instead of waiting for the program to tick
 
             for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {
@@ -75,7 +80,7 @@ public record Program(
 
 
         if (errors.isEmpty()) {
-            onSuccess.accept(program);
+            onSuccess.accept(program, builder);
         } else {
             onFailure.accept(errors);
         }
@@ -171,21 +176,81 @@ public record Program(
     }
 
     public boolean tick(ManagerBlockEntity manager) {
-        var context = new ProgramContext(manager);
-
         // update warnings on disk item every 20 seconds
         if (manager.getTick() % 20 == 0) {
             manager.getDisk().ifPresent(disk -> DiskItem.setWarnings(disk, gatherWarnings(disk, manager)));
         }
-        boolean didSomething = false;
+
+        // build the context and tick the program
+        var context = new ProgramContext(this, manager, ProgramContext.ExecutionPolicy.UNRESTRICTED);
+        tick(context);
+
+        manager.clearRedstonePulseQueue();
+        //noinspection UnnecessaryLocalVariable
+        boolean didSomething = triggers.stream().anyMatch(t -> t.shouldTick(context));
+        return didSomething;
+    }
+
+    @Override
+    public List<Statement> getStatements() {
+        return triggers.stream().map(x -> (Statement) x).toList();
+    }
+
+    @Override
+    public void tick(ProgramContext context) {
         for (Trigger t : triggers) {
             if (t.shouldTick(context)) {
-                t.tick(context.fork());
-                didSomething = true;
+                t.tick(context.copy());
             }
         }
-        manager.clearRedstonePulseQueue();
-        return didSomething;
+    }
+
+    public void replaceOutputStatement(OutputStatement oldStatement, OutputStatement newStatement) {
+        Deque<Statement> toPatch = new ArrayDeque<>();
+        toPatch.add(this);
+        while (!toPatch.isEmpty()) {
+            Statement statement = toPatch.pollFirst();
+            List<Statement> children = statement.getStatements();
+            for (int i = 0; i < children.size(); i++) {
+                Statement child = children.get(i);
+                if (child == oldStatement) {
+                    children.set(i, newStatement);
+                } else {
+                    toPatch.add(child);
+                }
+            }
+        }
+    }
+
+    public int getConditionIndex(IfStatement statement) {
+        Deque<Statement> toVisit = new ArrayDeque<>();
+        toVisit.add(this);
+        int seen = 0;
+        while (!toVisit.isEmpty()) {
+            Statement current = toVisit.pollFirst();
+            if (current instanceof IfStatement ifStatement) {
+                if (ifStatement == statement) {
+                    return seen;
+                }
+                seen++;
+            }
+            toVisit.addAll(current.getStatements());
+        }
+        return -1;
+    }
+
+    public int getConditionCount() {
+        Deque<Statement> toVisit = new ArrayDeque<>();
+        toVisit.add(this);
+        int seen = 0;
+        while (!toVisit.isEmpty()) {
+            Statement current = toVisit.pollFirst();
+            if (current instanceof IfStatement) {
+                seen++;
+            }
+            toVisit.addAll(current.getStatements());
+        }
+        return seen;
     }
 
     public static class ListErrorListener extends BaseErrorListener {

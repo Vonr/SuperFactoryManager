@@ -27,6 +27,16 @@ public enum ComparisonOperator implements ASTNode, BiPredicate<Long, Long> {
         };
     }
 
+    public String getSourceCode() {
+        return switch (this) {
+            case GREATER -> ">";
+            case LESSER -> "<";
+            case EQUALS -> "=";
+            case LESSER_OR_EQUAL -> "<=";
+            case GREATER_OR_EQUAL -> ">=";
+        };
+    }
+
     @Override
     public boolean test(Long a, Long b) {
         return PRED.test(a, b);

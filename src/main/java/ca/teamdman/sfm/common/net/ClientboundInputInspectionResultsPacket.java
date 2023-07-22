@@ -6,28 +6,25 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record ClientboundInspectExportsResultPacket(
-        int windowId,
+public record ClientboundInputInspectionResultsPacket(
         String results
 ) {
     public static final int MAX_RESULTS_LENGTH = 10240;
 
     public static void encode(
-            ClientboundInspectExportsResultPacket msg, FriendlyByteBuf friendlyByteBuf
+            ClientboundInputInspectionResultsPacket msg, FriendlyByteBuf friendlyByteBuf
     ) {
-        friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeUtf(msg.results(), MAX_RESULTS_LENGTH);
     }
 
-    public static ClientboundInspectExportsResultPacket decode(FriendlyByteBuf friendlyByteBuf) {
-        return new ClientboundInspectExportsResultPacket(
-                friendlyByteBuf.readVarInt(),
+    public static ClientboundInputInspectionResultsPacket decode(FriendlyByteBuf friendlyByteBuf) {
+        return new ClientboundInputInspectionResultsPacket(
                 friendlyByteBuf.readUtf(MAX_RESULTS_LENGTH)
         );
     }
 
     public static void handle(
-            ClientboundInspectExportsResultPacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ClientboundInputInspectionResultsPacket msg, Supplier<NetworkEvent.Context> contextSupplier
     ) {
         contextSupplier.get().enqueueWork(() -> ClientStuff.showProgramEditScreen(msg.results, next -> {
         }));

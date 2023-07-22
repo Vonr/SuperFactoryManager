@@ -1,12 +1,10 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
-import ca.teamdman.sfm.common.registry.SFMCapabilityProviderMappers;
 import ca.teamdman.sfm.common.util.SFMUtil;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 import javax.annotation.Nullable;
@@ -15,8 +13,8 @@ import java.util.stream.Stream;
 
 public class CableNetwork {
 
-    protected final Level                              LEVEL;
-    protected final Set<BlockPos>                      CABLES               = new HashSet<>();
+    protected final Level LEVEL;
+    protected final Set<BlockPos> CABLES = new HashSet<>();
     protected final Map<BlockPos, ICapabilityProvider> CAPABILITY_PROVIDERS = new HashMap<>();
 
     public CableNetwork(Level level) {
@@ -75,30 +73,15 @@ public class CableNetwork {
                 .distinct()
                 .peek(CAPABILITY_PROVIDERS::remove) // Bust the cache
                 .filter(this::hasCableNeighbour) // Verify if should [re]join network
-                .map(this::discoverCapabilityProvider) // Check if we can get capabilities from this block
+                .map(pos -> SFMUtil
+                        .discoverCapabilityProvider(LEVEL, pos)
+                        .map(prov -> Pair.of(pos, prov))) // Check if we can get capabilities from this block
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .forEach(prov -> CAPABILITY_PROVIDERS.put(prov.getFirst(), prov.getSecond())); // track it
     }
 
-    /**
-     * Find a {@link CapabilityProvider} for a given {@link BlockPos} in the level associated with this cable network.
-     * If multiple {@link CapabilityProviderMapper}s match, the first one is returned.
-     *
-     * @param pos block position be checked
-     * @return {@link Optional} containing the {@link CapabilityProvider} if one was found
-     */
-    @SuppressWarnings("UnstableApiUsage") // for the javadoc lol
-    public Optional<Pair<BlockPos, ICapabilityProvider>> discoverCapabilityProvider(BlockPos pos) {
-        return SFMCapabilityProviderMappers.DEFERRED_MAPPERS
-                .get()
-                .getValues()
-                .stream()
-                .map(mapper -> mapper.getProviderFor(LEVEL, pos))
-                .filter(Optional::isPresent)
-                .map(iCapabilityProvider -> Pair.of(pos, iCapabilityProvider.get()))
-                .findFirst();
-    }
+    // for the javadoc lol
 
     /**
      * Cables should only join the network if they would be touching a cable already in the network

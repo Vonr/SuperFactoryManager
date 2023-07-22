@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 public class ManagerContainerMenu extends AbstractContainerMenu {
     public final Container CONTAINER;
     public final Inventory INVENTORY;
-    public final BlockPos BLOCK_ENTITY_POSITION;
+    public final BlockPos MANAGER_POSITION;
     public String program;
     public ManagerBlockEntity.State state;
     public long[] tickTimeNanos;
@@ -36,7 +36,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
         checkContainerSize(container, 1);
         this.CONTAINER = container;
         this.INVENTORY = inv;
-        this.BLOCK_ENTITY_POSITION = blockEntityPos;
+        this.MANAGER_POSITION = blockEntityPos;
         this.program = program;
         this.state = state;
         this.tickTimeNanos = tickTimeNanos;
