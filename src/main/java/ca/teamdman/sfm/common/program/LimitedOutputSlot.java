@@ -25,7 +25,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
             return true;
         }
         STACK stack = getStackInSlot();
-        long count = type.getCount(stack);
+        long count = type.getAmount(stack);
         if (count >= type.getMaxStackSize(capability, slot)) {
             // if the maxStackSize is different, that will be handled by moveTo
             // for the general case, it will be faster to just assume 64 is the max stack size
@@ -52,7 +52,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         this.tracker = tracker;
         this.slot = slot;
         //noinspection DataFlowIssue
-        this.type = tracker.LIMIT.resourceId().getResourceType();
+        this.type = tracker.getLimit().resourceId().getResourceType();
         assert type != null;
         this.tracker.visit(this);
     }

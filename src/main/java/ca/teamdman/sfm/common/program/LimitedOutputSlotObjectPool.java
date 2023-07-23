@@ -9,6 +9,7 @@ import java.util.List;
  * This assumes that the pool will be used in a single thread.
  */
 public class LimitedOutputSlotObjectPool {
+    public static final LimitedOutputSlotObjectPool INSTANCE = new LimitedOutputSlotObjectPool();
     @SuppressWarnings("rawtypes")
     private LimitedOutputSlot[] pool = new LimitedOutputSlot[1];
     private int index = -1;

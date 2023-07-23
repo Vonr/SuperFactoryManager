@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
+import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.client.gui.IndentationUtils;
 import ca.teamdman.sfm.common.Constants;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -20,7 +21,6 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -62,6 +62,10 @@ public class ProgramEditScreen extends Screen {
         return rtn;
     }
 
+    public void scrollToTop() {
+        this.textarea.scrollToTop();
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -87,6 +91,24 @@ public class ProgramEditScreen extends Screen {
     }
 
     @Override
+    public boolean keyReleased(int pKeyCode, int pScanCode, int pModifiers) {
+        if (pKeyCode == GLFW.GLFW_KEY_LEFT_CONTROL || pKeyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
+            // if control released => update syntax highlighting
+            textarea.rebuild(Screen.hasControlDown());
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(char pCodePoint, int pModifiers) {
+        if (Screen.hasControlDown() && pCodePoint == ' ') {
+            return true;
+        }
+        return super.charTyped(pCodePoint, pModifiers);
+    }
+
+    @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {
             onDone();
@@ -109,6 +131,22 @@ public class ProgramEditScreen extends Screen {
             textarea.setValue(result.content());
             textarea.setCursorPosition(result.cursorPosition());
             textarea.setSelectionCursorPosition(result.selectionCursorPosition());
+            return true;
+        }
+        if (pKeyCode == GLFW.GLFW_KEY_LEFT_CONTROL || pKeyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
+            // if control pressed => update syntax highlighting
+            textarea.rebuild(Screen.hasControlDown());
+            return true;
+        }
+        if (pKeyCode == GLFW.GLFW_KEY_SPACE && Screen.hasControlDown()) {
+            ProgramTokenContextActions.getContextAction(
+                            textarea.getValue(),
+                            textarea.getCursorPosition()
+                    )
+                    .ifPresent(Runnable::run);
+
+            // disable the underline since it doesn't refresh when the context action closes
+            textarea.rebuild(false);
             return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
@@ -141,6 +179,10 @@ public class ProgramEditScreen extends Screen {
             );
         }
 
+        public void scrollToTop() {
+            this.setScrollAmount(0);
+        }
+
         public int getCursorPosition() {
             return this.textField.cursor;
         }
@@ -157,6 +199,7 @@ public class ProgramEditScreen extends Screen {
             if (!this.visible) {
                 rtn = false;
             } else {
+                //noinspection unused
                 boolean flag = this.withinContentAreaPoint(pMouseX, pMouseY);
                 boolean flag1 = this.scrollbarVisible()
                                 && pMouseX >= (double) (this.getX() + this.width)
@@ -195,12 +238,19 @@ public class ProgramEditScreen extends Screen {
             this.textField.selectCursor = cursor;
         }
 
+        private void rebuild(boolean showContextActionHints) {
+            lastProgram = this.textField.value();
+            lastProgramWithSyntaxHighlighting = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(
+                    lastProgram,
+                    showContextActionHints
+            );
+        }
+
         @Override
         protected void renderContents(GuiGraphics graphics, int mx, int my, float partialTicks) {
             Matrix4f matrix4f = graphics.pose().last().pose();
             if (!lastProgram.equals(this.textField.value())) {
-                lastProgram = this.textField.value();
-                lastProgramWithSyntaxHighlighting = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(lastProgram);
+                rebuild(Screen.hasControlDown());
             }
             List<MutableComponent> lines = lastProgramWithSyntaxHighlighting;
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;

@@ -60,7 +60,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                         INPUT FROM a
                         OUTPUT TO b
                     END
-                """;
+                """.stripTrailing().stripIndent();
 
         // set the labels
         LabelHolder.empty()
@@ -132,7 +132,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                         INPUT FROM a
                         OUTPUT TO b
                     END
-                """;
+                """.stripTrailing().stripIndent();
 
         // set the labels
         LabelHolder.empty()
@@ -226,7 +226,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                         INPUT *:*_ingot FROM a
                         OUTPUT TO b
                     END
-                """;
+                """.stripTrailing().stripIndent();
 
         // set the labels
         LabelHolder.empty()
@@ -335,7 +335,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                         INPUT *:*_ingot FROM d
                         OUTPUT TO a
                     END
-                """;
+                """.stripTrailing().stripIndent();
 
         // set the labels
         LabelHolder.empty()
@@ -467,7 +467,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                             retain 64 *:*_planks
                         TO chest
                     END
-                    """;
+                    """.stripTrailing().stripIndent();
 
             // set the labels
             LabelHolder.empty()

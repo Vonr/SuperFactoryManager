@@ -68,7 +68,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     private void sendUpdatePacket() {
         OpenContainerTracker.getPlayersWithOpenContainer(ManagerContainerMenu.class)
-                .filter(entry -> entry.getValue().BLOCK_ENTITY_POSITION.equals(getBlockPos()))
+                .filter(entry -> entry.getValue().MANAGER_POSITION.equals(getBlockPos()))
                 .forEach(entry -> SFMPackets.MANAGER_CHANNEL.send(
                         PacketDistributor.PLAYER.with(entry::getKey),
                         new ClientboundManagerGuiPacket(

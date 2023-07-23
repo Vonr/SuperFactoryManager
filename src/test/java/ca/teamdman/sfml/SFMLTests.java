@@ -1,6 +1,7 @@
 package ca.teamdman.sfml;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
+import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
@@ -437,7 +438,7 @@ public class SFMLTests {
         assertFalse(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
-        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
         String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
 
         assertEquals(rawInput, colouredInput);
@@ -468,7 +469,7 @@ public class SFMLTests {
         assertTrue(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
-        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
         String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
 
         assertEquals(rawInput, colouredInput);
@@ -496,7 +497,7 @@ public class SFMLTests {
         assertTrue(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
-        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
         String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
 
         assertEquals(rawInput, colouredInput);
@@ -524,7 +525,7 @@ public class SFMLTests {
         assertTrue(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
-        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
         String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
 
         assertEquals(rawInput, colouredInput);
@@ -557,7 +558,7 @@ public class SFMLTests {
                     .collect(Collectors.joining("\n"));
             var lines = rawInput.split("\n", -1);
 
-            var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+            var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
             String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
 
             assertEquals(rawInput, colouredInput);
@@ -589,7 +590,7 @@ public class SFMLTests {
         assertFalse(errors.isEmpty());
         var lines = rawInput.split("\n", -1);
 
-        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput);
+        var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
         String colouredInput = colouredLines.stream().map(Component::getString).collect(Collectors.joining("\n"));
 
         assertEquals(rawInput, colouredInput);
@@ -657,6 +658,38 @@ public class SFMLTests {
             assertTrue(errors.isEmpty());
             found++;
         }
-        assertTrue(found > 0);
+        assertNotEquals(0, found);
+    }
+
+    @Test
+    public void templates() throws IOException {
+        var rootDir = System.getProperty("user.dir");
+        var examplesDir = Paths.get(rootDir, "src/main/resources/assets/sfm/template_programs").toFile();
+        var found = 0;
+        //noinspection DataFlowIssue
+        for (var entry : examplesDir.listFiles()) {
+            assertEquals("sfml", FileNameUtils.getExtension(entry.getPath()));
+            System.out.println("Reading " + entry);
+            var content = Files.readString(entry.toPath());
+            content = content.replace("$REPLACE_RESOURCE_TYPES_HERE$", "");
+            var errors = getCompileErrors(content);
+            assertTrue(errors.isEmpty());
+            found++;
+        }
+        assertNotEquals(0, found);
+    }
+
+    @Test
+    public void symbolUnderCursor1() {
+        var programString = """
+                NAME "test"
+                EVERY 20 TICKS DO
+                    INPUT FROM a
+                    OUTPUT TO b
+                END
+                """.stripTrailing().stripIndent();
+        var cursorPos = programString.indexOf("INPUT") + 2;
+        var x = ProgramTokenContextActions.getContextAction(programString, cursorPos);
+        assertTrue(x.isPresent());
     }
 }

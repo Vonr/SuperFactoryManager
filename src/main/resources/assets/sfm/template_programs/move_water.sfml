@@ -1,6 +1,0 @@
-name "Move Fluid (water)"
-
-EVERY 20 TICKS DO
-    INPUT fluid::water from source BOTTOM SIDE
-    OUTPUT fluid:: to destination TOP SIDE
-END

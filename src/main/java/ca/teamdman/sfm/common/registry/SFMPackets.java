@@ -108,17 +108,59 @@ public class SFMPackets {
 
         INSPECTION_CHANNEL.registerMessage(
                 0,
-                ServerboundInspectExportsPacket.class,
-                ServerboundInspectExportsPacket::encode,
-                ServerboundInspectExportsPacket::decode,
-                ServerboundInspectExportsPacket::handle
+                ServerboundContainerExportsInspectionRequestPacket.class,
+                ServerboundContainerExportsInspectionRequestPacket::encode,
+                ServerboundContainerExportsInspectionRequestPacket::decode,
+                ServerboundContainerExportsInspectionRequestPacket::handle
         );
         INSPECTION_CHANNEL.registerMessage(
                 1,
-                ClientboundInspectExportsResultPacket.class,
-                ClientboundInspectExportsResultPacket::encode,
-                ClientboundInspectExportsResultPacket::decode,
-                ClientboundInspectExportsResultPacket::handle
+                ClientboundContainerExportsInspectionResultsPacket.class,
+                ClientboundContainerExportsInspectionResultsPacket::encode,
+                ClientboundContainerExportsInspectionResultsPacket::decode,
+                ClientboundContainerExportsInspectionResultsPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                2,
+                ServerboundLabelInspectionRequestPacket.class,
+                ServerboundLabelInspectionRequestPacket::encode,
+                ServerboundLabelInspectionRequestPacket::decode,
+                ServerboundLabelInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                3,
+                ClientboundLabelInspectionResultsPacket.class,
+                ClientboundLabelInspectionResultsPacket::encode,
+                ClientboundLabelInspectionResultsPacket::decode,
+                ClientboundLabelInspectionResultsPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                4,
+                ServerboundInputInspectionRequestPacket.class,
+                ServerboundInputInspectionRequestPacket::encode,
+                ServerboundInputInspectionRequestPacket::decode,
+                ServerboundInputInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                5,
+                ClientboundInputInspectionResultsPacket.class,
+                ClientboundInputInspectionResultsPacket::encode,
+                ClientboundInputInspectionResultsPacket::decode,
+                ClientboundInputInspectionResultsPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                6,
+                ServerboundOutputInspectionRequestPacket.class,
+                ServerboundOutputInspectionRequestPacket::encode,
+                ServerboundOutputInspectionRequestPacket::decode,
+                ServerboundOutputInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                7,
+                ClientboundOutputInspectionResultsPacket.class,
+                ClientboundOutputInspectionResultsPacket::encode,
+                ClientboundOutputInspectionResultsPacket::decode,
+                ClientboundOutputInspectionResultsPacket::handle
         );
     }
 

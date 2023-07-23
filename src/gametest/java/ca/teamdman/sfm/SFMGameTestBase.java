@@ -3,12 +3,14 @@ package ca.teamdman.sfm;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfml.ast.Block;
 import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraftforge.items.IItemHandler;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -62,6 +64,12 @@ public abstract class SFMGameTestBase {
             public void tick(ProgramContext context) {
                 startTime.set(System.nanoTime());
             }
+
+            @Override
+            public Block getBlock() {
+                //noinspection DataFlowIssue
+                return null;
+            }
         };
 
         Trigger endTimerTrigger = new Trigger() {
@@ -78,6 +86,12 @@ public abstract class SFMGameTestBase {
                     hasExecuted.set(true);
                     endTime.set(System.nanoTime());
                 }
+            }
+
+            @Override
+            public Block getBlock() {
+                //noinspection DataFlowIssue
+                return null;
             }
         };
 
@@ -113,6 +127,14 @@ public abstract class SFMGameTestBase {
     protected static int count(ChestBlockEntity chest, Item item) {
         return IntStream.range(0, chest.getContainerSize())
                 .mapToObj(chest::getItem)
+                .filter(stack -> stack.getItem() == item)
+                .mapToInt(ItemStack::getCount)
+                .sum();
+    }
+
+    protected static int count(IItemHandler chest, Item item) {
+        return IntStream.range(0, chest.getSlots())
+                .mapToObj(chest::getStackInSlot)
                 .filter(stack -> stack.getItem() == item)
                 .mapToInt(ItemStack::getCount)
                 .sum();

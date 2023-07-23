@@ -3,31 +3,42 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.common.program.ProgramContext;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public record IfStatement(
-        List<BoolExpr> expressions,
-        List<Block> blocks
+        BoolExpr condition,
+        Block trueBlock,
+        Block falseBlock
 ) implements ASTNode, Statement {
-    public IfStatement {
-        // if there is an "else" statement with no condition
-        if (expressions.size() < blocks.size()) {
-            expressions.add(new BoolExpr(__ -> true));
+    @Override
+    public void tick(ProgramContext context) {
+        Predicate<ProgramContext> condition = this.condition;
+        if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) {
+            condition = ctx -> {
+                int conditionIndex = ctx.getProgram().getConditionIndex(this);
+                return (ctx.getExplorationBranchIndex() & (1 << conditionIndex)) != 0;
+            };
         }
-        // there can only be 1 "else" statement without a condition
-        assert expressions.size() == blocks.size();
+
+        if (condition.test(context)) {
+            context.pushPath(new ProgramContext.Branch(this, true));
+            trueBlock.tick(context);
+        } else {
+            context.pushPath(new ProgramContext.Branch(this, false));
+            falseBlock.tick(context);
+        }
+
     }
 
     @Override
-    public void tick(ProgramContext context) {
-        var exprIter  = expressions.iterator();
-        var blockIter = blocks.iterator();
-        while (exprIter.hasNext()) {
-            var expr  = exprIter.next();
-            var block = blockIter.next();
-            if (expr.test(context)) {
-                block.tick(context);
-                break; // ensure only 1 block is evaluated
-            }
-        }
+    public String toString() {
+        return "IF " + condition + " THEN " + trueBlock.toString().indent(1) + " ELSE " + falseBlock
+                .toString()
+                .indent(1) + " END";
+    }
+
+    @Override
+    public List<Statement> getStatements() {
+        return List.of(trueBlock, falseBlock);
     }
 }
