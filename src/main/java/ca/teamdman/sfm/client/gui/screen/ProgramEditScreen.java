@@ -11,7 +11,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
-import net.minecraft.client.gui.components.Whence;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
@@ -20,7 +19,6 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -60,6 +58,10 @@ public class ProgramEditScreen extends Screen {
             return Optional.empty();
         }, Style.EMPTY);
         return rtn;
+    }
+
+    public void scrollToTop() {
+        this.textarea.scrollToTop();
     }
 
     @Override
@@ -102,10 +104,6 @@ public class ProgramEditScreen extends Screen {
             return true;
         }
         return super.charTyped(pCodePoint, pModifiers);
-    }
-
-    public void scrollToTop() {
-        textarea.setScrollAmount(0d);
     }
 
     @Override
@@ -179,6 +177,10 @@ public class ProgramEditScreen extends Screen {
             );
         }
 
+        public void scrollToTop() {
+            this.setScrollAmount(0);
+        }
+
         public int getCursorPosition() {
             return this.textField.cursor;
         }
@@ -195,6 +197,7 @@ public class ProgramEditScreen extends Screen {
             if (!this.visible) {
                 rtn = false;
             } else {
+                //noinspection unused
                 boolean flag = this.withinContentAreaPoint(pMouseX, pMouseY);
                 boolean flag1 = this.scrollbarVisible()
                                 && pMouseX >= (double) (this.getX() + this.width)
