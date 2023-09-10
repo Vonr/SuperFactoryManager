@@ -1,0 +1,9 @@
+            // Open the door by placing redstone dust
+            helper.setBlock(redstonePos, Blocks.REDSTONE_WIRE);
+            
+            // Open the door by stepping on the pressure plate
+            helper.setBlock(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE);
+            
+
+
+open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)

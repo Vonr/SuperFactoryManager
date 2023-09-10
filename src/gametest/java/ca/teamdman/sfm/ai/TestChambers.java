@@ -88,13 +88,15 @@ public class TestChambers extends SFMGameTestBase {
         // end test prefix
 
         // begin agent code
-            // The agent needs to create an action to make the item entity fall, this action will then activate the pressure
-            // plate which will in turn open the door.
-            // Move the diamond item to the pressure plate
-            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 1, 0)));
+            // Open the door by placing redstone dust
+            helper.setBlock(redstonePos, Blocks.REDSTONE_WIRE);
             
-            // Make item fall
-            item.setDeltaMovement(0, -0.5, 0);
+            // Open the door by stepping on the pressure plate
+            helper.setBlock(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE);
+            
+            // Assert that the door is open
+            helper.assertBlockProperty(doorPos, DoorBlock.OPEN, true);
+            
         // end agent code
 
         // begin test suffix

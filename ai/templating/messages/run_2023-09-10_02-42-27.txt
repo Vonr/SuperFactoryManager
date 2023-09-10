@@ -1,0 +1,7 @@
+            // Create a diamond item and drop it on the pressure plate
+            var itemEntity = new ItemEntity(helper.getLevel(), pressurePlatePos.getX() + 0.5, pressurePlatePos.getY() + 1.25, pressurePlatePos.getZ() + 0.5, new ItemStack(Items.DIAMOND));
+            itemEntity.setDeltaMovement(0, 0, 0);
+            helper.getLevel().addFreshEntity(itemEntity);
+
+
+open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)

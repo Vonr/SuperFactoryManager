@@ -115,32 +115,69 @@ None
 ---
 {
   "name": "run_test",
-  "arguments": "{\n\"include_visual_observation\": false,\n\"agent_test_code\": \n\"// The agent needs to create an action to make the item entity fall, this action will then activate the pressure\\n// plate which will in turn open the door.\\n// Move the diamond item to the pressure plate\\nitem.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 0.5, 0)));\\n\\n// Make item fall\\nitem.setDeltaMovement(0, -0.5, 0);\"\n}"
+  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"// Your code here\\n\"\n}"
 }
 # ~=~ function
-D:\Repos\Minecraft\Forge\SuperFactoryManager\src\gametest\java\ca\teamdman\sfm\ai\TestChambers.java:94: error: incompatible types: possible lossy conversion from double to int
-            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 0.5, 0)));
-                                                                                       ^
+open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)
 # ~=~ assistant
 None
 ---
 {
   "name": "run_test",
-  "arguments": "{\n\"include_visual_observation\": false,\n\"agent_test_code\": \n\"// The agent needs to create an action to make the item entity fall, this action will then activate the pressure\\n// plate which will in turn open the door.\\n// Move the diamond item to the pressure plate\\nitem.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 1, 0)));\\n\\n// Make item fall\\nitem.setDeltaMovement(0, -0.5, 0);\"\n}"
+  "arguments": "{\n  \"include_visual_observation\": true,\n  \"agent_test_code\": \"// Open the door\\nhelper.createRedstone(1, 2, 0, true);\\n\"\n}"
 }
 # ~=~ function
-open_door passed! (104ms)
+D:\Repos\Minecraft\Forge\SuperFactoryManager\src\gametest\java\ca\teamdman\sfm\ai\TestChambers.java:92: error: cannot find symbol
+            helper.createRedstone(1, 2, 0, true);
+                  ^
+  symbol:   method createRedstone(int,int,int,boolean)
+  location: variable helper of type GameTestHelper
 # ~=~ assistant
-The test ran successfully and passed!
-
-Here is the agent code that replaced the previously empty block, which caused the test to succeed:
-
-```java
-// The agent needs to create an action to make the item entity fall, this action will then activate the pressure plate which will in turn open the door.
-// Move the diamond item to the pressure plate
-item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 1, 0)));
-
-// Make item fall
-item.setDeltaMovement(0, -0.5, 0);
-```
-This code causes the diamond item to drop onto the pressure plate, which triggers the redstone circuit and opens the door. This meets the success condition for the test.
+None
+---
+{
+  "name": "run_test",
+  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"// Open the door\\nhelper.setBlockState(redstonePos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(BlockStateProperties.POWERED, true));\\n\"\n}"
+}
+# ~=~ function
+D:\Repos\Minecraft\Forge\SuperFactoryManager\src\gametest\java\ca\teamdman\sfm\ai\TestChambers.java:92: error: cannot find symbol
+            helper.setBlockState(redstonePos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(BlockStateProperties.POWERED, true));
+                  ^
+  symbol:   method setBlockState(BlockPos,BlockState)
+  location: variable helper of type GameTestHelper
+# ~=~ assistant
+None
+---
+{
+  "name": "run_test",
+  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"// Open the door by placing redstone dust\\nhelper.setBlock(redstonePos, Blocks.REDSTONE_WIRE);\"\n}"
+}
+# ~=~ function
+open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)
+# ~=~ assistant
+None
+---
+{
+  "name": "run_test",
+  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"// Open the door by placing redstone dust\\nhelper.setBlock(redstonePos, Blocks.REDSTONE_WIRE);\\n\\n// Open the door by stepping on the pressure plate\\nhelper.setBlock(pressurePlatePos, Blocks.DIRT);\\n\"\n}"
+}
+# ~=~ function
+open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)
+# ~=~ assistant
+None
+---
+{
+  "name": "run_test",
+  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"// Open the door by placing redstone dust\\nhelper.setBlock(redstonePos, Blocks.REDSTONE_WIRE);\\n\\n// Open the door by stepping on the pressure plate\\nhelper.setBlock(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE);\\n\"\n}"
+}
+# ~=~ function
+open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)
+# ~=~ assistant
+None
+---
+{
+  "name": "run_test",
+  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"// Open the door by placing redstone dust\\nhelper.setBlock(redstonePos, Blocks.REDSTONE_WIRE);\\n\\n// Open the door by stepping on the pressure plate\\nhelper.setBlock(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE);\\n\\n// Assert that the door is open\\nhelper.assertBlockProperty(doorPos, DoorBlock.OPEN, true);\\n\"\n}"
+}
+# ~=~ function
+open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=0)
