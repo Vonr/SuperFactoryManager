@@ -40,7 +40,7 @@ public record ServerboundInputInspectionRequestPacket(
             if (player == null) return;
             ManagerBlockEntity manager;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {
-                if (player.getLevel().getBlockEntity(mcm.MANAGER_POSITION) instanceof ManagerBlockEntity mbe) {
+                if (player.level().getBlockEntity(mcm.MANAGER_POSITION) instanceof ManagerBlockEntity mbe) {
                     manager = mbe;
                 } else {
                     return;
