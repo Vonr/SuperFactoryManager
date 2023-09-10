@@ -17,6 +17,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
@@ -85,11 +87,13 @@ public class TestChambers extends SFMGameTestBase {
                 new ItemStack(Items.DIAMOND)
         );
         item.setDeltaMovement(0, 0, 0);
+
+        // did we place the diamond above the correct block?
         item.setPos(Vec3.atCenterOf(helper.absolutePos(doorPos).offset(0, 3, 0)));
         // end test prefix
 
         // begin agent code
-//        item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0,3,0)));
+            helper.getLevel().setBlockAndUpdate(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE.defaultBlockState().setValue(BlockStateProperties.POWERED, true));
         // end agent code
 
         // begin test suffix
