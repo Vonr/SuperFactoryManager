@@ -47,18 +47,6 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class TestChambers extends SFMGameTestBase {
-    @Nullable
-    private static Thread integrationServer = null;
-    private static final ConcurrentHashMap<String, String> testResults = new ConcurrentHashMap<>();
-
-    private static void announce(String message) {
-        if (Minecraft.getInstance() == null || Minecraft.getInstance().player == null) {
-            SFM.LOGGER.warn("Failed to announce to player: {}", message);
-        } else {
-            Minecraft.getInstance().player.sendSystemMessage(Component.literal(message));
-        }
-    }
-
     /**
      * The agent must make the test case pass.
      * The agent is provided code at the beginning and the end of the test case.
@@ -120,94 +108,6 @@ public class TestChambers extends SFMGameTestBase {
         });
         // end test suffix
     }
-
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
-    public static class TestChamberEvents {
-        @SubscribeEvent
-        public static void onClientSystemMessage(final ClientChatReceivedEvent.System event) {
-            testResults.put("latest", event.getMessage().getString());
-        }
-
-        @SubscribeEvent
-        public static void onRegisterCommand(final RegisterClientCommandsEvent event) {
-            LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("sfm_ai");
-
-            command.then(Commands.literal("listen")
-                                 .executes(ctx -> {
-                                     if (integrationServer == null) {
-                                         // spawn new thread
-                                         integrationServer = new Thread(() -> {
-                                             announce("Integration server starting up");
-                                             Path filePath = Paths.get("D:\\Repos\\Minecraft\\Forge\\SuperFactoryManager\\ai\\templating\\messages\\run.txt");
-
-                                             while (true) {  // Infinite loop to keep checking
-                                                 try {
-                                                     if (Files.exists(filePath)) {
-                                                         List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
-
-                                                         if (lines.isEmpty()) {  // If the file is empty
-                                                             announce("Integration server starting test");
-
-                                                             testResults.put("latest", "");
-
-                                                             LocalPlayer player = Minecraft.getInstance().player;
-                                                             player.setDeltaMovement(0, 0, 0);
-                                                             player.setPos(0, -58, 0); // superflat
-                                                             player.getAbilities().flying = true;
-                                                             player.lookAt(
-                                                                     EntityAnchorArgument.Anchor.EYES,
-                                                                     Vec3.atCenterOf(new BlockPos(1, -58, 4))
-                                                             );
-                                                             player.connection.sendUnsignedCommand("test clearall");
-                                                             Thread.sleep(100);
-                                                             player.connection.sendUnsignedCommand("test run open_door");
-                                                             String results;
-
-                                                             while ((results = testResults.get("latest")).isEmpty()) {
-                                                                 announce("Integration server waiting for test results");
-                                                                 Thread.sleep(100);
-                                                             }
-
-                                                             announce("Integration server received test results " + results);
-
-                                                             // Append results to the file
-                                                             Files.write(filePath, results.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
-                                                         }
-                                                     }
-
-                                                     Thread.sleep(1000);  // Sleep for a second before checking again
-
-                                                 } catch (InterruptedException | IOException e) {
-                                                     e.printStackTrace();
-                                                 }
-                                             }
-                                         });
-                                         integrationServer.setDaemon(true);
-                                         integrationServer.start();
-                                     } else {
-                                         announce("Integration server already running");
-                                     }
-                                     return SINGLE_SUCCESS;
-                                 })
-            );
-
-            command.then(Commands.literal("stop")
-                                 .executes(ctx -> {
-                                     if (integrationServer != null) {
-                                         integrationServer.interrupt();
-                                         integrationServer = null;
-                                         announce("Integration server stopped");
-                                     } else {
-                                         announce("Integration server not running");
-                                     }
-                                     return SINGLE_SUCCESS;
-                                 })
-            );
-
-            SFM.LOGGER.info("Attaching test chamber commands");
-            event.getDispatcher().register(command);
-        }
-    }
 }
 ```
 # ~=~ assistant
@@ -215,30 +115,32 @@ None
 ---
 {
   "name": "run_test",
-  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"helper.spawnItem(item);\"\n}"
+  "arguments": "{\n\"include_visual_observation\": false,\n\"agent_test_code\": \n\"// The agent needs to create an action to make the item entity fall, this action will then activate the pressure\\n// plate which will in turn open the door.\\n// Move the diamond item to the pressure plate\\nitem.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 0.5, 0)));\\n\\n// Make item fall\\nitem.setDeltaMovement(0, -0.5, 0);\"\n}"
 }
 # ~=~ function
-D:\Repos\Minecraft\Forge\SuperFactoryManager\src\gametest\java\ca\teamdman\sfm\ai\TestChambers.java:103: error: no suitable method found for spawnItem(ItemEntity)
-            helper.spawnItem(item);
-                  ^
-    method GameTestHelper.spawnItem(Item,float,float,float) is not applicable
-      (actual and formal argument lists differ in length)
-    method GameTestHelper.spawnItem(Item,BlockPos) is not applicable
-      (actual and formal argument lists differ in length)
+D:\Repos\Minecraft\Forge\SuperFactoryManager\src\gametest\java\ca\teamdman\sfm\ai\TestChambers.java:94: error: incompatible types: possible lossy conversion from double to int
+            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 0.5, 0)));
+                                                                                       ^
 # ~=~ assistant
 None
 ---
 {
   "name": "run_test",
-  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"helper.spawnItem(Items.DIAMOND, pressurePlatePos);\"\n}"
+  "arguments": "{\n\"include_visual_observation\": false,\n\"agent_test_code\": \n\"// The agent needs to create an action to make the item entity fall, this action will then activate the pressure\\n// plate which will in turn open the door.\\n// Move the diamond item to the pressure plate\\nitem.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 1, 0)));\\n\\n// Make item fall\\nitem.setDeltaMovement(0, -0.5, 0);\"\n}"
 }
 # ~=~ function
-open_door passed! (97ms)
+open_door passed! (104ms)
 # ~=~ assistant
-The test has passed successfully. The code that I've added to make the test case pass is:
+The test ran successfully and passed!
+
+Here is the agent code that replaced the previously empty block, which caused the test to succeed:
 
 ```java
-helper.spawnItem(Items.DIAMOND, pressurePlatePos);
-```
+// The agent needs to create an action to make the item entity fall, this action will then activate the pressure plate which will in turn open the door.
+// Move the diamond item to the pressure plate
+item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 1, 0)));
 
-The code spawns a diamond item on the position of the pressure plate which, in turn, activates the redstone wire and opens the door.
+// Make item fall
+item.setDeltaMovement(0, -0.5, 0);
+```
+This code causes the diamond item to drop onto the pressure plate, which triggers the redstone circuit and opens the door. This meets the success condition for the test.

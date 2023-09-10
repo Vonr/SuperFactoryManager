@@ -42,18 +42,6 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class TestChambers extends SFMGameTestBase {
-    @Nullable
-    private static Thread integrationServer = null;
-    private static final ConcurrentHashMap<String, String> testResults = new ConcurrentHashMap<>();
-
-    private static void announce(String message) {
-        if (Minecraft.getInstance() == null || Minecraft.getInstance().player == null) {
-            SFM.LOGGER.warn("Failed to announce to player: {}", message);
-        } else {
-            Minecraft.getInstance().player.sendSystemMessage(Component.literal(message));
-        }
-    }
-
     /**
      * The agent must make the test case pass.
      * The agent is provided code at the beginning and the end of the test case.
@@ -100,7 +88,13 @@ public class TestChambers extends SFMGameTestBase {
         // end test prefix
 
         // begin agent code
-            helper.spawnItem(Items.DIAMOND, pressurePlatePos);
+            // The agent needs to create an action to make the item entity fall, this action will then activate the pressure
+            // plate which will in turn open the door.
+            // Move the diamond item to the pressure plate
+            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 1, 0)));
+            
+            // Make item fall
+            item.setDeltaMovement(0, -0.5, 0);
         // end agent code
 
         // begin test suffix
@@ -115,93 +109,5 @@ public class TestChambers extends SFMGameTestBase {
             helper.succeed();
         });
         // end test suffix
-    }
-
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
-    public static class TestChamberEvents {
-        @SubscribeEvent
-        public static void onClientSystemMessage(final ClientChatReceivedEvent.System event) {
-            testResults.put("latest", event.getMessage().getString());
-        }
-
-        @SubscribeEvent
-        public static void onRegisterCommand(final RegisterClientCommandsEvent event) {
-            LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("sfm_ai");
-
-            command.then(Commands.literal("listen")
-                                 .executes(ctx -> {
-                                     if (integrationServer == null) {
-                                         // spawn new thread
-                                         integrationServer = new Thread(() -> {
-                                             announce("Integration server starting up");
-                                             Path filePath = Paths.get("D:\\Repos\\Minecraft\\Forge\\SuperFactoryManager\\ai\\templating\\messages\\run.txt");
-
-                                             while (true) {  // Infinite loop to keep checking
-                                                 try {
-                                                     if (Files.exists(filePath)) {
-                                                         List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
-
-                                                         if (lines.isEmpty()) {  // If the file is empty
-                                                             announce("Integration server starting test");
-
-                                                             testResults.put("latest", "");
-
-                                                             LocalPlayer player = Minecraft.getInstance().player;
-                                                             player.setDeltaMovement(0, 0, 0);
-                                                             player.setPos(0, -58, 0); // superflat
-                                                             player.getAbilities().flying = true;
-                                                             player.lookAt(
-                                                                     EntityAnchorArgument.Anchor.EYES,
-                                                                     Vec3.atCenterOf(new BlockPos(1, -58, 4))
-                                                             );
-                                                             player.connection.sendUnsignedCommand("test clearall");
-                                                             Thread.sleep(100);
-                                                             player.connection.sendUnsignedCommand("test run open_door");
-                                                             String results;
-
-                                                             while ((results = testResults.get("latest")).isEmpty()) {
-                                                                 announce("Integration server waiting for test results");
-                                                                 Thread.sleep(100);
-                                                             }
-
-                                                             announce("Integration server received test results " + results);
-
-                                                             // Append results to the file
-                                                             Files.write(filePath, results.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
-                                                         }
-                                                     }
-
-                                                     Thread.sleep(1000);  // Sleep for a second before checking again
-
-                                                 } catch (InterruptedException | IOException e) {
-                                                     e.printStackTrace();
-                                                 }
-                                             }
-                                         });
-                                         integrationServer.setDaemon(true);
-                                         integrationServer.start();
-                                     } else {
-                                         announce("Integration server already running");
-                                     }
-                                     return SINGLE_SUCCESS;
-                                 })
-            );
-
-            command.then(Commands.literal("stop")
-                                 .executes(ctx -> {
-                                     if (integrationServer != null) {
-                                         integrationServer.interrupt();
-                                         integrationServer = null;
-                                         announce("Integration server stopped");
-                                     } else {
-                                         announce("Integration server not running");
-                                     }
-                                     return SINGLE_SUCCESS;
-                                 })
-            );
-
-            SFM.LOGGER.info("Attaching test chamber commands");
-            event.getDispatcher().register(command);
-        }
     }
 }
