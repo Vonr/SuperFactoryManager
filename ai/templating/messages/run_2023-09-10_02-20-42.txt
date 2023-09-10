@@ -1,0 +1,4 @@
+            helper.spawnItem(Items.DIAMOND, pressurePlatePos);
+
+
+open_door passed! (99ms)

@@ -1,0 +1,4 @@
+            helper.getLevel().setBlockAndUpdate(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE.defaultBlockState().setValue(PressurePlateBlock.POWERED, true));
+
+
+open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)

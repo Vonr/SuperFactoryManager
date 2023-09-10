@@ -22,6 +22,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
@@ -31,6 +33,13 @@ import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
@@ -129,34 +138,51 @@ public class TestChambers extends SFMGameTestBase {
                                          // spawn new thread
                                          integrationServer = new Thread(() -> {
                                              announce("Integration server starting up");
-                                             try {
-                                                 Thread.sleep(1000);
-                                                 announce("Integration server starting test");
-                                                 testResults.put("latest", "");
+                                             Path filePath = Paths.get("D:\\Repos\\Minecraft\\Forge\\SuperFactoryManager\\ai\\templating\\messages\\run.txt");
 
-                                                 LocalPlayer player = Minecraft.getInstance().player;
-                                                 player.setDeltaMovement(0, 0, 0);
-                                                 player.setPos(0, -58, 0); // superflat
-                                                 player.getAbilities().flying = true;
-                                                 player.lookAt(
-                                                         EntityAnchorArgument.Anchor.EYES,
-                                                         Vec3.atCenterOf(new BlockPos(1, -58, 4))
-                                                 );
-                                                 player.connection.sendUnsignedCommand("test clearall");
-                                                 Thread.sleep(100);
-                                                 player.connection.sendUnsignedCommand("test run open_door");
-                                                 String results;
-                                                 while ((results = testResults.get("latest")).isEmpty()) {
-                                                     announce("Integration server waiting for test results");
-                                                     Thread.sleep(100);
+                                             while (true) {  // Infinite loop to keep checking
+                                                 try {
+                                                     if (Files.exists(filePath)) {
+                                                         List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
+
+                                                         if (lines.isEmpty()) {  // If the file is empty
+                                                             announce("Integration server starting test");
+
+                                                             testResults.put("latest", "");
+
+                                                             LocalPlayer player = Minecraft.getInstance().player;
+                                                             player.setDeltaMovement(0, 0, 0);
+                                                             player.setPos(0, -58, 0); // superflat
+                                                             player.getAbilities().flying = true;
+                                                             player.lookAt(
+                                                                     EntityAnchorArgument.Anchor.EYES,
+                                                                     Vec3.atCenterOf(new BlockPos(1, -58, 4))
+                                                             );
+                                                             player.connection.sendUnsignedCommand("test clearall");
+                                                             Thread.sleep(100);
+                                                             player.connection.sendUnsignedCommand("test run open_door");
+                                                             String results;
+
+                                                             while ((results = testResults.get("latest")).isEmpty()) {
+                                                                 announce("Integration server waiting for test results");
+                                                                 Thread.sleep(100);
+                                                             }
+
+                                                             announce("Integration server received test results " + results);
+
+                                                             // Append results to the file
+                                                             Files.write(filePath, results.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
+                                                         }
+                                                     }
+
+                                                     Thread.sleep(1000);  // Sleep for a second before checking again
+
+                                                 } catch (InterruptedException | IOException e) {
+                                                     e.printStackTrace();
                                                  }
-                                                 announce("Integration server received test results " + results);
-                                                 integrationServer = null;
-                                             } catch (InterruptedException e) {
-                                                 e.printStackTrace();
                                              }
-                                             announce("Integration server shutting down");
                                          });
+                                         integrationServer.setDaemon(true);
                                          integrationServer.start();
                                      } else {
                                          announce("Integration server already running");
@@ -189,16 +215,30 @@ None
 ---
 {
   "name": "run_test",
-  "arguments": "{\n\"include_visual_observation\": false,\n\"agent_test_code\": \"helper.getLevel().setBlockAndUpdate(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE.defaultBlockState().setValue(PressurePlateBlock.POWERED, true));\"\n}"
+  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"helper.spawnItem(item);\"\n}"
 }
 # ~=~ function
-build successful
+D:\Repos\Minecraft\Forge\SuperFactoryManager\src\gametest\java\ca\teamdman\sfm\ai\TestChambers.java:103: error: no suitable method found for spawnItem(ItemEntity)
+            helper.spawnItem(item);
+                  ^
+    method GameTestHelper.spawnItem(Item,float,float,float) is not applicable
+      (actual and formal argument lists differ in length)
+    method GameTestHelper.spawnItem(Item,BlockPos) is not applicable
+      (actual and formal argument lists differ in length)
 # ~=~ assistant
 None
 ---
 {
   "name": "run_test",
-  "arguments": "{\n\"include_visual_observation\": false,\n\"agent_test_code\": \"helper.getLevel().setBlockAndUpdate(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE.defaultBlockState().setValue(BlockStateProperties.POWERED, true));\"\n}"
+  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"helper.spawnItem(Items.DIAMOND, pressurePlatePos);\"\n}"
 }
 # ~=~ function
-build successful
+open_door passed! (97ms)
+# ~=~ assistant
+The test has passed successfully. The code that I've added to make the test case pass is:
+
+```java
+helper.spawnItem(Items.DIAMOND, pressurePlatePos);
+```
+
+The code spawns a diamond item on the position of the pressure plate which, in turn, activates the redstone wire and opens the door.

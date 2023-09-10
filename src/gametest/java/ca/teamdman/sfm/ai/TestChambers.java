@@ -28,6 +28,13 @@ import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
@@ -93,7 +100,7 @@ public class TestChambers extends SFMGameTestBase {
         // end test prefix
 
         // begin agent code
-            helper.getLevel().setBlockAndUpdate(pressurePlatePos, Blocks.OAK_PRESSURE_PLATE.defaultBlockState().setValue(BlockStateProperties.POWERED, true));
+            helper.spawnItem(Items.DIAMOND, pressurePlatePos);
         // end agent code
 
         // begin test suffix
@@ -127,34 +134,51 @@ public class TestChambers extends SFMGameTestBase {
                                          // spawn new thread
                                          integrationServer = new Thread(() -> {
                                              announce("Integration server starting up");
-                                             try {
-                                                 Thread.sleep(1000);
-                                                 announce("Integration server starting test");
-                                                 testResults.put("latest", "");
+                                             Path filePath = Paths.get("D:\\Repos\\Minecraft\\Forge\\SuperFactoryManager\\ai\\templating\\messages\\run.txt");
 
-                                                 LocalPlayer player = Minecraft.getInstance().player;
-                                                 player.setDeltaMovement(0, 0, 0);
-                                                 player.setPos(0, -58, 0); // superflat
-                                                 player.getAbilities().flying = true;
-                                                 player.lookAt(
-                                                         EntityAnchorArgument.Anchor.EYES,
-                                                         Vec3.atCenterOf(new BlockPos(1, -58, 4))
-                                                 );
-                                                 player.connection.sendUnsignedCommand("test clearall");
-                                                 Thread.sleep(100);
-                                                 player.connection.sendUnsignedCommand("test run open_door");
-                                                 String results;
-                                                 while ((results = testResults.get("latest")).isEmpty()) {
-                                                     announce("Integration server waiting for test results");
-                                                     Thread.sleep(100);
+                                             while (true) {  // Infinite loop to keep checking
+                                                 try {
+                                                     if (Files.exists(filePath)) {
+                                                         List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
+
+                                                         if (lines.isEmpty()) {  // If the file is empty
+                                                             announce("Integration server starting test");
+
+                                                             testResults.put("latest", "");
+
+                                                             LocalPlayer player = Minecraft.getInstance().player;
+                                                             player.setDeltaMovement(0, 0, 0);
+                                                             player.setPos(0, -58, 0); // superflat
+                                                             player.getAbilities().flying = true;
+                                                             player.lookAt(
+                                                                     EntityAnchorArgument.Anchor.EYES,
+                                                                     Vec3.atCenterOf(new BlockPos(1, -58, 4))
+                                                             );
+                                                             player.connection.sendUnsignedCommand("test clearall");
+                                                             Thread.sleep(100);
+                                                             player.connection.sendUnsignedCommand("test run open_door");
+                                                             String results;
+
+                                                             while ((results = testResults.get("latest")).isEmpty()) {
+                                                                 announce("Integration server waiting for test results");
+                                                                 Thread.sleep(100);
+                                                             }
+
+                                                             announce("Integration server received test results " + results);
+
+                                                             // Append results to the file
+                                                             Files.write(filePath, results.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
+                                                         }
+                                                     }
+
+                                                     Thread.sleep(1000);  // Sleep for a second before checking again
+
+                                                 } catch (InterruptedException | IOException e) {
+                                                     e.printStackTrace();
                                                  }
-                                                 announce("Integration server received test results " + results);
-                                                 integrationServer = null;
-                                             } catch (InterruptedException e) {
-                                                 e.printStackTrace();
                                              }
-                                             announce("Integration server shutting down");
                                          });
+                                         integrationServer.setDaemon(true);
                                          integrationServer.start();
                                      } else {
                                          announce("Integration server already running");
