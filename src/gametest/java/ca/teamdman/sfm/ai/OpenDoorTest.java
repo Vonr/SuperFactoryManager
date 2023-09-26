@@ -38,8 +38,7 @@ public class OpenDoorTest extends SFMGameTestBase {
 
         // set the door
         helper.setBlock(doorPos, Blocks.IRON_DOOR);
-
-
+        
         var item = new ItemEntity(
                 helper.getLevel(),
                 redstonePos.getX(),
@@ -48,20 +47,14 @@ public class OpenDoorTest extends SFMGameTestBase {
                 new ItemStack(Items.DIAMOND)
         );
         item.setDeltaMovement(0, 0, 0);
-        item.setPos(Vec3.atCenterOf(helper.absolutePos(doorPos).offset(0, 3, 0)));
 
+        // is this the right position? There might be an improvement here 👀
+        item.setPos(Vec3.atCenterOf(helper.absolutePos(doorPos).offset(0, 3, 0)));
         // begin agent code
         // end agent code
-
         helper.getLevel().addFreshEntity(item);
-        // succeed as soon as possible
         helper.succeedWhen(() -> {
             helper.assertBlockProperty(doorPos, DoorBlock.OPEN, true);
-        });
-        // shorten the timeout to 3 ticks
-        helper.runAfterDelay(60, () -> {
-            helper.assertBlockProperty(doorPos, DoorBlock.OPEN, true);
-            helper.succeed();
         });
     }
 }

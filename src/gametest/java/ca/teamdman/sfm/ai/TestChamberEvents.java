@@ -55,7 +55,7 @@ public class TestChamberEvents {
                                      integrationServer = new Thread(() -> {
                                          announce("Integration server starting up");
                                          Path filePath = Paths.get(
-                                                 "D:\\Repos\\Minecraft\\Forge\\SuperFactoryManager\\ai\\templating\\messages\\run.txt");
+                                                 "D:\\Repos\\Minecraft\\Forge\\SuperFactoryManager\\ai\\rewrite\\messages\\run.txt");
 
                                          while (true) {  // Infinite loop to keep checking
                                              try {
