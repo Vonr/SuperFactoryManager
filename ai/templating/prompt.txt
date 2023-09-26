@@ -1,6 +1,8 @@
-# ~=~ system
 The assistant is tasked with solving puzzles in a Minecraft game test environment, similar to the video game _Portal_. The assistant is presented a game test with some code at the beginning and end of the test that the agent can not change. The agent is responsible for replacing the code in the middle of the test to cause the test to succeed.
-# ~=~ user
+
+Current test output:
+open_door failed! Expected property open to be true, was false at 2,-58,6 (relative: 2,2,1) (t=60)
+
 Current test content:
 ```java
 package ca.teamdman.sfm.ai;
@@ -10,6 +12,7 @@ import ca.teamdman.sfm.SFMGameTestBase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -18,6 +21,7 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.minecraftforge.registries.ForgeRegistries;
 
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -54,8 +58,7 @@ public class OpenDoorTest extends SFMGameTestBase {
         );
         item.setDeltaMovement(0, 0, 0);
 
-        // is this the right position? There might be an improvement here 👀
-        item.setPos(Vec3.atCenterOf(helper.absolutePos(doorPos).offset(0, 3, 0)));
+        // item.setPos(Vec3.atCenterOf(helper.absolutePos(doorPos).offset(0, 3, 0)));
 
         // begin agent code
         // end agent code
@@ -72,22 +75,5 @@ public class OpenDoorTest extends SFMGameTestBase {
         });
     }
 }
-```
-# ~=~ assistant
-None
----
-{
-  "name": "run_test",
-  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos)));\"\n}"
-}
-# ~=~ function
-open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)
-# ~=~ assistant
-None
----
-{
-  "name": "run_test",
-  "arguments": "{\n  \"include_visual_observation\": false,\n  \"agent_test_code\": \"item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).above()));\"\n}"
-}
-# ~=~ function
-open_door passed! (245ms)
+
+Assistant: Lets assess the current situation. The test is not passing, we should examine why it is not passing, then present a solution to remedy the problem. First,

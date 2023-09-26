@@ -1,5 +1,0 @@
-        var torchPos = new BlockPos(2, 3, 1);
-        helper.setBlock(torchPos, Blocks.REDSTONE_TORCH);
-
-
-open_door failed! Expected property open to be true, property open is missing at 2,-58,4 (relative: 2,2,1) (t=60)

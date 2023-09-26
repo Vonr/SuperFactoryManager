@@ -1,8 +1,0 @@
-            // Creates a new ItemStack and throw it on the pressure plate
-            ItemStack stack = new ItemStack(Items.DIAMOND);
-            ItemEntity itemEntity = new ItemEntity(helper.getLevel(), pressurePlatePos.getX() + 0.5, pressurePlatePos.getY() + 1, pressurePlatePos.getZ() + 0.5, stack);
-            itemEntity.setDeltaMovement(0, 0, 0);
-            helper.getLevel().addFreshEntity(itemEntity);
-
-
-open_door failed! Expected property open to be true, was false at 2,-58,4 (relative: 2,2,1) (t=60)

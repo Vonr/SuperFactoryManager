@@ -1,8 +1,0 @@
-            // set the redstone dust
-            helper.setBlock(redstonePos, Blocks.REDSTONE_WIRE);
-            
-            // move the item entity to the pressure plate
-            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 3, 0)));
-
-
-open_door passed! (496ms)
