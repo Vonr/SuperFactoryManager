@@ -51,6 +51,7 @@ public class OpenDoorTest extends SFMGameTestBase {
         // is this the right position? There might be an improvement here 👀
         item.setPos(Vec3.atCenterOf(helper.absolutePos(doorPos).offset(0, 3, 0)));
         // begin agent code
+            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 3, 0)));
         // end agent code
         helper.getLevel().addFreshEntity(item);
         helper.succeedWhen(() -> {
