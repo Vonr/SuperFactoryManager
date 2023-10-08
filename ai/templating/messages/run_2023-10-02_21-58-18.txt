@@ -1,0 +1,4 @@
+            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 3, 0)));
+
+
+open_door passed! (544ms)
