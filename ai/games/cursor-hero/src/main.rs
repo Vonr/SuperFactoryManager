@@ -45,7 +45,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: R
     let image_buf = screen.capture().unwrap();
     let dynamic_image = DynamicImage::ImageRgba8(image_buf);
     // Create an image using Bevy's Image type
-    let image = Image::from_dynamic(dynamic_image, false);
+    let image = Image::from_dynamic(dynamic_image, true);
     let texture = textures.add(image);
 
     // Create a sprite with the background texture
