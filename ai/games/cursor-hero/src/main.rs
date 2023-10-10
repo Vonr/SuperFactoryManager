@@ -1,9 +1,11 @@
-use bevy::{
-    prelude::*,
-    render::{render_resource::{TextureFormat, Extent3d, TextureDimension}, texture::{ImageType, CompressedImageFormats}},
-};
+use bevy::prelude::*;
 use image::DynamicImage;
 use screenshots::Screen;
+
+#[derive(Component)]
+pub struct Background {
+
+}
 
 fn main() {
     App::new()
@@ -12,7 +14,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: "Logic Farming Rougelike".into(),
+                        title: "Cursor Hero".into(),
                         resolution: (640.0, 480.0).into(),
                         resizable: false,
                         ..default()
@@ -26,7 +28,11 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: ResMut<Assets<Image>>,) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut textures: ResMut<Assets<Image>>,
+) {
     commands.spawn(Camera2dBundle::default());
 
     let texture = asset_server.load("character.png");
@@ -49,12 +55,19 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut textures: R
     let texture = textures.add(image);
 
     // Create a sprite with the background texture
-    commands.spawn(SpriteBundle {
-        texture,
-        transform: Transform::from_xyz(0.0, 0.0, -1.0), // Position behind the character
-        ..Default::default()
-    });
+    commands.spawn((
+        SpriteBundle {
+            texture,
+            transform: Transform::from_xyz(0.0, 0.0, -1.0), // Position behind the character
+            ..Default::default()
+        },
+        Background {},
+    ));
 }
+
+fn background_refresh(
+    
+)
 
 fn character_movement(
     mut characters: Query<(&mut Transform, &Sprite)>,
