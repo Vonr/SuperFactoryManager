@@ -39,13 +39,8 @@ fn setup(
 
 
 fn camera_follow_tick(
-    mut set: ParamSet<(
-        Query<&mut Transform, With<Camera>>,
-        Query<(&mut Transform, With<Character>)>,
-    )>,
+    mut cam: Query<&mut Transform, With<Camera>>,
+    char: Query<(&Transform, (With<Character>, Without<Camera>))>,
 ) {
-    let char_pos = set.p1().single().0.translation;
-    let mut camera = set.p0();
-    let mut camera = camera.single_mut();
-    camera.translation = char_pos;
+    cam.single_mut().translation = char.single().0.translation;
 }
