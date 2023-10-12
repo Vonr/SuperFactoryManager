@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, input::mouse::MouseWheel};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy::input::common_conditions::input_toggle_active;
 
@@ -27,7 +27,7 @@ fn main() {
         .add_plugins(WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Grave)))
         .add_plugins((ScreenBackgroundsPlugin, CursorCharacterPlugin))
         .add_systems(Startup, setup)
-        .add_systems(Update, camera_follow_tick)
+        .add_systems(Update, (camera_follow_tick, camera_zoom_tick))
         .run();
 }
 
@@ -37,6 +37,14 @@ fn setup(
     commands.spawn(Camera2dBundle::default());
 }
 
+fn camera_zoom_tick(
+    mut cam: Query<&mut Transform, With<Camera>>,
+    mut scroll: EventReader<MouseWheel>,
+) {
+    for event in scroll.iter() {
+        cam.single_mut().scale *= Vec3::splat(1.0 - event.y / 10.0);
+    }
+}
 
 fn camera_follow_tick(
     mut cam: Query<&mut Transform, With<Camera>>,
