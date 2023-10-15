@@ -1,33 +1,26 @@
 use bevy::prelude::*;
-use captrs::Capturer;
-use std::{collections::HashMap, sync::Arc};
-use image::DynamicImage;
-use screenshots::Screen as ScreenLib;
-use rayon::prelude::*;
 use bevy::utils::synccell::SyncCell;
+use captrs::Capturer;
+use image::{DynamicImage, ImageBuffer};
+use rayon::prelude::*;
+use screenshots::Screen as ScreenLib;
+use std::{collections::HashMap, sync::Arc};
 
 pub struct ScreenBackgroundsPlugin;
 
 impl Plugin for ScreenBackgroundsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_screens)
-            .add_systems(Update, update_screens)
+            .add_systems(Update, (update_screens, cycle_capture_method))
             .insert_non_send_resource(CapturerResource {
                 capturers: HashMap::new(),
-            })
-            ;
+            });
     }
 }
 
-#[derive(Resource)]
 pub struct CapturerResource {
     pub capturers: HashMap<u32, Capturer>,
-    // pub capturers: bevy::utils::synccell::SyncCell<HashMap<u32, Capturer>>,
-    // pub capturers: Capturer,
-    // pub capturers: std::cell::RefCell<Capturer>,
-    // pub capturers: Arc<Capturer>,
 }
-
 
 #[derive(Debug, Clone, Copy, Default, Reflect)]
 pub enum CaptureMethod {
@@ -50,7 +43,7 @@ pub struct ScreenParent;
 fn spawn_screens(
     mut commands: Commands,
     mut textures: ResMut<Assets<Image>>,
-    // mut capturer_resource: ResMut<CapturerResource>,
+    mut capturer_resource: NonSendMut<CapturerResource>,
 ) {
     commands.spawn((
         SpatialBundle::default(),
@@ -67,14 +60,21 @@ fn spawn_screens(
         let texture = textures.add(image);
 
         // // Assuming the index aligns with the capturer's expected screen index
-        // if let Ok(capturer) = Capturer::new(index+=1) {
-        //     capturer_resource.capturers.insert(screen.display_info.id, capturer);
-        // }
+        let capturer = Capturer::new(index)
+            .expect(format!("Failed to create capturer for screen {}", index).as_str());
+        capturer_resource
+            .capturers
+            .insert(screen.display_info.id, capturer);
+        index += 1;
 
         commands.spawn((
             SpriteBundle {
                 texture,
-                transform: Transform::from_xyz(screen.display_info.x as f32, screen.display_info.y as f32, -1.0), // Position behind the character
+                transform: Transform::from_xyz(
+                    screen.display_info.x as f32,
+                    screen.display_info.y as f32,
+                    -1.0,
+                ), // Position behind the character
                 ..Default::default()
             },
             Screen {
@@ -87,12 +87,11 @@ fn spawn_screens(
     }
 }
 
-
 fn update_screens(
     mut query: Query<(&mut Screen, &Handle<Image>)>,
     mut textures: ResMut<Assets<Image>>,
     time: Res<Time>,
-    // capturer_resource: Res<CapturerResource>,
+    mut capturer_resource: NonSendMut<CapturerResource>,
 ) {
     // Cache the screens
     let all_screens = ScreenLib::all().unwrap();
@@ -101,14 +100,15 @@ fn update_screens(
     let relevant_screens: Vec<_> = all_screens
         .par_iter()
         .filter(|&libscreen| {
-            query.iter().any(|(screen, _)| libscreen.display_info.id == screen.id)
+            query
+                .iter()
+                .any(|(screen, _)| libscreen.display_info.id == screen.id)
         })
         .collect();
 
     for (mut screen, texture) in &mut query {
         screen.refresh_rate.tick(time.delta());
         if screen.refresh_rate.finished() {
-            
             // Only consider the screens that were filtered before
             for libscreen in relevant_screens.iter() {
                 if libscreen.display_info.id == screen.id {
@@ -119,16 +119,27 @@ fn update_screens(
                             let image = Image::from_dynamic(dynamic_image, true);
 
                             textures.get_mut(&texture).unwrap().data = image.data;
-                        },
+                        }
                         CaptureMethod::Captrs => {
-                            // let start = std::time::Instant::now();
-                            // let image_buf = screen.capturer.as_mut().unwrap().capture().unwrap();
-                            // println!("capture took {:?}", start.elapsed());
-                            // let dynamic_image = DynamicImage::ImageRgba8(image_buf);
-                            // let image = Image::from_dynamic(dynamic_image, true);
+                            let start = std::time::Instant::now();
+                            let mut capturer =
+                                capturer_resource.capturers.get_mut(&screen.id).expect(
+                                    format!("captrs capturer not found for screen {}", screen.id)
+                                        .as_str(),
+                                );
+                            let (width, height) = capturer.geometry();
+                            let image_buf = capturer.capture_frame().unwrap();
+                            let image_buf = ImageBuffer::from_fn(width, height, |x, y| {
+                                let pixel = image_buf[(y * width + x) as usize];
+                                image::Rgba([pixel.b, pixel.g, pixel.r, pixel.a])
+                            });
+                            println!("capture took {:?}", start.elapsed());
+                            let dynamic_image = DynamicImage::ImageRgba8(image_buf);
 
-                            // textures.get_mut(&texture).unwrap().data = image.data;
-                        },
+                            let image = Image::from_dynamic(dynamic_image, true);
+
+                            textures.get_mut(&texture).unwrap().data = image.data;
+                        }
                     }
                 }
             }
@@ -136,21 +147,18 @@ fn update_screens(
     }
 }
 
-fn cycle_capture_method(
-    mut query: Query<&mut Screen>,
-    keyboard_input: Res<Input<KeyCode>>,
-) {
+fn cycle_capture_method(mut query: Query<&mut Screen>, keyboard_input: Res<Input<KeyCode>>) {
     if keyboard_input.just_pressed(KeyCode::M) {
         for mut screen in query.iter_mut() {
             screen.capture_method = match screen.capture_method {
                 CaptureMethod::Screen => {
                     println!("Switched to Captrs method");
                     CaptureMethod::Captrs
-                },
+                }
                 CaptureMethod::Captrs => {
                     println!("Switched to Screen method");
                     CaptureMethod::Screen
-                },
+                }
             };
         }
     }
