@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 use captrs::Capturer;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 use image::DynamicImage;
 use screenshots::Screen as ScreenLib;
 use rayon::prelude::*;
+use bevy::utils::synccell::SyncCell;
 
 pub struct ScreenBackgroundsPlugin;
 
@@ -11,20 +12,26 @@ impl Plugin for ScreenBackgroundsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_screens)
             .add_systems(Update, update_screens)
-            .insert_resource(CapturerResource {
+            .insert_non_send_resource(CapturerResource {
                 capturers: HashMap::new(),
-            });
+            })
+            ;
     }
 }
 
 #[derive(Resource)]
 pub struct CapturerResource {
-    pub capturers: bevy::utils::synccell::SyncCell<HashMap<u32, Capturer>>,
+    pub capturers: HashMap<u32, Capturer>,
+    // pub capturers: bevy::utils::synccell::SyncCell<HashMap<u32, Capturer>>,
+    // pub capturers: Capturer,
+    // pub capturers: std::cell::RefCell<Capturer>,
+    // pub capturers: Arc<Capturer>,
 }
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default, Reflect)]
 pub enum CaptureMethod {
+    #[default]
     Screen,
     Captrs,
 }
@@ -43,7 +50,7 @@ pub struct ScreenParent;
 fn spawn_screens(
     mut commands: Commands,
     mut textures: ResMut<Assets<Image>>,
-    mut capturer_resource: ResMut<CapturerResource>,
+    // mut capturer_resource: ResMut<CapturerResource>,
 ) {
     commands.spawn((
         SpatialBundle::default(),
@@ -59,10 +66,10 @@ fn spawn_screens(
         let image = Image::from_dynamic(dynamic_image, true);
         let texture = textures.add(image);
 
-        // Assuming the index aligns with the capturer's expected screen index
-        if let Ok(capturer) = Capturer::new(index+=1) {
-            capturer_resource.capturers.insert(screen.display_info.id, capturer);
-        }
+        // // Assuming the index aligns with the capturer's expected screen index
+        // if let Ok(capturer) = Capturer::new(index+=1) {
+        //     capturer_resource.capturers.insert(screen.display_info.id, capturer);
+        // }
 
         commands.spawn((
             SpriteBundle {
@@ -85,7 +92,7 @@ fn update_screens(
     mut query: Query<(&mut Screen, &Handle<Image>)>,
     mut textures: ResMut<Assets<Image>>,
     time: Res<Time>,
-    capturer_resource: Res<CapturerResource>,
+    // capturer_resource: Res<CapturerResource>,
 ) {
     // Cache the screens
     let all_screens = ScreenLib::all().unwrap();
@@ -114,13 +121,13 @@ fn update_screens(
                             textures.get_mut(&texture).unwrap().data = image.data;
                         },
                         CaptureMethod::Captrs => {
-                            let start = std::time::Instant::now();
-                            let image_buf = screen.capturer.as_mut().unwrap().capture().unwrap();
-                            println!("capture took {:?}", start.elapsed());
-                            let dynamic_image = DynamicImage::ImageRgba8(image_buf);
-                            let image = Image::from_dynamic(dynamic_image, true);
+                            // let start = std::time::Instant::now();
+                            // let image_buf = screen.capturer.as_mut().unwrap().capture().unwrap();
+                            // println!("capture took {:?}", start.elapsed());
+                            // let dynamic_image = DynamicImage::ImageRgba8(image_buf);
+                            // let image = Image::from_dynamic(dynamic_image, true);
 
-                            textures.get_mut(&texture).unwrap().data = image.data;
+                            // textures.get_mut(&texture).unwrap().data = image.data;
                         },
                     }
                 }
