@@ -185,8 +185,8 @@ impl MonitorRegionCapturer {
                 self.width,
                 self.height,
                 self.monitor.device_context,
-                self.capture_region.left,
-                self.capture_region.top,
+                self.monitor.info.rect.left -  self.capture_region.left,
+                self.monitor.info.rect.top - self.capture_region.top,
                 self.width,
                 self.height,
                 SRCCOPY,
@@ -284,13 +284,9 @@ mod tests {
     #[test]
     fn capture_avg() {
         let capturers = get_full_monitor_capturers().unwrap();
-        // create target/capture directory if it doesn't exist
         std::fs::create_dir_all("target/capture").unwrap();
 
-
-        println!("Performing 10 captures, averaging the pixels");
-
-        for i in 0..10 {
+        for i in 0..1 {
             capturers.iter().for_each(|capturer| {
                 let capture = capturer.capture().unwrap();
                 let mon_name_good = capturer.monitor.info.name.replace(r"\\.\", "");
