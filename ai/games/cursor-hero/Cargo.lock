@@ -1538,6 +1538,8 @@ dependencies = [
  "mouse-rs",
  "rayon",
  "screenshots",
+ "widestring",
+ "windows 0.51.1",
 ]
 
 [[package]]

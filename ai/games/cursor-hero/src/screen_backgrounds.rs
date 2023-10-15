@@ -1,10 +1,9 @@
 use bevy::prelude::*;
-use bevy::utils::synccell::SyncCell;
 use captrs::Capturer;
 use image::{DynamicImage, ImageBuffer};
 use rayon::prelude::*;
 use screenshots::Screen as ScreenLib;
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 pub struct ScreenBackgroundsPlugin;
 
@@ -43,7 +42,7 @@ pub struct ScreenParent;
 fn spawn_screens(
     mut commands: Commands,
     mut textures: ResMut<Assets<Image>>,
-    mut capturer_resource: NonSendMut<CapturerResource>,
+    // mut capturer_resource: NonSendMut<CapturerResource>,
 ) {
     commands.spawn((
         SpatialBundle::default(),
@@ -52,7 +51,7 @@ fn spawn_screens(
     ));
 
     // create a Screen component for each screen
-    let mut index = 0;
+    // let mut index = 0;
     for screen in ScreenLib::all().unwrap().iter() {
         let image_buf = screen.capture().unwrap();
         let dynamic_image = DynamicImage::ImageRgba8(image_buf);
@@ -60,12 +59,15 @@ fn spawn_screens(
         let texture = textures.add(image);
 
         // // Assuming the index aligns with the capturer's expected screen index
-        let capturer = Capturer::new(index)
-            .expect(format!("Failed to create capturer for screen {}", index).as_str());
-        capturer_resource
-            .capturers
-            .insert(screen.display_info.id, capturer);
-        index += 1;
+        // let capturer = Capturer::new_with_timeout(index, Duration::from_millis(2000))
+        // println!("Creating capturer for screen {}", index);
+        // let capturer = Capturer::new(index)
+        //     .expect(format!("Failed to create capturer for screen {}", index).as_str());
+        // index += 1;
+
+        // capturer_resource
+        //     .capturers
+        //     .insert(screen.display_info.id, capturer);
 
         commands.spawn((
             SpriteBundle {
@@ -122,7 +124,7 @@ fn update_screens(
                         }
                         CaptureMethod::Captrs => {
                             let start = std::time::Instant::now();
-                            let mut capturer =
+                            let capturer =
                                 capturer_resource.capturers.get_mut(&screen.id).expect(
                                     format!("captrs capturer not found for screen {}", screen.id)
                                         .as_str(),
