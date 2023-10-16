@@ -1,52 +1,21 @@
 use bevy::prelude::*;
 use captrs::Capturer;
-use dashmap::DashMap;
-use image::{DynamicImage, ImageBuffer, Rgba};
+use image::{DynamicImage, ImageBuffer};
 use rayon::prelude::*;
 use screenshots::Screen as ScreenLib;
-use std::{
-    collections::{HashMap, VecDeque},
-    sync::{atomic::{AtomicPtr, Ordering}, Arc},
-};
+use std::collections::{HashMap, VecDeque};
 
 pub struct ScreenBackgroundsPlugin;
-use crate::windows_screen_capturing::{
-    get_all_monitors, get_full_monitor_capturers, MonitorRegionCapturer,
-};
+use crate::windows_screen_capturing::{get_full_monitor_capturers, MonitorRegionCapturer, get_all_monitors};
+
 
 impl Plugin for ScreenBackgroundsPlugin {
     fn build(&self, app: &mut App) {
-        let latest_frames: Arc<DashMap<String, AtomicPtr<ImageBuffer<Rgba<u8>, Vec<u8>>>>> =
-            Arc::new(DashMap::new());
-
-        // Spawn a new background thread for capturing
-        let latest_frames_clone = latest_frames.clone();
-        std::thread::spawn(move || {
-            loop {
-                
-            let mut capturers = match get_full_monitor_capturers() {
-                Ok(capturers) => capturers,
-                Err(e) => panic!("Failed to get capturers: {}", e),
-            };
-                for capturer in capturers.iter_mut() {
-                    let frame = capturer.capture().unwrap();
-                    let frame_ptr = Box::into_raw(Box::new(frame));
-
-                    // Update the latest frame
-                    latest_frames_clone.insert(
-                        capturer.monitor.info.name.clone(),
-                        AtomicPtr::new(frame_ptr),
-                    );
-                }
-            }
-        });
-
         app.add_systems(Startup, spawn_screens)
             .add_systems(Update, (update_screens, cycle_capture_method))
             .insert_non_send_resource(CapturerResource {
                 captrs_capturers: HashMap::new(),
                 inhouse_capturers: get_full_monitor_capturers().unwrap(),
-                latest_from_other_thread: latest_frames,
             });
     }
 }
@@ -54,7 +23,6 @@ impl Plugin for ScreenBackgroundsPlugin {
 pub struct CapturerResource {
     pub captrs_capturers: HashMap<u32, Capturer>,
     pub inhouse_capturers: Vec<MonitorRegionCapturer>,
-    pub latest_from_other_thread: Arc<DashMap<String, AtomicPtr<ImageBuffer<Rgba<u8>, Vec<u8>>>>>,
 }
 
 #[derive(Debug, Clone, Copy, Default, Reflect)]
@@ -63,7 +31,6 @@ pub enum CaptureMethod {
     Captrs,
     #[default]
     Inhouse,
-    Multithreaded,
 }
 
 #[derive(Component, Default, Reflect)]
@@ -90,11 +57,7 @@ fn spawn_screens(
     ));
 
     // create a Screen component for each screen
-    let mut screen_names = get_all_monitors()
-        .unwrap()
-        .iter()
-        .map(|monitor| monitor.info.name.clone())
-        .collect::<VecDeque<String>>();
+    let mut screen_names = get_all_monitors().unwrap().iter().map(|monitor| monitor.info.name.clone()).collect::<VecDeque<String>>();
     for screen in ScreenLib::all().unwrap().iter() {
         let image_buf = screen.capture().unwrap();
         let dynamic_image = DynamicImage::ImageRgba8(image_buf);
@@ -162,7 +125,7 @@ fn update_screens(
                         CaptureMethod::Screen => {
                             let start = std::time::Instant::now();
                             let image_buf = libscreen.capture().unwrap();
-                            println!(" | total screen update took {:?}", start.elapsed());
+                            println!("capture took {:?}", start.elapsed());
 
                             let dynamic_image = DynamicImage::ImageRgba8(image_buf);
                             let image = Image::from_dynamic(dynamic_image, true);
@@ -170,10 +133,8 @@ fn update_screens(
                         }
                         CaptureMethod::Captrs => {
                             let start = std::time::Instant::now();
-                            let capturer = capturer_resource
-                                .captrs_capturers
-                                .get_mut(&screen.id)
-                                .expect(
+                            let capturer =
+                                capturer_resource.captrs_capturers.get_mut(&screen.id).expect(
                                     format!("captrs capturer not found for screen {}", screen.id)
                                         .as_str(),
                                 );
@@ -183,7 +144,7 @@ fn update_screens(
                                 let pixel = image_buf[(y * width + x) as usize];
                                 image::Rgba([pixel.b, pixel.g, pixel.r, pixel.a])
                             });
-                            println!(" | total screen update took {:?}", start.elapsed());
+                            println!("capture took {:?}", start.elapsed());
                             let dynamic_image = DynamicImage::ImageRgba8(image_buf);
 
                             let image = Image::from_dynamic(dynamic_image, true);
@@ -196,47 +157,14 @@ fn update_screens(
                                 .inhouse_capturers
                                 .iter_mut()
                                 .find(|capturer| capturer.monitor.info.name == screen.name)
-                                .expect(
-                                    format!("inhouse capturer not found for screen {}", screen.id)
-                                        .as_str(),
-                                );
+                                .expect(format!("inhouse capturer not found for screen {}", screen.id).as_str());
                             let frame = capturer.capture().unwrap();
                             println!(" | total screen update took {:?}", start.elapsed());
-
+                            
                             // let dynamic_image = DynamicImage::ImageRgba8(frame);
                             // let image = Image::from_dynamic(dynamic_image, true);
                             // textures.get_mut(&texture).unwrap().data = image.data;
                             textures.get_mut(&texture).unwrap().data = frame.to_vec();
-                        }
-                        CaptureMethod::Multithreaded => {
-                            // let start = std::time::Instant::now();
-                            // let frame = capturer_resource
-                            //     .latest_from_other_thread
-                            //     .get(&screen.name)
-                            //     .unwrap()
-                            //     .value();
-                            // // let frame: Box<ImageBuffer<Rgba<u8>, Vec<u8>>
-                            // println!(" | total screen update took {:?}", start.elapsed());
-                            // // textures.get_mut(&texture).unwrap().data = frame.to_vec();
-
-                            let start = std::time::Instant::now();
-                            if let Some(value_ref) =
-                                capturer_resource.latest_from_other_thread.get(&screen.name)
-                            {
-                                let atomic_ptr = value_ref.value();
-
-                                // Safely load the pointer
-                                let frame_ptr = atomic_ptr.load(Ordering::Relaxed); // Use proper ordering
-                                let frame_box = unsafe { Box::from_raw(frame_ptr) };
-                                let frame: &ImageBuffer<Rgba<u8>, Vec<u8>> = &(*frame_box); // Deref to get to ImageBuffer
-
-                                // Do something with frame, for example:
-                                textures.get_mut(&texture).unwrap().data = frame.to_vec();
-
-                                // Don't forget to forget the box to avoid deallocation
-                                std::mem::forget(frame_box);
-                            }
-                            println!(" | total screen update took {:?}", start.elapsed());
                         }
                     }
                 }
@@ -252,7 +180,7 @@ fn cycle_capture_method(mut query: Query<&mut Screen>, keyboard_input: Res<Input
                 CaptureMethod::Screen => {
                     // println!("Switched to Captrs method");
                     // CaptureMethod::Captrs
-
+                    
                     println!("Switched to Inhouse method");
                     CaptureMethod::Inhouse
                 }
@@ -261,10 +189,6 @@ fn cycle_capture_method(mut query: Query<&mut Screen>, keyboard_input: Res<Input
                     CaptureMethod::Inhouse
                 }
                 CaptureMethod::Inhouse => {
-                    println!("Switched to Multithreaded method");
-                    CaptureMethod::Multithreaded
-                }
-                CaptureMethod::Multithreaded => {
                     println!("Switched to Screen method");
                     CaptureMethod::Screen
                 }
