@@ -164,7 +164,7 @@ fn update_screens(
                             // let dynamic_image = DynamicImage::ImageRgba8(frame);
                             // let image = Image::from_dynamic(dynamic_image, true);
                             // textures.get_mut(&texture).unwrap().data = image.data;
-                            textures.get_mut(&texture).unwrap().data = frame;
+                            textures.get_mut(&texture).unwrap().data = frame.to_vec();
                         }
                     }
                 }

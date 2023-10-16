@@ -189,7 +189,7 @@ pub fn get_monitor_capturer(monitor: Rc<Monitor>, region: RECT) -> MonitorRegion
 
 impl MonitorRegionCapturer {
     // pub fn capture(&self) -> Result<RgbaImage> {
-    pub fn capture(&self) -> Result<Vec<u8>> {
+    pub fn capture(&self) -> Result<RgbaImage> {
         unsafe {
             let start = std::time::Instant::now();
             StretchBlt(
@@ -287,8 +287,8 @@ impl MonitorRegionCapturer {
         }
         print!(" shuffle took {:?}", start.elapsed());
         
-        
-        Ok(data)
+        let data = RgbaImage::from_vec(self.width as u32, self.height as u32, data);
+        data.ok_or_else(|| anyhow!("Invalid image data"))
     } 
 }
 
