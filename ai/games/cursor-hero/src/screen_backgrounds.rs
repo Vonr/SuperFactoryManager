@@ -1,17 +1,18 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
 use image::DynamicImage;
 use rayon::prelude::*;
 use screenshots::Screen as ScreenLib;
-use std::collections::VecDeque;
+use windows::Win32::Foundation::RECT;
+use std::{collections::VecDeque, rc::Rc};
 
 pub struct ScreenBackgroundsPlugin;
-use crate::windows_screen_capturing::{get_full_monitor_capturers, MonitorRegionCapturer, get_all_monitors};
+use crate::windows_screen_capturing::{get_full_monitor_capturers, MonitorRegionCapturer, get_all_monitors, get_monitor_capturer};
 
 
 impl Plugin for ScreenBackgroundsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_screens)
-            .add_systems(Update, (update_screens, cycle_capture_method))
+            .add_systems(Update, (update_screens, cycle_capture_method, resize_capture_areas.before(update_screens)))
             .insert_non_send_resource(CapturerResource {
                 inhouse_capturers: get_full_monitor_capturers().unwrap(),
             });
@@ -132,9 +133,12 @@ fn update_screens(
                             let capturer = capturer_resource
                                 .inhouse_capturers
                                 .iter_mut()
-                                .find(|capturer| capturer.monitor.info.name == screen.name)
-                                .expect(format!("inhouse capturer not found for screen {}", screen.id).as_str());
-                            let frame = capturer.capture().unwrap();
+                                .find(|capturer| capturer.monitor.info.name == screen.name);
+                            if capturer.is_none() {
+                                println!("No capturer found for screen {}", screen.name);
+                                continue;
+                            }
+                            let frame = capturer.unwrap().capture().unwrap();
                             println!(" | total screen update took {:?}", start.elapsed());
                             
                             // let dynamic_image = DynamicImage::ImageRgba8(frame);
@@ -163,5 +167,85 @@ fn cycle_capture_method(mut query: Query<&mut Screen>, keyboard_input: Res<Input
             println!("Switched to {:?} method", screen.capture_method);
 
         }
+    }
+}
+
+fn resize_capture_areas(
+    mut res: NonSendMut<CapturerResource>,
+    keyboard_input: Res<Input<KeyCode>>,
+    q_camera: Query<(&Camera, &GlobalTransform)>,
+) {
+    if keyboard_input.pressed(KeyCode::R) {
+        // println!("Resizing capture areas");
+        // Get camera and window information
+        let (camera, camera_transform) = q_camera.single();
+
+        // Convert the corners of the viewport to world coordinates
+        let bottom_left_world = camera
+            .viewport_to_world(camera_transform, Vec2::new(0.0, 0.0))
+            .map(|ray| ray.origin.truncate())
+            .unwrap_or_default();
+
+        let top_right_world = camera
+            .viewport_to_world(camera_transform, Vec2::new(1.0, 1.0))
+            .map(|ray| ray.origin.truncate())
+            .unwrap_or_default();
+
+        println!("Resizing capture areas to {:?} {:?}", bottom_left_world, top_right_world);
+
+        // Get monitors and prepare for new capturers
+        let monitors = get_all_monitors().unwrap();
+        let mut capturers = Vec::new();
+
+        for monitor in monitors {
+            let monitor_rect = monitor.info.rect.clone();
+
+            // Compute the intersection between the visible world coordinates and the monitor's rectangle
+            let capture_region = compute_capture_region(
+                monitor_rect,
+                bottom_left_world,
+                top_right_world,
+            );
+            if capture_region.is_none() {
+                continue;
+            }
+            let capturer = get_monitor_capturer(Rc::new(monitor), capture_region.unwrap());
+            capturers.push(capturer);
+        }
+        if capturers.len() == 0 {
+            eprintln!("No capturers exist after resize, aborting");
+            return;
+        }
+        res.inhouse_capturers = capturers;
+    }
+}
+
+fn compute_capture_region(
+    monitor_rect: RECT,
+    bottom_left_world: Vec2,
+    top_right_world: Vec2,
+) -> Option<RECT> {
+    // Convert Vec2 to i32 for comparison
+    let bl_x = bottom_left_world.x as i32;
+    let bl_y = bottom_left_world.y as i32;
+    let tr_x = top_right_world.x as i32;
+    let tr_y = top_right_world.y as i32;
+
+    // Calculate the overlapping region
+    let overlap_left = std::cmp::max(monitor_rect.left, bl_x);
+    let overlap_right = std::cmp::min(monitor_rect.right, tr_x);
+    let overlap_top = std::cmp::max(monitor_rect.top, bl_y);
+    let overlap_bottom = std::cmp::min(monitor_rect.bottom, tr_y);
+
+    // Check if the regions actually overlap
+    if overlap_left < overlap_right && overlap_top < overlap_bottom {
+        Some(RECT {
+            left: overlap_left,
+            top: overlap_top,
+            right: overlap_right,
+            bottom: overlap_bottom,
+        })
+    } else {
+        None
     }
 }

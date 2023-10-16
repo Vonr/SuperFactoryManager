@@ -198,6 +198,7 @@ impl Drop for MonitorRegionCapturer {
 impl MonitorRegionCapturer {
     // pub fn capture(&self) -> Result<RgbaImage> {
     pub fn capture(&self) -> Result<RgbaImage> {
+        // todo: try https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_2/nf-dxgi1_2-idxgioutputduplication-acquirenextframe
         unsafe {
             let start = std::time::Instant::now();
             StretchBlt(
