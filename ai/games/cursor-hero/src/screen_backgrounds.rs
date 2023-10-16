@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use captrs::Capturer;
-use image::{DynamicImage, ImageBuffer};
+use image::DynamicImage;
 use rayon::prelude::*;
 use screenshots::Screen as ScreenLib;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 pub struct ScreenBackgroundsPlugin;
 use crate::windows_screen_capturing::{get_full_monitor_capturers, MonitorRegionCapturer, get_all_monitors};
@@ -14,23 +13,20 @@ impl Plugin for ScreenBackgroundsPlugin {
         app.add_systems(Startup, spawn_screens)
             .add_systems(Update, (update_screens, cycle_capture_method))
             .insert_non_send_resource(CapturerResource {
-                captrs_capturers: HashMap::new(),
                 inhouse_capturers: get_full_monitor_capturers().unwrap(),
             });
     }
 }
 
 pub struct CapturerResource {
-    pub captrs_capturers: HashMap<u32, Capturer>,
     pub inhouse_capturers: Vec<MonitorRegionCapturer>,
 }
 
 #[derive(Debug, Clone, Copy, Default, Reflect)]
 pub enum CaptureMethod {
-    Screen,
-    Captrs,
     #[default]
     Inhouse,
+    Screen,
 }
 
 #[derive(Component, Default, Reflect)]
@@ -131,26 +127,6 @@ fn update_screens(
                             let image = Image::from_dynamic(dynamic_image, true);
                             textures.get_mut(&texture).unwrap().data = image.data;
                         }
-                        CaptureMethod::Captrs => {
-                            let start = std::time::Instant::now();
-                            let capturer =
-                                capturer_resource.captrs_capturers.get_mut(&screen.id).expect(
-                                    format!("captrs capturer not found for screen {}", screen.id)
-                                        .as_str(),
-                                );
-                            let (width, height) = capturer.geometry();
-                            let image_buf = capturer.capture_frame().unwrap();
-                            let image_buf = ImageBuffer::from_fn(width, height, |x, y| {
-                                let pixel = image_buf[(y * width + x) as usize];
-                                image::Rgba([pixel.b, pixel.g, pixel.r, pixel.a])
-                            });
-                            println!("capture took {:?}", start.elapsed());
-                            let dynamic_image = DynamicImage::ImageRgba8(image_buf);
-
-                            let image = Image::from_dynamic(dynamic_image, true);
-
-                            textures.get_mut(&texture).unwrap().data = image.data;
-                        }
                         CaptureMethod::Inhouse => {
                             let start = std::time::Instant::now();
                             let capturer = capturer_resource
@@ -178,21 +154,14 @@ fn cycle_capture_method(mut query: Query<&mut Screen>, keyboard_input: Res<Input
         for mut screen in query.iter_mut() {
             screen.capture_method = match screen.capture_method {
                 CaptureMethod::Screen => {
-                    // println!("Switched to Captrs method");
-                    // CaptureMethod::Captrs
-                    
-                    println!("Switched to Inhouse method");
-                    CaptureMethod::Inhouse
-                }
-                CaptureMethod::Captrs => {
-                    println!("Switched to Inhouse method");
                     CaptureMethod::Inhouse
                 }
                 CaptureMethod::Inhouse => {
-                    println!("Switched to Screen method");
                     CaptureMethod::Screen
                 }
             };
+            println!("Switched to {:?} method", screen.capture_method);
+
         }
     }
 }

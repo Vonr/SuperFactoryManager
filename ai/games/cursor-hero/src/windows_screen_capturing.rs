@@ -187,6 +187,14 @@ pub fn get_monitor_capturer(monitor: Rc<Monitor>, region: RECT) -> MonitorRegion
     }
 }
 
+impl Drop for MonitorRegionCapturer {
+    fn drop(&mut self) {
+        unsafe {
+            DeleteObject(self.bitmap);
+            DeleteDC(self.device_context);
+        }
+    }
+}
 impl MonitorRegionCapturer {
     // pub fn capture(&self) -> Result<RgbaImage> {
     pub fn capture(&self) -> Result<RgbaImage> {
