@@ -292,17 +292,6 @@ impl MonitorRegionCapturer {
     } 
 }
 
-pub fn bgra_to_rgba_image(width: u32, height: u32, buf: Vec<u8>) -> Result<RgbaImage> {
-    // convert to rgba
-    let rgba_buf = buf
-        .chunks_exact(4)
-        .take((width * height) as usize)
-        .flat_map(|bgra| [bgra[2], bgra[1], bgra[0], bgra[3]])
-        .collect();
-
-    RgbaImage::from_vec(width, height, rgba_buf).ok_or_else(|| anyhow!("Invalid image data"))
-}
-
 #[cfg(test)]
 #[allow(unused_imports)]
 mod tests {
