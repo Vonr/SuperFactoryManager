@@ -3,6 +3,13 @@
 // my changes are MPLv2, original code is Apache 2.0
 // modifications aim to reduce redundant work for successive screen capture calls
 
+#[cfg(target_arch = "x86_64")]
+use std::arch::x86_64::_mm_shuffle_epi8;
+#[cfg(target_arch = "x86")]
+use std::arch::x86::_mm_shuffle_epi8;
+use std::arch::x86_64::{__m128i, _mm_setr_epi8, _mm_loadu_si128, _mm_storeu_si128};
+
+
 use anyhow::{anyhow, Result};
 // use display_info::DisplayInfo;
 // use fxhash::hash32;
@@ -15,7 +22,7 @@ use windows::{
         Foundation::{BOOL, LPARAM, RECT},
         Graphics::Gdi::{
             CreateCompatibleBitmap, CreateCompatibleDC, CreateDCW, DeleteDC, DeleteObject,
-            EnumDisplayMonitors, GetDIBits, GetMonitorInfoW, GetObjectW, SelectObject,
+            EnumDisplayMonitors, GetDIBits, GetMonitorInfoW, GetObjectW, SelectObject, BitBlt,
             SetStretchBltMode, StretchBlt, BITMAP, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS,
             HBITMAP, HDC, HMONITOR, MONITORINFOEXW, RGBQUAD, SRCCOPY, STRETCH_HALFTONE,
         },
@@ -181,8 +188,10 @@ pub fn get_monitor_capturer(monitor: Rc<Monitor>, region: RECT) -> MonitorRegion
 }
 
 impl MonitorRegionCapturer {
-    pub fn capture(&self) -> Result<RgbaImage> {
+    // pub fn capture(&self) -> Result<RgbaImage> {
+    pub fn capture(&self) -> Result<Vec<u8>> {
         unsafe {
+            let start = std::time::Instant::now();
             StretchBlt(
                 self.device_context,
                 0,
@@ -195,8 +204,8 @@ impl MonitorRegionCapturer {
                 self.width,
                 self.height,
                 SRCCOPY,
-            )
-            .ok()?;
+            ).ok()?;
+            print!("blit took {:?}", start.elapsed());
         };
 
         let mut bitmap_info = BITMAPINFO {
@@ -219,6 +228,7 @@ impl MonitorRegionCapturer {
         let data = vec![0u8; (self.width * self.height) as usize * 4];
         let buf_prt = data.as_ptr() as *mut _;
 
+        let start = std::time::Instant::now();
         let is_success = unsafe {
             GetDIBits(
                 self.device_context,
@@ -230,6 +240,7 @@ impl MonitorRegionCapturer {
                 DIB_RGB_COLORS,
             ) == 0
         };
+        print!(" getdibits took {:?}", start.elapsed());
 
         if is_success {
             return Err(anyhow!("Get RGBA data failed"));
@@ -238,6 +249,7 @@ impl MonitorRegionCapturer {
         let mut bitmap = BITMAP::default();
         let bitmap_ptr = <*mut _>::cast(&mut bitmap);
 
+        let start = std::time::Instant::now();
         unsafe {
             // Get the BITMAP from the HBITMAP.
             GetObjectW(
@@ -246,20 +258,37 @@ impl MonitorRegionCapturer {
                 Some(bitmap_ptr),
             );
         }
+        print!(" getobject took {:?}", start.elapsed());
 
         // Rotate the image; the image data is inverted.
-        let mut chunks: Vec<Vec<u8>> = data
-            .chunks(self.width as usize * 4)
+        let start = std::time::Instant::now();
+        let mut data = data.chunks(self.width as usize * 4)
             .map(|x| x.to_vec())
-            .collect();
+            .collect::<Vec<Vec<u8>>>();
+        data.reverse();
+        let mut data = data.concat();
+        print!(" reverse took {:?}", start.elapsed());
 
-        chunks.reverse();
-
-        bgra_to_rgba_image(
-            bitmap.bmWidth as u32,
-            bitmap.bmHeight as u32,
-            chunks.concat(),
-        )
+        // The shuffle mask for converting BGRA -> RGBA
+        let start = std::time::Instant::now();
+        let mask: __m128i = unsafe {
+            _mm_setr_epi8(
+                2, 1, 0, 3,  // First pixel
+                6, 5, 4, 7,  // Second pixel
+                10, 9, 8, 11,  // Third pixel
+                14, 13, 12, 15  // Fourth pixel
+            )
+        };
+        // For each 16-byte chunk in your data
+        for chunk in data.chunks_exact_mut(16) {
+            let mut vector = unsafe { _mm_loadu_si128(chunk.as_ptr() as *const __m128i) };
+            vector = unsafe { _mm_shuffle_epi8(vector, mask) };
+            unsafe { _mm_storeu_si128(chunk.as_mut_ptr() as *mut __m128i, vector) };
+        }
+        print!(" shuffle took {:?}", start.elapsed());
+        
+        
+        Ok(data)
     } 
 }
 
