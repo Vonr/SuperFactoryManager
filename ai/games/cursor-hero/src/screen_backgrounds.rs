@@ -3,22 +3,26 @@ use captrs::Capturer;
 use image::{DynamicImage, ImageBuffer};
 use rayon::prelude::*;
 use screenshots::Screen as ScreenLib;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 pub struct ScreenBackgroundsPlugin;
+use crate::windows_screen_capturing::{get_full_monitor_capturers, MonitorRegionCapturer, get_all_monitors};
+
 
 impl Plugin for ScreenBackgroundsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_screens)
             .add_systems(Update, (update_screens, cycle_capture_method))
             .insert_non_send_resource(CapturerResource {
-                capturers: HashMap::new(),
+                captrs_capturers: HashMap::new(),
+                inhouse_capturers: get_full_monitor_capturers().unwrap(),
             });
     }
 }
 
 pub struct CapturerResource {
-    pub capturers: HashMap<u32, Capturer>,
+    pub captrs_capturers: HashMap<u32, Capturer>,
+    pub inhouse_capturers: Vec<MonitorRegionCapturer>,
 }
 
 #[derive(Debug, Clone, Copy, Default, Reflect)]
@@ -26,12 +30,14 @@ pub enum CaptureMethod {
     #[default]
     Screen,
     Captrs,
+    Inhouse,
 }
 
 #[derive(Component, Default, Reflect)]
 #[reflect(Component)]
 pub struct Screen {
     id: u32,
+    name: String,
     refresh_rate: Timer,
     capture_method: CaptureMethod,
 }
@@ -51,7 +57,7 @@ fn spawn_screens(
     ));
 
     // create a Screen component for each screen
-    // let mut index = 0;
+    let mut screen_names = get_all_monitors().unwrap().iter().map(|monitor| monitor.info.name.clone()).collect::<VecDeque<String>>();
     for screen in ScreenLib::all().unwrap().iter() {
         let image_buf = screen.capture().unwrap();
         let dynamic_image = DynamicImage::ImageRgba8(image_buf);
@@ -63,7 +69,7 @@ fn spawn_screens(
         // println!("Creating capturer for screen {}", index);
         // let capturer = Capturer::new(index)
         //     .expect(format!("Failed to create capturer for screen {}", index).as_str());
-        // index += 1;
+        let name = screen_names.pop_front().unwrap();
 
         // capturer_resource
         //     .capturers
@@ -80,6 +86,7 @@ fn spawn_screens(
                 ..Default::default()
             },
             Screen {
+                name,
                 id: screen.display_info.id,
                 refresh_rate: Timer::from_seconds(1.0, TimerMode::Repeating),
                 capture_method: CaptureMethod::Screen,
@@ -116,16 +123,18 @@ fn update_screens(
                 if libscreen.display_info.id == screen.id {
                     match screen.capture_method {
                         CaptureMethod::Screen => {
+                            let start = std::time::Instant::now();
                             let image_buf = libscreen.capture().unwrap();
+                            println!("capture took {:?}", start.elapsed());
+
                             let dynamic_image = DynamicImage::ImageRgba8(image_buf);
                             let image = Image::from_dynamic(dynamic_image, true);
-
                             textures.get_mut(&texture).unwrap().data = image.data;
                         }
                         CaptureMethod::Captrs => {
                             let start = std::time::Instant::now();
                             let capturer =
-                                capturer_resource.capturers.get_mut(&screen.id).expect(
+                                capturer_resource.captrs_capturers.get_mut(&screen.id).expect(
                                     format!("captrs capturer not found for screen {}", screen.id)
                                         .as_str(),
                                 );
@@ -142,6 +151,20 @@ fn update_screens(
 
                             textures.get_mut(&texture).unwrap().data = image.data;
                         }
+                        CaptureMethod::Inhouse => {
+                            let start = std::time::Instant::now();
+                            let capturer = capturer_resource
+                                .inhouse_capturers
+                                .iter_mut()
+                                .find(|capturer| capturer.monitor.info.name == screen.name)
+                                .expect(format!("inhouse capturer not found for screen {}", screen.id).as_str());
+                            let frame = capturer.capture().unwrap();
+                            println!("capture took {:?}", start.elapsed());
+                            
+                            let dynamic_image = DynamicImage::ImageRgba8(frame);
+                            let image = Image::from_dynamic(dynamic_image, true);
+                            textures.get_mut(&texture).unwrap().data = image.data;
+                        }
                     }
                 }
             }
@@ -154,10 +177,17 @@ fn cycle_capture_method(mut query: Query<&mut Screen>, keyboard_input: Res<Input
         for mut screen in query.iter_mut() {
             screen.capture_method = match screen.capture_method {
                 CaptureMethod::Screen => {
-                    println!("Switched to Captrs method");
-                    CaptureMethod::Captrs
+                    // println!("Switched to Captrs method");
+                    // CaptureMethod::Captrs
+                    
+                    println!("Switched to Inhouse method");
+                    CaptureMethod::Inhouse
                 }
                 CaptureMethod::Captrs => {
+                    println!("Switched to Inhouse method");
+                    CaptureMethod::Inhouse
+                }
+                CaptureMethod::Inhouse => {
                     println!("Switched to Screen method");
                     CaptureMethod::Screen
                 }

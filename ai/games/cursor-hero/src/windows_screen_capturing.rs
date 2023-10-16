@@ -137,12 +137,12 @@ pub fn get_all_monitors() -> Result<Vec<Monitor>> {
 /////////////////////////////
 
 pub struct MonitorRegionCapturer {
-    monitor: Rc<Monitor>,
+    pub monitor: Rc<Monitor>,
+    pub capture_region: RECT,
+    pub width: i32,
+    pub height: i32,
     device_context: HDC,
     bitmap: HBITMAP,
-    capture_region: RECT,
-    width: i32,
-    height: i32,
 }
 
 pub fn get_full_monitor_capturers() -> Result<Vec<MonitorRegionCapturer>> {
@@ -346,5 +346,23 @@ mod tests {
             print!("\n");
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
+    }
+
+    
+    #[test]
+    fn screenshot_speed() {
+        let capturers = get_full_monitor_capturers().unwrap();
+        let mut durations = Vec::new();
+        for _ in 0..100 {
+            capturers.iter().for_each(|capturer| {
+                let start = std::time::Instant::now();
+                let _ = capturer.capture().unwrap();
+                let duration = start.elapsed();
+                durations.push(duration.as_millis());
+            });
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        let avg = durations.iter().sum::<u128>() / durations.len() as u128;
+        println!("avg: {:?}ms", avg);
     }
 }
