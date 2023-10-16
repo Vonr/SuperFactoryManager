@@ -27,9 +27,9 @@ pub struct CapturerResource {
 
 #[derive(Debug, Clone, Copy, Default, Reflect)]
 pub enum CaptureMethod {
-    #[default]
     Screen,
     Captrs,
+    #[default]
     Inhouse,
 }
 
@@ -89,7 +89,7 @@ fn spawn_screens(
                 name,
                 id: screen.display_info.id,
                 refresh_rate: Timer::from_seconds(1.0, TimerMode::Repeating),
-                capture_method: CaptureMethod::Screen,
+                capture_method: default(),
             },
             Name::new(format!("Screen {}", screen.display_info.id)),
         ));
@@ -159,11 +159,12 @@ fn update_screens(
                                 .find(|capturer| capturer.monitor.info.name == screen.name)
                                 .expect(format!("inhouse capturer not found for screen {}", screen.id).as_str());
                             let frame = capturer.capture().unwrap();
-                            println!("capture took {:?}", start.elapsed());
+                            println!(" | total screen update took {:?}", start.elapsed());
                             
-                            let dynamic_image = DynamicImage::ImageRgba8(frame);
-                            let image = Image::from_dynamic(dynamic_image, true);
-                            textures.get_mut(&texture).unwrap().data = image.data;
+                            // let dynamic_image = DynamicImage::ImageRgba8(frame);
+                            // let image = Image::from_dynamic(dynamic_image, true);
+                            // textures.get_mut(&texture).unwrap().data = image.data;
+                            textures.get_mut(&texture).unwrap().data = frame;
                         }
                     }
                 }
