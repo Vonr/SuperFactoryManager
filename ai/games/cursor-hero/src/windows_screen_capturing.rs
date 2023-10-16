@@ -7,7 +7,7 @@ use anyhow::{anyhow, Result};
 // use display_info::DisplayInfo;
 // use fxhash::hash32;
 use image::RgbaImage;
-use std::{mem, ops::Deref, ptr};
+use std::{mem, ops::Deref, ptr, rc::Rc};
 use widestring::U16CString;
 use windows::{
     core::PCWSTR,
@@ -137,7 +137,7 @@ pub fn get_all_monitors() -> Result<Vec<Monitor>> {
 /////////////////////////////
 
 pub struct MonitorRegionCapturer {
-    monitor: Monitor,
+    monitor: Rc<Monitor>,
     device_context: HDC,
     bitmap: HBITMAP,
     capture_region: RECT,
@@ -151,28 +151,33 @@ pub fn get_full_monitor_capturers() -> Result<Vec<MonitorRegionCapturer>> {
 
     for monitor in monitors {
         let region = monitor.info.rect.clone();
-        let width = region.right - region.left;
-        let height = region.bottom - region.top;
-
-        let capture_device_context = unsafe { CreateCompatibleDC(monitor.device_context) };
-        let bitmap = unsafe { CreateCompatibleBitmap(monitor.device_context, width, height) };
-
-        unsafe {
-            SelectObject(capture_device_context, bitmap);
-            SetStretchBltMode(monitor.device_context, STRETCH_HALFTONE);
-        };
-
-        capturers.push(MonitorRegionCapturer {
-            monitor,
-            device_context: capture_device_context,
-            bitmap,
-            capture_region: region,
-            width,
-            height
-        });
+        let capturer = get_monitor_capturer(Rc::new(monitor), region);
+        capturers.push(capturer);
     }
 
     Ok(capturers)
+}
+
+pub fn get_monitor_capturer(monitor: Rc<Monitor>, region: RECT) -> MonitorRegionCapturer {
+    let width = region.right - region.left;
+    let height = region.bottom - region.top;
+
+    let capture_device_context = unsafe { CreateCompatibleDC(monitor.device_context) };
+    let bitmap = unsafe { CreateCompatibleBitmap(monitor.device_context, width, height) };
+
+    unsafe {
+        SelectObject(capture_device_context, bitmap);
+        SetStretchBltMode(monitor.device_context, STRETCH_HALFTONE);
+    };
+
+    MonitorRegionCapturer {
+        monitor,
+        device_context: capture_device_context,
+        bitmap,
+        capture_region: region,
+        width,
+        height
+    }
 }
 
 impl MonitorRegionCapturer {
@@ -282,17 +287,51 @@ mod tests {
     }
 
     #[test]
+    fn full_screenshots() {
+        let capturers = get_full_monitor_capturers().unwrap();
+        std::fs::create_dir_all("target/capture").unwrap();
+
+        capturers.iter().for_each(|capturer| {
+            let capture = capturer.capture().unwrap();
+            let mon_name_good = capturer.monitor.info.name.replace(r"\\.\", "");
+            let path = format!("target/capture/full-{}.png", mon_name_good);
+            capture.save(path).unwrap();
+        });
+    }
+
+    #[test]
+    fn region_screenshots() {
+        let monitors = get_all_monitors().unwrap();
+        let mut capturers = Vec::new();
+    
+        for monitor in monitors {
+            let region = RECT {
+                left: monitor.info.rect.left,
+                top: monitor.info.rect.top,
+                right: monitor.info.rect.left + 100,
+                bottom: monitor.info.rect.top + 100,
+            };
+            let capturer = get_monitor_capturer(Rc::new(monitor), region);
+            capturers.push(capturer);
+        }
+        std::fs::create_dir_all("target/capture").unwrap();
+
+        capturers.iter().for_each(|capturer| {
+            let capture = capturer.capture().unwrap();
+            let mon_name_good = capturer.monitor.info.name.replace(r"\\.\", "");
+            let path = format!("target/capture/region-{}.png", mon_name_good);
+            capture.save(path).unwrap();
+        });
+    }
+
+    #[test]
     fn capture_avg() {
         let capturers = get_full_monitor_capturers().unwrap();
         std::fs::create_dir_all("target/capture").unwrap();
 
-        for i in 0..1 {
+        for i in 0..100 {
             capturers.iter().for_each(|capturer| {
                 let capture = capturer.capture().unwrap();
-                let mon_name_good = capturer.monitor.info.name.replace(r"\\.\", "");
-                let path = format!("target/capture/{}-{}.png", i, mon_name_good);
-                capture.save(path).unwrap();
-
                 let (mut tot_r, mut tot_g, mut tot_b) = (0, 0, 0);
 
                 for pixel in capture.enumerate_pixels() {
@@ -302,10 +341,10 @@ mod tests {
                     tot_b += *b as u64;
                 }
                 let size = capture.iter().count() as u64;
-                println!("{} -- avg: {:?}",capturer.monitor.info.name,  (tot_r / size, tot_g / size, tot_b / size));
-
+                print!("{} -- avg: {:?}\t",capturer.monitor.info.name,  (tot_r / size, tot_g / size, tot_b / size));
             });
-            std::thread::sleep(std::time::Duration::from_millis(300));
+            print!("\n");
+            std::thread::sleep(std::time::Duration::from_millis(100));
         }
     }
 }
