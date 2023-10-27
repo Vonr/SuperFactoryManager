@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.ChatFormatting;
@@ -396,7 +397,7 @@ public class Constants {
                     try {
                         rtn.add((LocalizationEntry) field.get(null));
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
+                        SFM.LOGGER.error(e);
                     }
                 }
             }
