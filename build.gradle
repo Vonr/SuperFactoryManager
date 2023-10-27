@@ -2,7 +2,8 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'net.neoforged.gradle' version '[6.0.18,6.2)'
+    id 'org.spongepowered.mixin' version '0.7.+'
     id 'antlr'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
@@ -269,7 +270,7 @@ dependencies {
     // The "userdev" classifier will be requested and setup by ForgeGradle.
     // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    minecraft "net.neoforged:forge:${minecraft_version}-${neo_version}"
 
     // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -298,7 +299,7 @@ dependencies {
 def resourceTargets = ['META-INF/mods.toml', 'pack.mcmeta']
 def replaceProperties = [
         minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
-        forge_version       : forge_version, forge_version_range: forge_version_range,
+        neo_version       : neo_version, neo_version_range: neo_version_range,
         loader_version_range: loader_version_range,
         mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
         mod_authors         : mod_authors, mod_description: mod_description
