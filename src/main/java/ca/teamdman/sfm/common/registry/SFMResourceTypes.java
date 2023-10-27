@@ -1,6 +1,8 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.compat.SFMCompat;
+import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.resourcetype.FluidResourceType;
 import ca.teamdman.sfm.common.resourcetype.ForgeEnergyResourceType;
 import ca.teamdman.sfm.common.resourcetype.ItemResourceType;
@@ -43,6 +45,12 @@ public class SFMResourceTypes {
             "forge_energy",
             ForgeEnergyResourceType::new
     );
+
+    static {
+        if (SFMCompat.isMekanismLoaded()) {
+            SFMMekanismCompat.register(TYPES);
+        }
+    }
 
     public static void register(IEventBus bus) {
         TYPES.register(bus);

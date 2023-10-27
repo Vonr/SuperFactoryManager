@@ -284,6 +284,14 @@ public class Constants {
                 "gui.sfm.container_inspector.mekanism_null_direction_warning",
                 "MEKANISM BLOCKS ARE READ-ONLY FROM THE NULL DIRECTION!!!!!!"
         );
+        public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_MACHINE_INPUTS = new LocalizationEntry(
+                "gui.sfm.container_inspector.mekanism_machine_inputs",
+                "The following are based on the MACHINE'S input config"
+        );
+        public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_MACHINE_OUTPUTS = new LocalizationEntry(
+                "gui.sfm.container_inspector.mekanism_machine_outputs",
+                "The following are based on the MACHINE'S output config"
+        );
 
         public static final LocalizationEntry CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT = new LocalizationEntry(
                 "gui.sfm.container_inspector.container_slot_count",

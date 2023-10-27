@@ -287,10 +287,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
-    runtimeOnly fg.deobf("curse.maven:the-one-probe-245211:4579432") //TheOneProbe - 1.20.0-9.0.0
+    runtimeOnly fg.deobf("curse.maven:the-one-probe-245211:4629624") //TheOneProbe - 1.20.1-10.0.1
 
-    compileOnly fg.deobf('mezz.jei:jei-1.20-forge:14.0.0.11')
-    runtimeOnly fg.deobf('mezz.jei:jei-1.20-forge:14.0.0.11')
+    compileOnly fg.deobf('mezz.jei:jei-1.20.1-forge:15.2.0.27')
+    runtimeOnly fg.deobf('mezz.jei:jei-1.20.1-forge:15.2.0.27')
 
     implementation fg.deobf("curse.maven:mekanism-268560:4807067") //Mekanism-1.20.1-10.4.2.16.jar
     implementation "mekanism:Mekanism:1.20.1-10.4.2.16:api"
