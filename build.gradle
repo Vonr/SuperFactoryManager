@@ -301,11 +301,6 @@ dependencies {
 
 
 }
-task printClasspath {
-    doLast {
-        configurations.runtimeClasspath.each { println it }
-    }
-}
 
 processResources {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)

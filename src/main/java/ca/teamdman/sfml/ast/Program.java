@@ -91,7 +91,7 @@ public record Program(
         var labels = LabelHolder.from(disk);
         // labels in code but not in world
         for (String label : referencedLabels) {
-            var isUsed = labels.getPositions(label).size() > 0;
+            var isUsed = !labels.getPositions(label).isEmpty();
             if (!isUsed) {
                 warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_LABEL.get(label));
             }

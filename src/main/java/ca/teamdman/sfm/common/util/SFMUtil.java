@@ -45,7 +45,7 @@ public class SFMUtil {
         Deque<T> toVisit = new ArrayDeque<>();
         toVisit.add(first);
         debounce.add(first);
-        while (toVisit.size() > 0) {
+        while (!toVisit.isEmpty()) {
             T current = toVisit.pop();
             operator.accept(current, next -> {
                 if (!debounce.contains(next)) {

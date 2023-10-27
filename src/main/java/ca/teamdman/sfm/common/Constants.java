@@ -22,6 +22,22 @@ public class Constants {
                 "gui.sfm.text_editor.done_button.tooltip",
                 "Shift+Enter to submit"
         );
+        public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.save_changes_confirm.title",
+                "Save changes"
+        );
+        public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+                "gui.sfm.save_changes_confirm.message",
+                "Do you want to save before exiting?"
+        );
+        public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+                "gui.sfm.save_changes_confirm.yes_button",
+                "Save changes"
+        );
+        public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+                "gui.sfm.save_changes_confirm.no_button",
+                "Don't save"
+        );
 
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
         public static LocalizationEntry MOD_NAME = new LocalizationEntry(

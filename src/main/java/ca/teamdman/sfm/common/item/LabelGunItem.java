@@ -39,7 +39,7 @@ public class LabelGunItem extends Item {
 
     public static String getNextLabel(ItemStack gun, int change) {
         var labels = LabelHolder.from(gun).get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
-        if (labels.size() == 0) return "";
+        if (labels.isEmpty()) return "";
         var currentLabel = getActiveLabel(gun);
 
         int currentLabelIndex = 0;
