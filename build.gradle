@@ -286,12 +286,8 @@ dependencies {
     gametestImplementation fg.deobf("curse.maven:titanium-287342:4152837") //titanium-1.19.2-3.7.1-24.jar
     gametestImplementation fg.deobf("curse.maven:patchouli-306770:4031402") //Patchouli-1.19.2-77.jar
 
-    gametestImplementation fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
-//    compileOnly fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar // lets depend on some non-api stuff to get sidedness spicyness
-    runtimeOnly fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
-    implementation fg.deobf("curse.maven:mekanism-268560:3922056") //Mekanism-1.19.2-10.3.2.469.jar
-    compileOnly "mekanism:Mekanism:1.19.2-10.3.8.477:api" //https://github.com/mekanism/Mekanism
-    gametestImplementation "mekanism:Mekanism:1.19.2-10.3.8.477:api"
+    implementation fg.deobf("curse.maven:mekanism-268560:4644795") //Mekanism-1.19.2-10.3.2.469.jar
+    implementation "mekanism:Mekanism:1.19.2-10.3.8.477:api"
 
     // https://legacy.curseforge.com/minecraft/mc-mods/sophisticated-core/files/4503931
     // sophisticatedcore-1.19.2-0.5.51.251.jar
@@ -304,6 +300,11 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:sophisticated-storage-619320:4503929")
 
 
+}
+task printClasspath {
+    doLast {
+        configurations.runtimeClasspath.each { println it }
+    }
 }
 
 processResources {
