@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.ChatFormatting;
@@ -21,6 +22,22 @@ public class Constants {
         public static final LocalizationEntry PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.text_editor.done_button.tooltip",
                 "Shift+Enter to submit"
+        );
+        public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.save_changes_confirm.title",
+                "Save changes"
+        );
+        public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+                "gui.sfm.save_changes_confirm.message",
+                "Do you want to save before exiting?"
+        );
+        public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+                "gui.sfm.save_changes_confirm.yes_button",
+                "Save changes"
+        );
+        public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+                "gui.sfm.save_changes_confirm.no_button",
+                "Don't save"
         );
 
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
@@ -267,14 +284,6 @@ public class Constants {
                 "gui.sfm.container_inspector.mekanism_null_direction_warning",
                 "MEKANISM BLOCKS ARE READ-ONLY FROM THE NULL DIRECTION!!!!!!"
         );
-        public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_MACHINE_INPUTS = new LocalizationEntry(
-                "gui.sfm.container_inspector.mekanism_machine_inputs",
-                "The following are based on the MACHINE'S input config"
-        );
-        public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_MACHINE_OUTPUTS = new LocalizationEntry(
-                "gui.sfm.container_inspector.mekanism_machine_outputs",
-                "The following are based on the MACHINE'S output config"
-        );
 
         public static final LocalizationEntry CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT = new LocalizationEntry(
                 "gui.sfm.container_inspector.container_slot_count",
@@ -382,7 +391,7 @@ public class Constants {
                     try {
                         rtn.add((LocalizationEntry) field.get(null));
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
+                        SFM.LOGGER.error(e);
                     }
                 }
             }

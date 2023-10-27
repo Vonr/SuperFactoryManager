@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
-import ca.teamdman.sfm.client.gui.IndentationUtils;
+import ca.teamdman.sfm.client.gui.EditorUtils;
 import ca.teamdman.sfm.common.Constants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -78,14 +79,41 @@ public class ProgramEditScreen extends Screen {
                 300,
                 20,
                 CommonComponents.GUI_DONE,
-                (p_97691_) -> this.onDone(),
+                (p_97691_) -> this.onClosePerformCallback(),
                 Tooltip.create(PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP.getComponent())
         ));
     }
 
-    public void onDone() {
+    public void onClosePerformCallback() {
         CALLBACK.accept(textarea.getValue());
-        onClose();
+
+        assert this.minecraft != null;
+        this.minecraft.popGuiLayer();
+    }
+
+    @Override
+    public void onClose() {
+        if (!INITIAL_CONTENT.equals(textarea.getValue())) {
+            // if content changed => ask to save
+            assert this.minecraft != null;
+            // push confirm screen
+            this.minecraft.pushGuiLayer(new ConfirmScreen(
+                    doSave -> {
+                        this.minecraft.popGuiLayer();
+                        if (doSave) {
+                            onClosePerformCallback();
+                        } else {
+                            this.minecraft.popGuiLayer();
+                        }
+                    },
+                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_TITLE.getComponent(),
+                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+            ));
+        } else {
+            super.onClose();
+        }
     }
 
     @Override
@@ -109,7 +137,7 @@ public class ProgramEditScreen extends Screen {
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {
-            onDone();
+            onClosePerformCallback();
             return true;
         }
         if (pKeyCode == GLFW.GLFW_KEY_TAB) {
@@ -120,11 +148,11 @@ public class ProgramEditScreen extends Screen {
             String content = textarea.getValue();
             int cursor = textarea.getCursorPosition();
             int selectionCursor = textarea.getSelectionCursorPosition();
-            IndentationUtils.IndentationResult result;
+            EditorUtils.ManipulationResult result;
             if (Screen.hasShiftDown()) { // de-indent
-                result = IndentationUtils.deindent(content, cursor, selectionCursor);
+                result = EditorUtils.deindent(content, cursor, selectionCursor);
             } else { // indent
-                result = IndentationUtils.indent(content, cursor, selectionCursor);
+                result = EditorUtils.indent(content, cursor, selectionCursor);
             }
             textarea.setValue(result.content());
             textarea.setCursorPosition(result.cursorPosition());
@@ -134,6 +162,17 @@ public class ProgramEditScreen extends Screen {
         if (pKeyCode == GLFW.GLFW_KEY_LEFT_CONTROL || pKeyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
             // if control pressed => update syntax highlighting
             textarea.rebuild(Screen.hasControlDown());
+            return true;
+        }
+        if (pKeyCode == GLFW.GLFW_KEY_SLASH && Screen.hasControlDown()) {
+            // toggle line comments for selected lines
+            String content = textarea.getValue();
+            int cursor = textarea.getCursorPosition();
+            int selectionCursor = textarea.getSelectionCursorPosition();
+            EditorUtils.ManipulationResult result = EditorUtils.toggleComments(content, cursor, selectionCursor);
+            textarea.setValue(result.content());
+            textarea.setCursorPosition(result.cursorPosition());
+            textarea.setSelectionCursorPosition(result.selectionCursorPosition());
             return true;
         }
         if (pKeyCode == GLFW.GLFW_KEY_SPACE && Screen.hasControlDown()) {

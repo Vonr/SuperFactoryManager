@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
@@ -74,7 +75,7 @@ public record Program(
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
         } catch (Throwable t) {
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
-            t.printStackTrace();
+            SFM.LOGGER.error(t);
             if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage(), null, new Object[]{}));
         }
 
@@ -91,7 +92,7 @@ public record Program(
         var labels = LabelHolder.from(disk);
         // labels in code but not in world
         for (String label : referencedLabels) {
-            var isUsed = labels.getPositions(label).size() > 0;
+            var isUsed = !labels.getPositions(label).isEmpty();
             if (!isUsed) {
                 warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_LABEL.get(label));
             }
