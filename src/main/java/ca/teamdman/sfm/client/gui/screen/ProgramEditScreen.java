@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
-import ca.teamdman.sfm.client.gui.IndentationUtils;
+import ca.teamdman.sfm.client.gui.EditorUtils;
 import ca.teamdman.sfm.common.Constants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -133,11 +133,11 @@ public class ProgramEditScreen extends Screen {
             String content = textarea.getValue();
             int cursor = textarea.getCursorPosition();
             int selectionCursor = textarea.getSelectionCursorPosition();
-            IndentationUtils.IndentationResult result;
+            EditorUtils.ManipulationResult result;
             if (Screen.hasShiftDown()) { // de-indent
-                result = IndentationUtils.deindent(content, cursor, selectionCursor);
+                result = EditorUtils.deindent(content, cursor, selectionCursor);
             } else { // indent
-                result = IndentationUtils.indent(content, cursor, selectionCursor);
+                result = EditorUtils.indent(content, cursor, selectionCursor);
             }
             textarea.setValue(result.content());
             textarea.setCursorPosition(result.cursorPosition());
@@ -147,6 +147,17 @@ public class ProgramEditScreen extends Screen {
         if (pKeyCode == GLFW.GLFW_KEY_LEFT_CONTROL || pKeyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
             // if control pressed => update syntax highlighting
             textarea.rebuild(Screen.hasControlDown());
+            return true;
+        }
+        if (pKeyCode == GLFW.GLFW_KEY_SLASH && Screen.hasControlDown()) {
+            // toggle line comments for selected lines
+            String content = textarea.getValue();
+            int cursor = textarea.getCursorPosition();
+            int selectionCursor = textarea.getSelectionCursorPosition();
+            EditorUtils.ManipulationResult result = EditorUtils.toggleComments(content, cursor, selectionCursor);
+            textarea.setValue(result.content());
+            textarea.setCursorPosition(result.cursorPosition());
+            textarea.setSelectionCursorPosition(result.selectionCursorPosition());
             return true;
         }
         if (pKeyCode == GLFW.GLFW_KEY_SPACE && Screen.hasControlDown()) {

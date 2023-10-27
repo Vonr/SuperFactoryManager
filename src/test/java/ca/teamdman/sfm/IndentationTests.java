@@ -1,6 +1,6 @@
 package ca.teamdman.sfm;
 
-import ca.teamdman.sfm.client.gui.IndentationUtils;
+import ca.teamdman.sfm.client.gui.EditorUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +31,7 @@ public class IndentationTests {
         assertEquals(expectedSelection, expectedProgram.substring(expectedSelectionStart, expectedSelectionEnd));
 
 
-        var result = IndentationUtils.indent(program, selectionStart, selectionEnd);
+        var result = EditorUtils.indent(program, selectionStart, selectionEnd);
         assertEquals(expectedProgram, result.content());
         assertEquals(
                 expectedSelection,
@@ -66,7 +66,7 @@ public class IndentationTests {
         assertEquals(expectedSelection, expectedProgram.substring(expectedSelectionStart, expectedSelectionEnd));
 
 
-        var result = IndentationUtils.indent(program, selectionStart, selectionEnd);
+        var result = EditorUtils.indent(program, selectionStart, selectionEnd);
         assertEquals(expectedProgram, result.content());
         assertEquals(
                 expectedSelection,
@@ -102,7 +102,7 @@ public class IndentationTests {
         assertEquals(expectedSelection, expectedProgram.substring(expectedSelectionStart, expectedSelectionEnd));
 
 
-        var result = IndentationUtils.deindent(program, selectionStart, selectionEnd);
+        var result = EditorUtils.deindent(program, selectionStart, selectionEnd);
         assertEquals(expectedProgram, result.content());
         assertEquals(
                 expectedSelection,
@@ -138,7 +138,7 @@ public class IndentationTests {
         assertEquals(expectedSelection, expectedProgram.substring(expectedSelectionStart, expectedSelectionEnd));
 
 
-        var result = IndentationUtils.deindent(program, selectionStart, selectionEnd);
+        var result = EditorUtils.deindent(program, selectionStart, selectionEnd);
         assertEquals(expectedProgram, result.content());
         assertEquals(
                 expectedSelection,
