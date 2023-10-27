@@ -1,6 +1,8 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.compat.SFMCompat;
+import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -90,6 +92,13 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                 sb.append("No exports found");
             }
             sb.append("\n");
+        }
+
+        if (SFMCompat.isMekanismLoaded()) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be != null) {
+                sb.append(SFMMekanismCompat.gatherInspectionResults(be)).append("\n");
+            }
         }
 
         return sb.toString();
