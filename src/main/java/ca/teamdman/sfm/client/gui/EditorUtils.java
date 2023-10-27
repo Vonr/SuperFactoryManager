@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.gui;
 
-public class IndentationUtils {
+public class EditorUtils {
     private static int findLineStart(String content, int cursorPos) {
         while (cursorPos > 0 && content.charAt(cursorPos - 1) != '\n') {
             cursorPos--;
@@ -23,7 +23,7 @@ public class IndentationUtils {
      * @param selectionCursorPos The index within the string of the selection cursor. If equal to cursorPosition, no selection is present.
      * @return The indented content, and the new cursor and selection cursor positions
      */
-    public static IndentationResult indent(String content, int cursorPos, int selectionCursorPos) {
+    public static ManipulationResult indent(String content, int cursorPos, int selectionCursorPos) {
         StringBuilder sb = new StringBuilder(content);
         int lineStart = findLineStart(content, Math.min(cursorPos, selectionCursorPos));
         int lineEnd = findLineEnd(content, Math.max(cursorPos, selectionCursorPos));
@@ -48,7 +48,7 @@ public class IndentationUtils {
                 lineStart = findLineEnd(sb.toString(), lineStart) + 1;
             }
         }
-        return new IndentationResult(sb.toString(), cursorPos, selectionCursorPos);
+        return new ManipulationResult(sb.toString(), cursorPos, selectionCursorPos);
     }
 
     /**
@@ -59,7 +59,7 @@ public class IndentationUtils {
      * @param selectionCursorPos The index within the string of the selection cursor. If equal to cursorPosition, no selection is present.
      * @return The deindented content, and the new cursor and selection cursor positions
      */
-    public static IndentationResult deindent(String content, int cursorPos, int selectionCursorPos) {
+    public static ManipulationResult deindent(String content, int cursorPos, int selectionCursorPos) {
         StringBuilder sb = new StringBuilder(content);
         int lineStart = findLineStart(content, Math.min(cursorPos, selectionCursorPos));
         int lineEnd = findLineEnd(content, Math.max(cursorPos, selectionCursorPos));
@@ -77,10 +77,65 @@ public class IndentationUtils {
             }
             lineStart = findLineEnd(sb.toString(), lineStart) + 1;
         }
-        return new IndentationResult(sb.toString(), cursorPos, selectionCursorPos);
+        return new ManipulationResult(sb.toString(), cursorPos, selectionCursorPos);
     }
 
-    public record IndentationResult(
+    /**
+     * Perform the operation for hitting Ctrl+/
+     * If the selection contains a line not starting with "--", prepend each line with "--"
+     * If all lines in the selection start with "--", trim "--" from the start of each line
+     *
+     * @param content The content in the buffer
+     * @param cursorPos The index within the content for the cursor position
+     * @param selectionCursorPos The index within the content for the selection cursor. If equal to cursorPosition, no selection is present.
+     * @return The modified content, and the new cursor positions accommodating the shifting of said content
+     */
+    public static ManipulationResult toggleComments(String content, int cursorPos, int selectionCursorPos) {
+        StringBuilder sb = new StringBuilder(content);
+        int lineStart = findLineStart(content, Math.min(cursorPos, selectionCursorPos));
+        int lineEnd = findLineEnd(content, Math.max(cursorPos, selectionCursorPos));
+
+        boolean allLinesCommented = true;
+        while (lineStart < lineEnd) {
+            if (lineStart + 2 >= sb.length() || sb.charAt(lineStart) != '-' || sb.charAt(lineStart + 1) != '-') {
+                allLinesCommented = false;
+                break;
+            }
+            lineStart = findLineEnd(sb.toString(), lineStart) + 1;
+        }
+
+        lineStart = findLineStart(content, Math.min(cursorPos, selectionCursorPos));
+        lineEnd = findLineEnd(content, Math.max(cursorPos, selectionCursorPos));
+
+        if (allLinesCommented) {
+            while (lineStart < lineEnd) {
+                sb.delete(lineStart, lineStart + 2);
+                lineEnd -= 2;
+                if (lineStart < cursorPos) {
+                    cursorPos -= 2;
+                }
+                if (lineStart < selectionCursorPos) {
+                    selectionCursorPos -= 2;
+                }
+                lineStart = findLineEnd(sb.toString(), lineStart) + 1;
+            }
+        } else {
+            while (lineStart < lineEnd) {
+                sb.insert(lineStart, "--");
+                lineEnd += 2;
+                if (lineStart <= cursorPos) {
+                    cursorPos += 2;
+                }
+                if (lineStart <= selectionCursorPos) {
+                    selectionCursorPos += 2;
+                }
+                lineStart = findLineEnd(sb.toString(), lineStart) + 1;
+            }
+        }
+        return new ManipulationResult(sb.toString(), cursorPos, selectionCursorPos);
+    }
+
+    public record ManipulationResult(
             String content,
             int cursorPosition,
             int selectionCursorPosition

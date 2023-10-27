@@ -4,7 +4,6 @@ import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelHolder;
-import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -39,7 +38,7 @@ public class LabelGunItem extends Item {
 
     public static String getNextLabel(ItemStack gun, int change) {
         var labels = LabelHolder.from(gun).get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
-        if (labels.size() == 0) return "";
+        if (labels.isEmpty()) return "";
         var currentLabel = getActiveLabel(gun);
 
         int currentLabelIndex = 0;

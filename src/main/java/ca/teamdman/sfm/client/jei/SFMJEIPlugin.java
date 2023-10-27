@@ -75,7 +75,7 @@ public class SFMJEIPlugin implements IModPlugin {
                 return buttons
                         .stream()
                         .filter(b -> b.visible)
-                        .map(b -> new Rect2i(b.x, b.y, b.getWidth(), b.getHeight()))
+                        .map(b -> new Rect2i(b.getX(), b.getY(), b.getWidth(), b.getHeight()))
                         .toList();
             }
         });
