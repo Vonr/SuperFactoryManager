@@ -5,6 +5,7 @@ NAME "Changelog"
 
 -- 4.13.0
 ---- add ctrl+slash hotkey to toggle comments
+---- add warning when exiting program editor without saving
 
 -- 4.12.0
 ---- add changelog to templates
