@@ -16,6 +16,8 @@
   "gui.sfm.advanced.tooltip.hint": "§7Hold §b%s§7 for more info",
   "gui.sfm.container_inspector.container_slot_count": "Container Slots: %d",
   "gui.sfm.container_inspector.inventory_slot_count": "Inventory Slots: %d",
+  "gui.sfm.container_inspector.mekanism_machine_inputs": "The following are based on the MACHINE'S input config",
+  "gui.sfm.container_inspector.mekanism_machine_outputs": "The following are based on the MACHINE'S output config",
   "gui.sfm.container_inspector.mekanism_null_direction_warning": "MEKANISM BLOCKS ARE READ-ONLY FROM THE NULL DIRECTION!!!!!!",
   "gui.sfm.container_inspector.show_exports_button": "Export Inspector",
   "gui.sfm.label_gun.clear_button": "Clear",
