@@ -24,10 +24,9 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 import org.lwjgl.glfw.GLFW;
 
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
 
@@ -266,7 +265,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
-            t.printStackTrace();
+            SFM.LOGGER.error(t);
         }
     }
 
@@ -309,7 +308,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
-            t.printStackTrace();
+            SFM.LOGGER.error(t);
         }
     }
 
@@ -318,7 +317,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             String contents = Minecraft.getInstance().keyboardHandler.getClipboard();
             sendProgram(contents);
         } catch (Throwable t) {
-            t.printStackTrace();
+            SFM.LOGGER.error(t);
         }
     }
 
@@ -370,11 +369,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         }
 
         // Find the maximum tick time for normalization
-        long peakTickTime = 0;
+        long peakTickTimeNanoseconds = 0;
         for (int i = 0; i < menu.tickTimeNanos.length; i++) {
-            peakTickTime = Long.max(peakTickTime, menu.tickTimeNanos[i]);
+            peakTickTimeNanoseconds = Long.max(peakTickTimeNanoseconds, menu.tickTimeNanos[i]);
         }
-        long yMax = Long.max(peakTickTime, 50000000); // Start with max at 50ms but allow it to grow
+        long yMax = Long.max(peakTickTimeNanoseconds, 50000000); // Start with max at 50ms but allow it to grow
 
         // Constants for the plot size and position
         final int plotX = titleLabelX + 45;
@@ -415,7 +414,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             int plotPosX = plotX + spaceBetweenPoints * i;
 
             // Color the lines based on their tick times (green to red)
-            var c = getNanoColour(y);
+            var c = getMillisecondColour(y);
             //noinspection DataFlowIssue
             float red = ((c.getColor() >> 16) & 0xFF) / 255f;
             float green = ((c.getColor() >> 8) & 0xFF) / 255f;
@@ -437,15 +436,19 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         tesselator.end();
 
         // Draw the tick time text
-        var format = NumberFormat.getInstance(Locale.getDefault());
+        var format = new DecimalFormat("0.000");
         if (mouseTickTimeIndex != -1) { // We are hovering over the plot
             // Draw the tick time text for the hovered point instead of peak
-            long hoveredY = menu.tickTimeNanos[mouseTickTimeIndex];
+            long hoveredTickTimeNanoseconds = menu.tickTimeNanos[mouseTickTimeIndex];
+            var hoveredTickTimeMilliseconds = hoveredTickTimeNanoseconds / 1_000_000f;
+
             this.font.draw(
                     poseStack,
                     MANAGER_GUI_HOVERED_TICK_TIME.getComponent(Component
-                                                                       .literal(format.format(hoveredY))
-                                                                       .withStyle(getNanoColour(hoveredY))),
+                                                                       .literal(format.format(
+                                                                               hoveredTickTimeMilliseconds))
+                                                                       .withStyle(getMillisecondColour(
+                                                                               hoveredTickTimeMilliseconds))),
                     titleLabelX,
                     20f + font.lineHeight + 0.1f,
                     0
@@ -470,11 +473,13 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             tesselator.end();
         } else {
             // Draw the tick time text for peak value
+            var peakTickTimeMilliseconds = peakTickTimeNanoseconds / 1_000_000f;
             this.font.draw(
                     poseStack,
                     MANAGER_GUI_PEAK_TICK_TIME.getComponent(Component
-                                                                    .literal(format.format(peakTickTime))
-                                                                    .withStyle(getNanoColour(peakTickTime))),
+                                                                    .literal(format.format(peakTickTimeMilliseconds))
+                                                                    .withStyle(getMillisecondColour(
+                                                                            peakTickTimeMilliseconds))),
                     titleLabelX,
                     20f + font.lineHeight + 0.1f,
                     0
@@ -486,10 +491,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         RenderSystem.enableTexture();
     }
 
-    public ChatFormatting getNanoColour(long nano) {
-        if (nano <= 5_000_000) {
+    public ChatFormatting getMillisecondColour(float ms) {
+        if (ms <= 5) {
             return ChatFormatting.GREEN;
-        } else if (nano <= 15_000_000) {
+        } else if (ms <= 15) {
             return ChatFormatting.YELLOW;
         } else {
             return ChatFormatting.RED;
