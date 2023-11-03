@@ -147,6 +147,11 @@ minecraft {
             }
         }
 
+        client_teamy {
+            parent runs.client
+            args '--username', 'TeamDman', '--uuid', '83f1df8b-0ba3-4de0-8a26-e51a1fd74318'
+        }
+
         server {
             workingDirectory project.file('runServer')
 
@@ -296,7 +301,7 @@ dependencies {
     implementation "mekanism:Mekanism:1.20.1-10.4.2.16:api"
 }
 
-// This block of code expands all declared replace properties in the specified resource targets.
+// This block of code expands all declared replace properties in the specified resource tar+gets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 // When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
 // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
