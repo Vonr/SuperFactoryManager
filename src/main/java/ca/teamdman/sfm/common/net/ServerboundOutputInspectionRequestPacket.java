@@ -214,19 +214,18 @@ public record ServerboundOutputInspectionRequestPacket(
                                                                 .resourceLimits()
                                                                 .resourceLimits()
                                                                 .stream()
-                                                                .filter(outputResourceLimit -> ResourceType.stackIdMatches(
-                                                                        outputResourceLimit.resourceId(),
-                                                                        resourceLimitLocation
-                                                                ) && outputStatement
+                                                                .filter(outputResourceLimit -> outputResourceLimit
+                                                                                                       .resourceId()
+                                                                                                       .matchesStack(
+                                                                                                               resourceLimitLocation)
+                                                                                               && outputStatement
                                                                                                        .resourceLimits()
                                                                                                        .exclusions()
                                                                                                        .resourceIds()
                                                                                                        .stream()
                                                                                                        .noneMatch(
-                                                                                                               exclusion -> ResourceType.stackIdMatches(
-                                                                                                                       exclusion,
-                                                                                                                       resourceLimitLocation
-                                                                                                               )))
+                                                                                                               exclusion -> exclusion.matchesStack(
+                                                                                                                       resourceLimitLocation)))
                                                                 .mapToLong(rl -> rl.limit().quantity().number().value())
                                                                 .max()
                                                                 .orElse(0);

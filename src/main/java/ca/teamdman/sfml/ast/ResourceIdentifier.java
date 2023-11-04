@@ -30,6 +30,28 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     public final String resourceNamespace;
     public final String resourceName;
     private @Nullable ResourceType<STACK, ITEM, CAP> resourceTypeCache = null;
+    private static final Map<String, Predicate<String>> patternCache = new Object2ObjectOpenHashMap<>();
+
+    static {
+        // we want to make common match-all patterns fast
+        // resource names are lowercase alphanumeric with underscores
+        String[] matchAny = new String[]{
+                ".",
+                "[a-z0-9/._-]",
+                };
+        String[] suffixes = new String[]{"+", "*"};
+        for (String s : matchAny) {
+            for (String suffix : suffixes) {
+                patternCache.put(s + suffix, s1 -> true);
+                patternCache.put("^" + s + suffix, s1 -> true);
+                patternCache.put("^" + s + suffix + "$", s1 -> true);
+                patternCache.put(s + suffix + "$", s1 -> true);
+            }
+        }
+    }
+
+    private final Predicate<String> resourceNamespacePredicate;
+    private final Predicate<String> resourceNamePredicate;
 
     public ResourceIdentifier(
             String resourceTypeNamespace,
@@ -41,6 +63,29 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         this.resourceTypeName = resourceTypeName;
         this.resourceNamespace = resourceNamespace;
         this.resourceName = resourceName;
+        this.resourceNamespacePredicate = buildPredicate(resourceNamespace);
+        this.resourceNamePredicate = buildPredicate(resourceName);
+    }
+
+    private static Predicate<String> buildPredicate(String possiblePattern) {
+        return isRegexPattern(possiblePattern)
+               ? patternCache.computeIfAbsent(possiblePattern, x -> Pattern.compile(x).asMatchPredicate())
+               : possiblePattern::equals;
+    }
+
+    private static boolean isRegexPattern(String pattern) {
+        String specialChars = ".?*+^$[](){}|\\";
+        for (int i = 0; i < pattern.length(); i++) {
+            if (specialChars.indexOf(pattern.charAt(i)) >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean matchesStack(ResourceLocation stackId) {
+        return resourceNamespacePredicate.test(stackId.getNamespace())
+               && resourceNamePredicate.test(stackId.getPath());
     }
 
     public ResourceIdentifier(String value) {
@@ -72,8 +117,12 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
 
     public void assertValid() throws IllegalArgumentException {
         try {
-            Pattern.compile(this.resourceNamespace);
-            Pattern.compile(this.resourceName);
+            if (isRegexPattern(this.resourceNamespace)) {
+                Pattern.compile(this.resourceNamespace);
+            }
+            if (isRegexPattern(this.resourceName)) {
+                Pattern.compile(this.resourceName);
+            }
         } catch (PatternSyntaxException e) {
             throw new IllegalArgumentException("Invalid resource identifier pattern \""
                                                + this
@@ -94,7 +143,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
 
     public boolean test(Object other) {
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
-        return resourceType != null && resourceType.stackMatches(this, other);
+        return resourceType != null && resourceType.matchesStack(this, other);
     }
 
     public List<ResourceIdentifier<STACK, ITEM, CAP>> expand() {
@@ -112,7 +161,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
         //noinspection DataFlowIssue // if we get here, it should have a registry
         List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().getEntries().stream()
-                .filter(e -> ResourceType.stackIdMatches(this, e.getKey().location()))
+                .filter(e -> matchesStack(e.getKey().location()))
                 .map(e -> new ResourceIdentifier<STACK, ITEM, CAP>(
                         resourceTypeNamespace,
                         resourceTypeName,
