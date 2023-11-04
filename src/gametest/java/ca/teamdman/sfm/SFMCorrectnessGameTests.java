@@ -2337,4 +2337,92 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
+
+    @GameTest(template = "3x2x1")
+    public static void forget(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a
+                                           IF a has gt 0 dirt THEN
+                                               FORGET a
+                                           END
+                                           OUTPUT TO b -- nothing happens :D
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "Dirt should not depart");
+            assertTrue(rightChest.getStackInSlot(0).isEmpty(), "Dirt should not arrive");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void forget_slot(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+        leftChest.insertItem(1, new ItemStack(Items.IRON_INGOT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a SLOTS 1-26 -- iron ingot
+                                           INPUT FROM c SLOTS 0    -- dirt blocks
+                                           IF a SLOTS 0 has gt 0 dirt THEN
+                                               FORGET a -- forgets the iron ingot
+                                           END
+                                           OUTPUT TO b -- will move the dirt block, the next tick the ingots
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("c", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt should depart");
+            assertTrue(leftChest.getStackInSlot(1).getCount() == 64, "Iron ingots should not depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt should arrive in size");
+            assertTrue(rightChest.getStackInSlot(0).getItem() == Items.DIRT, "Dirt should arrive in type");
+            helper.succeed();
+        });
+    }
 }

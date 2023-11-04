@@ -27,9 +27,11 @@ block           : statement* ;
 statement       : inputstatement    #InputStatementStatement
                 | outputstatement   #OutputStatementStatement
                 | ifstatement       #IfStatementStatement
+                | forgetstatement   #ForgetStatementStatement
                 ;
 
 // IO STATEMENT
+forgetstatement : FORGET label (COMMA label)* COMMA?;
 inputstatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess;
 outputstatement : OUTPUT outputmatchers? resourceexclusion? TO EACH? labelaccess;
 inputmatchers   : movement; // separate for different defaults
@@ -161,6 +163,7 @@ SLOTS   : S L O T S ;
 RETAIN  : R E T A I N ;
 EACH    : E A C H ;
 EXCEPT  : E X C E P T ;
+FORGET  : F O R G E T ;
 
 // SIDE LOGIC
 TOP     : T O P ;

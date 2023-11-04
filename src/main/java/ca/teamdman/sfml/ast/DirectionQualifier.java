@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNode {
 
     public static DirectionQualifier NULL_DIRECTION = new DirectionQualifier(EnumSet.noneOf(Direction.class));
+    public static DirectionQualifier EVERY_DIRECTION = new DirectionQualifier(EnumSet.allOf(Direction.class));
 
     public static Direction lookup(Side side) {
         return switch (side) {
@@ -34,6 +35,8 @@ public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNo
     }
 
     public Stream<Direction> stream() {
+        if (this == EVERY_DIRECTION)
+            return Stream.concat(directions.stream(), Stream.<Direction>builder().add(null).build());
         if (directions.isEmpty()) return Stream.<Direction>builder().add(null).build();
         return directions.stream();
     }

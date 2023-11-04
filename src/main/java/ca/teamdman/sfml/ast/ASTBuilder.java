@@ -466,6 +466,27 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
+    public ASTNode visitForgetStatementStatement(SFMLParser.ForgetStatementStatementContext ctx) {
+        ForgetStatement statement = (ForgetStatement) visit(ctx.forgetstatement());
+        AST_NODE_CONTEXTS.add(new Pair<>(statement, ctx));
+        return statement;
+    }
+
+    @Override
+    public ForgetStatement visitForgetstatement(SFMLParser.ForgetstatementContext ctx) {
+        List<Label> labels = ctx
+                .label()
+                .stream()
+                .map(this::visit)
+                .map(Label.class::cast)
+                .collect(Collectors.toList());
+        if (labels.isEmpty()) {
+            labels = USED_LABELS.stream().toList();
+        }
+        return new ForgetStatement(labels);
+    }
+
+    @Override
     public NumberRangeSet visitRangeset(@Nullable SFMLParser.RangesetContext ctx) {
         if (ctx == null) return NumberRangeSet.MAX_RANGE;
         NumberRangeSet numberRangeSet = new NumberRangeSet(ctx
