@@ -7,9 +7,12 @@ import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
 import com.google.common.collect.Sets;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.items.IItemHandler;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.compress.utils.FileNameUtils;
@@ -55,6 +58,11 @@ public class SFMLTests {
         }
 
         return errors;
+    }
+
+    @Test
+    public void resourceIdentifierClassLoadingRegression() {
+        new ResourceIdentifier<ItemStack, Item, IItemHandler>("stone");
     }
 
     public Program compile(String input) {

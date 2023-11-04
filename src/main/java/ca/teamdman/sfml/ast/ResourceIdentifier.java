@@ -1,6 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.program.RegexCache;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -30,25 +31,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     public final String resourceNamespace;
     public final String resourceName;
     private @Nullable ResourceType<STACK, ITEM, CAP> resourceTypeCache = null;
-    private static final Map<String, Predicate<String>> patternCache = new Object2ObjectOpenHashMap<>();
 
-    static {
-        // we want to make common match-all patterns fast
-        // resource names are lowercase alphanumeric with underscores
-        String[] matchAny = new String[]{
-                ".",
-                "[a-z0-9/._-]",
-                };
-        String[] suffixes = new String[]{"+", "*"};
-        for (String s : matchAny) {
-            for (String suffix : suffixes) {
-                patternCache.put(s + suffix, s1 -> true);
-                patternCache.put("^" + s + suffix, s1 -> true);
-                patternCache.put("^" + s + suffix + "$", s1 -> true);
-                patternCache.put(s + suffix + "$", s1 -> true);
-            }
-        }
-    }
 
     private final Predicate<String> resourceNamespacePredicate;
     private final Predicate<String> resourceNamePredicate;
@@ -63,29 +46,12 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         this.resourceTypeName = resourceTypeName;
         this.resourceNamespace = resourceNamespace;
         this.resourceName = resourceName;
-        this.resourceNamespacePredicate = buildPredicate(resourceNamespace);
-        this.resourceNamePredicate = buildPredicate(resourceName);
-    }
-
-    private static Predicate<String> buildPredicate(String possiblePattern) {
-        return isRegexPattern(possiblePattern)
-               ? patternCache.computeIfAbsent(possiblePattern, x -> Pattern.compile(x).asMatchPredicate())
-               : possiblePattern::equals;
-    }
-
-    private static boolean isRegexPattern(String pattern) {
-        String specialChars = ".?*+^$[](){}|\\";
-        for (int i = 0; i < pattern.length(); i++) {
-            if (specialChars.indexOf(pattern.charAt(i)) >= 0) {
-                return true;
-            }
-        }
-        return false;
+        this.resourceNamespacePredicate = RegexCache.buildPredicate(resourceNamespace);
+        this.resourceNamePredicate = RegexCache.buildPredicate(resourceName);
     }
 
     public boolean matchesStack(ResourceLocation stackId) {
-        return resourceNamespacePredicate.test(stackId.getNamespace())
-               && resourceNamePredicate.test(stackId.getPath());
+        return resourceNamePredicate.test(stackId.getPath()) && resourceNamespacePredicate.test(stackId.getNamespace());
     }
 
     public ResourceIdentifier(String value) {
@@ -117,10 +83,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
 
     public void assertValid() throws IllegalArgumentException {
         try {
-            if (isRegexPattern(this.resourceNamespace)) {
+            if (RegexCache.isRegexPattern(this.resourceNamespace)) {
                 Pattern.compile(this.resourceNamespace);
             }
-            if (isRegexPattern(this.resourceName)) {
+            if (RegexCache.isRegexPattern(this.resourceName)) {
                 Pattern.compile(this.resourceName);
             }
         } catch (PatternSyntaxException e) {
@@ -176,9 +142,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     public @Nullable ResourceType<STACK, ITEM, CAP> getResourceType() {
         if (resourceTypeCache == null) {
             //noinspection unchecked
-            resourceTypeCache = (ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.DEFERRED_TYPES
-                    .get()
-                    .getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
+            resourceTypeCache = (ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.fastLookup(
+                    resourceTypeNamespace,
+                    resourceTypeName
+            );
         }
         return resourceTypeCache;
     }
