@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.handler;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.LabelGunItem;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import com.google.common.collect.HashMultimap;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -73,7 +73,7 @@ public class LabelGunWorldRenderer {
         var labelGun = player.getMainHandItem();
         if (!(labelGun.getItem() instanceof LabelGunItem)) labelGun = player.getOffhandItem();
         if (!(labelGun.getItem() instanceof LabelGunItem)) return;
-        var labels = LabelHolder.from(labelGun);
+        var labels = LabelPositionHolder.from(labelGun);
         var labelPositions = HashMultimap.<BlockPos, String>create();
         labels.forEach((label, pos1) -> labelPositions.put(pos1, label));
 

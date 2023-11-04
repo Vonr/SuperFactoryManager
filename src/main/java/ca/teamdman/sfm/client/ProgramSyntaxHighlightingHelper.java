@@ -131,6 +131,12 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.REDSTONE:
             case SFMLLexer.PULSE:
                 return ChatFormatting.RED;
+            case SFMLLexer.ROUND:
+            case SFMLLexer.ROBIN:
+            case SFMLLexer.BY:
+            case SFMLLexer.BLOCK:
+            case SFMLLexer.LABEL:
+                return ChatFormatting.YELLOW;
             default:
                 return ChatFormatting.WHITE;
         }

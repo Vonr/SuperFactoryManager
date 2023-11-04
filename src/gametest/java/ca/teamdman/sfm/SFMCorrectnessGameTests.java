@@ -6,7 +6,7 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.item.FormItem;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.core.BlockPos;
@@ -99,7 +99,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -140,7 +140,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -201,7 +201,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("source", helper.absolutePos(sourcePos))
                 .add("dest", helper.absolutePos(dest1Pos))
                 .add("dest", helper.absolutePos(dest2Pos))
@@ -262,7 +262,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    END
                                    """.stripTrailing().stripIndent());
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -307,7 +307,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -337,7 +337,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(left))
                 .add("b", helper.absolutePos(right))
                 .save(manager.getDisk().get());
@@ -381,7 +381,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(left))
                 .add("b", helper.absolutePos(right))
                 .save(manager.getDisk().get());
@@ -438,7 +438,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(start))
                 .add("b", helper.absolutePos(end))
                 .save(manager.getDisk().get());
@@ -489,7 +489,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(left))
                 .add("a", helper.absolutePos(front))
                 .add("b", helper.absolutePos(right))
@@ -720,7 +720,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(left))
                 .add("b", helper.absolutePos(right))
                 .save(manager.getDisk().get());
@@ -766,7 +766,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1433,7 +1433,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1508,7 +1508,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1583,7 +1583,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1658,7 +1658,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1733,7 +1733,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1790,7 +1790,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1830,7 +1830,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1870,7 +1870,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1910,7 +1910,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1958,7 +1958,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2004,7 +2004,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2051,7 +2051,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2098,7 +2098,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2144,7 +2144,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2188,7 +2188,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2233,7 +2233,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2302,7 +2302,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2367,7 +2367,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2411,7 +2411,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("c", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
@@ -2422,6 +2422,314 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(1).getCount() == 64, "Iron ingots should not depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.DIRT, "Dirt should arrive in type");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void reorder_1(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           FROM a
+                                           INPUT iron_ingot
+                                           
+                                           TO b OUTPUT
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
+            assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void reorder_2(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           FROM a
+                                           INPUT iron_ingot
+                                           
+                                           OUTPUT TO b
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
+            assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void reorder_3(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a
+                                           
+                                           TO b
+                                           OUTPUT iron_ingot
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
+            assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x4x3")
+    public static void round_robin_by_block_1(GameTestHelper helper) {
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        BlockPos sourcePos = new BlockPos(1, 3, 1);
+        BlockPos dest1Pos = new BlockPos(2, 2, 1);
+        BlockPos dest2Pos = new BlockPos(0, 2, 1);
+
+        // set up inventories
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+
+        var sourceInv = (helper.getBlockEntity(sourcePos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var dest1Inv = (helper.getBlockEntity(dest1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        var dest2Inv = (helper.getBlockEntity(dest2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        for (int i = 0; i < sourceInv.getSlots(); i++) {
+            sourceInv.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
+        }
+
+        // set up manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM source
+                                           OUTPUT 128 dirt TO dest ROUND ROBIN BY BLOCK
+                                       END
+                                   """.stripTrailing().stripIndent());
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("source", helper.absolutePos(sourcePos))
+                .add("dest", helper.absolutePos(dest1Pos))
+                .add("dest", helper.absolutePos(dest2Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 2), "source count bad");
+            assertTrue(count(dest1Inv, Items.DIRT) == 128, "dest1 arrival count bad");
+            assertTrue(count(dest2Inv, Items.DIRT) == 0, "dest2 arrival count bad");
+
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x4x3")
+    public static void round_robin_by_block_2(GameTestHelper helper) {
+        for (int x = 0; x < 3; x++) {
+            for (int z = 0; z < 3; z++) {
+                helper.setBlock(x, 1, z, SFMBlocks.CABLE_BLOCK.get());
+            }
+        }
+        BlockPos managerPos = new BlockPos(0, 2, 2);
+        BlockPos sourcePos = new BlockPos(2, 2, 0);
+        BlockPos a1Pos = new BlockPos(0, 2, 0);
+        BlockPos a2Pos = new BlockPos(0, 2, 1);
+        BlockPos b1Pos = new BlockPos(1, 2, 2);
+        BlockPos b2Pos = new BlockPos(2, 2, 2);
+
+        // set up inventories
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+
+        var sourceInv = (helper.getBlockEntity(sourcePos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var a1 = (helper.getBlockEntity(a1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var a2 = (helper.getBlockEntity(a2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var b1 = (helper.getBlockEntity(b1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var b2 = (helper.getBlockEntity(b2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        for (int i = 0; i < sourceInv.getSlots(); i++) {
+            sourceInv.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
+        }
+
+        // set up manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM source
+                                           OUTPUT 128 dirt TO EACH a,b ROUND ROBIN BY BLOCK
+                                       END
+                                   """.stripTrailing().stripIndent());
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("source", helper.absolutePos(sourcePos))
+                .add("a", helper.absolutePos(a1Pos))
+                .add("a", helper.absolutePos(a2Pos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 2), "source count bad");
+            assertTrue(count(a1, Items.DIRT) == 128, "a1 arrival count bad");
+            assertTrue(count(a2, Items.DIRT) == 0, "a2 arrival count bad");
+            assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
+            assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void round_robin_by_label(GameTestHelper helper) {
+        for (int x = 0; x < 3; x++) {
+            for (int z = 0; z < 3; z++) {
+                helper.setBlock(x, 1, z, SFMBlocks.CABLE_BLOCK.get());
+            }
+        }
+        BlockPos managerPos = new BlockPos(0, 2, 2);
+        BlockPos sourcePos = new BlockPos(2, 2, 0);
+        BlockPos a1Pos = new BlockPos(0, 2, 0);
+        BlockPos a2Pos = new BlockPos(0, 2, 1);
+        BlockPos b1Pos = new BlockPos(1, 2, 2);
+        BlockPos b2Pos = new BlockPos(2, 2, 2);
+
+        // set up inventories
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+
+        var sourceInv = (helper.getBlockEntity(sourcePos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var a1 = (helper.getBlockEntity(a1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var a2 = (helper.getBlockEntity(a2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var b1 = (helper.getBlockEntity(b1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var b2 = (helper.getBlockEntity(b2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        for (int i = 0; i < sourceInv.getSlots(); i++) {
+            sourceInv.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
+        }
+
+        // set up manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM source
+                                           OUTPUT 128 dirt TO EACH a,b ROUND ROBIN BY LABEL
+                                       END
+                                   """.stripTrailing().stripIndent());
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("source", helper.absolutePos(sourcePos))
+                .add("a", helper.absolutePos(a1Pos))
+                .add("a", helper.absolutePos(a2Pos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 4), "source count bad");
+            assertTrue(count(a1, Items.DIRT) == 128, "a1 arrival count bad");
+            assertTrue(count(a2, Items.DIRT) == 128, "a2 arrival count bad");
+            assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
+            assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
             helper.succeed();
         });
     }

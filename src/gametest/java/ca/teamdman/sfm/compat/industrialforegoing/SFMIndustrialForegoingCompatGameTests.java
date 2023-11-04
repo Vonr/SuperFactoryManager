@@ -3,7 +3,7 @@ package ca.teamdman.sfm.compat.industrialforegoing;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import com.buuz135.industrial.module.ModuleCore;
@@ -47,7 +47,7 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
                                    """.stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -88,7 +88,7 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
                                    """.stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -132,7 +132,7 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
                                    """.stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());

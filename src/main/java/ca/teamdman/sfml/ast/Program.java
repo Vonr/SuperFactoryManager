@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.SFMLLexer;
@@ -97,7 +97,7 @@ public record Program(
 
     public ArrayList<TranslatableContents> gatherWarnings(ItemStack disk, @Nullable ManagerBlockEntity manager) {
         var warnings = new ArrayList<TranslatableContents>();
-        var labels = LabelHolder.from(disk);
+        var labels = LabelPositionHolder.from(disk);
         // labels in code but not in world
         for (String label : referencedLabels) {
             var isUsed = !labels.getPositions(label).isEmpty();
@@ -170,7 +170,7 @@ public record Program(
     }
 
     public void fixWarnings(ItemStack disk, ManagerBlockEntity manager) {
-        var labels = LabelHolder.from(disk);
+        var labels = LabelPositionHolder.from(disk);
         // remove labels not defined in code
         labels.removeIf(label -> !referencedLabels.contains(label));
 

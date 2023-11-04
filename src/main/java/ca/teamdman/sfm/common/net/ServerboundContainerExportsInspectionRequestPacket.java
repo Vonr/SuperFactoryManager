@@ -160,7 +160,8 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                                         new DirectionQualifier(direction == null
                                                                ? EnumSet.noneOf(Direction.class)
                                                                : EnumSet.of(direction)),
-                                        NumberRangeSet.MAX_RANGE
+                                        NumberRangeSet.MAX_RANGE,
+                                        RoundRobin.disabled()
                                 ),
                                 new ResourceLimits(
                                         resourceLimitList.stream().distinct().toList(),

@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.item;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -28,7 +28,7 @@ public class LabelGunItem extends Item {
 
     public static void setActiveLabel(ItemStack gun, String label) {
         if (label.isEmpty()) return;
-        LabelHolder.from(gun).addReferencedLabel(label).save(gun);
+        LabelPositionHolder.from(gun).addReferencedLabel(label).save(gun);
         gun.getOrCreateTag().putString("sfm:active_label", label);
     }
 
@@ -38,7 +38,7 @@ public class LabelGunItem extends Item {
     }
 
     public static String getNextLabel(ItemStack gun, int change) {
-        var labels = LabelHolder.from(gun).get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
+        var labels = LabelPositionHolder.from(gun).get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
         if (labels.isEmpty()) return "";
         var currentLabel = getActiveLabel(gun);
 
@@ -64,7 +64,7 @@ public class LabelGunItem extends Item {
         var level = ctx.getLevel();
         if (level.isClientSide) return InteractionResult.SUCCESS;
 
-        var gunLabels = LabelHolder.from(gun);
+        var gunLabels = LabelPositionHolder.from(gun);
         var pos = ctx.getClickedPos();
 
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager) {
@@ -72,7 +72,7 @@ public class LabelGunItem extends Item {
                 Player player = ctx.getPlayer();
                 if (player != null && player.isShiftKeyDown()) {
                     // copy labels from disk to gun and also add referenced labels from scripts
-                    var diskLabels = LabelHolder.from(disk);
+                    var diskLabels = LabelPositionHolder.from(disk);
                     manager.getReferencedLabels().forEach(diskLabels::addReferencedLabel);
                     diskLabels.save(gun);
                     player.sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
@@ -107,7 +107,7 @@ public class LabelGunItem extends Item {
     ) {
         lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
         lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.addAll(LabelHolder.from(stack).asHoverText());
+        lines.addAll(LabelPositionHolder.from(stack).asHoverText());
     }
 
     @Override

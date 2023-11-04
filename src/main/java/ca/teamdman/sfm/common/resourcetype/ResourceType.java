@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.resourcetype;
 
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
@@ -63,9 +63,9 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     ) {
         Optional<ItemStack> disk = programContext.getManager().getDisk();
         if (disk.isEmpty()) return Stream.empty();
-        LabelHolder labels = LabelHolder.from(disk.get());
+        LabelPositionHolder labelPositions = LabelPositionHolder.from(disk.get());
         CableNetwork network = programContext.getNetwork();
-        return labels.getPositions(labelAccess)
+        return labelAccess.roundRobin().gather(labelAccess, labelPositions)
                 .map(network::getCapabilityProvider)
                 .filter(Optional::isPresent)
                 .map(Optional::get)

@@ -2,7 +2,7 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.ast.Program;
@@ -37,29 +37,29 @@ public record ServerboundLabelInspectionRequestPacket(
             ServerPlayer player = contextSupplier.get().getSender();
             if (player == null) return;
             SFM.LOGGER.info("Received label inspection request packet from player " + player.getStringUUID());
-            LabelHolder labelHolder;
+            LabelPositionHolder labelPositionHolder;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {
                 SFM.LOGGER.info("Player is using a manager container menu - will append additional info to payload");
-                labelHolder = LabelHolder.from(mcm.CONTAINER.getItem(0));
+                labelPositionHolder = LabelPositionHolder.from(mcm.CONTAINER.getItem(0));
             } else {
                 if (player.getMainHandItem().is(SFMItems.DISK_ITEM.get())) {
-                    labelHolder = LabelHolder.from(player.getMainHandItem());
+                    labelPositionHolder = LabelPositionHolder.from(player.getMainHandItem());
                 } else if (player.getOffhandItem().is(SFMItems.DISK_ITEM.get())) {
-                    labelHolder = LabelHolder.from(player.getOffhandItem());
+                    labelPositionHolder = LabelPositionHolder.from(player.getOffhandItem());
                 } else {
-                    labelHolder = null;
+                    labelPositionHolder = null;
                 }
             }
-            if (labelHolder == null) {
+            if (labelPositionHolder == null) {
                 SFM.LOGGER.info("Label holder wasn't found - aborting");
                 return;
             }
             SFM.LOGGER.info("building payload");
             StringBuilder payload = new StringBuilder();
             payload.append("-- Positions for label \"").append(msg.label()).append("\" --\n");
-            payload.append(labelHolder.getPositions(msg.label()).size()).append(" assignments\n");
+            payload.append(labelPositionHolder.getPositions(msg.label()).size()).append(" assignments\n");
             payload.append("-- Summary --\n");
-            labelHolder.get().getOrDefault(msg.label(), List.of()).forEach(pos -> {
+            labelPositionHolder.get().getOrDefault(msg.label(), List.of()).forEach(pos -> {
                 payload
                         .append(pos.getX())
                         .append(",")
@@ -79,7 +79,7 @@ public record ServerboundLabelInspectionRequestPacket(
             });
 
             payload.append("\n\n\n-- Detailed --\n");
-            for (BlockPos pos : labelHolder.get().getOrDefault(msg.label(), List.of())) {
+            for (BlockPos pos : labelPositionHolder.get().getOrDefault(msg.label(), List.of())) {
                 if (payload.length() > 20_000) {
                     payload.append("... (truncated)");
                     break;

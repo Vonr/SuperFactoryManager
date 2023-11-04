@@ -4,7 +4,7 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunClearPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunPrunePacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -20,14 +20,14 @@ import java.util.Comparator;
 
 public class LabelGunScreen extends Screen {
     private final InteractionHand HAND;
-    private final LabelHolder LABEL_HOLDER;
+    private final LabelPositionHolder LABEL_HOLDER;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private EditBox labelField;
     private boolean shouldRebuildWidgets = false;
 
     public LabelGunScreen(ItemStack labelGunStack, InteractionHand hand) {
         super(Constants.LocalizationKeys.LABEL_GUN_GUI_TITLE.getComponent());
-        LABEL_HOLDER = LabelHolder.from(labelGunStack);
+        LABEL_HOLDER = LabelPositionHolder.from(labelGunStack);
         HAND = hand;
     }
 

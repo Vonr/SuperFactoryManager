@@ -20,7 +20,8 @@ public record ForgetStatement(
                                         .filter(label -> !this.labels.contains(label))
                                         .collect(Collectors.toList()),
                                 input.labelAccess().directions(),
-                                input.labelAccess().slots()
+                                input.labelAccess().slots(),
+                                input.labelAccess().roundRobin()
                         ),
                         input.resourceLimits(),
                         input.each()

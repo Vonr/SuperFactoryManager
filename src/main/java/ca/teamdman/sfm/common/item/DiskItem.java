@@ -6,7 +6,7 @@ import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtil;
@@ -171,7 +171,7 @@ public class DiskItem extends Item {
                     () -> () -> false
             );
             if (!showProgram) {
-                list.addAll(LabelHolder.from(stack).asHoverText());
+                list.addAll(LabelPositionHolder.from(stack).asHoverText());
                 getErrors(stack)
                         .stream()
                         .map(MutableComponent::create)

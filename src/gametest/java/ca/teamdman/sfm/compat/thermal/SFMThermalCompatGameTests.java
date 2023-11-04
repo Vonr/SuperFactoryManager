@@ -3,7 +3,7 @@ package ca.teamdman.sfm.compat.thermal;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import mekanism.common.registries.MekanismBlocks;
@@ -79,7 +79,7 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .addAll("source", sourceBlocks.stream().map(helper::absolutePos).toList())
                 .addAll("dest", destBlocks.stream().map(helper::absolutePos).toList())
                 .add("power", powerPos)

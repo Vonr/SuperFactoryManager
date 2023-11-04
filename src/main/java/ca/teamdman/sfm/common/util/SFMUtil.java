@@ -113,7 +113,8 @@ public class SFMUtil {
                         labelAccess.labels(),
                         labelAccess.directions(),
                         inputStatement.labelAccess()
-                                .slots()
+                                .slots(),
+                        RoundRobin.disabled()
                 ), inputStatement.resourceLimits(), inputStatement.each()));
     }
 
@@ -135,7 +136,8 @@ public class SFMUtil {
                         : EnumSet.of(direction)),
                 new NumberRangeSet(
                         new NumberRange[]{new NumberRange(slot, slot)}
-                )
+                ),
+                RoundRobin.disabled()
         );
         Limit limit = new Limit(
                 new ResourceQuantity(
