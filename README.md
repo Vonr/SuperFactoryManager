@@ -26,7 +26,7 @@ There's some neat tricks used to improve the performance of the mod, here's an o
 
 ### Minimum Tick Rate
 
-Setting the minimum timer interval to 1 second makes crappy programs 20x more performant since they aren't running every
+The minimum timer interval of 1 second makes crappy programs 20x more performant since they aren't running every
 tick.
 
 ### Pattern Caching
@@ -61,28 +61,21 @@ EVERY 20 TICKS DO
 END
 ```
 
-Simple enough, right?
-
-Surprise, there are 625 barrels here, and they're all full.
+When many inventories are involved, this can quickly result in a lot of objects being created when the program runs.
 
 ![625 barrels](media/many%20barrels.png)
 
-Unfortunately, this means that the manager is doing a lot more work than if they were empty.
-
-Reusing objects instead of letting them fall to the garbage collector gives a 3000ms difference when running 61 tests.
-Note that this is a calculation of the total time it takes each individual test to run, so if that 3000ms difference is
-spread between 61 tests there's only a 49ms observable difference... which isn't that much.
-
-It helps, if only marginally I guess. Now I'm sad.
+My testing shows that object pooling provides a slight increase in performance, even if there's only tens of thousands
+of objects involved.
 
 ### Testing
 
 I created a custom barrel block used only for testing. Running all the game tests for the mod creates 2,866 barrel
 blocks.
-Many of those barrels are so full of items, that when I clear or restart the tests it causes 27,310 stacks to be dropped
+Many of those barrels are so full of items that when I clear or restart the tests it causes 27,310 stacks to be dropped
 on the ground.
 
-By creating a custom barrel that doesn't drop the inventory contents, we can reduce the friction of doing more tests!
+By creating a custom barrel that doesn't drop the inventory contents, the friction of doing more tests is reduced!
 
 ![tests](media/tests.png)
 
