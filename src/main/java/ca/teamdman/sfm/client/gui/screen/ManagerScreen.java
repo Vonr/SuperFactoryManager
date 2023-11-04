@@ -265,7 +265,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
-            SFM.LOGGER.error(t);
+            SFM.LOGGER.error("failed to save clipboard", t);
         }
     }
 
@@ -308,7 +308,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
-            SFM.LOGGER.error(t);
+            SFM.LOGGER.error("failed saving clipboard", t);
         }
     }
 
@@ -317,7 +317,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             String contents = Minecraft.getInstance().keyboardHandler.getClipboard();
             sendProgram(contents);
         } catch (Throwable t) {
-            SFM.LOGGER.error(t);
+            SFM.LOGGER.error("failed loading clipboard", t);
         }
     }
 

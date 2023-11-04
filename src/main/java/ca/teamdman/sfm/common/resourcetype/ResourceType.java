@@ -13,31 +13,11 @@ import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
-    private static final Map<String, Predicate<String>> patternCache = new Object2ObjectOpenHashMap<>();
     private final Map<ITEM, ResourceLocation> registryKeyCache = new Object2ObjectOpenHashMap<>();
 
-    static {
-        // we want to make common match-all patterns fast
-        // resource names are lowercase alphanumeric with underscores
-        String[] matchAny = new String[]{
-                ".",
-                "[a-z0-9/._-]",
-                };
-        String[] suffixes = new String[]{"+", "*"};
-        for (String s : matchAny) {
-            for (String suffix : suffixes) {
-                patternCache.put(s + suffix, s1 -> true);
-                patternCache.put("^" + s + suffix, s1 -> true);
-                patternCache.put("^" + s + suffix + "$", s1 -> true);
-                patternCache.put(s + suffix + "$", s1 -> true);
-            }
-        }
-    }
 
     public final Capability<CAP> CAPABILITY;
 
@@ -45,21 +25,6 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         this.CAPABILITY = CAPABILITY;
     }
 
-    private static Predicate<String> buildPredicate(String possiblePattern) {
-        return isRegexPattern(possiblePattern)
-               ? Pattern.compile(possiblePattern).asMatchPredicate()
-               : possiblePattern::equals;
-    }
-
-    private static boolean isRegexPattern(String pattern) {
-        String specialChars = ".?*+^$[](){}|\\";
-        for (int i = 0; i < pattern.length(); i++) {
-            if (specialChars.indexOf(pattern.charAt(i)) >= 0) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public abstract long getAmount(STACK stack);
 
@@ -83,29 +48,12 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract boolean matchesStackType(Object o);
 
-    public static <STACK, ITEM, CAP> boolean stackIdMatches(
-            ResourceIdentifier<STACK, ITEM, CAP> rid,
-            ResourceLocation stackId
-    ) {
-        Predicate<String> namespacePredicate = patternCache.get(rid.resourceNamespace);
-        if (namespacePredicate == null) {
-            namespacePredicate = buildPredicate(rid.resourceNamespace);
-            patternCache.put(rid.resourceNamespace, namespacePredicate);
-        }
-        Predicate<String> namePredicate = patternCache.get(rid.resourceName);
-        if (namePredicate == null) {
-            namePredicate = buildPredicate(rid.resourceName);
-            patternCache.put(rid.resourceName, namePredicate);
-        }
-        return namespacePredicate.test(stackId.getNamespace()) && namePredicate.test(stackId.getPath());
-    }
-
-    public boolean stackMatches(ResourceIdentifier<STACK, ITEM, CAP> rid, Object other) {
-        if (!matchesStackType(other)) return false;
-        @SuppressWarnings("unchecked") STACK stack = (STACK) other;
-        if (isEmpty(stack)) return false;
-        var stackId = getRegistryKey(stack);
-        return stackIdMatches(rid, stackId);
+    public boolean matchesStack(ResourceIdentifier<STACK, ITEM, CAP> resourceId, Object stack) {
+        if (!matchesStackType(stack)) return false;
+        @SuppressWarnings("unchecked") STACK stack_ = (STACK) stack;
+        if (isEmpty(stack_)) return false;
+        var stackId = getRegistryKey(stack_);
+        return resourceId.matchesStack(stackId);
     }
 
     public abstract boolean matchesCapabilityType(Object o);

@@ -75,8 +75,16 @@ public record Program(
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
         } catch (Throwable t) {
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
-            SFM.LOGGER.error(t);
-            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage(), null, new Object[]{}));
+            SFM.LOGGER.error("Encountered unhandled error while compiling program", t);
+            if (!FMLEnvironment.production) {
+                var message = t.getMessage();
+
+                if (message != null) {
+                    errors.add(new TranslatableContents(t.getClass().getSimpleName() + ": " + message, new Object[]{}));
+                } else {
+                    errors.add(new TranslatableContents(t.getClass().getSimpleName(), new Object[]{}));
+                }
+            }
         }
 
 

@@ -397,7 +397,7 @@ public class Constants {
                     try {
                         rtn.add((LocalizationEntry) field.get(null));
                     } catch (IllegalAccessException e) {
-                        SFM.LOGGER.error(e);
+                        SFM.LOGGER.error("Failed reading entry field", e);
                     }
                 }
             }
