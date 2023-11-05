@@ -144,7 +144,7 @@ public class CableNetworkManager {
 
     public static List<BlockPos> getBadCableCachePositions(Level level) {
         return getNetworksForLevel(level)
-                .flatMap(net -> net.getCables().stream())
+                .flatMap(CableNetwork::getCables)
                 .filter(pos -> !(level.getBlockState(pos).getBlock() instanceof ICable))
                 .collect(Collectors.toList());
     }
