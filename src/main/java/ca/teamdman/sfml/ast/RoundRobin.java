@@ -32,6 +32,9 @@ public class RoundRobin implements ASTNode {
                         .flatMap(Collection::stream)
                         .distinct()
                         .toList();
+                if (positions.isEmpty()) {
+                    yield Stream.empty();
+                }
                 yield Stream.of(positions.get(this.next(positions.size())));
             }
             default -> labelAccess.labels().stream()

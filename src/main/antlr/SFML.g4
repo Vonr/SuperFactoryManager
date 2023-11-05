@@ -31,7 +31,7 @@ statement       : inputstatement    #InputStatementStatement
                 ;
 
 // IO STATEMENT
-forgetstatement : FORGET label (COMMA label)* COMMA?;
+forgetstatement : FORGET label? (COMMA label)* COMMA?;
 inputstatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess
                 | FROM EACH? labelaccess INPUT inputmatchers? resourceexclusion?
                 ;
