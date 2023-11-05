@@ -45,6 +45,6 @@ public class CableBlock extends Block implements ICable {
     @SuppressWarnings("deprecation")
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        CableNetworkManager.unregister(level, pos);
+        CableNetworkManager.removeCable(level, pos);
     }
 }

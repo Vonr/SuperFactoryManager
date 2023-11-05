@@ -116,7 +116,7 @@ public record Program(
             // labels in world but not connected via cables
             CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> labels.forEach((label, pos) -> {
                 var inNetwork = network.isInNetwork(pos);
-                var adjacent = network.hasCableNeighbour(pos);
+                var adjacent = network.isAdjacentToCable(pos);
                 if (!inNetwork) {
                     if (adjacent) {
                         warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(

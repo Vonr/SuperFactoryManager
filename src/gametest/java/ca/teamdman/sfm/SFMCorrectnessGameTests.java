@@ -539,11 +539,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         for (int i = 0; i < 10; i++) {
             assertTrue(CableNetworkManager
                                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
-                               .get() == net, "Networks did not merge");
+                               .get() == net, "Line of ten should be on same network");
         }
 
         // the network should only contain those cables
-        assertTrue(net.getCables().size() == 10, "Network size did not match");
+        assertTrue(net.getCableCount() == 10, "Network size should be ten");
 
         // break a block in the middle of the cable
         helper.setBlock(new BlockPos(5, 2, 0), Blocks.AIR);
@@ -555,15 +555,17 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         for (int i = 0; i < 5; i++) {
             assertTrue(CableNetworkManager
                                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
-                               .get() == net, "Networks did not merge");
+                               .get() == net, "Row of five should be same network after splitting");
         }
+        var old = net;
         net = CableNetworkManager
                 .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(6, 2, 0)))
                 .get();
+        assertTrue(old != net, "Networks should be distinct after splitting");
         for (int i = 6; i < 10; i++) {
             assertTrue(CableNetworkManager
                                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
-                               .get() == net, "Networks did not merge");
+                               .get() == net, "Remaining row should be same network after splitting");
         }
 
         // repair the cable
@@ -575,7 +577,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         for (int i = 0; i < 10; i++) {
             assertTrue(CableNetworkManager
                                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
-                               .get() == net, "Networks did not merge");
+                               .get() == net, "Networks should merge to same network after repairing");
         }
 
         // add cables in the corner
@@ -584,16 +586,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(CableNetworkManager
                            .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                            .get()
-                           .getCables()
-                           .size() == 12, "Network size did not match");
+                           .getCableCount() == 12, "Network should grow to twelve after adding two cables");
 
         // punch out the corner, the network should shrink by 1
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.AIR);
         assertTrue(CableNetworkManager
                            .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                            .get()
-                           .getCables()
-                           .size() == 11, "Network size did not match");
+                           .getCableCount() == 11, "Network should shrink to eleven after removing a cable");
 
 
         // create a new network in a plus shape
@@ -612,7 +612,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
                                )
                                .get()
-                       == net, "Networks did not merge");
+                       == net, "Plus cables should all be on the same network");
         }
 
         // break the block in the middle
@@ -632,7 +632,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
         // make sure all the networks are different
         for (CableNetwork network : networks) {
-            assertTrue(networks.stream().filter(n -> n == network).count() == 1, "Networks did not split");
+            assertTrue(
+                    networks.stream().filter(n -> n == network).count() == 1,
+                    "Broken plus networks should be distinct"
+            );
         }
 
         // add the block back
@@ -648,10 +651,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
                                )
                                .get()
-                       == net, "Networks did not merge");
+                       == net, "Plus networks did not merge after repairing");
         }
 
-        // lets also test having cables in more than just a straight line
+        // let's also test having cables in more than just a straight line
         // we want corners with multiple cables adjacent
 
         for (int i = 0; i < 5; i++) {
@@ -663,12 +666,12 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(CableNetworkManager
                            .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 7)))
                            .get()
-                           .getCables()
-                           .size() == 25, "Network size did not match");
+                           .getCableCount() == 25, "Network cable count should be 25");
         // cut a line through it
         for (int i = 0; i < 5; i++) {
             helper.setBlock(new BlockPos(7 + i, 2, 9), Blocks.AIR);
         }
+
         // make sure the network disappeared where it was cut
         assertTrue(CableNetworkManager
                            .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 9)))
@@ -677,22 +680,40 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(CableNetworkManager
                            .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 8)))
                            .get()
-                           .getCables()
-                           .size() == 10, "Network size did not match");
+                           .getCableCount() == 10, "New network should be size ten");
         // make sure new network of 10 is formed
         assertTrue(CableNetworkManager
                            .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 11)))
                            .get()
-                           .getCables()
-                           .size() == 10, "Network size did not match");
+                           .getCableCount() == 10, "Other new network should be size ten");
         // make sure the new networks are distinct
         assertTrue(CableNetworkManager
                            .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 8)))
                            .get() != CableNetworkManager
                            .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 11)))
-                           .get(), "Networks did not split");
+                .get(), "New networks should be distinct");
 
 
+        helper.succeed();
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void CableNetworkRebuilding(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        helper.setBlock(new BlockPos(2, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        var network = CableNetworkManager.getOrRegisterNetwork(
+                helper.getLevel(),
+                helper.absolutePos(new BlockPos(0, 2, 0))
+        );
+        assertTrue(network.isPresent(), "Network should be built");
+        CableNetworkManager.unregisterNetworkForTestingPurposes(network.get());
+        network = CableNetworkManager.getOrRegisterNetwork(
+                helper.getLevel(),
+                helper.absolutePos(new BlockPos(0, 2, 0))
+        );
+        assertTrue(network.isPresent(), "Network should be rebuilt after clearing");
+        assertTrue(network.get().getCableCount() == 3, "Network rebuilding should discover 3 cables");
         helper.succeed();
     }
 

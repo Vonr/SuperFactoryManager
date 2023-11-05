@@ -130,7 +130,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
                 Containers.dropContents(level, pos, container);
                 level.updateNeighbourForOutputSignal(pos, this);
             }
-            CableNetworkManager.unregister(level, pos);
+            CableNetworkManager.removeCable(level, pos);
             super.onRemove(state, level, pos, newState, isMoving);
         }
     }
