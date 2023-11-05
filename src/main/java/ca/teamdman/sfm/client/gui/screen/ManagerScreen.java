@@ -414,7 +414,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             int plotPosX = plotX + spaceBetweenPoints * i;
 
             // Color the lines based on their tick times (green to red)
-            var c = getMillisecondColour(y);
+            var c = getMillisecondColour(y / 1_000_000f);
             //noinspection DataFlowIssue
             float red = ((c.getColor() >> 16) & 0xFF) / 255f;
             float green = ((c.getColor() >> 8) & 0xFF) / 255f;
