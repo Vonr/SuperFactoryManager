@@ -176,7 +176,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         } else {
             rtn = resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
         }
-        return "\"" + rtn + "\"";
+        return rtn;
     }
 
     @Override

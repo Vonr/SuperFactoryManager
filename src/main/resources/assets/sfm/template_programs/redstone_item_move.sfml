@@ -2,8 +2,7 @@ name "Redstone item movement"
 
 EVERY 20 TICKS DO
     -- redstone is a keyword
-    -- when we want to move the redstone item,
-    -- we have to put it in quotes
-    input "redstone" from a
-    output to b
+    -- I fixed it so that it can be used without quotes now :D
+    input redstone from a
+    output minecraft:redstone to b
 END

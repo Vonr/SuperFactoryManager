@@ -35,7 +35,7 @@ public class CableNetwork {
         if (world == null) return false;
         return world
                 .getBlockState(cablePos)
-                .getBlock() instanceof ICable;
+                .getBlock() instanceof ICableBlock;
     }
 
     public void rebuildNetwork(BlockPos start) {
@@ -118,6 +118,17 @@ public class CableNetwork {
                 )); // track it
     }
 
+    @Override
+    public String toString() {
+        return "CableNetwork{level="
+               + getLevel().dimension().location()
+               + ", #cables="
+               + getCableCount()
+               + ", #capabilityProviders="
+               + CAPABILITY_PROVIDER_POSITIONS.size()
+               + "}";
+    }
+
     /**
      * Cables should only join the network if they would be touching a cable already in the network
      *
@@ -164,8 +175,12 @@ public class CableNetwork {
         return CABLE_POSITIONS.isEmpty();
     }
 
-    public Stream<BlockPos> getCables() {
+    public Stream<BlockPos> getCablePositions() {
         return CABLE_POSITIONS.longStream().mapToObj(BlockPos::of);
+    }
+
+    public Stream<BlockPos> getCapabilityProviderPositions() {
+        return CAPABILITY_PROVIDER_POSITIONS.keySet().longStream().mapToObj(BlockPos::of);
     }
 
     /**

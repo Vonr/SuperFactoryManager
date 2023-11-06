@@ -1,0 +1,11 @@
+NAME "*new* Round Robin"
+
+EVERY 20 TICKS DO
+    INPUT FROM source
+    OUTPUT 128 dirt TO dest ROUND ROBIN BY BLOCK
+
+    FORGET
+
+    INPUT FROM "storage a", "storage b" ROUND ROBIN BY LABEL
+    OUTPUT 8 bone_meal TO EACH dispenser
+END

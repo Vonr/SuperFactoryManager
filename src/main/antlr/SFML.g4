@@ -113,7 +113,7 @@ label           : IDENTIFIER #RawLabel
                 | string    #StringLabel
                 ;
 
-resourceid      : IDENTIFIER (COLON IDENTIFIER? (COLON IDENTIFIER? (COLON IDENTIFIER?)?)?)? # Resource
+resourceid      : (IDENTIFIER|REDSTONE) (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)?)?)?)? # Resource
                 | string                             # StringResource
                 ;
 

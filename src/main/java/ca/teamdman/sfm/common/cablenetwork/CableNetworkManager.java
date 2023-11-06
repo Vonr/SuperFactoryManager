@@ -1,9 +1,9 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
@@ -38,24 +38,31 @@ public class CableNetworkManager {
      * Remove a block from any networks it is in. Then, prune any empty networks.
      */
     public static void removeCable(Level level, BlockPos cablePos) {
-        getNetwork(level, cablePos).ifPresent(network -> {
+        getNetworkFromCablePosition(level, cablePos).ifPresent(network -> {
             removeNetwork(network);
             var newNetworks = network.withoutCable(cablePos);
             newNetworks.forEach(CableNetworkManager::addNetwork);
         });
     }
 
-    public static Optional<CableNetwork> getOrRegisterNetwork(BlockEntity tile) {
-        return getOrRegisterNetwork(tile.getLevel(), tile.getBlockPos());
+    public static Optional<CableNetwork> getOrRegisterNetworkFromManagerPosition(ManagerBlockEntity tile) {
+        return getOrRegisterNetworkFromCablePosition(tile.getLevel(), tile.getBlockPos());
     }
 
-    private static Stream<CableNetwork> getNetworksForLevel(Level level) {
+    public static Optional<CableNetwork> getNetworkFromPosition(Level level, BlockPos pos) {
+        return getNetworksForLevel(level)
+                .filter(net -> net.CABLE_POSITIONS.contains(pos.asLong())
+                               || net.CAPABILITY_PROVIDER_POSITIONS.containsKey(pos.asLong()))
+                .findFirst();
+    }
+
+    public static Stream<CableNetwork> getNetworksForLevel(Level level) {
         return NETWORKS.getOrDefault(level, Collections.emptyList())
                 .stream()
                 .filter(net -> net.getLevel().isClientSide() == level.isClientSide());
     }
 
-    private static Optional<CableNetwork> getNetwork(Level level, BlockPos pos) {
+    private static Optional<CableNetwork> getNetworkFromCablePosition(Level level, BlockPos pos) {
         return getNetworksForLevel(level)
                 .filter(net -> net.containsCablePosition(pos))
                 .findFirst();
@@ -104,7 +111,7 @@ public class CableNetworkManager {
      * <p>
      * Networks should only exist on the server side.
      */
-    public static Optional<CableNetwork> getOrRegisterNetwork(@Nullable Level level, BlockPos pos) {
+    public static Optional<CableNetwork> getOrRegisterNetworkFromCablePosition(@Nullable Level level, BlockPos pos) {
         if (level == null) return Optional.empty();
         if (level.isClientSide()) return Optional.empty();
 
@@ -112,7 +119,7 @@ public class CableNetworkManager {
         if (!CableNetwork.isCable(level, pos)) return Optional.empty();
 
         // discover existing network for this position
-        Optional<CableNetwork> existing = getNetwork(level, pos);
+        Optional<CableNetwork> existing = getNetworkFromCablePosition(level, pos);
         if (existing.isPresent()) return existing;
 
         // find potential networks
@@ -142,10 +149,11 @@ public class CableNetworkManager {
         return result;
     }
 
+
     public static List<BlockPos> getBadCableCachePositions(Level level) {
         return getNetworksForLevel(level)
-                .flatMap(CableNetwork::getCables)
-                .filter(pos -> !(level.getBlockState(pos).getBlock() instanceof ICable))
+                .flatMap(CableNetwork::getCablePositions)
+                .filter(pos -> !(level.getBlockState(pos).getBlock() instanceof ICableBlock))
                 .collect(Collectors.toList());
     }
 

@@ -153,6 +153,13 @@ public class Constants {
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".chat.pushed",
                 () -> "Pushed labels to the manager."
         );
+
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry NETWORK_TOOL_ITEM = new LocalizationEntry(
+                () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId(),
+                () -> "Network Tool"
+        );
+
         public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_1 = new LocalizationEntry(
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.1",
                 () -> "Right click a Factory Manager to push labels."

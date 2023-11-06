@@ -383,7 +383,7 @@ public class SFMLTests {
                 END
                 """;
         var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+        assertTrue(errors.isEmpty()); // redstone is now a valid resource id
     }
 
     @Test
@@ -395,7 +395,7 @@ public class SFMLTests {
                 END
                 """;
         var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+        assertTrue(errors.isEmpty()); // redstone is now a valid resource id
     }
 
     @Test
@@ -407,7 +407,7 @@ public class SFMLTests {
                 END
                 """;
         var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+        assertTrue(errors.isEmpty()); // redstone is now a valid resource id
     }
 
 

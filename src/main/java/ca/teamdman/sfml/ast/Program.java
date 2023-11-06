@@ -114,7 +114,9 @@ public record Program(
 
         if (manager != null) {
             // labels in world but not connected via cables
-            CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> labels.forEach((label, pos) -> {
+            CableNetworkManager
+                    .getOrRegisterNetworkFromManagerPosition(manager)
+                    .ifPresent(network -> labels.forEach((label, pos) -> {
                 var inNetwork = network.isInNetwork(pos);
                 var adjacent = network.isAdjacentToCable(pos);
                 if (!inNetwork) {
@@ -176,7 +178,7 @@ public record Program(
 
         // remove labels not connected via cables
         CableNetworkManager
-                .getOrRegisterNetwork(manager)
+                .getOrRegisterNetworkFromManagerPosition(manager)
                 .ifPresent(network -> labels.removeIf((label, pos) -> !network.isInNetwork(pos)));
         labels.save(disk);
 

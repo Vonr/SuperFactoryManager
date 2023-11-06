@@ -123,6 +123,7 @@ minecraft {
         }
 
         client_teamy {
+            //noinspection GroovyAssignabilityCheck
             parent runs.client
             args '--username', 'TeamDman', '--uuid', '83f1df8b-0ba3-4de0-8a26-e51a1fd74318'
         }
@@ -269,6 +270,7 @@ dependencies {
 
     gametestImplementation fg.deobf("appeng:appliedenergistics2-forge:12.9.8")
     runtimeOnly fg.deobf("appeng:appliedenergistics2-forge:12.9.8")
+    compileOnly fg.deobf("appeng:appliedenergistics2-forge:12.9.8:api")
 
 
     // don't use cursemaven for CoFH since the maven gives better IDE inspections

@@ -526,19 +526,22 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
     @GameTest(template = "25x4x25") // start with empty platform
-    public static void CableNetworkFormation(GameTestHelper helper) {
+    public static void cable_network_formation(GameTestHelper helper) {
         // create a row of cables
         for (int i = 0; i < 10; i++) {
             helper.setBlock(new BlockPos(i, 2, 0), SFMBlocks.CABLE_BLOCK.get());
         }
 
         var net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                 .get();
         // those cables should all be on the same network
         for (int i = 0; i < 10; i++) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
+                               .getOrRegisterNetworkFromCablePosition(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(i, 2, 0))
+                               )
                                .get() == net, "Line of ten should be on same network");
         }
 
@@ -549,22 +552,28 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(new BlockPos(5, 2, 0), Blocks.AIR);
         // the network should split
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                 .get();
         // now we have a network of 5 cables and a network of 4 cables
         for (int i = 0; i < 5; i++) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
+                               .getOrRegisterNetworkFromCablePosition(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(i, 2, 0))
+                               )
                                .get() == net, "Row of five should be same network after splitting");
         }
         var old = net;
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(6, 2, 0)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(6, 2, 0)))
                 .get();
         assertTrue(old != net, "Networks should be distinct after splitting");
         for (int i = 6; i < 10; i++) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
+                               .getOrRegisterNetworkFromCablePosition(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(i, 2, 0))
+                               )
                                .get() == net, "Remaining row should be same network after splitting");
         }
 
@@ -572,11 +581,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(new BlockPos(5, 2, 0), SFMBlocks.CABLE_BLOCK.get());
         // the network should merge
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                 .get();
         for (int i = 0; i < 10; i++) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
+                               .getOrRegisterNetworkFromCablePosition(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(i, 2, 0))
+                               )
                                .get() == net, "Networks should merge to same network after repairing");
         }
 
@@ -584,14 +596,20 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(new BlockPos(0, 2, 1), SFMBlocks.CABLE_BLOCK.get());
         helper.setBlock(new BlockPos(1, 2, 1), SFMBlocks.CABLE_BLOCK.get());
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(0, 2, 0))
+                           )
                            .get()
                            .getCableCount() == 12, "Network should grow to twelve after adding two cables");
 
         // punch out the corner, the network should shrink by 1
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.AIR);
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(0, 2, 0))
+                           )
                            .get()
                            .getCableCount() == 11, "Network should shrink to eleven after removing a cable");
 
@@ -603,11 +621,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
         // should all be on the same network
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
                 .get();
         for (Direction value : Direction.values()) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(
+                               .getOrRegisterNetworkFromCablePosition(
                                        helper.getLevel(),
                                        helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
                                )
@@ -619,12 +637,15 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(new BlockPos(15, 2, 15), Blocks.AIR);
         // the network should split
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(15, 2, 15))
+                           )
                            .isEmpty(), "Network should not be present where the cable was removed from");
         var networks = new ArrayList<CableNetwork>();
         for (Direction value : Direction.values()) {
             networks.add(CableNetworkManager
-                                 .getOrRegisterNetwork(
+                                 .getOrRegisterNetworkFromCablePosition(
                                          helper.getLevel(),
                                          helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
                                  )
@@ -642,11 +663,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(new BlockPos(15, 2, 15), SFMBlocks.CABLE_BLOCK.get());
         // the network should merge
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
                 .get();
         for (Direction value : Direction.values()) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(
+                               .getOrRegisterNetworkFromCablePosition(
                                        helper.getLevel(),
                                        helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
                                )
@@ -664,7 +685,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
         // make sure it's all in a single network
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 7)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 7))
+                           )
                            .get()
                            .getCableCount() == 25, "Network cable count should be 25");
         // cut a line through it
@@ -674,41 +698,56 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // make sure the network disappeared where it was cut
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 9)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 9))
+                           )
                            .isEmpty(), "Network should not be present where the cable was removed from");
         // make sure new network of 10 is formed
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 8)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 8))
+                           )
                            .get()
                            .getCableCount() == 10, "New network should be size ten");
         // make sure new network of 10 is formed
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 11)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 11))
+                           )
                            .get()
                            .getCableCount() == 10, "Other new network should be size ten");
         // make sure the new networks are distinct
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 8)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 8))
+                           )
                            .get() != CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 11)))
-                .get(), "New networks should be distinct");
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 11))
+                           )
+                           .get(), "New networks should be distinct");
 
 
         helper.succeed();
     }
 
     @GameTest(template = "3x2x1")
-    public static void CableNetworkRebuilding(GameTestHelper helper) {
+    public static void cable_network_rebuilding(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.CABLE_BLOCK.get());
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.CABLE_BLOCK.get());
         helper.setBlock(new BlockPos(2, 2, 0), SFMBlocks.CABLE_BLOCK.get());
-        var network = CableNetworkManager.getOrRegisterNetwork(
+        var network = CableNetworkManager.getOrRegisterNetworkFromCablePosition(
                 helper.getLevel(),
                 helper.absolutePos(new BlockPos(0, 2, 0))
         );
         assertTrue(network.isPresent(), "Network should be built");
         CableNetworkManager.unregisterNetworkForTestingPurposes(network.get());
-        network = CableNetworkManager.getOrRegisterNetwork(
+        network = CableNetworkManager.getOrRegisterNetworkFromCablePosition(
                 helper.getLevel(),
                 helper.absolutePos(new BlockPos(0, 2, 0))
         );
@@ -2360,7 +2399,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
 
     @GameTest(template = "3x2x1")
-    public static void forget(GameTestHelper helper) {
+    public static void forget_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
         helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
@@ -2391,6 +2430,50 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "Dirt should not depart");
+            assertTrue(rightChest.getStackInSlot(0).isEmpty(), "Dirt should not arrive");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void forget_2(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a,b,c
+                                           IF a has gt 0 dirt THEN
+                                               FORGET
+                                           END
+                                           OUTPUT TO dest -- nothing happens :D
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(leftPos))
+                .add("c", helper.absolutePos(leftPos))
+                .add("dest", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
@@ -2688,6 +2771,37 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void round_robin_no_blocks_crash_regression(GameTestHelper helper) {
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        BlockPos managerPos = new BlockPos(1, 2, 0);
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM d,e ROUND ROBIN BY BLOCK
+                                           OUTPUT TO f,g,h ROUND ROBIN BY LABEL
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .save(manager.getDisk().get());
+
+        // it should not crash
+        succeedIfManagerDidThingWithoutLagging(helper, manager, helper::succeed);
     }
 
     @GameTest(template = "3x4x3")
