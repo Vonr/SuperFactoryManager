@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.util;
 
-import ca.teamdman.sfm.common.cablenetwork.CapabilityProviderMapper;
+import ca.teamdman.sfm.common.capabilityprovidermapper.CapabilityProviderMapper;
 import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.registry.SFMCapabilityProviderMappers;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
