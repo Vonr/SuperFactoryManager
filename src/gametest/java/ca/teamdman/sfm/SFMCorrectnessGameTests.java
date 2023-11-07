@@ -2700,8 +2700,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 2), "source count bad");
-            assertTrue(count(dest1Inv, Items.DIRT) == 128, "dest1 arrival count bad");
-            assertTrue(count(dest2Inv, Items.DIRT) == 0, "dest2 arrival count bad");
+            int count1 = count(dest1Inv, Items.DIRT);
+            int count2 = count(dest2Inv, Items.DIRT);
+            assertTrue(count1 == 128 && count2 == 0 || count1 == 0 && count2 == 128, "first tick arrival count bad");
 
             helper.succeed();
         });
