@@ -20,6 +20,7 @@ NAME "Changelog for 4.14.0"
 -- test suite improvements
 -- fix inv overlay (Ctrl+i) failing with big payloads
 -- double inspection payload max size before truncation to 20480
+-- add ae2 inscriber example program
 
 ---- 4.13.0 ----
 -- add ctrl+slash hotkey to toggle comments
