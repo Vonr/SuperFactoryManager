@@ -1,11 +1,10 @@
 package ca.teamdman.sfm.common.net;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.InputStatement;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.network.FriendlyByteBuf;
@@ -74,7 +73,7 @@ public record ServerboundInputInspectionRequestPacket(
                                 int preLen = payload.length();
                                 inputStatement.gatherSlots(
                                         context,
-                                        slot -> SFMUtil
+                                        slot -> SFMUtils
                                                 .getInputStatementForSlot(
                                                         slot,
                                                         inputStatement.labelAccess()
@@ -86,26 +85,15 @@ public record ServerboundInputInspectionRequestPacket(
                                 if (payload.length() == preLen) {
                                     payload.append("none");
                                 }
-                                if (payload.length()
-                                    > ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH) {
-                                    SFM.LOGGER.info("Payload too big! (len={})", payload.length());
-                                    String truncationMsg = "\n...truncated";
-                                    SFMPackets.INSPECTION_CHANNEL.send(
-                                            PacketDistributor.PLAYER.with(() -> player),
-                                            new ClientboundInputInspectionResultsPacket(
-                                                    payload.substring(
-                                                            0,
-                                                            ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH
-                                                            - truncationMsg.length()
-                                                    ) + truncationMsg)
-                                    );
-                                } else {
-                                    SFMPackets.INSPECTION_CHANNEL.send(
-                                            PacketDistributor.PLAYER.with(() -> player),
-                                            new ClientboundInputInspectionResultsPacket(
-                                                    payload.toString())
-                                    );
-                                }
+
+                                SFMPackets.INSPECTION_CHANNEL.send(
+                                        PacketDistributor.PLAYER.with(() -> player),
+                                        new ClientboundInputInspectionResultsPacket(
+                                                SFMUtils.truncate(
+                                                        payload.toString(),
+                                                        ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH
+                                                ))
+                                );
                             }),
                     failure -> {
                     }

@@ -160,6 +160,23 @@ public class Constants {
                 () -> "Network Tool"
         );
 
+        public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_1 = new LocalizationEntry(
+                () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.1",
+                () -> "Shows cables through walls when held."
+        );
+        public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_2 = new LocalizationEntry(
+                () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.2",
+                () -> "Right click a block face to view diagnostic info."
+        );
+        public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_3 = new LocalizationEntry(
+                () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.3",
+                () -> ChatFormatting.GRAY
+                      + "You might not need this, don't forget you can press "
+                      + ChatFormatting.AQUA
+                      + "%s"
+                      + ChatFormatting.GRAY
+                      + " in an inventory to toggle the inspector."
+        );
         public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_1 = new LocalizationEntry(
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.1",
                 () -> "Right click a Factory Manager to push labels."
@@ -167,6 +184,10 @@ public class Constants {
         public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_2 = new LocalizationEntry(
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.2",
                 () -> "Right click a Factory Manager while sneaking to pull labels."
+        );
+        public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_3 = new LocalizationEntry(
+                () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.3",
+                () -> "Hold control to apply labels to blocks of the same type adjacent to cables."
         );
         public static final LocalizationEntry LABEL_GUN_ITEM_NAME_WITH_LABEL = new LocalizationEntry(
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".with_label",

@@ -6,7 +6,7 @@ import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
-import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -58,11 +58,16 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                 (menu, blockEntity) -> {
                     assert blockEntity.getLevel() != null;
                     String payload = buildInspectionResults(blockEntity.getLevel(), blockEntity.getBlockPos());
+                    var player = contextSupplier.get().getSender();
+
                     SFMPackets.INSPECTION_CHANNEL.send(
-                            PacketDistributor.PLAYER.with(contextSupplier.get()::getSender),
+                            PacketDistributor.PLAYER.with(() -> player),
                             new ClientboundContainerExportsInspectionResultsPacket(
                                     msg.windowId,
-                                    payload
+                                    SFMUtils.truncate(
+                                            payload,
+                                            ClientboundContainerExportsInspectionResultsPacket.MAX_RESULTS_LENGTH
+                                    )
                             )
                     );
                 }
@@ -104,7 +109,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         return sb.toString();
     }
 
-    private static <STACK, ITEM, CAP> String buildInspectionResults(
+    public static <STACK, ITEM, CAP> String buildInspectionResults(
             ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey,
             ResourceType<STACK, ITEM, CAP> resourceType,
             LevelAccessor level,
@@ -113,7 +118,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
             Direction direction
     ) {
         StringBuilder sb = new StringBuilder();
-        SFMUtil
+        SFMUtils
                 .discoverCapabilityProvider(level, pos)
                 .ifPresent(prov -> prov.getCapability(resourceType.CAPABILITY, direction).ifPresent(cap -> {
                     int slots = resourceType.getSlots(cap);
@@ -126,34 +131,34 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                     }
 
                     if (!slotContents.isEmpty()) {
-                slotContents.forEach((slot, stack) -> {
-                    InputStatement inputStatement = SFMUtil.getInputStatementForStack(
-                            resourceTypeResourceKey,
-                            resourceType,
-                            stack,
-                            "target",
-                            slot,
-                            false,
-                            direction
-                    );
-                    sb.append(inputStatement.toStringPretty()).append("\n");
-                });
+                        slotContents.forEach((slot, stack) -> {
+                            InputStatement inputStatement = SFMUtils.getInputStatementForStack(
+                                    resourceTypeResourceKey,
+                                    resourceType,
+                                    stack,
+                                    "target",
+                                    slot,
+                                    false,
+                                    direction
+                            );
+                            sb.append(inputStatement.toStringPretty()).append("\n");
+                        });
 
                         List<ResourceLimit<STACK, ITEM, CAP>> resourceLimitList = new ArrayList<>();
-                slotContents.forEach((slot, stack) -> {
-                    ResourceLocation stackId = resourceType.getRegistryKey(stack);
-                    ResourceIdentifier<STACK, ITEM, CAP> resourceIdentifier = new ResourceIdentifier<>(
-                            resourceTypeResourceKey.location().getNamespace(),
-                            resourceTypeResourceKey.location().getPath(),
-                            stackId.getNamespace(),
-                            stackId.getPath()
-                    );
-                    ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
-                            resourceIdentifier,
-                            Limit.MAX_QUANTITY_NO_RETENTION
-                    );
-                    resourceLimitList.add(resourceLimit);
-                });
+                        slotContents.forEach((slot, stack) -> {
+                            ResourceLocation stackId = resourceType.getRegistryKey(stack);
+                            ResourceIdentifier<STACK, ITEM, CAP> resourceIdentifier = new ResourceIdentifier<>(
+                                    resourceTypeResourceKey.location().getNamespace(),
+                                    resourceTypeResourceKey.location().getPath(),
+                                    stackId.getNamespace(),
+                                    stackId.getPath()
+                            );
+                            ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
+                                    resourceIdentifier,
+                                    Limit.MAX_QUANTITY_NO_RETENTION
+                            );
+                            resourceLimitList.add(resourceLimit);
+                        });
                         InputStatement inputStatement = new InputStatement(
                                 new LabelAccess(
                                         List.of(new Label("target")),

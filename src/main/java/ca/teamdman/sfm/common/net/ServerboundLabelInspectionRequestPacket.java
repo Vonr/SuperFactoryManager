@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
-import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public record ServerboundLabelInspectionRequestPacket(
@@ -59,7 +59,7 @@ public record ServerboundLabelInspectionRequestPacket(
             payload.append("-- Positions for label \"").append(msg.label()).append("\" --\n");
             payload.append(labelPositionHolder.getPositions(msg.label()).size()).append(" assignments\n");
             payload.append("-- Summary --\n");
-            labelPositionHolder.get().getOrDefault(msg.label(), List.of()).forEach(pos -> {
+            labelPositionHolder.get().getOrDefault(msg.label(), Set.of()).forEach(pos -> {
                 payload
                         .append(pos.getX())
                         .append(",")
@@ -79,7 +79,7 @@ public record ServerboundLabelInspectionRequestPacket(
             });
 
             payload.append("\n\n\n-- Detailed --\n");
-            for (BlockPos pos : labelPositionHolder.get().getOrDefault(msg.label(), List.of())) {
+            for (BlockPos pos : labelPositionHolder.get().getOrDefault(msg.label(), Set.of())) {
                 if (payload.length() > 20_000) {
                     payload.append("... (truncated)");
                     break;

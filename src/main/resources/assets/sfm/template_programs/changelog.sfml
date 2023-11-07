@@ -18,6 +18,8 @@ NAME "Changelog for 4.14.0"
 ---- shifted pattern compilation to build time instead of first inference
 -- improved GitHub README
 -- test suite improvements
+-- fix inv overlay (Ctrl+i) failing with big payloads
+-- double inspection payload max size before truncation to 20480
 
 ---- 4.13.0 ----
 -- add ctrl+slash hotkey to toggle comments

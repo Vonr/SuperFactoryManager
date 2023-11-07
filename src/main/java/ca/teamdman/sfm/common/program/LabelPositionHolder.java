@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("UnusedReturnValue")
 public class LabelPositionHolder {
-    private final Map<String, List<BlockPos>> LABELS = new HashMap<>();
+    private final Map<String, Set<BlockPos>> LABELS = new HashMap<>();
 
     private LabelPositionHolder() {
 
@@ -58,7 +58,7 @@ public class LabelPositionHolder {
     }
 
     public boolean contains(String label, BlockPos pos) {
-        return LABELS.getOrDefault(label, Collections.emptyList()).contains(pos);
+        return LABELS.getOrDefault(label, Collections.emptySet()).contains(pos);
     }
 
     public LabelPositionHolder toggle(String label, BlockPos pos) {
@@ -70,15 +70,15 @@ public class LabelPositionHolder {
         return this;
     }
 
-    public Map<String, List<BlockPos>> get() {
+    public Map<String, Set<BlockPos>> get() {
         return LABELS;
     }
 
-    public List<BlockPos> getPositions(String label) {
-        return LABELS.computeIfAbsent(label, s -> new ArrayList<>());
+    public Set<BlockPos> getPositions(String label) {
+        return LABELS.computeIfAbsent(label, s -> new HashSet<>());
     }
 
-    public LabelPositionHolder addAll(String label, List<BlockPos> positions) {
+    public LabelPositionHolder addAll(String label, Collection<BlockPos> positions) {
         getPositions(label).addAll(positions);
         return this;
     }

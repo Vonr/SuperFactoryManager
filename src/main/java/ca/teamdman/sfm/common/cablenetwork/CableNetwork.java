@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
-import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -49,7 +49,7 @@ public class CableNetwork {
         CAPABILITY_PROVIDER_POSITIONS.clear();
 
         // discover existing cables
-        var cables = SFMUtil.getRecursiveStream((current, next, results) -> {
+        var cables = SFMUtils.getRecursiveStream((current, next, results) -> {
             results.accept(current);
             for (Direction d : Direction.values()) {
                 BlockPos offset = current.offset(d.getNormal());
@@ -72,7 +72,7 @@ public class CableNetwork {
     }
 
     public Stream<BlockPos> discoverCables(BlockPos startPos) {
-        return SFMUtil.getRecursiveStream((current, next, results) -> {
+        return SFMUtils.getRecursiveStream((current, next, results) -> {
             results.accept(current);
             for (Direction d : Direction.values()) {
                 BlockPos offset = current.offset(d.getNormal());
@@ -107,7 +107,7 @@ public class CableNetwork {
                 .distinct()
                 .peek(pos -> CAPABILITY_PROVIDER_POSITIONS.remove(pos.asLong())) // Bust the cache
                 .filter(this::isAdjacentToCable) // Verify if should [re]join network
-                .map(pos -> SFMUtil
+                .map(pos -> SFMUtils
                         .discoverCapabilityProvider(LEVEL, pos)
                         .map(prov -> Pair.of(pos, prov))) // Check if we can get capabilities from this block
                 .filter(Optional::isPresent)

@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.util;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.capabilityprovidermapper.CapabilityProviderMapper;
 import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.registry.SFMCapabilityProviderMappers;
@@ -25,7 +26,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public class SFMUtil {
+public class SFMUtils {
 
     /**
      * Gets a stream using a self-feeding mapping function. Prevents the
@@ -99,7 +100,7 @@ public class SFMUtil {
                     //noinspection unchecked,rawtypes
                     return (ResourceKey<ResourceType<STACK, ITEM, CAP>>) (ResourceKey) x;
                 })
-                .map((ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey) -> SFMUtil.getInputStatementForStack(
+                .map((ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey) -> SFMUtils.getInputStatementForStack(
                         resourceTypeResourceKey,
                         slot.type,
                         stack,
@@ -170,9 +171,18 @@ public class SFMUtil {
         );
     }
 
-    public interface RecursiveBuilder<T> {
-
-        void accept(T next, Consumer<T> nextQueue, Consumer<T> resultBuilder);
+    public static String truncate(String input, int maxLength) {
+        if (input.length() > maxLength) {
+            SFM.LOGGER.warn(
+                    "input too big, truncation has occurred! (len={}, max={}, over={})",
+                    input.length(),
+                    maxLength,
+                    maxLength - input.length()
+            );
+            String truncationWarning = "\n...truncated";
+            return input.substring(0, maxLength - truncationWarning.length()) + truncationWarning;
+        }
+        return input;
     }
 
     /**
@@ -189,5 +199,10 @@ public class SFMUtil {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst();
+    }
+
+    public interface RecursiveBuilder<T> {
+
+        void accept(T current, Consumer<T> next, Consumer<T> results);
     }
 }

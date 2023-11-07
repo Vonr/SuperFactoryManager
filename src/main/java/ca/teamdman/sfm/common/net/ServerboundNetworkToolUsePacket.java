@@ -1,30 +1,21 @@
 package ca.teamdman.sfm.common.net;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.program.InputResourceTracker;
-import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfm.common.util.SFMUtil;
-import ca.teamdman.sfml.ast.*;
+import ca.teamdman.sfm.common.registry.SFMResourceTypes;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 public record ServerboundNetworkToolUsePacket(
@@ -71,36 +62,28 @@ public record ServerboundNetworkToolUsePacket(
                     payload.append("---- (dev only) block entity ----\n");
                     payload.append(entity).append("\n");
                 }
-                entity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(itemHandler -> {
-                    payload.append("---- item handler ----\n").append(itemHandler).append("\n------ contents ------\n");
-                    LabelAccess labelAccess = new LabelAccess(
-                            List.of(new Label("target")),
-                            new DirectionQualifier(EnumSet.of(msg.blockFace)),
-                            NumberRangeSet.MAX_RANGE,
-                            RoundRobin.disabled()
-                    );
-                    InputResourceTracker<ItemStack, Item, IItemHandler> tracker = new InputResourceTracker<>(
-                            new ResourceLimit<>(new ResourceIdentifier<>(".*"), Limit.MAX_QUANTITY_NO_RETENTION),
-                            ResourceIdSet.EMPTY,
-                            new AtomicLong(0),
-                            new AtomicLong(0)
-                    );
-                    for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
-                        LimitedInputSlot<ItemStack, Item, IItemHandler> inputSlot = new LimitedInputSlot<>(
-                                itemHandler,
-                                slot,
-                                tracker
-                        );
-                        SFMUtil
-                                .getInputStatementForSlot(
-                                        inputSlot,
-                                        labelAccess
-                                )
-                                .ifPresent(is -> payload
-                                        .append(is.toStringPretty())
-                                        .append("\n"));
-                    }
-                });
+            }
+
+            payload.append("---- exports ----\n");
+            int len = payload.length();
+            //noinspection unchecked,rawtypes
+            SFMResourceTypes.DEFERRED_TYPES
+                    .get()
+                    .getEntries()
+                    .forEach(entry -> payload.append(ServerboundContainerExportsInspectionRequestPacket.buildInspectionResults(
+                            (ResourceKey) entry.getKey(),
+                            entry.getValue(),
+                            level,
+                            pos,
+                            msg.blockFace
+                    )));
+            if (payload.length() == len) {
+                payload.append("No exports found");
+            }
+            payload.append("\n");
+
+
+            if (entity != null) {
                 if (player.hasPermissions(2)) {
                     payload.append("---- (op only) nbt data ----\n");
                     payload.append(entity.serializeNBT()).append("\n");
@@ -108,26 +91,14 @@ public record ServerboundNetworkToolUsePacket(
             }
 
 
-            if (payload.length()
-                > ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH) {
-                SFM.LOGGER.info("Payload too big! (len={})", payload.length());
-                String truncationMsg = "\n...truncated";
-                SFMPackets.INSPECTION_CHANNEL.send(
-                        PacketDistributor.PLAYER.with(() -> player),
-                        new ClientboundInputInspectionResultsPacket(
-                                payload.substring(
-                                        0,
-                                        ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH
-                                        - truncationMsg.length()
-                                ) + truncationMsg)
-                );
-            } else {
-                SFMPackets.INSPECTION_CHANNEL.send(
-                        PacketDistributor.PLAYER.with(() -> player),
-                        new ClientboundInputInspectionResultsPacket(
-                                payload.toString())
-                );
-            }
+            SFMPackets.INSPECTION_CHANNEL.send(
+                    PacketDistributor.PLAYER.with(() -> player),
+                    new ClientboundInputInspectionResultsPacket(
+                            SFMUtils.truncate(
+                                    payload.toString(),
+                                    ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH
+                            ))
+            );
         });
     }
 }

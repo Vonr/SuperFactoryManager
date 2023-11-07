@@ -464,7 +464,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
 
     @GameTest(template = "25x3x25")
-    public static void mana_lava_cauldrons(GameTestHelper helper) {
+    public static void many_lava_cauldrons(GameTestHelper helper) {
         // designate positions
         var sourceBlocks = new ArrayList<BlockPos>();
         var destBlocks = new ArrayList<BlockPos>();
