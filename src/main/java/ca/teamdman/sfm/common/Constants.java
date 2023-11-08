@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -435,11 +436,11 @@ public class Constants {
             }
 
             public TranslatableContents get(Object... args) {
-                return new TranslatableContents(key.get(), null, args);
+                return SFMUtils.getTranslatableContents(key.get(), args);
             }
 
             public TranslatableContents get() {
-                return new TranslatableContents(key.get(), null, new Object[]{});
+                return SFMUtils.getTranslatableContents(key.get());
             }
 
             public String getString() {

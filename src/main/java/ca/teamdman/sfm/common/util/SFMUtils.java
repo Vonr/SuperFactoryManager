@@ -66,7 +66,7 @@ public class SFMUtils {
                 .map(StringTag.class::cast)
                 .map(StringTag::getAsString)
                 .toArray();
-        return new TranslatableContents(key, null, args);
+        return getTranslatableContents(key, args);
     }
 
     public static CompoundTag serializeTranslation(TranslatableContents contents) {
@@ -80,6 +80,19 @@ public class SFMUtils {
         return tag;
     }
 
+    /**
+     * Helper method to avoid noisy git merges between versions
+     */
+    public static TranslatableContents getTranslatableContents(String key, Object... args) {
+        return new TranslatableContents(key, args);
+    }
+
+    /**
+     * Helper method to avoid noisy git merges between versions
+     */
+    public static TranslatableContents getTranslatableContents(String key) {
+        return getTranslatableContents(key, new Object[]{});
+    }
     public static <STACK, ITEM, CAP> Optional<InputStatement> getInputStatementForSlot(
             LimitedInputSlot<STACK, ITEM, CAP> slot,
             LabelAccess labelAccess

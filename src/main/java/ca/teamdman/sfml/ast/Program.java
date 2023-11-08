@@ -8,6 +8,7 @@ import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import net.minecraft.ResourceLocationException;
@@ -78,15 +79,10 @@ public record Program(
             SFM.LOGGER.error("Encountered unhandled error while compiling program", t);
             if (!FMLEnvironment.production) {
                 var message = t.getMessage();
-
                 if (message != null) {
-                    errors.add(new TranslatableContents(
-                            t.getClass().getSimpleName() + ": " + message,
-                            null,
-                            new Object[]{}
-                    ));
+                    errors.add(SFMUtils.getTranslatableContents(t.getClass().getSimpleName() + ": " + message));
                 } else {
-                    errors.add(new TranslatableContents(t.getClass().getSimpleName(), null, new Object[]{}));
+                    errors.add(SFMUtils.getTranslatableContents(t.getClass().getSimpleName()));
                 }
             }
         }
