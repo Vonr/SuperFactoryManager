@@ -103,7 +103,7 @@ public class ItemWorldRenderer {
                 RENDER_TYPE.setupRenderState();
 
                 if (capabilityProviderVBO == null) {
-                    capabilityProviderVBO = new VertexBuffer();
+                    capabilityProviderVBO = new VertexBuffer(VertexBuffer.Usage.STATIC);
                     capabilityProviderVBO.bind();
                     capabilityProviderVBO.upload(createCapabilityProviderVBO());
                 } else {
@@ -168,7 +168,7 @@ public class ItemWorldRenderer {
                 RENDER_TYPE.setupRenderState();
 
                 if (capabilityProviderVBO == null) {
-                    capabilityProviderVBO = new VertexBuffer();
+                    capabilityProviderVBO = new VertexBuffer(VertexBuffer.Usage.STATIC);
                     capabilityProviderVBO.bind();
                     capabilityProviderVBO.upload(createCapabilityProviderVBO());
                 } else {
@@ -190,7 +190,7 @@ public class ItemWorldRenderer {
 
 
                 if (cableVBO == null) {
-                    cableVBO = new VertexBuffer();
+                    cableVBO = new VertexBuffer(VertexBuffer.Usage.STATIC);
                     cableVBO.bind();
                     cableVBO.upload(createCableVBO());
                 } else {

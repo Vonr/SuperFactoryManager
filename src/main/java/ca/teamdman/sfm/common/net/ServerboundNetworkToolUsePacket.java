@@ -41,7 +41,7 @@ public record ServerboundNetworkToolUsePacket(
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
             ServerPlayer player = contextSupplier.get().getSender();
             if (player == null) return;
-            Level level = player.getLevel();
+            Level level = player.level();
             BlockPos pos = msg.blockPosition();
             if (!level.isLoaded(pos)) return;
             StringBuilder payload = new StringBuilder()
