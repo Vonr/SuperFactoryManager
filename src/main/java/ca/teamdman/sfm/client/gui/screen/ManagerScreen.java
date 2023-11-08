@@ -12,6 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -79,6 +80,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         editButton.visible = diskPresent && !isReadOnly();
     }
 
+    private Button.OnTooltip buildTooltip(LocalizationEntry entry) {
+        return Tooltip.create(entry.getComponent());
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -90,7 +95,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onLoadClipboard(),
-                Tooltip.create(MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP.getComponent())
+                buildTooltip(MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP)
         ));
         editButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -99,7 +104,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_EDIT_BUTTON.getComponent(),
                 button -> onEdit(),
-                Tooltip.create(MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent())
+                buildTooltip(MANAGER_GUI_EDIT_BUTTON_TOOLTIP)
         ));
         examplesButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -108,7 +113,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_VIEW_EXAMPLES_BUTTON.getComponent(),
                 button -> onShowExamples(),
-                Tooltip.create(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP.getComponent())
+                buildTooltip(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP)
         ));
         clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -125,7 +130,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 12,
                 MANAGER_GUI_RESET_BUTTON.getComponent(),
                 button -> sendReset(),
-                Tooltip.create(MANAGER_GUI_RESET_BUTTON_TOOLTIP.getComponent())
+                buildTooltip(MANAGER_GUI_RESET_BUTTON_TOOLTIP)
         ));
         diagButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
@@ -140,11 +145,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         this.onSaveDiagClipboard();
                     }
                 },
-                Tooltip.create((
-                                       isReadOnly()
-                                       ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
-                                       : MANAGER_GUI_WARNING_BUTTON_TOOLTIP
-                               ).getComponent())
+                buildTooltip(isReadOnly()
+                             ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
+                             : MANAGER_GUI_WARNING_BUTTON_TOOLTIP)
         ));
         updateVisibilities();
     }
