@@ -13,6 +13,7 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -78,6 +79,23 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         editButton.visible = diskPresent && !isReadOnly();
     }
 
+    private Button.OnTooltip buildTooltip(LocalizationEntry entry) {
+        return (btn, pose, mx, my) -> renderTooltip(
+                pose,
+                font.split(
+                        entry.getComponent(),
+                        Math.max(
+                                width
+                                / 2
+                                - 43,
+                                170
+                        )
+                ),
+                mx,
+                my
+        );
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -89,23 +107,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onLoadClipboard(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                buildTooltip(MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP)
         ));
-
-
         editButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
                 (this.height - this.imageHeight) / 2 + 16 + 50,
@@ -113,20 +116,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_EDIT_BUTTON.getComponent(),
                 button -> onEdit(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                buildTooltip(MANAGER_GUI_EDIT_BUTTON_TOOLTIP)
         ));
         examplesButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -135,22 +125,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_VIEW_EXAMPLES_BUTTON.getComponent(),
                 button -> onShowExamples(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                buildTooltip(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP)
         ));
-
         clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
                 (this.height - this.imageHeight) / 2 + 128,
@@ -159,7 +135,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 MANAGER_GUI_COPY_TO_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onSaveClipboard()
         ));
-
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
                 (this.height - this.imageHeight) / 2 + 10,
@@ -167,20 +142,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 12,
                 MANAGER_GUI_RESET_BUTTON.getComponent(),
                 button -> sendReset(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                MANAGER_RESET_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                buildTooltip(MANAGER_GUI_RESET_BUTTON_TOOLTIP)
         ));
         diagButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
@@ -195,24 +157,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         this.onSaveDiagClipboard();
                     }
                 },
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                (
-                                        isReadOnly()
-                                        ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
-                                        : MANAGER_GUI_WARNING_BUTTON_TOOLTIP
-                                ).getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                buildTooltip(isReadOnly()
+                             ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
+                             : MANAGER_GUI_WARNING_BUTTON_TOOLTIP)
         ));
         updateVisibilities();
     }
