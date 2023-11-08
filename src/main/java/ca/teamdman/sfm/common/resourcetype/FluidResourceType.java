@@ -1,15 +1,15 @@
 package ca.teamdman.sfm.common.resourcetype;
 
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.neoforged.neoforge.common.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 
 public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHandler> {
     public FluidResourceType() {
-        super(ForgeCapabilities.FLUID_HANDLER);
+        super(Capabilities.FLUID_HANDLER);
     }
 
     @Override

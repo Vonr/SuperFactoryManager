@@ -2,7 +2,7 @@ package ca.teamdman.sfm.client.gui.screen;
 
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.client.gui.widget.ExtendedButton;
+import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public class ExtendedButtonWithTooltip extends ExtendedButton {
     public ExtendedButtonWithTooltip(

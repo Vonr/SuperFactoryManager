@@ -2,14 +2,14 @@ package ca.teamdman.sfm.common.resourcetype;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.neoforged.neoforge.common.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 
 public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler> {
     public ItemResourceType() {
-        super(ForgeCapabilities.ITEM_HANDLER);
+        super(Capabilities.ITEM_HANDLER);
     }
 
     @Override

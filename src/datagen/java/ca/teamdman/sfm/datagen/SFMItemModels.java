@@ -4,14 +4,12 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.client.renderer.block.model.BlockModel;
-import net.minecraft.data.DataGenerator;
-import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.client.model.generators.ItemModelProvider;
-import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.client.model.generators.ItemModelProvider;
+import net.neoforged.client.model.generators.ModelFile;
+import net.neoforged.data.event.GatherDataEvent;
+import net.neoforged.neoforge.registries.RegistryObject;
 
 public class SFMItemModels extends ItemModelProvider {
     public SFMItemModels(

@@ -4,12 +4,11 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import net.minecraft.core.Direction;
-import net.minecraft.data.PackOutput;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraftforge.client.model.generators.BlockStateProvider;
-import net.minecraftforge.client.model.generators.ConfiguredModel;
-import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.data.event.GatherDataEvent;
+import net.neoforged.client.model.generators.BlockStateProvider;
+import net.neoforged.client.model.generators.ConfiguredModel;
+import net.neoforged.client.model.generators.ModelFile;
+import net.neoforged.data.event.GatherDataEvent;
 
 public class SFMBlockStatesAndModels extends BlockStateProvider {
     public SFMBlockStatesAndModels(GatherDataEvent event) {

@@ -5,14 +5,13 @@ import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.slurry.ISlurryHandler;
 import mekanism.api.chemical.slurry.Slurry;
 import mekanism.api.chemical.slurry.SlurryStack;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.registries.IForgeRegistry;
-
-import static net.minecraftforge.common.capabilities.CapabilityManager.get;
+import net.neoforged.neoforge.common.capabilities.Capability;
+import net.neoforged.neoforge.common.capabilities.CapabilityManager;
+import net.neoforged.neoforge.common.capabilities.CapabilityToken;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 
 public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurryHandler> {
-    public static final Capability<ISlurryHandler> CAP = get(new CapabilityToken<>() {
+    public static final Capability<ISlurryHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
     });
 
     public SlurryResourceType() {

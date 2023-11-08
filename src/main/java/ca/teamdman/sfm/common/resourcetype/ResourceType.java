@@ -8,8 +8,8 @@ import ca.teamdman.sfml.ast.ResourceIdentifier;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.neoforged.neoforge.common.capabilities.Capability;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 
 import java.util.Map;
 import java.util.Optional;

@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.neoforged.neoforge.common.capabilities.Capabilities;
 
 public class BatteryBlock extends Block implements EntityBlock {
     public static final IntegerProperty LEVEL = IntegerProperty.create("level", 0, 10);
@@ -50,7 +50,7 @@ public class BatteryBlock extends Block implements EntityBlock {
     ) {
         BlockEntity be = pLevel.getBlockEntity(pPos);
         if (be instanceof BatteryBlockEntity bbe) {
-            var cap = bbe.getCapability(ForgeCapabilities.ENERGY, pHit.getDirection());
+            var cap = bbe.getCapability(Capabilities.ENERGY, pHit.getDirection());
             cap.ifPresent(c -> {
                 if (pPlayer.isShiftKeyDown()) {
                     c.extractEnergy(1000, false);

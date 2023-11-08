@@ -11,8 +11,8 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.data.event.GatherDataEvent;
+import net.neoforged.neoforge.registries.RegistryObject;
 
 import java.util.Collections;
 import java.util.function.BiConsumer;

@@ -10,10 +10,10 @@ import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.client.event.RegisterClientCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.client.event.ClientChatReceivedEvent;
+import net.neoforged.client.event.RegisterClientCommandsEvent;
+import net.neoforged.fml.common.Mod;
 
 import javax.annotation.Nullable;
 import java.io.IOException;

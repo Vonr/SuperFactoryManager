@@ -4,8 +4,8 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.tags.BlockTags;
-import net.minecraftforge.common.data.BlockTagsProvider;
-import net.minecraftforge.data.event.GatherDataEvent;
+import net.neoforged.common.data.BlockTagsProvider;
+import net.neoforged.data.event.GatherDataEvent;
 
 public class SFMBlockTags extends BlockTagsProvider {
     public SFMBlockTags(GatherDataEvent event) {

@@ -5,14 +5,13 @@ import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.pigment.IPigmentHandler;
 import mekanism.api.chemical.pigment.Pigment;
 import mekanism.api.chemical.pigment.PigmentStack;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.registries.IForgeRegistry;
-
-import static net.minecraftforge.common.capabilities.CapabilityManager.get;
+import net.neoforged.neoforge.common.capabilities.Capability;
+import net.neoforged.neoforge.common.capabilities.CapabilityManager;
+import net.neoforged.neoforge.common.capabilities.CapabilityToken;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 
 public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPigmentHandler> {
-    public static final Capability<IPigmentHandler> CAP = get(new CapabilityToken<>() {
+    public static final Capability<IPigmentHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
     });
 
     public PigmentResourceType() {

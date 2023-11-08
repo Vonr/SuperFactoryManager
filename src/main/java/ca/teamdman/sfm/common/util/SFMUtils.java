@@ -18,8 +18,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraftforge.common.capabilities.CapabilityProvider;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.neoforged.neoforge.common.capabilities.ICapabilityProvider;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -205,7 +204,7 @@ public class SFMUtils {
     }
 
     /**
-     * Find a {@link CapabilityProvider} as provided by the registered capability provider mappers.
+     * Find a {@link net.neoforged.neoforge.common.capabilities.CapabilityProvider} as provided by the registered capability provider mappers.
      * If multiple {@link CapabilityProviderMapper}s match, the first one is returned.
      */
     @SuppressWarnings("UnstableApiUsage") // for the javadoc lol

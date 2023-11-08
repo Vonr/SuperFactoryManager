@@ -5,14 +5,13 @@ import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.infuse.IInfusionHandler;
 import mekanism.api.chemical.infuse.InfuseType;
 import mekanism.api.chemical.infuse.InfusionStack;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.registries.IForgeRegistry;
-
-import static net.minecraftforge.common.capabilities.CapabilityManager.get;
+import net.neoforged.neoforge.common.capabilities.Capability;
+import net.neoforged.neoforge.common.capabilities.CapabilityManager;
+import net.neoforged.neoforge.common.capabilities.CapabilityToken;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 
 public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, IInfusionHandler> {
-    public static final Capability<IInfusionHandler> CAP = get(new CapabilityToken<>() {
+    public static final Capability<IInfusionHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
     });
 
     public InfuseResourceType() {

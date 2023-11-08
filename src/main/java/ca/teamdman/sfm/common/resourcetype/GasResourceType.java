@@ -5,14 +5,13 @@ import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasHandler;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.registries.IForgeRegistry;
-
-import static net.minecraftforge.common.capabilities.CapabilityManager.get;
+import net.neoforged.neoforge.common.capabilities.Capability;
+import net.neoforged.neoforge.common.capabilities.CapabilityManager;
+import net.neoforged.neoforge.common.capabilities.CapabilityToken;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 
 public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
-    public static final Capability<IGasHandler> CAP = get(new CapabilityToken<>() {
+    public static final Capability<IGasHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
     });
 
     public GasResourceType() {
