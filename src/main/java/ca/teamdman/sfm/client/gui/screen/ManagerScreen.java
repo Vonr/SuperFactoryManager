@@ -12,7 +12,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -80,7 +79,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         editButton.visible = diskPresent && !isReadOnly();
     }
 
-    private Button.OnTooltip buildTooltip(LocalizationEntry entry) {
+    private Tooltip buildTooltip(LocalizationEntry entry) {
         return Tooltip.create(entry.getComponent());
     }
 
