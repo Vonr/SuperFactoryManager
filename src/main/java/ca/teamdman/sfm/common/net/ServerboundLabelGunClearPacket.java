@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.item.LabelGunItem;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraftforge.network.NetworkEvent;
@@ -31,7 +31,7 @@ public record ServerboundLabelGunClearPacket(
             }
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof LabelGunItem) {
-                LabelHolder.empty().save(stack);
+                LabelPositionHolder.empty().save(stack);
             }
         });
         ctx.get().setPacketHandled(true);

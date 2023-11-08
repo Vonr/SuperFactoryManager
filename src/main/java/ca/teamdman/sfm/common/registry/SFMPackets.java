@@ -162,6 +162,13 @@ public class SFMPackets {
                 ClientboundOutputInspectionResultsPacket::decode,
                 ClientboundOutputInspectionResultsPacket::handle
         );
+        INSPECTION_CHANNEL.registerMessage(
+                8,
+                ServerboundNetworkToolUsePacket.class,
+                ServerboundNetworkToolUsePacket::encode,
+                ServerboundNetworkToolUsePacket::decode,
+                ServerboundNetworkToolUsePacket::handle
+        );
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(

@@ -1,9 +1,9 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.cablenetwork.BlockEntityCapabilityProviderMapper;
-import ca.teamdman.sfm.common.cablenetwork.CapabilityProviderMapper;
-import ca.teamdman.sfm.common.cablenetwork.CauldronCapabilityProviderMapper;
+import ca.teamdman.sfm.common.capabilityprovidermapper.BlockEntityCapabilityProviderMapper;
+import ca.teamdman.sfm.common.capabilityprovidermapper.CapabilityProviderMapper;
+import ca.teamdman.sfm.common.capabilityprovidermapper.CauldronCapabilityProviderMapper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;

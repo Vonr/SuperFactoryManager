@@ -5,9 +5,10 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import net.minecraft.ResourceLocationException;
@@ -75,8 +76,15 @@ public record Program(
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
         } catch (Throwable t) {
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
-            SFM.LOGGER.error(t);
-            if (!FMLEnvironment.production) errors.add(new TranslatableContents(t.getMessage(), null, new Object[]{}));
+            SFM.LOGGER.error("Encountered unhandled error while compiling program", t);
+            if (!FMLEnvironment.production) {
+                var message = t.getMessage();
+                if (message != null) {
+                    errors.add(SFMUtils.getTranslatableContents(t.getClass().getSimpleName() + ": " + message));
+                } else {
+                    errors.add(SFMUtils.getTranslatableContents(t.getClass().getSimpleName()));
+                }
+            }
         }
 
 
@@ -89,7 +97,7 @@ public record Program(
 
     public ArrayList<TranslatableContents> gatherWarnings(ItemStack disk, @Nullable ManagerBlockEntity manager) {
         var warnings = new ArrayList<TranslatableContents>();
-        var labels = LabelHolder.from(disk);
+        var labels = LabelPositionHolder.from(disk);
         // labels in code but not in world
         for (String label : referencedLabels) {
             var isUsed = !labels.getPositions(label).isEmpty();
@@ -106,9 +114,11 @@ public record Program(
 
         if (manager != null) {
             // labels in world but not connected via cables
-            CableNetworkManager.getOrRegisterNetwork(manager).ifPresent(network -> labels.forEach((label, pos) -> {
+            CableNetworkManager
+                    .getOrRegisterNetworkFromManagerPosition(manager)
+                    .ifPresent(network -> labels.forEach((label, pos) -> {
                 var inNetwork = network.isInNetwork(pos);
-                var adjacent = network.hasCableNeighbour(pos);
+                var adjacent = network.isAdjacentToCable(pos);
                 if (!inNetwork) {
                     if (adjacent) {
                         warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
@@ -162,13 +172,13 @@ public record Program(
     }
 
     public void fixWarnings(ItemStack disk, ManagerBlockEntity manager) {
-        var labels = LabelHolder.from(disk);
+        var labels = LabelPositionHolder.from(disk);
         // remove labels not defined in code
         labels.removeIf(label -> !referencedLabels.contains(label));
 
         // remove labels not connected via cables
         CableNetworkManager
-                .getOrRegisterNetwork(manager)
+                .getOrRegisterNetworkFromManagerPosition(manager)
                 .ifPresent(network -> labels.removeIf((label, pos) -> !network.isInNetwork(pos)));
         labels.save(disk);
 

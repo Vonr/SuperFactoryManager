@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -155,6 +156,30 @@ public class Constants {
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".chat.pushed",
                 () -> "Pushed labels to the manager."
         );
+
+        @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+        public static LocalizationEntry NETWORK_TOOL_ITEM = new LocalizationEntry(
+                () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId(),
+                () -> "Network Tool"
+        );
+
+        public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_1 = new LocalizationEntry(
+                () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.1",
+                () -> "Shows cables through walls when held."
+        );
+        public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_2 = new LocalizationEntry(
+                () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.2",
+                () -> "Right click a block face to view diagnostic info."
+        );
+        public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_3 = new LocalizationEntry(
+                () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.3",
+                () -> ChatFormatting.GRAY
+                      + "You might not need this, don't forget you can press "
+                      + ChatFormatting.AQUA
+                      + "%s"
+                      + ChatFormatting.GRAY
+                      + " in an inventory to toggle the inspector."
+        );
         public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_1 = new LocalizationEntry(
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.1",
                 () -> "Right click a Factory Manager to push labels."
@@ -162,6 +187,10 @@ public class Constants {
         public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_2 = new LocalizationEntry(
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.2",
                 () -> "Right click a Factory Manager while sneaking to pull labels."
+        );
+        public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_3 = new LocalizationEntry(
+                () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.3",
+                () -> "Hold control to apply labels to blocks of the same type adjacent to cables."
         );
         public static final LocalizationEntry LABEL_GUN_ITEM_NAME_WITH_LABEL = new LocalizationEntry(
                 () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".with_label",
@@ -297,11 +326,11 @@ public class Constants {
 
         public static final LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME = new LocalizationEntry(
                 "gui.sfm.manager.peak_tick_time",
-                "Peak tick time: %s ns"
+                "Peak tick time: %s ms"
         );
         public static final LocalizationEntry MANAGER_GUI_HOVERED_TICK_TIME = new LocalizationEntry(
                 "gui.sfm.manager.hovered_tick_time",
-                "Hovered tick time: %s ns"
+                "Hovered tick time: %s ms"
         );
         public static final LocalizationEntry MANAGER_GUI_STATE_NO_DISK = new LocalizationEntry(
                 "gui.sfm.manager.state.no_disk",
@@ -391,7 +420,7 @@ public class Constants {
                     try {
                         rtn.add((LocalizationEntry) field.get(null));
                     } catch (IllegalAccessException e) {
-                        SFM.LOGGER.error(e);
+                        SFM.LOGGER.error("Failed reading entry field", e);
                     }
                 }
             }
@@ -407,11 +436,11 @@ public class Constants {
             }
 
             public TranslatableContents get(Object... args) {
-                return new TranslatableContents(key.get(), null, args);
+                return SFMUtils.getTranslatableContents(key.get(), args);
             }
 
             public TranslatableContents get() {
-                return new TranslatableContents(key.get(), null, new Object[]{});
+                return SFMUtils.getTranslatableContents(key.get());
             }
 
             public String getString() {

@@ -88,6 +88,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.FROM:
             case SFMLLexer.TO:
             case SFMLLexer.OUTPUT:
+            case SFMLLexer.FORGET:
                 return ChatFormatting.LIGHT_PURPLE;
             case SFMLLexer.NAME:
             case SFMLLexer.EVERY:
@@ -130,6 +131,12 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.REDSTONE:
             case SFMLLexer.PULSE:
                 return ChatFormatting.RED;
+            case SFMLLexer.ROUND:
+            case SFMLLexer.ROBIN:
+            case SFMLLexer.BY:
+            case SFMLLexer.BLOCK:
+            case SFMLLexer.LABEL:
+                return ChatFormatting.YELLOW;
             default:
                 return ChatFormatting.WHITE;
         }

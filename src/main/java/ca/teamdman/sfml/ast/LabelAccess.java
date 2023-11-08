@@ -7,12 +7,16 @@ import java.util.stream.Collectors;
 public record LabelAccess(
         List<Label> labels,
         DirectionQualifier directions,
-        NumberRangeSet slots
+        NumberRangeSet slots,
+        RoundRobin roundRobin
 ) implements ASTNode {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(labels.stream().map(Objects::toString).collect(Collectors.joining(", ")));
+        if (roundRobin.isEnabled()) {
+            builder.append(" ").append(roundRobin);
+        }
         if (!directions.directions().isEmpty()) {
             builder.append(" ");
             builder
