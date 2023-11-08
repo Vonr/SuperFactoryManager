@@ -101,7 +101,6 @@ public class ItemWorldRenderer {
             }
             { // draw highlights
                 RENDER_TYPE.setupRenderState();
-                RenderSystem.disableTexture();
 
                 if (capabilityProviderVBO == null) {
                     capabilityProviderVBO = new VertexBuffer();
@@ -126,7 +125,6 @@ public class ItemWorldRenderer {
 
                 VertexBuffer.unbind();
                 RENDER_TYPE.clearRenderState();
-                RenderSystem.enableTexture();
             }
             bufferSource.endBatch();
             poseStack.popPose();
@@ -168,7 +166,6 @@ public class ItemWorldRenderer {
 
             { // draw highlights
                 RENDER_TYPE.setupRenderState();
-                RenderSystem.disableTexture();
 
                 if (capabilityProviderVBO == null) {
                     capabilityProviderVBO = new VertexBuffer();
@@ -215,7 +212,6 @@ public class ItemWorldRenderer {
 
                 VertexBuffer.unbind();
                 RENDER_TYPE.clearRenderState();
-                RenderSystem.enableTexture();
             }
             bufferSource.endBatch();
             poseStack.popPose();
@@ -245,7 +241,7 @@ public class ItemWorldRenderer {
                     false,
                     poseStack.last().pose(),
                     mbs,
-                    true,
+                    Font.DisplayMode.SEE_THROUGH,
                     0,
                     0xF000F0
             );
