@@ -21,6 +21,7 @@ NAME "Changelog for 4.14.0"
 -- fix inv overlay (Ctrl+i) failing with big payloads
 -- double inspection payload max size before truncation to 20480
 -- add ae2 inscriber example program
+-- add network tool item
 
 ---- 4.13.0 ----
 -- add ctrl+slash hotkey to toggle comments
