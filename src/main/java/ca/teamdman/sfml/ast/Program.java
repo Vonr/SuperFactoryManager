@@ -80,9 +80,13 @@ public record Program(
                 var message = t.getMessage();
 
                 if (message != null) {
-                    errors.add(new TranslatableContents(t.getClass().getSimpleName() + ": " + message, new Object[]{}));
+                    errors.add(new TranslatableContents(
+                            t.getClass().getSimpleName() + ": " + message,
+                            null,
+                            new Object[]{}
+                    ));
                 } else {
-                    errors.add(new TranslatableContents(t.getClass().getSimpleName(), new Object[]{}));
+                    errors.add(new TranslatableContents(t.getClass().getSimpleName(), null, new Object[]{}));
                 }
             }
         }

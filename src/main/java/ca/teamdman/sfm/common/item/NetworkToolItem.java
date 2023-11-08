@@ -4,7 +4,6 @@ import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.net.ServerboundNetworkToolUsePacket;
-import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -24,7 +23,7 @@ import java.util.List;
 
 public class NetworkToolItem extends Item {
     public NetworkToolItem() {
-        super(new Item.Properties().stacksTo(1).tab(SFMItems.TAB));
+        super(new Item.Properties().stacksTo(1));
     }
 
     @Override

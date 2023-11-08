@@ -58,6 +58,17 @@ public class SFMUtils {
         return builder.build();
     }
 
+    public static TranslatableContents deserializeTranslation(CompoundTag tag) {
+        var key = tag.getString("key");
+        var args = tag
+                .getList("args", Tag.TAG_STRING)
+                .stream()
+                .map(StringTag.class::cast)
+                .map(StringTag::getAsString)
+                .toArray();
+        return new TranslatableContents(key, null, args);
+    }
+
     public static CompoundTag serializeTranslation(TranslatableContents contents) {
         CompoundTag tag = new CompoundTag();
         tag.putString("key", contents.getKey());
@@ -69,30 +80,18 @@ public class SFMUtils {
         return tag;
     }
 
-	public static TranslatableContents deserializeTranslation(CompoundTag tag) {
-		var key = tag.getString("key");
-		var args = tag
-				.getList("args", Tag.TAG_STRING)
-				.stream()
-				.map(StringTag.class::cast)
-				.map(StringTag::getAsString)
-				.toArray();
-		return new TranslatableContents(key, null, args);
-	}
-
-
-	public static <STACK, ITEM, CAP> Optional<InputStatement> getInputStatementForSlot(
-			LimitedInputSlot<STACK, ITEM, CAP> slot,
-			LabelAccess labelAccess
-	) {
-		STACK potential = slot.peekExtractPotential();
-		if (slot.type.isEmpty(potential)) return Optional.empty();
-		long toMove = slot.type.getAmount(potential);
-		toMove = Long.min(toMove, slot.tracker.getResourceLimit().limit().quantity().number().value());
-		long remainingObligation = slot.tracker.getRemainingRetentionObligation();
-		toMove -= Long.min(toMove, remainingObligation);
-		potential = slot.type.withCount(potential, toMove);
-		STACK stack = potential;
+    public static <STACK, ITEM, CAP> Optional<InputStatement> getInputStatementForSlot(
+            LimitedInputSlot<STACK, ITEM, CAP> slot,
+            LabelAccess labelAccess
+    ) {
+        STACK potential = slot.peekExtractPotential();
+        if (slot.type.isEmpty(potential)) return Optional.empty();
+        long toMove = slot.type.getAmount(potential);
+        toMove = Long.min(toMove, slot.tracker.getResourceLimit().limit().quantity().number().value());
+        long remainingObligation = slot.tracker.getRemainingRetentionObligation();
+        toMove -= Long.min(toMove, remainingObligation);
+        potential = slot.type.withCount(potential, toMove);
+        STACK stack = potential;
 
         return SFMResourceTypes.DEFERRED_TYPES
                 .get()
@@ -118,6 +117,12 @@ public class SFMUtils {
                                 .slots(),
                         RoundRobin.disabled()
                 ), inputStatement.resourceLimits(), inputStatement.each()));
+    }
+
+
+    public interface RecursiveBuilder<T> {
+
+        void accept(T current, Consumer<T> next, Consumer<T> results);
     }
 
 
@@ -172,10 +177,6 @@ public class SFMUtils {
         );
     }
 
-	public interface RecursiveBuilder<T> {
-
-		void accept(T next, Consumer<T> nextQueue, Consumer<T> resultBuilder);
-	}
     public static String truncate(String input, int maxLength) {
         if (input.length() > maxLength) {
             SFM.LOGGER.warn(
@@ -204,10 +205,5 @@ public class SFMUtils {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst();
-    }
-
-    public interface RecursiveBuilder<T> {
-
-        void accept(T current, Consumer<T> next, Consumer<T> results);
     }
 }
