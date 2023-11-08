@@ -84,7 +84,7 @@ public class SFMUtils {
      * Helper method to avoid noisy git merges between versions
      */
     public static TranslatableContents getTranslatableContents(String key, Object... args) {
-        return new TranslatableContents(key, args);
+        return new TranslatableContents(key, null, args);
     }
 
     /**
