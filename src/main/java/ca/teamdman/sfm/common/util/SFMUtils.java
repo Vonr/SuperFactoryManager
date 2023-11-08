@@ -58,6 +58,17 @@ public class SFMUtils {
         return builder.build();
     }
 
+    public static TranslatableContents deserializeTranslation(CompoundTag tag) {
+        var key = tag.getString("key");
+        var args = tag
+                .getList("args", Tag.TAG_STRING)
+                .stream()
+                .map(StringTag.class::cast)
+                .map(StringTag::getAsString)
+                .toArray();
+        return getTranslatableContents(key, args);
+    }
+
     public static CompoundTag serializeTranslation(TranslatableContents contents) {
         CompoundTag tag = new CompoundTag();
         tag.putString("key", contents.getKey());
@@ -69,15 +80,23 @@ public class SFMUtils {
         return tag;
     }
 
-    public static TranslatableContents deserializeTranslation(CompoundTag tag) {
-        var key = tag.getString("key");
-        var args = tag
-                .getList("args", Tag.TAG_STRING)
-                .stream()
-                .map(StringTag.class::cast)
-                .map(StringTag::getAsString)
-                .toArray();
+    /**
+     * Helper method to avoid noisy git merges between versions
+     */
+    public static TranslatableContents getTranslatableContents(String key, Object... args) {
         return new TranslatableContents(key, args);
+    }
+
+    /**
+     * Helper method to avoid noisy git merges between versions
+     */
+    public static TranslatableContents getTranslatableContents(String key) {
+        return getTranslatableContents(key, new Object[]{});
+    }
+
+    public interface RecursiveBuilder<T> {
+
+        void accept(T current, Consumer<T> next, Consumer<T> results);
     }
 
     public static <STACK, ITEM, CAP> Optional<InputStatement> getInputStatementForSlot(
@@ -199,10 +218,5 @@ public class SFMUtils {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst();
-    }
-
-    public interface RecursiveBuilder<T> {
-
-        void accept(T current, Consumer<T> next, Consumer<T> results);
     }
 }
