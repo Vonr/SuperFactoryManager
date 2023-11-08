@@ -2,7 +2,7 @@ package ca.teamdman.sfm;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.core.BlockPos;
@@ -63,7 +63,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 """.stripTrailing().stripIndent();
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .addAll("a", sourceBlocks.stream().map(helper::absolutePos).toList())
                 .addAll("b", destBlocks.stream().map(helper::absolutePos).toList())
                 .save(manager.getDisk().get());
@@ -135,7 +135,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 """.stripTrailing().stripIndent();
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .addAll("a", sourceBlocks.stream().map(helper::absolutePos).toList())
                 .addAll("b", destBlocks.stream().map(helper::absolutePos).toList())
                 .save(manager.getDisk().get());
@@ -229,7 +229,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 """.stripTrailing().stripIndent();
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .addAll("a", sourceBlocks.stream().map(helper::absolutePos).toList())
                 .addAll("b", destBlocks.stream().map(helper::absolutePos).toList())
                 .save(manager.getDisk().get());
@@ -338,7 +338,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 """.stripTrailing().stripIndent();
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(aPos))
                 .add("b", helper.absolutePos(bPos))
                 .add("c", helper.absolutePos(cPos))
@@ -470,7 +470,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                     """.stripTrailing().stripIndent();
 
             // set the labels
-            LabelHolder.empty()
+            LabelPositionHolder.empty()
                     .addAll("storage", storage.stream().map(helper::absolutePos).toList())
                     .add("chest", helper.absolutePos(new BlockPos(0, 2, 0)))
                     .save(manager.getDisk().get());

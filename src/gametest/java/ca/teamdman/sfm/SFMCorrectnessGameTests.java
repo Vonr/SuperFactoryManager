@@ -6,13 +6,14 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.item.FormItem;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -22,7 +23,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -77,9 +77,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_1_stack(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -99,7 +99,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -115,9 +115,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_full_chest(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
 
         var leftChest = (helper.getBlockEntity(leftPos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
@@ -140,7 +140,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -172,9 +172,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos dest2Pos = new BlockPos(0, 2, 1);
 
         // set up inventories
-        helper.setBlock(sourcePos, Blocks.CHEST);
-        helper.setBlock(dest1Pos, Blocks.CHEST);
-        helper.setBlock(dest2Pos, Blocks.CHEST);
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
 
         var sourceInv = (helper.getBlockEntity(sourcePos))
@@ -201,7 +201,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("source", helper.absolutePos(sourcePos))
                 .add("dest", helper.absolutePos(dest1Pos))
                 .add("dest", helper.absolutePos(dest2Pos))
@@ -241,9 +241,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void retain_5(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -262,7 +262,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    END
                                    """.stripTrailing().stripIndent());
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -278,9 +278,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_multiple_item_names(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var leftChest = (helper.getBlockEntity(leftPos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
         var rightChest = (helper.getBlockEntity(rightPos))
@@ -307,7 +307,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -337,7 +337,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(left))
                 .add("b", helper.absolutePos(right))
                 .save(manager.getDisk().get());
@@ -381,7 +381,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(left))
                 .add("b", helper.absolutePos(right))
                 .save(manager.getDisk().get());
@@ -425,20 +425,20 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // fill in the blocks needed for the test
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
-        helper.setBlock(start, Blocks.CHEST);
-        helper.setBlock(end, Blocks.CHEST);
+        helper.setBlock(start, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(end, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // add some items
-        ChestBlockEntity startChest = (ChestBlockEntity) helper.getBlockEntity(start);
+        Container startChest = (Container) helper.getBlockEntity(start);
         startChest.setItem(0, new ItemStack(Items.IRON_INGOT, 64));
-        ChestBlockEntity endChest = (ChestBlockEntity) helper.getBlockEntity(end);
+        Container endChest = (Container) helper.getBlockEntity(end);
 
 
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(start))
                 .add("b", helper.absolutePos(end))
                 .save(manager.getDisk().get());
@@ -471,13 +471,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
 
         BlockPos left = new BlockPos(2, 2, 1);
-        helper.setBlock(left, Blocks.CHEST);
+        helper.setBlock(left, SFMBlocks.TEST_BARREL_BLOCK.get());
         // add sticks to the chest
-        ChestBlockEntity chest = (ChestBlockEntity) helper.getBlockEntity(left);
+        Container chest = (Container) helper.getBlockEntity(left);
         chest.setItem(0, new ItemStack(Items.STICK, 64));
 
         BlockPos right = new BlockPos(0, 2, 1);
-        helper.setBlock(right, Blocks.CHEST);
+        helper.setBlock(right, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         BlockPos front = new BlockPos(1, 2, 2);
         helper.setBlock(front, Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
@@ -489,7 +489,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(left))
                 .add("a", helper.absolutePos(front))
                 .add("b", helper.absolutePos(right))
@@ -518,7 +518,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             // ensure sticks departed
             assertTrue(chest.getItem(0).getCount() == 0, "Items did not move");
             // ensure sticks arrived
-            ChestBlockEntity rightChest = (ChestBlockEntity) helper.getBlockEntity(right);
+            Container rightChest = (Container) helper.getBlockEntity(right);
             assertTrue(rightChest.getItem(0).getCount() == 64, "Items did not move");
 
             helper.succeed();
@@ -526,74 +526,92 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
     @GameTest(template = "25x4x25") // start with empty platform
-    public static void CableNetworkFormation(GameTestHelper helper) {
+    public static void cable_network_formation(GameTestHelper helper) {
         // create a row of cables
         for (int i = 0; i < 10; i++) {
             helper.setBlock(new BlockPos(i, 2, 0), SFMBlocks.CABLE_BLOCK.get());
         }
 
         var net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                 .get();
         // those cables should all be on the same network
         for (int i = 0; i < 10; i++) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
-                               .get() == net, "Networks did not merge");
+                               .getOrRegisterNetworkFromCablePosition(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(i, 2, 0))
+                               )
+                               .get() == net, "Line of ten should be on same network");
         }
 
         // the network should only contain those cables
-        assertTrue(net.getCables().size() == 10, "Network size did not match");
+        assertTrue(net.getCableCount() == 10, "Network size should be ten");
 
         // break a block in the middle of the cable
         helper.setBlock(new BlockPos(5, 2, 0), Blocks.AIR);
         // the network should split
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                 .get();
         // now we have a network of 5 cables and a network of 4 cables
         for (int i = 0; i < 5; i++) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
-                               .get() == net, "Networks did not merge");
+                               .getOrRegisterNetworkFromCablePosition(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(i, 2, 0))
+                               )
+                               .get() == net, "Row of five should be same network after splitting");
         }
+        var old = net;
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(6, 2, 0)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(6, 2, 0)))
                 .get();
+        assertTrue(old != net, "Networks should be distinct after splitting");
         for (int i = 6; i < 10; i++) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
-                               .get() == net, "Networks did not merge");
+                               .getOrRegisterNetworkFromCablePosition(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(i, 2, 0))
+                               )
+                               .get() == net, "Remaining row should be same network after splitting");
         }
 
         // repair the cable
         helper.setBlock(new BlockPos(5, 2, 0), SFMBlocks.CABLE_BLOCK.get());
         // the network should merge
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
                 .get();
         for (int i = 0; i < 10; i++) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(i, 2, 0)))
-                               .get() == net, "Networks did not merge");
+                               .getOrRegisterNetworkFromCablePosition(
+                                       helper.getLevel(),
+                                       helper.absolutePos(new BlockPos(i, 2, 0))
+                               )
+                               .get() == net, "Networks should merge to same network after repairing");
         }
 
         // add cables in the corner
         helper.setBlock(new BlockPos(0, 2, 1), SFMBlocks.CABLE_BLOCK.get());
         helper.setBlock(new BlockPos(1, 2, 1), SFMBlocks.CABLE_BLOCK.get());
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(0, 2, 0))
+                           )
                            .get()
-                           .getCables()
-                           .size() == 12, "Network size did not match");
+                           .getCableCount() == 12, "Network should grow to twelve after adding two cables");
 
         // punch out the corner, the network should shrink by 1
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.AIR);
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(0, 2, 0)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(0, 2, 0))
+                           )
                            .get()
-                           .getCables()
-                           .size() == 11, "Network size did not match");
+                           .getCableCount() == 11, "Network should shrink to eleven after removing a cable");
 
 
         // create a new network in a plus shape
@@ -603,28 +621,31 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
         // should all be on the same network
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
                 .get();
         for (Direction value : Direction.values()) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(
+                               .getOrRegisterNetworkFromCablePosition(
                                        helper.getLevel(),
                                        helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
                                )
                                .get()
-                       == net, "Networks did not merge");
+                       == net, "Plus cables should all be on the same network");
         }
 
         // break the block in the middle
         helper.setBlock(new BlockPos(15, 2, 15), Blocks.AIR);
         // the network should split
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(15, 2, 15))
+                           )
                            .isEmpty(), "Network should not be present where the cable was removed from");
         var networks = new ArrayList<CableNetwork>();
         for (Direction value : Direction.values()) {
             networks.add(CableNetworkManager
-                                 .getOrRegisterNetwork(
+                                 .getOrRegisterNetworkFromCablePosition(
                                          helper.getLevel(),
                                          helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
                                  )
@@ -632,26 +653,29 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
         // make sure all the networks are different
         for (CableNetwork network : networks) {
-            assertTrue(networks.stream().filter(n -> n == network).count() == 1, "Networks did not split");
+            assertTrue(
+                    networks.stream().filter(n -> n == network).count() == 1,
+                    "Broken plus networks should be distinct"
+            );
         }
 
         // add the block back
         helper.setBlock(new BlockPos(15, 2, 15), SFMBlocks.CABLE_BLOCK.get());
         // the network should merge
         net = CableNetworkManager
-                .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
+                .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
                 .get();
         for (Direction value : Direction.values()) {
             assertTrue(CableNetworkManager
-                               .getOrRegisterNetwork(
+                               .getOrRegisterNetworkFromCablePosition(
                                        helper.getLevel(),
                                        helper.absolutePos(new BlockPos(15, 2, 15).relative(value))
                                )
                                .get()
-                       == net, "Networks did not merge");
+                       == net, "Plus networks did not merge after repairing");
         }
 
-        // lets also test having cables in more than just a straight line
+        // let's also test having cables in more than just a straight line
         // we want corners with multiple cables adjacent
 
         for (int i = 0; i < 5; i++) {
@@ -661,38 +685,74 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
         // make sure it's all in a single network
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 7)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 7))
+                           )
                            .get()
-                           .getCables()
-                           .size() == 25, "Network size did not match");
+                           .getCableCount() == 25, "Network cable count should be 25");
         // cut a line through it
         for (int i = 0; i < 5; i++) {
             helper.setBlock(new BlockPos(7 + i, 2, 9), Blocks.AIR);
         }
+
         // make sure the network disappeared where it was cut
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 9)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 9))
+                           )
                            .isEmpty(), "Network should not be present where the cable was removed from");
         // make sure new network of 10 is formed
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 8)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 8))
+                           )
                            .get()
-                           .getCables()
-                           .size() == 10, "Network size did not match");
+                           .getCableCount() == 10, "New network should be size ten");
         // make sure new network of 10 is formed
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 11)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 11))
+                           )
                            .get()
-                           .getCables()
-                           .size() == 10, "Network size did not match");
+                           .getCableCount() == 10, "Other new network should be size ten");
         // make sure the new networks are distinct
         assertTrue(CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 8)))
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 8))
+                           )
                            .get() != CableNetworkManager
-                           .getOrRegisterNetwork(helper.getLevel(), helper.absolutePos(new BlockPos(7, 2, 11)))
-                           .get(), "Networks did not split");
+                           .getOrRegisterNetworkFromCablePosition(
+                                   helper.getLevel(),
+                                   helper.absolutePos(new BlockPos(7, 2, 11))
+                           )
+                           .get(), "New networks should be distinct");
 
 
+        helper.succeed();
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void cable_network_rebuilding(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        helper.setBlock(new BlockPos(2, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        var network = CableNetworkManager.getOrRegisterNetworkFromCablePosition(
+                helper.getLevel(),
+                helper.absolutePos(new BlockPos(0, 2, 0))
+        );
+        assertTrue(network.isPresent(), "Network should be built");
+        CableNetworkManager.unregisterNetworkForTestingPurposes(network.get());
+        network = CableNetworkManager.getOrRegisterNetworkFromCablePosition(
+                helper.getLevel(),
+                helper.absolutePos(new BlockPos(0, 2, 0))
+        );
+        assertTrue(network.isPresent(), "Network should be rebuilt after clearing");
+        assertTrue(network.get().getCableCount() == 3, "Network rebuilding should discover 3 cables");
         helper.succeed();
     }
 
@@ -720,7 +780,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 """;
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(left))
                 .add("b", helper.absolutePos(right))
                 .save(manager.getDisk().get());
@@ -740,9 +800,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_slots(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -766,7 +826,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -798,7 +858,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(pistonPos, Blocks.PISTON.defaultBlockState().setValue(DirectionalBlock.FACING, Direction.DOWN));
         helper.setBlock(woodPos, Blocks.OAK_PLANKS);
         helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
-        helper.setBlock(chestPos, Blocks.CHEST);
+        helper.setBlock(chestPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
         Player player = helper.makeMockPlayer();
@@ -1060,7 +1120,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(pistonPos, Blocks.PISTON.defaultBlockState().setValue(DirectionalBlock.FACING, Direction.DOWN));
         helper.setBlock(woodPos, Blocks.OAK_PLANKS);
         helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
-        helper.setBlock(chestPos, Blocks.CHEST);
+        helper.setBlock(chestPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
         Player player = helper.makeMockPlayer();
@@ -1393,11 +1453,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
-        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var left = (Container) helper.getBlockEntity(leftPos);
+        var right = (Container) helper.getBlockEntity(rightPos);
         var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         left.setItem(0, new ItemStack(Items.DIAMOND, 64));
         left.setItem(1, new ItemStack(Items.DIAMOND, 64));
@@ -1433,7 +1493,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1468,11 +1528,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
-        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var left = (Container) helper.getBlockEntity(leftPos);
+        var right = (Container) helper.getBlockEntity(rightPos);
         var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         left.setItem(0, new ItemStack(Items.DIAMOND, 64));
         left.setItem(1, new ItemStack(Items.DIAMOND, 64));
@@ -1508,7 +1568,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1543,11 +1603,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
-        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var left = (Container) helper.getBlockEntity(leftPos);
+        var right = (Container) helper.getBlockEntity(rightPos);
         var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         left.setItem(0, new ItemStack(Items.DIAMOND, 64));
         left.setItem(1, new ItemStack(Items.DIAMOND, 64));
@@ -1583,7 +1643,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1618,11 +1678,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
-        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var left = (Container) helper.getBlockEntity(leftPos);
+        var right = (Container) helper.getBlockEntity(rightPos);
         var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         left.setItem(0, new ItemStack(Items.DIAMOND, 64));
         left.setItem(1, new ItemStack(Items.DIAMOND, 64));
@@ -1658,7 +1718,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1693,11 +1753,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        var left = (ChestBlockEntity) helper.getBlockEntity(leftPos);
-        var right = (ChestBlockEntity) helper.getBlockEntity(rightPos);
+        var left = (Container) helper.getBlockEntity(leftPos);
+        var right = (Container) helper.getBlockEntity(rightPos);
         var manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         left.setItem(0, new ItemStack(Items.DIAMOND, 64));
         left.setItem(1, new ItemStack(Items.DIAMOND, 64));
@@ -1733,7 +1793,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
                 .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1766,9 +1826,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void pattern_cache_regression_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -1790,7 +1850,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1806,9 +1866,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void pattern_cache_regression_2(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -1830,7 +1890,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1846,9 +1906,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void pattern_cache_regression_3(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -1870,7 +1930,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1886,9 +1946,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_src_quantity(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -1910,7 +1970,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1933,9 +1993,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_src_quantity_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -1958,7 +2018,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -1979,9 +2039,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_src_quantity_each_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -2004,7 +2064,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2025,9 +2085,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_src_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -2051,7 +2111,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2074,9 +2134,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_dest_quantity(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -2098,7 +2158,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2121,9 +2181,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_dest_quantity_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -2144,7 +2204,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2165,9 +2225,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_dest_quantity_each_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -2188,7 +2248,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2209,9 +2269,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_dest_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -2233,7 +2293,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2256,9 +2316,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void sfm_v4_12_0_changelog(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, Blocks.CHEST);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, Blocks.CHEST);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = (helper.getBlockEntity(rightPos))
                 .getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -2302,7 +2362,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    """.stripTrailing().stripIndent());
 
         // set the labels
-        LabelHolder.empty()
+        LabelPositionHolder.empty()
                 .add("a", helper.absolutePos(leftPos))
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
@@ -2337,4 +2397,476 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
+
+    @GameTest(template = "3x2x1")
+    public static void forget_1(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a
+                                           IF a has gt 0 dirt THEN
+                                               FORGET a
+                                           END
+                                           OUTPUT TO b -- nothing happens :D
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "Dirt should not depart");
+            assertTrue(rightChest.getStackInSlot(0).isEmpty(), "Dirt should not arrive");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void forget_2(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a,b,c
+                                           IF a has gt 0 dirt THEN
+                                               FORGET
+                                           END
+                                           OUTPUT TO dest -- nothing happens :D
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(leftPos))
+                .add("c", helper.absolutePos(leftPos))
+                .add("dest", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "Dirt should not depart");
+            assertTrue(rightChest.getStackInSlot(0).isEmpty(), "Dirt should not arrive");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void forget_slot(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+        leftChest.insertItem(1, new ItemStack(Items.IRON_INGOT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a SLOTS 1-26 -- iron ingot
+                                           INPUT FROM c SLOTS 0    -- dirt blocks
+                                           IF a SLOTS 0 has gt 0 dirt THEN
+                                               FORGET a -- forgets the iron ingot
+                                           END
+                                           OUTPUT TO b -- will move the dirt block, the next tick the ingots
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("c", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt should depart");
+            assertTrue(leftChest.getStackInSlot(1).getCount() == 64, "Iron ingots should not depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt should arrive in size");
+            assertTrue(rightChest.getStackInSlot(0).getItem() == Items.DIRT, "Dirt should arrive in type");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void reorder_1(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           FROM a
+                                           INPUT iron_ingot
+                                           
+                                           TO b OUTPUT
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
+            assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void reorder_2(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           FROM a
+                                           INPUT iron_ingot
+                                           
+                                           OUTPUT TO b
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
+            assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void reorder_3(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = (helper.getBlockEntity(rightPos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a
+                                           
+                                           TO b
+                                           OUTPUT iron_ingot
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
+            assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x4x3")
+    public static void round_robin_by_block_1(GameTestHelper helper) {
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        BlockPos sourcePos = new BlockPos(1, 3, 1);
+        BlockPos dest1Pos = new BlockPos(2, 2, 1);
+        BlockPos dest2Pos = new BlockPos(0, 2, 1);
+
+        // set up inventories
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+
+        var sourceInv = (helper.getBlockEntity(sourcePos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var dest1Inv = (helper.getBlockEntity(dest1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        var dest2Inv = (helper.getBlockEntity(dest2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        for (int i = 0; i < sourceInv.getSlots(); i++) {
+            sourceInv.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
+        }
+
+        // set up manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM source
+                                           OUTPUT 128 dirt TO dest ROUND ROBIN BY BLOCK
+                                       END
+                                   """.stripTrailing().stripIndent());
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("source", helper.absolutePos(sourcePos))
+                .add("dest", helper.absolutePos(dest1Pos))
+                .add("dest", helper.absolutePos(dest2Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 2), "source count bad");
+            int count1 = count(dest1Inv, Items.DIRT);
+            int count2 = count(dest2Inv, Items.DIRT);
+            assertTrue(count1 == 128 && count2 == 0 || count1 == 0 && count2 == 128, "first tick arrival count bad");
+
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x4x3")
+    public static void round_robin_by_block_2(GameTestHelper helper) {
+        for (int x = 0; x < 3; x++) {
+            for (int z = 0; z < 3; z++) {
+                helper.setBlock(x, 1, z, SFMBlocks.CABLE_BLOCK.get());
+            }
+        }
+        BlockPos managerPos = new BlockPos(0, 2, 2);
+        BlockPos sourcePos = new BlockPos(2, 2, 0);
+        BlockPos a1Pos = new BlockPos(0, 2, 0);
+        BlockPos a2Pos = new BlockPos(0, 2, 1);
+        BlockPos b1Pos = new BlockPos(1, 2, 2);
+        BlockPos b2Pos = new BlockPos(2, 2, 2);
+
+        // set up inventories
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+
+        var sourceInv = (helper.getBlockEntity(sourcePos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var a1 = (helper.getBlockEntity(a1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var a2 = (helper.getBlockEntity(a2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var b1 = (helper.getBlockEntity(b1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var b2 = (helper.getBlockEntity(b2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        for (int i = 0; i < sourceInv.getSlots(); i++) {
+            sourceInv.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
+        }
+
+        // set up manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM source
+                                           OUTPUT 128 dirt TO EACH a,b ROUND ROBIN BY BLOCK
+                                       END
+                                   """.stripTrailing().stripIndent());
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("source", helper.absolutePos(sourcePos))
+                .add("a", helper.absolutePos(a1Pos))
+                .add("a", helper.absolutePos(a2Pos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 2), "source count bad");
+            assertTrue(count(a1, Items.DIRT) == 128, "a1 arrival count bad");
+            assertTrue(count(a2, Items.DIRT) == 0, "a2 arrival count bad");
+            assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
+            assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
+    public static void round_robin_no_blocks_crash_regression(GameTestHelper helper) {
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        BlockPos managerPos = new BlockPos(1, 2, 0);
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM d,e ROUND ROBIN BY BLOCK
+                                           OUTPUT TO f,g,h ROUND ROBIN BY LABEL
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .save(manager.getDisk().get());
+
+        // it should not crash
+        succeedIfManagerDidThingWithoutLagging(helper, manager, helper::succeed);
+    }
+
+    @GameTest(template = "3x4x3")
+    public static void round_robin_by_label(GameTestHelper helper) {
+        for (int x = 0; x < 3; x++) {
+            for (int z = 0; z < 3; z++) {
+                helper.setBlock(x, 1, z, SFMBlocks.CABLE_BLOCK.get());
+            }
+        }
+        BlockPos managerPos = new BlockPos(0, 2, 2);
+        BlockPos sourcePos = new BlockPos(2, 2, 0);
+        BlockPos a1Pos = new BlockPos(0, 2, 0);
+        BlockPos a2Pos = new BlockPos(0, 2, 1);
+        BlockPos b1Pos = new BlockPos(1, 2, 2);
+        BlockPos b2Pos = new BlockPos(2, 2, 2);
+
+        // set up inventories
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+
+        var sourceInv = (helper.getBlockEntity(sourcePos))
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve()
+                .get();
+
+        var a1 = (helper.getBlockEntity(a1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var a2 = (helper.getBlockEntity(a2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var b1 = (helper.getBlockEntity(b1Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var b2 = (helper.getBlockEntity(b2Pos)).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+
+        for (int i = 0; i < sourceInv.getSlots(); i++) {
+            sourceInv.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
+        }
+
+        // set up manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM source
+                                           OUTPUT 128 dirt TO EACH a,b ROUND ROBIN BY LABEL
+                                       END
+                                   """.stripTrailing().stripIndent());
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("source", helper.absolutePos(sourcePos))
+                .add("a", helper.absolutePos(a1Pos))
+                .add("a", helper.absolutePos(a2Pos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 4), "source count bad");
+            assertTrue(count(a1, Items.DIRT) == 128, "a1 arrival count bad");
+            assertTrue(count(a2, Items.DIRT) == 128, "a2 arrival count bad");
+            assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
+            assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
+            helper.succeed();
+        });
+    }
 }

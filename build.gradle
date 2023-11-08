@@ -58,7 +58,7 @@ static void extendConfigurations(Configuration base, Configuration... configurat
 }
 
 
-version = '4.13.0'
+version = '4.14.0'
 group = 'ca.teamdman.sfm' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'SuperFactoryManager-1.19.4'
 
@@ -119,6 +119,12 @@ minecraft {
                 }
             }
 
+        }
+
+        client_teamy {
+            //noinspection GroovyAssignabilityCheck
+            parent runs.client
+            args '--username', 'TeamDman', '--uuid', '83f1df8b-0ba3-4de0-8a26-e51a1fd74318'
         }
 
         server {

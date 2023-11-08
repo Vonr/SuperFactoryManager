@@ -1,6 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.program.RegexCache;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -31,6 +32,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     public final String resourceName;
     private @Nullable ResourceType<STACK, ITEM, CAP> resourceTypeCache = null;
 
+
+    private final Predicate<String> resourceNamespacePredicate;
+    private final Predicate<String> resourceNamePredicate;
+
     public ResourceIdentifier(
             String resourceTypeNamespace,
             String resourceTypeName,
@@ -41,6 +46,12 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         this.resourceTypeName = resourceTypeName;
         this.resourceNamespace = resourceNamespace;
         this.resourceName = resourceName;
+        this.resourceNamespacePredicate = RegexCache.buildPredicate(resourceNamespace);
+        this.resourceNamePredicate = RegexCache.buildPredicate(resourceName);
+    }
+
+    public boolean matchesStack(ResourceLocation stackId) {
+        return resourceNamePredicate.test(stackId.getPath()) && resourceNamespacePredicate.test(stackId.getNamespace());
     }
 
     public ResourceIdentifier(String value) {
@@ -72,8 +83,12 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
 
     public void assertValid() throws IllegalArgumentException {
         try {
-            Pattern.compile(this.resourceNamespace);
-            Pattern.compile(this.resourceName);
+            if (RegexCache.isRegexPattern(this.resourceNamespace)) {
+                Pattern.compile(this.resourceNamespace);
+            }
+            if (RegexCache.isRegexPattern(this.resourceName)) {
+                Pattern.compile(this.resourceName);
+            }
         } catch (PatternSyntaxException e) {
             throw new IllegalArgumentException("Invalid resource identifier pattern \""
                                                + this
@@ -94,7 +109,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
 
     public boolean test(Object other) {
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
-        return resourceType != null && resourceType.stackMatches(this, other);
+        return resourceType != null && resourceType.matchesStack(this, other);
     }
 
     public List<ResourceIdentifier<STACK, ITEM, CAP>> expand() {
@@ -112,7 +127,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
         //noinspection DataFlowIssue // if we get here, it should have a registry
         List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().getEntries().stream()
-                .filter(e -> ResourceType.stackIdMatches(this, e.getKey().location()))
+                .filter(e -> matchesStack(e.getKey().location()))
                 .map(e -> new ResourceIdentifier<STACK, ITEM, CAP>(
                         resourceTypeNamespace,
                         resourceTypeName,
@@ -127,9 +142,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     public @Nullable ResourceType<STACK, ITEM, CAP> getResourceType() {
         if (resourceTypeCache == null) {
             //noinspection unchecked
-            resourceTypeCache = (ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.DEFERRED_TYPES
-                    .get()
-                    .getValue(new ResourceLocation(this.resourceTypeNamespace, this.resourceTypeName));
+            resourceTypeCache = (ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.fastLookup(
+                    resourceTypeNamespace,
+                    resourceTypeName
+            );
         }
         return resourceTypeCache;
     }
@@ -160,7 +176,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         } else {
             rtn = resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
         }
-        return "\"" + rtn + "\"";
+        return rtn;
     }
 
     @Override

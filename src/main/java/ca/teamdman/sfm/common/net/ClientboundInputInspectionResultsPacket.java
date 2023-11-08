@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 public record ClientboundInputInspectionResultsPacket(
         String results
 ) {
-    public static final int MAX_RESULTS_LENGTH = 10240;
+    public static final int MAX_RESULTS_LENGTH = 20480;
 
     public static void encode(
             ClientboundInputInspectionResultsPacket msg, FriendlyByteBuf friendlyByteBuf

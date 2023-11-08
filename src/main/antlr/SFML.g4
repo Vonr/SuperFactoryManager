@@ -27,11 +27,17 @@ block           : statement* ;
 statement       : inputstatement    #InputStatementStatement
                 | outputstatement   #OutputStatementStatement
                 | ifstatement       #IfStatementStatement
+                | forgetstatement   #ForgetStatementStatement
                 ;
 
 // IO STATEMENT
-inputstatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess;
-outputstatement : OUTPUT outputmatchers? resourceexclusion? TO EACH? labelaccess;
+forgetstatement : FORGET label? (COMMA label)* COMMA?;
+inputstatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess
+                | FROM EACH? labelaccess INPUT inputmatchers? resourceexclusion?
+                ;
+outputstatement : OUTPUT outputmatchers? resourceexclusion? TO EACH? labelaccess
+                | TO EACH? labelaccess OUTPUT outputmatchers? resourceexclusion?
+                ;
 inputmatchers   : movement; // separate for different defaults
 outputmatchers  : movement; // separate for different defaults
 
@@ -101,12 +107,13 @@ setOp           : OVERALL
 //
 // IO HELPERS
 //
-labelaccess     : label (COMMA label)* sidequalifier? slotqualifier?;
+labelaccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
+roundrobin: ROUND ROBIN BY (LABEL | BLOCK);
 label           : IDENTIFIER #RawLabel
                 | string    #StringLabel
                 ;
 
-resourceid      : IDENTIFIER (COLON IDENTIFIER? (COLON IDENTIFIER? (COLON IDENTIFIER?)?)?)? # Resource
+resourceid      : (IDENTIFIER|REDSTONE) (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)?)?)?)? # Resource
                 | string                             # StringResource
                 ;
 
@@ -161,6 +168,14 @@ SLOTS   : S L O T S ;
 RETAIN  : R E T A I N ;
 EACH    : E A C H ;
 EXCEPT  : E X C E P T ;
+FORGET  : F O R G E T ;
+
+// ROUND ROBIN
+ROUND : R O U N D ;
+ROBIN : R O B I N ;
+BY    : B Y ;
+LABEL : L A B E L ;
+BLOCK : B L O C K ;
 
 // SIDE LOGIC
 TOP     : T O P ;

@@ -12,7 +12,7 @@ public record ClientboundContainerExportsInspectionResultsPacket(
         int windowId,
         String results
 ) {
-    public static final int MAX_RESULTS_LENGTH = 10240;
+    public static final int MAX_RESULTS_LENGTH = 20480;
 
     public static void encode(
             ClientboundContainerExportsInspectionResultsPacket msg, FriendlyByteBuf friendlyByteBuf

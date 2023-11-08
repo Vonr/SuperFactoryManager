@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.block;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
-import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -78,7 +78,7 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
 
     public void recount(Level level, BlockPos pos) {
         if (!(level.getBlockEntity(pos) instanceof WaterTankBlockEntity be)) return;
-        var tanks = SFMUtil.getRecursiveStream((current, next, results) -> {
+        var tanks = SFMUtils.getRecursiveStream((current, next, results) -> {
             results.accept(current);
             for (var d : Direction.values()) {
                 var offset = current.getBlockPos().offset(d.getNormal());

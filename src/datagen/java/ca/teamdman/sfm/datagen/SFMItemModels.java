@@ -30,6 +30,7 @@ public class SFMItemModels extends ItemModelProvider {
         basicItem(SFMItems.LABEL_GUN_ITEM);
         basicItem(SFMItems.EXPERIENCE_GOOP_ITEM);
         basicItem(SFMItems.EXPERIENCE_SHARD_ITEM);
+        basicItem(SFMItems.NETWORK_TOOL_ITEM);
 
         // force custom renderer
         getBuilder(SFMItems.FORM_ITEM.getId().toString())

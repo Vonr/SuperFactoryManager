@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.block;
 
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.cablenetwork.ICable;
+import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
 
-public class CableBlock extends Block implements ICable {
+public class CableBlock extends Block implements ICableBlock {
 
     public CableBlock() {
         super(Block.Properties
@@ -32,19 +32,19 @@ public class CableBlock extends Block implements ICable {
         if (!(level instanceof ServerLevel)) return;
         // reassess neighbours of the CABLE's position
         CableNetworkManager
-                .getOrRegisterNetwork(level, pos)
+                .getOrRegisterNetworkFromCablePosition(level, pos)
                 .ifPresent(network -> network.rebuildAdjacentInventories(pos));
     }
 
     @SuppressWarnings("deprecation")
     @Override
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
-        CableNetworkManager.getOrRegisterNetwork(world, pos);
+        CableNetworkManager.getOrRegisterNetworkFromCablePosition(world, pos);
     }
 
     @SuppressWarnings("deprecation")
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        CableNetworkManager.unregister(level, pos);
+        CableNetworkManager.removeCable(level, pos);
     }
 }

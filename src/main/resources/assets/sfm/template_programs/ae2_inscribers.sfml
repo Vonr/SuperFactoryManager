@@ -1,0 +1,23 @@
+NAME "AE2 Inscribers"
+EVERY 20 TICKS DO
+    INPUT FROM materials
+    OUTPUT gold_ingot TO logic SLOTS 2
+    OUTPUT diamond TO engineering SLOTS 2
+    OUTPUT certus_quartz_crystal TO calculation SLOTS 2
+    OUTPUT silicon TO silicon SLOTS 2
+    OUTPUT redstone TO last SLOTS 2
+    OUTPUT printed_silicon TO last SLOTS 1
+    OUTPUT
+        printed_calculation_processor,
+        printed_engineering_processor,
+        printed_logic_processor,
+    TO last SLOTS 0
+
+    FORGET
+    INPUT FROM logic, engineering, calculation, silicon west side
+    output to materials
+
+    FORGET
+    INPUT FROM last west SIDE
+    OUTPUT TO results
+END
