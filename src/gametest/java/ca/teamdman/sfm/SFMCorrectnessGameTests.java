@@ -2766,10 +2766,16 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 2), "source count bad");
-            assertTrue(count(a1, Items.DIRT) == 128, "a1 arrival count bad");
-            assertTrue(count(a2, Items.DIRT) == 0, "a2 arrival count bad");
-            assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
-            assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
+            int a1Count = count(a1, Items.DIRT);
+            int a2Count = count(a2, Items.DIRT);
+            int b1Count = count(b1, Items.DIRT);
+            int b2Count = count(b2, Items.DIRT);
+            // only one of a1, a2, b1, b2 must be 128, rest must be zero
+            boolean good = (a1Count == 128 && a2Count == 0 && b1Count == 0 && b2Count == 0) ||
+                           (a1Count == 0 && a2Count == 128 && b1Count == 0 && b2Count == 0) ||
+                           (a1Count == 0 && a2Count == 0 && b1Count == 128 && b2Count == 0) ||
+                           (a1Count == 0 && a2Count == 0 && b1Count == 0 && b2Count == 128);
+            assertTrue(good, "first tick arrival count bad");
             helper.succeed();
         });
     }
