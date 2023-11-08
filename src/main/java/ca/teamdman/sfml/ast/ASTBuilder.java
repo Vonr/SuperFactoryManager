@@ -236,10 +236,19 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         LabelAccess labelAccess = new LabelAccess(
                 ctx.label().stream().map(this::visit).map(Label.class::cast).collect(Collectors.toList()),
                 visitSidequalifier(ctx.sidequalifier()),
-                visitSlotqualifier(ctx.slotqualifier())
+                visitSlotqualifier(ctx.slotqualifier()),
+                visitRoundrobin(ctx.roundrobin())
         );
         AST_NODE_CONTEXTS.add(new Pair<>(labelAccess, ctx));
         return labelAccess;
+    }
+
+    @Override
+    public RoundRobin visitRoundrobin(@Nullable SFMLParser.RoundrobinContext ctx) {
+        if (ctx == null) return RoundRobin.disabled();
+        return ctx.BLOCK() != null
+               ? new RoundRobin(RoundRobin.Behaviour.BY_BLOCK)
+               : new RoundRobin(RoundRobin.Behaviour.BY_LABEL);
     }
 
     @Override
@@ -463,6 +472,27 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         NumberRangeSet numberRangeSet = visitRangeset(ctx == null ? null : ctx.rangeset());
         AST_NODE_CONTEXTS.add(new Pair<>(numberRangeSet, ctx));
         return numberRangeSet;
+    }
+
+    @Override
+    public ASTNode visitForgetStatementStatement(SFMLParser.ForgetStatementStatementContext ctx) {
+        ForgetStatement statement = (ForgetStatement) visit(ctx.forgetstatement());
+        AST_NODE_CONTEXTS.add(new Pair<>(statement, ctx));
+        return statement;
+    }
+
+    @Override
+    public ForgetStatement visitForgetstatement(SFMLParser.ForgetstatementContext ctx) {
+        List<Label> labels = ctx
+                .label()
+                .stream()
+                .map(this::visit)
+                .map(Label.class::cast)
+                .collect(Collectors.toList());
+        if (labels.isEmpty()) {
+            labels = USED_LABELS.stream().toList();
+        }
+        return new ForgetStatement(labels);
     }
 
     @Override

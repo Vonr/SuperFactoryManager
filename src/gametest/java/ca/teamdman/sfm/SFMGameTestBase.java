@@ -7,9 +7,9 @@ import ca.teamdman.sfml.ast.Block;
 import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraftforge.items.IItemHandler;
 
 import java.text.NumberFormat;
@@ -124,7 +124,7 @@ public abstract class SFMGameTestBase {
         );
     }
 
-    protected static int count(ChestBlockEntity chest, Item item) {
+    protected static int count(Container chest, Item item) {
         return IntStream.range(0, chest.getContainerSize())
                 .mapToObj(chest::getItem)
                 .filter(stack -> stack.getItem() == item)
@@ -139,4 +139,6 @@ public abstract class SFMGameTestBase {
                 .mapToInt(ItemStack::getCount)
                 .sum();
     }
+
+
 }

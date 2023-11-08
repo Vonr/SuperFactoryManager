@@ -6,9 +6,9 @@ import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
-import ca.teamdman.sfm.common.program.LabelHolder;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -94,7 +94,7 @@ public class DiskItem extends Item {
                         "sfm:errors",
                         errors
                                 .stream()
-                                .map(SFMUtil::serializeTranslation)
+                                .map(SFMUtils::serializeTranslation)
                                 .collect(ListTag::new, ListTag::add, ListTag::addAll)
                 );
     }
@@ -107,7 +107,7 @@ public class DiskItem extends Item {
                         "sfm:warnings",
                         warnings
                                 .stream()
-                                .map(SFMUtil::serializeTranslation)
+                                .map(SFMUtils::serializeTranslation)
                                 .collect(ListTag::new, ListTag::add, ListTag::addAll)
                 );
     }
@@ -119,7 +119,7 @@ public class DiskItem extends Item {
                 .getList("sfm:errors", Tag.TAG_COMPOUND)
                 .stream()
                 .map(CompoundTag.class::cast)
-                .map(SFMUtil::deserializeTranslation)
+                .map(SFMUtils::deserializeTranslation)
                 .toList();
     }
 
@@ -129,7 +129,7 @@ public class DiskItem extends Item {
                 .getList("sfm:warnings", Tag.TAG_COMPOUND)
                 .stream()
                 .map(CompoundTag.class::cast)
-                .map(SFMUtil::deserializeTranslation)
+                .map(SFMUtils::deserializeTranslation)
                 .collect(
                         Collectors.toList());
     }
@@ -168,7 +168,7 @@ public class DiskItem extends Item {
                     () -> () -> false
             );
             if (!showProgram) {
-                list.addAll(LabelHolder.from(stack).asHoverText());
+                list.addAll(LabelPositionHolder.from(stack).asHoverText());
                 getErrors(stack)
                         .stream()
                         .map(MutableComponent::create)
@@ -180,7 +180,7 @@ public class DiskItem extends Item {
                         .map(line -> line.withStyle(ChatFormatting.YELLOW))
                         .forEach(list::add);
                 list.add(Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
-                                 .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getKey().getDisplayName())
+                                 .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getTranslatedKeyMessage())
                                  .withStyle(ChatFormatting.AQUA));
             } else {
                 var program = getProgram(stack);

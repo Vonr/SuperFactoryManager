@@ -2,7 +2,7 @@ package ca.teamdman.sfm.common.block;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.cablenetwork.ICable;
+import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import net.minecraft.core.BlockPos;
@@ -28,7 +28,7 @@ import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
-public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable {
+public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICableBlock {
     public static final BooleanProperty TRIGGERED = BlockStateProperties.TRIGGERED;
 
     public ManagerBlock() {
@@ -63,7 +63,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         { // update cable network
             // reassess neighbours of the CABLE's position
             CableNetworkManager
-                    .getOrRegisterNetwork(level, pos)
+                    .getOrRegisterNetworkFromCablePosition(level, pos)
                     .ifPresent(network -> network.rebuildAdjacentInventories(pos));
         }
         { // check redstone for triggers
@@ -116,7 +116,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     @Override
     @SuppressWarnings("deprecation")
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
-        CableNetworkManager.getOrRegisterNetwork(world, pos);
+        CableNetworkManager.getOrRegisterNetworkFromCablePosition(world, pos);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
                 Containers.dropContents(level, pos, container);
                 level.updateNeighbourForOutputSignal(pos, this);
             }
-            CableNetworkManager.unregister(level, pos);
+            CableNetworkManager.removeCable(level, pos);
             super.onRemove(state, level, pos, newState, isMoving);
         }
     }

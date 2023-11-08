@@ -22,7 +22,11 @@ public class SFMItems {
     //    public static final  RegistryObject<Item>   BATTERY_ITEM    = register("battery", SFMBlocks.BATTERY_BLOCK);
     public static final RegistryObject<Item> WATER_TANK_ITEM = register("water_tank", SFMBlocks.WATER_TANK_BLOCK);
     public static final RegistryObject<Item> DISK_ITEM = ITEMS.register("disk", DiskItem::new);
-    public static final RegistryObject<Item> LABEL_GUN_ITEM = ITEMS.register("labelgun", LabelGunItem::new);
+    public static final RegistryObject<Item> LABEL_GUN_ITEM = ITEMS.register(
+            "labelgun",
+            LabelGunItem::new
+    ); // TODO: rename on a major version update to label_gun
+    public static final RegistryObject<Item> NETWORK_TOOL_ITEM = ITEMS.register("network_tool", NetworkToolItem::new);
 
     public static final RegistryObject<Item> PRINTING_PRESS_ITEM = ITEMS.register(
             "printing_press",

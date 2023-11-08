@@ -148,6 +148,7 @@ minecraft {
         }
 
         client_teamy {
+            //noinspection GroovyAssignabilityCheck
             parent runs.client
             args '--username', 'TeamDman', '--uuid', '83f1df8b-0ba3-4de0-8a26-e51a1fd74318'
         }

@@ -7,7 +7,7 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
-import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Number;
 import ca.teamdman.sfml.ast.*;
 import net.minecraft.network.FriendlyByteBuf;
@@ -154,7 +154,7 @@ public record ServerboundOutputInspectionRequestPacket(
                                                         ))
                                                 ));
                                         List<InputStatement> inputStatements = inputSlots.stream()
-                                                .map(slot -> SFMUtil.getInputStatementForSlot(slot.a, slot.b))
+                                                .map(slot -> SFMUtils.getInputStatementForSlot(slot.a, slot.b))
                                                 .filter(Optional::isPresent)
                                                 .map(Optional::get)
                                                 .toList();
@@ -214,19 +214,18 @@ public record ServerboundOutputInspectionRequestPacket(
                                                                 .resourceLimits()
                                                                 .resourceLimits()
                                                                 .stream()
-                                                                .filter(outputResourceLimit -> ResourceType.stackIdMatches(
-                                                                        outputResourceLimit.resourceId(),
-                                                                        resourceLimitLocation
-                                                                ) && outputStatement
+                                                                .filter(outputResourceLimit -> outputResourceLimit
+                                                                                                       .resourceId()
+                                                                                                       .matchesStack(
+                                                                                                               resourceLimitLocation)
+                                                                                               && outputStatement
                                                                                                        .resourceLimits()
                                                                                                        .exclusions()
                                                                                                        .resourceIds()
                                                                                                        .stream()
                                                                                                        .noneMatch(
-                                                                                                               exclusion -> ResourceType.stackIdMatches(
-                                                                                                                       exclusion,
-                                                                                                                       resourceLimitLocation
-                                                                                                               )))
+                                                                                                               exclusion -> exclusion.matchesStack(
+                                                                                                                       resourceLimitLocation)))
                                                                 .mapToLong(rl -> rl.limit().quantity().number().value())
                                                                 .max()
                                                                 .orElse(0);

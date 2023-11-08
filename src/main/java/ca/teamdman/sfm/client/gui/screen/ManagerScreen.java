@@ -29,10 +29,9 @@ import net.minecraftforge.client.gui.widget.ExtendedButton;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
 
@@ -84,6 +83,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         editButton.visible = diskPresent && !isReadOnly();
     }
 
+    private Tooltip buildTooltip(LocalizationEntry entry) {
+        return Tooltip.create(entry.getComponent());
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -95,7 +98,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onLoadClipboard(),
-                Tooltip.create(MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP.getComponent())
+                buildTooltip(MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP)
         ));
         editButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -104,7 +107,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_EDIT_BUTTON.getComponent(),
                 button -> onEdit(),
-                Tooltip.create(MANAGER_GUI_EDIT_BUTTON_TOOLTIP.getComponent())
+                buildTooltip(MANAGER_GUI_EDIT_BUTTON_TOOLTIP)
         ));
         examplesButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -113,7 +116,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_VIEW_EXAMPLES_BUTTON.getComponent(),
                 button -> onShowExamples(),
-                Tooltip.create(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP.getComponent())
+                buildTooltip(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP)
         ));
         clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -130,7 +133,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 12,
                 MANAGER_GUI_RESET_BUTTON.getComponent(),
                 button -> sendReset(),
-                Tooltip.create(MANAGER_GUI_RESET_BUTTON_TOOLTIP.getComponent())
+                buildTooltip(MANAGER_GUI_RESET_BUTTON_TOOLTIP)
         ));
         diagButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 35,
@@ -145,11 +148,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         this.onSaveDiagClipboard();
                     }
                 },
-                Tooltip.create((
-                                       isReadOnly()
-                                       ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
-                                       : MANAGER_GUI_WARNING_BUTTON_TOOLTIP
-                               ).getComponent())
+                buildTooltip(isReadOnly()
+                             ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
+                             : MANAGER_GUI_WARNING_BUTTON_TOOLTIP)
         ));
         updateVisibilities();
     }
@@ -202,7 +203,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
-            t.printStackTrace();
+            SFM.LOGGER.error("failed to save clipboard", t);
         }
     }
 
@@ -245,7 +246,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
-            t.printStackTrace();
+            SFM.LOGGER.error("failed saving clipboard", t);
         }
     }
 
@@ -254,7 +255,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             String contents = Minecraft.getInstance().keyboardHandler.getClipboard();
             sendProgram(contents);
         } catch (Throwable t) {
-            t.printStackTrace();
+            SFM.LOGGER.error("failed loading clipboard", t);
         }
     }
 
@@ -308,11 +309,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         }
 
         // Find the maximum tick time for normalization
-        long peakTickTime = 0;
+        long peakTickTimeNanoseconds = 0;
         for (int i = 0; i < menu.tickTimeNanos.length; i++) {
-            peakTickTime = Long.max(peakTickTime, menu.tickTimeNanos[i]);
+            peakTickTimeNanoseconds = Long.max(peakTickTimeNanoseconds, menu.tickTimeNanos[i]);
         }
-        long yMax = Long.max(peakTickTime, 50000000); // Start with max at 50ms but allow it to grow
+        long yMax = Long.max(peakTickTimeNanoseconds, 50000000); // Start with max at 50ms but allow it to grow
 
         // Constants for the plot size and position
         final int plotX = titleLabelX + 45;
@@ -352,7 +353,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             int plotPosX = plotX + spaceBetweenPoints * i;
 
             // Color the lines based on their tick times (green to red)
-            var c = getNanoColour(y);
+            var c = getMillisecondColour(y / 1_000_000f);
             //noinspection DataFlowIssue
             float red = ((c.getColor() >> 16) & 0xFF) / 255f;
             float green = ((c.getColor() >> 8) & 0xFF) / 255f;
@@ -374,15 +375,19 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         tesselator.end();
 
         // Draw the tick time text
-        var format = NumberFormat.getInstance(Locale.getDefault());
+        var format = new DecimalFormat("0.000");
         if (mouseTickTimeIndex != -1) { // We are hovering over the plot
             // Draw the tick time text for the hovered point instead of peak
-            long hoveredY = menu.tickTimeNanos[mouseTickTimeIndex];
+            long hoveredTickTimeNanoseconds = menu.tickTimeNanos[mouseTickTimeIndex];
+            var hoveredTickTimeMilliseconds = hoveredTickTimeNanoseconds / 1_000_000f;
+
             graphics.drawString(
                     this.font,
                     MANAGER_GUI_HOVERED_TICK_TIME.getComponent(Component
-                                                                       .literal(format.format(hoveredY))
-                                                                       .withStyle(getNanoColour(hoveredY))),
+                                                                       .literal(format.format(
+                                                                               hoveredTickTimeMilliseconds))
+                                                                       .withStyle(getMillisecondColour(
+                                                                               hoveredTickTimeMilliseconds))),
                     titleLabelX,
                     20 + font.lineHeight,
                     0,
@@ -408,11 +413,13 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             tesselator.end();
         } else {
             // Draw the tick time text for peak value
+            var peakTickTimeMilliseconds = peakTickTimeNanoseconds / 1_000_000f;
             graphics.drawString(
                     this.font,
                     MANAGER_GUI_PEAK_TICK_TIME.getComponent(Component
-                                                                    .literal(format.format(peakTickTime))
-                                                                    .withStyle(getNanoColour(peakTickTime))),
+                                                                    .literal(format.format(peakTickTimeMilliseconds))
+                                                                    .withStyle(getMillisecondColour(
+                                                                            peakTickTimeMilliseconds))),
                     titleLabelX,
                     20 + font.lineHeight,
                     0,
@@ -424,10 +431,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         RenderSystem.disableBlend();
     }
 
-    public ChatFormatting getNanoColour(long nano) {
-        if (nano <= 5_000_000) {
+    public ChatFormatting getMillisecondColour(float ms) {
+        if (ms <= 5) {
             return ChatFormatting.GREEN;
-        } else if (nano <= 15_000_000) {
+        } else if (ms <= 15) {
             return ChatFormatting.YELLOW;
         } else {
             return ChatFormatting.RED;

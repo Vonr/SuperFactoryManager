@@ -61,6 +61,19 @@ public class SFMRecipes extends RecipeProvider {
 
 
         ShapedRecipeBuilder
+                .shaped(RecipeCategory.REDSTONE, SFMItems.NETWORK_TOOL_ITEM.get())
+                .define('S', Items.IRON_INGOT)
+                .define('L', Items.REDSTONE_LAMP)
+                .define('P', Items.HEAVY_WEIGHTED_PRESSURE_PLATE)
+                .define('C', Items.OAK_SIGN)
+                .unlockedBy("has_redstone_lamp", RecipeProvider.has(Items.REDSTONE_LAMP))
+                .pattern(" LC")
+                .pattern(" SP")
+                .pattern("S  ")
+                .save(consumer);
+
+
+        ShapedRecipeBuilder
                 .shaped(RecipeCategory.REDSTONE, SFMItems.DISK_ITEM.get())
                 .define('R', Blocks.REDSTONE_BLOCK)
                 .define('e', Items.REDSTONE)

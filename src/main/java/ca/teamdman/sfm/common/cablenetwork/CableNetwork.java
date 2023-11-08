@@ -1,21 +1,28 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
-import ca.teamdman.sfm.common.util.SFMUtil;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import com.mojang.datafixers.util.Pair;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class CableNetwork {
 
     protected final Level LEVEL;
-    protected final Set<BlockPos> CABLES = new HashSet<>();
-    protected final Map<BlockPos, ICapabilityProvider> CAPABILITY_PROVIDERS = new HashMap<>();
+    protected final LongSet CABLE_POSITIONS = new LongOpenHashSet();
+    protected final Long2ObjectMap<ICapabilityProvider> CAPABILITY_PROVIDER_POSITIONS = new Long2ObjectOpenHashMap<>();
 
     public CableNetwork(Level level) {
         this.LEVEL = level;
@@ -28,17 +35,44 @@ public class CableNetwork {
         if (world == null) return false;
         return world
                 .getBlockState(cablePos)
-                .getBlock() instanceof ICable;
+                .getBlock() instanceof ICableBlock;
     }
 
-    public void rebuildNetwork(BlockPos pos) {
-        CABLES.clear();
-        CAPABILITY_PROVIDERS.clear();
-        discoverCables(pos).forEach(this::addCable);
+    public void rebuildNetwork(BlockPos start) {
+        CABLE_POSITIONS.clear();
+        CAPABILITY_PROVIDER_POSITIONS.clear();
+        discoverCables(start).forEach(this::addCable);
+    }
+
+    public void rebuildNetworkFromCache(BlockPos start, CableNetwork cache) {
+        CABLE_POSITIONS.clear();
+        CAPABILITY_PROVIDER_POSITIONS.clear();
+
+        // discover existing cables
+        var cables = SFMUtils.getRecursiveStream((current, next, results) -> {
+            results.accept(current);
+            for (Direction d : Direction.values()) {
+                BlockPos offset = current.offset(d.getNormal());
+                if (cache.containsCablePosition(offset)) {
+                    next.accept(offset);
+                }
+            }
+        }, start).toList();
+        for (BlockPos cablePos : cables) {
+            CABLE_POSITIONS.add(cablePos.asLong());
+        }
+        // discover existing capability providers
+        cables
+                .stream()
+                .flatMap(cablePos -> Arrays.stream(Direction.values()).map(Direction::getNormal).map(cablePos::offset))
+                .distinct()
+                .filter(pos -> cache.CAPABILITY_PROVIDER_POSITIONS.containsKey(pos.asLong()))
+                .map(capPos -> Pair.of(capPos, cache.CAPABILITY_PROVIDER_POSITIONS.get(capPos.asLong())))
+                .forEach(pair -> CAPABILITY_PROVIDER_POSITIONS.put(pair.getFirst().asLong(), pair.getSecond()));
     }
 
     public Stream<BlockPos> discoverCables(BlockPos startPos) {
-        return SFMUtil.getRecursiveStream((current, next, results) -> {
+        return SFMUtils.getRecursiveStream((current, next, results) -> {
             results.accept(current);
             for (Direction d : Direction.values()) {
                 BlockPos offset = current.offset(d.getNormal());
@@ -50,7 +84,7 @@ public class CableNetwork {
     }
 
     public void addCable(BlockPos pos) {
-        boolean isNewMember = CABLES.add(pos);
+        boolean isNewMember = CABLE_POSITIONS.add(pos.asLong());
         if (isNewMember) {
             rebuildAdjacentInventories(pos);
         }
@@ -71,17 +105,29 @@ public class CableNetwork {
                 .map(Direction::getNormal)
                 .map(cablePos::offset)
                 .distinct()
-                .peek(CAPABILITY_PROVIDERS::remove) // Bust the cache
-                .filter(this::hasCableNeighbour) // Verify if should [re]join network
-                .map(pos -> SFMUtil
+                .peek(pos -> CAPABILITY_PROVIDER_POSITIONS.remove(pos.asLong())) // Bust the cache
+                .filter(this::isAdjacentToCable) // Verify if should [re]join network
+                .map(pos -> SFMUtils
                         .discoverCapabilityProvider(LEVEL, pos)
                         .map(prov -> Pair.of(pos, prov))) // Check if we can get capabilities from this block
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .forEach(prov -> CAPABILITY_PROVIDERS.put(prov.getFirst(), prov.getSecond())); // track it
+                .forEach(prov -> CAPABILITY_PROVIDER_POSITIONS.put(
+                        prov.getFirst().asLong(),
+                        prov.getSecond()
+                )); // track it
     }
 
-    // for the javadoc lol
+    @Override
+    public String toString() {
+        return "CableNetwork{level="
+               + getLevel().dimension().location()
+               + ", #cables="
+               + getCableCount()
+               + ", #capabilityProviders="
+               + CAPABILITY_PROVIDER_POSITIONS.size()
+               + "}";
+    }
 
     /**
      * Cables should only join the network if they would be touching a cable already in the network
@@ -89,30 +135,30 @@ public class CableNetwork {
      * @param pos Candidate cable position
      * @return {@code true} if adjacent to cable in network
      */
-    public boolean hasCableNeighbour(BlockPos pos) {
+    public boolean isAdjacentToCable(BlockPos pos) {
         for (Direction direction : Direction.values()) {
-            if (CABLES.contains(pos.offset(direction.getNormal()))) {
+            if (containsCablePosition(pos.offset(direction.getNormal()))) {
                 return true;
             }
         }
         return false;
     }
 
-    public boolean containsCableLocation(BlockPos pos) {
-        return CABLES.contains(pos);
+    public boolean containsCablePosition(BlockPos pos) {
+        return CABLE_POSITIONS.contains(pos.asLong());
     }
 
     public boolean isInNetwork(BlockPos pos) {
-        return CAPABILITY_PROVIDERS.containsKey(pos);
+        return CAPABILITY_PROVIDER_POSITIONS.containsKey(pos.asLong());
     }
 
 
     public Optional<ICapabilityProvider> getCapabilityProvider(BlockPos pos) {
-        return Optional.ofNullable(CAPABILITY_PROVIDERS.get(pos));
+        return Optional.ofNullable(CAPABILITY_PROVIDER_POSITIONS.get(pos.asLong()));
     }
 
-    public int size() {
-        return CABLES.size();
+    public int getCableCount() {
+        return CABLE_POSITIONS.size();
     }
 
     /**
@@ -121,35 +167,37 @@ public class CableNetwork {
      * @param other Foreign network
      */
     public void mergeNetwork(CableNetwork other) {
-        CABLES.addAll(other.CABLES);
-        CAPABILITY_PROVIDERS.putAll(other.CAPABILITY_PROVIDERS);
+        CABLE_POSITIONS.addAll(other.CABLE_POSITIONS);
+        CAPABILITY_PROVIDER_POSITIONS.putAll(other.CAPABILITY_PROVIDER_POSITIONS);
     }
 
     public boolean isEmpty() {
-        return CABLES.isEmpty();
+        return CABLE_POSITIONS.isEmpty();
     }
 
-    @SuppressWarnings("unused")
-    public Map<BlockPos, ICapabilityProvider> getCapabilityProviders() {
-        return Collections.unmodifiableMap(CAPABILITY_PROVIDERS);
+    public Stream<BlockPos> getCablePositions() {
+        return CABLE_POSITIONS.longStream().mapToObj(BlockPos::of);
     }
 
-    public Set<BlockPos> getCables() {
-        return Collections.unmodifiableSet(CABLES);
+    public Stream<BlockPos> getCapabilityProviderPositions() {
+        return CAPABILITY_PROVIDER_POSITIONS.keySet().longStream().mapToObj(BlockPos::of);
     }
 
     /**
-     * Discover what networks would exist if this network did not have a cable at cablePos
+     * Discover what networks would exist if this network did not have a cable at {@code cablePos}.
+     * @param cablePos cable position to be removed
+     * @return resulting networks to replace this network
      */
     protected List<CableNetwork> withoutCable(BlockPos cablePos) {
+        CABLE_POSITIONS.remove(cablePos.asLong());
         List<CableNetwork> branches = new ArrayList<>();
         for (var direction : Direction.values()) {
             var offsetPos = cablePos.offset(direction.getNormal());
-            if (!isCable(getLevel(), offsetPos)) continue;
+            if (!containsCablePosition(offsetPos)) continue;
             // make sure that a branch network doesn't already contain this cable
-            if (branches.stream().anyMatch(n -> n.containsCableLocation(offsetPos))) continue;
+            if (branches.stream().anyMatch(n -> n.containsCablePosition(offsetPos))) continue;
             var branchNetwork = new CableNetwork(this.getLevel());
-            branchNetwork.rebuildNetwork(offsetPos);
+            branchNetwork.rebuildNetworkFromCache(offsetPos, this);
             branches.add(branchNetwork);
         }
         return branches;

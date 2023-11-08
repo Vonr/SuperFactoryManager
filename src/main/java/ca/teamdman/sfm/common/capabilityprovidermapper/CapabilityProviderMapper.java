@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.cablenetwork;
+package ca.teamdman.sfm.common.capabilityprovidermapper;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelAccessor;
