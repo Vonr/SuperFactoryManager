@@ -35,7 +35,7 @@ for syntax highlighting 🌈
 11. `runData`
 11. `gradle build`
 12. `git checkout 1.20`
-13. `git merge 1.19.4`, resolve conflicts, and update [`gradle.properties`](./gradle.properties) with new mod version
+13. `git merge 1.19.4`
     number
 14. `runData`
 15. `runClient` and `/test runall`
