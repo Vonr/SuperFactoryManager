@@ -1,3 +1,4 @@
+<!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
 
 # Super Factory Manager 4
@@ -19,6 +20,33 @@ Get the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=T
 for syntax highlighting 🌈
 
 ![](media/vscode%20syntax.png)
+
+## New build checklist
+
+1. Checkout `1.19.2` branch
+2. Make changes
+3. Bump version number in `build.gradle`
+4. `runData`
+5. `runClient` and `/test runall`
+6. `runServer` and connect with `runClient`, do basic manual test from zero
+7. `gradle build`
+8. `git checkout 1.19.4`
+9. `git merge 1.19.2` and resolve conflicts
+11. `runData`
+11. `gradle build`
+12. `git checkout 1.20`
+13. `git merge 1.19.4`, resolve conflicts, and update [`gradle.properties`](./gradle.properties) with new mod version
+    number
+14. `runData`
+15. `runClient` and `/test runall`
+14. `gradle build`
+15. `git checkout 1.20.1`
+16. `git merge 1.20`
+17. `runData`
+18. `runClient` and `/test runall`
+19. `gradle build`
+20. Run 1.19.2, 1.19.4, 1.20, 1.20.1 jars in polymc to ensure works outside of dev environment
+15. Upload jars from [build/libs](./build/libs) with changelog to curseforge
 
 ## Optimization
 
