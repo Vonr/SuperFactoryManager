@@ -7,10 +7,7 @@ plugins {
 }
 
 
-//apply plugin: 'net.minecraftforge.gradle' version '5.1.+'
-//apply plugin: 'eclipse'
-//apply plugin: 'maven-publish'
-//apply plugin: 'antlr'
+
 
 sourceSets {
     main {
@@ -79,14 +76,37 @@ minecraft {
     // See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
     //
     // Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge
-    // Additional setup is needed to use their mappings: https://github.com/ParchmentMC/Parchment/wiki/Getting-Started
+    // Additional setup is needed to use their mappings: https://parchmentmc.org/docs/getting-started
     //
     // Use non-default mappings at your own risk. They may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
-    // mappings channel: 'official', version: '1.19.2'
-    mappings channel: 'parchment', version: '2022.08.21-1.19.2'
+    mappings channel: mapping_channel, version: mapping_version
+
+    // When true, this property will have all Eclipse run configurations run the "prepareX" task for the given run configuration before launching the game.
+    // In most cases, it is not necessary to enable.
+    // enableEclipsePrepareRuns = true
+
+    // When true, this property will have all IntelliJ IDEA run configurations run the "prepareX" task for the given run configuration before launching the game.
+    // In most cases, it is not necessary to enable.
+    // enableIdeaPrepareRuns = true
+
+    // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
+    // It is REQUIRED to be set to true for this template to function.
+    // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
+    copyIdeResources = true
+
+    // When true, this property will add the folder name of all declared run configurations to generated IDE run configurations.
+    // The folder name can be set on a run configuration using the "folderName" property.
+    // By default, the folder name of a run configuration is the name of the Gradle project containing it.
+    // generateRunFolders = true
+
+    // This property enables access transformers for use in development.
+    // They will be applied to the Minecraft artifact.
+    // The access transformer file can be anywhere in the project.
+    // However, it must be at "META-INF/accesstransformer.cfg" in the final mod jar to be loaded by Forge.
+    // This default location is a best practice to automatically put the file in the right place in the final jar.
+    // See https://docs.minecraftforge.net/en/latest/advanced/accesstransformers/ for more information.
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-    // Currently, this location cannot be changed from the default.
 
     // Default run configurations.
     // These can be tweaked, removed, or duplicated as needed.
@@ -107,22 +127,22 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', 'sfm'
+            property 'forge.enabledGameTestNamespaces', mod_id
 
+            // Ensure mixin dependencies play nice
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
-//            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
-//            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
+            // https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
+            // https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
             jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
-                sfm {
+                "${mod_id}" {
                     source sourceSets.main
                     source sourceSets.gametest
                 }
             }
-
         }
 
         client_teamy {
@@ -138,17 +158,15 @@ minecraft {
 
             property 'forge.logging.console.level', 'debug'
 
-            property 'forge.enabledGameTestNamespaces', 'sfm'
+            property 'forge.enabledGameTestNamespaces', mod_id
 
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
-//            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
-//            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
             jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
-                sfm {
+                "${mod_id}" {
                     source sourceSets.main
                     source sourceSets.gametest
                 }
@@ -165,19 +183,15 @@ minecraft {
 
             property 'forge.logging.console.level', 'debug'
 
-            property 'forge.enabledGameTestNamespaces', 'sfm'
+            property 'forge.enabledGameTestNamespaces', mod_id
 
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
-            ideaModule "${project.name}.gametest"
-
-//            https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
-//            https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
             jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
-                sfm {
+                "${mod_id}" {
                     source sourceSets.main
                     source sourceSets.gametest
                 }
@@ -194,11 +208,15 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
+            jvmArgs '-XX:+AllowEnhancedClassRedefinition', '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
+
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', 'sfm', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
             ideaModule "${project.name}.datagen"
+
             mods {
-                sfm {
+                "${mod_id}" {
                     source sourceSets.main
                     source sourceSets.datagen
                 }
@@ -207,11 +225,16 @@ minecraft {
     }
 }
 
+
+// Include resources generated by data generators.
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
 repositories {
     // Put repositories for dependencies here
     // ForgeGradle automatically adds the Forge maven and Maven Central for you
 
-    // If you have mod jar dependencies in ./libs, you can declare them as a repository like so:
+    // If you have mod jar dependencies in ./libs, you can declare them as a repository like so.
+    // See https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:flat_dir_resolver
     // flatDir {
     //     dir 'libs'
     // }
@@ -315,8 +338,27 @@ dependencies {
 
 }
 
+// This block of code expands all declared replace properties in the specified resource tar+gets.
+// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
+// When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
+// See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
+def resourceTargets = ['META-INF/mods.toml', 'pack.mcmeta']
+def replaceProperties = [
+        minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
+        neo_version         : neo_version, neo_version_range: neo_version_range,
+        loader_version_range: loader_version_range,
+        mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+        mod_authors         : mod_authors, mod_description: mod_description
+]
 processResources {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
+    inputs.properties replaceProperties
+    replaceProperties.put 'project', project
+
+    filesMatching(resourceTargets) {
+        expand replaceProperties
+    }
 }
 
 processGametestResources {
@@ -332,12 +374,12 @@ test {
 jar {
     manifest {
         attributes([
-                "Specification-Title"     : "sfm",
-                "Specification-Vendor"    : "teamdman.ca",
+                "Specification-Title"  : mod_id,
+                "Specification-Vendor" : mod_authors,
                 "Specification-Version"   : "1", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
-                "Implementation-Vendor"   : "teamdman.ca",
+                "Implementation-Vendor": mod_authors,
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
@@ -351,9 +393,7 @@ jar.finalizedBy('reobfJar')
 
 publishing {
     publications {
-        //noinspection GroovyAssignabilityCheck
         mavenJava(MavenPublication) {
-            //noinspection GroovyAssignabilityCheck
             artifact jar
         }
     }
@@ -373,15 +413,3 @@ generateGrammarSource {
     outputDirectory = file("${project.buildDir}/generated-src/antlr/main/ca/teamdman/sfml")
 }
 compileJava.dependsOn generateGrammarSource
-//
-////generateGrammarSource.doLast {
-////    copy {
-////        from "${project.buildDir}/src/generated/java/sfml"
-////        into "src/generated/java"
-////    }
-////}
-//
-//task removeGeneratedSource(type: Delete) {
-////    delete
-//}
-//clean.dependsOn removeGeneratedSource
