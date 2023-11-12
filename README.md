@@ -21,13 +21,16 @@ for syntax highlighting 🌈
 
 ![](media/vscode%20syntax.png)
 
-## New build checklist
+## Release process
+
+The following process is designed to catch the most obvious problems that may arise from creating a new release.
 
 ```
 versions = [1.19.2, 1.19.4, 1.20, 1.20.1]
 jars = []
 for i,version in enumerate(versions):
     git checkout $version
+    gradle genIntellijRuns
     if i == 0:
         make changes
         bump mod_version in gradle.properties
@@ -37,12 +40,13 @@ for i,version in enumerate(versions):
     else:
         git merge $versions[i-1]
         resolve conflicts
-        git push
     runData
     git add src/generated
-    runClient, /test runall
-    runGameTestServer, assert exit == 0
-    jars.append(gradle build)
+    rm -rf runGameTest/world
+    gradle runGameTestServer, assert exit == 0
+    gradle build | jars.append($_)
+
+git push --all
 
 for jar in jars:
     copy jar to server, run.bat
