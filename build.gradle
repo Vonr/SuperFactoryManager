@@ -271,7 +271,7 @@ dependencies {
     // The "userdev" classifier will be requested and setup by ForgeGradle.
     // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${neo_version}"
 
     // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -298,19 +298,21 @@ dependencies {
     runtimeOnly fg.deobf('mezz.jei:jei-1.20-forge:14.0.0.11')
 }
 
-// This block of code expands all declared replace properties in the specified resource targets.
+// This block of code expands all declared replace properties in the specified resource tar+gets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 // When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
 // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
 def resourceTargets = ['META-INF/mods.toml', 'pack.mcmeta']
 def replaceProperties = [
         minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
-        forge_version       : forge_version, forge_version_range: forge_version_range,
+        neo_version         : neo_version, neo_version_range: neo_version_range,
         loader_version_range: loader_version_range,
         mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
         mod_authors         : mod_authors, mod_description: mod_description
 ]
 processResources {
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
     inputs.properties replaceProperties
     replaceProperties.put 'project', project
 
@@ -319,16 +321,25 @@ processResources {
     }
 }
 
+processGametestResources {
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+
+
+test {
+    useJUnitPlatform()
+}
+
 // Example for how to get properties into the manifest for reading at runtime.
 jar {
     manifest {
         attributes([
-                "Specification-Title"     : mod_id,
-                "Specification-Vendor"    : mod_authors,
+                "Specification-Title"  : mod_id,
+                "Specification-Vendor" : mod_authors,
                 "Specification-Version"   : "1", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
-                "Implementation-Vendor"   : mod_authors,
+                "Implementation-Vendor": mod_authors,
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
@@ -356,21 +367,6 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
-
-
-test {
-    useJUnitPlatform()
-}
-
-
-processResources {
-    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-}
-
-processGametestResources {
-    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-}
-
 
 generateGrammarSource {
     arguments = ["-visitor", "-package", "ca.teamdman.sfml"]
