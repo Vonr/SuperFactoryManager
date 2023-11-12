@@ -32,6 +32,7 @@ for i,version in enumerate(versions):
         make changes
         bump mod_version in gradle.properties
         update changelog.sfml example
+        git commit
     else:
         git merge $versions[i-1]
         resolve conflicts
