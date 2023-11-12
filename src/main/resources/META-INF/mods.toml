@@ -62,3 +62,8 @@ mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
+
+[[dependencies.${ mod_id }]]
+modId = "mekanism"
+mandatory = false
+versionRange = "[10.3.2,)"
