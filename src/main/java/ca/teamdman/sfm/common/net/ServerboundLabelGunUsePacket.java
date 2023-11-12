@@ -55,7 +55,7 @@ public record ServerboundLabelGunUsePacket(
                 return;
             }
             var stack = sender.getItemInHand(msg.hand);
-            var level = sender.getLevel();
+            var level = sender.level();
             if (!(stack.getItem() instanceof LabelGunItem)) {
                 return;
             }
