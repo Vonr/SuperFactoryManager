@@ -71,6 +71,7 @@ public class LabelGunItem extends Item {
                     Screen.hasControlDown(),
                     ctx.getPlayer().isShiftKeyDown()
             ));
+            return InteractionResult.SUCCESS;
         }
         return InteractionResult.CONSUME;
     }
