@@ -33,9 +33,11 @@ for i,version in enumerate(versions):
         bump mod_version in gradle.properties
         update changelog.sfml example
         git commit
+        git push
     else:
         git merge $versions[i-1]
         resolve conflicts
+        git push
     runData
     git add src/generated
     runClient, /test runall
