@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.util.SFMUtils;
@@ -62,7 +63,16 @@ public record ServerboundNetworkToolUsePacket(
                     payload.append("---- (dev only) block entity ----\n");
                     payload.append(entity).append("\n");
                 }
+                payload.append("---- capabilities ----\n");
+                for (var cap : SFMCompat.getCapabilities()) {
+                    payload
+                            .append(cap.getName())
+                            .append(": ")
+                            .append(entity.getCapability(cap).isPresent() ? "yes" : "no")
+                            .append("\n");
+                }
             }
+
 
             payload.append("---- exports ----\n");
             int len = payload.length();
