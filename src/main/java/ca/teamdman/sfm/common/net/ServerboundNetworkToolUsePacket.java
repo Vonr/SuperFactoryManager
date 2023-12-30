@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.util.SFMUtils;
+import ca.teamdman.sfml.ast.DirectionQualifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
@@ -18,6 +19,7 @@ import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public record ServerboundNetworkToolUsePacket(
         BlockPos blockPosition,
@@ -63,13 +65,17 @@ public record ServerboundNetworkToolUsePacket(
                     payload.append("---- (dev only) block entity ----\n");
                     payload.append(entity).append("\n");
                 }
-                payload.append("---- capabilities ----\n");
+                payload.append("---- capability directions ----\n");
                 for (var cap : SFMCompat.getCapabilities()) {
                     payload
                             .append(cap.getName())
-                            .append(": ")
-                            .append(entity.getCapability(cap).isPresent() ? "yes" : "no")
-                            .append("\n");
+                            .append(": ");
+                    String directions = DirectionQualifier.EVERY_DIRECTION
+                            .stream()
+                            .filter(dir -> entity.getCapability(cap, dir).isPresent())
+                            .map(dir -> dir == null ? "NULL DIRECTION" : DirectionQualifier.directionToString(dir))
+                            .collect(Collectors.joining(", ", "[", "]"));
+                    payload.append(directions).append("\n");
                 }
             }
 
