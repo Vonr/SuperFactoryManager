@@ -14,6 +14,16 @@ There are also [in-game examples](src/main/resources/assets/sfm/template_program
 
 </div>
 
+## About
+
+Super Factory Manager is a mod for Minecraft that lets users create programs to run their factories. The mod provides a domain specific language tailored for moving items, fluids, and other resource types. A text editor is included, along with example programs.
+
+To get started, you will need a factory manager, a label gun, and a disk.
+
+## Mod Spotlight
+
+[![mod spotlight](https://i.ytimg.com/vi/W5wY23VxZAc/maxresdefault.jpg)](https://www.youtube.com/watch?v=W5wY23VxZAc)
+
 ## VSCode Extension
 
 Get the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=TeamDman.super-factory-manager-language)
