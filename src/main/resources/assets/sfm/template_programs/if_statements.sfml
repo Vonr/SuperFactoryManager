@@ -4,10 +4,10 @@ name "IF statements"
 --       a              a                 a
 --  | 5 stone |    | 5 stone |    | 10 stone |
 
--- each a has >= 5 stone    - TRUE
+-- every a has = 5 stone    - FALSE (not all of them do!)
+-- each a has >= 5 stone    - TRUE (alias for "every")
 -- some a has eq 5 stone    - TRUE
 -- one a has = 5 stone       - FALSE (more than one does!)
--- every a has = 5 stone    - FALSE (not all of them do!)
 -- lone a has = 5 stone      - FALSE (more than zero or one does!)
 -- overall a has eq 5 stone - FALSE (there are 20 stone in total, not 5)
 -- a has eq 5 stone           - FALSE (default behaviour is 'overall')
