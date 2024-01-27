@@ -37,7 +37,7 @@ public record ResourceComparer<STACK, ITEM, CAP>(
                     var isOverallSatisfied = this.op.test(overallCount, this.quantity.number().value());
                     return setOp.test(isOverallSatisfied, satisfiedSet);
                 },
-                sourceCode
+                labelAccess + " HAS " + sourceCode
         );
     }
 
