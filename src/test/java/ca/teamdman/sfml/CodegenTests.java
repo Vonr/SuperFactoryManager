@@ -115,7 +115,7 @@ public class CodegenTests {
         /* outputs:
         NAME "hello world"
         EVERY 20 TICKS DO
-         IF gt 10 sfm:item:.*:.* THEN
+         IF a HAS gt 10 sfm:item:.*:.* THEN
           INPUT .* FROM a
          END
         END
