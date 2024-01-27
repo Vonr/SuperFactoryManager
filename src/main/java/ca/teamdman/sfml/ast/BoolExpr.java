@@ -17,4 +17,9 @@ public record BoolExpr(
     public BoolExpr negate() {
         return new BoolExpr(pred.negate(), "NOT " + sourceCode);
     }
+
+    @Override
+    public String toString() {
+        return sourceCode;
+    }
 }

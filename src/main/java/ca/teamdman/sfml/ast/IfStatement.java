@@ -32,9 +32,18 @@ public record IfStatement(
 
     @Override
     public String toString() {
-        return "IF " + condition + " THEN " + trueBlock.toString().indent(1) + " ELSE " + falseBlock
-                .toString()
-                .indent(1) + " END";
+        var rtn = "IF " + condition + " THEN\n" + trueBlock.toString().strip().indent(1).stripTrailing();
+        if (!falseBlock.getStatements().isEmpty()) {
+            rtn += "\nELSE\n" + falseBlock.toString().strip().indent(1);
+        }
+        rtn += "\nEND";
+//        var rtn = new StringBuilder();
+//        rtn.append("IF ").append(condition).append(" THEN\n").append(trueBlock.toString().indent(1));
+//        if (!falseBlock.getStatements().isEmpty()) {
+//            rtn.append("\nELSE\n").append(falseBlock.toString().indent(1));
+//        }
+//        rtn.append("\nEND");
+        return rtn.strip();
     }
 
     @Override

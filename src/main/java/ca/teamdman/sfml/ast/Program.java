@@ -216,6 +216,16 @@ public record Program(
         }
     }
 
+    @Override
+    public String toString() {
+        var rtn = new StringBuilder();
+        rtn.append("NAME \"").append(name).append("\"\n");
+        for (Trigger trigger : triggers) {
+            rtn.append(trigger).append("\n");
+        }
+        return rtn.toString();
+    }
+
     public void replaceOutputStatement(OutputStatement oldStatement, OutputStatement newStatement) {
         Deque<Statement> toPatch = new ArrayDeque<>();
         toPatch.add(this);

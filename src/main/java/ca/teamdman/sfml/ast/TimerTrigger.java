@@ -28,4 +28,12 @@ public record TimerTrigger(
     public List<Statement> getStatements() {
         return List.of(block);
     }
+
+    @Override
+    public String toString() {
+        String rtn = "EVERY " + interval + " DO\n"
+                     + block.toString().indent(1).stripTrailing()
+                     + "\nEND";
+        return rtn;
+    }
 }
