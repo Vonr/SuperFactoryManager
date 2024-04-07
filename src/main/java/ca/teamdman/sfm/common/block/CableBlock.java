@@ -3,7 +3,6 @@ package ca.teamdman.sfm.common.block;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -17,23 +16,6 @@ public class CableBlock extends Block implements ICableBlock {
                       .instrument(NoteBlockInstrument.BASS)
                       .destroyTime(1f)
                       .sound(SoundType.METAL));
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void neighborChanged(
-            BlockState state,
-            Level level,
-            BlockPos pos,
-            Block block,
-            BlockPos fromPos,
-            boolean movedByPiston
-    ) {
-        if (!(level instanceof ServerLevel)) return;
-        // reassess neighbours of the CABLE's position
-        CableNetworkManager
-                .getOrRegisterNetworkFromCablePosition(level, pos)
-                .ifPresent(network -> network.rebuildAdjacentInventories(pos));
     }
 
     @SuppressWarnings("deprecation")

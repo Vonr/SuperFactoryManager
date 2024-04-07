@@ -1,7 +1,11 @@
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
-NAME "Changelog for 4.14.1"
+NAME "Changelog for 4.14.2"
+---- 4.14.2 ----
+-- fix capability caching to avoid resource voiding and programs not working
+
+---- 4.14.1 ----
 -- fix label gun not working on servers
 
 ---- 4.14.0 ----
