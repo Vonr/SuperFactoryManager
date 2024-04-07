@@ -9,6 +9,11 @@ public record Interval(int ticks) implements ASTNode {
         return new Interval(seconds * 20);
     }
 
+    @Override
+    public String toString() {
+        return ticks + " TICKS";
+    }
+
     public int getTicks() {
         return ticks;
     }

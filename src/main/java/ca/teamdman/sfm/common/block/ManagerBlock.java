@@ -45,7 +45,6 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         builder.add(TRIGGERED);
     }
 
-    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
@@ -63,12 +62,6 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     ) {
         if (!(level.getBlockEntity(pos) instanceof ManagerBlockEntity mgr)) return;
         if (!(level instanceof ServerLevel)) return;
-        { // update cable network
-            // reassess neighbours of the CABLE's position
-            CableNetworkManager
-                    .getOrRegisterNetworkFromCablePosition(level, pos)
-                    .ifPresent(network -> network.rebuildAdjacentInventories(pos));
-        }
         { // check redstone for triggers
             var isPowered = level.hasNeighborSignal(pos) || level.hasNeighborSignal(pos.above());
             var debounce  = state.getValue(TRIGGERED);

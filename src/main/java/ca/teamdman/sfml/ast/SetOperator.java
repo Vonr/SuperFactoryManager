@@ -22,7 +22,11 @@ public enum SetOperator implements ASTNode, BiPredicate<Boolean, List<Boolean>> 
     }
 
     public static SetOperator from(String text) {
-        return SetOperator.valueOf(text.toUpperCase(Locale.ROOT));
+        text = text.toUpperCase(Locale.ROOT);
+        if (text.equals("EACH")) {
+            text = "EVERY";
+        }
+        return SetOperator.valueOf(text);
     }
 
     @Override
