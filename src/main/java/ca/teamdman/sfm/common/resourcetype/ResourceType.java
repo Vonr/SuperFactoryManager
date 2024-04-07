@@ -5,13 +5,18 @@ import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
+import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -19,10 +24,10 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     private final Map<ITEM, ResourceLocation> registryKeyCache = new Object2ObjectOpenHashMap<>();
 
 
-    public final Capability<CAP> CAPABILITY;
+    public final Capability<CAP> CAPABILITY_KIND;
 
-    public ResourceType(Capability<CAP> CAPABILITY) {
-        this.CAPABILITY = CAPABILITY;
+    public ResourceType(Capability<CAP> CAPABILITY_KIND) {
+        this.CAPABILITY_KIND = CAPABILITY_KIND;
     }
 
 
@@ -61,28 +66,34 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     public Stream<CAP> getCapabilities(
             ProgramContext programContext, LabelAccess labelAccess
     ) {
+        // Get labels from disk
         Optional<ItemStack> disk = programContext.getManager().getDisk();
         if (disk.isEmpty()) return Stream.empty();
         LabelPositionHolder labelPositions = LabelPositionHolder.from(disk.get());
+
+        // Get positions
+        Stream<BlockPos> positions = labelAccess.roundRobin().gather(labelAccess, labelPositions);
+
+        // Expand positions to (pos,direction) pairs
+        Stream<Pair<BlockPos, Direction>> position_direction_pairs = positions.flatMap(pos -> labelAccess
+                .directions()
+                .stream()
+                .map(dir -> Pair.of(pos, dir)));
+
+        // Get capability from the network
         CableNetwork network = programContext.getNetwork();
-        return labelAccess.roundRobin().gather(labelAccess, labelPositions)
-                .map(network::getCapabilityProvider)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .flatMap((
-                                 prov -> labelAccess
-                                         .directions()
-                                         .stream()
-                                         .map(direction -> prov.getCapability(CAPABILITY, direction))
-                         ))
-                .map(x -> {
-                    //noinspection DataFlowIssue
-                    return x.orElse(null);
-                })
-                .filter(x -> {
-                    //noinspection ConstantValue,Convert2MethodRef
-                    return x != null;
+        Stream<LazyOptional<CAP>> caps = position_direction_pairs
+                .map(pair -> {
+                    BlockPos pos = pair.getFirst();
+                    Direction dir = pair.getSecond();
+                    return network.getCapability(CAPABILITY_KIND, pos, dir);
                 });
+
+        // Unwrap
+        //noinspection ConstantValue,DataFlowIssue
+        return caps
+                .map(x -> x.orElse(null))
+                .filter(Objects::nonNull);
     }
 
     public Stream<STACK> collect(CAP cap, LabelAccess labelAccess) {

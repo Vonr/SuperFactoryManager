@@ -21,23 +21,6 @@ public class CableBlock extends Block implements ICableBlock {
 
     @SuppressWarnings("deprecation")
     @Override
-    public void neighborChanged(
-            BlockState state,
-            Level level,
-            BlockPos pos,
-            Block block,
-            BlockPos fromPos,
-            boolean movedByPiston
-    ) {
-        if (!(level instanceof ServerLevel)) return;
-        // reassess neighbours of the CABLE's position
-        CableNetworkManager
-                .getOrRegisterNetworkFromCablePosition(level, pos)
-                .ifPresent(network -> network.rebuildAdjacentInventories(pos));
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
         CableNetworkManager.getOrRegisterNetworkFromCablePosition(world, pos);
     }
