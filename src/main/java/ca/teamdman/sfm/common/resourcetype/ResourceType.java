@@ -90,8 +90,11 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                 });
 
         // Unwrap
+        // We use isPresent check to detect validity
+        // We use orElse with null to unwrap
         //noinspection ConstantValue,DataFlowIssue
         return caps
+                .filter(LazyOptional::isPresent)
                 .map(x -> x.orElse(null))
                 .filter(Objects::nonNull);
     }
