@@ -55,7 +55,7 @@ public class CapabilityCache {
         return null;
     }
 
-    @SuppressWarnings("CodeBlock2Expr")
+    @SuppressWarnings({"CodeBlock2Expr", "rawtypes", "unchecked"})
     public void putAll(CapabilityCache other) {
         other.CACHE.forEach((pos, capMap) -> {
             capMap.forEach((capKind, dirMap) -> {
