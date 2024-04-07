@@ -55,6 +55,7 @@ public class CapabilityCache {
         return null;
     }
 
+    @SuppressWarnings("CodeBlock2Expr")
     public void putAll(CapabilityCache other) {
         other.CACHE.forEach((pos, capMap) -> {
             capMap.forEach((capKind, dirMap) -> {
