@@ -30,9 +30,9 @@ public record ServerboundManagerProgramPacket(
         );
     }
 
-    public static void handle(ServerboundManagerProgramPacket msg, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handle(ServerboundManagerProgramPacket msg, NetworkEvent.Context context) {
         SFMPackets.handleServerboundContainerPacket(
-                contextSupplier,
+                context,
                 ManagerContainerMenu.class,
                 ManagerBlockEntity.class,
                 msg.pos,

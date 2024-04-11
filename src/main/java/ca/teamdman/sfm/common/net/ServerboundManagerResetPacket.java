@@ -25,9 +25,9 @@ public record ServerboundManagerResetPacket(
         );
     }
 
-    public static void handle(ServerboundManagerResetPacket msg, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handle(ServerboundManagerResetPacket msg, NetworkEvent.Context context) {
         SFMPackets.handleServerboundContainerPacket(
-                contextSupplier,
+                context,
                 ManagerContainerMenu.class,
                 ManagerBlockEntity.class,
                 msg.pos,

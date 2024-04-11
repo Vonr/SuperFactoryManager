@@ -26,7 +26,7 @@ public class LabelGunScrollSwitcher {
         }
         if (!(gun.getItem() instanceof LabelGunItem)) return;
 
-        var next = LabelGunItem.getNextLabel(gun, event.getScrollDelta() < 0 ? -1 : 1);
+        var next = LabelGunItem.getNextLabel(gun, event.getScrollDeltaY() < 0 ? -1 : 1);
         SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
                 next,
                 hand

@@ -2,7 +2,6 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.compat.SFMCompat;
-import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -12,6 +11,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -20,7 +20,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.NetworkEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -47,10 +46,10 @@ public record ServerboundContainerExportsInspectionRequestPacket(
 
     public static void handle(
             ServerboundContainerExportsInspectionRequestPacket msg,
-            Supplier<NetworkEvent.Context> contextSupplier
+            NetworkEvent.Context context
     ) {
         SFMPackets.handleServerboundContainerPacket(
-                contextSupplier,
+                context,
                 AbstractContainerMenu.class,
                 BlockEntity.class,
                 msg.pos,
@@ -58,7 +57,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                 (menu, blockEntity) -> {
                     assert blockEntity.getLevel() != null;
                     String payload = buildInspectionResults(blockEntity.getLevel(), blockEntity.getBlockPos());
-                    var player = contextSupplier.get().getSender();
+                    var player = context.getSender();
 
                     SFMPackets.INSPECTION_CHANNEL.send(
                             PacketDistributor.PLAYER.with(() -> player),
@@ -84,8 +83,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
             int len = sb.length();
             //noinspection unchecked,rawtypes
             SFMResourceTypes.DEFERRED_TYPES
-                    .get()
-                    .getEntries()
+                    .entrySet()
                     .forEach(entry -> sb.append(buildInspectionResults(
                             (ResourceKey) entry.getKey(),
                             entry.getValue(),
@@ -102,7 +100,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         if (SFMCompat.isMekanismLoaded()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be != null) {
-                sb.append(SFMMekanismCompat.gatherInspectionResults(be)).append("\n");
+//                sb.append(ca.teamdman.sfm.common.compat.SFMMekanismCompat.gatherInspectionResults(be)).append("\n");
             }
         }
 
@@ -181,7 +179,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         if (!result.isBlank()) {
             BlockEntity be = level.getBlockEntity(pos);
             //noinspection DataFlowIssue
-            if (be != null && direction == null && ForgeRegistries.BLOCK_ENTITY_TYPES
+            if (be != null && direction == null && BuiltInRegistries.BLOCK_ENTITY_TYPE
                     .getKey(be.getType())
                     .getNamespace()
                     .equals("mekanism")) {

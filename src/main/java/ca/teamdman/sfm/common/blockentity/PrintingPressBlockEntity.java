@@ -62,7 +62,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         public boolean isItemValid(int slot, ItemStack stack) {
             if (getLevel() == null) return false;
             return getLevel().getRecipeManager()
-                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.INK.test(stack));
+                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.value().INK.test(stack));
         }
     };
 
@@ -83,7 +83,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         public boolean isItemValid(int slot, ItemStack stack) {
             if (getLevel() == null) return false;
             return getLevel().getRecipeManager()
-                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.PAPER.test(stack));
+                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.value().PAPER.test(stack));
         }
     };
     private final LazyOptional<IItemHandler> ITEMS_CAPABILITY = LazyOptional.of(() -> new CombinedInvWrapper(
@@ -210,7 +210,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
             if (paper.isEmpty() || ink.isEmpty() || form.isEmpty()) {
                 return;
             }
-            paper = recipe.assemble(this, getLevel().registryAccess());
+            paper = recipe.value().assemble(this, getLevel().registryAccess());
             PAPER.setStackInSlot(0, paper);
             ink.shrink(1);
             INK.setStackInSlot(0, ink);

@@ -1,9 +1,9 @@
 package ca.teamdman.sfm.common.resourcetype;
 
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.common.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
-import net.neoforged.neoforge.registries.IForgeRegistry;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer>, IEnergyStorage> {
@@ -75,7 +75,7 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public IForgeRegistry<Class<Integer>> getRegistry() {
+    public Registry<Class<Integer>> getRegistry() {
         throw new NotImplementedException();
     }
 

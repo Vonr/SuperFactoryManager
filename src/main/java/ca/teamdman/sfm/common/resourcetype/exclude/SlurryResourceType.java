@@ -1,14 +1,16 @@
-package ca.teamdman.sfm.common.resourcetype;
+package ca.teamdman.sfm.common.resourcetype.exclude;
 
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.slurry.ISlurryHandler;
 import mekanism.api.chemical.slurry.Slurry;
 import mekanism.api.chemical.slurry.SlurryStack;
+import net.minecraft.core.Registry;
 import net.neoforged.neoforge.common.capabilities.Capability;
 import net.neoforged.neoforge.common.capabilities.CapabilityManager;
 import net.neoforged.neoforge.common.capabilities.CapabilityToken;
-import net.neoforged.neoforge.registries.IForgeRegistry;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurryHandler> {
     public static final Capability<ISlurryHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
@@ -80,8 +82,9 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
 
 
     @Override
-    public IForgeRegistry<Slurry> getRegistry() {
-        return MekanismAPI.slurryRegistry();
+    public Registry<Slurry> getRegistry() {
+        throw new NotImplementedException();
+//        return MekanismAPI.slurryRegistry();
     }
 
     @Override

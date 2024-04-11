@@ -25,9 +25,9 @@ public record ServerboundManagerFixPacket(
         );
     }
 
-    public static void handle(ServerboundManagerFixPacket msg, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handle(ServerboundManagerFixPacket msg, NetworkEvent.Context context) {
         SFMPackets.handleServerboundContainerPacket(
-                contextSupplier,
+                context,
                 ManagerContainerMenu.class,
                 ManagerBlockEntity.class,
                 msg.pos,

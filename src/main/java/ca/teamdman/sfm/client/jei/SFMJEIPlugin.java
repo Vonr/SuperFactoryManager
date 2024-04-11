@@ -57,8 +57,8 @@ public class SFMJEIPlugin implements IModPlugin {
         assert level != null;
         RecipeManager recipeManager = level.getRecipeManager();
         recipeManager.getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).forEach(r -> {
-            printingPressRecipes.add(r);
-            fallingAnvilRecipes.add(new FallingAnvilFormRecipe(r));
+            printingPressRecipes.add(r.value());
+            fallingAnvilRecipes.add(new FallingAnvilFormRecipe(r.value()));
         });
         fallingAnvilRecipes.add(new FallingAnvilDisenchantRecipe());
         fallingAnvilRecipes.add(new FallingAnvilExperienceShardRecipe());

@@ -7,7 +7,8 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.RegistryObject;
+
+import java.util.function.Supplier;
 
 public class SFMCreativeTabs {
     private static final DeferredRegister<CreativeModeTab> CREATIVE_TABS = DeferredRegister.create(
@@ -16,7 +17,7 @@ public class SFMCreativeTabs {
     );
 
     @SuppressWarnings("unused")
-    public static final RegistryObject<CreativeModeTab> MAIN_TAB = CREATIVE_TABS.register(
+    public static final Supplier<CreativeModeTab> MAIN_TAB = CREATIVE_TABS.register(
             "main",
             () -> CreativeModeTab
                     .builder()

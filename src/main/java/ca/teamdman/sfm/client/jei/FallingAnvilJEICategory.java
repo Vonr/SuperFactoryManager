@@ -11,6 +11,8 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
@@ -22,7 +24,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,8 +87,6 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
                     .addSlot(RecipeIngredientRole.OUTPUT, 50, 18)
                     .addItemStacks(Arrays.stream(formRecipe.PARENT.FORM.getItems()).map(FormItem::getForm).toList());
         } else if (recipe instanceof FallingAnvilDisenchantRecipe) {
-            Collection<Enchantment> enchants = ForgeRegistries.ENCHANTMENTS.getValues();
-
             var tools = List.of(
                     Items.DIAMOND_HELMET,
                     Items.DIAMOND_CHESTPLATE,
@@ -132,7 +132,7 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
             );
             var enchanted = new ArrayList<ItemStack>();
             var books = new ArrayList<ItemStack>();
-            for (Enchantment enchant : enchants) {
+            for (Enchantment enchant : BuiltInRegistries.ENCHANTMENT) {
                 for (Item tool : tools) {
                     var stack = new ItemStack(tool);
                     if (enchant.canEnchant(stack)) {

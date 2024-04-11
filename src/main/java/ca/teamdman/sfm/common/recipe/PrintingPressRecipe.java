@@ -5,6 +5,8 @@ import ca.teamdman.sfm.common.item.FormItem;
 import ca.teamdman.sfm.common.registry.SFMRecipeSerializers;
 import ca.teamdman.sfm.common.registry.SFMRecipeTypes;
 import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -22,21 +24,15 @@ import java.util.Objects;
  * Printing press copies a form using ink and paper.
  */
 public class PrintingPressRecipe implements Recipe<PrintingPressBlockEntity> {
-    public final ResourceLocation ID;
     public final Ingredient FORM;
     public final Ingredient INK;
     public final Ingredient PAPER;
 
-    /**
-     *
-     */
     public PrintingPressRecipe(
-            ResourceLocation id,
             Ingredient form,
             Ingredient ink,
             Ingredient paper
     ) {
-        this.ID = id;
         this.FORM = form;
         this.INK = ink;
         this.PAPER = paper;
@@ -66,12 +62,6 @@ public class PrintingPressRecipe implements Recipe<PrintingPressBlockEntity> {
 
     }
 
-
-    @Override
-    public ResourceLocation getId() {
-        return ID;
-    }
-
     @Override
     public RecipeSerializer<?> getSerializer() {
         return SFMRecipeSerializers.PRINTING_PRESS.get();
@@ -87,41 +77,43 @@ public class PrintingPressRecipe implements Recipe<PrintingPressBlockEntity> {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (PrintingPressRecipe) obj;
-        return Objects.equals(this.ID, that.ID) &&
-               Objects.equals(this.FORM, that.FORM) &&
-               Objects.equals(this.INK, that.INK) &&
-               Objects.equals(this.PAPER, that.PAPER);
+        return
+                Objects.equals(this.FORM, that.FORM) &&
+                Objects.equals(this.INK, that.INK) &&
+                Objects.equals(this.PAPER, that.PAPER);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ID, FORM, INK, PAPER);
+        return Objects.hash(FORM, INK, PAPER);
     }
 
     @Override
     public String toString() {
         return "PrintingPressRecipe[" +
-               "id=" + ID + ", " +
                "form=" + FORM + ", " +
                "ink=" + INK + ", " +
                "paper=" + PAPER + ']';
     }
 
     public static class Serializer implements RecipeSerializer<PrintingPressRecipe> {
+        private final Codec<PrintingPressRecipe> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Ingredient.CODEC.fieldOf("form").forGetter(recipe -> recipe.FORM),
+                Ingredient.CODEC.fieldOf("ink").forGetter(recipe -> recipe.INK),
+                Ingredient.CODEC.fieldOf("paper").forGetter(recipe -> recipe.PAPER)
+        ).apply(instance, PrintingPressRecipe::new));
+
         @Override
-        public PrintingPressRecipe fromJson(ResourceLocation pRecipeId, JsonObject pSerializedRecipe) {
-            Ingredient form = Ingredient.fromJson(pSerializedRecipe.get("form"));
-            Ingredient ink = Ingredient.fromJson(pSerializedRecipe.get("ink"));
-            Ingredient paper = Ingredient.fromJson(pSerializedRecipe.get("paper"));
-            return new PrintingPressRecipe(pRecipeId, form, ink, paper);
+        public Codec<PrintingPressRecipe> codec() {
+            return CODEC;
         }
 
         @Override
-        public @Nullable PrintingPressRecipe fromNetwork(ResourceLocation pRecipeId, FriendlyByteBuf pBuffer) {
-            Ingredient form = Ingredient.fromNetwork(pBuffer);
-            Ingredient ink = Ingredient.fromNetwork(pBuffer);
-            Ingredient paper = Ingredient.fromNetwork(pBuffer);
-            return new PrintingPressRecipe(pRecipeId, form, ink, paper);
+        public PrintingPressRecipe fromNetwork(FriendlyByteBuf friendlyByteBuf) {
+            Ingredient form = Ingredient.fromNetwork(friendlyByteBuf);
+            Ingredient ink = Ingredient.fromNetwork(friendlyByteBuf);
+            Ingredient paper = Ingredient.fromNetwork(friendlyByteBuf);
+            return new PrintingPressRecipe(form, ink, paper);
         }
 
         @Override

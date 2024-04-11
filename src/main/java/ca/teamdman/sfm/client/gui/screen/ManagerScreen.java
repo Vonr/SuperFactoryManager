@@ -443,7 +443,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     @Override
     public void render(GuiGraphics graphics, int mx, int my, float partialTicks) {
-        this.renderBackground(graphics);
+        this.renderTransparentBackground(graphics);
         super.render(graphics, mx, my, partialTicks);
         this.renderTooltip(graphics, mx, my);
 

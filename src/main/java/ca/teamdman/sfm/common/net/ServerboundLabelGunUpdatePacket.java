@@ -25,10 +25,10 @@ public record ServerboundLabelGunUpdatePacket(
     }
 
     public static void handle(
-            ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket msg, Supplier<NetworkEvent.Context> ctx
+            ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket msg, NetworkEvent.Context ctx
     ) {
-        ctx.get().enqueueWork(() -> {
-            var sender = ctx.get().getSender();
+        ctx.enqueueWork(() -> {
+            var sender = ctx.getSender();
             if (sender == null) {
                 return;
             }
@@ -37,6 +37,6 @@ public record ServerboundLabelGunUpdatePacket(
                 LabelGunItem.setActiveLabel(stack, msg.label);
             }
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

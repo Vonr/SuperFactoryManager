@@ -126,13 +126,14 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         }
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
         //noinspection DataFlowIssue // if we get here, it should have a registry
-        List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().getEntries().stream()
-                .filter(e -> matchesStack(e.getKey().location()))
-                .map(e -> new ResourceIdentifier<STACK, ITEM, CAP>(
+        List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().keySet()
+                .stream()
+                .filter(this::matchesStack)
+                .map(key -> new ResourceIdentifier<STACK, ITEM, CAP>(
                         resourceTypeNamespace,
                         resourceTypeName,
-                        e.getKey().location().getNamespace(),
-                        e.getKey().location().getPath()
+                        key.getNamespace(),
+                        key.getPath()
                 )).toList();
         //noinspection unchecked,rawtypes
         expansionCache.put(this, (List) rtn);

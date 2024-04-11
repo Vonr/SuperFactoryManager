@@ -29,9 +29,9 @@ public record ClientboundContainerExportsInspectionResultsPacket(
     }
 
     public static void handle(
-            ClientboundContainerExportsInspectionResultsPacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ClientboundContainerExportsInspectionResultsPacket msg, NetworkEvent.Context context
     ) {
-        contextSupplier.get().enqueueWork(() -> {
+        context.enqueueWork(() -> {
             LocalPlayer player = Minecraft.getInstance().player;
             if (player == null) return;
             var container = player.containerMenu;
@@ -39,6 +39,6 @@ public record ClientboundContainerExportsInspectionResultsPacket(
             ClientStuff.showProgramEditScreen(msg.results, next -> {
             });
         });
-        contextSupplier.get().setPacketHandled(true);
+        context.setPacketHandled(true);
     }
 }

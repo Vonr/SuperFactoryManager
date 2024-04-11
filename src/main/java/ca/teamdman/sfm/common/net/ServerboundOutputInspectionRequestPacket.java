@@ -46,7 +46,6 @@ public record ServerboundOutputInspectionRequestPacket(
         ResourceType<STACK, ITEM, CAP> resourceType = limitedInputSlot.type;
         //noinspection OptionalGetWithoutIsPresent
         ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey = SFMResourceTypes.DEFERRED_TYPES
-                .get()
                 .getResourceKey(limitedInputSlot.type)
                 .map(x -> {
                     //noinspection unchecked,rawtypes
@@ -78,11 +77,11 @@ public record ServerboundOutputInspectionRequestPacket(
 
     public static void handle(
             ServerboundOutputInspectionRequestPacket msg,
-            Supplier<NetworkEvent.Context> contextSupplier
+            NetworkEvent.Context context
     ) {
-        contextSupplier.get().enqueueWork(() -> {
+        context.enqueueWork(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = contextSupplier.get().getSender();
+            ServerPlayer player = context.getSender();
             if (player == null) return;
             ManagerBlockEntity manager;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {

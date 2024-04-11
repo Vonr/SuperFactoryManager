@@ -4,6 +4,10 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.*;
+import ca.teamdman.sfm.common.resourcetype.exclude.GasResourceType;
+import ca.teamdman.sfm.common.resourcetype.exclude.InfuseResourceType;
+import ca.teamdman.sfm.common.resourcetype.exclude.PigmentResourceType;
+import ca.teamdman.sfm.common.resourcetype.exclude.SlurryResourceType;
 import ca.teamdman.sfml.ast.DirectionQualifier;
 import mekanism.api.RelativeSide;
 import mekanism.common.lib.transmitter.TransmissionType;
@@ -28,17 +32,13 @@ public class SFMMekanismCompat {
             case ITEM -> Optional.of(SFMResourceTypes.ITEM.get());
             case FLUID -> Optional.of(SFMResourceTypes.FLUID.get());
             case GAS -> Optional.of(SFMResourceTypes.DEFERRED_TYPES
-                                            .get()
-                                            .getValue(new ResourceLocation(SFM.MOD_ID, "gas")));
+                                            .get(new ResourceLocation(SFM.MOD_ID, "gas")));
             case INFUSION -> Optional.of(SFMResourceTypes.DEFERRED_TYPES
-                                                 .get()
-                                                 .getValue(new ResourceLocation(SFM.MOD_ID, "infusion")));
+                                                 .get(new ResourceLocation(SFM.MOD_ID, "infusion")));
             case PIGMENT -> Optional.of(SFMResourceTypes.DEFERRED_TYPES
-                                                .get()
-                                                .getValue(new ResourceLocation(SFM.MOD_ID, "pigment")));
+                                                .get(new ResourceLocation(SFM.MOD_ID, "pigment")));
             case SLURRY -> Optional.of(SFMResourceTypes.DEFERRED_TYPES
-                                               .get()
-                                               .getValue(new ResourceLocation(SFM.MOD_ID, "slurry")));
+                                               .get(new ResourceLocation(SFM.MOD_ID, "slurry")));
             default -> Optional.empty();
         };
     }
@@ -52,7 +52,7 @@ public class SFMMekanismCompat {
         TileComponentConfig config = sideConfiguration.getConfig();
         for (TransmissionType type : TransmissionType.values()) {
             getResourceType(type)
-                    .flatMap(resourceType -> SFMResourceTypes.DEFERRED_TYPES.get().getResourceKey(resourceType))
+                    .flatMap(SFMResourceTypes.DEFERRED_TYPES::getResourceKey)
                     .ifPresent(resourceTypeKey -> {
                         ConfigInfo info = config.getConfig(type);
                         if (info != null) {

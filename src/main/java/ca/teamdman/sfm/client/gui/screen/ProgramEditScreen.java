@@ -201,11 +201,12 @@ public class ProgramEditScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mx, int my, float partialTicks) {
-        this.renderBackground(graphics);
+        this.renderTransparentBackground(graphics);
         super.render(graphics, mx, my, partialTicks);
     }
 
     private class MyMultiLineEditBox extends MultiLineEditBox {
+        private int frame = 0;
         public MyMultiLineEditBox() {
             super(
                     ProgramEditScreen.this.font,
@@ -292,7 +293,7 @@ public class ProgramEditScreen extends Screen {
                 rebuild(Screen.hasControlDown());
             }
             List<MutableComponent> lines = lastProgramWithSyntaxHighlighting;
-            boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
+            boolean isCursorVisible = this.isFocused() && this.frame++ / 60 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
             int lineX = this.getX() + this.innerPadding();

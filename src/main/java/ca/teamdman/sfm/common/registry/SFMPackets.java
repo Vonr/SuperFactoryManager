@@ -76,21 +76,21 @@ public class SFMPackets {
         );
 
 
-        LABEL_GUN_ITEM_CHANNEL.registerMessage(
+        LABEL_GUN_ITEM_CHANNEL.<ServerboundLabelGunUpdatePacket>registerMessage(
                 0,
                 ServerboundLabelGunUpdatePacket.class,
                 ServerboundLabelGunUpdatePacket::encode,
                 ServerboundLabelGunUpdatePacket::decode,
                 ServerboundLabelGunUpdatePacket::handle
         );
-        LABEL_GUN_ITEM_CHANNEL.registerMessage(
+        LABEL_GUN_ITEM_CHANNEL.<ServerboundLabelGunPrunePacket>registerMessage(
                 1,
                 ServerboundLabelGunPrunePacket.class,
                 ServerboundLabelGunPrunePacket::encode,
                 ServerboundLabelGunPrunePacket::decode,
                 ServerboundLabelGunPrunePacket::handle
         );
-        LABEL_GUN_ITEM_CHANNEL.registerMessage(
+        LABEL_GUN_ITEM_CHANNEL.<ServerboundLabelGunClearPacket>registerMessage(
                 2,
                 ServerboundLabelGunClearPacket.class,
                 ServerboundLabelGunClearPacket::encode,
@@ -98,7 +98,7 @@ public class SFMPackets {
                 ServerboundLabelGunClearPacket::handle
         );
 
-        DISK_ITEM_CHANNEL.registerMessage(
+        DISK_ITEM_CHANNEL.<ServerboundDiskItemSetProgramPacket>registerMessage(
                 0,
                 ServerboundDiskItemSetProgramPacket.class,
                 ServerboundDiskItemSetProgramPacket::encode,
@@ -172,19 +172,16 @@ public class SFMPackets {
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(
-            @Nullable Supplier<NetworkEvent.Context> ctxSupplier,
+            @Nullable NetworkEvent.Context context,
             Class<MENU> menuClass,
             Class<BE> blockEntityClass,
             BlockPos pos,
             int containerId,
             BiConsumer<MENU, BE> callback
     ) {
-        if (ctxSupplier == null) return;
-
-        var ctx = ctxSupplier.get();
-        if (ctx == null) return;
-        ctx.enqueueWork(() -> {
-            var sender = ctx.getSender();
+        if (context == null) return;
+        context.enqueueWork(() -> {
+            var sender = context.getSender();
             if (sender == null) return;
             if (sender.isSpectator()) return; // ignore packets from spectators
 

@@ -30,11 +30,11 @@ public record ServerboundLabelInspectionRequestPacket(
 
     public static void handle(
             ServerboundLabelInspectionRequestPacket msg,
-            Supplier<NetworkEvent.Context> contextSupplier
+            NetworkEvent.Context context
     ) {
-        contextSupplier.get().enqueueWork(() -> {
+        context.enqueueWork(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = contextSupplier.get().getSender();
+            ServerPlayer player = context.getSender();
             if (player == null) return;
             SFM.LOGGER.info("Received label inspection request packet from player " + player.getStringUUID());
             LabelPositionHolder labelPositionHolder;

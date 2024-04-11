@@ -43,9 +43,9 @@ public class ProgramTemplatePickerScreen extends Screen {
             try (BufferedReader reader = entry.getValue().openAsReader()) {
                 String program = reader.lines().collect(Collectors.joining("\n"));
                 if (program.contains("$REPLACE_RESOURCE_TYPES_HERE$")) {
-                    var replacement = SFMResourceTypes.DEFERRED_TYPES.get().getEntries()
+                    var replacement = SFMResourceTypes.DEFERRED_TYPES.keySet()
                             .stream()
-                            .map(e -> e.getKey().location().getPath())
+                            .map(ResourceLocation::getPath)
                             .map(e -> "INPUT " + e + ":: FROM a")
                             .collect(Collectors.joining("\n    "));
                     program = program.replace("$REPLACE_RESOURCE_TYPES_HERE$", replacement);
@@ -106,9 +106,9 @@ public class ProgramTemplatePickerScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(graphics);
-        this.renderBackground(graphics);
-        this.renderBackground(graphics);
+        this.renderTransparentBackground(graphics);
+        this.renderTransparentBackground(graphics);
+        this.renderTransparentBackground(graphics);
         super.render(graphics, pMouseX, pMouseY, pPartialTick);
         MutableComponent warning1 = Constants.LocalizationKeys.PROGRAM_TEMPLATE_PICKER_GUI_WARNING_1.getComponent();
         graphics.drawString(

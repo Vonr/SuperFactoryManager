@@ -24,10 +24,10 @@ public record ClientboundInputInspectionResultsPacket(
     }
 
     public static void handle(
-            ClientboundInputInspectionResultsPacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ClientboundInputInspectionResultsPacket msg, NetworkEvent.Context context
     ) {
-        contextSupplier.get().enqueueWork(() -> ClientStuff.showProgramEditScreen(msg.results, next -> {
+        context.enqueueWork(() -> ClientStuff.showProgramEditScreen(msg.results, next -> {
         }));
-        contextSupplier.get().setPacketHandled(true);
+        context.setPacketHandled(true);
     }
 }

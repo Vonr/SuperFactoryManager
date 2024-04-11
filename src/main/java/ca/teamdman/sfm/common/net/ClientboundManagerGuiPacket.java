@@ -34,9 +34,9 @@ public record ClientboundManagerGuiPacket(
     }
 
     public static void handle(
-            ClientboundManagerGuiPacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ClientboundManagerGuiPacket msg, NetworkEvent.Context context
     ) {
-        contextSupplier.get().enqueueWork(() -> ClientStuff.updateMenu(msg));
-        contextSupplier.get().setPacketHandled(true);
+        context.enqueueWork(() -> ClientStuff.updateMenu(msg));
+        context.setPacketHandled(true);
     }
 }

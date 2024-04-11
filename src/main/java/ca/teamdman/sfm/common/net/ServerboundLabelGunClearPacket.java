@@ -22,10 +22,10 @@ public record ServerboundLabelGunClearPacket(
     }
 
     public static void handle(
-            ServerboundLabelGunClearPacket msg, Supplier<NetworkEvent.Context> ctx
+            ServerboundLabelGunClearPacket msg, NetworkEvent.Context ctx
     ) {
-        ctx.get().enqueueWork(() -> {
-            var sender = ctx.get().getSender();
+        ctx.enqueueWork(() -> {
+            var sender = ctx.getSender();
             if (sender == null) {
                 return;
             }
@@ -34,6 +34,6 @@ public record ServerboundLabelGunClearPacket(
                 LabelPositionHolder.empty().save(stack);
             }
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

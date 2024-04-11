@@ -35,11 +35,11 @@ public record ServerboundNetworkToolUsePacket(
     }
 
     public static void handle(
-            ServerboundNetworkToolUsePacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ServerboundNetworkToolUsePacket msg, NetworkEvent.Context context
     ) {
-        contextSupplier.get().enqueueWork(() -> {
+        context.enqueueWork(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = contextSupplier.get().getSender();
+            ServerPlayer player = context.getSender();
             if (player == null) return;
             Level level = player.level();
             BlockPos pos = msg.blockPosition();
@@ -68,8 +68,7 @@ public record ServerboundNetworkToolUsePacket(
             int len = payload.length();
             //noinspection unchecked,rawtypes
             SFMResourceTypes.DEFERRED_TYPES
-                    .get()
-                    .getEntries()
+                    .entrySet()
                     .forEach(entry -> payload.append(ServerboundContainerExportsInspectionRequestPacket.buildInspectionResults(
                             (ResourceKey) entry.getKey(),
                             entry.getValue(),

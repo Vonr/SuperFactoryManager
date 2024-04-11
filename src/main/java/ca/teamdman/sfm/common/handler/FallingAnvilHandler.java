@@ -11,6 +11,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
@@ -36,7 +37,7 @@ public class FallingAnvilHandler {
                 Level level = event.getLevel();
                 Block block = level.getBlockState(landPosition.below()).getBlock();
                 if (block == Blocks.IRON_BLOCK) { // create a form
-                    List<PrintingPressRecipe> recipes = level
+                    var recipes = level
                             .getRecipeManager()
                             .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get());
                     var items = level
@@ -48,9 +49,9 @@ public class FallingAnvilHandler {
                     boolean didForm = false;
 
                     for (ItemEntity item : items) {
-                        for (PrintingPressRecipe recipe : recipes) {
+                        for (RecipeHolder<PrintingPressRecipe> recipe : recipes) {
                             // check if the item can be turned into a form
-                            if (recipe.FORM.test(item.getItem())) {
+                            if (recipe.value().FORM.test(item.getItem())) {
                                 didForm = true;
                                 item.setItem(FormItem.getForm(item.getItem()));
                                 break;

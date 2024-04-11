@@ -22,10 +22,10 @@ public record ServerboundLabelGunPrunePacket(
     }
 
     public static void handle(
-            ServerboundLabelGunPrunePacket msg, Supplier<NetworkEvent.Context> ctx
+            ServerboundLabelGunPrunePacket msg, NetworkEvent.Context ctx
     ) {
-        ctx.get().enqueueWork(() -> {
-            var sender = ctx.get().getSender();
+        ctx.enqueueWork(() -> {
+            var sender = ctx.getSender();
             if (sender == null) {
                 return;
             }
@@ -34,6 +34,6 @@ public record ServerboundLabelGunPrunePacket(
                 LabelPositionHolder.from(stack).prune().save(stack);
             }
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

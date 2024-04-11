@@ -6,10 +6,10 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.registries.IForgeRegistry;
 
 import java.util.Map;
 import java.util.Optional;
@@ -111,7 +111,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         return found;
     }
 
-    public abstract IForgeRegistry<ITEM> getRegistry();
+    public abstract Registry<ITEM> getRegistry();
 
     public abstract ITEM getItem(STACK stack);
 

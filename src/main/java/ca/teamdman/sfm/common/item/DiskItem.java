@@ -163,10 +163,7 @@ public class DiskItem extends Item {
             ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag detail
     ) {
         if (stack.hasTag()) {
-            boolean showProgram = DistExecutor.unsafeRunForDist(
-                    () -> ClientStuff::isMoreInfoKeyDown,
-                    () -> () -> false
-            );
+            boolean showProgram = FMLEnvironment.dist.isClient() && ClientStuff.isMoreInfoKeyDown();
             if (!showProgram) {
                 list.addAll(LabelPositionHolder.from(stack).asHoverText());
                 getErrors(stack)

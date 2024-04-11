@@ -92,6 +92,7 @@ public class SFMUtils {
     public static TranslatableContents getTranslatableContents(String key) {
         return getTranslatableContents(key, new Object[]{});
     }
+
     public static <STACK, ITEM, CAP> Optional<InputStatement> getInputStatementForSlot(
             LimitedInputSlot<STACK, ITEM, CAP> slot,
             LabelAccess labelAccess
@@ -106,7 +107,6 @@ public class SFMUtils {
         STACK stack = potential;
 
         return SFMResourceTypes.DEFERRED_TYPES
-                .get()
                 .getResourceKey(slot.type)
                 .map(x -> {
                     //noinspection unchecked,rawtypes
@@ -210,8 +210,6 @@ public class SFMUtils {
     @SuppressWarnings("UnstableApiUsage") // for the javadoc lol
     public static Optional<ICapabilityProvider> discoverCapabilityProvider(LevelAccessor level, BlockPos pos) {
         return SFMCapabilityProviderMappers.DEFERRED_MAPPERS
-                .get()
-                .getValues()
                 .stream()
                 .map(mapper -> mapper.getProviderFor(level, pos))
                 .filter(Optional::isPresent)

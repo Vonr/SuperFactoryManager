@@ -1,11 +1,11 @@
 package ca.teamdman.sfm.common.resourcetype;
 
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.registries.ForgeRegistries;
-import net.neoforged.neoforge.registries.IForgeRegistry;
 
 public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler> {
     public ItemResourceType() {
@@ -13,8 +13,8 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     }
 
     @Override
-    public IForgeRegistry<Item> getRegistry() {
-        return ForgeRegistries.ITEMS;
+    public Registry<Item> getRegistry() {
+        return BuiltInRegistries.ITEM;
     }
 
 

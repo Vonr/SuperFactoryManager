@@ -29,7 +29,6 @@ import java.util.stream.Stream;
  * - Remove the network if it was the only member
  * - Cause a network to split into other networks if it was a "bridge" block
  */
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SFM.MOD_ID)
 public class CableNetworkManager {
 
     private static final Map<Level, List<CableNetwork>> NETWORKS = new WeakHashMap<>();

@@ -10,6 +10,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -149,8 +150,13 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     }
 
     @Override
-    public ItemStack pickupBlock(LevelAccessor level, BlockPos pos, BlockState state) {
-        return state.getValue(IN_WATER) ? new ItemStack(Fluids.WATER.getBucket()) : ItemStack.EMPTY;
+    public ItemStack pickupBlock(
+            @Nullable Player player,
+            LevelAccessor levelAccessor,
+            BlockPos blockPos,
+            BlockState blockState
+    ) {
+        return blockState.getValue(IN_WATER) ? new ItemStack(Fluids.WATER.getBucket()) : ItemStack.EMPTY;
     }
 
     @Override
@@ -159,7 +165,13 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     }
 
     @Override
-    public boolean canPlaceLiquid(BlockGetter level, BlockPos pos, BlockState state, Fluid fluid) {
+    public boolean canPlaceLiquid(
+            @Nullable Player player,
+            BlockGetter blockGetter,
+            BlockPos blockPos,
+            BlockState blockState,
+            Fluid fluid
+    ) {
         return fluid.isSame(Fluids.WATER);
     }
 

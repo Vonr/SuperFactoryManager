@@ -2,10 +2,12 @@ package ca.teamdman.sfm.common.recipe;
 
 import ca.teamdman.sfm.common.registry.SFMRecipeSerializers;
 import com.google.gson.JsonObject;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import org.jetbrains.annotations.Nullable;
 
 public class PrintingPressFinishedRecipe implements FinishedRecipe {
     private final ResourceLocation id;
@@ -27,28 +29,29 @@ public class PrintingPressFinishedRecipe implements FinishedRecipe {
 
     @Override
     public void serializeRecipeData(JsonObject json) {
-        json.add("form", form.toJson());
-        json.add("ink", ink.toJson());
-        json.add("paper", paper.toJson());
+        json.add("form", form.toJson(false));
+        json.add("ink", ink.toJson(false));
+        json.add("paper", paper.toJson(false));
     }
 
     @Override
-    public ResourceLocation getId() {
+    public ResourceLocation id() {
         return id;
     }
 
     @Override
-    public RecipeSerializer<?> getType() {
+    public RecipeSerializer<?> type() {
         return SFMRecipeSerializers.PRINTING_PRESS.get();
     }
 
     @Override
-    public JsonObject serializeAdvancement() {
-        return null; // No advancements needed for this recipe
+    public JsonObject serializeRecipe() {
+        return FinishedRecipe.super.serializeRecipe();
     }
 
+    @Nullable
     @Override
-    public ResourceLocation getAdvancementId() {
-        return new ResourceLocation("");
+    public AdvancementHolder advancement() {
+        return null;
     }
 }

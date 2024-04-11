@@ -143,7 +143,7 @@ public class LabelGunScreen extends Screen {
             shouldRebuildWidgets = false;
             rebuildWidgets();
         }
-        this.renderBackground(graphics);
+        this.renderTransparentBackground(graphics);
         super.render(graphics, mx, my, partialTicks);
     }
 }

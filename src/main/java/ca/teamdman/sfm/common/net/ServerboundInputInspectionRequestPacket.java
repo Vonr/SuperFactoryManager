@@ -31,11 +31,11 @@ public record ServerboundInputInspectionRequestPacket(
     }
 
     public static void handle(
-            ServerboundInputInspectionRequestPacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ServerboundInputInspectionRequestPacket msg, NetworkEvent.Context context
     ) {
-        contextSupplier.get().enqueueWork(() -> {
+        context.enqueueWork(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = contextSupplier.get().getSender();
+            ServerPlayer player = context.getSender();
             if (player == null) return;
             ManagerBlockEntity manager;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {
@@ -65,14 +65,14 @@ public record ServerboundInputInspectionRequestPacket(
                                         .append(inputStatement.toStringPretty())
                                         .append("\n-- peek results --\n");
 
-                                ProgramContext context = new ProgramContext(
+                                ProgramContext programContext = new ProgramContext(
                                         successProgram,
                                         manager,
                                         ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES
                                 );
                                 int preLen = payload.length();
                                 inputStatement.gatherSlots(
-                                        context,
+                                        programContext,
                                         slot -> SFMUtils
                                                 .getInputStatementForSlot(
                                                         slot,
