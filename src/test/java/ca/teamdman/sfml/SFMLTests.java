@@ -306,7 +306,7 @@ public class SFMLTests {
     public void wildcardResourceIdentifiers() {
         var input = """
                 name "hello world"
-                                
+
                 every 20 ticks do
                     INPUT fluid:minecraft:water from a TOP SIDE
                     OUTPUT fluid:*:* to b
@@ -466,7 +466,7 @@ public class SFMLTests {
     public void syntaxHighlighting2() {
         var rawInput = """
                 EVERY 20 TICKS DO
-                                
+
                     INPUT FROM a
                     INPUT FROM hehehehehehehehehhe
                     
