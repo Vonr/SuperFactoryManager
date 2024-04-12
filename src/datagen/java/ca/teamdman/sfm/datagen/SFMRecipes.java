@@ -13,8 +13,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
-import java.util.function.Consumer;
-
 public class SFMRecipes extends RecipeProvider {
     public SFMRecipes(GatherDataEvent event) {
         super(event.getGenerator().getPackOutput(), event.getLookupProvider());

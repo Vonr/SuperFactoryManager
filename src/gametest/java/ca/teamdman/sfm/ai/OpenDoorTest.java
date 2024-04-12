@@ -14,6 +14,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
+@SuppressWarnings("unused")
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class OpenDoorTest extends SFMGameTestBase {
@@ -54,8 +55,6 @@ public class OpenDoorTest extends SFMGameTestBase {
             item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 3, 0)));
         // end agent code
         helper.getLevel().addFreshEntity(item);
-        helper.succeedWhen(() -> {
-            helper.assertBlockProperty(doorPos, DoorBlock.OPEN, true);
-        });
+        helper.succeedWhen(() -> helper.assertBlockProperty(doorPos, DoorBlock.OPEN, true));
     }
 }

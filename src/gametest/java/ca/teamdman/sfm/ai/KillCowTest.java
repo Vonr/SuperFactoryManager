@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
+@SuppressWarnings("unused")
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class KillCowTest extends SFMGameTestBase {

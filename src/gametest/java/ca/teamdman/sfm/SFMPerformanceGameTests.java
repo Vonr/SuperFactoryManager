@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@SuppressWarnings({"DataFlowIssue", "OptionalGetWithoutIsPresent", "DuplicatedCode"})
+@SuppressWarnings({"DataFlowIssue", "OptionalGetWithoutIsPresent", "DuplicatedCode", "unused"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMPerformanceGameTests extends SFMGameTestBase {
@@ -55,7 +55,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "many inventory lag test"
-                                    
+
                     EVERY 20 TICKS DO
                         INPUT FROM a
                         OUTPUT TO b
@@ -127,7 +127,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "move many full"
-                                    
+
                     EVERY 20 TICKS DO
                         INPUT FROM a
                         OUTPUT TO b
@@ -221,7 +221,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "move many regex"
-                                    
+
                     EVERY 20 TICKS DO
                         INPUT *:*_ingot FROM a
                         OUTPUT TO b
@@ -318,7 +318,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "move regex circle"
-                                    
+
                     EVERY 20 TICKS DO
                         INPUT *:*_ingot FROM a
                         OUTPUT TO b

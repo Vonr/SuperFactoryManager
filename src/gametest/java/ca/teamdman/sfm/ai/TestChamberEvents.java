@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
+@SuppressWarnings("unused")
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class TestChamberEvents {
     @Nullable
