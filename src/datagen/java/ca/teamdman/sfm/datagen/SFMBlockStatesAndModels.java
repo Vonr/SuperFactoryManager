@@ -4,11 +4,12 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.client.model.generators.BlockStateProvider;
-import net.neoforged.client.model.generators.ConfiguredModel;
-import net.neoforged.client.model.generators.ModelFile;
-import net.neoforged.data.event.GatherDataEvent;
+import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
+import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 public class SFMBlockStatesAndModels extends BlockStateProvider {
     public SFMBlockStatesAndModels(GatherDataEvent event) {
@@ -18,7 +19,7 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
     @Override
     protected void registerStatesAndModels() {
         simpleBlock(SFMBlocks.MANAGER_BLOCK.get(), models().cubeBottomTop(
-                SFMBlocks.MANAGER_BLOCK.getId().getPath(),
+                BuiltInRegistries.BLOCK.getKey(SFMBlocks.MANAGER_BLOCK.get()).getPath(),
                 modLoc("block/manager_side"),
                 modLoc("block/manager_bot"),
                 modLoc("block/manager_top")
@@ -30,12 +31,12 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
 
         ModelFile waterIntakeModelActive = models()
                 .cubeAll(
-                        SFMBlocks.WATER_TANK_BLOCK.getId().getPath() + "_active",
+                        BuiltInRegistries.BLOCK.getKey(SFMBlocks.WATER_TANK_BLOCK.get()).getPath() + "_active",
                         modLoc("block/water_intake_active")
                 );
         ModelFile waterIntakeModelInactive = models()
                 .cubeAll(
-                        SFMBlocks.WATER_TANK_BLOCK.getId().getPath() + "_inactive",
+                        BuiltInRegistries.BLOCK.getKey(SFMBlocks.WATER_TANK_BLOCK.get()).getPath() + "_inactive",
                         modLoc("block/water_intake_inactive")
                 );
         getVariantBuilder(SFMBlocks.WATER_TANK_BLOCK.get())

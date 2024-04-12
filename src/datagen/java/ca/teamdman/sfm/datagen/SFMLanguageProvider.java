@@ -2,9 +2,9 @@ package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
-import net.neoforged.common.data.LanguageProvider;
-import net.neoforged.data.event.GatherDataEvent;
-import net.neoforged.neoforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.neoforged.neoforge.common.data.LanguageProvider;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,15 +24,15 @@ public class SFMLanguageProvider extends LanguageProvider {
             seen.add(entry.key().get());
         }
         List<String> unmapped = new ArrayList<>();
-        ForgeRegistries.ITEMS
-                .getEntries()
+        BuiltInRegistries.ITEM
+                .entrySet()
                 .stream()
                 .filter(entry -> entry.getKey().location().getNamespace().equals(SFM.MOD_ID))
                 .filter(entry -> !seen.contains(entry.getValue().getDescriptionId()))
                 .map(entry -> entry.getValue().toString())
                 .forEach(unmapped::add);
-        ForgeRegistries.BLOCKS
-                .getEntries()
+        BuiltInRegistries.BLOCK
+                .entrySet()
                 .stream()
                 .filter(entry -> entry.getKey().location().getNamespace().equals(SFM.MOD_ID))
                 .filter(entry -> !seen.contains(entry.getValue().getDescriptionId()))

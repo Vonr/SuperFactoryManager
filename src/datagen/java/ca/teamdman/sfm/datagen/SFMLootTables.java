@@ -11,11 +11,11 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
-import net.neoforged.data.event.GatherDataEvent;
-import net.neoforged.neoforge.registries.RegistryObject;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.util.Collections;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public class SFMLootTables extends LootTableProvider {
 
@@ -38,7 +38,7 @@ public class SFMLootTables extends LootTableProvider {
 
         }
 
-        private void dropSelf(RegistryObject<Block> block, BiConsumer<ResourceLocation, LootTable.Builder> writer) {
+        private void dropSelf(Supplier<Block> block, BiConsumer<ResourceLocation, LootTable.Builder> writer) {
             var pool = LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1))
                     .add(LootItem.lootTableItem(block.get()));

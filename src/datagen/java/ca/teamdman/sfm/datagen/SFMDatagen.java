@@ -2,9 +2,9 @@ package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.SFM;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.data.event.GatherDataEvent;
-import net.neoforged.data.loading.DatagenModLoader;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.neoforge.data.loading.DatagenModLoader;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class SFMDatagen {

@@ -25,53 +25,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
 //minecraft.accessTransformers.entry public net.minecraft.client.Minecraft textureManager # textureManager
 
-// Default run configurations.
-// These can be tweaked, removed, or duplicated as needed.
-runs {
-    // applies to all the run configs below
-    configureEach {
-        // Recommended logging data for a userdev environment
-        // The markers can be added/remove as needed separated by commas.
-        // "SCAN": For mods scan.
-        // "REGISTRIES": For firing of registry events.
-        // "REGISTRYDUMP": For getting the contents of all registries.
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-
-        // Recommended logging level for the console
-        // You can set various levels here.
-        // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
-        systemProperty 'forge.logging.console.level', 'debug'
-
-        modSource project.sourceSets.main
-    }
-
-    client {
-        // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    server {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        programArgument '--nogui'
-    }
-
-    // This run config launches GameTestServer and runs all registered gametests, then exits.
-    // By default, the server will crash when no gametests are provided.
-    // The gametest system is also enabled by default for other run configs under the /test command.
-    gameTestServer {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    data {
-        // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
-        // workingDirectory project.file('run-data')
-
-        // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-    }
-}
-
-
+// this must come before runs for the sourcesets to be available when calling modSource project.sourceSets.gametest
 sourceSets {
     main {
         resources {
@@ -100,14 +54,81 @@ sourceSets {
     gametest {
         java {
             srcDir "src/gametest/java"
+            exclude "ca/teamdman/sfm/compat/**"
         }
         compileClasspath += main.output
+//        compileClasspath += sourceSets.main.output
 //        runtimeClasspath += sourceSets.main.output
         resources {
             srcDirs += "src/gametest/resources"
         }
     }
 }
+
+
+// Ensure sources are available for other modules
+configurations {
+    extendConfigurations(implementation, gametestImplementation, testImplementation, datagenImplementation)
+    extendConfigurations(compileOnly, gametestCompileOnly, testCompileOnly, datagenCompileOnly)
+    extendConfigurations(runtimeOnly, gametestRuntimeOnly, testRuntimeOnly, datagenRuntimeOnly)
+}
+static void extendConfigurations(Configuration base, Configuration... configurations) {
+    for (def configuration : configurations) {
+        configuration.extendsFrom(base)
+    }
+}
+
+
+
+// Default run configurations.
+// These can be tweaked, removed, or duplicated as needed.
+runs {
+    // applies to all the run configs below
+    configureEach {
+        // Recommended logging data for a userdev environment
+        // The markers can be added/remove as needed separated by commas.
+        // "SCAN": For mods scan.
+        // "REGISTRIES": For firing of registry events.
+        // "REGISTRYDUMP": For getting the contents of all registries.
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+
+        // Recommended logging level for the console
+        // You can set various levels here.
+        // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
+        systemProperty 'forge.logging.console.level', 'debug'
+
+        modSource project.sourceSets.main
+    }
+
+    client {
+        modSource project.sourceSets.gametest
+        // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    server {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        programArgument '--nogui'
+    }
+
+    // This run config launches GameTestServer and runs all registered gametests, then exits.
+    // By default, the server will crash when no gametests are provided.
+    // The gametest system is also enabled by default for other run configs under the /test command.
+    gameTestServer {
+        modSource project.sourceSets.gametest
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    data {
+        modSource project.sourceSets.datagen
+        // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
+        // workingDirectory project.file('run-data')
+
+        // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+    }
+}
+
 
 
 dependencies {
@@ -187,22 +208,16 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 
-//
-//configurations {
-//    extendConfigurations(implementation, gametestImplementation, testImplementation, datagenImplementation)
-//    extendConfigurations(compileOnly, gametestCompileOnly, testCompileOnly, datagenCompileOnly)
-//    extendConfigurations(runtimeOnly, gametestRuntimeOnly, testRuntimeOnly, datagenRuntimeOnly)
-////    testImplementation.extendsFrom(minecraft)
-////    gametestImplementation.extendsFrom(minecraft)
-////    datagenImplementation.extendsFrom(minecraft)
-//}
-//
-//static void extendConfigurations(Configuration base, Configuration... configurations) {
-//    for (def configuration : configurations) {
-//        configuration.extendsFrom(base)
-//    }
-//}
-//
+test {
+    useJUnitPlatform()
+}
+
+generateGrammarSource {
+    arguments = ["-visitor", "-package", "ca.teamdman.sfml"]
+    outputDirectory = file("${project.buildDir}/generated-src/antlr/main/ca/teamdman/sfml")
+}
+compileJava.dependsOn generateGrammarSource
+
 //
 //// Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 //java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -513,13 +528,4 @@ tasks.withType(JavaCompile).configureEach {
 //}
 //
 //
-test {
-    useJUnitPlatform()
-}
-
-generateGrammarSource {
-    arguments = ["-visitor", "-package", "ca.teamdman.sfml"]
-    outputDirectory = file("${project.buildDir}/generated-src/antlr/main/ca/teamdman/sfml")
-}
-compileJava.dependsOn generateGrammarSource
 //

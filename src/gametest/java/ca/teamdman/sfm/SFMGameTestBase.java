@@ -10,7 +10,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import java.text.NumberFormat;
 import java.util.List;

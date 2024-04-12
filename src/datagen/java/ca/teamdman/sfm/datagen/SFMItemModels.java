@@ -4,12 +4,12 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.neoforged.client.model.generators.ItemModelProvider;
-import net.neoforged.client.model.generators.ModelFile;
-import net.neoforged.data.event.GatherDataEvent;
-import net.neoforged.neoforge.registries.Supplier;
+import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.util.function.Supplier;
 
@@ -33,7 +33,7 @@ public class SFMItemModels extends ItemModelProvider {
         basicItem(SFMItems.NETWORK_TOOL_ITEM);
 
         // force custom renderer
-        getBuilder(SFMItems.FORM_ITEM.getId().toString())
+        getBuilder(BuiltInRegistries.ITEM.getKey(SFMItems.FORM_ITEM.get()).toString())
                 .parent(new ModelFile.UncheckedModelFile("builtin/entity"))
                 .guiLight(BlockModel.GuiLight.FRONT);
         getBuilder("form_base")
@@ -50,17 +50,18 @@ public class SFMItemModels extends ItemModelProvider {
     private void justParent(
             Supplier<? extends Item> item, Supplier<? extends Block> block, String extra
     ) {
-        withExistingParent(block.getId().getPath(), SFM.MOD_ID + ":block/" + item.getId().getPath() + extra);
+        var blockPath = BuiltInRegistries.BLOCK.getKey(block.get()).getPath();
+        var itemPath = BuiltInRegistries.ITEM.getKey(item.get()).getPath();
+        withExistingParent(blockPath, SFM.MOD_ID + ":block/" + itemPath + extra);
     }
 
     private void basicItem(
             Supplier<? extends Item> item
     ) {
-        withExistingParent(item.getId().getPath(), mcLoc("item/generated")).texture(
+        var itemPath = BuiltInRegistries.ITEM.getKey(item.get()).getPath();
+        withExistingParent(itemPath, mcLoc("item/generated")).texture(
                 "layer0",
-                modLoc("item/" + item
-                        .getId()
-                        .getPath())
+                modLoc("item/" + itemPath)
         );
     }
 }

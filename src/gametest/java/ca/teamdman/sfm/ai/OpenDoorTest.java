@@ -11,8 +11,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.gametest.GameTestHolder;
-import net.neoforged.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
