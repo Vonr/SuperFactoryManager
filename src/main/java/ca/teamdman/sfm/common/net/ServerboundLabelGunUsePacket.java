@@ -12,7 +12,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.NetworkEvent;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -47,10 +47,10 @@ public record ServerboundLabelGunUsePacket(
     }
 
     public static void handle(
-            ServerboundLabelGunUsePacket msg, Supplier<NetworkEvent.Context> ctx
+            ServerboundLabelGunUsePacket msg, NetworkEvent.Context ctx
     ) {
-        ctx.get().enqueueWork(() -> {
-            var sender = ctx.get().getSender();
+        ctx.enqueueWork(() -> {
+            var sender = ctx.getSender();
             if (sender == null) {
                 return;
             }
@@ -145,6 +145,6 @@ public record ServerboundLabelGunUsePacket(
             // write changes to label gun stack
             gunLabels.save(stack);
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

@@ -1,10 +1,10 @@
 package ca.teamdman.sfm.common.compat;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
-import net.minecraftforge.fml.ModList;
-import java.util.List;
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.common.capabilities.Capabilities;
+import net.neoforged.neoforge.common.capabilities.Capability;
+
+import java.util.List;
 
 public class SFMCompat {
     public static boolean isMekanismLoaded() {
@@ -13,9 +13,9 @@ public class SFMCompat {
 
     public static List<Capability<?>> getCapabilities() {
         return List.of(
-                ForgeCapabilities.ITEM_HANDLER,
-                ForgeCapabilities.FLUID_HANDLER,
-                ForgeCapabilities.ENERGY
+                Capabilities.ITEM_HANDLER,
+                Capabilities.FLUID_HANDLER,
+                Capabilities.ENERGY
         );
     }
 }

@@ -18,9 +18,6 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.capabilities.CapabilityProvider;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraft.world.level.LevelAccessor;
 import net.neoforged.neoforge.common.capabilities.ICapabilityProvider;
 
 import javax.annotation.Nullable;

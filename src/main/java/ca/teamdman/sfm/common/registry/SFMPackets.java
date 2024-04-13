@@ -76,21 +76,21 @@ public class SFMPackets {
         );
 
 
-        LABEL_GUN_ITEM_CHANNEL.<ServerboundLabelGunUpdatePacket>registerMessage(
+        LABEL_GUN_ITEM_CHANNEL.registerMessage(
                 0,
                 ServerboundLabelGunUpdatePacket.class,
                 ServerboundLabelGunUpdatePacket::encode,
                 ServerboundLabelGunUpdatePacket::decode,
                 ServerboundLabelGunUpdatePacket::handle
         );
-        LABEL_GUN_ITEM_CHANNEL.<ServerboundLabelGunPrunePacket>registerMessage(
+        LABEL_GUN_ITEM_CHANNEL.registerMessage(
                 1,
                 ServerboundLabelGunPrunePacket.class,
                 ServerboundLabelGunPrunePacket::encode,
                 ServerboundLabelGunPrunePacket::decode,
                 ServerboundLabelGunPrunePacket::handle
         );
-        LABEL_GUN_ITEM_CHANNEL.<ServerboundLabelGunClearPacket>registerMessage(
+        LABEL_GUN_ITEM_CHANNEL.registerMessage(
                 2,
                 ServerboundLabelGunClearPacket.class,
                 ServerboundLabelGunClearPacket::encode,
@@ -105,7 +105,7 @@ public class SFMPackets {
                 ServerboundLabelGunUsePacket::handle
         );
 
-        DISK_ITEM_CHANNEL.<ServerboundDiskItemSetProgramPacket>registerMessage(
+        DISK_ITEM_CHANNEL.registerMessage(
                 0,
                 ServerboundDiskItemSetProgramPacket.class,
                 ServerboundDiskItemSetProgramPacket::encode,
