@@ -1,9 +1,11 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.util.SFMUtils;
+import ca.teamdman.sfml.ast.DirectionQualifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
@@ -17,6 +19,7 @@ import net.neoforged.neoforge.network.NetworkEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public record ServerboundNetworkToolUsePacket(
         BlockPos blockPosition,
@@ -62,7 +65,20 @@ public record ServerboundNetworkToolUsePacket(
                     payload.append("---- (dev only) block entity ----\n");
                     payload.append(entity).append("\n");
                 }
+                payload.append("---- capability directions ----\n");
+                for (var cap : SFMCompat.getCapabilities()) {
+                    payload
+                            .append(cap.getName())
+                            .append(": ");
+                    String directions = DirectionQualifier.EVERY_DIRECTION
+                            .stream()
+                            .filter(dir -> entity.getCapability(cap, dir).isPresent())
+                            .map(dir -> dir == null ? "NULL DIRECTION" : DirectionQualifier.directionToString(dir))
+                            .collect(Collectors.joining(", ", "[", "]"));
+                    payload.append(directions).append("\n");
+                }
             }
+
 
             payload.append("---- exports ----\n");
             int len = payload.length();

@@ -112,37 +112,37 @@ public record Program(
                 .filter(x -> !referencedLabels.contains(x))
                 .forEach(label -> warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNDEFINED_LABEL.get(label)));
 
-        if (manager != null) {
+        var level = manager != null ? manager.getLevel() : null;
+        if (level != null) {
             // labels in world but not connected via cables
             CableNetworkManager
                     .getOrRegisterNetworkFromManagerPosition(manager)
                     .ifPresent(network -> labels.forEach((label, pos) -> {
-                var inNetwork = network.isInNetwork(pos);
-                var adjacent = network.isAdjacentToCable(pos);
-                if (!inNetwork) {
-                    if (adjacent) {
-                        warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL.get(
-                                label,
-                                String.format(
-                                        "[%d,%d,%d]",
-                                        pos.getX(),
-                                        pos.getY(),
-                                        pos.getZ()
-                                )
-                        ));
-                    } else {
-                        warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
-                                label,
-                                String.format(
-                                        "[%d,%d,%d]",
-                                        pos.getX(),
-                                        pos.getY(),
-                                        pos.getZ()
-                                )
-                        ));
-                    }
-                }
-            }));
+                        var adjacent = network.isAdjacentToCable(pos);
+                        if (!adjacent) {
+                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
+                                    label,
+                                    String.format(
+                                            "[%d,%d,%d]",
+                                            pos.getX(),
+                                            pos.getY(),
+                                            pos.getZ()
+                                    )
+                            ));
+                        }
+                        var viable = SFMUtils.discoverCapabilityProvider(level, pos).isPresent();
+                        if (!viable && adjacent) {
+                                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL.get(
+                                        label,
+                                        String.format(
+                                                "[%d,%d,%d]",
+                                                pos.getX(),
+                                                pos.getY(),
+                                                pos.getZ()
+                                        )
+                                ));
+                        }
+                    }));
         }
 
         // try and validate that references resources exist
@@ -179,7 +179,7 @@ public record Program(
         // remove labels not connected via cables
         CableNetworkManager
                 .getOrRegisterNetworkFromManagerPosition(manager)
-                .ifPresent(network -> labels.removeIf((label, pos) -> !network.isInNetwork(pos)));
+                .ifPresent(network -> labels.removeIf((label, pos) -> !network.isAdjacentToCable(pos)));
         labels.save(disk);
 
         // update warnings
@@ -214,6 +214,16 @@ public record Program(
                 t.tick(context.copy());
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        var rtn = new StringBuilder();
+        rtn.append("NAME \"").append(name).append("\"\n");
+        for (Trigger trigger : triggers) {
+            rtn.append(trigger).append("\n");
+        }
+        return rtn.toString();
     }
 
     public void replaceOutputStatement(OutputStatement oldStatement, OutputStatement newStatement) {

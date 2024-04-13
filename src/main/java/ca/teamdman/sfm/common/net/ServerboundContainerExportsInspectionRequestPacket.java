@@ -16,7 +16,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.NetworkEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -74,7 +74,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
     }
 
 
-    public static String buildInspectionResults(LevelAccessor level, BlockPos pos) {
+    public static String buildInspectionResults(Level level, BlockPos pos) {
         StringBuilder sb = new StringBuilder();
         Direction[] dirs = Arrays.copyOf(Direction.values(), Direction.values().length + 1);
         dirs[dirs.length - 1] = null;
@@ -110,7 +110,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
     public static <STACK, ITEM, CAP> String buildInspectionResults(
             ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey,
             ResourceType<STACK, ITEM, CAP> resourceType,
-            LevelAccessor level,
+            Level level,
             BlockPos pos,
             @Nullable
             Direction direction
@@ -118,7 +118,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         StringBuilder sb = new StringBuilder();
         SFMUtils
                 .discoverCapabilityProvider(level, pos)
-                .ifPresent(prov -> prov.getCapability(resourceType.CAPABILITY, direction).ifPresent(cap -> {
+                .ifPresent(prov -> prov.getCapability(resourceType.CAPABILITY_KIND, direction).ifPresent(cap -> {
                     int slots = resourceType.getSlots(cap);
                     Int2ObjectMap<STACK> slotContents = new Int2ObjectArrayMap<>(slots);
                     for (int slot = 0; slot < slots; slot++) {

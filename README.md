@@ -1,3 +1,4 @@
+<!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
 
 # Super Factory Manager 4
@@ -13,12 +14,59 @@ There are also [in-game examples](src/main/resources/assets/sfm/template_program
 
 </div>
 
+## About
+
+Super Factory Manager is a mod for Minecraft that lets users create programs to run their factories. The mod provides a domain specific language tailored for moving items, fluids, and other resource types. A text editor is included, along with example programs.
+
+To get started, you will need a factory manager, a label gun, and a disk.
+
+## Mod Spotlight
+
+[![mod spotlight](https://i.ytimg.com/vi/W5wY23VxZAc/maxresdefault.jpg)](https://www.youtube.com/watch?v=W5wY23VxZAc)
+
 ## VSCode Extension
 
 Get the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=TeamDman.super-factory-manager-language)
 for syntax highlighting 🌈
 
 ![](media/vscode%20syntax.png)
+
+## Release process
+
+The following process is designed to catch the most obvious problems that may arise from creating a new release.
+
+```
+versions = [1.19.2, 1.19.4, 1.20, 1.20.1]
+jars = []
+for i,version in enumerate(versions):
+    git checkout $version
+    gradle genIntellijRuns
+    if i == 0:
+        make changes
+        bump mod_version in gradle.properties
+        update changelog.sfml example
+        git commit
+        git push
+    else:
+        git merge $versions[i-1]
+        resolve conflicts
+    runData
+    git add src/generated
+    rm -rf runGameTest/world
+    gradle runGameTestServer, assert exit == 0
+    gradle build | jars.append($_)
+
+git push --all
+
+for jar in jars:
+    copy jar to server, run.bat
+    copy jar to prism launcher, launch
+    connect to server
+    assemble a simple program, assert works
+
+for jar in jars:
+    upload jar to curseforge with changelog
+```
 
 ## Optimization
 

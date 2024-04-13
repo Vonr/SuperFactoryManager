@@ -140,13 +140,17 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         return rtn;
     }
 
+    public void setResourceTypeCache(@Nullable ResourceType<STACK, ITEM, CAP> resourceTypeCache) {
+        this.resourceTypeCache = resourceTypeCache;
+    }
+
     public @Nullable ResourceType<STACK, ITEM, CAP> getResourceType() {
         if (resourceTypeCache == null) {
             //noinspection unchecked
-            resourceTypeCache = (ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.fastLookup(
+            setResourceTypeCache((ResourceType<STACK, ITEM, CAP>) SFMResourceTypes.fastLookup(
                     resourceTypeNamespace,
                     resourceTypeName
-            );
+            ));
         }
         return resourceTypeCache;
     }

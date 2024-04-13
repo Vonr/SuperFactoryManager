@@ -95,6 +95,7 @@ comparisonOp    : GT
 setOp           : OVERALL
                 | SOME
                 | EVERY
+                | EACH
                 | ONE
                 | LONE
                 ;

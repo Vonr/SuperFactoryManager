@@ -280,7 +280,7 @@ public class Constants {
                 "program.sfm.warnings.disconnected_label",
                 "Label \"%s\" is assigned in the world at %s but not connected by cables."
         );
-        public static final LocalizationEntry PROGRAM_WARNING_ADJACENT_BUT_DISCONNECTED_LABEL = new LocalizationEntry(
+        public static final LocalizationEntry PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL = new LocalizationEntry(
                 "program.sfm.warnings.adjacent_but_disconnected_label",
                 "Label \"%s\" is assigned in the world at %s and is connected by cables but is not detected as a valid inventory."
         );

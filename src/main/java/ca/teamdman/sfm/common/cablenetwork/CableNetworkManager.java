@@ -51,7 +51,7 @@ public class CableNetworkManager {
     public static Optional<CableNetwork> getNetworkFromPosition(Level level, BlockPos pos) {
         return getNetworksForLevel(level)
                 .filter(net -> net.CABLE_POSITIONS.contains(pos.asLong())
-                               || net.CAPABILITY_PROVIDER_POSITIONS.containsKey(pos.asLong()))
+                               || net.getCapabilityProviderPositions().anyMatch(pos::equals))
                 .findFirst();
     }
 

@@ -17,6 +17,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.CapabilityProvider;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraft.world.level.LevelAccessor;
 import net.neoforged.neoforge.common.capabilities.ICapabilityProvider;
 
@@ -92,7 +95,6 @@ public class SFMUtils {
     public static TranslatableContents getTranslatableContents(String key) {
         return getTranslatableContents(key, new Object[]{});
     }
-
     public static <STACK, ITEM, CAP> Optional<InputStatement> getInputStatementForSlot(
             LimitedInputSlot<STACK, ITEM, CAP> slot,
             LabelAccess labelAccess
@@ -208,7 +210,8 @@ public class SFMUtils {
      * If multiple {@link CapabilityProviderMapper}s match, the first one is returned.
      */
     @SuppressWarnings("UnstableApiUsage") // for the javadoc lol
-    public static Optional<ICapabilityProvider> discoverCapabilityProvider(LevelAccessor level, BlockPos pos) {
+    public static Optional<ICapabilityProvider> discoverCapabilityProvider(Level level, BlockPos pos) {
+        if (!level.isLoaded(pos)) return Optional.empty();
         return SFMCapabilityProviderMappers.DEFERRED_MAPPERS
                 .stream()
                 .map(mapper -> mapper.getProviderFor(level, pos))

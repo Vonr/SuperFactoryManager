@@ -13,6 +13,22 @@ public record Block(List<Statement> statements) implements Statement {
     }
 
     @Override
+    public String toString() {
+        var rtn = new StringBuilder();
+        for (Statement statement : statements) {
+            if (statement instanceof InputStatement ins) {
+                rtn.append(ins.toStringPretty().strip());
+            } else if (statement instanceof OutputStatement outs) {
+                rtn.append(outs.toStringPretty().strip());
+            } else {
+                rtn.append(statement.toString().strip());
+            }
+            rtn.append("\n");
+        }
+        return rtn.toString().strip();
+    }
+
+    @Override
     public List<Statement> getStatements() {
         return statements;
     }

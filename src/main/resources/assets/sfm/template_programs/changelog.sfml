@@ -1,7 +1,14 @@
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
-NAME "Changelog for 4.14.0"
+NAME "Changelog for 4.14.2"
+---- 4.14.2 ----
+-- fix capability caching to avoid resource voiding and programs not working
+
+---- 4.14.1 ----
+-- fix label gun not working on servers
+
+---- 4.14.0 ----
 -- switch to milliseconds instead of nanoseconds
 -- add FORGET keyword
 ---- FORGET a,b,c -- remove these from inputs
