@@ -5,16 +5,20 @@ import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.Block;
 import ca.teamdman.sfml.ast.Trigger;
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
@@ -140,5 +144,14 @@ public abstract class SFMGameTestBase {
                 .sum();
     }
 
-
+    protected static IItemHandler getItemHandler(GameTestHelper helper, BlockPos pos) {
+        BlockEntity blockEntity = helper
+                .getBlockEntity(pos);
+        SFMGameTestBase.assertTrue(blockEntity != null, "No block entity found at " + pos);
+        Optional<IItemHandler> found = blockEntity
+                .getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .resolve();
+        SFMGameTestBase.assertTrue(found.isPresent(), "No item handler found at " + pos);
+        return found.get();
+    }
 }
