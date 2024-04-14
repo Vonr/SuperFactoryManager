@@ -146,8 +146,11 @@ public abstract class SFMGameTestBase {
     }
 
     protected static IItemHandler getItemHandler(GameTestHelper helper, BlockPos pos) {
-        var found = helper.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, pos, Direction.UP);
-        SFMGameTestBase.assertTrue(found != null, "No item handler found at " + pos);
+        BlockPos worldPos = helper.absolutePos(pos);
+        var found = helper
+                .getLevel()
+                .getCapability(Capabilities.ItemHandler.BLOCK, worldPos, Direction.DOWN);
+        SFMGameTestBase.assertTrue(found != null, "No item handler found at " + worldPos);
         return found;
     }
 }
