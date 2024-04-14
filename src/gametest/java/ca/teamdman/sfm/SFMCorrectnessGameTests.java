@@ -82,7 +82,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
