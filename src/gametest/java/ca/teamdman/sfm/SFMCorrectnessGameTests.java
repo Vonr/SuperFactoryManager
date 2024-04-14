@@ -926,10 +926,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             );
             ItemStack held = player.getMainHandItem();
             if (held.is(SFMItems.DISK_ITEM.get()) && DiskItem.getProgram(held).equals(DiskItem.getProgram(disk))) {
-                helper
-                        .getBlockEntity(chestPos)
-                        .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                        .ifPresent(c -> c.insertItem(0, held, false));
+                var chest = getItemHandler(helper, chestPos);
+                chest.insertItem(0, held, false);
                 assertTrue(printingPress.getInk().isEmpty(), "Ink was not consumed");
                 assertTrue(printingPress.getPaper().isEmpty(), "Paper was not consumed");
                 assertTrue(!printingPress.getForm().isEmpty(), "Form should not be consumed");
@@ -1185,10 +1183,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             );
             ItemStack held = player.getMainHandItem();
             if (ItemStack.isSameItemSameTags(held, reference)) {
-                helper
-                        .getBlockEntity(chestPos)
-                        .getCapability(ForgeCapabilities.ITEM_HANDLER)
-                        .ifPresent(c -> c.insertItem(0, held, false));
+                var chest = getItemHandler(helper, chestPos);
+                chest.insertItem(0, held, false);
                 assertTrue(printingPress.getInk().getCount() == 9, "Ink was not consumed properly");
                 assertTrue(printingPress.getPaper().isEmpty(), "Paper was not consumed");
                 assertTrue(!printingPress.getForm().isEmpty(), "Form should not be consumed");
@@ -1813,7 +1809,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
 
@@ -1850,7 +1846,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
 
@@ -1887,7 +1883,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
 
@@ -1924,7 +1920,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 64), false);
@@ -1968,7 +1964,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 2), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 2), false);
@@ -2011,7 +2007,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 2), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 2), false);
@@ -2054,7 +2050,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 64), false);
@@ -2100,7 +2096,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 64), false);
@@ -2144,7 +2140,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 2), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 2), false);
@@ -2185,7 +2181,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 8), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 8), false);
@@ -2226,7 +2222,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 64), false);
@@ -2270,7 +2266,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         Item[] items = new Item[]{
                 Items.NETHERITE_INGOT,
@@ -2353,7 +2349,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
@@ -2392,7 +2388,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
@@ -2433,7 +2429,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
         leftChest.insertItem(1, new ItemStack(Items.IRON_INGOT, 64), false);
@@ -2477,7 +2473,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
 
@@ -2515,7 +2511,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
 
@@ -2553,7 +2549,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
 
@@ -2712,7 +2708,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
