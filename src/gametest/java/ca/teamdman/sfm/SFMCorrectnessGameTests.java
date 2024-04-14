@@ -2708,7 +2708,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
-        var leftChest = helper.getBlockEntity(leftPos).getCapability(Capabilities.ITEM_HANDLER).resolve().get();
+        var leftChest = getItemHandler(helper, leftPos);
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
