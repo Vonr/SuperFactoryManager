@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.LimitedInputSlot;
@@ -11,11 +12,13 @@ import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Number;
 import ca.teamdman.sfml.ast.*;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.NetworkEvent;
+
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 import org.antlr.v4.runtime.misc.Pair;
 
 import java.util.ArrayList;
@@ -27,7 +30,18 @@ import java.util.function.Supplier;
 public record ServerboundOutputInspectionRequestPacket(
         String programString,
         int outputNodeIndex
-) {
+) implements CustomPacketPayload {
+    @Override
+    public void write(FriendlyByteBuf friendlyByteBuf) {
+        encode(this, friendlyByteBuf);
+    }
+
+    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_output_inspection_request_packet");
+    @Override
+    public ResourceLocation id() {
+        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+    }
+
     public static void encode(ServerboundOutputInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
         friendlyByteBuf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
         friendlyByteBuf.writeInt(msg.outputNodeIndex());
@@ -77,12 +91,13 @@ public record ServerboundOutputInspectionRequestPacket(
 
     public static void handle(
             ServerboundOutputInspectionRequestPacket msg,
-            NetworkEvent.Context context
+            PlayPayloadContext context
     ) {
-        context.enqueueWork(() -> {
+        context.workHandler().submitAsync(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
+            if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
+                return;
+            }
             ManagerBlockEntity manager;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {
                 if (player.level().getBlockEntity(mcm.MANAGER_POSITION) instanceof ManagerBlockEntity mbe) {
@@ -92,8 +107,7 @@ public record ServerboundOutputInspectionRequestPacket(
                 }
             } else {
                 //todo: localize
-                SFMPackets.INSPECTION_CHANNEL.send(
-                        PacketDistributor.PLAYER.with(() -> player),
+                PacketDistributor.PLAYER.with(player).send(
                         new ClientboundInputInspectionResultsPacket(
                                 "This inspection is only available when editing inside a manager.")
                 );
@@ -286,16 +300,13 @@ public record ServerboundOutputInspectionRequestPacket(
                                     ));
                                 }
 
-
-                                SFMPackets.INSPECTION_CHANNEL.send(
-                                        PacketDistributor.PLAYER.with(() -> player),
+                                PacketDistributor.PLAYER.with(player).send(
                                         new ClientboundOutputInspectionResultsPacket(payload.toString().strip())
                                 );
                             }),
                     failure -> {
                         //todo: translate
-                        SFMPackets.INSPECTION_CHANNEL.send(
-                                PacketDistributor.PLAYER.with(() -> player),
+                        PacketDistributor.PLAYER.with(player).send(
                                 new ClientboundOutputInspectionResultsPacket("failed to compile program")
                         );
                     }

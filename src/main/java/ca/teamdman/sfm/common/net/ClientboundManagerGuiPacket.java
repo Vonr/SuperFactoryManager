@@ -1,19 +1,30 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.neoforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
 public record ClientboundManagerGuiPacket(
         int windowId,
         String program,
         ManagerBlockEntity.State state,
         long[] tickTimes
-) {
+) implements CustomPacketPayload {
+    @Override
+    public void write(FriendlyByteBuf friendlyByteBuf) {
+        encode(this, friendlyByteBuf);
+    }
+
+    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "clientbound_manager_gui_packet");
+    @Override
+    public ResourceLocation id() {
+        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+    }
 
     public static void encode(
             ClientboundManagerGuiPacket msg, FriendlyByteBuf friendlyByteBuf
@@ -34,9 +45,9 @@ public record ClientboundManagerGuiPacket(
     }
 
     public static void handle(
-            ClientboundManagerGuiPacket msg, NetworkEvent.Context context
+            ClientboundManagerGuiPacket msg, PlayPayloadContext context
     ) {
-        context.enqueueWork(() -> ClientStuff.updateMenu(msg));
-        context.setPacketHandled(true);
+        context.workHandler().submitAsync(() -> ClientStuff.updateMenu(msg));
+        
     }
 }

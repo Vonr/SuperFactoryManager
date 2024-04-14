@@ -26,6 +26,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -169,7 +170,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void sendReset() {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerResetPacket(
+        PacketDistributor.SERVER.noArg().send(new ServerboundManagerResetPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION
         ));
@@ -178,7 +179,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void sendAttemptFix() {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerFixPacket(
+        PacketDistributor.SERVER.noArg().send(new ServerboundManagerFixPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION
         ));
@@ -187,7 +188,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void sendProgram(String program) {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerProgramPacket(
+        PacketDistributor.SERVER.noArg().send(new ServerboundManagerProgramPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION,
                 program

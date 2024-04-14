@@ -1,12 +1,16 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.neoforge.network.NetworkEvent;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
 import java.util.function.Supplier;
 
@@ -14,7 +18,17 @@ public record ServerboundManagerProgramPacket(
         int windowId,
         BlockPos pos,
         String program
-) {
+) implements CustomPacketPayload {
+    @Override
+    public void write(FriendlyByteBuf friendlyByteBuf) {
+        encode(this, friendlyByteBuf);
+    }
+
+    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_manager_program_packet");
+    @Override
+    public ResourceLocation id() {
+        return ID;
+    }
 
     public static void encode(ServerboundManagerProgramPacket msg, FriendlyByteBuf friendlyByteBuf) {
         friendlyByteBuf.writeVarInt(msg.windowId());
@@ -30,7 +44,7 @@ public record ServerboundManagerProgramPacket(
         );
     }
 
-    public static void handle(ServerboundManagerProgramPacket msg, NetworkEvent.Context context) {
+    public static void handle(ServerboundManagerProgramPacket msg, PlayPayloadContext context) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
                 ManagerContainerMenu.class,

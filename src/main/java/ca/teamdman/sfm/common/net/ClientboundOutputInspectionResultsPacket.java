@@ -1,14 +1,28 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.neoforge.network.NetworkEvent;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+
 
 import java.util.function.Supplier;
 
 public record ClientboundOutputInspectionResultsPacket(
         String results
-) {
+) implements CustomPacketPayload {
+    @Override
+    public void write(FriendlyByteBuf friendlyByteBuf) {
+        encode(this, friendlyByteBuf);
+    }
+
+    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "clientbound_output_inspection_results_packet");
+    @Override
+    public ResourceLocation id() {
+        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+    }
     public static final int MAX_RESULTS_LENGTH = 10240;
 
     public static void encode(
@@ -24,10 +38,10 @@ public record ClientboundOutputInspectionResultsPacket(
     }
 
     public static void handle(
-            ClientboundOutputInspectionResultsPacket msg, NetworkEvent.Context context
+            ClientboundOutputInspectionResultsPacket msg, PlayPayloadContext context
     ) {
-        context.enqueueWork(() -> ClientStuff.showProgramEditScreen(msg.results, next -> {
+        context.workHandler().submitAsync(() -> ClientStuff.showProgramEditScreen(msg.results, next -> {
         }));
-        context.setPacketHandled(true);
+        
     }
 }

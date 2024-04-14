@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
@@ -9,14 +10,17 @@ import ca.teamdman.sfml.ast.DirectionQualifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.network.NetworkEvent;
+
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -24,7 +28,17 @@ import java.util.stream.Collectors;
 public record ServerboundNetworkToolUsePacket(
         BlockPos blockPosition,
         Direction blockFace
-) {
+) implements CustomPacketPayload {
+    @Override
+    public void write(FriendlyByteBuf friendlyByteBuf) {
+        encode(this, friendlyByteBuf);
+    }
+
+    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_network_tool_use_packet");
+    @Override
+    public ResourceLocation id() {
+        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+    }
     public static void encode(ServerboundNetworkToolUsePacket msg, FriendlyByteBuf friendlyByteBuf) {
         friendlyByteBuf.writeBlockPos(msg.blockPosition);
         friendlyByteBuf.writeEnum(msg.blockFace);
@@ -38,12 +52,13 @@ public record ServerboundNetworkToolUsePacket(
     }
 
     public static void handle(
-            ServerboundNetworkToolUsePacket msg, NetworkEvent.Context context
+            ServerboundNetworkToolUsePacket msg, PlayPayloadContext context
     ) {
-        context.enqueueWork(() -> {
+        context.workHandler().submitAsync(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
+            if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
+                return;
+            }
             Level level = player.level();
             BlockPos pos = msg.blockPosition();
             if (!level.isLoaded(pos)) return;
@@ -106,8 +121,8 @@ public record ServerboundNetworkToolUsePacket(
             }
 
 
-            SFMPackets.INSPECTION_CHANNEL.send(
-                    PacketDistributor.PLAYER.with(() -> player),
+            PacketDistributor.PLAYER.with(player).send(
+
                     new ClientboundInputInspectionResultsPacket(
                             SFMUtils.truncate(
                                     payload.toString(),

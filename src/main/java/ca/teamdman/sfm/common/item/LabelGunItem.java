@@ -4,9 +4,6 @@ import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUsePacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
-import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -19,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -66,7 +64,7 @@ public class LabelGunItem extends Item {
     ) {
         var level = ctx.getLevel();
         if (level.isClientSide && ctx.getPlayer() != null) {
-            SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUsePacket(
+            PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunUsePacket(
                     ctx.getHand(),
                     ctx.getClickedPos(),
                     Screen.hasControlDown(),

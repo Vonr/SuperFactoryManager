@@ -1,6 +1,7 @@
 package ca.teamdman.sfm;
 
 import ca.teamdman.sfm.client.gui.screen.ProgramEditScreen;
+import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfml.ast.*;
 import net.minecraft.ChatFormatting;
@@ -58,5 +59,11 @@ public class SFMTests {
                 List.of(new BlockPos(0, 1, 0)),
                 labelAccess.roundRobin().gather(labelAccess, labelPositions).toList()
         );
+    }
+
+    @Test
+    public void ClassName() {
+        var name = ServerboundManagerProgramPacket.class.getSimpleName();
+        assertEquals("ServerboundManagerProgramPacket", name);
     }
 }

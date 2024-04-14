@@ -4,10 +4,10 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.ServerboundInputInspectionRequestPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelInspectionRequestPacket;
 import ca.teamdman.sfm.common.net.ServerboundOutputInspectionRequestPacket;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import ca.teamdman.sfml.ast.*;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -67,7 +67,7 @@ public class ProgramTokenContextActions {
             });
         } else if (node instanceof Label label) {
             SFM.LOGGER.info("Found context action for label node");
-            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundLabelInspectionRequestPacket(
+            return Optional.of(() -> PacketDistributor.SERVER.noArg().send(new ServerboundLabelInspectionRequestPacket(
                     label.name()
             )));
         } else if (node instanceof InputStatement) {
@@ -77,7 +77,7 @@ public class ProgramTokenContextActions {
             }
             SFM.LOGGER.info("Found context action for input node");
             int nodeIndex = builder.getIndexForNode(node);
-            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundInputInspectionRequestPacket(
+            return Optional.of(() -> PacketDistributor.SERVER.noArg().send(new ServerboundInputInspectionRequestPacket(
                     programString,
                     nodeIndex
             )));
@@ -88,7 +88,7 @@ public class ProgramTokenContextActions {
             }
             SFM.LOGGER.info("Found context action for output node");
             int nodeIndex = builder.getIndexForNode(node);
-            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundOutputInspectionRequestPacket(
+            return Optional.of(() -> PacketDistributor.SERVER.noArg().send(new ServerboundOutputInspectionRequestPacket(
                     programString,
                     nodeIndex
             )));

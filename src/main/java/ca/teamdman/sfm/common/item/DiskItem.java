@@ -7,7 +7,6 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
@@ -25,8 +24,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.DistExecutor;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -78,7 +77,7 @@ public class DiskItem extends Item {
         if (pLevel.isClientSide) {
             ClientStuff.showProgramEditScreen(
                     stack,
-                    programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
+                    programString -> PacketDistributor.SERVER.noArg().send(new ServerboundDiskItemSetProgramPacket(
                             programString,
                             pUsedHand
                     ))

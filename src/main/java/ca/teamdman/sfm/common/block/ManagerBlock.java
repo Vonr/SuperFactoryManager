@@ -25,7 +25,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.network.NetworkHooks;
 import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.Nullable;
@@ -96,7 +95,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
             BlockHitResult hit
     ) {
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager && player instanceof ServerPlayer sp) {
-            NetworkHooks.openScreen(sp, manager, buf -> ManagerContainerMenu.encode(manager, buf));
+            sp.openMenu(manager, buf -> ManagerContainerMenu.encode(manager, buf));
             return InteractionResult.CONSUME;
         }
         return InteractionResult.SUCCESS;

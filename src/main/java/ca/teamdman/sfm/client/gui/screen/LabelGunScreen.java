@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Comparator;
@@ -49,7 +50,7 @@ public class LabelGunScreen extends Screen {
         this.addRenderableWidget(new Button.Builder(
                                          Constants.LocalizationKeys.LABEL_GUN_GUI_CLEAR_BUTTON.getComponent(),
                                          __ -> {
-                                             SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunClearPacket(HAND));
+                                             PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunClearPacket(HAND));
                                              LABEL_HOLDER.clear();
                                              shouldRebuildWidgets = true;
                                          }
@@ -60,7 +61,7 @@ public class LabelGunScreen extends Screen {
         this.addRenderableWidget(new Button.Builder(
                 Constants.LocalizationKeys.LABEL_GUN_GUI_PRUNE_BUTTON.getComponent(),
                 (btn) -> {
-                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunPrunePacket(HAND));
+                    PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunPrunePacket(HAND));
                     LABEL_HOLDER.prune();
                     shouldRebuildWidgets = true;
                 }
@@ -120,7 +121,7 @@ public class LabelGunScreen extends Screen {
     }
 
     public void onDone() {
-        SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
+        PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunUpdatePacket(
                 labelField.getValue(),
                 HAND
         ));

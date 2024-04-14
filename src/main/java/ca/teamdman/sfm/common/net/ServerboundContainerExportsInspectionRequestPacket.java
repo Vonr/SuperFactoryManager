@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
@@ -13,13 +14,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.network.NetworkEvent;
+
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -28,7 +32,18 @@ import java.util.function.Supplier;
 public record ServerboundContainerExportsInspectionRequestPacket(
         int windowId,
         BlockPos pos
-) {
+) implements CustomPacketPayload {
+    @Override
+    public void write(FriendlyByteBuf friendlyByteBuf) {
+        encode(this, friendlyByteBuf);
+    }
+
+    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_container_exports_inspection_request_packet");
+    @Override
+    public ResourceLocation id() {
+        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+    }
+
     public static void encode(ServerboundContainerExportsInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
@@ -43,7 +58,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
 
     public static void handle(
             ServerboundContainerExportsInspectionRequestPacket msg,
-            NetworkEvent.Context context
+            PlayPayloadContext context
     ) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
@@ -53,19 +68,18 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                 msg.windowId,
                 (menu, blockEntity) -> {
                     assert blockEntity.getLevel() != null;
+                    if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
+                        return;
+                    }
                     String payload = buildInspectionResults(blockEntity.getLevel(), blockEntity.getBlockPos());
-                    var player = context.getSender();
-
-                    SFMPackets.INSPECTION_CHANNEL.send(
-                            PacketDistributor.PLAYER.with(() -> player),
+                    PacketDistributor.PLAYER.with(player).send(
                             new ClientboundContainerExportsInspectionResultsPacket(
                                     msg.windowId,
                                     SFMUtils.truncate(
                                             payload,
                                             ClientboundContainerExportsInspectionResultsPacket.MAX_RESULTS_LENGTH
                                     )
-                            )
-                    );
+                            ));
                 }
         );
     }

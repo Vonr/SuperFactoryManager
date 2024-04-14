@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
@@ -10,9 +11,13 @@ import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Block;
-import net.neoforged.neoforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,7 +31,17 @@ public record ServerboundLabelGunUsePacket(
         BlockPos pos,
         boolean isCtrlKeyDown,
         boolean isShiftKeyDown
-) {
+) implements CustomPacketPayload {
+    @Override
+    public void write(FriendlyByteBuf friendlyByteBuf) {
+        encode(this, friendlyByteBuf);
+    }
+
+    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_label_gun_use_packet");
+    @Override
+    public ResourceLocation id() {
+        return ID;
+    }
 
     public static void encode(ServerboundLabelGunUsePacket msg, FriendlyByteBuf buf) {
         buf.writeEnum(msg.hand);
@@ -47,11 +62,10 @@ public record ServerboundLabelGunUsePacket(
     }
 
     public static void handle(
-            ServerboundLabelGunUsePacket msg, NetworkEvent.Context ctx
+            ServerboundLabelGunUsePacket msg, PlayPayloadContext context
     ) {
-        ctx.enqueueWork(() -> {
-            var sender = ctx.getSender();
-            if (sender == null) {
+        context.workHandler().submitAsync(() -> {
+            if (!(context.player().orElse(null) instanceof ServerPlayer sender)) {
                 return;
             }
             var stack = sender.getItemInHand(msg.hand);
@@ -145,6 +159,6 @@ public record ServerboundLabelGunUsePacket(
             // write changes to label gun stack
             gunLabels.save(stack);
         });
-        ctx.setPacketHandled(true);
+        
     }
 }

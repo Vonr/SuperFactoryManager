@@ -8,16 +8,29 @@ import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.NetworkEvent;
+
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
 import java.util.Set;
 import java.util.function.Supplier;
 
 public record ServerboundLabelInspectionRequestPacket(
         String label
-) {
+) implements CustomPacketPayload {
+    @Override
+    public void write(FriendlyByteBuf friendlyByteBuf) {
+        encode(this, friendlyByteBuf);
+    }
+
+    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_label_inspection_request_packet");
+    @Override
+    public ResourceLocation id() {
+        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+    }
     public static void encode(ServerboundLabelInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
         friendlyByteBuf.writeUtf(msg.label(), Program.MAX_LABEL_LENGTH);
     }
@@ -30,12 +43,13 @@ public record ServerboundLabelInspectionRequestPacket(
 
     public static void handle(
             ServerboundLabelInspectionRequestPacket msg,
-            NetworkEvent.Context context
+            PlayPayloadContext context
     ) {
-        context.enqueueWork(() -> {
+        context.workHandler().submitAsync(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
+            if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
+                return;
+            }
             SFM.LOGGER.info("Received label inspection request packet from player " + player.getStringUUID());
             LabelPositionHolder labelPositionHolder;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {
@@ -109,8 +123,8 @@ public record ServerboundLabelInspectionRequestPacket(
                             + payload.length()
                             + " to player "
                             + player.getStringUUID());
-            SFMPackets.INSPECTION_CHANNEL.send(
-                    PacketDistributor.PLAYER.with(() -> player),
+            PacketDistributor.PLAYER.with(player).send(
+
                     new ClientboundLabelInspectionResultsPacket(
                             payload.toString()
                     )

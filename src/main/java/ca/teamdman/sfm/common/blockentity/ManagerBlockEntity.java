@@ -5,7 +5,6 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiPacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.OpenContainerTracker;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import ca.teamdman.sfml.ast.Program;
@@ -69,15 +68,15 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     private void sendUpdatePacket() {
         OpenContainerTracker.getPlayersWithOpenContainer(ManagerContainerMenu.class)
                 .filter(entry -> entry.getValue().MANAGER_POSITION.equals(getBlockPos()))
-                .forEach(entry -> SFMPackets.MANAGER_CHANNEL.send(
-                        PacketDistributor.PLAYER.with(entry::getKey),
-                        new ClientboundManagerGuiPacket(
-                                entry.getValue().containerId,
-                                getProgramString().orElse(""),
-                                getState(),
-                                getTickTimeNanos()
-                        )
-                ));
+                .forEach(entry ->
+                                 PacketDistributor.PLAYER.with(entry.getKey()).send(
+                                         new ClientboundManagerGuiPacket(
+                                                 entry.getValue().containerId,
+                                                 getProgramString().orElse(""),
+                                                 getState(),
+                                                 getTickTimeNanos()
+                                         )
+                                 ));
     }
 
     public int getTick() {

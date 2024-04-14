@@ -4,7 +4,6 @@ import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.net.ServerboundNetworkToolUsePacket;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -17,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -30,7 +30,7 @@ public class NetworkToolItem extends Item {
     public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext pContext) {
         if (pContext.getLevel().isClientSide) return InteractionResult.SUCCESS;
 
-        SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundNetworkToolUsePacket(
+        PacketDistributor.SERVER.noArg().send(new ServerboundNetworkToolUsePacket(
                 pContext.getClickedPos(),
                 pContext.getClickedFace()
         ));

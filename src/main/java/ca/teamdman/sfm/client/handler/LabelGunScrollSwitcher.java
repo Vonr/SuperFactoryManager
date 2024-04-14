@@ -3,13 +3,13 @@ package ca.teamdman.sfm.client.handler;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.LabelGunItem;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class LabelGunScrollSwitcher {
@@ -27,7 +27,7 @@ public class LabelGunScrollSwitcher {
         if (!(gun.getItem() instanceof LabelGunItem)) return;
 
         var next = LabelGunItem.getNextLabel(gun, event.getScrollDeltaY() < 0 ? -1 : 1);
-        SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
+        PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunUpdatePacket(
                 next,
                 hand
         ));
