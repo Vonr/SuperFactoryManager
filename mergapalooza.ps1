@@ -107,6 +107,12 @@ D:\Repos\Minecraft\SFM\SuperFactoryManager 1.20.2 D:\Repos\Minecraft\SFM\SuperFa
                 throw "Failed to merge $old_git_branch into $new_git_branch"
                 break
             }
+
+            Write-Host "`nPushing $new_git_branch to remote"
+            git push origin $new_git_branch
+            if ($? -eq $false) {
+                throw "Failed to push $new_git_branch to remote"
+            }
         } catch {
             throw "Encountered error, stopping: $($_.Exception.Message)"
         } finally {
