@@ -1,3 +1,7 @@
+param(
+    [switch]$Push
+)
+
 Push-Location ".."
 try {
     $cwd = Get-Location
@@ -15,10 +19,12 @@ try {
 
 Mode                 LastWriteTime         Length Name
 ----                 -------------         ------ ----
-d----          2024-04-13  7:37 PM                SuperFactoryManager 1.19.2
-d----          2024-04-13  7:36 PM                SuperFactoryManager 1.19.4
-d----          2024-04-13  6:55 PM                SuperFactoryManager 1.20.2
-d----          2024-04-12  8:11 PM                SuperFactoryManager 1.20.3
+d----          2024-04-14  1:41 PM                SuperFactoryManager 1.19.2
+d----          2024-04-14  1:39 PM                SuperFactoryManager 1.19.4
+d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20
+d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.1
+d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.2
+d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
     #>
 
     # Check if anything is uncommitted
@@ -108,10 +114,12 @@ D:\Repos\Minecraft\SFM\SuperFactoryManager 1.20.2 D:\Repos\Minecraft\SFM\SuperFa
                 break
             }
 
-            Write-Host "`nPushing $new_git_branch to remote"
-            git push origin $new_git_branch
-            if ($? -eq $false) {
-                throw "Failed to push $new_git_branch to remote"
+            if ($Push) {
+                Write-Host "`nPushing $new_git_branch to remote"
+                git push origin $new_git_branch
+                if ($? -eq $false) {
+                    throw "Failed to push $new_git_branch to remote"
+                }
             }
         } catch {
             throw "Encountered error, stopping: $($_.Exception.Message)"
