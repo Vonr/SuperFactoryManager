@@ -6,13 +6,14 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.Block;
 import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.common.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 
 import java.text.NumberFormat;
@@ -145,13 +146,8 @@ public abstract class SFMGameTestBase {
     }
 
     protected static IItemHandler getItemHandler(GameTestHelper helper, BlockPos pos) {
-        BlockEntity blockEntity = helper
-                .getBlockEntity(pos);
-        SFMGameTestBase.assertTrue(blockEntity != null, "No block entity found at " + pos);
-        Optional<IItemHandler> found = blockEntity
-                .getCapability(Capabilities.ITEM_HANDLER)
-                .resolve();
-        SFMGameTestBase.assertTrue(found.isPresent(), "No item handler found at " + pos);
-        return found.get();
+        var found = helper.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, pos, Direction.UP);
+        SFMGameTestBase.assertTrue(found != null, "No item handler found at " + pos);
+        return found;
     }
 }
