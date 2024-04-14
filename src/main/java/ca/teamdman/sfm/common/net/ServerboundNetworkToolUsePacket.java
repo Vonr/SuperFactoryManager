@@ -65,20 +65,20 @@ public record ServerboundNetworkToolUsePacket(
                     payload.append("---- (dev only) block entity ----\n");
                     payload.append(entity).append("\n");
                 }
-                payload.append("---- capability directions ----\n");
-                for (var cap : SFMCompat.getCapabilities()) {
-                    payload
-                            .append(cap.name())
-                            .append(": ");
-                    String directions = DirectionQualifier.EVERY_DIRECTION
-                            .stream()
-                            .filter(dir -> level.getCapability(cap, pos, dir) != null)
-                            .map(dir -> dir == null ? "NULL DIRECTION" : DirectionQualifier.directionToString(dir))
-                            .collect(Collectors.joining(", ", "[", "]"));
-                    payload.append(directions).append("\n");
-                }
             }
 
+            payload.append("---- capability directions ----\n");
+            for (var cap : SFMCompat.getCapabilities()) {
+                payload
+                        .append(cap.name())
+                        .append(": ");
+                String directions = DirectionQualifier.EVERY_DIRECTION
+                        .stream()
+                        .filter(dir -> level.getCapability(cap, pos, dir) != null)
+                        .map(dir -> dir == null ? "NULL DIRECTION" : DirectionQualifier.directionToString(dir))
+                        .collect(Collectors.joining(", ", "[", "]"));
+                payload.append(directions).append("\n");
+            }
 
             payload.append("---- exports ----\n");
             int len = payload.length();
