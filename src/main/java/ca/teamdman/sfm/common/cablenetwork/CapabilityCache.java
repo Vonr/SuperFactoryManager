@@ -6,15 +6,17 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.util.LazyOptional;
+import net.neoforged.neoforge.capabilities.BlockCapability;
+import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.stream.Stream;
 
 public class CapabilityCache {
-    private final Long2ObjectMap<Object2ObjectOpenHashMap<Capability<?>, Object2ObjectOpenHashMap<Direction, LazyOptional<?>>>> CACHE = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectMap<Object2ObjectOpenHashMap<BlockCapability<?, @Nullable Direction>, Object2ObjectOpenHashMap<Direction, BlockCapabilityCache<?, @Nullable Direction>>>> CACHE = new Long2ObjectOpenHashMap<>();
 
     public void clear() {
         CACHE.clear();
@@ -31,9 +33,9 @@ public class CapabilityCache {
         }
     }
 
-    public <CAP> @Nullable LazyOptional<CAP> getCapability(
+    public <CAP> @Nullable BlockCapabilityCache<CAP, @Nullable Direction> getCapability(
             BlockPos pos,
-            Capability<CAP> capKind,
+            BlockCapability<CAP, Direction> capKind,
             @Nullable Direction direction
     ) {
         if (CACHE.containsKey(pos.asLong())) {
@@ -46,7 +48,7 @@ public class CapabilityCache {
                         return null;
                     } else {
                         //noinspection unchecked
-                        return (LazyOptional<CAP>) found;
+                        return (BlockCapabilityCache<CAP, Direction>) found;
                     }
                 }
 
@@ -60,7 +62,7 @@ public class CapabilityCache {
         other.CACHE.forEach((pos, capMap) -> {
             capMap.forEach((capKind, dirMap) -> {
                 dirMap.forEach((direction, cap) -> {
-                    putCapability(BlockPos.of(pos), (Capability) capKind, direction, cap);
+                    putCapability(BlockPos.of(pos), (BlockCapability) capKind, direction, cap);
                 });
             });
         });
@@ -70,34 +72,35 @@ public class CapabilityCache {
         return CACHE.keySet().longStream().mapToObj(BlockPos::of);
     }
 
-    public <CAP> LazyOptional<CAP> getOrDiscoverCapability(
+    public <CAP> @Nullable BlockCapabilityCache<CAP, @Nullable Direction> getOrDiscoverCapability(
             Level level,
             BlockPos pos,
-            Capability<CAP> capKind,
+            BlockCapability<CAP, @Nullable Direction> capKind,
             @Nullable Direction direction
     ) {
-        // Check cache
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return null;
+        }
+
         var found = getCapability(pos, capKind, direction);
-        if (found != null) {
-            return found;
+        if (found == null) {
+            // Cache miss, discover and store it
+            found = BlockCapabilityCache.<CAP, @Nullable Direction>create(
+                    capKind,
+                    serverLevel,
+                    pos,
+                    direction,
+                    () -> true,
+                    () -> remove(pos, capKind, direction)
+            );
+            putCapability(pos, capKind, direction, found);
         }
-
-        // No capability found, discover it
-        var provider = SFMUtils.discoverCapabilityProvider(level, pos);
-        if (provider.isPresent()) {
-            var lazyOptional = provider.get().getCapability(capKind, direction);
-            putCapability(pos, capKind, direction, lazyOptional);
-            lazyOptional.addListener(x -> remove(pos, capKind, direction));
-            return lazyOptional;
-        }
-
-        // Fallback to empty
-        return LazyOptional.empty();
+        return found;
     }
 
     public void remove(
             BlockPos pos,
-            Capability<?> capKind,
+            BlockCapability<?, @Nullable Direction> capKind,
             @Nullable Direction direction
     ) {
         if (CACHE.containsKey(pos.asLong())) {
@@ -117,12 +120,12 @@ public class CapabilityCache {
 
     public <CAP> void putCapability(
             BlockPos pos,
-            Capability<CAP> capKind,
+            BlockCapability<CAP, @Nullable Direction> capKind,
             @Nullable Direction direction,
-            LazyOptional<CAP> cap
+            BlockCapabilityCache<CAP, @Nullable Direction> entry
     ) {
         var capMap = CACHE.computeIfAbsent(pos.asLong(), k -> new Object2ObjectOpenHashMap<>());
         var dirMap = capMap.computeIfAbsent(capKind, k -> new Object2ObjectOpenHashMap<>());
-        dirMap.put(direction, cap);
+        dirMap.put(direction, entry);
     }
 }

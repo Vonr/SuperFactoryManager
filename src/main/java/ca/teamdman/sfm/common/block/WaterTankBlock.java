@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMUtils;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,6 +27,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -87,6 +89,11 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
             }
         }, be).toList();
         tanks.forEach(t -> t.setConnectedCount(tanks.size()));
+    }
+
+    @Override
+    protected MapCodec<WaterTankBlock> codec() {
+        throw new NotImplementedException("This isn't used until 1.20.5 apparently");
     }
 
     @Override

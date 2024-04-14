@@ -3,18 +3,12 @@ package ca.teamdman.sfm.common.blockentity;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.common.capabilities.Capabilities;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.util.LazyOptional;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class WaterTankBlockEntity extends BlockEntity {
     public void setConnectedCount(int connectedCount) {
@@ -44,26 +38,10 @@ public class WaterTankBlockEntity extends BlockEntity {
         }
     };
 
-    public final LazyOptional<IFluidHandler> TANK_CAPABILITY = LazyOptional.of(() -> TANK);
-
     public WaterTankBlockEntity(
             BlockPos pos,
             BlockState state
     ) {
         super(SFMBlockEntities.WATER_TANK_BLOCK_ENTITY.get(), pos, state);
-    }
-
-    @Override
-    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        if (cap == Capabilities.FLUID_HANDLER) {
-            return TANK_CAPABILITY.cast();
-        } else {
-            return super.getCapability(cap, side);
-        }
-    }
-
-    @Override
-    public void invalidateCaps() {
-        TANK_CAPABILITY.invalidate();
     }
 }

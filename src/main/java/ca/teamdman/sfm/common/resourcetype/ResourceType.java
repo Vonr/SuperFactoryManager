@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.resourcetype;
 
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
+import ca.teamdman.sfm.common.cablenetwork.CapabilityCache;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.LabelAccess;
@@ -12,8 +13,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.util.LazyOptional;
+import net.neoforged.neoforge.capabilities.BlockCapability;
+import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
@@ -24,9 +26,9 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     private final Map<ITEM, ResourceLocation> registryKeyCache = new Object2ObjectOpenHashMap<>();
 
 
-    public final Capability<CAP> CAPABILITY_KIND;
+    public final BlockCapability<CAP, @Nullable Direction> CAPABILITY_KIND;
 
-    public ResourceType(Capability<CAP> CAPABILITY_KIND) {
+    public ResourceType(BlockCapability<CAP, @Nullable Direction> CAPABILITY_KIND) {
         this.CAPABILITY_KIND = CAPABILITY_KIND;
     }
 
@@ -82,20 +84,16 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
         // Get capability from the network
         CableNetwork network = programContext.getNetwork();
-        Stream<LazyOptional<CAP>> caps = position_direction_pairs
+        Stream<BlockCapabilityCache<CAP, @Nullable Direction>> caps = position_direction_pairs
                 .map(pair -> {
                     BlockPos pos = pair.getFirst();
                     Direction dir = pair.getSecond();
                     return network.getCapability(CAPABILITY_KIND, pos, dir);
                 });
 
-        // Unwrap
-        // We use isPresent check to detect validity
-        // We use orElse with null to unwrap
-        //noinspection ConstantValue,DataFlowIssue
+        // Resolve and filter out invalid cache entries
         return caps
-                .filter(LazyOptional::isPresent)
-                .map(x -> x.orElse(null))
+                .map(BlockCapabilityCache::getCapability)
                 .filter(Objects::nonNull);
     }
 

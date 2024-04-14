@@ -4,12 +4,12 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.common.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 
 public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler> {
     public ItemResourceType() {
-        super(Capabilities.ITEM_HANDLER);
+        super(Capabilities.ItemHandler.BLOCK);
     }
 
     @Override

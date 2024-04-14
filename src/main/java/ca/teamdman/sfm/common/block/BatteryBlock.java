@@ -1,7 +1,6 @@
 package ca.teamdman.sfm.common.block;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.blockentity.BatteryBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -16,7 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.common.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 public class BatteryBlock extends Block implements EntityBlock {
     public static final IntegerProperty LEVEL = IntegerProperty.create("level", 0, 10);
@@ -48,17 +47,14 @@ public class BatteryBlock extends Block implements EntityBlock {
             InteractionHand pHand,
             BlockHitResult pHit
     ) {
-        BlockEntity be = pLevel.getBlockEntity(pPos);
-        if (be instanceof BatteryBlockEntity bbe) {
-            var cap = bbe.getCapability(Capabilities.ENERGY, pHit.getDirection());
-            cap.ifPresent(c -> {
-                if (pPlayer.isShiftKeyDown()) {
-                    c.extractEnergy(1000, false);
-                } else {
-                    c.receiveEnergy(1000, false);
-                }
-                SFM.LOGGER.info("Energy stored: {}", c.getEnergyStored());
-            });
+        var cap = pLevel.getCapability(Capabilities.EnergyStorage.BLOCK, pPos, pHit.getDirection());
+        if (cap != null) {
+            if (pPlayer.isShiftKeyDown()) {
+                cap.extractEnergy(1000, false);
+            } else {
+                cap.receiveEnergy(1000, false);
+            }
+            SFM.LOGGER.info("Energy stored: {}", cap.getEnergyStored());
         }
         return InteractionResult.SUCCESS;
     }

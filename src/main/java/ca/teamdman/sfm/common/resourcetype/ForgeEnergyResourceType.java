@@ -2,13 +2,13 @@ package ca.teamdman.sfm.common.resourcetype;
 
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.common.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer>, IEnergyStorage> {
     public ForgeEnergyResourceType() {
-        super(Capabilities.ENERGY);
+        super(Capabilities.EnergyStorage.BLOCK);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.datagen;
 
-import ca.teamdman.sfm.common.recipe.PrintingPressFinishedRecipe;
+import ca.teamdman.sfm.common.recipe.DiskResetRecipe;
+import ca.teamdman.sfm.common.recipe.PrintingPressRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMRecipeSerializers;
@@ -12,6 +13,8 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
+
+import java.util.Objects;
 
 public class SFMRecipes extends RecipeProvider {
     public SFMRecipes(GatherDataEvent event) {
@@ -151,10 +154,14 @@ public class SFMRecipes extends RecipeProvider {
                 Ingredient.of(SFMItems.DISK_ITEM.get())
         );
 
-        //noinspection DataFlowIssue
         SpecialRecipeBuilder
-                .special(SFMRecipeSerializers.DISK_RESET.get())
-                .save(output, BuiltInRegistries.RECIPE_SERIALIZER.getKey(SFMRecipeSerializers.DISK_RESET.get()).getPath());
+                .special((DiskResetRecipe::new))
+                .save(
+                        output,
+                        Objects
+                                .requireNonNull(BuiltInRegistries.RECIPE_SERIALIZER.getKey(SFMRecipeSerializers.DISK_RESET.get()))
+                                .getPath()
+                );
     }
 
     private void addPrintingPressRecipe(
@@ -164,6 +171,6 @@ public class SFMRecipes extends RecipeProvider {
             Ingredient ink,
             Ingredient paper
     ) {
-        output.accept(new PrintingPressFinishedRecipe(id, form, ink, paper));
+        output.accept(id, new PrintingPressRecipe(form, ink, paper), null);
     }
 }

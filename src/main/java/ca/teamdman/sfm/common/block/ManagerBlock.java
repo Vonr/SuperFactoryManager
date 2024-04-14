@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,6 +26,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.neoforge.network.NetworkHooks;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.Nullable;
 
@@ -47,6 +49,10 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         return RenderShape.MODEL;
     }
 
+    @Override
+    protected MapCodec<WaterTankBlock> codec() {
+        throw new NotImplementedException("This isn't used until 1.20.5 apparently");
+    }
 
     @Override
     @SuppressWarnings("deprecation")

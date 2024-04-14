@@ -6,11 +6,10 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.util.LazyOptional;
+import net.neoforged.neoforge.capabilities.BlockCapability;
+import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -118,12 +117,12 @@ public class CableNetwork {
         return CABLE_POSITIONS.contains(pos.asLong());
     }
 
-    public <CAP> @Nonnull LazyOptional<CAP> getCapability(
-            Capability<CAP> cap,
+    public <CAP> @Nullable BlockCapabilityCache<CAP, @Nullable Direction> getCapability(
+            BlockCapability<CAP, @Nullable Direction> capKind,
             BlockPos pos,
             @Nullable Direction direction
     ) {
-        return CAPABILITY_CACHE.getOrDiscoverCapability(LEVEL, pos, cap, direction);
+        return CAPABILITY_CACHE.getOrDiscoverCapability(LEVEL, pos, capKind, direction);
     }
 
     public int getCableCount() {

@@ -5,7 +5,6 @@ import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMRecipeTypes;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
@@ -16,13 +15,8 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.common.capabilities.Capabilities;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.util.LazyOptional;
-import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -30,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
  * When a piston is pressed on top of this block, it will print the form onto the paper.
  */
 public class PrintingPressBlockEntity extends BlockEntity implements NotContainer {
+
 
     private final ItemStackHandler FORM = new ItemStackHandler(1) {
         @Override
@@ -61,8 +56,11 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
             if (getLevel() == null) return false;
-            return getLevel().getRecipeManager()
-                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.value().INK.test(stack));
+            return getLevel()
+                    .getRecipeManager()
+                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get())
+                    .stream()
+                    .anyMatch(r -> r.value().INK.test(stack));
         }
     };
 
@@ -82,21 +80,22 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
             if (getLevel() == null) return false;
-            return getLevel().getRecipeManager()
-                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get()).stream().anyMatch(r -> r.value().PAPER.test(stack));
+            return getLevel()
+                    .getRecipeManager()
+                    .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get())
+                    .stream()
+                    .anyMatch(r -> r.value().PAPER.test(stack));
         }
     };
-    private final LazyOptional<IItemHandler> ITEMS_CAPABILITY = LazyOptional.of(() -> new CombinedInvWrapper(
-            FORM,
-            INK,
-            PAPER
-    ));
+    public final CombinedInvWrapper INVENTORY = new CombinedInvWrapper(FORM, INK, PAPER);
+
 
     public PrintingPressBlockEntity(
             BlockPos pPos, BlockState pBlockState
     ) {
         super(SFMBlockEntities.PRINTING_PRESS_BLOCK_ENTITY.get(), pPos, pBlockState);
     }
+
 
     @Override
     public void load(CompoundTag tag) {
@@ -123,13 +122,6 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         FORM.deserializeNBT(tag.getCompound("form"));
     }
 
-    @Override
-    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        if (cap == Capabilities.ITEM_HANDLER) {
-            return ITEMS_CAPABILITY.cast();
-        }
-        return super.getCapability(cap, side);
-    }
 
     public ItemStack acceptStack(ItemStack stack) {
         ItemStack remainder;

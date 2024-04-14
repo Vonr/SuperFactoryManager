@@ -1,8 +1,9 @@
 package ca.teamdman.sfm.common.compat;
 
+import net.minecraft.core.Direction;
 import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.common.capabilities.Capabilities;
-import net.neoforged.neoforge.common.capabilities.Capability;
+import net.neoforged.neoforge.capabilities.BlockCapability;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import java.util.List;
 
@@ -11,11 +12,11 @@ public class SFMCompat {
         return ModList.get().getModContainerById("mekanism").isPresent();
     }
 
-    public static List<Capability<?>> getCapabilities() {
+    public static List<BlockCapability<?, Direction>> getCapabilities() {
         return List.of(
-                Capabilities.ITEM_HANDLER,
-                Capabilities.FLUID_HANDLER,
-                Capabilities.ENERGY
+                Capabilities.ItemHandler.BLOCK,
+                Capabilities.FluidHandler.BLOCK,
+                Capabilities.EnergyStorage.BLOCK
         );
     }
 }

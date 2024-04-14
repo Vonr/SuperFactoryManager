@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.block;
 
 import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
@@ -14,6 +15,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
 
@@ -50,6 +52,11 @@ public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
             && pLevel.getBlockEntity(pPos) instanceof PrintingPressBlockEntity blockEntity) {
             blockEntity.performPrint();
         }
+    }
+
+    @Override
+    protected MapCodec<WaterTankBlock> codec() {
+        throw new NotImplementedException("This isn't used until 1.20.5 apparently");
     }
 
     @Override

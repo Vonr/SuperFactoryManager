@@ -23,7 +23,6 @@ public class SFM {
         SFMCreativeTabs.register(bus);
         SFMResourceTypes.register(bus);
         SFMBlockEntities.register(bus);
-        SFMCapabilityProviderMappers.register(bus);
         SFMMenus.register(bus);
         SFMRecipeTypes.register(bus);
         SFMRecipeSerializers.register(bus);

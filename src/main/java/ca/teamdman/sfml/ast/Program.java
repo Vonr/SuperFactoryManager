@@ -4,6 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
@@ -12,6 +13,7 @@ import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import net.minecraft.ResourceLocationException;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -130,17 +132,21 @@ public record Program(
                                     )
                             ));
                         }
-                        var viable = SFMUtils.discoverCapabilityProvider(level, pos).isPresent();
+                        var viable = SFMCompat.getCapabilities().stream()
+                                .flatMap(capKind -> DirectionQualifier.EVERY_DIRECTION
+                                        .stream()
+                                        .map(dir -> level.getCapability(capKind, pos, dir)))
+                                .anyMatch(Objects::nonNull);
                         if (!viable && adjacent) {
-                                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL.get(
-                                        label,
-                                        String.format(
-                                                "[%d,%d,%d]",
-                                                pos.getX(),
-                                                pos.getY(),
-                                                pos.getZ()
-                                        )
-                                ));
+                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL.get(
+                                    label,
+                                    String.format(
+                                            "[%d,%d,%d]",
+                                            pos.getX(),
+                                            pos.getY(),
+                                            pos.getZ()
+                                    )
+                            ));
                         }
                     }));
         }
