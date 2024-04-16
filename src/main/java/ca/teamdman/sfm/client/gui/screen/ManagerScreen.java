@@ -12,6 +12,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
 import net.minecraft.ChatFormatting;
+import net.minecraft.SharedConstants;
+import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,6 +26,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLLoader;
+import net.minecraftforge.versions.forge.ForgeVersion;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
@@ -232,9 +236,26 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             StringBuilder content = new StringBuilder(menu.program);
 
             content
-                    .append("\n\n-- Diagnostic info ")
+                    .append("\n\n-- Diagnostic info --\n");
+
+            content.append("-- DateTime: ")
                     .append(new SimpleDateFormat("yyyy-MM-dd HH:mm.ss").format(new java.util.Date()))
-                    .append(" --\n");
+                    .append('\n');
+
+            content
+                    .append("-- Game Version: ")
+                    .append("Minecraft ")
+                    .append(SharedConstants.getCurrentVersion().getName())
+                    .append(" (")
+                    .append(this.minecraft.getLaunchedVersion())
+                    .append("/")
+                    .append(ClientBrandRetriever.getClientModName())
+                    .append(")")
+                    .append('\n');
+
+            content.append("-- Forge Version: ")
+                    .append(ForgeVersion.getVersion())
+                    .append('\n');
 
             ModList.get().getModContainerById(SFM.MOD_ID).ifPresent(mod -> {
                 content.append("-- SFM Version: ")
