@@ -1,7 +1,12 @@
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
-NAME "Changelog for 4.14.2"
+NAME "Changelog for 4.14.3"
+---- 4.14.3 ----
+-- add support for 1.20.2
+-- add support for 1.20.3
+-- add support for 1.20.4
+
 ---- 4.14.2 ----
 -- fix capability caching to avoid resource voiding and programs not working
 
