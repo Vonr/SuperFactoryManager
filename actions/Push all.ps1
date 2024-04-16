@@ -46,8 +46,6 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
                 } else {
                     Write-Warning "Uncommitted changes in ${repo}"
                     return
-                    # $allChangedFiles | ForEach-Object { Write-Host " - $_" }
-                    # return 1
                 }
             }
         } catch {
