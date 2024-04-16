@@ -1,13 +1,17 @@
 Push-Location ".."
 try {
+    # Get to repos folder
     $cwd = Get-Location
-    $expected = "D:\repos\Minecraft\SFM"
+    $expected = "D:\repos\Minecraft\SFM\repos"
     if (-not $cwd -eq $expected) {
         Write-Host $cwd
         throw "This should be ran from a directory that is a child of D:\repos\Minecraft\SFM"
     }
 
+    # Begin time measurement
+    $start = Get-Date
     
+    # Gather repos
     $repo_clones = Get-ChildItem -Directory | Sort-Object
     <#
 ❯ $repo_clones
@@ -28,11 +32,14 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
     foreach ($repo in $repo_clones) {
         try {
             Push-Location $repo
-            .\gradlew.bat runData
+            Write-Host "Running runData for $repo"
+            .\gradlew.bat runData --no-daemon
             if ($? -eq $false) {
                 Write-Warning "runData failed for ${repo}"
             }
-            .\gradlew.bat build
+
+            Write-Host "Running build for $repo"
+            .\gradlew.bat build --no-daemon
             if ($? -eq $false) {
                 throw "Build failed for ${repo}"
             }
@@ -42,11 +49,19 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
     }
 
     # Collect jars
+    Write-Host "Collecting jars"
+    $outdir = "..\jars"
+    New-Item -ItemType Directory -Path $outdir -ErrorAction SilentlyContinue
     $jars = Get-ChildItem -Recurse | Where-Object { $_ -like "*build\libs\*.jar" }
     $jars | ForEach-Object {
-        Copy-Item $_.FullName "SuperFactoryManager 1.19.2\build\libs"
+        Copy-Item -Path $_.FullName -Destination $outdir
     }
-    Invoke-Item "SuperFactoryManager 1.19.2\build\libs"
+    Invoke-Item $outdir
+
+    # Measure time
+    $end = Get-Date
+    $elapsed = $end - $start
+    Write-Host "All versions built, took $elapsed"
 } finally {
     Pop-Location
 }
