@@ -7,7 +7,7 @@ NAME "Changelog for 4.14.4"
 ---- (e.g., "IF EACH chest HAS GT 1 iron_ingot THEN")
 ---- this is an old change but I forgot to mention till now
 -- move disk warning update trigger from tick to manager open
-
+-- add warnings for smelly round robin usage
 
 
 ---- 4.14.3 ----
