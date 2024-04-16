@@ -187,11 +187,6 @@ public record Program(
     }
 
     public boolean tick(ManagerBlockEntity manager) {
-        // update warnings on disk item every 20 seconds
-        if (manager.getTick() % 20 == 0) {
-            manager.getDisk().ifPresent(disk -> DiskItem.setWarnings(disk, gatherWarnings(disk, manager)));
-        }
-
         // build the context and tick the program
         var context = new ProgramContext(this, manager, ProgramContext.ExecutionPolicy.UNRESTRICTED);
         tick(context);
