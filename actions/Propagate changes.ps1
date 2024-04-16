@@ -5,7 +5,7 @@ param(
 Push-Location ".."
 try {
     $cwd = Get-Location
-    $expected = "D:\repos\Minecraft\SFM"
+    $expected = "D:\repos\Minecraft\SFM\repos"
     if (-not $cwd -eq $expected) {
         Write-Host $cwd
         throw "This should be ran from a directory that is a child of D:\repos\Minecraft\SFM"
