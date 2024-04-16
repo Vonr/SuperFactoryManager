@@ -58,66 +58,20 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
         }
     }
     
-
-
-    # We want to enumerate each pair of (older, one step newer) directories
-    $pairs = $repo_clones | ForEach-Object {
-        $older = $_
-        $newer = $repo_clones | Where-Object { $_.Name -gt $older.Name } | Select-Object -First 1
-        if ($newer) {
-            [PSCustomObject]@{
-                Older = $older
-                Newer = $newer
-            }
-        }
-    }
-    <#
-❯ $pairs 
-
-Older                                             Newer
------                                             -----
-D:\Repos\Minecraft\SFM\SuperFactoryManager 1.19.2 D:\Repos\Minecraft\SFM\SuperFactoryManager 1.19.4
-D:\Repos\Minecraft\SFM\SuperFactoryManager 1.19.4 D:\Repos\Minecraft\SFM\SuperFactoryManager 1.20.2
-D:\Repos\Minecraft\SFM\SuperFactoryManager 1.20.2 D:\Repos\Minecraft\SFM\SuperFactoryManager 1.20.3
-    #>
-
+    # Perform push
     
-    foreach ($pair in $pairs) {
+    foreach ($repo in $repo_clones) {
         try {
-            Push-Location $pair.Newer
-
-            try {
-                Push-Location $pair.Older
-                $old_git_branch = git rev-parse --abbrev-ref HEAD
-            } finally {
-                Pop-Location
-            }
-            
-            $new_git_branch = git rev-parse --abbrev-ref HEAD
-
-            if (-not $old_git_branch -or -not $new_git_branch) {
-                Write-Warning "Failed to determine branch names for $pair"
-                return
-                break
-            }
-
-            Write-Host "`nFetching $old_git_branch to $new_git_branch repository"
-            git fetch "$($pair.Older)" "$old_git_branch"
+            Push-Location $repo.FullName
+            $branch = git rev-parse --abbrev-ref HEAD
+            Write-Host "`nPushing $branch to remote"
+            git push origin $branch
             if ($? -eq $false) {
-                Write-Warning "Failed to fetch $old_git_branch from $($pair.Older)"
+                Write-Warning "Failed to push $branch to remote"
                 return
-                break
-            }
-            
-            Write-Host "`nMerging $old_git_branch -> $new_git_branch"
-            git merge FETCH_HEAD
-            if ($? -eq $false) {
-                Write-Warning "Failed to merge $old_git_branch into $new_git_branch"
-                return
-                break
             }
         } catch {
-            Write-Warning "Encountered error, stopping: $($_.Exception.Message)"
+            Write-Warning "Encountered error pushing, stopping: $($_.Exception.Message)"
             return
         } finally {
             Pop-Location
