@@ -282,6 +282,14 @@ public class Constants {
                 "program.sfm.warnings.adjacent_but_disconnected_label",
                 "Label \"%s\" is assigned in the world at %s and is connected by cables but is not detected as a valid inventory."
         );
+        public static final LocalizationEntry PROGRAM_WARNING_ROUND_ROBIN_SMELLY_EACH = new LocalizationEntry(
+                "program.sfm.warnings.round_robin_smelly_each",
+                "Round robin by block shouldn't be used with EACH, statement %s"
+        );
+        public static final LocalizationEntry PROGRAM_WARNING_ROUND_ROBIN_SMELLY_COUNT = new LocalizationEntry(
+                "program.sfm.warnings.round_robin_smelly_count",
+                "Round robin by label should be used with more than one label, statement %s"
+        );
         public static final LocalizationEntry PROGRAM_ERROR_COMPILE_FAILED = new LocalizationEntry(
                 "program.sfm.error.compile_failed",
                 "Failed to compile."

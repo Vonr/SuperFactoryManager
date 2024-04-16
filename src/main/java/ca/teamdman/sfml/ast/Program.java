@@ -132,15 +132,15 @@ public record Program(
                         }
                         var viable = SFMUtils.discoverCapabilityProvider(level, pos).isPresent();
                         if (!viable && adjacent) {
-                                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL.get(
-                                        label,
-                                        String.format(
-                                                "[%d,%d,%d]",
-                                                pos.getX(),
-                                                pos.getY(),
-                                                pos.getZ()
-                                        )
-                                ));
+                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL.get(
+                                    label,
+                                    String.format(
+                                            "[%d,%d,%d]",
+                                            pos.getX(),
+                                            pos.getY(),
+                                            pos.getZ()
+                                    )
+                            ));
                         }
                     }));
         }
@@ -168,6 +168,23 @@ public record Program(
                 warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_ID.get(resource));
             }
         }
+
+        // check for poor round-robin usage
+        getDescendantStatements()
+                .forEach(statement -> {
+                    if (statement instanceof InputStatement input) {
+                        var smell = input.labelAccess().roundRobin().getSmell(input.labelAccess(), input.each());
+                        if (smell != null) {
+                            warnings.add(smell.get(input.toStringPretty()));
+                        }
+                    }
+                    if (statement instanceof OutputStatement output) {
+                        var smell = output.labelAccess().roundRobin().getSmell(output.labelAccess(), output.each());
+                        if (smell != null) {
+                            warnings.add(smell.get(output.toStringPretty()));
+                        }
+                    }
+                });
         return warnings;
     }
 
