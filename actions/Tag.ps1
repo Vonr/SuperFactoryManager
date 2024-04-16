@@ -58,19 +58,35 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
         }
     }
     
-    # Perform push
+    # Get mod version
+    $props = Get-Content $(Join-Path -Path $repo_clones[0] -ChildPath "gradle.properties") -Raw `
+    | ConvertFrom-StringData
+    $mod_version = $props["mod_version"]
+    if ([string]::IsNullOrWhiteSpace($mod_version)) {
+        Write-Warning "Failed to get mod version"
+        return
+    }
+
+    # Perform tag
     foreach ($repo in $repo_clones) {
         try {
             Push-Location $repo.FullName
             $branch = git rev-parse --abbrev-ref HEAD
-            Write-Host "`nPushing $branch to remote"
-            git push origin $branch
+            $tag = "$mod_version-$branch"
+            Write-Host "`nTagging $tag"
+            git tag $tag
             if ($? -eq $false) {
-                Write-Warning "Failed to push $branch to remote"
+                Write-Warning "Failed to tag $tag"
+                return
+            }
+            Write-Host "`nPushing tag $tag"
+            git push origin $tag
+            if ($? -eq $false) {
+                Write-Warning "Failed to push tag $tag"
                 return
             }
         } catch {
-            Write-Warning "Encountered error pushing, stopping: $($_.Exception.Message)"
+            Write-Warning "Encountered error tagging, stopping: $($_.Exception.Message)"
             return
         } finally {
             Pop-Location
