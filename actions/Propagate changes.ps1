@@ -8,7 +8,8 @@ try {
     $expected = "D:\repos\Minecraft\SFM\repos"
     if (-not $cwd -eq $expected) {
         Write-Host $cwd
-        throw "This should be ran from a directory that is a child of D:\repos\Minecraft\SFM"
+        Write-Warning "This should be ran from a directory that is a child of D:\repos\Minecraft\SFM"
+        return
     }
 
     $repo_clones = Get-ChildItem -Directory | Sort-Object
@@ -34,7 +35,8 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
             $old_git_branch = git rev-parse --abbrev-ref HEAD
             $expected_branch = $repo.Name -split " " | Select-Object -Last 1
             if (-not $old_git_branch -eq $expected_branch) {
-                throw "Branch mismatch: dir=$repo expected=$expected_branch got=$old_git_branch"
+                Write-Warning "Branch mismatch: dir=$repo expected=$expected_branch got=$old_git_branch"
+                return
             }
     
             # New method to check for uncommitted changes
@@ -46,13 +48,15 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
                 if ($allChangedFiles -eq @("mergapalooza.ps1")) {
                     Write-Warning "This script has uncommitted modifications! You have been warned!"
                 } else {
-                    throw "Uncommitted changes in ${repo}"
+                    Write-Warning "Uncommitted changes in ${repo}"
+                    return
                     # $allChangedFiles | ForEach-Object { Write-Host " - $_" }
                     # return 1
                 }
             }
         } catch {
-            throw "Encountered error validating repo checkout status, stopping: $($_.Exception.Message)"
+            Write-Warning "Encountered error validating repo checkout status, stopping: $($_.Exception.Message)"
+            return
         } finally {
             Pop-Location
         }
@@ -96,21 +100,24 @@ D:\Repos\Minecraft\SFM\SuperFactoryManager 1.20.2 D:\Repos\Minecraft\SFM\SuperFa
             $new_git_branch = git rev-parse --abbrev-ref HEAD
 
             if (-not $old_git_branch -or -not $new_git_branch) {
-                throw "Failed to determine branch names for $pair"
+                Write-Warning "Failed to determine branch names for $pair"
+                return
                 break
             }
 
             Write-Host "`nFetching $old_git_branch to $new_git_branch repository"
             git fetch "$($pair.Older)" "$old_git_branch"
             if ($? -eq $false) {
-                throw "Failed to fetch $old_git_branch from $($pair.Older)"
+                Write-Warning "Failed to fetch $old_git_branch from $($pair.Older)"
+                return
                 break
             }
             
             Write-Host "`nMerging $old_git_branch -> $new_git_branch"
             git merge FETCH_HEAD
             if ($? -eq $false) {
-                throw "Failed to merge $old_git_branch into $new_git_branch"
+                Write-Warning "Failed to merge $old_git_branch into $new_git_branch"
+                return
                 break
             }
 
@@ -118,11 +125,13 @@ D:\Repos\Minecraft\SFM\SuperFactoryManager 1.20.2 D:\Repos\Minecraft\SFM\SuperFa
                 Write-Host "`nPushing $new_git_branch to remote"
                 git push origin $new_git_branch
                 if ($? -eq $false) {
-                    throw "Failed to push $new_git_branch to remote"
+                    Write-Warning "Failed to push $new_git_branch to remote"
+                    return
                 }
             }
         } catch {
-            throw "Encountered error, stopping: $($_.Exception.Message)"
+            Write-Warning "Encountered error, stopping: $($_.Exception.Message)"
+            return
         } finally {
             Pop-Location
         }
