@@ -174,12 +174,29 @@ public record Program(
                 .filter(IOStatement.class::isInstance)
                 .map(IOStatement.class::cast)
                 .forEach(statement -> {
-                    var smell = statement
-                            .labelAccess()
-                            .roundRobin()
-                            .getSmell(statement.labelAccess(), statement.each());
-                    if (smell != null) {
-                        warnings.add(smell.get(statement.toStringPretty()));
+                    { // round robin smells
+                        var smell = statement
+                                .labelAccess()
+                                .roundRobin()
+                                .getSmell(statement.labelAccess(), statement.each());
+                        if (smell != null) {
+                            warnings.add(smell.get(statement.toStringPretty()));
+                        }
+                    }
+                    { // resource each without pattern
+                        boolean smells = statement
+                                .resourceLimits()
+                                .resourceLimits()
+                                .stream()
+                                .anyMatch(rl -> rl.limit().quantity().idExpansionBehaviour()
+                                                == ResourceQuantity.IdExpansionBehaviour.EXPAND && !rl
+                                                        .resourceId()
+                                                        .usesRegex());
+                        if (smells) {
+                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN.get(
+                                    statement.toStringPretty()
+                            ));
+                        }
                     }
                 });
         return warnings;

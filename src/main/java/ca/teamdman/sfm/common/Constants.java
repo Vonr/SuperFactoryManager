@@ -40,6 +40,10 @@ public class Constants {
                 "gui.sfm.save_changes_confirm.no_button",
                 "Don't save"
         );
+        public static final LocalizationEntry PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN = new LocalizationEntry(
+                "program.sfm.warnings.each_without_pattern",
+                "EACH used without a pattern, statement %s"
+        );
 
         @SuppressWarnings("unused") // used by minecraft without us having to directly reference
         public static LocalizationEntry MOD_NAME = new LocalizationEntry(

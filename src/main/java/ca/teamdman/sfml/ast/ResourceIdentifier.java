@@ -198,4 +198,8 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     public int hashCode() {
         return Objects.hash(resourceTypeNamespace, resourceTypeName, resourceNamespace, resourceName);
     }
+
+    public boolean usesRegex() {
+        return RegexCache.isRegexPattern(resourceNamespace) || RegexCache.isRegexPattern(resourceName);
+    }
 }
