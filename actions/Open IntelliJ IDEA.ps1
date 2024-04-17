@@ -28,7 +28,7 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
     foreach ($repo in $repo_clones) {
         try {
             Push-Location $repo
-            idea .
+            idea . &
             Start-Sleep -Seconds 5
         } finally {
             Pop-Location

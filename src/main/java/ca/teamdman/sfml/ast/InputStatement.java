@@ -15,7 +15,7 @@ public record InputStatement(
         LabelAccess labelAccess,
         ResourceLimits resourceLimits,
         boolean each
-) implements Statement {
+) implements IOStatement {
 
     @Override
     public void tick(ProgramContext context) {
@@ -90,6 +90,7 @@ public record InputStatement(
         return "INPUT " + resourceLimits + " FROM " + (each ? "EACH " : "") + labelAccess;
     }
 
+    @Override
     public String toStringPretty() {
         StringBuilder sb = new StringBuilder();
         sb.append("INPUT");

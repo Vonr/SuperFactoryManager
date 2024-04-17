@@ -27,7 +27,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -2787,6 +2786,42 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(a2, Items.DIRT) == 128, "a2 arrival count bad");
             assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
             assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void wireless_regression(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 1, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = getItemHandler(helper, rightPos);
+        var leftChest = getItemHandler(helper, leftPos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(!leftChest.getStackInSlot(0).isEmpty(), "Dirt should not move");
+            assertTrue(rightChest.getStackInSlot(0).getCount() != 64, "Dirt should not move");
             helper.succeed();
         });
     }

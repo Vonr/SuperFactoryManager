@@ -14,6 +14,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.ChatFormatting;
+import net.minecraft.SharedConstants;
+import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -26,6 +28,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLLoader;
+import net.minecraftforge.versions.forge.ForgeVersion;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -222,13 +227,36 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             StringBuilder content = new StringBuilder(menu.program);
 
             content
-                    .append("\n\n-- Diagnostic info ")
+                    .append("\n\n-- Diagnostic info --\n");
+
+            content.append("-- DateTime: ")
                     .append(new SimpleDateFormat("yyyy-MM-dd HH:mm.ss").format(new java.util.Date()))
-                    .append(" --");
+                    .append('\n');
+
+            content
+                    .append("-- Game Version: ")
+                    .append("Minecraft ")
+                    .append(SharedConstants.getCurrentVersion().getName())
+                    .append(" (")
+                    .append(this.minecraft.getLaunchedVersion())
+                    .append("/")
+                    .append(ClientBrandRetriever.getClientModName())
+                    .append(")")
+                    .append('\n');
+
+            content.append("-- Forge Version: ")
+                    .append(ForgeVersion.getVersion())
+                    .append('\n');
+
+            ModList.get().getModContainerById(SFM.MOD_ID).ifPresent(mod -> {
+                content.append("-- SFM Version: ")
+                        .append(mod.getModInfo().getVersion())
+                        .append('\n');
+            });
 
             var errors = DiskItem.getErrors(disk);
             if (!errors.isEmpty()) {
-                content.append("\n\n-- Errors\n");
+                content.append("\n-- Errors\n");
                 for (var error : errors) {
                     content.append("-- * ").append(I18n.get(error.getKey(), error.getArgs())).append("\n");
                 }
@@ -236,7 +264,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
             var warnings = DiskItem.getWarnings(disk);
             if (!warnings.isEmpty()) {
-                content.append("\n\n-- Warnings\n");
+                content.append("\n-- Warnings\n");
                 for (var warning : warnings) {
                     content.append("-- * ").append(I18n.get(warning.getKey(), warning.getArgs())).append("\n");
                 }
