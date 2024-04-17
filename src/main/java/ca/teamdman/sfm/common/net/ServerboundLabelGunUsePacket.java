@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -117,22 +118,21 @@ public record ServerboundLabelGunUsePacket(
                         .flatMap(CableNetwork::getCablePositions)
                         .collect(Collectors.toSet());
 
-                // get positions of all connected blocks of the same type
+                // get the block type of the target position
                 Block targetBlock = level.getBlockState(pos).getBlock();
+
+                // predicate to check if a position is adjacent to a cable
+                Predicate<BlockPos> isAdjacentToCable = p -> Arrays
+                        .stream(Direction.values())
+                        .anyMatch(d -> cablePositions.contains(p.offset(d.getNormal())));
+
+                // get positions of all connected blocks of the same type
                 List<BlockPos> positions = SFMUtils.getRecursiveStream((current, nextQueue, results) -> {
                     results.accept(current);
-                    for (var d : Direction.values()) {
-                        var offset = current.offset(d.getNormal());
-                        if (level.getBlockState(offset).getBlock() == targetBlock) {
-                            // this is the block we are looking for
-                            // ensure it is also adjacent to a cable
-                            if (Arrays
-                                    .stream(Direction.values())
-                                    .anyMatch(d2 -> cablePositions.contains(offset.offset(d2.getNormal())))) {
-                                nextQueue.accept(offset);
-                            }
-                        }
-                    }
+                    SFMUtils.get3DNeighboursIncludingKittyCorner(current)
+                            .filter(p -> level.getBlockState(p).getBlock() == targetBlock)
+                            .filter(isAdjacentToCable)
+                            .forEach(nextQueue);
                 }, pos).toList();
 
                 // check if any of the positions are missing the label

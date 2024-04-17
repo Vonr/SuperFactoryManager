@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.Number;
 import ca.teamdman.sfml.ast.*;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -198,4 +199,16 @@ public class SFMUtils {
         return input;
     }
 
+    public static Stream<BlockPos> get3DNeighboursIncludingKittyCorner(BlockPos pos) {
+        Stream.Builder<BlockPos> builder = Stream.builder();
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    if (x == 0 && y == 0 && z == 0) continue;
+                    builder.accept(pos.offset(x, y, z));
+                }
+            }
+        }
+        return builder.build();
+    }
 }
