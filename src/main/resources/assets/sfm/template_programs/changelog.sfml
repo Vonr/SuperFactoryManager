@@ -9,6 +9,8 @@ NAME "Changelog for 4.14.4"
 -- move disk warning update trigger from tick to manager open
 -- add warnings for smelly round robin usage
 -- add mod+game info to clipboard diagnostics
+-- add EACH SIDE alias
+---- OUTPUT forge_energy:: TO "flux cell" EACH SIDE
 
 ---- 4.14.3 ----
 -- add support for 1.20.2
