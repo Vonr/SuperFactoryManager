@@ -233,9 +233,16 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public LabelAccess visitLabelaccess(SFMLParser.LabelaccessContext ctx) {
+        var directionQualifierCtx = ctx.sidequalifier();
+        DirectionQualifier directionQualifier;
+        if (directionQualifierCtx == null) {
+            directionQualifier = DirectionQualifier.NULL_DIRECTION;
+        } else {
+            directionQualifier = (DirectionQualifier) visit(directionQualifierCtx);
+        }
         LabelAccess labelAccess = new LabelAccess(
                 ctx.label().stream().map(this::visit).map(Label.class::cast).collect(Collectors.toList()),
-                (DirectionQualifier) visit(ctx.sidequalifier()),
+                directionQualifier,
                 visitSlotqualifier(ctx.slotqualifier()),
                 visitRoundrobin(ctx.roundrobin())
         );
@@ -575,8 +582,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public DirectionQualifier visitListedSides(@Nullable SFMLParser.ListedSidesContext ctx) {
-        if (ctx == null) return DirectionQualifier.NULL_DIRECTION;
+    public DirectionQualifier visitListedSides(SFMLParser.ListedSidesContext ctx) {
         DirectionQualifier directionQualifier = new DirectionQualifier(
                 EnumSet.copyOf(ctx.side().stream()
                                        .map(this::visitSide)
