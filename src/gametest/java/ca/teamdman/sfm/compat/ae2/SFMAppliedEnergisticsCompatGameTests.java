@@ -202,8 +202,8 @@ public class SFMAppliedEnergisticsCompatGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "25x3x25")
-    public static void ae2_many_inscribers(GameTestHelper helper) {
-        helper.fail("not finished");
-    }
+//    @GameTest(template = "25x3x25")
+//    public static void ae2_many_inscribers(GameTestHelper helper) {
+//        helper.fail("not finished");
+//    }
 }
