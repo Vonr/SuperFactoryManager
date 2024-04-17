@@ -12,6 +12,7 @@ NAME "Changelog for 4.14.4"
 -- add EACH SIDE alias
 ---- OUTPUT forge_energy:: TO "flux cell" EACH SIDE
 -- improve error logging when resource voiding detected
+-- fix bug where programs worked without inventory cables
 
 ---- 4.14.3 ----
 -- add support for 1.20.2
