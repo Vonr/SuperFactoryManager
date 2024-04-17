@@ -1,8 +1,8 @@
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
-NAME "Changelog for 4.14.4"
----- 4.14.4 ----
+NAME "Changelog for 4.15.0"
+---- 4.15.0 ----
 -- alias "each" to "every" when parsing set operators
 ---- (e.g., "IF EACH chest HAS GT 1 iron_ingot THEN")
 ---- this is an old change but I forgot to mention till now
