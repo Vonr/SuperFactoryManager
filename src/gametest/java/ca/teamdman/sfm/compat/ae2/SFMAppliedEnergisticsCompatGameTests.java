@@ -176,16 +176,16 @@ public class SFMAppliedEnergisticsCompatGameTests extends SFMGameTestBase {
                                        OUTPUT redstone TO last SLOTS 2
                                        OUTPUT printed_silicon TO last SLOTS 1
                                        OUTPUT printed_calculation_processor, printed_engineering_processor, printed_logic_processor TO last SLOTS 0
-                                                                      
+
                                        FORGET
                                        INPUT FROM logic, engineering, calculation, silicon west side
                                        output to materials
-                                                                      
+
                                        FORGET
                                        INPUT FROM last west SIDE
                                        OUTPUT TO results
                                    END
-                                        """.stripTrailing().stripIndent());
+                                   """.stripTrailing().stripIndent());
         helper.succeedWhen(() -> {
             boolean hasCalculation = count(results, AEItems.CALCULATION_PROCESSOR.asItem().asItem()) > 0;
             boolean hasEngineering = count(results, AEItems.ENGINEERING_PROCESSOR.asItem().asItem()) > 0;

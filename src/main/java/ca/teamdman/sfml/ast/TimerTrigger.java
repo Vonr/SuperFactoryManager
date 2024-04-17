@@ -36,7 +36,6 @@ public record TimerTrigger(
 
     @Override
     public String toString() {
-        String rtn = "EVERY " + interval + " DO\n" + block.toString().indent(1).stripTrailing() + "\nEND";
-        return rtn;
+        return "EVERY " + interval + " DO\n" + block.toString().indent(1).stripTrailing() + "\nEND";
     }
 }
