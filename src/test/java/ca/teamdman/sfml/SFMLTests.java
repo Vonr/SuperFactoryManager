@@ -2,6 +2,7 @@ package ca.teamdman.sfml;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
+import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
@@ -78,7 +79,7 @@ public class SFMLTests {
     public void simpleComparisons() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input from a
                         if a has gt 100 iron then
@@ -101,7 +102,7 @@ public class SFMLTests {
     public void resource1() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input item:minecraft:stick from a
                     end
@@ -119,7 +120,7 @@ public class SFMLTests {
     public void resource2() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input item::stick from a
                     end
@@ -137,7 +138,7 @@ public class SFMLTests {
     public void resource3() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input item::stick from a
                     end
@@ -155,7 +156,7 @@ public class SFMLTests {
     public void resource4() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input stick from a
                     end
@@ -173,7 +174,7 @@ public class SFMLTests {
     public void resource5() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input fluid::water from a
                     end
@@ -191,7 +192,7 @@ public class SFMLTests {
     public void resource6() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input fluid:minecraft:water from a
                     end
@@ -213,7 +214,7 @@ public class SFMLTests {
     public void resource7() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input fluid:: from a
                     end
@@ -231,7 +232,7 @@ public class SFMLTests {
     public void badResource() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input :fluid:: from a
                     end
@@ -319,7 +320,7 @@ public class SFMLTests {
     public void resource8() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input forge_energy:forge:energy from a
                     end
@@ -341,7 +342,7 @@ public class SFMLTests {
     public void resource9() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input forge_energy:forge:energy from a
                     end
@@ -363,7 +364,7 @@ public class SFMLTests {
     public void resource10() {
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input gas::ethylene from a
                     end
@@ -381,7 +382,7 @@ public class SFMLTests {
     public void wildcardResourceIdentifiers() {
         var input = """
                 name "hello world"
-                                
+
                 every 20 ticks do
                     INPUT fluid:minecraft:water from a TOP SIDE
                     OUTPUT fluid:*:* to b
@@ -502,18 +503,18 @@ public class SFMLTests {
     public void syntaxHighlighting1() {
         var rawInput = """
                 EVERY 20 TICKS DO
-                                
+
                     INPUT FROM a''" -- hehehehaw
                     -- we want there to be no issues highlighting even if errors are present
                     "'''''
-                    
+
                     -- we want to test to make sure whitespace is preserved
                     -- in the
-                    
+
                     -- syntax highlighting
-                    
+
                     INPUT FROM hehehehehehehehehhe
-                    
+
                     OUTPUT stone to b
                 END
                 """.stripIndent();
@@ -541,10 +542,10 @@ public class SFMLTests {
     public void syntaxHighlighting2() {
         var rawInput = """
                 EVERY 20 TICKS DO
-                                
+
                     INPUT FROM a
                     INPUT FROM hehehehehehehehehhe
-                    
+
                     OUTPUT stone to b
                 END
                 """.stripIndent();
@@ -599,7 +600,7 @@ public class SFMLTests {
     public void syntaxHighlightingWhitespaceRegression2() {
         // the empty newline is important
         var rawInput = """
-                    
+
                 EVERY 20 TICKS DO
                     INPUT FROM a
                     OUTPUT TO b
@@ -628,10 +629,10 @@ public class SFMLTests {
     public void syntaxHighlighting3() {
         var rawRawInput = """
                 EVERY 20 TICKS DO
-                                
+
                     INPUT FROM a
                     INPUT FROM hehehehehehehehehhe
-                    
+
                     OUTPUT stone to b
                 END
                 """.stripIndent();
@@ -662,10 +663,10 @@ public class SFMLTests {
     public void syntaxHighlightingUnusedToken() {
         var rawInput = """
                 EVERY 20 TICKS DO
-                                
+
                     INPUT FROM a
                     INPUT FROM hehehehehehehehehhe=
-                    
+
                     OUTPUT stone to b
                 END
                 """.stripIndent();
@@ -693,7 +694,7 @@ public class SFMLTests {
     public void booleanHasOperator() {
         var input = """
                 name "hello world"
-                                
+
                 every 20 ticks do
                     input from a
                     if a has gt 100 energy:minecraft:iron then
@@ -710,7 +711,7 @@ public class SFMLTests {
     public void quotedLabels() {
         var input = """
                 name "hello world"
-                                
+
                 every 20 ticks do
                     input from "hehe beans 😀"
                     output to "haha benis"
