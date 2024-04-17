@@ -2,6 +2,7 @@ package ca.teamdman.sfml;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
+import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
@@ -241,6 +242,81 @@ public class SFMLTests {
     }
 
     @Test
+    public void badTimerInterval() {
+        var input = """
+                    name "hello world"
+
+                    every 0 ticks do
+                        input from a
+                    end
+                """;
+        var errors = getCompileErrors(input);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
+    public void badTimerIntervalCheckingConfig() {
+        var min = SFMConfig.COMMON.timerTriggerMinimumIntervalInTicks.getDefault();
+        for (int i = min-1; i > 0; i--) {
+            var input = """
+                    name "hello world"
+
+                    every X ticks do
+                        input from a
+                    end
+                """;
+            var errors = getCompileErrors(input.replace("X", String.valueOf(min - 1)));
+            assertFalse(errors.isEmpty());
+        }
+    }
+
+    @Test
+    public void forgeTimerIntervalPass() {
+        var min = SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO.getDefault();
+        assertEquals(min, 1);
+        var input = """
+            name "hello world"
+
+            every 1 ticks do
+                input forge_energy:: from a
+            end
+        """;
+        var errors = getCompileErrors(input);
+        assertTrue(errors.isEmpty());
+    }
+
+    @Test
+    public void forgeTimerIntervalFail1() {
+        var min = SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO.getDefault();
+        assertEquals(min, 1);
+        var input = """
+            name "hello world"
+
+            every 0 ticks do
+                input forge_energy:: from a
+            end
+        """;
+        var errors = getCompileErrors(input);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
+    public void forgeTimerIntervalFail2() {
+        var min = SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO.getDefault();
+        assertEquals(min, 1);
+        var input = """
+            name "hello world"
+
+            every 1 ticks do
+                input forge_energy:: from a
+                output to b -- this is an item io statement
+            end
+        """;
+        var errors = getCompileErrors(input);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
     public void resource8() {
         var input = """
                     name "hello world"
@@ -469,7 +545,7 @@ public class SFMLTests {
 
                     INPUT FROM a
                     INPUT FROM hehehehehehehehehhe
-                    
+
                     OUTPUT stone to b
                 END
                 """.stripIndent();
@@ -524,6 +600,7 @@ public class SFMLTests {
     public void syntaxHighlightingWhitespaceRegression2() {
         // the empty newline is important
         var rawInput = """
+
                 EVERY 20 TICKS DO
                     INPUT FROM a
                     OUTPUT TO b

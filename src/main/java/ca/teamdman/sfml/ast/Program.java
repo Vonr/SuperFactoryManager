@@ -132,15 +132,15 @@ public record Program(
                         }
                         var viable = SFMUtils.discoverCapabilityProvider(level, pos).isPresent();
                         if (!viable && adjacent) {
-                                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL.get(
-                                        label,
-                                        String.format(
-                                                "[%d,%d,%d]",
-                                                pos.getX(),
-                                                pos.getY(),
-                                                pos.getZ()
-                                        )
-                                ));
+                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL.get(
+                                    label,
+                                    String.format(
+                                            "[%d,%d,%d]",
+                                            pos.getX(),
+                                            pos.getY(),
+                                            pos.getZ()
+                                    )
+                            ));
                         }
                     }));
         }
@@ -168,6 +168,37 @@ public record Program(
                 warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_ID.get(resource));
             }
         }
+
+        // check for poor round-robin usage
+        getDescendantStatements()
+                .filter(IOStatement.class::isInstance)
+                .map(IOStatement.class::cast)
+                .forEach(statement -> {
+                    { // round robin smells
+                        var smell = statement
+                                .labelAccess()
+                                .roundRobin()
+                                .getSmell(statement.labelAccess(), statement.each());
+                        if (smell != null) {
+                            warnings.add(smell.get(statement.toStringPretty()));
+                        }
+                    }
+                    { // resource each without pattern
+                        boolean smells = statement
+                                .resourceLimits()
+                                .resourceLimits()
+                                .stream()
+                                .anyMatch(rl -> rl.limit().quantity().idExpansionBehaviour()
+                                                == ResourceQuantity.IdExpansionBehaviour.EXPAND && !rl
+                                                        .resourceId()
+                                                        .usesRegex());
+                        if (smells) {
+                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN.get(
+                                    statement.toStringPretty()
+                            ));
+                        }
+                    }
+                });
         return warnings;
     }
 
@@ -187,11 +218,6 @@ public record Program(
     }
 
     public boolean tick(ManagerBlockEntity manager) {
-        // update warnings on disk item every 20 seconds
-        if (manager.getTick() % 20 == 0) {
-            manager.getDisk().ifPresent(disk -> DiskItem.setWarnings(disk, gatherWarnings(disk, manager)));
-        }
-
         // build the context and tick the program
         var context = new ProgramContext(this, manager, ProgramContext.ExecutionPolicy.UNRESTRICTED);
         tick(context);

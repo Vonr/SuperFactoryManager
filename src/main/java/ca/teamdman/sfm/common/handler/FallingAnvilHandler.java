@@ -35,6 +35,11 @@ public class FallingAnvilHandler {
             if (fbe.getBlockState().getBlock() instanceof AnvilBlock) {
                 var landPosition = fbe.blockPosition();
                 Level level = event.getLevel();
+                if (!level.isLoaded(landPosition.below())) {
+                    // avoid problems when the server is shutting down
+                    // https://github.com/TeamDman/SuperFactoryManager/issues/114
+                    return;
+                }
                 Block block = level.getBlockState(landPosition.below()).getBlock();
                 if (block == Blocks.IRON_BLOCK) { // create a form
                     var recipes = level
