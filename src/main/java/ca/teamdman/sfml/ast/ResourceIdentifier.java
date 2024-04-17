@@ -9,10 +9,7 @@ import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -42,6 +39,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             String resourceNamespace,
             String resourceName
     ) {
+        var check = List.of("fe","rf","energy","power");
+        if (resourceTypeNamespace.equals("sfm") && check.contains(resourceTypeName)) {
+            resourceTypeName = "forge_energy";
+        }
         this.resourceTypeNamespace = resourceTypeNamespace;
         this.resourceTypeName = resourceTypeName;
         this.resourceNamespace = resourceNamespace;
@@ -197,5 +198,9 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
     @Override
     public int hashCode() {
         return Objects.hash(resourceTypeNamespace, resourceTypeName, resourceNamespace, resourceName);
+    }
+
+    public boolean usesRegex() {
+        return RegexCache.isRegexPattern(resourceNamespace) || RegexCache.isRegexPattern(resourceName);
     }
 }

@@ -57,7 +57,10 @@ limit           : quantity retention    #QuantityRetentionLimit
 quantity        : number EACH?;
 retention       : RETAIN number EACH?;
 
-sidequalifier   : side(COMMA side)* SIDE;
+sidequalifier   : EACH SIDE                 #EachSide
+                | side(COMMA side)* SIDE    #ListedSides
+                ;
+
 side            : TOP
                 | BOTTOM
                 | NORTH

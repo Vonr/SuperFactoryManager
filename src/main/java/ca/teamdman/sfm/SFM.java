@@ -1,7 +1,9 @@
 package ca.teamdman.sfm;
 
 import ca.teamdman.sfm.client.registry.SFMMenuScreens;
+import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfm.common.registry.*;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -27,6 +29,7 @@ public class SFM {
         SFMMenus.register(bus);
         SFMRecipeTypes.register(bus);
         SFMRecipeSerializers.register(bus);
+        SFMConfig.register(ModLoadingContext.get());
         bus.addListener((FMLClientSetupEvent e) -> SFMMenuScreens.register());
         bus.addListener((FMLCommonSetupEvent e) -> SFMPackets.register());
     }
