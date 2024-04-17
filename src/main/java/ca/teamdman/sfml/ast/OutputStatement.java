@@ -2,6 +2,7 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.program.*;
+import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class OutputStatement implements Statement {
+public class OutputStatement implements IOStatement {
     private final LabelAccess labelAccess;
     private final ResourceLimits resourceLimits;
     private final boolean each;
@@ -98,7 +99,10 @@ public class OutputStatement implements Statement {
         // will void items if it does
         if (!destination.type.isEmpty(remainder)) {
             SFM.LOGGER.error(
-                    "Failed to move all promised items, took {} but had {} left over after insertion.",
+                    "Failed to move all promised items, found {} {}:{}, took {} but had {} left over after insertion. Resource loss may have occurred!!!",
+                    potential,
+                    SFMResourceTypes.DEFERRED_TYPES.get().getKey(source.type),
+                    destination.type.getRegistryKey(potential),
                     extracted,
                     remainder
             );
@@ -239,6 +243,7 @@ public class OutputStatement implements Statement {
         return "OUTPUT " + resourceLimits + " TO " + (each ? "EACH " : "") + labelAccess;
     }
 
+    @Override
     public String toStringPretty() {
         StringBuilder sb = new StringBuilder();
         sb.append("OUTPUT");

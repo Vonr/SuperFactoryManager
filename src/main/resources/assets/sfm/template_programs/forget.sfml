@@ -1,4 +1,4 @@
-NAME "*new* Forget"
+NAME "Forget"
 
 EVERY 20 TICKS DO
     INPUT FROM a

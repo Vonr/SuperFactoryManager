@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -125,10 +126,21 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitTimerTrigger(SFMLParser.TimerTriggerContext ctx) {
+        // create timer trigger
         var time = (Interval) visit(ctx.interval());
-        if (time.getSeconds() < 1) throw new IllegalArgumentException("Minimum trigger interval is 1 second.");
         var block = visitBlock(ctx.block());
         TimerTrigger timerTrigger = new TimerTrigger(time, block);
+
+        // get default min interval
+        int minInterval = timerTrigger.usesOnlyForgeEnergyResourceIO()
+                          ? SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO)
+                          : SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicks);
+
+        // validate interval
+        if (time.getTicks() < minInterval) {
+            throw new IllegalArgumentException("Minimum trigger interval is " + minInterval + " ticks.");
+        }
+
         AST_NODE_CONTEXTS.add(new Pair<>(timerTrigger, ctx));
         return timerTrigger;
     }
@@ -233,9 +245,16 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public LabelAccess visitLabelaccess(SFMLParser.LabelaccessContext ctx) {
+        var directionQualifierCtx = ctx.sidequalifier();
+        DirectionQualifier directionQualifier;
+        if (directionQualifierCtx == null) {
+            directionQualifier = DirectionQualifier.NULL_DIRECTION;
+        } else {
+            directionQualifier = (DirectionQualifier) visit(directionQualifierCtx);
+        }
         LabelAccess labelAccess = new LabelAccess(
                 ctx.label().stream().map(this::visit).map(Label.class::cast).collect(Collectors.toList()),
-                visitSidequalifier(ctx.sidequalifier()),
+                directionQualifier,
                 visitSlotqualifier(ctx.slotqualifier()),
                 visitRoundrobin(ctx.roundrobin())
         );
@@ -568,8 +587,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public DirectionQualifier visitSidequalifier(@Nullable SFMLParser.SidequalifierContext ctx) {
-        if (ctx == null) return DirectionQualifier.NULL_DIRECTION;
+    public DirectionQualifier visitEachSide(SFMLParser.EachSideContext ctx) {
+        var rtn = DirectionQualifier.EVERY_DIRECTION;
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
+    public DirectionQualifier visitListedSides(SFMLParser.ListedSidesContext ctx) {
         DirectionQualifier directionQualifier = new DirectionQualifier(
                 EnumSet.copyOf(ctx.side().stream()
                                        .map(this::visitSide)
