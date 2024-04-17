@@ -17,6 +17,8 @@ NAME "Changelog for 4.15.0"
 -- ctrl+labelgun now applies to kitty corner
 -- add config for minimum tick time
 -- allow programs to tick faster if only moving energy
+-- alias forge_energy:: <= fe::, rf::, energy::, power::
+-- fix anvils causing problems when quitting world
 
 ---- 4.14.3 ----
 -- add support for 1.20.2
