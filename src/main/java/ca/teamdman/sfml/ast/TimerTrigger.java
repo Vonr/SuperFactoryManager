@@ -29,11 +29,14 @@ public record TimerTrigger(
         return List.of(block);
     }
 
+    public boolean usesOnlyForgeEnergyResourceIO() {
+        return getReferencedIOResourceIds().allMatch(id -> id.resourceTypeNamespace.equals("sfm")
+                                                           && id.resourceTypeName.equals("forge_energy"));
+    }
+
     @Override
     public String toString() {
-        String rtn = "EVERY " + interval + " DO\n"
-                     + block.toString().indent(1).stripTrailing()
-                     + "\nEND";
+        String rtn = "EVERY " + interval + " DO\n" + block.toString().indent(1).stripTrailing() + "\nEND";
         return rtn;
     }
 }

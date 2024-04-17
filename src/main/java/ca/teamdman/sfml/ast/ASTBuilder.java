@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -125,10 +126,21 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitTimerTrigger(SFMLParser.TimerTriggerContext ctx) {
+        // create timer trigger
         var time = (Interval) visit(ctx.interval());
-        if (time.getSeconds() < 1) throw new IllegalArgumentException("Minimum trigger interval is 1 second.");
         var block = visitBlock(ctx.block());
         TimerTrigger timerTrigger = new TimerTrigger(time, block);
+
+        // get default min interval
+        int minInterval = timerTrigger.usesOnlyForgeEnergyResourceIO()
+                          ? SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO)
+                          : SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicks);
+
+        // validate interval
+        if (time.getTicks() < minInterval) {
+            throw new IllegalArgumentException("Minimum trigger interval is " + minInterval + " ticks.");
+        }
+
         AST_NODE_CONTEXTS.add(new Pair<>(timerTrigger, ctx));
         return timerTrigger;
     }

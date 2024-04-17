@@ -16,4 +16,12 @@ public interface ASTNode {
         });
         return builder.build();
     }
+
+    default Stream<ResourceIdentifier<?, ?, ?>> getReferencedIOResourceIds() {
+        return getDescendantStatements()
+                .filter(IOStatement.class::isInstance)
+                .map(IOStatement.class::cast)
+                .flatMap(statement -> statement.resourceLimits().resourceLimits().stream())
+                .map(ResourceLimit::resourceId);
+    }
 }

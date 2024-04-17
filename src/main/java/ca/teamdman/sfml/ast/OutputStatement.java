@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class OutputStatement implements Statement {
+public class OutputStatement implements IOStatement {
     private final LabelAccess labelAccess;
     private final ResourceLimits resourceLimits;
     private final boolean each;
@@ -243,6 +243,7 @@ public class OutputStatement implements Statement {
         return "OUTPUT " + resourceLimits + " TO " + (each ? "EACH " : "") + labelAccess;
     }
 
+    @Override
     public String toStringPretty() {
         StringBuilder sb = new StringBuilder();
         sb.append("OUTPUT");

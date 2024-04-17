@@ -171,18 +171,15 @@ public record Program(
 
         // check for poor round-robin usage
         getDescendantStatements()
+                .filter(IOStatement.class::isInstance)
+                .map(IOStatement.class::cast)
                 .forEach(statement -> {
-                    if (statement instanceof InputStatement input) {
-                        var smell = input.labelAccess().roundRobin().getSmell(input.labelAccess(), input.each());
-                        if (smell != null) {
-                            warnings.add(smell.get(input.toStringPretty()));
-                        }
-                    }
-                    if (statement instanceof OutputStatement output) {
-                        var smell = output.labelAccess().roundRobin().getSmell(output.labelAccess(), output.each());
-                        if (smell != null) {
-                            warnings.add(smell.get(output.toStringPretty()));
-                        }
+                    var smell = statement
+                            .labelAccess()
+                            .roundRobin()
+                            .getSmell(statement.labelAccess(), statement.each());
+                    if (smell != null) {
+                        warnings.add(smell.get(statement.toStringPretty()));
                     }
                 });
         return warnings;
