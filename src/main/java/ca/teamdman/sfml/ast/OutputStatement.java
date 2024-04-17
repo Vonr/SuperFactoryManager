@@ -2,6 +2,7 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.program.*;
+import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
@@ -98,7 +99,10 @@ public class OutputStatement implements Statement {
         // will void items if it does
         if (!destination.type.isEmpty(remainder)) {
             SFM.LOGGER.error(
-                    "Failed to move all promised items, took {} but had {} left over after insertion.",
+                    "Failed to move all promised items, found {} {}:{}, took {} but had {} left over after insertion. Resource loss may have occurred!!!",
+                    potential,
+                    SFMResourceTypes.DEFERRED_TYPES.get().getKey(source.type),
+                    destination.type.getRegistryKey(potential),
                     extracted,
                     remainder
             );
