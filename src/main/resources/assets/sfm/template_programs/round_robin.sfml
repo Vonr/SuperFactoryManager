@@ -1,4 +1,4 @@
-NAME "*new* Round Robin"
+NAME "Round Robin"
 
 EVERY 20 TICKS DO
     INPUT FROM source
