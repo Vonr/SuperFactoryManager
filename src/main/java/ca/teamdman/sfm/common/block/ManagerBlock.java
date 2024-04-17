@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
@@ -68,7 +69,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         if (!(level instanceof ServerLevel)) return;
         { // check redstone for triggers
             var isPowered = level.hasNeighborSignal(pos) || level.hasNeighborSignal(pos.above());
-            var debounce  = state.getValue(TRIGGERED);
+            var debounce = state.getValue(TRIGGERED);
             if (isPowered && !debounce) {
                 mgr.trackRedstonePulseUnprocessed();
                 level.setBlock(pos, state.setValue(TRIGGERED, true), 4);
@@ -96,6 +97,12 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
             BlockHitResult hit
     ) {
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager && player instanceof ServerPlayer sp) {
+            // update warnings on disk as we open the gui
+            manager
+                    .getDisk()
+                    .ifPresent(disk -> manager
+                            .getProgram()
+                            .ifPresent(program -> DiskItem.setWarnings(disk, program.gatherWarnings(disk, manager))));
             NetworkHooks.openScreen(sp, manager, buf -> ManagerContainerMenu.encode(manager, buf));
             return InteractionResult.CONSUME;
         }

@@ -122,6 +122,9 @@ public class CableNetwork {
             BlockPos pos,
             @Nullable Direction direction
     ) {
+        if (!isAdjacentToCable(pos)) {
+            return null;
+        }
         return CAPABILITY_CACHE.getOrDiscoverCapability(LEVEL, pos, capKind, direction);
     }
 
