@@ -2867,7 +2867,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
         helper.setBlock(rightPos, Blocks.COMPOSTER);
-        BlockPos leftPos = new BlockPos(2, 1, 0);
+        BlockPos leftPos = new BlockPos(2, 2, 0);
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
@@ -2880,16 +2880,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setProgram("""
                                        EVERY 20 TICKS DO
                                            INPUT FROM a
-                                           OUTPUT TO b
-                                           OUTPUT TO b
-                                           OUTPUT TO b
-                                           OUTPUT TO b
-                                           OUTPUT TO b
-                                           OUTPUT TO b
-                                           OUTPUT TO b
-                                           OUTPUT TO b
-                                           OUTPUT TO b
-                                           OUTPUT TO b
+                                           OUTPUT TO b,b,b,b,b,b,b,b,b,b,b,b,b,b,b
+                                           OUTPUT TO b,b,b,b,b,b,b,b,b,b,b,b,b,b,b
                                        END
                                    """.stripTrailing().stripIndent());
 
