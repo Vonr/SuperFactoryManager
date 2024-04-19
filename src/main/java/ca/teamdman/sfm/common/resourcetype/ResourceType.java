@@ -89,7 +89,8 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                     BlockPos pos = pair.getFirst();
                     Direction dir = pair.getSecond();
                     return network.getCapability(CAPABILITY_KIND, pos, dir);
-                });
+                })
+                .filter(Objects::nonNull);
 
         // Resolve and filter out invalid cache entries
         return caps
