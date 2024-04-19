@@ -9,6 +9,7 @@ logs/
 
 logs/debug.log
 logs/latest.log
+logs/test.log
 
 # idea
 out
