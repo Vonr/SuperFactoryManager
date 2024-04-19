@@ -32,16 +32,18 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
     foreach ($repo in $repo_clones) {
         try {
             Push-Location $repo
-            Write-Host "Running runData for $repo"
-            .\gradlew.bat runData --no-daemon
-            if ($? -eq $false) {
-                Write-Warning "runData failed for ${repo}"
-            }
-
-            Write-Host "Running build for $repo"
-            .\gradlew.bat build --no-daemon
-            if ($? -eq $false) {
-                throw "Build failed for ${repo}"
+            Write-Host "Running runGameTestServer for $repo"
+            $test_log_file = "logs\test.log"
+            Clear-Content $test_log_file -ErrorAction SilentlyContinue
+            .\gradlew.bat runGameTestServer --no-daemon | Tee-Object -FilePath $test_log_file
+            # Gradle 
+            if ((Get-Content $test_log_file -Raw ) -notlike "*All * required tests passed :)*") {
+                Write-Warning "Test failed for $repo, opening logs"
+                code $test_log_file &
+                break
+            } else {
+                Write-Host -ForegroundColor Green "All tests passed for $repo"
+                Remove-Item -Path $test_log_file
             }
         } finally {
             Pop-Location
@@ -51,7 +53,7 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
     # Measure time
     $end = Get-Date
     $elapsed = $end - $start
-    Write-Host "All versions built, took $elapsed"
+    Write-Host "All versions tested, took $elapsed"
 } finally {
     Pop-Location
 }
