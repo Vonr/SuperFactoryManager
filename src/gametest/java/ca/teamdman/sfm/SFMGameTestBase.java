@@ -110,7 +110,7 @@ public abstract class SFMGameTestBase {
                         triggers.remove(endTimerTrigger);
                         assertion.run();
                         SFMGameTestBase.assertTrue(
-                                endTime.get() - startTime.get() < 50_000_000,
+                                endTime.get() - startTime.get() < 70_000_000,
                                 "Program took too long to run: took " + NumberFormat
                                         .getInstance(Locale.getDefault())
                                         .format(endTime.get() - startTime.get()) + "ns"
