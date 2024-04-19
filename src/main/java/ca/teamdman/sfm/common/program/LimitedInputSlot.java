@@ -5,16 +5,15 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import javax.annotation.Nullable;
 
 public class LimitedInputSlot<STACK, ITEM, CAP> {
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public ResourceType<STACK, ITEM, CAP> type;
-    @SuppressWarnings("NotNullFieldNotInitialized")
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public CAP handler;
     public int slot;
-    @SuppressWarnings("NotNullFieldNotInitialized")
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public InputResourceTracker<STACK, ITEM, CAP> tracker;
-    private boolean done = false;
     private @Nullable STACK extractSimulateCache = null;
+    private boolean done = false;
 
     public LimitedInputSlot(
             CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker
@@ -26,6 +25,10 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
         if (done) return true;
         // we don't bother setting done because if this returns true it should be the last time this is called
         if (tracker.isDone()) {
+            return true;
+        }
+        if (slot > type.getSlots(handler)) {
+            // composter block changes how many slots it has between insertions
             return true;
         }
         STACK stack = peekExtractPotential();
