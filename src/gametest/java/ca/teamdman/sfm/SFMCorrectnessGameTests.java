@@ -12,6 +12,7 @@ import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -27,8 +28,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -2825,4 +2828,37 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             helper.succeed();
         });
     }
+
+    @GameTest(template = "1x2x1")
+    public static void compost_crash(GameTestHelper helper) {
+        // Place the composter
+        var pos = new BlockPos(0, 2, 0);
+        helper.setBlock(pos, Blocks.COMPOSTER);
+
+        // Get the inventory
+        BlockPos worldPos = helper.absolutePos(pos);
+        IItemHandler found = helper
+                .getLevel()
+                .getCapability(Capabilities.ItemHandler.BLOCK, worldPos, Direction.UP);
+        if (found == null) {
+            throw new GameTestAssertException("No item handler found at " + worldPos);
+        }
+
+        // Fill 'er up
+        for (int i = 0; i < 64; i++) {
+            var slots = found.getSlots();
+            System.out.println("i= " + i + " slots = " + slots);
+            if (slots > 0) {
+                // Without the check, this crashes.
+                // As a mod author, I didn't know that the inventory size could change between insertions.
+                found.insertItem(0, new ItemStack(Items.POTATO), false);
+            } else {
+                break;
+            }
+        }
+
+        // Success!
+        helper.succeed();
+    }
+
 }

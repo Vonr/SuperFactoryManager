@@ -12,14 +12,13 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
@@ -146,10 +145,13 @@ public abstract class SFMGameTestBase {
     }
 
     protected static IItemHandler getItemHandler(GameTestHelper helper, BlockPos pos) {
+        return getItemHandler(helper, pos, Direction.DOWN);
+    }
+    protected static IItemHandler getItemHandler(GameTestHelper helper, BlockPos pos, @Nullable Direction direction) {
         BlockPos worldPos = helper.absolutePos(pos);
-        var found = helper
+        @SuppressWarnings("DataFlowIssue") var found = helper
                 .getLevel()
-                .getCapability(Capabilities.ItemHandler.BLOCK, worldPos, Direction.DOWN);
+                .getCapability(Capabilities.ItemHandler.BLOCK, worldPos, direction);
         SFMGameTestBase.assertTrue(found != null, "No item handler found at " + worldPos);
         return found;
     }
