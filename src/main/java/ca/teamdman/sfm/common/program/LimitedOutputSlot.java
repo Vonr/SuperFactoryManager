@@ -24,7 +24,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         if (tracker.isDone()) {
             return true;
         }
-        if (slot > type.getSlots(handler)) {
+        if (slot > type.getSlots(handler) - 1) {
             // composter block changes how many slots it has between insertions
             return true;
         }
