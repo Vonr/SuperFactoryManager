@@ -23,7 +23,7 @@ public record ClientboundManagerGuiPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "clientbound_manager_gui_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
 
     public static void encode(

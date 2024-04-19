@@ -23,7 +23,7 @@ public record ServerboundLabelGunClearPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_label_gun_clear_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
     public static void encode(ServerboundLabelGunClearPacket msg, FriendlyByteBuf buf) {
         buf.writeEnum(msg.hand);

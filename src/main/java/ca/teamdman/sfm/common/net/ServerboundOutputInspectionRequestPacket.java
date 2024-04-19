@@ -39,7 +39,7 @@ public record ServerboundOutputInspectionRequestPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_output_inspection_request_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
 
     public static void encode(ServerboundOutputInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {

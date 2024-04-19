@@ -25,7 +25,7 @@ public record ServerboundManagerResetPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_manager_reset_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
     public static void encode(ServerboundManagerResetPacket msg, FriendlyByteBuf friendlyByteBuf) {
         friendlyByteBuf.writeVarInt(msg.windowId());

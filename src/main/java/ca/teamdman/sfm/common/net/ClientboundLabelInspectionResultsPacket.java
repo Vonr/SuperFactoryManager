@@ -21,7 +21,7 @@ public record ClientboundLabelInspectionResultsPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "clientbound_label_inspection_results_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
     public static final int MAX_RESULTS_LENGTH = 50_000;
 

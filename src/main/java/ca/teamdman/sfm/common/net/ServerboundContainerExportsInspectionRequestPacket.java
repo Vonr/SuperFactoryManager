@@ -41,7 +41,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_container_exports_inspection_request_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
 
     public static void encode(ServerboundContainerExportsInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {

@@ -25,7 +25,7 @@ public record ServerboundManagerFixPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_manager_fix_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
     public static void encode(ServerboundManagerFixPacket msg, FriendlyByteBuf friendlyByteBuf) {
         friendlyByteBuf.writeVarInt(msg.windowId());

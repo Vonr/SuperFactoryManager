@@ -25,7 +25,7 @@ public record ServerboundDiskItemSetProgramPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_disk_item_set_program_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
 
     public static void encode(ServerboundDiskItemSetProgramPacket msg, FriendlyByteBuf buf) {

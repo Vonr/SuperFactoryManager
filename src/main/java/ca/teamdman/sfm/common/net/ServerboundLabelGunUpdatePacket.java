@@ -24,7 +24,7 @@ public record ServerboundLabelGunUpdatePacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_label_gun_update_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
     public static final int MAX_LABEL_LENGTH = 80;
 

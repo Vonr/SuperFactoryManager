@@ -20,7 +20,7 @@ public record ClientboundContainerExportsInspectionResultsPacket(
     public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "clientbound_container_exports_inspection_results_packet");
     @Override
     public ResourceLocation id() {
-        return new ResourceLocation(SFM.MOD_ID, getClass().getSimpleName());
+        return ID;
     }
     public static final int MAX_RESULTS_LENGTH = 20480;
 
