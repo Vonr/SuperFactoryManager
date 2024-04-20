@@ -35,37 +35,54 @@ for syntax highlighting 🌈
 
 The following process is designed to catch the most obvious problems that may arise from creating a new release.
 
-```
-versions = [1.19.2, 1.19.4, 1.20, 1.20.1]
-jars = []
-for i,version in enumerate(versions):
-    git checkout $version
-    gradle genIntellijRuns
-    if i == 0:
-        make changes
-        bump mod_version in gradle.properties
-        update changelog.sfml example
-        git commit
-        git push
-    else:
-        git merge $versions[i-1]
-        resolve conflicts
-    runData
-    git add src/generated
-    rm -rf runGameTest/world
-    gradle runGameTestServer, assert exit == 0
-    gradle build | jars.append($_)
+```pwsh
+.\act.ps1
+Manual: Bump `mod_version` in gradle.properties
+Manual: Commit bump
+Action: Propagate changes
+Action: Run gameTestServer for all versions
+Action: Build
+Action: Wipe jars summary dir
+Action: Collect jars
+Action: Update PrismMC test instances to use latest build output
+Action: Update test servers to latest build output
+Action: Launch PrismMC
+Action: Launch test server
 
-git push --all
+for each version:
+    Launch version from PrismMC
+    Multiplayer -> join localhost
+    Break previous setup
+    Build new setup from scratch -- ensure core gameplay loop is always tested
+    Validate changelog accuracy
+    /stop
+    Quit game
 
-for jar in jars:
-    copy jar to server, run.bat
-    copy jar to prism launcher, launch
-    connect to server
-    assemble a simple program, assert works
+For each version:
+    CurseForge -> Upload file
+"https://authors.curseforge.com/#/projects/306935/files/create"
+    Environment=Server+Client
+    Modloader=match mc version {
+        ..1.20   -> Forge
+        1.20.1   -> Forge+NeoForge
+        1.20.2.. -> NeoForge
+    }
+    Java=Java 17
+    Minecraft=$version
+    Changelog= <<
+        ```
+        $section from changelog.sfml
+        ```
+    >>
 
-for jar in jars:
-    upload jar to curseforge with changelog
+For each version:
+    Modrinth -> Versions -> Drag n drop
+"https://modrinth.com/mod/super-factory-manager/versions"
+    Adjust populated version numbers
+    Changelog=same as above
+
+Action: Tag
+Action: Push all
 ```
 
 ## Optimization
