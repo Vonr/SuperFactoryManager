@@ -4,6 +4,7 @@
 NAME "Changelog for 4.15.1"
 ---- 4.15.1 ---
 -- Fix crash bug where variable-size inventories (composters) crashed
+-- Fix modloader=forge missing for the mc=1.20.1 CurseForge uploads
 
 ---- 4.15.0 ----
 -- alias "each" to "every" when parsing set operators
