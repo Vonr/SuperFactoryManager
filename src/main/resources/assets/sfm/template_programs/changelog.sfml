@@ -1,7 +1,10 @@
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
-NAME "Changelog for 4.15.0"
+NAME "Changelog for 4.15.1"
+---- 4.15.1 ---
+-- Fix crash bug where variable-size inventories (composters) crashed
+
 ---- 4.15.0 ----
 -- alias "each" to "every" when parsing set operators
 ---- (e.g., "IF EACH chest HAS GT 1 iron_ingot THEN")
