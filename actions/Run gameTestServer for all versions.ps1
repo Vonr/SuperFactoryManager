@@ -43,7 +43,6 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
                 break
             } else {
                 Write-Host -ForegroundColor Green "All tests passed for $repo"
-                Remove-Item -Path $test_log_file
             }
         } finally {
             Pop-Location
