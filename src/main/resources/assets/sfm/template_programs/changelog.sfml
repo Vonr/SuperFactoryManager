@@ -5,6 +5,7 @@
 -- fix missing dash in changelog
 -- make FORGET keyword blue
 -- Add git tag action to release process documentation
+-- Add GitHub release to release process documentation
 
 NAME "Changelog for 4.15.1"
 ---- 4.15.1 ----

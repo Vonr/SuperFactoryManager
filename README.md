@@ -75,14 +75,17 @@ For each version:
         ```
     >>
 
-For each version:
-    Modrinth -> Versions -> Drag n drop
-"https://modrinth.com/mod/super-factory-manager/versions"
-    Adjust populated version numbers
-    Changelog=same as above
-
-Action: Tag
-Action: Push all
+GitHub -> Draft a new release
+"https://github.com/TeamDman/SuperFactoryManager/releases/new"
+Choose a tag=latest
+Target=latest
+Release title=mod version
+Description= <<
+    ```
+    $section from changelog.sfml
+    ```
+>>
+Attach=jar for latest mod version for each mc version
 ```
 
 ## Optimization
