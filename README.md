@@ -80,6 +80,9 @@ For each version:
 "https://modrinth.com/mod/super-factory-manager/versions"
     Adjust populated version numbers
     Changelog=same as above
+
+Action: Tag
+Action: Push all
 ```
 
 ## Optimization
