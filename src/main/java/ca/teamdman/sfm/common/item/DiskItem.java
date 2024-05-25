@@ -48,6 +48,14 @@ public class DiskItem extends Item {
                 .getString("sfm:program");
     }
 
+    public static void setProgram(ItemStack stack, String program) {
+        stack
+                .getOrCreateTag()
+                .putString("sfm:program", program.replaceAll("\r", ""));
+
+    }
+
+
     public static Optional<Program> updateDetails(ItemStack stack, @Nullable ManagerBlockEntity manager) {
         //TODO: give this a name that implies the program is getting compiled
         AtomicReference<Program> rtn = new AtomicReference<>(null);
@@ -67,12 +75,6 @@ public class DiskItem extends Item {
         return Optional.ofNullable(rtn.get());
     }
 
-    public static void setProgram(ItemStack stack, String program) {
-        stack
-                .getOrCreateTag()
-                .putString("sfm:program", program.replaceAll("\r", ""));
-
-    }
 
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
@@ -89,6 +91,18 @@ public class DiskItem extends Item {
         return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
     }
 
+
+
+    public static List<TranslatableContents> getErrors(ItemStack stack) {
+        return stack
+                .getOrCreateTag()
+                .getList("sfm:errors", Tag.TAG_COMPOUND)
+                .stream()
+                .map(CompoundTag.class::cast)
+                .map(SFMUtils::deserializeTranslation)
+                .toList();
+    }
+
     public static void setErrors(ItemStack stack, List<TranslatableContents> errors) {
         stack
                 .getOrCreateTag()
@@ -101,6 +115,17 @@ public class DiskItem extends Item {
                 );
     }
 
+
+    public static List<TranslatableContents> getWarnings(ItemStack stack) {
+        return stack
+                .getOrCreateTag()
+                .getList("sfm:warnings", Tag.TAG_COMPOUND)
+                .stream()
+                .map(CompoundTag.class::cast)
+                .map(SFMUtils::deserializeTranslation)
+                .collect(
+                        Collectors.toList());
+    }
 
     public static void setWarnings(ItemStack stack, List<TranslatableContents> warnings) {
         stack
@@ -115,25 +140,16 @@ public class DiskItem extends Item {
     }
 
 
-    public static List<TranslatableContents> getErrors(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getList("sfm:errors", Tag.TAG_COMPOUND)
-                .stream()
-                .map(CompoundTag.class::cast)
-                .map(SFMUtils::deserializeTranslation)
-                .toList();
-    }
 
-    public static List<TranslatableContents> getWarnings(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getList("sfm:warnings", Tag.TAG_COMPOUND)
-                .stream()
-                .map(CompoundTag.class::cast)
-                .map(SFMUtils::deserializeTranslation)
-                .collect(
-                        Collectors.toList());
+
+    @Override
+    public Component getName(ItemStack stack) {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            if (ClientStuff.isMoreInfoKeyDown()) return super.getName(stack);
+        }
+        var name = getProgramName(stack);
+        if (name.isEmpty()) return super.getName(stack);
+        return Component.literal(name).withStyle(ChatFormatting.AQUA);
     }
 
     public static String getProgramName(ItemStack stack) {
@@ -150,15 +166,6 @@ public class DiskItem extends Item {
         }
     }
 
-    @Override
-    public Component getName(ItemStack stack) {
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            if (ClientStuff.isMoreInfoKeyDown()) return super.getName(stack);
-        }
-        var name = getProgramName(stack);
-        if (name.isEmpty()) return super.getName(stack);
-        return Component.literal(name).withStyle(ChatFormatting.AQUA);
-    }
 
 
     @Override
