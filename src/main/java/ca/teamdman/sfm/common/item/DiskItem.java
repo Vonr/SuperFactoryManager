@@ -49,6 +49,7 @@ public class DiskItem extends Item {
     }
 
     public static Optional<Program> updateDetails(ItemStack stack, @Nullable ManagerBlockEntity manager) {
+        //TODO: give this a name that implies the program is getting compiled
         AtomicReference<Program> rtn = new AtomicReference<>(null);
         Program.compile(
                 getProgram(stack),

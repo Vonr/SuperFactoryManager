@@ -19,6 +19,7 @@ public class OpenContainerTracker {
 
     @SuppressWarnings("unchecked")
     public static <T extends AbstractContainerMenu> Stream<Map.Entry<ServerPlayer, T>> getPlayersWithOpenContainer(Class<T> menuClass) {
+        // TODO: make this accept a block pos and update the map to be keyed by block pos
         return OPEN_CONTAINERS.entrySet().stream()
                 .filter(e -> menuClass.isInstance(e.getValue()))
                 .map(e -> (Map.Entry<ServerPlayer, T>) e);

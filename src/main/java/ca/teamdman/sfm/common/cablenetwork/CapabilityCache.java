@@ -86,12 +86,16 @@ public class CapabilityCache {
         var provider = SFMUtils.discoverCapabilityProvider(level, pos);
         if (provider.isPresent()) {
             var lazyOptional = provider.get().getCapability(capKind, direction);
+
+            // TODO: check if empty, warn on disk if so, otherwise current behaviour (add to cache)
             putCapability(pos, capKind, direction, lazyOptional);
             lazyOptional.addListener(x -> remove(pos, capKind, direction));
+
             return lazyOptional;
         }
 
         // Fallback to empty
+        // TODO: add warning to disk when this occurs
         return LazyOptional.empty();
     }
 

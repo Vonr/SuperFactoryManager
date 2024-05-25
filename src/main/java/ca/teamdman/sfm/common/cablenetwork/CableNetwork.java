@@ -122,6 +122,7 @@ public class CableNetwork {
             @Nullable Direction direction
     ) {
         if (!isAdjacentToCable(pos)) {
+            // TODO: add warning to disk when this occurs
             return LazyOptional.empty();
         }
         return CAPABILITY_CACHE.getOrDiscoverCapability(LEVEL, pos, cap, direction);

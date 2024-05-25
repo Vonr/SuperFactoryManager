@@ -70,6 +70,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         Optional<ItemStack> disk = programContext.getManager().getDisk();
         if (disk.isEmpty()) return Stream.empty();
         LabelPositionHolder labelPositions = LabelPositionHolder.from(disk.get());
+        // TODO: make disk/LabelPositionHolder part of context, crash if fail to construct
 
         // Get positions
         Stream<BlockPos> positions = labelAccess.roundRobin().gather(labelAccess, labelPositions);
@@ -90,6 +91,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                 });
 
         // Unwrap
+        // TODO: add warning to disk if not present
         // We use isPresent check to detect validity
         // We use orElse with null to unwrap
         //noinspection ConstantValue,DataFlowIssue
