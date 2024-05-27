@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.containermenu;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket;
 import ca.teamdman.sfm.common.registry.SFMMenus;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
@@ -18,6 +19,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
     public final Container CONTAINER;
     public final Inventory INVENTORY;
     public final BlockPos MANAGER_POSITION;
+    public String logLevel;
     public String program;
     public ManagerBlockEntity.State state;
     public long[] tickTimeNanos;
@@ -29,6 +31,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
             Container container,
             BlockPos blockEntityPos,
             String program,
+            String logLevel,
             ManagerBlockEntity.State state,
             long[] tickTimeNanos
     ) {
@@ -37,6 +40,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
         this.CONTAINER = container;
         this.INVENTORY = inv;
         this.MANAGER_POSITION = blockEntityPos;
+        this.logLevel = logLevel;
         this.program = program;
         this.state = state;
         this.tickTimeNanos = tickTimeNanos;
@@ -71,6 +75,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
                 new SimpleContainer(1),
                 buf.readBlockPos(),
                 buf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                buf.readUtf(ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH),
                 buf.readEnum(ManagerBlockEntity.State.class),
                 buf.readLongArray(null, ManagerBlockEntity.TICK_TIME_HISTORY_SIZE)
         );
@@ -83,6 +88,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
                 manager,
                 manager.getBlockPos(),
                 manager.getProgramString().orElse(""),
+                manager.logger.getLogLevel().name(),
                 manager.getState(),
                 manager.getTickTimeNanos()
         );
@@ -91,8 +97,13 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
     public static void encode(ManagerBlockEntity manager, FriendlyByteBuf buf) {
         buf.writeBlockPos(manager.getBlockPos());
         buf.writeUtf(manager.getProgramString().orElse(""), Program.MAX_PROGRAM_LENGTH);
+        buf.writeUtf(manager.logger.getLogLevel().name(), ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH);
         buf.writeEnum(manager.getState());
         buf.writeLongArray(manager.getTickTimeNanos());
+    }
+
+    public ItemStack getDisk() {
+        return this.CONTAINER.getItem(0);
     }
 
 

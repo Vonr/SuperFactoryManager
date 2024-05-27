@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.InputResourceTracker;
 import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.program.LimitedInputSlotObjectPool;
@@ -20,6 +21,9 @@ public record InputStatement(
     @Override
     public void tick(ProgramContext context) {
         context.addInput(this);
+        context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_INPUT_STATEMENT.get(
+                labelAccess.labels().stream().map(Object::toString).collect(Collectors.joining(", "))
+        )));
     }
 
     private static final LimitedInputSlotObjectPool SLOT_POOL = new LimitedInputSlotObjectPool();

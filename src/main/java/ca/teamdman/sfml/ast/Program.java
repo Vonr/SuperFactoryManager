@@ -190,8 +190,8 @@ public record Program(
                                 .stream()
                                 .anyMatch(rl -> rl.limit().quantity().idExpansionBehaviour()
                                                 == ResourceQuantity.IdExpansionBehaviour.EXPAND && !rl
-                                                        .resourceId()
-                                                        .usesRegex());
+                                        .resourceId()
+                                        .usesRegex());
                         if (smells) {
                             warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN.get(
                                     statement.toStringPretty()
@@ -220,6 +220,14 @@ public record Program(
     public boolean tick(ManagerBlockEntity manager) {
         // build the context and tick the program
         var context = new ProgramContext(this, manager, ProgramContext.ExecutionPolicy.UNRESTRICTED);
+
+        // log if there are unprocessed redstone pulses
+        int unprocessedRedstonePulseCount = manager.getUnprocessedRedstonePulseCount();
+        if (unprocessedRedstonePulseCount > 0) {
+            manager.logger.debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_WITH_REDSTONE_COUNT.get(
+                    unprocessedRedstonePulseCount)));
+        }
+
         tick(context);
 
         manager.clearRedstonePulseQueue();
@@ -237,7 +245,12 @@ public record Program(
     public void tick(ProgramContext context) {
         for (Trigger t : triggers) {
             if (t.shouldTick(context)) {
+                long start = System.nanoTime();
                 t.tick(context.copy());
+                long nanoTimePassed = System.nanoTime() - start;
+                context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_NS.get(
+                        t.toString(),
+                        nanoTimePassed)));
             }
         }
     }

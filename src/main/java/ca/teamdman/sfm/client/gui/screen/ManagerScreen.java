@@ -56,11 +56,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private ExtendedButton editButton;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton examplesButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton logsButton;
 
     public List<ExtendedButton> getButtonsForJEIExclusionZones() {
         return List.of(
                 clipboardPasteButton,
                 editButton,
+                logsButton,
                 examplesButton,
                 clipboardCopyButton
         );
@@ -79,6 +82,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         boolean diskPresent = menu.getSlot(0).hasItem();
         diagButton.visible = shouldShowDiagButton();
         clipboardCopyButton.visible = diskPresent;
+        logsButton.visible = diskPresent;
         clipboardPasteButton.visible = diskPresent && !isReadOnly();
         resetButton.visible = diskPresent && !isReadOnly();
         editButton.visible = diskPresent && !isReadOnly();
@@ -132,6 +136,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 button -> onShowExamples(),
                 buildTooltip(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP)
         ));
+        logsButton = this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16 * 3 + 50,
+                buttonWidth,
+                16,
+                MANAGER_GUI_VIEW_LOGS_BUTTON.getComponent(),
+                button -> onShowLogs()
+        ));
         clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
                 (this.height - this.imageHeight) / 2 + 128,
@@ -170,7 +182,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onEdit() {
-        ClientStuff.showProgramEditScreen(menu.CONTAINER.getItem(0), this::sendProgram);
+        ClientStuff.showProgramEditScreen(menu.getDisk(), this::sendProgram);
     }
 
     private void onShowExamples() {
@@ -180,6 +192,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         template,
                         this::sendProgram
                 )));
+    }
+    private void onShowLogs() {
+        ClientStuff.showLogsScreen(menu);
     }
 
     private void sendReset() {
@@ -222,7 +237,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private boolean shouldShowDiagButton() {
-        var disk = menu.CONTAINER.getItem(0);
+        var disk = menu.getDisk();
         if (!(disk.getItem() instanceof DiskItem)) return false;
         var errors = DiskItem.getErrors(disk);
         var warnings = DiskItem.getWarnings(disk);

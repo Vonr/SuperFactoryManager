@@ -1,8 +1,10 @@
 package ca.teamdman.sfm.common.blockentity;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiPacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
@@ -38,10 +40,14 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     private int unprocessedRedstonePulses = 0; // used by redstone trigger
     private boolean shouldRebuildProgram = false;
     private int tickIndex = 0;
+    public final TranslatableLogger logger;
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
+        String loggerName = SFM.MOD_ID + ":manager@" + blockPos.toShortString();
+        logger = new TranslatableLogger(loggerName);
     }
+
 
     public static void serverTick(
             @SuppressWarnings("unused") Level level,
@@ -62,6 +68,8 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 tile.tickTimeNanos[tile.tickIndex] = (int) nanoTimePassed;
                 tile.tickIndex = (tile.tickIndex + 1) % tile.tickTimeNanos.length;
                 tile.sendUpdatePacket();
+                tile.logger.trace(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_NS.get(nanoTimePassed)));
+                tile.logger.dump(tile::getDisk);
             }
         }
     }
@@ -133,7 +141,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void rebuildProgramAndUpdateDisk() {
         if (level != null && level.isClientSide()) return;
         this.program = getDisk()
-                .flatMap(itemStack -> DiskItem.updateDetails(itemStack, this))
+                .flatMap(itemStack -> DiskItem.compileAndUpdateAttributes(itemStack, this))
                 .orElse(null);
         sendUpdatePacket();
     }

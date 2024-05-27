@@ -20,6 +20,10 @@ public class Constants {
                 "gui.sfm.text_editor.title",
                 "Text Editor"
         );
+        public static final LocalizationEntry LOGS_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.logs.title",
+                "Logs"
+        );
         public static final LocalizationEntry PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.text_editor.done_button.tooltip",
                 "Shift+Enter to submit"
@@ -302,6 +306,60 @@ public class Constants {
                 "program.sfm.error.literal",
                 "%s"
         );
+
+        public static final LocalizationEntry PROGRAM_COMPILE_FAILED_WITH_ERRORS = new LocalizationEntry(
+                "program.sfm.error.compile_failed_with_errors",
+                "Failed to compile with %d errors."
+        );
+        public static final LocalizationEntry PROGRAM_COMPILE_SUCCEEDED_WITH_WARNINGS = new LocalizationEntry(
+                "program.sfm.error.compile_success_with_warnings",
+                "Successfully compiled \"%s\"with %d warnings."
+        );
+        public static final LocalizationEntry PROGRAM_COMPILE_FROM_DISK_BEGIN = new LocalizationEntry(
+                "program.sfm.compile_begin",
+                "Compiling program from disk."
+        );
+
+        public static final LocalizationEntry PROGRAM_TICK_TIME_NS = new LocalizationEntry(
+                "program.sfm.tick.time",
+                "Program tick took %d ns"
+        );
+
+        public static final LocalizationEntry PROGRAM_TICK_STATEMENT_TIME_NS = new LocalizationEntry(
+                "program.sfm.tick.time_taken.statement",
+                "Program statement tick took %d ns:\n```\n%s\n```\n"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_TRIGGER_TIME_NS = new LocalizationEntry(
+                "program.sfm.tick.time_taken.trigger",
+                "Program trigger tick took %d ns:\n```\n%s\n```\n"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_INPUT_STATEMENT = new LocalizationEntry(
+                "program.sfm.tick.statement.input",
+                "INPUT FROM %s"
+        );
+
+        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT = new LocalizationEntry(
+                "program.sfm.tick.statement.output",
+                "INPUT FROM %s"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_FORGET_STATEMENT = new LocalizationEntry(
+                "program.sfm.tick.statement.forget",
+                "FORGET %s"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_IF_STATEMENT_WAS_TRUE = new LocalizationEntry(
+                "program.sfm.tick.statement.if.true",
+                "TRUE: %s"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_IF_STATEMENT_WAS_FALSE = new LocalizationEntry(
+                "program.sfm.tick.statement.if.false",
+                "FALSE: %s"
+        );
+
+        public static final LocalizationEntry PROGRAM_TICK_WITH_REDSTONE_COUNT = new LocalizationEntry(
+                "program.sfm.tick.redstone_count",
+                "Program ticking with %d unprocessed redstone pulses."
+        );
+
         public static final LocalizationEntry PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE = new LocalizationEntry(
                 "program.sfm.error.malformed_resource_type",
                 "Program has a malformed resource type \"%s\".\nReminder: Resource types must be literals, not wildcards."
@@ -373,6 +431,18 @@ public class Constants {
         public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON = new LocalizationEntry(
                 "gui.sfm.manager.button.view_examples",
                 "View examples"
+        );
+        public static final LocalizationEntry MANAGER_GUI_VIEW_LOGS_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.button.view_logs",
+                "View logs"
+        );
+        public static final LocalizationEntry LOGS_GUI_SET_LOG_LEVEL_BUTTON_PACKET_RECEIVED = new LocalizationEntry(
+                "gui.sfm.logs.button.set_log_level.packet_received",
+                "Log level updated to %s"
+        );
+        public static final LocalizationEntry LOGS_GUI_NO_CONTENT = new LocalizationEntry(
+                "gui.sfm.logs.no_content",
+                "No logs have been captured.\nChange the filters at the top of this screen."
         );
         public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.button.view_examples.tooltip",

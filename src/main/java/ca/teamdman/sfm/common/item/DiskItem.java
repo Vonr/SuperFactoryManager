@@ -31,6 +31,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -55,43 +56,63 @@ public class DiskItem extends Item {
 
     }
 
+    public static String getLogs(ItemStack stack) {
+        return stack
+                .getOrCreateTag()
+                .getString("sfm:logs");
+    }
 
-    public static Optional<Program> updateDetails(ItemStack stack, @Nullable ManagerBlockEntity manager) {
-        //TODO: give this a name that implies the program is getting compiled
+    public static void setLogs(ItemStack stack, String logs) {
+        stack
+                .getOrCreateTag()
+                .putString("sfm:logs", logs.replaceAll("\r", ""));
+    }
+
+    public static Optional<Program> compileAndUpdateAttributes(ItemStack stack, @Nullable ManagerBlockEntity manager) {
+        if (manager != null) {
+            manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FROM_DISK_BEGIN.get()));
+        }
         AtomicReference<Program> rtn = new AtomicReference<>(null);
         Program.compile(
                 getProgram(stack),
                 (successProgram, builder) -> {
+                    ArrayList<TranslatableContents> warnings = successProgram.gatherWarnings(stack, manager);
+                    List<TranslatableContents> errors = Collections.emptyList();
+
+                    // Log to disk
+                    if (manager != null) {
+                        manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_SUCCEEDED_WITH_WARNINGS.get(
+                                successProgram.name(),
+                                warnings.size()
+                        )));
+                        manager.logger.warn(warnings::forEach);
+                    }
+
+                    // Update disk properties
                     setProgramName(stack, successProgram.name());
-                    setWarnings(stack, successProgram.gatherWarnings(stack, manager));
-                    setErrors(stack, Collections.emptyList());
+                    setWarnings(stack, warnings);
+                    setErrors(stack, errors);
+
+                    // Track result
                     rtn.set(successProgram);
                 },
-                failure -> {
-                    setWarnings(stack, Collections.emptyList());
-                    setErrors(stack, failure);
+                errors -> {
+                    List<TranslatableContents> warnings = Collections.emptyList();
+
+                    // Log to disk
+                    if (manager != null) {
+                        manager.logger.error(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FAILED_WITH_ERRORS.get(
+                                errors.size())));
+                        manager.logger.error(errors::forEach);
+                    }
+
+                    // Update disk properties
+                    setWarnings(stack, warnings);
+                    setErrors(stack, errors);
                 }
         );
         return Optional.ofNullable(rtn.get());
     }
-
-
-    @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        var stack = pPlayer.getItemInHand(pUsedHand);
-        if (pLevel.isClientSide) {
-            ClientStuff.showProgramEditScreen(
-                    stack,
-                    programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
-                            programString,
-                            pUsedHand
-                    ))
-            );
-        }
-        return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
-    }
-
-
 
     public static List<TranslatableContents> getErrors(ItemStack stack) {
         return stack
@@ -114,7 +135,6 @@ public class DiskItem extends Item {
                                 .collect(ListTag::new, ListTag::add, ListTag::addAll)
                 );
     }
-
 
     public static List<TranslatableContents> getWarnings(ItemStack stack) {
         return stack
@@ -139,19 +159,6 @@ public class DiskItem extends Item {
                 );
     }
 
-
-
-
-    @Override
-    public Component getName(ItemStack stack) {
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            if (ClientStuff.isMoreInfoKeyDown()) return super.getName(stack);
-        }
-        var name = getProgramName(stack);
-        if (name.isEmpty()) return super.getName(stack);
-        return Component.literal(name).withStyle(ChatFormatting.AQUA);
-    }
-
     public static String getProgramName(ItemStack stack) {
         return stack
                 .getOrCreateTag()
@@ -166,7 +173,30 @@ public class DiskItem extends Item {
         }
     }
 
+    @Override
+    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+        var stack = pPlayer.getItemInHand(pUsedHand);
+        if (pLevel.isClientSide) {
+            ClientStuff.showProgramEditScreen(
+                    stack,
+                    programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
+                            programString,
+                            pUsedHand
+                    ))
+            );
+        }
+        return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
+    }
 
+    @Override
+    public Component getName(ItemStack stack) {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            if (ClientStuff.isMoreInfoKeyDown()) return super.getName(stack);
+        }
+        var name = getProgramName(stack);
+        if (name.isEmpty()) return super.getName(stack);
+        return Component.literal(name).withStyle(ChatFormatting.AQUA);
+    }
 
     @Override
     public void appendHoverText(

@@ -2,6 +2,7 @@ package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.screen.LabelGunScreen;
+import ca.teamdman.sfm.client.gui.screen.LogsScreen;
 import ca.teamdman.sfm.client.gui.screen.ProgramEditScreen;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
@@ -13,6 +14,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -94,5 +96,19 @@ public class ClientStuff {
         if (hr.getType() != HitResult.Type.BLOCK) return null;
         var pos = ((BlockHitResult) hr).getBlockPos();
         return level.getBlockEntity(pos);
+    }
+
+    public static void showLogsScreen(ManagerContainerMenu menu) {
+        LogsScreen screen = new LogsScreen(menu);
+        if (Minecraft.getInstance().screen == null) {
+            Minecraft
+                    .getInstance()
+                    .setScreen(screen);
+        } else {
+            Minecraft
+                    .getInstance()
+                    .pushGuiLayer(screen);
+        }
+        screen.scrollToTop();
     }
 }

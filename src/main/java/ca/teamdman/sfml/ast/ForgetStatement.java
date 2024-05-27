@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.ProgramContext;
 
 import java.util.List;
@@ -30,6 +31,9 @@ public record ForgetStatement(
                 .toList();
         context.getInputs().clear();
         context.getInputs().addAll(newInputs);
+        context.getManager().logger.debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_FORGET_STATEMENT.get(
+                labels.stream().map(Objects::toString).collect(Collectors.joining(", "))
+        )));
     }
 
     @Override
