@@ -304,6 +304,10 @@ dependencies {
     // https://www.curseforge.com/minecraft/mc-mods/tool-kit/files/3933949
     runtimeOnly fg.deobf("curse.maven:tool-kit-324888:3933949")
 
+    runtimeOnly fg.deobf("curse.maven:ftb-library-404465:4661834") // ftb-library-forge-1902.4.1-build.236.jar
+    runtimeOnly fg.deobf("curse.maven:architectury-api-419699:5137942") // [Forge 1.19.2] v6.6.92
+
+
 
     gametestImplementation fg.deobf("com.teamcofh:cofh_core:1.19.2-10.2.0.+")
     runtimeOnly fg.deobf("com.teamcofh:cofh_core:1.19.2-10.2.0.+")
