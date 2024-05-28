@@ -56,18 +56,6 @@ public class DiskItem extends Item {
 
     }
 
-    public static String getLogs(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getString("sfm:logs");
-    }
-
-    public static void setLogs(ItemStack stack, String logs) {
-        stack
-                .getOrCreateTag()
-                .putString("sfm:logs", logs.replaceAll("\r", ""));
-    }
-
     public static Optional<Program> compileAndUpdateAttributes(ItemStack stack, @Nullable ManagerBlockEntity manager) {
         if (manager != null) {
             manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FROM_DISK_BEGIN.get()));

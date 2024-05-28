@@ -44,6 +44,11 @@ public class ProgramEditScreen extends Screen {
         this.CALLBACK = callback;
     }
 
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
     public static MutableComponent substring(MutableComponent component, int start, int end) {
         var rtn = Component.empty();
         AtomicInteger seen = new AtomicInteger(0);

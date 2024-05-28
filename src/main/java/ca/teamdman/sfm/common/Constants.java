@@ -265,7 +265,6 @@ public class Constants {
                 "container.sfm.manager",
                 "Factory Manager"
         );
-
         public static final LocalizationEntry PROGRAM_WARNING_UNUSED_LABEL = new LocalizationEntry(
                 "program.sfm.warnings.unused_label",
                 "Label \"%s\" is used in code but not assigned in the world."
@@ -313,7 +312,7 @@ public class Constants {
         );
         public static final LocalizationEntry PROGRAM_COMPILE_SUCCEEDED_WITH_WARNINGS = new LocalizationEntry(
                 "program.sfm.error.compile_success_with_warnings",
-                "Successfully compiled \"%s\"with %d warnings."
+                "Successfully compiled \"%s\" with %d warnings."
         );
         public static final LocalizationEntry PROGRAM_COMPILE_FROM_DISK_BEGIN = new LocalizationEntry(
                 "program.sfm.compile_begin",

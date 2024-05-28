@@ -48,28 +48,26 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         logger = new TranslatableLogger(loggerName);
     }
 
-
     public static void serverTick(
             @SuppressWarnings("unused") Level level,
             @SuppressWarnings("unused") BlockPos pos,
             @SuppressWarnings("unused") BlockState state,
-            ManagerBlockEntity tile
+            ManagerBlockEntity manager
     ) {
         long start = System.nanoTime();
-        tile.tick++;
-        if (tile.shouldRebuildProgram) {
-            tile.rebuildProgramAndUpdateDisk();
-            tile.shouldRebuildProgram = false;
+        manager.tick++;
+        if (manager.shouldRebuildProgram) {
+            manager.rebuildProgramAndUpdateDisk();
+            manager.shouldRebuildProgram = false;
         }
-        if (tile.program != null) {
-            boolean didSomething = tile.program.tick(tile);
+        if (manager.program != null) {
+            boolean didSomething = manager.program.tick(manager);
             if (didSomething) {
                 long nanoTimePassed = Long.min(System.nanoTime() - start, Integer.MAX_VALUE);
-                tile.tickTimeNanos[tile.tickIndex] = (int) nanoTimePassed;
-                tile.tickIndex = (tile.tickIndex + 1) % tile.tickTimeNanos.length;
-                tile.sendUpdatePacket();
-                tile.logger.trace(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_NS.get(nanoTimePassed)));
-                tile.logger.dump(tile::getDisk);
+                manager.tickTimeNanos[manager.tickIndex] = (int) nanoTimePassed;
+                manager.tickIndex = (manager.tickIndex + 1) % manager.tickTimeNanos.length;
+                manager.sendUpdatePacket();
+                manager.logger.trace(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_NS.get(nanoTimePassed)));
             }
         }
     }

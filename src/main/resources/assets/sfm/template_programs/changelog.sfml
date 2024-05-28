@@ -1,9 +1,14 @@
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
+-- I am aware that managers sometimes stop working.
+-- If you can reproduce this problem, join the Discord and let me know how.
+
 ---- next ----
--- fix missing dash in changelog
+-- add logging for individual managers
 -- make FORGET keyword blue
+-- program edit screen no longer pauses the game in single player
+-- fix missing dash in changelog
 -- Add git tag action to release process documentation
 -- Add GitHub release to release process documentation
 

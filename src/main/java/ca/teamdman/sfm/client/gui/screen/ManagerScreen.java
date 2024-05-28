@@ -26,8 +26,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.versions.forge.ForgeVersion;
+import org.apache.logging.log4j.Level;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
@@ -59,6 +59,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton logsButton;
 
+    public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
+        super(menu, inv, title);
+    }
+
     public List<ExtendedButton> getButtonsForJEIExclusionZones() {
         return List.of(
                 clipboardPasteButton,
@@ -67,10 +71,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 examplesButton,
                 clipboardCopyButton
         );
-    }
-
-    public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title);
     }
 
     public boolean isReadOnly() {
@@ -193,6 +193,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         this::sendProgram
                 )));
     }
+
     private void onShowLogs() {
         ClientStuff.showLogsScreen(menu);
     }
@@ -346,6 +347,26 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 20,
                 0
         );
+
+        // draw log level
+        if (!menu.logLevel.equals(Level.OFF.name())) {
+            poseStack.pushPose();
+            poseStack.translate(
+                    titleLabelX,
+                    font.lineHeight * 1.5,
+                    0f
+            );
+            poseStack.scale(0.5f,0.5f,1f);
+            this.font.draw(
+                    poseStack,
+                    Component
+                            .literal(menu.logLevel),
+                    0f,
+                    0f,
+                    0
+            );
+            poseStack.popPose();
+        }
 
         // draw status string
         if (statusCountdown > 0) {
@@ -516,9 +537,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     @Override
     protected void renderBg(PoseStack matrixStack, float partialTicks, int mx, int my) {
-        //        Lighting.setupForFlatItems();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        if (!menu.logLevel.equals(Level.OFF.name())) {
+            RenderSystem.setShaderColor(0.2f, 0.8f, 1f, 1f);
+        } else {
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        }
         RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE_LOCATION);
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;

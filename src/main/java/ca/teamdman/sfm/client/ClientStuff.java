@@ -14,7 +14,9 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -109,6 +111,10 @@ public class ClientStuff {
                     .getInstance()
                     .pushGuiLayer(screen);
         }
-        screen.scrollToTop();
+        screen.scrollToBottom();
+    }
+
+    public static String resolveTranslation(TranslatableContents contents) {
+        return I18n.get(contents.getKey(), contents.getArgs());
     }
 }

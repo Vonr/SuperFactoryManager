@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.logging;
 
 import ca.teamdman.sfm.SFM;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
@@ -10,19 +11,16 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.apache.logging.log4j.core.time.MutableInstant;
 import org.apache.logging.log4j.message.Message;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
 @Plugin(name = "TranslatableAppender", category = "Core", elementType = Appender.ELEMENT_TYPE, printObject = true)
 public class TranslatableAppender extends AbstractAppender {
-
-    public final List<TranslatableContents> contents;
+    public final List<TranslatableLogEvent> contents;
 
     protected TranslatableAppender(String name, Layout<? extends Serializable> layout) {
         super(name, null, layout, true, null);
@@ -37,10 +35,20 @@ public class TranslatableAppender extends AbstractAppender {
 
     @Override
     public void append(LogEvent event) {
+        // clone since the event is mutable
+        var instant = new MutableInstant();
+        instant.initFrom(event.getInstant());
+
+        Level level = event.getLevel();
+
         Message message = event.getMessage();
-        String key = message.getFormat();
-        Object[] parameters = message.getParameters();
-        contents.add(new TranslatableContents(key, parameters));
-        SFM.LOGGER.debug("Appended log event to {}", System.identityHashCode(this));
+        TranslatableContents content = new TranslatableContents(message.getFormat(), message.getParameters());
+
+        contents.add(new TranslatableLogEvent(
+                level,
+                instant,
+                content
+        ));
+//        SFM.LOGGER.debug("Appended log event to {}", System.identityHashCode(this));
     }
 }

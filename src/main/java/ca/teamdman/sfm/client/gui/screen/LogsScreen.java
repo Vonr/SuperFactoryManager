@@ -1,14 +1,15 @@
 package ca.teamdman.sfm.client.gui.screen;
 
+import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
-import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
+import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
 import ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
@@ -17,27 +18,23 @@ import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.Level;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.MANAGER_GUI_STATUS_LOADED_CLIPBOARD;
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
 public class LogsScreen extends Screen {
     private final ManagerContainerMenu MENU;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private MyMultiLineEditBox textarea;
-    private String lastContent = "";
-    private List<MutableComponent> lastContentWithSyntaxHighlighting = Collections.emptyList();
+    private List<MutableComponent> content = Collections.emptyList();
 
 
     public LogsScreen(ManagerContainerMenu menu) {
@@ -45,7 +42,10 @@ public class LogsScreen extends Screen {
         this.MENU = menu;
     }
 
-
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
 
     private void sendSetLogLevel(String logLevel) {
         SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerSetLogLevelPacket(
@@ -56,66 +56,94 @@ public class LogsScreen extends Screen {
         MENU.logLevel = logLevel;
     }
 
-    public static MutableComponent substring(MutableComponent component, int start, int end) {
-        var rtn = Component.empty();
-        AtomicInteger seen = new AtomicInteger(0);
-        component.visit((style, content) -> {
-            int contentStart = Math.max(start - seen.get(), 0);
-            int contentEnd = Math.min(end - seen.get(), content.length());
-
-            if (contentStart < contentEnd) {
-                rtn.append(Component.literal(content.substring(contentStart, contentEnd)).withStyle(style));
-            }
-            seen.addAndGet(content.length());
-            return Optional.empty();
-        }, Style.EMPTY);
-        return rtn;
-    }
-
     @Override
     protected void init() {
         super.init();
         assert this.minecraft != null;
         this.textarea = this.addRenderableWidget(new MyMultiLineEditBox());
 
-        String content = DiskItem.getLogs(MENU.getDisk());
-        if (content.isBlank()) {
-            content = Constants.LocalizationKeys.LOGS_GUI_NO_CONTENT.getString();
+
+        List<MutableComponent> list = new ArrayList<>();
+        for (TranslatableLogEvent log : MENU.logs) {
+            int seconds = (int) (System.currentTimeMillis() - log.instant().getEpochMillisecond()) / 1000;
+            int minutes = seconds / 60;
+            seconds = seconds % 60;
+            var ago = Component.literal(minutes + "m" + seconds + "s ago").withStyle(ChatFormatting.GRAY);
+
+            var level = Component.literal(" [" + log.level() + "] ");
+            if (log.level() == Level.ERROR) {
+                level = level.withStyle(ChatFormatting.RED);
+            } else if (log.level() == Level.WARN) {
+                level = level.withStyle(ChatFormatting.YELLOW);
+            } else if (log.level() == Level.INFO) {
+                level = level.withStyle(ChatFormatting.GREEN);
+            } else if (log.level() == Level.DEBUG) {
+                level = level.withStyle(ChatFormatting.AQUA);
+            } else if (log.level() == Level.TRACE) {
+                level = level.withStyle(ChatFormatting.DARK_GRAY);
+            }
+
+//            var message = MutableComponent.create(log.contents());
+//
+//            MutableComponent apply = ago.append(level).append(message);
+//            list.add(apply);
+
+
+//            var message = MutableComponent.create(log.contents());
+            String[] lines = ClientStuff.resolveTranslation(log.contents()).split("\n", -1);
+
+            for (int i = 0; i < lines.length; i++) {
+                MutableComponent lineComponent;
+                if (i == 0) {
+                    lineComponent = ago.append(level).append(Component.literal(lines[i]).withStyle(ChatFormatting.WHITE));
+                } else {
+                    lineComponent = Component.literal(lines[i]).withStyle(ChatFormatting.WHITE);
+                }
+                list.add(lineComponent);
+            }
         }
-        textarea.setValue(content);
+        content = list;
+
+        if (content.isEmpty()) {
+            content = Collections.singletonList(Constants.LocalizationKeys.LOGS_GUI_NO_CONTENT.getComponent());
+        }
+
+        // update textarea with plain string contents so select and copy works
+        StringBuilder sb = new StringBuilder();
+        for (var line : content) {
+            sb.append(line.getString()).append("\n");
+        }
+        textarea.setValue(sb.toString());
 
         this.setInitialFocus(textarea);
 
 
-
+        var buttons = new Level[]{
+                Level.OFF,
+                Level.TRACE,
+                Level.DEBUG,
+                Level.INFO,
+                Level.WARN,
+                Level.ERROR
+        };
         int buttonWidth = 60;
         int buttonHeight = 20;
         int spacing = 5;
-        int startX = (this.width - (buttonWidth * 5 + spacing * 4)) / 2;
+        int startX = (this.width - (buttonWidth * buttons.length + spacing * 4)) / 2;
         int startY = this.height / 2 - 115;
+        int buttonIndex = 0;
 
-        this.addRenderableWidget(new Button(
-                startX, startY, buttonWidth, buttonHeight,
-                Component.literal("TRACE"), button -> sendSetLogLevel(Level.TRACE.name())
-        ));
-        //noinspection PointlessArithmeticExpression
-        this.addRenderableWidget(new Button(
-                startX + (buttonWidth + spacing) * 1, startY, buttonWidth, buttonHeight,
-                Component.literal("DEBUG"), button -> sendSetLogLevel(Level.DEBUG.name())
-        ));
-        this.addRenderableWidget(new Button(
-                startX + (buttonWidth + spacing) * 2, startY, buttonWidth, buttonHeight,
-                Component.literal("INFO"), button -> sendSetLogLevel(Level.INFO.name())
-        ));
-        this.addRenderableWidget(new Button(
-                startX + (buttonWidth + spacing) * 3, startY, buttonWidth, buttonHeight,
-                Component.literal("WARN"), button -> sendSetLogLevel(Level.WARN.name())
-        ));
-        this.addRenderableWidget(new Button(
-                startX + (buttonWidth + spacing) * 4, startY, buttonWidth, buttonHeight,
-                Component.literal("ERROR"), button -> sendSetLogLevel(Level.ERROR.name())
-        ));
-
+        for (var level : buttons) {
+            this.addRenderableWidget(new Button(
+                    startX + (buttonWidth + spacing) * buttonIndex,
+                    startY,
+                    buttonWidth,
+                    buttonHeight,
+                    Component.literal(level.name()),
+                    button -> sendSetLogLevel(level.name())
+            ));
+            buttonIndex++;
+        }
 
         this.addRenderableWidget(new Button(
                 this.width / 2 - 2 - 150,
@@ -148,6 +176,10 @@ public class LogsScreen extends Screen {
 
     public void scrollToTop() {
         textarea.setScrollAmount(0d);
+    }
+
+    public void scrollToBottom() {
+        textarea.setScrollAmount(Double.MAX_VALUE);
     }
 
     @Override
@@ -203,18 +235,10 @@ public class LogsScreen extends Screen {
             this.textField.selectCursor = cursor;
         }
 
-        private void rebuild() {
-            lastContent = this.textField.value();
-            lastContentWithSyntaxHighlighting = lastContent.lines().map(Component::literal).toList();
-        }
-
         @Override
         protected void renderContents(PoseStack poseStack, int mx, int my, float partialTicks) {
             Matrix4f matrix4f = poseStack.last().pose();
-            if (!lastContent.equals(this.textField.value())) {
-                rebuild();
-            }
-            List<MutableComponent> lines = lastContentWithSyntaxHighlighting;
+            List<MutableComponent> lines = content;
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
@@ -242,7 +266,7 @@ public class LogsScreen extends Screen {
                     // we draw the raw before coloured in case of token recognition errors
                     // draw before cursor
                     cursorX = this.font.drawInBatch(
-                            substring(componentColoured, 0, cursorIndex - charCount),
+                            ProgramEditScreen.substring(componentColoured, 0, cursorIndex - charCount),
                             lineX,
                             lineY,
                             -1,
@@ -254,7 +278,7 @@ public class LogsScreen extends Screen {
                             LightTexture.FULL_BRIGHT
                     ) - 1;
                     this.font.drawInBatch(
-                            substring(componentColoured, cursorIndex - charCount, lineLength),
+                            ProgramEditScreen.substring(componentColoured, cursorIndex - charCount, lineLength),
                             cursorX,
                             lineY,
                             -1,
@@ -286,8 +310,16 @@ public class LogsScreen extends Screen {
                     int lineSelectionStart = Math.max(selectionStart - charCount, 0);
                     int lineSelectionEnd = Math.min(selectionEnd - charCount, lineLength);
 
-                    int highlightStartX = this.font.width(substring(componentColoured, 0, lineSelectionStart));
-                    int highlightEndX = this.font.width(substring(componentColoured, 0, lineSelectionEnd));
+                    int highlightStartX = this.font.width(ProgramEditScreen.substring(
+                            componentColoured,
+                            0,
+                            lineSelectionStart
+                    ));
+                    int highlightEndX = this.font.width(ProgramEditScreen.substring(
+                            componentColoured,
+                            0,
+                            lineSelectionEnd
+                    ));
 
                     this.renderHighlight(
                             poseStack,
