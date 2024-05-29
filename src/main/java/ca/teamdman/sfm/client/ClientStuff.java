@@ -8,14 +8,15 @@ import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.net.ClientboundManagerGuiPacket;
+import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
+import ca.teamdman.sfm.common.logging.TranslatableLogger;
+import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -29,6 +30,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -78,7 +80,7 @@ public class ClientStuff {
         );
     }
 
-    public static void updateMenu(ClientboundManagerGuiPacket msg) {
+    public static void updateMenu(ClientboundManagerGuiUpdatePacket msg) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
         var container = player.containerMenu;
@@ -86,6 +88,16 @@ public class ClientStuff {
             menu.tickTimeNanos = msg.tickTimes();
             menu.state = msg.state();
             menu.program = msg.program();
+
+            if (menu.logs.isEmpty()) {
+                menu.logs = msg.logs();
+            } else {
+                var newest = menu.logs.get(menu.logs.size() - 1).instant();
+                List<TranslatableLogEvent> toAdd = msg.logs().stream()
+                        .filter(x -> TranslatableLogger.comesAfter(x.instant(), newest))
+                        .toList();
+                menu.logs.addAll(toAdd);
+            }
         }
     }
 

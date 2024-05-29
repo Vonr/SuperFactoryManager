@@ -69,10 +69,10 @@ public class SFMPackets {
         );
         MANAGER_CHANNEL.registerMessage(
                 3,
-                ClientboundManagerGuiPacket.class,
-                ClientboundManagerGuiPacket::encode,
-                ClientboundManagerGuiPacket::decode,
-                ClientboundManagerGuiPacket::handle
+                ClientboundManagerGuiUpdatePacket.class,
+                ClientboundManagerGuiUpdatePacket::encode,
+                ClientboundManagerGuiUpdatePacket::decode,
+                ClientboundManagerGuiUpdatePacket::handle
         );
         MANAGER_CHANNEL.registerMessage(
                 4,

@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
-import ca.teamdman.sfm.common.net.ClientboundManagerGuiPacket;
+import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.OpenContainerTracker;
@@ -33,6 +33,7 @@ import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int TICK_TIME_HISTORY_SIZE = 20;
+    public final TranslatableLogger logger;
     private final NonNullList<ItemStack> ITEMS = NonNullList.withSize(1, ItemStack.EMPTY);
     private final long[] tickTimeNanos = new long[TICK_TIME_HISTORY_SIZE];
     private @Nullable Program program = null;
@@ -40,7 +41,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     private int unprocessedRedstonePulses = 0; // used by redstone trigger
     private boolean shouldRebuildProgram = false;
     private int tickIndex = 0;
-    public final TranslatableLogger logger;
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
@@ -67,22 +67,27 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 manager.tickTimeNanos[manager.tickIndex] = (int) nanoTimePassed;
                 manager.tickIndex = (manager.tickIndex + 1) % manager.tickTimeNanos.length;
                 manager.sendUpdatePacket();
-                manager.logger.trace(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_NS.get(nanoTimePassed)));
+                manager.logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_NS.get(nanoTimePassed)));
+                manager.logger.pruneSoWeDontEatAllTheRam();
             }
         }
     }
 
     private void sendUpdatePacket() {
+        // Create one packet and clone it for each receiver
+        var packet = new ClientboundManagerGuiUpdatePacket(
+                -1,
+                getProgramString().orElse(""),
+                getState(),
+                getTickTimeNanos(),
+                logger.getLatestLogs()
+        );
+
         OpenContainerTracker.getPlayersWithOpenContainer(ManagerContainerMenu.class)
                 .filter(entry -> entry.getValue().MANAGER_POSITION.equals(getBlockPos()))
                 .forEach(entry -> SFMPackets.MANAGER_CHANNEL.send(
                         PacketDistributor.PLAYER.with(entry::getKey),
-                        new ClientboundManagerGuiPacket(
-                                entry.getValue().containerId,
-                                getProgramString().orElse(""),
-                                getState(),
-                                getTickTimeNanos()
-                        )
+                        packet.cloneWithWindowId(entry.getValue().containerId)
                 ));
     }
 

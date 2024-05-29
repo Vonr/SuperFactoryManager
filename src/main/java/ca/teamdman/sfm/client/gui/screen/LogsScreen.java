@@ -26,7 +26,6 @@ import org.apache.logging.log4j.Level;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
@@ -56,13 +55,11 @@ public class LogsScreen extends Screen {
         MENU.logLevel = logLevel;
     }
 
-    @Override
-    protected void init() {
-        super.init();
-        assert this.minecraft != null;
-        this.textarea = this.addRenderableWidget(new MyMultiLineEditBox());
+    private boolean shouldRebuildText() {
+        return MENU.logs.size() != content.size();
+    }
 
-
+    private void rebuildText() {
         List<MutableComponent> list = new ArrayList<>();
         for (TranslatableLogEvent log : MENU.logs) {
             int seconds = (int) (System.currentTimeMillis() - log.instant().getEpochMillisecond()) / 1000;
@@ -95,7 +92,9 @@ public class LogsScreen extends Screen {
             for (int i = 0; i < lines.length; i++) {
                 MutableComponent lineComponent;
                 if (i == 0) {
-                    lineComponent = ago.append(level).append(Component.literal(lines[i]).withStyle(ChatFormatting.WHITE));
+                    lineComponent = ago
+                            .append(level)
+                            .append(Component.literal(lines[i]).withStyle(ChatFormatting.WHITE));
                 } else {
                     lineComponent = Component.literal(lines[i]).withStyle(ChatFormatting.WHITE);
                 }
@@ -114,6 +113,15 @@ public class LogsScreen extends Screen {
             sb.append(line.getString()).append("\n");
         }
         textarea.setValue(sb.toString());
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        assert this.minecraft != null;
+        this.textarea = this.addRenderableWidget(new MyMultiLineEditBox());
+
+        rebuildText();
 
         this.setInitialFocus(textarea);
 
@@ -238,7 +246,9 @@ public class LogsScreen extends Screen {
         @Override
         protected void renderContents(PoseStack poseStack, int mx, int my, float partialTicks) {
             Matrix4f matrix4f = poseStack.last().pose();
-            List<MutableComponent> lines = content;
+            if (shouldRebuildText()) {
+                rebuildText();
+            }
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
@@ -251,8 +261,8 @@ public class LogsScreen extends Screen {
             int selectionStart = selectedRange.beginIndex();
             int selectionEnd = selectedRange.endIndex();
 
-            for (int line = 0; line < lines.size(); ++line) {
-                var componentColoured = lines.get(line);
+            for (int line = 0; line < content.size(); ++line) {
+                var componentColoured = content.get(line);
                 int lineLength = componentColoured.getString().length();
                 int lineHeight = this.font.lineHeight + (line == 0 ? 2 : 0);
                 boolean cursorOnThisLine = isCursorVisible
