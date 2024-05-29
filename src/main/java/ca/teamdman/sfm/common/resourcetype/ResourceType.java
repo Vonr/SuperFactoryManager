@@ -87,7 +87,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                 .map(pair -> {
                     BlockPos pos = pair.getFirst();
                     Direction dir = pair.getSecond();
-                    return network.getCapability(CAPABILITY_KIND, pos, dir);
+                    return network.getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger());
                 });
 
         // Unwrap

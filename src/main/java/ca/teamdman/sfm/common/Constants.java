@@ -443,6 +443,18 @@ public class Constants {
                 "gui.sfm.logs.no_content",
                 "No logs have been captured.\nChange the filters at the top of this screen."
         );
+        public static final LocalizationEntry LOGS_MISSING_ADJACENT_CABLE = new LocalizationEntry(
+                "gui.sfm.logs.missing_adjacent_cable",
+                "No adjacent cable found for %s"
+        );
+        public static final LocalizationEntry LOGS_MISSING_CAPABILITY_PROVIDER = new LocalizationEntry(
+                "gui.sfm.logs.missing_capability_provider",
+                "No capability provider found for %s"
+        );
+        public static final LocalizationEntry LOGS_EMPTY_CAPABILITY = new LocalizationEntry(
+                "gui.sfm.logs.empty_capability",
+                "Received an empty capability %s"
+        );
         public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.button.view_examples.tooltip",
                 "Press Ctrl+Shift+E to view examples."

@@ -29,6 +29,8 @@ import java.util.List;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
+// todo: checkbox for auto-scrolling
+// todo: clear button
 public class LogsScreen extends Screen {
     private final ManagerContainerMenu MENU;
     @SuppressWarnings("NotNullFieldNotInitialized")
