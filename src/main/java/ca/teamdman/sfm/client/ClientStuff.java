@@ -97,6 +97,10 @@ public class ClientStuff {
                         .filter(x -> TranslatableLogger.comesAfter(x.instant(), newest))
                         .toList();
                 menu.logs.addAll(toAdd);
+                // truncate to 256 entries
+                if (menu.logs.size() > 256) {
+                    menu.logs.subList(0, menu.logs.size() - 256).clear();
+                }
             }
         }
     }
