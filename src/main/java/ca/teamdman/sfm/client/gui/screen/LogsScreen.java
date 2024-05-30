@@ -36,6 +36,7 @@ public class LogsScreen extends Screen {
     @SuppressWarnings("NotNullFieldNotInitialized")
     private MyMultiLineEditBox textarea;
     private List<MutableComponent> content = Collections.emptyList();
+    private int lastSize = 0;
 
 
     public LogsScreen(ManagerContainerMenu menu) {
@@ -59,6 +60,8 @@ public class LogsScreen extends Screen {
 
     private boolean shouldRebuildText() {
         return MENU.logs.size() != content.size();
+        return MENU.logs.size() != lastSize;
+//        return false;
     }
 
     private void rebuildText() {
@@ -115,6 +118,7 @@ public class LogsScreen extends Screen {
             sb.append(line.getString()).append("\n");
         }
         textarea.setValue(sb.toString());
+        lastSize = MENU.logs.size();
     }
 
     @Override
@@ -182,10 +186,6 @@ public class LogsScreen extends Screen {
     public void onClosePerformCallback() {
         assert this.minecraft != null;
         this.minecraft.popGuiLayer();
-    }
-
-    public void scrollToTop() {
-        textarea.setScrollAmount(0d);
     }
 
     public void scrollToBottom() {
