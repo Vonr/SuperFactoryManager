@@ -319,18 +319,18 @@ public class Constants {
                 "Compiling program from disk."
         );
 
-        public static final LocalizationEntry PROGRAM_TICK_TIME_NS = new LocalizationEntry(
+        public static final LocalizationEntry PROGRAM_TICK_TIME_MS = new LocalizationEntry(
                 "program.sfm.tick.time",
-                "Program tick took %d ns"
+                "Program tick took %.2f ns"
         );
 
-        public static final LocalizationEntry PROGRAM_TICK_STATEMENT_TIME_NS = new LocalizationEntry(
+        public static final LocalizationEntry PROGRAM_TICK_STATEMENT_TIME_MS = new LocalizationEntry(
                 "program.sfm.tick.time_taken.statement",
-                "Program statement tick took %d ns:\n```\n%s\n```\n"
+                "Program statement tick took %.2f ms:\n```\n%s\n```\n"
         );
-        public static final LocalizationEntry PROGRAM_TICK_TRIGGER_TIME_NS = new LocalizationEntry(
+        public static final LocalizationEntry PROGRAM_TICK_TRIGGER_TIME_MS = new LocalizationEntry(
                 "program.sfm.tick.time_taken.trigger",
-                "Program trigger tick took %d ns:\n```\n%s\n```\n"
+                "Program trigger tick took %.2f ms:\n```\n%s\n```\n"
         );
         public static final LocalizationEntry PROGRAM_TICK_INPUT_STATEMENT = new LocalizationEntry(
                 "program.sfm.tick.statement.input",

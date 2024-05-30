@@ -67,7 +67,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 manager.tickTimeNanos[manager.tickIndex] = (int) nanoTimePassed;
                 manager.tickIndex = (manager.tickIndex + 1) % manager.tickTimeNanos.length;
                 manager.sendUpdatePacket();
-                manager.logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_NS.get(nanoTimePassed)));
+                manager.logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_MS.get(nanoTimePassed / 1_000_000f)));
                 manager.logger.pruneSoWeDontEatAllTheRam();
             }
         }

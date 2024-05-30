@@ -248,8 +248,8 @@ public record Program(
                 long start = System.nanoTime();
                 t.tick(context.copy());
                 long nanoTimePassed = System.nanoTime() - start;
-                context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_NS.get(
-                        nanoTimePassed,
+                context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_MS.get(
+                        nanoTimePassed / 1_000_000.0,
                         t.toString())));
             }
         }

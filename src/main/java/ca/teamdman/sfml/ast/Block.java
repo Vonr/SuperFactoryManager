@@ -11,14 +11,14 @@ public record Block(List<Statement> statements) implements Statement {
         for (Statement statement : statements) {
             long start = System.nanoTime();
             statement.tick(context);
-            long elapsed = System.nanoTime() - start;
+            float elapsed = (System.nanoTime() - start) / 1_000_000f;
             if (statement instanceof PrettyStatement ps) {
-                context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_STATEMENT_TIME_NS.get(
+                context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_STATEMENT_TIME_MS.get(
                         elapsed,
                         ps.toStringPretty()
                 )));
             } else {
-                context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_STATEMENT_TIME_NS.get(
+                context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_STATEMENT_TIME_MS.get(
                         elapsed,
                         statement.toString()
                 )));
