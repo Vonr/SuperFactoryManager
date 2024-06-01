@@ -229,4 +229,10 @@ public class TranslatableLogger {
         if (!this.active && !this.logger.isEnabled(Level.TRACE)) return;
         logger.accept(this::trace);
     }
+
+    public void clear() {
+        List<TranslatableLogEvent> contents = getContents();
+        contents.clear();
+        lastSentMarker.initFrom(new MutableInstant());
+    }
 }

@@ -4,6 +4,7 @@ import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
+import ca.teamdman.sfm.common.net.ServerboundManagerClearLogsPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -13,6 +14,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.screens.Screen;
@@ -22,6 +24,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.time.MutableInstant;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,24 +52,24 @@ public class LogsScreen extends Screen {
         return false;
     }
 
-    private void sendSetLogLevel(String logLevel) {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerSetLogLevelPacket(
-                MENU.containerId,
-                MENU.MANAGER_POSITION,
-                logLevel
-        ));
-        MENU.logLevel = logLevel;
-    }
-
     private boolean shouldRebuildText() {
-        return MENU.logs.size() != content.size();
         return MENU.logs.size() != lastSize;
 //        return false;
     }
 
     private void rebuildText() {
-        List<MutableComponent> list = new ArrayList<>();
-        for (TranslatableLogEvent log : MENU.logs) {
+        List<MutableComponent> processedLogs = new ArrayList<>();
+        List<TranslatableLogEvent> toProcess = MENU.logs;
+        if (toProcess.isEmpty() && MENU.logLevel.equals(Level.OFF.name())) {
+            MutableInstant instant = new MutableInstant();
+            instant.initFromEpochMilli(System.currentTimeMillis(), 0);
+            toProcess.add(new TranslatableLogEvent(
+                    Level.WARN,
+                    instant,
+                    Constants.LocalizationKeys.LOGS_GUI_NO_CONTENT.get()
+            ));
+        }
+        for (TranslatableLogEvent log : toProcess) {
             int seconds = (int) (System.currentTimeMillis() - log.instant().getEpochMillisecond()) / 1000;
             int minutes = seconds / 60;
             seconds = seconds % 60;
@@ -85,13 +88,6 @@ public class LogsScreen extends Screen {
                 level = level.withStyle(ChatFormatting.DARK_GRAY);
             }
 
-//            var message = MutableComponent.create(log.contents());
-//
-//            MutableComponent apply = ago.append(level).append(message);
-//            list.add(apply);
-
-
-//            var message = MutableComponent.create(log.contents());
             String[] lines = ClientStuff.resolveTranslation(log.contents()).split("\n", -1);
 
             for (int i = 0; i < lines.length; i++) {
@@ -103,18 +99,15 @@ public class LogsScreen extends Screen {
                 } else {
                     lineComponent = Component.literal(lines[i]).withStyle(ChatFormatting.WHITE);
                 }
-                list.add(lineComponent);
+                processedLogs.add(lineComponent);
             }
         }
-        content = list;
+        this.content = processedLogs;
 
-        if (content.isEmpty()) {
-            content = Collections.singletonList(Constants.LocalizationKeys.LOGS_GUI_NO_CONTENT.getComponent());
-        }
 
         // update textarea with plain string contents so select and copy works
         StringBuilder sb = new StringBuilder();
-        for (var line : content) {
+        for (var line : this.content) {
             sb.append(line.getString()).append("\n");
         }
         textarea.setValue(sb.toString());
@@ -154,15 +147,23 @@ public class LogsScreen extends Screen {
                     buttonWidth,
                     buttonHeight,
                     Component.literal(level.name()),
-                    button -> sendSetLogLevel(level.name())
+                    button -> {
+                        String logLevel = level.name();
+                        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerSetLogLevelPacket(
+                                MENU.containerId,
+                                MENU.MANAGER_POSITION,
+                                logLevel
+                        ));
+                        MENU.logLevel = logLevel;
+                    }
             ));
             buttonIndex++;
         }
 
         this.addRenderableWidget(new Button(
-                this.width / 2 - 2 - 150,
+                this.width / 2 - 2 - 100,
                 this.height / 2 - 100 + 195,
-                300,
+                200,
                 20,
                 CommonComponents.GUI_DONE,
                 (p_97691_) -> this.onClosePerformCallback(),
@@ -180,6 +181,20 @@ public class LogsScreen extends Screen {
                         mx,
                         my
                 )
+        ));
+        this.addRenderableWidget(new Button(
+                this.width / 2 - 2 + 150,
+                this.height / 2 - 100 + 195,
+                80,
+                20,
+                Constants.LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON.getComponent(),
+                (button) -> {
+                    SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerClearLogsPacket(
+                            MENU.containerId,
+                            MENU.MANAGER_POSITION
+                    ));
+                    MENU.logs.clear();
+                }
         ));
     }
 
