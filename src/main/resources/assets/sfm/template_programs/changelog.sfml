@@ -6,8 +6,9 @@
 
 ---- next ----
 -- add logging for individual managers
--- make FORGET keyword blue
 -- program edit screen no longer pauses the game in single player
+-- program edit screen and template edit screen now have additional confirmation dialogs
+-- make FORGET keyword blue
 -- fix missing dash in changelog
 -- Add git tag action to release process documentation
 -- Add GitHub release to release process documentation
