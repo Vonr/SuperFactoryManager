@@ -1,19 +1,17 @@
 package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.client.gui.screen.LabelGunScreen;
-import ca.teamdman.sfm.client.gui.screen.LogsScreen;
-import ca.teamdman.sfm.client.gui.screen.ProgramEditScreen;
+import ca.teamdman.sfm.client.gui.screen.*;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
-import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
@@ -31,18 +29,12 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientStuff {
-    public static void showLabelGunScreen(ItemStack stack, InteractionHand hand) {
-        Minecraft
-                .getInstance()
-                .setScreen(new LabelGunScreen(stack, hand));
-    }
-
-    public static void showProgramEditScreen(String initialContent, Consumer<String> callback) {
-        ProgramEditScreen screen = new ProgramEditScreen(initialContent, callback);
+    public static void setOrPushScreen(Screen screen) {
         if (Minecraft.getInstance().screen == null) {
             Minecraft
                     .getInstance()
@@ -52,12 +44,47 @@ public class ClientStuff {
                     .getInstance()
                     .pushGuiLayer(screen);
         }
+    }
+
+    public static void showLabelGunScreen(ItemStack stack, InteractionHand hand) {
+        setOrPushScreen(new LabelGunScreen(stack, hand));
+    }
+
+    public static void showProgramEditScreen(String initialContent, Consumer<String> saveCallback) {
+        ProgramEditScreen screen = new ProgramEditScreen(initialContent, saveCallback);
+        setOrPushScreen(screen);
         screen.scrollToTop();
     }
 
-    public static void showProgramEditScreen(ItemStack diskItem, Consumer<String> callback) {
-        showProgramEditScreen(DiskItem.getProgram(diskItem), callback);
+    public static void showProgramEditScreen(String initialContent) {
+        showProgramEditScreen(initialContent, (x) -> {
+        });
     }
+
+    public static void showExampleListScreen(String program, Consumer<String> saveCallback) {
+        setOrPushScreen(new ExamplesScreen((chosenTemplate, templates) -> showExampleEditScreen(
+                program,
+                chosenTemplate,
+                templates,
+                saveCallback
+        )));
+    }
+
+    public static void showExampleEditScreen(
+            String program, String chosenTemplate, Map<String, String> templates,
+            Consumer<String> saveCallback
+    ) {
+        ProgramEditScreen screen = new ExampleEditScreen(program, chosenTemplate, templates, saveCallback);
+        setOrPushScreen(screen);
+        screen.scrollToTop();
+    }
+
+    public static void showLogsScreen(ManagerContainerMenu menu) {
+        LogsScreen screen = new LogsScreen(menu);
+        setOrPushScreen(screen);
+        screen.scrollToBottom();
+    }
+
 
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -114,20 +141,6 @@ public class ClientStuff {
         if (hr.getType() != HitResult.Type.BLOCK) return null;
         var pos = ((BlockHitResult) hr).getBlockPos();
         return level.getBlockEntity(pos);
-    }
-
-    public static void showLogsScreen(ManagerContainerMenu menu) {
-        LogsScreen screen = new LogsScreen(menu);
-        if (Minecraft.getInstance().screen == null) {
-            Minecraft
-                    .getInstance()
-                    .setScreen(screen);
-        } else {
-            Minecraft
-                    .getInstance()
-                    .pushGuiLayer(screen);
-        }
-        screen.scrollToBottom();
     }
 
     public static String resolveTranslation(TranslatableContents contents) {

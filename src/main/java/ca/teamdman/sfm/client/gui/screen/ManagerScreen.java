@@ -67,9 +67,9 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         return List.of(
                 clipboardPasteButton,
                 editButton,
-                logsButton,
                 examplesButton,
-                clipboardCopyButton
+                clipboardCopyButton,
+                logsButton
         );
     }
 
@@ -136,14 +136,6 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 button -> onShowExamples(),
                 buildTooltip(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP)
         ));
-        logsButton = this.addRenderableWidget(new ExtendedButton(
-                (this.width - this.imageWidth) / 2 - buttonWidth,
-                (this.height - this.imageHeight) / 2 + 16 * 3 + 50,
-                buttonWidth,
-                16,
-                MANAGER_GUI_VIEW_LOGS_BUTTON.getComponent(),
-                button -> onShowLogs()
-        ));
         clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
                 (this.height - this.imageHeight) / 2 + 128,
@@ -151,6 +143,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_COPY_TO_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onSaveClipboard()
+        ));
+        logsButton = this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16 * 9,
+                buttonWidth,
+                16,
+                MANAGER_GUI_VIEW_LOGS_BUTTON.getComponent(),
+                button -> onShowLogs()
         ));
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
@@ -182,16 +182,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onEdit() {
-        ClientStuff.showProgramEditScreen(menu.getDisk(), this::sendProgram);
+        ClientStuff.showProgramEditScreen(DiskItem.getProgram(menu.getDisk()), this::sendProgram);
     }
 
     private void onShowExamples() {
-        Minecraft
-                .getInstance()
-                .pushGuiLayer(new ProgramTemplatePickerScreen(template -> ClientStuff.showProgramEditScreen(
-                        template,
-                        this::sendProgram
-                )));
+        ClientStuff.showExampleListScreen(DiskItem.getProgram(menu.getDisk()), this::sendProgram);
     }
 
     private void onShowLogs() {
@@ -356,7 +351,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                     font.lineHeight * 1.5,
                     0f
             );
-            poseStack.scale(0.5f,0.5f,1f);
+            poseStack.scale(0.5f, 0.5f, 1f);
             this.font.draw(
                     poseStack,
                     Component

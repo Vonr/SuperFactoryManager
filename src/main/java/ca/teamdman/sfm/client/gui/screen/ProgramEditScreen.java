@@ -20,6 +20,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Collections;
@@ -31,22 +32,17 @@ import java.util.function.Consumer;
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
 public class ProgramEditScreen extends Screen {
-    private final String INITIAL_CONTENT;
-    private final Consumer<String> CALLBACK;
+    protected final String INITIAL_CONTENT;
+    protected final Consumer<String> SAVE_CALLBACK;
     @SuppressWarnings("NotNullFieldNotInitialized")
-    private MyMultiLineEditBox textarea;
-    private String lastProgram = "";
-    private List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
+    protected MyMultiLineEditBox textarea;
+    protected String lastProgram = "";
+    protected List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
 
-    public ProgramEditScreen(String initialContent, Consumer<String> callback) {
+    public ProgramEditScreen(String initialContent, Consumer<String> saveCallback) {
         super(Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TITLE.getComponent());
         this.INITIAL_CONTENT = initialContent;
-        this.CALLBACK = callback;
-    }
-
-    @Override
-    public boolean isPauseScreen() {
-        return false;
+        this.SAVE_CALLBACK = saveCallback;
     }
 
     public static MutableComponent substring(MutableComponent component, int start, int end) {
@@ -66,6 +62,11 @@ public class ProgramEditScreen extends Screen {
     }
 
     @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
     protected void init() {
         super.init();
         assert this.minecraft != null;
@@ -77,11 +78,11 @@ public class ProgramEditScreen extends Screen {
         this.addRenderableWidget(new Button(
                 this.width / 2 - 2 - 150,
                 this.height / 2 - 100 + 195,
-                300,
+                200,
                 20,
                 CommonComponents.GUI_DONE,
-                (p_97691_) -> this.onClosePerformCallback(),
-                (btn, pose, mx, my) -> renderTooltip(
+                (button) -> this.saveAndClose(),
+                (button, pose, mx, my) -> renderTooltip(
                         pose,
                         font.split(
                                 PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP.getComponent(),
@@ -96,38 +97,79 @@ public class ProgramEditScreen extends Screen {
                         my
                 )
         ));
+        this.addRenderableWidget(new Button(
+                this.width / 2 - 2 + 100,
+                this.height / 2 - 100 + 195,
+                100,
+                20,
+                CommonComponents.GUI_CANCEL,
+                (button) -> this.onClose()
+        ));
     }
 
-    public void onClosePerformCallback() {
-        CALLBACK.accept(textarea.getValue());
+    public void saveAndClose() {
+        SAVE_CALLBACK.accept(textarea.getValue());
 
+        assert this.minecraft != null;
+        this.minecraft.popGuiLayer();
+    }
+
+    public void closeWithoutSaving() {
         assert this.minecraft != null;
         this.minecraft.popGuiLayer();
     }
 
     @Override
     public void onClose() {
+        // The user has requested to close the screen.
+        // If the content is different, ask to save
         if (!INITIAL_CONTENT.equals(textarea.getValue())) {
-            // if content changed => ask to save
             assert this.minecraft != null;
-            // push confirm screen
-            this.minecraft.pushGuiLayer(new ConfirmScreen(
-                    doSave -> {
-                        this.minecraft.popGuiLayer();
-                        if (doSave) {
-                            onClosePerformCallback();
-                        } else {
-                            this.minecraft.popGuiLayer();
-                        }
-                    },
-                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_TITLE.getComponent(),
-                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE.getComponent(),
-                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
-                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON.getComponent()
-            ));
+            ConfirmScreen exitWithoutSavingConfirmScreen = getExitWithoutSavingConfirmScreen();
+            this.minecraft.pushGuiLayer(exitWithoutSavingConfirmScreen);
+            exitWithoutSavingConfirmScreen.setDelay(20);
         } else {
             super.onClose();
         }
+    }
+
+    protected @NotNull ConfirmScreen getSaveConfirmScreen(Runnable onConfirm) {
+        return new ConfirmScreen(
+                doSave -> {
+                    assert this.minecraft != null;
+                    this.minecraft.popGuiLayer(); // Close confirm screen
+
+                    //noinspection StatementWithEmptyBody
+                    if (doSave) {
+                        onConfirm.run();
+                    } else {
+                        // do nothing, continue editing
+                    }
+                },
+                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_TITLE.getComponent(),
+                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+        );
+    }
+    protected @NotNull ConfirmScreen getExitWithoutSavingConfirmScreen() {
+        return new ConfirmScreen(
+                doSave -> {
+                    assert this.minecraft != null;
+                    this.minecraft.popGuiLayer(); // Close confirm screen
+
+                    //noinspection StatementWithEmptyBody
+                    if (doSave) {
+                        closeWithoutSaving();
+                    } else {
+                        // do nothing; continue editing
+                    }
+                },
+                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE.getComponent(),
+                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+        );
     }
 
     @Override
@@ -155,7 +197,7 @@ public class ProgramEditScreen extends Screen {
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {
-            onClosePerformCallback();
+            saveAndClose();
             return true;
         }
         if (pKeyCode == GLFW.GLFW_KEY_TAB) {
@@ -221,7 +263,7 @@ public class ProgramEditScreen extends Screen {
         super.render(poseStack, mx, my, partialTicks);
     }
 
-    private class MyMultiLineEditBox extends MultiLineEditBox {
+    protected class MyMultiLineEditBox extends MultiLineEditBox {
         public MyMultiLineEditBox() {
             super(
                     ProgramEditScreen.this.font,

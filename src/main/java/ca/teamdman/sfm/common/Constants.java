@@ -38,11 +38,27 @@ public class Constants {
         );
         public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
                 "gui.sfm.save_changes_confirm.yes_button",
-                "Save changes"
+                "Overwrite disk"
         );
         public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
                 "gui.sfm.save_changes_confirm.no_button",
-                "Don't save"
+                "Continue editing"
+        );
+        public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.exit_without_saving_confirm.title",
+                "Exit without saving?"
+        );
+        public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+                "gui.sfm.exit_without_saving_confirm.message",
+                "Are you sure you want to abandon your work?"
+        );
+        public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+                "gui.sfm.exit_without_saving_confirm.yes_button",
+                "Exit without saving"
+        );
+        public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+                "gui.sfm.exit_without_saving_confirm.no_button",
+                "Continue editing"
         );
         public static final LocalizationEntry PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN = new LocalizationEntry(
                 "program.sfm.warnings.each_without_pattern",
@@ -214,15 +230,15 @@ public class Constants {
                 "gui.sfm.title.labelgun",
                 "Label Gun"
         );
-        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_WARNING_1 = new LocalizationEntry(
+        public static final LocalizationEntry EXAMPLES_GUI_WARNING_1 = new LocalizationEntry(
                 "gui.sfm.program_template_picker.warning1",
                 "Hitting \"Done\" will on the next screen will overwrite your existing program!"
         );
-        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_WARNING_2 = new LocalizationEntry(
+        public static final LocalizationEntry EXAMPLES_GUI_WARNING_2 = new LocalizationEntry(
                 "gui.sfm.program_template_picker.warning2",
                 "Hit <esc> to cancel instead."
         );
-        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_TITLE = new LocalizationEntry(
+        public static final LocalizationEntry EXAMPLES_GUI_TITLE = new LocalizationEntry(
                 "gui.sfm.title.program_template_picker",
                 "Program Template Picker"
         );
@@ -438,6 +454,14 @@ public class Constants {
         public static final LocalizationEntry LOGS_GUI_SET_LOG_LEVEL_BUTTON_PACKET_RECEIVED = new LocalizationEntry(
                 "gui.sfm.logs.button.set_log_level.packet_received",
                 "Log level updated to %s"
+        );
+        public static final LocalizationEntry LOGS_GUI_CLEAR_LOGS_BUTTON_PACKET_RECEIVED = new LocalizationEntry(
+                "gui.sfm.logs.button.clear_logs.packet_received",
+                "Cleared logs"
+        );
+        public static final LocalizationEntry LOGS_GUI_CLEAR_LOGS_BUTTON = new LocalizationEntry(
+                "gui.sfm.logs.button.clear_logs",
+                "Clear logs"
         );
         public static final LocalizationEntry LOGS_GUI_NO_CONTENT = new LocalizationEntry(
                 "gui.sfm.logs.no_content",

@@ -41,8 +41,7 @@ public class ProgramTokenContextActions {
                     .findFirst();
         } catch (Throwable t) {
             return Optional.of(() -> ClientStuff.showProgramEditScreen("-- Encountered error, program parse failed:\n--"
-                                                                       + t.getMessage(), next -> {
-            }));
+                                                                       + t.getMessage()));
         }
     }
 
@@ -62,8 +61,7 @@ public class ProgramTokenContextActions {
                         .stream()
                         .map(ResourceIdentifier::toStringCondensed)
                         .collect(Collectors.joining(",\n"));
-                ClientStuff.showProgramEditScreen(expansion, next -> {
-                });
+                ClientStuff.showProgramEditScreen(expansion);
             });
         } else if (node instanceof Label label) {
             SFM.LOGGER.info("Found context action for label node");

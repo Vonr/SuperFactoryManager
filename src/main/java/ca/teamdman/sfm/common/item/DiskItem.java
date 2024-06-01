@@ -166,11 +166,11 @@ public class DiskItem extends Item {
         var stack = pPlayer.getItemInHand(pUsedHand);
         if (pLevel.isClientSide) {
             ClientStuff.showProgramEditScreen(
-                    stack,
+                    getProgram(stack),
                     programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
-                            programString,
-                            pUsedHand
-                    ))
+                                programString,
+                                pUsedHand
+                        ))
             );
         }
         return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
