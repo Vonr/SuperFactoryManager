@@ -253,6 +253,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                     .append(new SimpleDateFormat("yyyy-MM-dd HH:mm.ss").format(new java.util.Date()))
                     .append('\n');
 
+            assert this.minecraft != null;
             content
                     .append("-- Game Version: ")
                     .append("Minecraft ")
@@ -268,6 +269,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                     .append(ForgeVersion.getVersion())
                     .append('\n');
 
+            //noinspection CodeBlock2Expr
             ModList.get().getModContainerById(SFM.MOD_ID).ifPresent(mod -> {
                 content.append("-- SFM Version: ")
                         .append(mod.getModInfo().getVersion())

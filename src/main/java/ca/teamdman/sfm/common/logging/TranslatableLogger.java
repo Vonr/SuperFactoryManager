@@ -19,7 +19,7 @@ public class TranslatableLogger {
     private static final LoggerContext CONTEXT = new LoggerContext(SFM.MOD_ID);
     private final Logger logger;
     private boolean active = false;
-    private MutableInstant lastSentMarker = new MutableInstant();
+    private final MutableInstant lastSentMarker = new MutableInstant();
 
     public TranslatableLogger(String name) {
         // Create logger
