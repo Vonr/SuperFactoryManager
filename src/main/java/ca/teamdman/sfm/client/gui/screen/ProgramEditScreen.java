@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.client.gui.screen;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.client.gui.EditorUtils;
@@ -263,6 +264,7 @@ public class ProgramEditScreen extends Screen {
         super.render(poseStack, mx, my, partialTicks);
     }
 
+    // TODO: enable scrolling without focus
     protected class MyMultiLineEditBox extends MultiLineEditBox {
         public MyMultiLineEditBox() {
             super(
@@ -289,7 +291,7 @@ public class ProgramEditScreen extends Screen {
             try {
                 return super.mouseClicked(p_239101_, p_239102_, p_239103_);
             } catch (Exception e) {
-                e.printStackTrace();
+                SFM.LOGGER.error("Error in ProgramEditScreen.MyMultiLineEditBox.mouseClicked", e);
                 return false;
             }
         }
