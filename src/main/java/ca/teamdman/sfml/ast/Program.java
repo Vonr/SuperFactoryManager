@@ -243,14 +243,24 @@ public record Program(
 
     @Override
     public void tick(ProgramContext context) {
+        boolean hasLogged = false;
         for (Trigger t : triggers) {
             if (t.shouldTick(context)) {
+                if (!hasLogged) {
+                    context.getManager().logger.debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK.get()));
+                    hasLogged = true;
+                }
+                if (triggers instanceof ShortStatement ss) {
+                    context.getManager().logger.debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_STATEMENT.get(
+                            ss.toStringShort())));
+                }
                 long start = System.nanoTime();
                 t.tick(context.copy());
                 long nanoTimePassed = System.nanoTime() - start;
                 context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_MS.get(
                         nanoTimePassed / 1_000_000.0,
-                        t.toString())));
+                        t.toString()
+                )));
             }
         }
     }
