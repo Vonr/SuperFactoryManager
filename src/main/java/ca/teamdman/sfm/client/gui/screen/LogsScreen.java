@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.client.gui.screen;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
@@ -220,6 +221,7 @@ public class LogsScreen extends Screen {
         super.render(poseStack, mx, my, partialTicks);
     }
 
+    // TODO: enable scrolling without focus
     private class MyMultiLineEditBox extends MultiLineEditBox {
         public MyMultiLineEditBox() {
             super(
@@ -233,12 +235,11 @@ public class LogsScreen extends Screen {
             );
         }
 
-        public int getCursorPosition() {
-            return this.textField.cursor;
-        }
-
-        public void setCursorPosition(int cursor) {
-            this.textField.cursor = cursor;
+        @Override
+        public void setValue(String p_240160_) {
+//            var cursorListener = textField::scro
+            this.textField.setValue(p_240160_);
+//            setCursorPosition(cursor);
         }
 
         @Override
@@ -246,17 +247,9 @@ public class LogsScreen extends Screen {
             try {
                 return super.mouseClicked(p_239101_, p_239102_, p_239103_);
             } catch (Exception e) {
-                e.printStackTrace();
+                SFM.LOGGER.error("Error in LogsScreen.MyMultiLineEditBox.mouseClicked", e);
                 return false;
             }
-        }
-
-        public int getSelectionCursorPosition() {
-            return this.textField.selectCursor;
-        }
-
-        public void setSelectionCursorPosition(int cursor) {
-            this.textField.selectCursor = cursor;
         }
 
         @Override
@@ -366,7 +359,6 @@ public class LogsScreen extends Screen {
                 GuiComponent.fill(poseStack, cursorX, cursorY - 1, cursorX + 1, cursorY + 1 + 9, -1);
             }
         }
-
     }
 }
 
