@@ -307,6 +307,8 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:ftb-library-404465:4661834") // ftb-library-forge-1902.4.1-build.236.jar
     runtimeOnly fg.deobf("curse.maven:architectury-api-419699:5137942") // [Forge 1.19.2] v6.6.92
 
+//    https://www.curseforge.com/minecraft/mc-mods/ex-pattern-provider/files/5250574
+    runtimeOnly fg.deobf("curse.maven:ex-pattern-provider-892005:5250574") // ExtendedAE-1.19-0.2.2-forge.jar
 
 
     gametestImplementation fg.deobf("com.teamcofh:cofh_core:1.19.2-10.2.0.+")
