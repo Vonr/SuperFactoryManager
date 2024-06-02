@@ -7,7 +7,7 @@ import java.util.List;
 public record TimerTrigger(
         Interval interval,
         Block block
-) implements Trigger {
+) implements Trigger, ShortStatement {
     @Override
     public Block getBlock() {
         return block;
@@ -37,5 +37,10 @@ public record TimerTrigger(
     @Override
     public String toString() {
         return "EVERY " + interval + " DO\n" + block.toString().indent(1).stripTrailing() + "\nEND";
+    }
+
+    @Override
+    public String toStringShort() {
+        return "EVERY " + interval + " DO";
     }
 }
