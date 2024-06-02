@@ -160,6 +160,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         return resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
     }
 
+    // todo: make this a ShortStatement impl
     public String toStringCondensed() {
         String rtn;
         if (resourceTypeNamespace.equals(SFM.MOD_ID) && resourceTypeName.equals("item")) {
