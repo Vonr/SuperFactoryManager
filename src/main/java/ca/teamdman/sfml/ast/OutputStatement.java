@@ -1,6 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -113,6 +114,13 @@ public class OutputStatement implements IOStatement {
     @Override
     public void tick(ProgramContext context) {
         if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return;
+//        context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT.get(
+//                labelAccess.labels().stream().map(Object::toString).collect(Collectors.joining(", "))
+//        )));
+        context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT.get(
+                toString()
+        )));
+
         // gather the input slots from all the input statements, +27 to hopefully avoid resizing
         List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity + 27);
         for (var inputStatement : context.getInputs()) {

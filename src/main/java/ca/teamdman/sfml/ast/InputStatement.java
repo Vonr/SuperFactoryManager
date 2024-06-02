@@ -21,8 +21,11 @@ public record InputStatement(
     @Override
     public void tick(ProgramContext context) {
         context.addInput(this);
+//        context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_INPUT_STATEMENT.get(
+//                labelAccess.labels().stream().map(Object::toString).collect(Collectors.joining(", "))
+//        )));
         context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_INPUT_STATEMENT.get(
-                labelAccess.labels().stream().map(Object::toString).collect(Collectors.joining(", "))
+                toString()
         )));
     }
 

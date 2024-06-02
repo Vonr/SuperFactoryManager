@@ -348,14 +348,22 @@ public class Constants {
                 "program.sfm.tick.time_taken.trigger",
                 "Program trigger tick took %.2f ms:\n```\n%s\n```\n"
         );
+
+        public static final LocalizationEntry PROGRAM_TICK = new LocalizationEntry(
+                "program.sfm.tick",
+                "PROGRAM TICK BEGIN"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_TRIGGER_STATEMENT = new LocalizationEntry(
+                "program.sfm.tick.statement.trigger",
+                "TRIGGERED FROM %s"
+        );
         public static final LocalizationEntry PROGRAM_TICK_INPUT_STATEMENT = new LocalizationEntry(
                 "program.sfm.tick.statement.input",
-                "INPUT FROM %s"
+                "%s"
         );
-
         public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT = new LocalizationEntry(
                 "program.sfm.tick.statement.output",
-                "INPUT FROM %s"
+                "%s"
         );
         public static final LocalizationEntry PROGRAM_TICK_FORGET_STATEMENT = new LocalizationEntry(
                 "program.sfm.tick.statement.forget",
