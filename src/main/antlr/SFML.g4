@@ -83,7 +83,7 @@ boolexpr        : TRUE                                  #BooleanTrue
                 | setOp? labelaccess HAS resourcecomparison #BooleanHas
                 | REDSTONE (comparisonOp number)?       #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp number resourceid ;
+resourcecomparison : comparisonOp number resourceid? ;
 comparisonOp    : GT
                 | LT
                 | EQ
@@ -113,8 +113,8 @@ setOp           : OVERALL
 //
 labelaccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
 roundrobin: ROUND ROBIN BY (LABEL | BLOCK);
-label           : IDENTIFIER #RawLabel
-                | string    #StringLabel
+label           : (IDENTIFIER|REDSTONE)   #RawLabel
+                | string                  #StringLabel
                 ;
 
 resourceid      : (IDENTIFIER|REDSTONE) (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)?)?)?)? # Resource

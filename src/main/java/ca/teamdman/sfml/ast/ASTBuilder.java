@@ -352,7 +352,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         ComparisonOperator op = visitComparisonOp(ctx.comparisonOp());
         Number num = visitNumber(ctx.number());
         ResourceQuantity quantity = new ResourceQuantity(num, ResourceQuantity.IdExpansionBehaviour.NO_EXPAND);
-        ResourceIdentifier<?, ?, ?> item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
+
+        ResourceIdentifier<?, ?, ?> item;
+        if (ctx.resourceid() == null) {
+            item = ResourceIdentifier.MATCH_ALL;
+        } else {
+            item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
+        }
+
         ResourceComparer<?, ?, ?> resourceComparer = new ResourceComparer<>(op, quantity, item);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceComparer, ctx));
         return resourceComparer;
