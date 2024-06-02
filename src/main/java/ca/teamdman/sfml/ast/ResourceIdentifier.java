@@ -164,9 +164,19 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         String rtn;
         if (resourceTypeNamespace.equals(SFM.MOD_ID) && resourceTypeName.equals("item")) {
             if (resourceNamespace.equals(".*")) {
-                rtn = resourceName;
+                if (resourceName.equals(".*")) {
+                    rtn = "item::";
+                } else if (RegexCache.isRegexPattern(resourceName)) {
+                    rtn = "\""+resourceName+"\"";
+                } else {
+                    rtn = resourceName;
+                }
             } else {
-                rtn = resourceNamespace + ":" + resourceName;
+                if (RegexCache.isRegexPattern(resourceName) || RegexCache.isRegexPattern(resourceNamespace)) {
+                    rtn = "\"" + resourceNamespace + ":" + resourceName + "\"";
+                } else {
+                    rtn = resourceNamespace + ":" + resourceName;
+                }
             }
         } else if (
                 resourceTypeNamespace.equals(SFM.MOD_ID)
@@ -177,9 +187,17 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         ) {
             rtn = "forge_energy::";
         } else if (resourceTypeNamespace.equals(SFM.MOD_ID)) {
-            rtn = resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            if (RegexCache.isRegexPattern(resourceNamespace) || RegexCache.isRegexPattern(resourceName)) {
+                rtn = "\"" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName + "\"";
+            } else {
+                rtn = resourceTypeName + resourceNamespace + ":" + resourceName;
+            }
         } else {
-            rtn = resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            if (RegexCache.isRegexPattern(resourceNamespace) || RegexCache.isRegexPattern(resourceName)) {
+                rtn = "\"" + resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName + "\"";
+            } else {
+                rtn = resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            }
         }
         return rtn;
     }
