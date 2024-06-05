@@ -5,6 +5,9 @@
 -- If you can reproduce this problem, join the Discord and let me know how.
 
 ---- next ----
+-- make "EVERY TICK DO" valid syntax
+---- this still only allows forge_energy by default
+-- add line numbers to program edit screen
 -- add logging for individual managers
 -- program edit screen no longer pauses the game in single player
 -- program edit screen and template edit screen now have additional confirmation dialogs

@@ -190,6 +190,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
+    public Interval visitTick(SFMLParser.TickContext ctx) {
+        Interval interval = Interval.fromTicks(1);
+        AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
+        return interval;
+    }
+
+    @Override
     public Interval visitTicks(SFMLParser.TicksContext ctx) {
         var num = visitNumber(ctx.number());
         assert num.value() <= Integer.MAX_VALUE;

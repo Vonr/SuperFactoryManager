@@ -15,7 +15,8 @@ trigger : EVERY interval DO block END           #TimerTrigger
         | EVERY REDSTONE PULSE DO block END     #PulseTrigger
         ;
 
-interval: number TICKS     #Ticks
+interval: TICK             #Tick
+        | number TICKS     #Ticks
         | number SECONDS   #Seconds
         ;
 
@@ -193,6 +194,7 @@ SIDE    : S I D E ;
 
 // TRIGGERS
 TICKS           : T I C K S ;
+TICK           : T I C K ;
 SECONDS         : S E C O N D S ;
 // REDSTONE TRIGGER
 REDSTONE        : R E D S T O N E ;
