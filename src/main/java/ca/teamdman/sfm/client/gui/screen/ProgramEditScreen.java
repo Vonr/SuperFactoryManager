@@ -288,13 +288,32 @@ public class ProgramEditScreen extends Screen {
         }
 
         @Override
-        public boolean mouseClicked(double p_239101_, double p_239102_, int p_239103_) {
+        public boolean mouseClicked(double mx, double my, int button) {
             try {
-                return super.mouseClicked(p_239101_, p_239102_, p_239103_);
+                // if mouse in bounds, translate to accommodate line numbers
+                if (mx >= this.x + 1 && mx <= this.x + this.width - 1) {
+                    mx -= 1 + this.font.width("000");
+                }
+                return super.mouseClicked(mx , my, button);
             } catch (Exception e) {
                 SFM.LOGGER.error("Error in ProgramEditScreen.MyMultiLineEditBox.mouseClicked", e);
                 return false;
             }
+        }
+
+        @Override
+        public boolean mouseDragged(
+                double mx,
+                double my,
+                int button,
+                double dx,
+                double dy
+        ) {
+            // if mouse in bounds, translate to accommodate line numbers
+            if (mx >= this.x + 1 && mx <= this.x + this.width - 1) {
+                mx -= 1 + this.font.width("000");
+            }
+            return super.mouseDragged(mx, my, button, dx, dy);
         }
 
         public int getSelectionCursorPosition() {
