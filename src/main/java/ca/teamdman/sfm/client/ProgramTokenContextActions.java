@@ -1,9 +1,7 @@
 package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.net.ServerboundInputInspectionRequestPacket;
-import ca.teamdman.sfm.common.net.ServerboundLabelInspectionRequestPacket;
-import ca.teamdman.sfm.common.net.ServerboundOutputInspectionRequestPacket;
+import ca.teamdman.sfm.common.net.*;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
@@ -90,13 +88,27 @@ public class ProgramTokenContextActions {
                     programString,
                     nodeIndex
             )));
+        } else if (node instanceof BoolExpr) {
+            SFM.LOGGER.info("Found context action for BoolExpr node");
+            int nodeIndex = builder.getIndexForNode(node);
+            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundBoolExprStatementInspectionRequestPacket(
+                    programString,
+                    nodeIndex
+            )));
+        } else if (node instanceof IfStatement) {
+            SFM.LOGGER.info("Found context action for if statement node");
+            int nodeIndex = builder.getIndexForNode(node);
+            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundIfStatementInspectionRequestPacket(
+                    programString,
+                    nodeIndex
+            )));
         }
         return Optional.empty();
     }
 
     public static boolean hasContextAction(Token token) {
         return switch (token.getType()) {
-            case SFMLLexer.INPUT, SFMLLexer.OUTPUT, SFMLLexer.IDENTIFIER -> true;
+            case SFMLLexer.INPUT, SFMLLexer.OUTPUT, SFMLLexer.IDENTIFIER, SFMLLexer.IF, SFMLLexer.HAS -> true;
             default -> false;
         };
     }

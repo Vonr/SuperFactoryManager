@@ -15,6 +15,7 @@
 -- allow `redstone` as a label
 -- fix missing dash in changelog
 -- support `IF chest HAS EQ 0 THEN`, same as `IF chest HAS EQ 0 item:: THEN`
+-- Add ctrl+space action for IfStatement and BoolExpr
 -- Add git tag action to release process documentation
 -- Add GitHub release to release process documentation
 

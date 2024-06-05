@@ -190,6 +190,34 @@ public class SFMPackets {
                 ServerboundNetworkToolUsePacket::decode,
                 ServerboundNetworkToolUsePacket::handle
         );
+        INSPECTION_CHANNEL.registerMessage(
+                9,
+                ServerboundIfStatementInspectionRequestPacket.class,
+                ServerboundIfStatementInspectionRequestPacket::encode,
+                ServerboundIfStatementInspectionRequestPacket::decode,
+                ServerboundIfStatementInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                10,
+                ClientboundIfStatementInspectionResultsPacket.class,
+                ClientboundIfStatementInspectionResultsPacket::encode,
+                ClientboundIfStatementInspectionResultsPacket::decode,
+                ClientboundIfStatementInspectionResultsPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                11,
+                ServerboundBoolExprStatementInspectionRequestPacket.class,
+                ServerboundBoolExprStatementInspectionRequestPacket::encode,
+                ServerboundBoolExprStatementInspectionRequestPacket::decode,
+                ServerboundBoolExprStatementInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                12,
+                ClientboundBoolExprStatementInspectionResultsPacket.class,
+                ClientboundBoolExprStatementInspectionResultsPacket::encode,
+                ClientboundBoolExprStatementInspectionResultsPacket::decode,
+                ClientboundBoolExprStatementInspectionResultsPacket::handle
+        );
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(
