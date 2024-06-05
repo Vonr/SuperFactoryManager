@@ -153,6 +153,7 @@ public class ProgramEditScreen extends Screen {
                 Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON.getComponent()
         );
     }
+
     protected @NotNull ConfirmScreen getExitWithoutSavingConfirmScreen() {
         return new ConfirmScreen(
                 doSave -> {
@@ -322,7 +323,7 @@ public class ProgramEditScreen extends Screen {
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
-            int lineX = this.x + this.innerPadding();
+            int lineX = this.x + this.innerPadding() + this.font.width("000");
             int lineY = this.y + this.innerPadding();
             int charCount = 0;
             int cursorX = 0;
@@ -340,11 +341,25 @@ public class ProgramEditScreen extends Screen {
                                            && cursorIndex <= charCount + lineLength;
                 var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
 
+                // Draw line number
+                String lineNumber = String.valueOf(line + 1);
+                this.font.drawInBatch(
+                        lineNumber,
+                        lineX - 2 - this.font.width(lineNumber),
+                        lineY,
+                        -1,
+                        true,
+                        matrix4f,
+                        buffer,
+                        false,
+                        0,
+                        LightTexture.FULL_BRIGHT
+                );
+
                 if (cursorOnThisLine) {
                     isCursorAtEndOfLine = cursorIndex == charCount + lineLength;
                     cursorY = lineY;
-                    // we draw the raw before coloured in case of token recognition errors
-                    // draw before cursor
+                    // draw text before cursor
                     cursorX = this.font.drawInBatch(
                             substring(componentColoured, 0, cursorIndex - charCount),
                             lineX,
@@ -357,6 +372,7 @@ public class ProgramEditScreen extends Screen {
                             0,
                             LightTexture.FULL_BRIGHT
                     ) - 1;
+                    // draw text after cursor
                     this.font.drawInBatch(
                             substring(componentColoured, cursorIndex - charCount, lineLength),
                             cursorX,
