@@ -17,6 +17,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
+import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -217,8 +218,12 @@ public record Program(
         DiskItem.setWarnings(disk, gatherWarnings(disk, manager));
     }
 
+    /**
+     * Create a context and tick the program.
+     *
+     * @return {@code true} if a trigger entered its body
+     */
     public boolean tick(ManagerBlockEntity manager) {
-        // build the context and tick the program
         var context = new ProgramContext(this, manager, ProgramContext.ExecutionPolicy.UNRESTRICTED);
 
         // log if there are unprocessed redstone pulses
@@ -228,12 +233,12 @@ public record Program(
                     unprocessedRedstonePulseCount)));
         }
 
+
         tick(context);
 
         manager.clearRedstonePulseQueue();
-        //noinspection UnnecessaryLocalVariable
-        boolean didSomething = triggers.stream().anyMatch(t -> t.shouldTick(context));
-        return didSomething;
+
+        return context.didSomething();
     }
 
     @Override
@@ -243,25 +248,89 @@ public record Program(
 
     @Override
     public void tick(ProgramContext context) {
-        boolean hasLogged = false;
         for (Trigger t : triggers) {
-            if (t.shouldTick(context)) {
-                if (!hasLogged) {
-                    context.getManager().logger.debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK.get()));
-                    hasLogged = true;
-                }
-                if (triggers instanceof ShortStatement ss) {
-                    context.getManager().logger.debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_STATEMENT.get(
-                            ss.toStringShort())));
-                }
-                long start = System.nanoTime();
-                t.tick(context.copy());
-                long nanoTimePassed = System.nanoTime() - start;
-                context.getManager().logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_MS.get(
-                        nanoTimePassed / 1_000_000.0,
-                        t.toString()
-                )));
+            // Only process triggers that should tick
+            if (!t.shouldTick(context)) {
+                continue;
             }
+
+            // Set flag and log on first trigger
+            if (!context.didSomething()) {
+                context.setDidSomething(true);
+                context.getLogger().trace(trace -> {
+                    trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_1.get());
+                    trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_2.get());
+                    context
+                            .getNetwork()
+                            .getCablePositions()
+                            .map(pos -> "- "
+                                        + pos.toString()
+                                        + " "
+                                        + context
+                                                .getManager()
+                                                .getLevel()
+                                                .getBlockState(
+                                                        pos))
+                            .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
+                                    body)));
+                    trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_3.get());
+                    context
+                            .getNetwork()
+                            .getCapabilityProviderPositions()
+                            .map(pos -> "- " + pos.toString() + " " + context
+                                    .getManager()
+                                    .getLevel()
+                                    .getBlockState(pos))
+                            .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
+                                    body)));
+                    trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_FOOTER.get());
+
+                    trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER.get());
+                    context
+                            .getlabelPositions()
+                            .get()
+                            .forEach((label, positions) -> positions
+                                    .stream()
+                                    .map(
+                                            pos -> "- "
+                                                   + label
+                                                   + ": "
+                                                   + pos.toString()
+                                                   + " "
+                                                   + context
+                                                           .getManager()
+                                                           .getLevel()
+                                                           .getBlockState(
+                                                                   pos)
+
+                                    )
+                                    .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_BODY.get(
+                                            body))));
+                    trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER.get());
+                });
+                context.getLogger().debug(debug -> {
+                    debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
+                    debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK.get());
+                });
+            }
+
+            // Log pretty triggers
+            if (triggers instanceof ShortStatement ss) {
+                context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_STATEMENT.get(
+                        ss.toStringShort())));
+            }
+
+            // Perform and measure tick
+            long start = System.nanoTime();
+            t.tick(context.copy());
+            long nanoTimePassed = System.nanoTime() - start;
+
+            // Log trigger time
+            context.getLogger().info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_MS.get(
+                    nanoTimePassed / 1_000_000.0,
+                    t.toString()
+            )));
+
         }
     }
 

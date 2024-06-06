@@ -20,7 +20,7 @@ import java.util.List;
 
 @Plugin(name = "TranslatableAppender", category = "Core", elementType = Appender.ELEMENT_TYPE, printObject = true)
 public class TranslatableAppender extends AbstractAppender {
-    public final List<TranslatableLogEvent> contents;
+    public final LinkedList<TranslatableLogEvent> contents;
 
     protected TranslatableAppender(String name, Layout<? extends Serializable> layout) {
         super(name, null, layout, true, null);

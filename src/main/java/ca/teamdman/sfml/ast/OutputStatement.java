@@ -35,14 +35,17 @@ public class OutputStatement implements IOStatement {
      * Juicy method function here.
      * Given two slots, move as much as possible from one to the other.
      *
-     * @param source      The slot to pull from
-     * @param destination the slot to push to
      * @param <STACK>     the stack type
      * @param <ITEM>      the item type
      * @param <CAP>       the capability type
+     * @param context
+     * @param source      The slot to pull from
+     * @param destination the slot to push to
      */
     public static <STACK, ITEM, CAP> void moveTo(
-            LimitedInputSlot<STACK, ITEM, CAP> source, LimitedOutputSlot<STACK, ITEM, CAP> destination
+            ProgramContext context,
+            LimitedInputSlot<STACK, ITEM, CAP> source,
+            LimitedOutputSlot<STACK, ITEM, CAP> destination
     ) {
         // always ensure types match
         // items and fluids are incompatible, etc
@@ -99,13 +102,23 @@ public class OutputStatement implements IOStatement {
         // this should never happen
         // will void items if it does
         if (!destination.type.isEmpty(remainder)) {
-            SFM.LOGGER.error(
-                    "Failed to move all promised items, found {} {}:{}, took {} but had {} left over after insertion. Resource loss may have occurred!!!",
+            STACK finalRemainder = remainder;
+            context.getLogger().error(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_VOIDED_RESOURCES.get(
                     potential,
                     SFMResourceTypes.DEFERRED_TYPES.get().getKey(source.type),
                     destination.type.getRegistryKey(potential),
                     extracted,
-                    remainder
+                    finalRemainder
+            )));
+            SFM.LOGGER.error(
+                    "!!!RESOURCE LOSS HAS OCCURRED!!! Manager at {} in {} failed to move all promised items, found {} {}:{}, took {} but had {} left over after insertion.",
+                    context.getManager().getBlockPos(),
+                    context.getManager().getLevel(),
+                    potential,
+                    SFMResourceTypes.DEFERRED_TYPES.get().getKey(source.type),
+                    destination.type.getRegistryKey(potential),
+                    extracted,
+                    finalRemainder
             );
         }
     }
@@ -113,52 +126,145 @@ public class OutputStatement implements IOStatement {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public void tick(ProgramContext context) {
+        // Don't do anything if performing exploration
+        // TODO: move this logic to ast.Block
         if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return;
-//        context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT.get(
-//                labelAccess.labels().stream().map(Object::toString).collect(Collectors.joining(", "))
-//        )));
-        context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT.get(
-                toString()
+
+        // Log the output statement
+        context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT.get(
+                this.toString()
         )));
+
+        /* ################
+             INPUT SLOTS
+           ################ */
 
         // gather the input slots from all the input statements, +27 to hopefully avoid resizing
         List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity + 27);
         for (var inputStatement : context.getInputs()) {
             inputStatement.gatherSlots(context, inputSlots::add);
         }
-        if (inputSlots.isEmpty()) return; // stop if we have nothing to move
+
+        // Update allocation hint
         lastInputCapacity = inputSlots.size();
+
+        // Get assertion hint
+        int inputCheck = LimitedInputSlotObjectPool.INSTANCE.getIndex();
+
+        // Log the number of input slots
+        context
+                .getLogger()
+                .debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT.get(
+                        inputSlots.size()
+                )));
+
+        // Short-circuit if we have nothing to move
+        if (inputSlots.isEmpty()) {
+            // Log the short-circuit
+            context
+                    .getLogger()
+                    .warn(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS.get()));
+
+            // Free the input slots (we acquired no slots but the assertion is still valid)
+            LimitedInputSlotObjectPool.INSTANCE.release(inputSlots, inputCheck);
+
+            // Stop processing
+            return;
+        }
+
+        /* ################
+             OUTPUT SLOTS
+           ################ */
 
         // collect the output slots, +27 to hopefully avoid resizing
         List<LimitedOutputSlot> outputSlots = new ArrayList<>(lastOutputCapacity + 27);
         gatherSlots(context, outputSlots::add);
+
+        // Update allocation hint
         lastOutputCapacity = outputSlots.size();
 
-        // try and move resources from input slots to output slots
-        var inIt = inputSlots.iterator();
-        while (inIt.hasNext()) {
-            var in = inIt.next();
-            if (in.isDone()) { // this slot is no longer useful
-                inIt.remove(); // ensure we only release slots once
-                InputStatement.releaseSlot(in); // release the slot to the object pool
-                continue;
-            }
-            var outIt = outputSlots.iterator();
-            while (outIt.hasNext()) {
-                var out = outIt.next();
-                if (out.isDone()) { // this slot is no longer useful
-                    outIt.remove(); // ensure we only release slots once
-                    LimitedOutputSlotObjectPool.INSTANCE.release(out); // release the slot to the object pool
-                    continue;
-                }
-                moveTo(in, out); // move the contents from the "in" slot to the "out" slot
-                if (in.isDone()) break; // stop processing output slots if we have nothing to move
-            }
-            if (outputSlots.isEmpty()) break; // stop processing input slots if we have no output slots
+        // Get assertion hint
+        int outputCheck = LimitedOutputSlotObjectPool.INSTANCE.getIndex();
+
+        // Log the number of output slots
+        context
+                .getLogger()
+                .debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT.get(
+                        outputSlots.size()
+                )));
+
+        // Short-circuit if we have nothing to move
+        if (outputSlots.isEmpty()) {
+            // Log the short-circuit
+            context
+                    .getLogger()
+                    .warn(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS.get()));
+
+            // Free the input slots
+            LimitedInputSlotObjectPool.INSTANCE.release(inputSlots, inputCheck);
+
+            // Free the output slots (we acquired no slots but the assertion is still valid)
+            LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots, outputCheck);
+
+            // Stop processing
+            return;
         }
 
-        LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots);
-        InputStatement.releaseSlots(inputSlots);
+
+        /* ################
+                 MOVE
+           ################ */
+
+        // try and move resources from input slots to output slots
+        var inputSlotIter = inputSlots.iterator();
+        while (inputSlotIter.hasNext()) {
+            // Get an input slot
+            var inputSlot = inputSlotIter.next();
+            if (inputSlot.isDone()) {
+                // Make sure we don't process this slot again
+                inputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
+                // Release it
+                LimitedInputSlotObjectPool.INSTANCE.release(inputSlot);
+                // Update the input check
+                inputCheck++;
+                // Try again
+                continue;
+            }
+
+            // Try to move into every output slot
+            var outputSlotIter = outputSlots.iterator();
+            while (outputSlotIter.hasNext()) {
+                // Get an output slot
+                var outputSlot = outputSlotIter.next();
+                if (outputSlot.isDone()) {
+                    // Make sure we don't process this slot again
+                    outputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
+                    // Release it
+                    LimitedOutputSlotObjectPool.INSTANCE.release(outputSlot);
+                    // Update the output check
+                    outputCheck++;
+                    // Try again
+                    continue;
+                }
+
+                // Attempt a move
+                moveTo(context, inputSlot, outputSlot);
+
+                // Continue to the next input slot when the current one is finished
+                if (inputSlot.isDone()) break;
+            }
+            // Stop processing when no output slots are left
+            if (outputSlots.isEmpty()) break;
+        }
+
+
+        /* ################
+                FINISH
+           ################ */
+
+        // Release remaining slot objects
+        LimitedInputSlotObjectPool.INSTANCE.release(inputSlots, inputCheck);
+        LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots, outputCheck);
     }
 
     /**
@@ -248,7 +354,7 @@ public class OutputStatement implements IOStatement {
 
     @Override
     public String toString() {
-        return "OUTPUT " + resourceLimits + " TO " + (each ? "EACH " : "") + labelAccess;
+        return "OUTPUT " + resourceLimits.toStringPretty(Limit.MAX_QUANTITY_MAX_RETENTION) + " TO " + (each ? "EACH " : "") + labelAccess;
     }
 
     @Override

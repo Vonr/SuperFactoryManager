@@ -1,11 +1,14 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
 import ca.teamdman.sfm.common.net.ServerboundManagerClearLogsPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerLogDesireUpdatePacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -59,7 +62,7 @@ public class LogsScreen extends Screen {
 
     private void rebuildText() {
         List<MutableComponent> processedLogs = new ArrayList<>();
-        List<TranslatableLogEvent> toProcess = MENU.logs;
+        var toProcess = MENU.logs;
         if (toProcess.isEmpty() && MENU.logLevel.equals(Level.OFF.name())) {
             MutableInstant instant = new MutableInstant();
             instant.initFromEpochMilli(System.currentTimeMillis(), 0);
@@ -90,16 +93,37 @@ public class LogsScreen extends Screen {
 
             String[] lines = ClientStuff.resolveTranslation(log.contents()).split("\n", -1);
 
+            StringBuilder codeBlock = new StringBuilder();
+            boolean insideCodeBlock = false;
+
             for (int i = 0; i < lines.length; i++) {
+                String line = lines[i];
                 MutableComponent lineComponent;
-                if (i == 0) {
-                    lineComponent = ago
-                            .append(level)
-                            .append(Component.literal(lines[i]).withStyle(ChatFormatting.WHITE));
+
+                if (line.equals("```")) {
+                    if (insideCodeBlock) {
+                        // output processed code
+                        var codeLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(
+                                codeBlock.toString(),
+                                false
+                        );
+                        processedLogs.addAll(codeLines);
+                        codeBlock = new StringBuilder();
+                    } else {
+                        // begin tracking code
+                        insideCodeBlock = true;
+                    }
+                } else if (insideCodeBlock) {
+                    codeBlock.append(line).append("\n");
                 } else {
-                    lineComponent = Component.literal(lines[i]).withStyle(ChatFormatting.WHITE);
+                    lineComponent = Component.literal(line).withStyle(ChatFormatting.WHITE);
+                    if (i == 0) {
+                        lineComponent = ago
+                                .append(level)
+                                .append(lineComponent);
+                    }
+                    processedLogs.add(lineComponent);
                 }
-                processedLogs.add(lineComponent);
             }
         }
         this.content = processedLogs;
@@ -160,13 +184,43 @@ public class LogsScreen extends Screen {
             buttonIndex++;
         }
 
+
+        this.addRenderableWidget(new Button(
+                this.width / 2 - 200,
+                this.height / 2 - 100 + 195,
+                80,
+                20,
+                Constants.LocalizationKeys.LOGS_GUI_COPY_LOGS_BUTTON.getComponent(),
+                (button) -> {
+                    StringBuilder clip = new StringBuilder();
+                    clip.append(ClientDiagnosticInfo.getDiagnosticInfo(MENU.program, MENU.getDisk()));
+                    clip.append("\n-- LOGS --\n");
+                    if (hasShiftDown()) {
+                        for (TranslatableLogEvent log : MENU.logs) {
+                            clip.append(log.level().name()).append(" ");
+                            clip.append(log.instant().toString()).append(" ");
+                            clip.append(log.contents().getKey());
+                            for (Object arg : log.contents().getArgs()) {
+                                clip.append(" ").append(arg);
+                            }
+                            clip.append("\n");
+                        }
+                    } else {
+                        for (MutableComponent line : content) {
+                            clip.append(line.getString()).append("\n");
+                        }
+                    }
+                    Minecraft.getInstance().keyboardHandler.setClipboard(clip.toString());
+                },
+                buildTooltip(Constants.LocalizationKeys.LOGS_GUI_COPY_LOGS_BUTTON_TOOLTIP)
+        ));
         this.addRenderableWidget(new Button(
                 this.width / 2 - 2 - 100,
                 this.height / 2 - 100 + 195,
                 200,
                 20,
                 CommonComponents.GUI_DONE,
-                (p_97691_) -> this.onClosePerformCallback(),
+                (p_97691_) -> this.onClose(),
                 (btn, pose, mx, my) -> renderTooltip(
                         pose,
                         font.split(
@@ -183,7 +237,7 @@ public class LogsScreen extends Screen {
                 )
         ));
         this.addRenderableWidget(new Button(
-                this.width / 2 - 2 + 150,
+                this.width / 2 - 2 + 115,
                 this.height / 2 - 100 + 195,
                 80,
                 20,
@@ -198,9 +252,31 @@ public class LogsScreen extends Screen {
         ));
     }
 
-    public void onClosePerformCallback() {
-        assert this.minecraft != null;
-        this.minecraft.popGuiLayer();
+    private Button.OnTooltip buildTooltip(Constants.LocalizationKeys.LocalizationEntry entry) {
+        return (btn, pose, mx, my) -> renderTooltip(
+                pose,
+                font.split(
+                        entry.getComponent(),
+                        Math.max(
+                                width
+                                / 2
+                                - 43,
+                                170
+                        )
+                ),
+                mx,
+                my
+        );
+    }
+
+    @Override
+    public void onClose() {
+        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
+                MENU.containerId,
+                MENU.MANAGER_POSITION,
+                false
+        ));
+        super.onClose();
     }
 
     public void scrollToBottom() {

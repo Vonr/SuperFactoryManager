@@ -21,23 +21,12 @@ public record InputStatement(
     @Override
     public void tick(ProgramContext context) {
         context.addInput(this);
-//        context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_INPUT_STATEMENT.get(
+//        context.getLogger().debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_INPUT_STATEMENT.get(
 //                labelAccess.labels().stream().map(Object::toString).collect(Collectors.joining(", "))
 //        )));
-        context.getManager().logger.debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_INPUT_STATEMENT.get(
+        context.getLogger().debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_INPUT_STATEMENT.get(
                 toString()
         )));
-    }
-
-    private static final LimitedInputSlotObjectPool SLOT_POOL = new LimitedInputSlotObjectPool();
-
-    @SuppressWarnings("rawtypes")
-    public static void releaseSlots(List<LimitedInputSlot> slots) {
-        SLOT_POOL.release(slots);
-    }
-
-    public static void releaseSlot(LimitedInputSlot<?, ?, ?> slot) {
-        SLOT_POOL.release(slot);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
@@ -80,7 +69,7 @@ public record InputStatement(
                     for (InputResourceTracker<?, ?, ?> tracker : trackers) {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
                             //noinspection unchecked
-                            acceptor.accept(SLOT_POOL.acquire(
+                            acceptor.accept(LimitedInputSlotObjectPool.INSTANCE.acquire(
                                     capability,
                                     slot,
                                     (InputResourceTracker<STACK, ITEM, CAP>) tracker
@@ -94,7 +83,7 @@ public record InputStatement(
 
     @Override
     public String toString() {
-        return "INPUT " + resourceLimits + " FROM " + (each ? "EACH " : "") + labelAccess;
+        return "INPUT " + resourceLimits.toStringPretty(Limit.MAX_QUANTITY_NO_RETENTION) + " FROM " + (each ? "EACH " : "") + labelAccess;
     }
 
     @Override

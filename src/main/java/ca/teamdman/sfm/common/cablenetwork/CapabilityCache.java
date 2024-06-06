@@ -82,7 +82,14 @@ public class CapabilityCache {
         // Check cache
         var found = getCapability(pos, capKind, direction);
         if (found != null) {
-            return found;
+            if (found.isPresent()) {
+                logger.trace(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_HIT.get(pos, capKind.getName(), direction)));
+                return found;
+            } else {
+                logger.error(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_HIT_INVALID.get(pos, capKind.getName(), direction)));
+            }
+        } else {
+            logger.trace(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_MISS.get(pos, capKind.getName(), direction)));
         }
 
         // No capability found, discover it
@@ -93,11 +100,11 @@ public class CapabilityCache {
                 putCapability(pos, capKind, direction, lazyOptional);
                 lazyOptional.addListener(x -> remove(pos, capKind, direction));
             } else {
-                logger.warn(x -> x.accept(Constants.LocalizationKeys.LOGS_EMPTY_CAPABILITY.get(pos)));
+                logger.warn(x -> x.accept(Constants.LocalizationKeys.LOGS_EMPTY_CAPABILITY.get(pos, capKind.getName(), direction)));
             }
             return lazyOptional;
         } else {
-            logger.warn(x -> x.accept(Constants.LocalizationKeys.LOGS_MISSING_CAPABILITY_PROVIDER.get(pos)));
+            logger.warn(x -> x.accept(Constants.LocalizationKeys.LOGS_MISSING_CAPABILITY_PROVIDER.get(pos, capKind.getName(), direction)));
             return LazyOptional.empty();
         }
     }

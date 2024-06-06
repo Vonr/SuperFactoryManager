@@ -349,9 +349,73 @@ public class Constants {
                 "Program trigger tick took %.2f ms:\n```\n%s\n```\n"
         );
 
-        public static final LocalizationEntry PROGRAM_TICK = new LocalizationEntry(
-                "program.sfm.tick",
+        public static final LocalizationEntry LOG_RESOURCE_TYPE_GET_CAPABILITIES_BEGIN = new LocalizationEntry(
+                "log.sfm.resource_type.get_capabilities.begin",
+                "Gathering capabilities of type %s against labels %s"
+        );
+        public static final LocalizationEntry LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT = new LocalizationEntry(
+                "log.sfm.resource_type.get_capabilities.not_present",
+                "Capability %s %s direction=%s not present"
+        );
+        public static final LocalizationEntry LOG_CAPABILITY_CACHE_HIT = new LocalizationEntry(
+                "log.sfm.capability_cache.hit",
+                "Capability cache HIT for %s %s direction=%s"
+        );
+        public static final LocalizationEntry LOG_CAPABILITY_CACHE_HIT_INVALID = new LocalizationEntry(
+                "log.sfm.capability_cache.hit_invalid",
+                "Capability cache HIT but NOT PRESENT for %s %s direction=%s"
+        );
+        public static final LocalizationEntry LOGS_RECEIVED = new LocalizationEntry(
+                "log.sfm.received",
+                "Received %d manager log entries from the server"
+        );
+        public static final LocalizationEntry LOG_CAPABILITY_CACHE_MISS = new LocalizationEntry(
+                "log.sfm.capability_cache.miss",
+                "Capability cache MISS for %s %s direction=%s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK = new LocalizationEntry(
+                "log.sfm.program.tick",
                 "PROGRAM TICK BEGIN"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_CONTEXT = new LocalizationEntry(
+                "log.sfm.program.context",
+                "Initial program context: %s"
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_HEADER_1 = new LocalizationEntry(
+                "log.sfm.cable_network.header.1",
+                "======= Cable network ======="
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_HEADER_2 = new LocalizationEntry(
+                "log.sfm.cable_network.header.2",
+                "Cable positions:"
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_HEADER_3 = new LocalizationEntry(
+                "log.sfm.cable_network.header.3",
+                "Cache positions:"
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_BODY = new LocalizationEntry(
+                "log.sfm.cable_network.body",
+                "%s"
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_FOOTER = new LocalizationEntry(
+                "log.sfm.cable_network.footer",
+                "============================="
+        );
+        public static final LocalizationEntry LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER = new LocalizationEntry(
+                "log.sfm.label_position_holder.header",
+                "=== Label position holder ==="
+        );
+        public static final LocalizationEntry LOG_LABEL_POSITION_HOLDER_DETAILS_BODY = new LocalizationEntry(
+                "log.sfm.label_position_holder.body",
+                "%s"
+        );
+        public static final LocalizationEntry LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER = new LocalizationEntry(
+                "log.sfm.label_position_holder.footer",
+                "============================="
+        );
+        public static final LocalizationEntry LOG_PROGRAM_VOIDED_RESOURCES = new LocalizationEntry(
+                "program.sfm.voided_resources",
+                "!!!RESOURCE LOSS HAS OCCURRED!!! Failed to move all promised items, found %s %s:%s, took %d but had %d left over after insertion"
         );
         public static final LocalizationEntry PROGRAM_TICK_TRIGGER_STATEMENT = new LocalizationEntry(
                 "program.sfm.tick.statement.trigger",
@@ -364,6 +428,22 @@ public class Constants {
         public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT = new LocalizationEntry(
                 "program.sfm.tick.statement.output",
                 "%s"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT = new LocalizationEntry(
+                "program.sfm.tick.statement.output.discovered_input_slot_count",
+                "Discovered %d input slots"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT = new LocalizationEntry(
+                "program.sfm.tick.statement.output.discovered_output_slot_count",
+                "Discovered %d output slots"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS = new LocalizationEntry(
+                "program.sfm.tick.statement.output.short_circuit_no_input_slots",
+                "Short-circuiting, no input slots"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS = new LocalizationEntry(
+                "program.sfm.tick.statement.output.short_circuit_no_output_slots",
+                "Short-circuiting, no output slots. This probably shouldn't happen."
         );
         public static final LocalizationEntry PROGRAM_TICK_FORGET_STATEMENT = new LocalizationEntry(
                 "program.sfm.tick.statement.forget",
@@ -459,8 +539,8 @@ public class Constants {
                 "gui.sfm.manager.button.view_logs",
                 "View logs"
         );
-        public static final LocalizationEntry LOGS_GUI_SET_LOG_LEVEL_BUTTON_PACKET_RECEIVED = new LocalizationEntry(
-                "gui.sfm.logs.button.set_log_level.packet_received",
+        public static final LocalizationEntry LOG_LEVEL_UPDATED = new LocalizationEntry(
+                "log.sfm.level_updated",
                 "Log level updated to %s"
         );
         public static final LocalizationEntry LOGS_GUI_CLEAR_LOGS_BUTTON_PACKET_RECEIVED = new LocalizationEntry(
@@ -470,6 +550,14 @@ public class Constants {
         public static final LocalizationEntry LOGS_GUI_CLEAR_LOGS_BUTTON = new LocalizationEntry(
                 "gui.sfm.logs.button.clear_logs",
                 "Clear logs"
+        );
+        public static final LocalizationEntry LOGS_GUI_COPY_LOGS_BUTTON = new LocalizationEntry(
+                "gui.sfm.logs.button.copy_logs",
+                "Copy logs"
+        );
+        public static final LocalizationEntry LOGS_GUI_COPY_LOGS_BUTTON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.logs.button.copy_logs.tooltip",
+                "Shift-click for raw"
         );
         public static final LocalizationEntry LOGS_GUI_NO_CONTENT = new LocalizationEntry(
                 "gui.sfm.logs.no_content",
@@ -481,11 +569,11 @@ public class Constants {
         );
         public static final LocalizationEntry LOGS_MISSING_CAPABILITY_PROVIDER = new LocalizationEntry(
                 "gui.sfm.logs.missing_capability_provider",
-                "No capability provider found for %s"
+                "No capability provider found for %s %s direction=%s"
         );
         public static final LocalizationEntry LOGS_EMPTY_CAPABILITY = new LocalizationEntry(
                 "gui.sfm.logs.empty_capability",
-                "Received an empty capability %s"
+                "Received an empty capability %s %s direction=%s"
         );
         public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.button.view_examples.tooltip",

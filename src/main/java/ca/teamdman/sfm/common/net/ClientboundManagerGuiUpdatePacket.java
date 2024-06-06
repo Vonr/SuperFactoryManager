@@ -1,22 +1,21 @@
 package ca.teamdman.sfm.common.net;
 
-import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
-import ca.teamdman.sfm.common.logging.TranslatableLogger;
+import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfml.ast.Program;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 public record ClientboundManagerGuiUpdatePacket(
         int windowId,
         String program,
         ManagerBlockEntity.State state,
-        long[] tickTimes,
-        List<TranslatableLogEvent> logs
+        long[] tickTimes
 ) {
 
     public static void encode(
@@ -26,7 +25,6 @@ public record ClientboundManagerGuiUpdatePacket(
         friendlyByteBuf.writeUtf(msg.program(), Program.MAX_PROGRAM_LENGTH);
         friendlyByteBuf.writeEnum(msg.state());
         friendlyByteBuf.writeLongArray(msg.tickTimes());
-        TranslatableLogger.encode(msg.logs(), friendlyByteBuf);
     }
 
     public static ClientboundManagerGuiUpdatePacket decode(FriendlyByteBuf friendlyByteBuf) {
@@ -34,19 +32,31 @@ public record ClientboundManagerGuiUpdatePacket(
                 friendlyByteBuf.readVarInt(),
                 friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH),
                 friendlyByteBuf.readEnum(ManagerBlockEntity.State.class),
-                friendlyByteBuf.readLongArray(),
-                TranslatableLogger.decode(friendlyByteBuf)
+                friendlyByteBuf.readLongArray()
         );
     }
 
     public static void handle(
             ClientboundManagerGuiUpdatePacket msg, Supplier<NetworkEvent.Context> contextSupplier
     ) {
-        contextSupplier.get().enqueueWork(() -> ClientStuff.updateMenu(msg));
+        contextSupplier.get().enqueueWork(msg::handle);
         contextSupplier.get().setPacketHandled(true);
     }
 
     public ClientboundManagerGuiUpdatePacket cloneWithWindowId(int windowId) {
-        return new ClientboundManagerGuiUpdatePacket(windowId, program(), state(), tickTimes(), logs());
+        return new ClientboundManagerGuiUpdatePacket(windowId, program(), state(), tickTimes());
+    }
+
+    public void handle() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null
+            || !(player.containerMenu instanceof ManagerContainerMenu menu)
+            || menu.containerId != this.windowId()) {
+            SFM.LOGGER.error("Invalid logs packet received, ignoring.");
+            return;
+        }
+        menu.tickTimeNanos = this.tickTimes();
+        menu.state = this.state();
+        menu.program = this.program();
     }
 }

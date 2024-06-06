@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
@@ -12,26 +13,20 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
 import net.minecraft.ChatFormatting;
-import net.minecraft.SharedConstants;
-import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.versions.forge.ForgeVersion;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
@@ -244,55 +239,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         try {
             var disk = menu.CONTAINER.getItem(0);
             if (!(disk.getItem() instanceof DiskItem)) return;
-            StringBuilder content = new StringBuilder(menu.program);
-
-            content
-                    .append("\n\n-- Diagnostic info --\n");
-
-            content.append("-- DateTime: ")
-                    .append(new SimpleDateFormat("yyyy-MM-dd HH:mm.ss").format(new java.util.Date()))
-                    .append('\n');
-
-            assert this.minecraft != null;
-            content
-                    .append("-- Game Version: ")
-                    .append("Minecraft ")
-                    .append(SharedConstants.getCurrentVersion().getName())
-                    .append(" (")
-                    .append(this.minecraft.getLaunchedVersion())
-                    .append("/")
-                    .append(ClientBrandRetriever.getClientModName())
-                    .append(")")
-                    .append('\n');
-
-            content.append("-- Forge Version: ")
-                    .append(ForgeVersion.getVersion())
-                    .append('\n');
-
-            //noinspection CodeBlock2Expr
-            ModList.get().getModContainerById(SFM.MOD_ID).ifPresent(mod -> {
-                content.append("-- SFM Version: ")
-                        .append(mod.getModInfo().getVersion())
-                        .append('\n');
-            });
-
-            var errors = DiskItem.getErrors(disk);
-            if (!errors.isEmpty()) {
-                content.append("\n-- Errors\n");
-                for (var error : errors) {
-                    content.append("-- * ").append(I18n.get(error.getKey(), error.getArgs())).append("\n");
-                }
-            }
-
-            var warnings = DiskItem.getWarnings(disk);
-            if (!warnings.isEmpty()) {
-                content.append("\n-- Warnings\n");
-                for (var warning : warnings) {
-                    content.append("-- * ").append(I18n.get(warning.getKey(), warning.getArgs())).append("\n");
-                }
-            }
-
-            Minecraft.getInstance().keyboardHandler.setClipboard(content.toString());
+            Minecraft.getInstance().keyboardHandler.setClipboard(ClientDiagnosticInfo.getDiagnosticInfo(
+                    menu.program,
+                    disk
+            ));
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {

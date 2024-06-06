@@ -1,5 +1,7 @@
 package ca.teamdman.sfm.common.program;
 
+import ca.teamdman.sfm.SFM;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,6 +15,10 @@ public class LimitedOutputSlotObjectPool {
     @SuppressWarnings("rawtypes")
     private LimitedOutputSlot[] pool = new LimitedOutputSlot[1];
     private int index = -1;
+
+    public int getIndex() {
+        return index;
+    }
 
     /**
      * Acquire a {@link LimitedOutputSlot} from the pool, or creates a new one if none available
@@ -45,9 +51,11 @@ public class LimitedOutputSlotObjectPool {
 
     /**
      * Release a {@link LimitedOutputSlot} back into the pool for it to be reused instead of garbage collected
+     *
+     * After acquiring slots, the end the index after release should be {@code check + slots.size()}
      */
     @SuppressWarnings("rawtypes")
-    public void release(List<LimitedOutputSlot> slots) {
+    public void release(List<LimitedOutputSlot> slots, int check) {
         // handle resizing
         if (index + slots.size() >= pool.length) {
             int slotsFree = pool.length - index - 1;
@@ -58,6 +66,15 @@ public class LimitedOutputSlotObjectPool {
         for (LimitedOutputSlot<?, ?, ?> slot : slots) {
             index++;
             pool[index] = slot;
+        }
+        // assert
+        if (index != check + slots.size()) {
+            SFM.LOGGER.warn(
+                    "Index mismatch after releasing output slots, got {} expected {}",
+                    index,
+                    check + slots.size()
+            );
+//            throw new IllegalStateException("Index mismatch after releasing slots, got " + index + " expected " + (check + slots.size()));
         }
     }
 }

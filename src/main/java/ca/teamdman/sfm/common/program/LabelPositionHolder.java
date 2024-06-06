@@ -147,4 +147,11 @@ public class LabelPositionHolder {
         LABELS.forEach((key, value) -> value.forEach(pos -> consumer.accept(key, pos)));
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "LabelPositionHolder{size=" + LABELS.values().stream().mapToInt(Set::size).sum() + "; " +
+               LABELS.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue().size()).collect(Collectors.joining(", ")) +
+               "}";
+    }
 }

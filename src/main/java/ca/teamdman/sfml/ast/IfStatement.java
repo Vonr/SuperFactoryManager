@@ -23,12 +23,12 @@ public record IfStatement(
 
         if (condition.test(context)) {
             context.pushPath(new ProgramContext.Branch(this, true));
-            context.getManager().logger.debug(x -> x.accept(
+            context.getLogger().debug(x -> x.accept(
                     Constants.LocalizationKeys.PROGRAM_TICK_IF_STATEMENT_WAS_TRUE.get(this.condition.sourceCode())));
             trueBlock.tick(context);
         } else {
             context.pushPath(new ProgramContext.Branch(this, false));
-            context.getManager().logger.debug(x -> x.accept(
+            context.getLogger().debug(x -> x.accept(
                     Constants.LocalizationKeys.PROGRAM_TICK_IF_STATEMENT_WAS_FALSE.get(this.condition.sourceCode())));
             falseBlock.tick(context);
         }

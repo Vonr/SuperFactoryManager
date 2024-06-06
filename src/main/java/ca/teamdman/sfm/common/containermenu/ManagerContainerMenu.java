@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket;
 import ca.teamdman.sfm.common.registry.SFMMenus;
+import ca.teamdman.sfm.common.util.IHasPosition;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -17,14 +18,18 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class ManagerContainerMenu extends AbstractContainerMenu {
+public class ManagerContainerMenu extends AbstractContainerMenu implements IHasPosition {
     public final Container CONTAINER;
     public final Inventory INVENTORY;
     public final BlockPos MANAGER_POSITION;
     public String logLevel;
-    public List<TranslatableLogEvent> logs;
+    public ArrayDeque<TranslatableLogEvent> logs;
+    public boolean isLogScreenOpen = false;
     public String program;
     public ManagerBlockEntity.State state;
     public long[] tickTimeNanos;
@@ -39,7 +44,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
             String logLevel,
             ManagerBlockEntity.State state,
             long[] tickTimeNanos,
-            List<TranslatableLogEvent> logs
+            ArrayDeque<TranslatableLogEvent> logs
     ) {
         super(SFMMenus.MANAGER_MENU.get(), windowId);
         checkContainerSize(container, 1);
@@ -85,7 +90,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
                 buf.readUtf(ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH),
                 buf.readEnum(ManagerBlockEntity.State.class),
                 buf.readLongArray(null, ManagerBlockEntity.TICK_TIME_HISTORY_SIZE),
-                TranslatableLogger.decode(buf)
+                new ArrayDeque<>()
         );
     }
 
@@ -99,7 +104,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
                 manager.logger.getLogLevel().name(),
                 manager.getState(),
                 manager.getTickTimeNanos(),
-                manager.logger.cloneContents()
+                new ArrayDeque<>()
         );
     }
 
@@ -112,7 +117,6 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
         );
         buf.writeEnum(manager.getState());
         buf.writeLongArray(manager.getTickTimeNanos());
-        manager.logger.encodeAndTruncate(buf);
     }
 
     public ItemStack getDisk() {
@@ -149,5 +153,10 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
             slot.setChanged();
         }
         return result;
+    }
+
+    @Override
+    public BlockPos getPosition() {
+        return MANAGER_POSITION;
     }
 }

@@ -7,6 +7,7 @@ import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfml.ast.IfStatement;
 import ca.teamdman.sfml.ast.InputStatement;
 import ca.teamdman.sfml.ast.Program;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -22,6 +23,17 @@ public class ProgramContext {
     private final List<Branch> PATH_TAKEN = new ArrayList<>();
     private final int EXPLORATION_BRANCH_INDEX;
     private final int REDSTONE_PULSES;
+    private final ItemStack DISK_STACK;
+    private final LabelPositionHolder LABEL_POSITIONS;
+    private boolean did_something = false;
+
+    public boolean didSomething() {
+        return did_something;
+    }
+
+    public void setDidSomething(boolean value) {
+        this.did_something = value;
+    }
 
     public ProgramContext(Program program, ManagerBlockEntity manager, ExecutionPolicy executionPolicy) {
         this(program, manager, executionPolicy, 0);
@@ -44,6 +56,17 @@ public class ProgramContext {
         REDSTONE_PULSES = MANAGER.getUnprocessedRedstonePulseCount();
         EXECUTION_POLICY = executionPolicy;
         EXPLORATION_BRANCH_INDEX = branchIndex;
+        //noinspection OptionalGetWithoutIsPresent // program shouldn't be ticking if there is no disk
+        DISK_STACK = MANAGER.getDisk().get();
+        LABEL_POSITIONS = LabelPositionHolder.from(DISK_STACK);
+    }
+
+    public ItemStack getDisk() {
+        return DISK_STACK;
+    }
+
+    public LabelPositionHolder getlabelPositions() {
+        return LABEL_POSITIONS;
     }
 
     private ProgramContext(ProgramContext other) {
@@ -55,6 +78,9 @@ public class ProgramContext {
         EXECUTION_POLICY = other.EXECUTION_POLICY;
         EXPLORATION_BRANCH_INDEX = other.EXPLORATION_BRANCH_INDEX;
         INPUTS.addAll(other.INPUTS);
+        did_something = other.did_something;
+        DISK_STACK = other.DISK_STACK;
+        LABEL_POSITIONS = other.LABEL_POSITIONS;
     }
 
     public ExecutionPolicy getExecutionPolicy() {
@@ -115,5 +141,23 @@ public class ProgramContext {
             IfStatement ifStatement,
             boolean wasTrue
     ) {
+    }
+
+    @Override
+    public String toString() {
+        return "ProgramContext{" +
+               "PROGRAM=" + PROGRAM +
+               ", MANAGER=" + MANAGER +
+               ", NETWORK=" + NETWORK +
+               ", INPUTS=" + INPUTS +
+               ", LEVEL=" + LEVEL +
+               ", EXECUTION_POLICY=" + EXECUTION_POLICY +
+               ", PATH_TAKEN=" + PATH_TAKEN +
+               ", EXPLORATION_BRANCH_INDEX=" + EXPLORATION_BRANCH_INDEX +
+               ", REDSTONE_PULSES=" + REDSTONE_PULSES +
+               ", DISK_STACK=" + DISK_STACK +
+               ", LABEL_POSITIONS=" + LABEL_POSITIONS +
+               ", did_something=" + did_something +
+               '}';
     }
 }

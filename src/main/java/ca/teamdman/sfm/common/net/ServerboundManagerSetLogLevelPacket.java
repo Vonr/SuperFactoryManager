@@ -43,13 +43,13 @@ public record ServerboundManagerSetLogLevelPacket(
                 (menu, manager) -> {
                     Level logLevelObj = Level.getLevel(msg.logLevel());
                     manager.logger.setLogLevel(logLevelObj);
-                    manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOGS_GUI_SET_LOG_LEVEL_BUTTON_PACKET_RECEIVED.get(
+                    manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOG_LEVEL_UPDATED.get(
                             msg.logLevel())));
                     String sender = "UNKNOWN SENDER";
                     if (contextSupplier.get().getSender() != null) {
                         sender = contextSupplier.get().getSender().getName().getString();
                     }
-                    SFM.LOGGER.debug("{} updated manager {} log level to {}", sender, msg.pos(), msg.logLevel());
+                    SFM.LOGGER.debug("{} updated manager {} {} log level to {}", sender, msg.pos(), manager.getLevel(), msg.logLevel());
                 }
         );
     }

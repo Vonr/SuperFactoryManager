@@ -5,15 +5,13 @@ import ca.teamdman.sfm.client.gui.screen.*;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
-import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
-import ca.teamdman.sfm.common.logging.TranslatableLogger;
-import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerLogDesireUpdatePacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.InteractionHand;
@@ -26,14 +24,17 @@ import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientStuff {
+    public static final Marker MANAGER_LOG_MARKER = MarkerManager.getMarker("MANAGER_LOGS");
+
     public static void setOrPushScreen(Screen screen) {
         if (Minecraft.getInstance().screen == null) {
             Minecraft
@@ -83,8 +84,12 @@ public class ClientStuff {
         LogsScreen screen = new LogsScreen(menu);
         setOrPushScreen(screen);
         screen.scrollToBottom();
+        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
+                menu.containerId,
+                menu.MANAGER_POSITION,
+                true
+        ));
     }
-
 
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -105,31 +110,6 @@ public class ClientStuff {
                         .getKey()
                         .getValue()
         );
-    }
-
-    public static void updateMenu(ClientboundManagerGuiUpdatePacket msg) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) return;
-        var container = player.containerMenu;
-        if (container instanceof ManagerContainerMenu menu && container.containerId == msg.windowId()) {
-            menu.tickTimeNanos = msg.tickTimes();
-            menu.state = msg.state();
-            menu.program = msg.program();
-
-            if (menu.logs.isEmpty()) {
-                menu.logs = msg.logs();
-            } else {
-                var newest = menu.logs.get(menu.logs.size() - 1).instant();
-                List<TranslatableLogEvent> toAdd = msg.logs().stream()
-                        .filter(x -> TranslatableLogger.comesAfter(x.instant(), newest))
-                        .toList();
-                menu.logs.addAll(toAdd);
-                // truncate to 256 entries
-                if (menu.logs.size() > 256) {
-                    menu.logs.subList(0, menu.logs.size() - 256).clear();
-                }
-            }
-        }
     }
 
     public static @Nullable BlockEntity getLookBlockEntity() {

@@ -4,8 +4,10 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
+import ca.teamdman.sfm.common.net.ClientboundManagerLogsPacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.OpenContainerTracker;
@@ -25,8 +27,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
+import org.apache.logging.log4j.core.time.MutableInstant;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -66,29 +70,76 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 long nanoTimePassed = Long.min(System.nanoTime() - start, Integer.MAX_VALUE);
                 manager.tickTimeNanos[manager.tickIndex] = (int) nanoTimePassed;
                 manager.tickIndex = (manager.tickIndex + 1) % manager.tickTimeNanos.length;
+                manager.logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_MS.get(nanoTimePassed
+                                                                                                       / 1_000_000f)));
                 manager.sendUpdatePacket();
-                manager.logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_MS.get(nanoTimePassed / 1_000_000f)));
                 manager.logger.pruneSoWeDontEatAllTheRam();
+
+                if (manager.logger.getLogLevel() == org.apache.logging.log4j.Level.TRACE) {
+                    org.apache.logging.log4j.Level newLevel = org.apache.logging.log4j.Level.OFF;
+                    manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOG_LEVEL_UPDATED.get(newLevel)));
+                    manager.logger.setLogLevel(newLevel);
+                    SFM.LOGGER.debug(
+                            "SFM updated manager {} {} log level to {} after a single execution at TRACE level",
+                            manager.getBlockPos(),
+                            manager.getLevel(),
+                            newLevel
+                    );
+                }
             }
         }
     }
 
     private void sendUpdatePacket() {
         // Create one packet and clone it for each receiver
-        var packet = new ClientboundManagerGuiUpdatePacket(
+        var managerUpdatePacket = new ClientboundManagerGuiUpdatePacket(
                 -1,
                 getProgramString().orElse(""),
                 getState(),
-                getTickTimeNanos(),
-                logger.getLatestLogs()
+                getTickTimeNanos()
         );
 
-        OpenContainerTracker.getPlayersWithOpenContainer(ManagerContainerMenu.class)
-                .filter(entry -> entry.getValue().MANAGER_POSITION.equals(getBlockPos()))
-                .forEach(entry -> SFMPackets.MANAGER_CHANNEL.send(
-                        PacketDistributor.PLAYER.with(entry::getKey),
-                        packet.cloneWithWindowId(entry.getValue().containerId)
-                ));
+        OpenContainerTracker.getOpenManagerMenus(getBlockPos())
+                .forEach(entry -> {
+                    ManagerContainerMenu menu = entry.getValue();
+
+                    // Send a copy of the manager update packet
+                    SFMPackets.MANAGER_CHANNEL.send(
+                            PacketDistributor.PLAYER.with(entry::getKey),
+                            managerUpdatePacket.cloneWithWindowId(menu.containerId)
+                    );
+
+                    // Sync logs
+                    if (!menu.isLogScreenOpen) return;
+                    MutableInstant hasSince = new MutableInstant();
+                    if (!menu.logs.isEmpty()) {
+                        hasSince.initFrom(menu.logs.getLast().instant());
+                    }
+                    var sending = logger.getLogsAfter(hasSince);
+                    if (!sending.isEmpty()) {
+                        // Add the latest entry to the server copy
+                        // since the server copy is only used for checking what the latest log timestamp is
+                        menu.logs.add(sending.getLast());
+
+                        // Send the logs
+                        while (!sending.isEmpty()) {
+                            int remaining = sending.size();
+                            // By passing the same list to the same player in each packet
+                            // as the packets encode, they will drain the list to make
+                            // the packets as full as possible.
+                            // This assumes that the send method immediately invokes the encode method
+                            // which it does as of 2024-06-05 on 1.19.2
+                            SFMPackets.MANAGER_CHANNEL.send(
+                                    PacketDistributor.PLAYER.with(entry::getKey),
+                                    new ClientboundManagerLogsPacket(
+                                            menu.containerId,
+                                            sending
+                                    )
+                            );
+                            assert sending.size() < remaining : "Failed to send logs, infinite loop detected";
+                        }
+                    }
+                });
     }
 
     public int getTick() {

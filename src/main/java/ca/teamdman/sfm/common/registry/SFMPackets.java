@@ -88,6 +88,20 @@ public class SFMPackets {
                 ServerboundManagerClearLogsPacket::decode,
                 ServerboundManagerClearLogsPacket::handle
         );
+        MANAGER_CHANNEL.registerMessage(
+                6,
+                ServerboundManagerLogDesireUpdatePacket.class,
+                ServerboundManagerLogDesireUpdatePacket::encode,
+                ServerboundManagerLogDesireUpdatePacket::decode,
+                ServerboundManagerLogDesireUpdatePacket::handle
+        );
+        MANAGER_CHANNEL.registerMessage(
+                7,
+                ClientboundManagerLogsPacket.class,
+                ClientboundManagerLogsPacket::encode,
+                ClientboundManagerLogsPacket::decode,
+                ClientboundManagerLogsPacket::handle
+        );
 
 
         LABEL_GUN_ITEM_CHANNEL.registerMessage(

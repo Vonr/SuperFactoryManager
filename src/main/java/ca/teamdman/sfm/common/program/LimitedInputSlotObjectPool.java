@@ -1,5 +1,7 @@
 package ca.teamdman.sfm.common.program;
 
+import ca.teamdman.sfm.SFM;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,9 +11,14 @@ import java.util.List;
  * This assumes that the pool will be used in a single thread.
  */
 public class LimitedInputSlotObjectPool {
+    public static final LimitedInputSlotObjectPool INSTANCE = new LimitedInputSlotObjectPool();
     @SuppressWarnings("rawtypes")
     private LimitedInputSlot[] pool = new LimitedInputSlot[1];
     private int index = -1;
+
+    public int getIndex() {
+        return index;
+    }
 
     /**
      * Acquire a {@link LimitedInputSlot} from the pool, or creates a new one if none available
@@ -44,9 +51,11 @@ public class LimitedInputSlotObjectPool {
 
     /**
      * Release a {@link LimitedInputSlot} back into the pool for it to be reused instead of garbage collected
+     *
+     * After acquiring slots, the end the index after release should be {@code check + slots.size()}
      */
     @SuppressWarnings("rawtypes")
-    public void release(List<LimitedInputSlot> slots) {
+    public void release(List<LimitedInputSlot> slots, int check) {
         // handle resizing
         if (index + slots.size() >= pool.length) {
             int slotsFree = pool.length - index - 1;
@@ -57,6 +66,16 @@ public class LimitedInputSlotObjectPool {
         for (LimitedInputSlot slot : slots) {
             index++;
             pool[index] = slot;
+        }
+        // assert
+        if (index != check + slots.size()) {
+            SFM.LOGGER.warn(
+                    "Index mismatch after releasing input slots, got {} expected {}",
+                    index,
+                    check + slots.size()
+            );
+
+//            throw new IllegalStateException("Index mismatch after releasing slots, got " + index + " expected " + (check + slots.size()));
         }
     }
 }
