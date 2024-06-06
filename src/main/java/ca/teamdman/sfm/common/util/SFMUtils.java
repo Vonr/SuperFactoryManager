@@ -81,13 +81,13 @@ public class SFMUtils {
         return tag;
     }
 
-    public static final int MAX_TRANSLATION_ELEMENT_LENGTH = 2048;
+    public static final int MAX_TRANSLATION_ELEMENT_LENGTH = 10240;
 
     public static void encodeTranslation(TranslatableContents contents, FriendlyByteBuf buf) {
         buf.writeUtf(contents.getKey(), MAX_TRANSLATION_ELEMENT_LENGTH);
         buf.writeVarInt(contents.getArgs().length);
         for (var arg : contents.getArgs()) {
-            buf.writeUtf(arg.toString(), MAX_TRANSLATION_ELEMENT_LENGTH);
+            buf.writeUtf(String.valueOf(arg), MAX_TRANSLATION_ELEMENT_LENGTH);
         }
     }
 
