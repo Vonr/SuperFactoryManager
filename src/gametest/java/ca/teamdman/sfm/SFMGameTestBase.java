@@ -16,6 +16,7 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 
 import java.text.NumberFormat;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -71,8 +72,7 @@ public abstract class SFMGameTestBase {
 
             @Override
             public Block getBlock() {
-                //noinspection DataFlowIssue
-                return null;
+                return new Block(Collections.emptyList());
             }
         };
 
@@ -94,8 +94,7 @@ public abstract class SFMGameTestBase {
 
             @Override
             public Block getBlock() {
-                //noinspection DataFlowIssue
-                return null;
+                return new Block(Collections.emptyList());
             }
         };
 
