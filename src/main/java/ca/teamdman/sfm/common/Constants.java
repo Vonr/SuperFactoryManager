@@ -337,7 +337,7 @@ public class Constants {
 
         public static final LocalizationEntry PROGRAM_TICK_TIME_MS = new LocalizationEntry(
                 "program.sfm.tick.time",
-                "Program tick took %.2f ns"
+                "Program tick took %.2f ms"
         );
 
         public static final LocalizationEntry PROGRAM_TICK_STATEMENT_TIME_MS = new LocalizationEntry(
@@ -391,7 +391,7 @@ public class Constants {
         );
         public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_HEADER_3 = new LocalizationEntry(
                 "log.sfm.cable_network.header.3",
-                "Cache positions:"
+                "Capability positions:"
         );
         public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_BODY = new LocalizationEntry(
                 "log.sfm.cable_network.body",
