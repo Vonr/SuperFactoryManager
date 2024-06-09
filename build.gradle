@@ -315,6 +315,8 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:ex-pattern-provider-892005:5250574") // ExtendedAE-1.19-0.2.2-forge.jar
 
 
+    runtimeOnly fg.deobf("curse.maven:construction-wand-399558:4455719") // constructionwand-1.19.2-2.10.jar
+
     gametestImplementation fg.deobf("com.teamcofh:cofh_core:1.19.2-10.2.0.+")
     runtimeOnly fg.deobf("com.teamcofh:cofh_core:1.19.2-10.2.0.+")
 
