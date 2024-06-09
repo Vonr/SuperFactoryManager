@@ -7,6 +7,7 @@
 ---- next ----
 -- make "EVERY TICK DO" valid syntax
 ---- this still only allows forge_energy by default
+-- optimize more common regex (*seed, seed*, *seed*)
 -- add line numbers to program edit screen
 -- add logging for individual managers
 -- program edit screen no longer pauses the game in single player
