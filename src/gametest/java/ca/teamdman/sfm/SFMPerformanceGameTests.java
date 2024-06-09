@@ -431,42 +431,93 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
 
             // create the program
             var program = """
-                    NAME "gather supplies"
+NAME "gather supplies"
 
-                    EVERY 20 TICKS DO
-                        INPUT FROM chest
-                        OUTPUT TO storage
-                    END
+EVERY 20 TICKS DO
+   INPUT
+       retain 64 gold_ingot,
+       retain 64 gold_block,
+       retain 64 iron_ingot,
+       retain 64 iron_block,
+       retain 64 diamond,
+       retain 64 diamond_block,
+       retain 64 emerald,
+       retain 64 emerald_block,
+       retain 64 lapis_lazuli,
+       retain 64 lapis_block,
+       retain 64 "redstone",
+       retain 64 redstone_block,
+       retain 64 coal,
+       retain 64 coal_block,
+       retain 64 netherite_ingot,
+       retain 64 netherite_block,
+       retain 64 torch,
+       retain 16 bucket,
+       retain 64 chest,
+       retain 64 crafting_table,
+       retain 64 furnace,
+       retain 64 cobblestone,
+       retain 64 *:*_log,
+       retain 64 *:*_planks
+    FROM chest
+    INPUT EXCEPT
+       gold_ingot,
+       gold_block,
+       iron_ingot,
+       iron_block,
+       diamond,
+       diamond_block,
+       emerald,
+       emerald_block,
+       lapis_lazuli,
+       lapis_block,
+       "redstone",
+       redstone_block,
+       coal,
+       coal_block,
+       netherite_ingot,
+       netherite_block,
+       torch,
+       bucket,
+       chest,
+       crafting_table,
+       furnace,
+       cobblestone,
+       *:*_log,
+       *:*_planks
+   FROM chest
+   OUTPUT TO storage
+END
 
-                    EVERY 20 TICKS DO
-                        INPUT FROM storage
-                        OUTPUT
-                            retain 64 gold_ingot,
-                            retain 64 gold_block,
-                            retain 64 iron_ingot,
-                            retain 64 iron_block,
-                            retain 64 diamond,
-                            retain 64 diamond_block,
-                            retain 64 emerald,
-                            retain 64 emerald_block,
-                            retain 64 lapis_lazuli,
-                            retain 64 lapis_block,
-                            retain 64 "redstone",
-                            retain 64 redstone_block,
-                            retain 64 coal,
-                            retain 64 coal_block,
-                            retain 64 netherite_ingot,
-                            retain 64 netherite_block,
-                            retain 64 torch,
-                            retain 16 bucket,
-                            retain 64 chest,
-                            retain 64 crafting_table,
-                            retain 64 furnace,
-                            retain 64 cobblestone,
-                            retain 64 *:*_log,
-                            retain 64 *:*_planks
-                        TO chest
-                    END
+EVERY 20 TICKS DO
+   INPUT FROM storage
+   OUTPUT
+       retain 64 gold_ingot,
+       retain 64 gold_block,
+       retain 64 iron_ingot,
+       retain 64 iron_block,
+       retain 64 diamond,
+       retain 64 diamond_block,
+       retain 64 emerald,
+       retain 64 emerald_block,
+       retain 64 lapis_lazuli,
+       retain 64 lapis_block,
+       retain 64 "redstone",
+       retain 64 redstone_block,
+       retain 64 coal,
+       retain 64 coal_block,
+       retain 64 netherite_ingot,
+       retain 64 netherite_block,
+       retain 64 torch,
+       retain 16 bucket,
+       retain 64 chest,
+       retain 64 crafting_table,
+       retain 64 furnace,
+       retain 64 cobblestone,
+       retain 64 *:*_log,
+       retain 64 *:*_planks
+   TO chest
+END
                     """.stripTrailing().stripIndent();
 
             // set the labels
