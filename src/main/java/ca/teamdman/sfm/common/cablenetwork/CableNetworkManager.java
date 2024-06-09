@@ -34,75 +34,33 @@ public class CableNetworkManager {
 
     private static final Map<Level, List<CableNetwork>> NETWORKS = new WeakHashMap<>();
 
-    /**
-     * Remove a block from any networks it is in. Then, prune any empty networks.
-     */
-    public static void removeCable(Level level, BlockPos cablePos) {
-        getNetworkFromCablePosition(level, cablePos).ifPresent(network -> {
-            removeNetwork(network);
-            var newNetworks = network.withoutCable(cablePos);
-            newNetworks.forEach(CableNetworkManager::addNetwork);
-        });
-    }
-
     public static Optional<CableNetwork> getOrRegisterNetworkFromManagerPosition(ManagerBlockEntity tile) {
         return getOrRegisterNetworkFromCablePosition(tile.getLevel(), tile.getBlockPos());
     }
 
-    public static Optional<CableNetwork> getNetworkFromPosition(Level level, BlockPos pos) {
-        return getNetworksForLevel(level)
-                .filter(net -> net.CABLE_POSITIONS.contains(pos.asLong())
-                               || net.getCapabilityProviderPositions().anyMatch(pos::equals))
-                .findFirst();
-    }
-
     public static Stream<CableNetwork> getNetworksForLevel(Level level) {
-        return NETWORKS.getOrDefault(level, Collections.emptyList())
+        return NETWORKS
+                .getOrDefault(level, Collections.emptyList())
                 .stream()
                 .filter(net -> net.getLevel().isClientSide() == level.isClientSide());
     }
 
-    private static Optional<CableNetwork> getNetworkFromCablePosition(Level level, BlockPos pos) {
-        return getNetworksForLevel(level)
-                .filter(net -> net.containsCablePosition(pos))
-                .findFirst();
-    }
-
-    private static void removeNetwork(CableNetwork network) {
-        NETWORKS.getOrDefault(network.getLevel(), Collections.emptyList()).remove(network);
-    }
-
-    private static void addNetwork(CableNetwork network) {
-        NETWORKS.computeIfAbsent(network.getLevel(), k -> new ArrayList<>()).add(network);
-    }
-
-    /**
-     * Finds the set of networks that contain the given position
-     */
-    private static Set<CableNetwork> getCandidateNetworks(Level level, BlockPos pos) {
-        return getNetworksForLevel(level)
-                .filter(net -> net.isAdjacentToCable(pos))
-                .collect(Collectors.toSet());
-    }
-
-
-    private static Optional<CableNetwork> mergeNetworks(Set<CableNetwork> networks) {
-        if (networks.isEmpty()) return Optional.empty();
-
-        Iterator<CableNetwork> iterator = networks.iterator();
-        CableNetwork main = iterator.next();
-
-        // Merge the rest into the first
-        iterator.forEachRemaining(other -> {
-            main.mergeNetwork(other);
-            removeNetwork(other);
-        });
-
-        return Optional.of(main);
-    }
-
     public static void unregisterNetworkForTestingPurposes(CableNetwork network) {
         removeNetwork(network);
+    }
+
+    public static void onCablePlaced(Level level, BlockPos pos) {
+        getOrRegisterNetworkFromCablePosition(level, pos);
+    }
+
+    public static void onCableRemoved(Level level, BlockPos cablePos) {
+        getNetworkFromCablePosition(level, cablePos).ifPresent(network -> {
+            // Unregister the original network
+            removeNetwork(network);
+            // Register networks that result from the removal of the cable, if any
+            var remainingNetworks = network.withoutCable(cablePos);
+            remainingNetworks.forEach(CableNetworkManager::addNetwork);
+        });
     }
 
     /**
@@ -149,7 +107,6 @@ public class CableNetworkManager {
         return result;
     }
 
-
     public static List<BlockPos> getBadCableCachePositions(Level level) {
         return getNetworksForLevel(level)
                 .flatMap(CableNetwork::getCablePositions)
@@ -159,5 +116,39 @@ public class CableNetworkManager {
 
     public static void clear() {
         NETWORKS.clear();
+    }
+
+    private static Optional<CableNetwork> getNetworkFromCablePosition(Level level, BlockPos pos) {
+        return getNetworksForLevel(level).filter(net -> net.containsCablePosition(pos)).findFirst();
+    }
+
+    private static void removeNetwork(CableNetwork network) {
+        NETWORKS.getOrDefault(network.getLevel(), Collections.emptyList()).remove(network);
+    }
+
+    private static void addNetwork(CableNetwork network) {
+        NETWORKS.computeIfAbsent(network.getLevel(), k -> new ArrayList<>()).add(network);
+    }
+
+    /**
+     * Finds the set of networks that contain the given position
+     */
+    private static Set<CableNetwork> getCandidateNetworks(Level level, BlockPos pos) {
+        return getNetworksForLevel(level).filter(net -> net.isAdjacentToCable(pos)).collect(Collectors.toSet());
+    }
+
+    private static Optional<CableNetwork> mergeNetworks(Set<CableNetwork> networks) {
+        if (networks.isEmpty()) return Optional.empty();
+
+        Iterator<CableNetwork> iterator = networks.iterator();
+        CableNetwork main = iterator.next();
+
+        // Merge the rest into the first
+        iterator.forEachRemaining(other -> {
+            main.mergeNetwork(other);
+            removeNetwork(other);
+        });
+
+        return Optional.of(main);
     }
 }
