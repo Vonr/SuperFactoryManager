@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.program;
 import ca.teamdman.sfm.SFM;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * A pool of {@link LimitedInputSlot} objects to avoid the garbage collector
@@ -55,7 +55,7 @@ public class LimitedInputSlotObjectPool {
      * After acquiring slots, the end the index after release should be {@code check + slots.size()}
      */
     @SuppressWarnings("rawtypes")
-    public void release(List<LimitedInputSlot> slots, int check) {
+    public void release(Collection<LimitedInputSlot> slots, int check) {
         // handle resizing
         if (index + slots.size() >= pool.length) {
             int slotsFree = pool.length - index - 1;

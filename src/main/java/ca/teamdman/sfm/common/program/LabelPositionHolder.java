@@ -13,21 +13,26 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("UnusedReturnValue")
 public class LabelPositionHolder {
+    private final static WeakHashMap<ItemStack, LabelPositionHolder> CACHE = new WeakHashMap<>();
     private final Map<String, Set<BlockPos>> LABELS = new HashMap<>();
 
     private LabelPositionHolder() {
+    }
 
+    public static LabelPositionHolder from(ItemStack stack) {
+        return CACHE.computeIfAbsent(stack, s -> {
+            var tag = stack.getOrCreateTag().getCompound("sfm:labels");
+            return deserialize(tag);
+        });
     }
 
     public static LabelPositionHolder empty() {
         return new LabelPositionHolder();
     }
 
-    public static LabelPositionHolder from(ItemStack stack) {
+    public static LabelPositionHolder deserialize(CompoundTag tag) {
         var labels = LabelPositionHolder.empty();
-        var tag = stack.getOrCreateTag().getCompound("sfm:labels");
         for (var label : tag.getAllKeys()) {
             // old: storing BlockPos as long
             labels.addAll(label, tag.getList(label, Tag.TAG_LONG).stream()
@@ -42,6 +47,11 @@ public class LabelPositionHolder {
                     .collect(Collectors.toList()));
         }
         return labels;
+    }
+
+    public void save(ItemStack stack) {
+        stack.getOrCreateTag().put("sfm:labels", serialize());
+        CACHE.put(stack, this);
     }
 
     public CompoundTag serialize() {
@@ -128,11 +138,6 @@ public class LabelPositionHolder {
         return this;
     }
 
-    public LabelPositionHolder save(ItemStack stack) {
-        stack.getOrCreateTag().put("sfm:labels", serialize());
-        return this;
-    }
-
     public LabelPositionHolder removeIf(BiPredicate<String, BlockPos> predicate) {
         LABELS.forEach((key, value) -> value.removeIf(pos -> predicate.test(key, pos)));
         return this;
@@ -151,7 +156,11 @@ public class LabelPositionHolder {
     @Override
     public String toString() {
         return "LabelPositionHolder{size=" + LABELS.values().stream().mapToInt(Set::size).sum() + "; " +
-               LABELS.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue().size()).collect(Collectors.joining(", ")) +
+               LABELS
+                       .entrySet()
+                       .stream()
+                       .map(entry -> entry.getKey() + "=" + entry.getValue().size())
+                       .collect(Collectors.joining(", ")) +
                "}";
     }
 }

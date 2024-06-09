@@ -6,9 +6,7 @@ import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -140,7 +138,7 @@ public class OutputStatement implements IOStatement {
            ################ */
 
         // gather the input slots from all the input statements, +27 to hopefully avoid resizing
-        List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity + 27);
+        ArrayDeque<LimitedInputSlot> inputSlots = new ArrayDeque<>(lastInputCapacity + 27);
         for (var inputStatement : context.getInputs()) {
             inputStatement.gatherSlots(context, inputSlots::add);
         }
@@ -177,7 +175,7 @@ public class OutputStatement implements IOStatement {
            ################ */
 
         // collect the output slots, +27 to hopefully avoid resizing
-        List<LimitedOutputSlot> outputSlots = new ArrayList<>(lastOutputCapacity + 27);
+        ArrayDeque<LimitedOutputSlot> outputSlots = new ArrayDeque<>(lastOutputCapacity + 27);
         gatherSlots(context, outputSlots::add);
 
         // Update allocation hint
