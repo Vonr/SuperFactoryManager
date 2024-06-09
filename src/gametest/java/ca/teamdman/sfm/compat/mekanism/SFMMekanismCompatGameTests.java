@@ -100,7 +100,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                       INPUT infusion:*:* FROM a NORTH SIDE -- mek can extract from front by default
                                       OUTPUT infusion:*:* TO b TOP SIDE -- mek can insert to top by default
                                    END
-                                                           """.stripIndent());
+                                   """.stripIndent());
 
         // set the labels
         LabelPositionHolder.empty()
@@ -494,7 +494,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "many inventory lag test"
-                                    
+
                     EVERY 20 TICKS DO
                         INPUT fluid:*:* FROM source
                         OUTPUT fluid:*:* TO dest TOP SIDE

@@ -24,7 +24,7 @@ public class ProgramTokenContextActions {
         var builder = new ASTBuilder();
         try {
             builder.visitProgram(parser.program());
-            SFM.LOGGER.info("Gathering context actions for cursor position " + cursorPosition);
+            SFM.LOGGER.info("Gathering context actions for cursor position {}", cursorPosition);
             return Stream.concat(
                             builder
                                     .getNodesUnderCursor(cursorPosition)

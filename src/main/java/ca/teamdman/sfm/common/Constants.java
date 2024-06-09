@@ -365,10 +365,6 @@ public class Constants {
                 "log.sfm.capability_cache.hit_invalid",
                 "Capability cache HIT but NOT PRESENT for %s %s direction=%s"
         );
-        public static final LocalizationEntry LOGS_RECEIVED = new LocalizationEntry(
-                "log.sfm.received",
-                "Received %d manager log entries from the server"
-        );
         public static final LocalizationEntry LOG_CAPABILITY_CACHE_MISS = new LocalizationEntry(
                 "log.sfm.capability_cache.miss",
                 "Capability cache MISS for %s %s direction=%s"

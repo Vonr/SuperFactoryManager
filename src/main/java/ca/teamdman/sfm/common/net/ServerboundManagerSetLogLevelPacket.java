@@ -7,6 +7,7 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.Level;
 
@@ -46,8 +47,9 @@ public record ServerboundManagerSetLogLevelPacket(
                     manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOG_LEVEL_UPDATED.get(
                             msg.logLevel())));
                     String sender = "UNKNOWN SENDER";
-                    if (contextSupplier.get().getSender() != null) {
-                        sender = contextSupplier.get().getSender().getName().getString();
+                    ServerPlayer player = contextSupplier.get().getSender();
+                    if (player != null) {
+                        sender = player.getName().getString();
                     }
                     SFM.LOGGER.debug("{} updated manager {} {} log level to {}", sender, msg.pos(), manager.getLevel(), msg.logLevel());
                 }

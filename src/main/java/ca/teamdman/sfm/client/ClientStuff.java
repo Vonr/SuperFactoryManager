@@ -24,8 +24,6 @@ import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -33,7 +31,6 @@ import java.util.function.Consumer;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientStuff {
-    public static final Marker MANAGER_LOG_MARKER = MarkerManager.getMarker("MANAGER_LOGS");
 
     public static void setOrPushScreen(Screen screen) {
         if (Minecraft.getInstance().screen == null) {

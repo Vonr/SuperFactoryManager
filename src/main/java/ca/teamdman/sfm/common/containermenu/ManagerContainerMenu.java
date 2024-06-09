@@ -3,10 +3,8 @@ package ca.teamdman.sfm.common.containermenu;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
-import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket;
 import ca.teamdman.sfm.common.registry.SFMMenus;
-import ca.teamdman.sfm.common.util.IHasPosition;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -19,13 +17,10 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
-public class ManagerContainerMenu extends AbstractContainerMenu implements IHasPosition {
+public class ManagerContainerMenu extends AbstractContainerMenu {
     public final Container CONTAINER;
-    public final Inventory INVENTORY;
+    public final Inventory PLAYER_INVENTORY;
     public final BlockPos MANAGER_POSITION;
     public String logLevel;
     public ArrayDeque<TranslatableLogEvent> logs;
@@ -49,7 +44,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu implements IHasP
         super(SFMMenus.MANAGER_MENU.get(), windowId);
         checkContainerSize(container, 1);
         this.CONTAINER = container;
-        this.INVENTORY = inv;
+        this.PLAYER_INVENTORY = inv;
         this.MANAGER_POSITION = blockEntityPos;
         this.logLevel = logLevel;
         this.logs = logs;
@@ -153,10 +148,5 @@ public class ManagerContainerMenu extends AbstractContainerMenu implements IHasP
             slot.setChanged();
         }
         return result;
-    }
-
-    @Override
-    public BlockPos getPosition() {
-        return MANAGER_POSITION;
     }
 }

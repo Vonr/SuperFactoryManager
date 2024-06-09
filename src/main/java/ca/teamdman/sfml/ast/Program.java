@@ -15,9 +15,9 @@ import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
-import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -260,32 +260,34 @@ public record Program(
                 context.getLogger().trace(trace -> {
                     trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_1.get());
                     trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_2.get());
+                    Level level = context
+                            .getManager()
+                            .getLevel();
+                    //noinspection DataFlowIssue
                     context
                             .getNetwork()
                             .getCablePositions()
                             .map(pos -> "- "
                                         + pos.toString()
                                         + " "
-                                        + context
-                                                .getManager()
-                                                .getLevel()
+                                        + level
                                                 .getBlockState(
                                                         pos))
                             .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
                                     body)));
                     trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_3.get());
+                    //noinspection DataFlowIssue
                     context
                             .getNetwork()
                             .getCapabilityProviderPositions()
-                            .map(pos -> "- " + pos.toString() + " " + context
-                                    .getManager()
-                                    .getLevel()
+                            .map(pos -> "- " + pos.toString() + " " + level
                                     .getBlockState(pos))
                             .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
                                     body)));
                     trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_FOOTER.get());
 
                     trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER.get());
+                    //noinspection DataFlowIssue
                     context
                             .getlabelPositions()
                             .get()
@@ -297,9 +299,7 @@ public record Program(
                                                    + ": "
                                                    + pos.toString()
                                                    + " "
-                                                   + context
-                                                           .getManager()
-                                                           .getLevel()
+                                                   + level
                                                            .getBlockState(
                                                                    pos)
 

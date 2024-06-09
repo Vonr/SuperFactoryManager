@@ -1,7 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
@@ -49,6 +48,5 @@ public record ClientboundManagerLogsPacket(
         }
 
         menu.logs.addAll(logs());
-//        SFM.LOGGER.debug(Constants.LocalizationKeys.LOGS_RECEIVED.getString(logs().size()));
     }
 }

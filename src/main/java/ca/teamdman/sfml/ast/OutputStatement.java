@@ -38,7 +38,7 @@ public class OutputStatement implements IOStatement {
      * @param <STACK>     the stack type
      * @param <ITEM>      the item type
      * @param <CAP>       the capability type
-     * @param context
+     * @param context     program execution context
      * @param source      The slot to pull from
      * @param destination the slot to push to
      */

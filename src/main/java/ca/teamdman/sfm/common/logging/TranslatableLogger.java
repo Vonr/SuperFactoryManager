@@ -70,10 +70,9 @@ public class TranslatableLogger {
      * Will safely stop writing once the buffer is full.
      * Will remove from the list the logs that were written.
      *
-     * @return number of logs written
      * @see NetworkHooks#openScreen(ServerPlayer, MenuProvider, Consumer) the byte limit
      */
-    public static int encodeAndDrain(Collection<TranslatableLogEvent> logs, FriendlyByteBuf buf) {
+    public static void encodeAndDrain(Collection<TranslatableLogEvent> logs, FriendlyByteBuf buf) {
         int maxReadableBytes = 32600;
         FriendlyByteBuf chunk = new FriendlyByteBuf(Unpooled.buffer());
         int count = 0;
@@ -91,16 +90,6 @@ public class TranslatableLogger {
 
         buf.writeVarInt(count);
         buf.writeBytes(chunk);
-
-//        if (count < logs.size()) {
-//            SFM.LOGGER.debug(
-//                    "Wrote {} logs to buffer, but {} logs were not written because they didn't fit",
-//                    count,
-//                    logs.size() - count
-//            );
-//        }
-
-        return count;
     }
 
     public Level getLogLevel() {
@@ -124,20 +113,6 @@ public class TranslatableLogger {
             }
         }
         return new LinkedList<>();
-    }
-
-    /**
-     * Used to syn
-     *
-     * @return
-     * @see ManagerContainerMenu#ManagerContainerMenu(int, Inventory, ManagerBlockEntity)
-     */
-    public List<TranslatableLogEvent> getListOfLatestEntry() {
-        ArrayList<TranslatableLogEvent> rtn = new ArrayList<>();
-        if (!getContents().isEmpty()) {
-            rtn.add(getContents().getLast());
-        }
-        return rtn;
     }
 
     public ArrayDeque<TranslatableLogEvent> getLogsAfter(Instant instant) {

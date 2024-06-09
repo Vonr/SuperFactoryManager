@@ -51,7 +51,7 @@ public class LimitedInputSlotObjectPool {
 
     /**
      * Release a {@link LimitedInputSlot} back into the pool for it to be reused instead of garbage collected
-     *
+     * <p>
      * After acquiring slots, the end the index after release should be {@code check + slots.size()}
      */
     @SuppressWarnings("rawtypes")

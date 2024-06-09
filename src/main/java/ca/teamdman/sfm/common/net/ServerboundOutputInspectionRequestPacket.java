@@ -116,7 +116,7 @@ public record ServerboundOutputInspectionRequestPacket(
                                         outputStatement.resourceLimits(),
                                         outputStatement.each()
                                 ) {
-                                    private Set<List<ProgramContext.Branch>> seen = new HashSet<>();
+                                    private final Set<List<ProgramContext.Branch>> seen = new HashSet<>();
                                     // TODO: overhaul speculative output execution
                                     // currently performing 2^n speculative executions, where n is the number
                                     // of if statements in the entire program.

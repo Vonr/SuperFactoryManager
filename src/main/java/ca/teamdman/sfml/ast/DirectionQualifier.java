@@ -8,8 +8,8 @@ import java.util.stream.Stream;
 
 public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNode {
 
-    public static DirectionQualifier NULL_DIRECTION = new DirectionQualifier(EnumSet.noneOf(Direction.class));
-    public static DirectionQualifier EVERY_DIRECTION = new DirectionQualifier(EnumSet.allOf(Direction.class));
+    public static final DirectionQualifier NULL_DIRECTION = new DirectionQualifier(EnumSet.noneOf(Direction.class));
+    public static final DirectionQualifier EVERY_DIRECTION = new DirectionQualifier(EnumSet.allOf(Direction.class));
 
     public static Direction lookup(Side side) {
         return switch (side) {

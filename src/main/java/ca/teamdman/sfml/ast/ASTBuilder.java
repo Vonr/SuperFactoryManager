@@ -156,6 +156,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
         ComparisonOperator finalComp = comp;
         assert num.value() <= Integer.MAX_VALUE;
+        //noinspection ExtractMethodRecommender
         int finalNum = (int) num.value();
         //noinspection DataFlowIssue // if the program is ticking, level shouldn't be null
         BoolExpr boolExpr = new BoolExpr(

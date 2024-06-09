@@ -12,8 +12,6 @@ import net.minecraftforge.versions.forge.ForgeVersion;
 
 import java.text.SimpleDateFormat;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.MANAGER_GUI_STATUS_SAVED_CLIPBOARD;
-
 public class ClientDiagnosticInfo {
     public static String getDiagnosticInfo(String program, ItemStack diskStack) {
         StringBuilder content = new StringBuilder(program);

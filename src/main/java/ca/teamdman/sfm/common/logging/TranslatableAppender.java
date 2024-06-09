@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.common.logging;
 
-import ca.teamdman.sfm.SFM;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Appender;
@@ -16,7 +15,6 @@ import org.apache.logging.log4j.message.Message;
 
 import java.io.Serializable;
 import java.util.LinkedList;
-import java.util.List;
 
 @Plugin(name = "TranslatableAppender", category = "Core", elementType = Appender.ELEMENT_TYPE, printObject = true)
 public class TranslatableAppender extends AbstractAppender {
