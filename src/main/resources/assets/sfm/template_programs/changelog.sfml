@@ -5,6 +5,7 @@
 -- If you can reproduce this problem, join the Discord and let me know how.
 
 ---- next ----
+-- add mekanism_energy:mekanism:energy resource type
 -- make "EVERY TICK DO" valid syntax
 ---- this still only allows forge_energy by default
 -- optimize more common regex (*seed, seed*, *seed*)

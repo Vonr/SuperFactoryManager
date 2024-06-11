@@ -93,7 +93,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                     programContext
                             .getLogger()
                             .error(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT.get(
-                                    CAPABILITY_KIND, pos, dir
+                                    CAPABILITY_KIND.getName(), pos, dir
                             )));
                 }
             }
