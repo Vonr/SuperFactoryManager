@@ -18,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -257,57 +258,7 @@ public record Program(
             // Set flag and log on first trigger
             if (!context.didSomething()) {
                 context.setDidSomething(true);
-                context.getLogger().trace(trace -> {
-                    trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_1.get());
-                    trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_2.get());
-                    Level level = context
-                            .getManager()
-                            .getLevel();
-                    //noinspection DataFlowIssue
-                    context
-                            .getNetwork()
-                            .getCablePositions()
-                            .map(pos -> "- "
-                                        + pos.toString()
-                                        + " "
-                                        + level
-                                                .getBlockState(
-                                                        pos))
-                            .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
-                                    body)));
-                    trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_3.get());
-                    //noinspection DataFlowIssue
-                    context
-                            .getNetwork()
-                            .getCapabilityProviderPositions()
-                            .map(pos -> "- " + pos.toString() + " " + level
-                                    .getBlockState(pos))
-                            .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
-                                    body)));
-                    trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_FOOTER.get());
-
-                    trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER.get());
-                    //noinspection DataFlowIssue
-                    context
-                            .getlabelPositions()
-                            .get()
-                            .forEach((label, positions) -> positions
-                                    .stream()
-                                    .map(
-                                            pos -> "- "
-                                                   + label
-                                                   + ": "
-                                                   + pos.toString()
-                                                   + " "
-                                                   + level
-                                                           .getBlockState(
-                                                                   pos)
-
-                                    )
-                                    .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_BODY.get(
-                                            body))));
-                    trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER.get());
-                });
+                context.getLogger().trace(getTraceLogWriter(context));
                 context.getLogger().debug(debug -> {
                     debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
                     debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK.get());
@@ -332,6 +283,60 @@ public record Program(
             )));
 
         }
+    }
+
+    private static @NotNull Consumer<Consumer<TranslatableContents>> getTraceLogWriter(ProgramContext context) {
+        return trace -> {
+            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_1.get());
+            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_2.get());
+            Level level = context
+                    .getManager()
+                    .getLevel();
+            //noinspection DataFlowIssue
+            context
+                    .getNetwork()
+                    .getCablePositions()
+                    .map(pos -> "- "
+                                + pos.toString()
+                                + " "
+                                + level
+                                        .getBlockState(
+                                                pos))
+                    .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
+                            body)));
+            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_3.get());
+            //noinspection DataFlowIssue
+            context
+                    .getNetwork()
+                    .getCapabilityProviderPositions()
+                    .map(pos -> "- " + pos.toString() + " " + level
+                            .getBlockState(pos))
+                    .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
+                            body)));
+            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_FOOTER.get());
+
+            trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER.get());
+            //noinspection DataFlowIssue
+            context
+                    .getlabelPositions()
+                    .get()
+                    .forEach((label, positions) -> positions
+                            .stream()
+                            .map(
+                                    pos -> "- "
+                                           + label
+                                           + ": "
+                                           + pos.toString()
+                                           + " "
+                                           + level
+                                                   .getBlockState(
+                                                           pos)
+
+                            )
+                            .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_BODY.get(
+                                    body))));
+            trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER.get());
+        };
     }
 
     @Override
