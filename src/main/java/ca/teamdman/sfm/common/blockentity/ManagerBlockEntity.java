@@ -50,6 +50,13 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         logger = new TranslatableLogger(loggerName);
     }
 
+    @Override
+    public String toString() {
+        return "ManagerBlockEntity{" +
+               "hasDisk=" + getDisk().isPresent() +
+               '}';
+    }
+
     public static void serverTick(
             @SuppressWarnings("unused") Level level,
             @SuppressWarnings("unused") BlockPos pos,
