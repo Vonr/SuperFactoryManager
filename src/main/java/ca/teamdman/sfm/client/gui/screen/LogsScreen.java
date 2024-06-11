@@ -30,9 +30,7 @@ import net.minecraft.network.chat.MutableComponent;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.time.MutableInstant;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
@@ -44,11 +42,14 @@ public class LogsScreen extends Screen {
     private MyMultiLineEditBox textarea;
     private List<MutableComponent> content = Collections.emptyList();
     private int lastSize = 0;
+    private Map<Level,Button> levelButtons = new HashMap<>();
+    private String lastKnownLogLevel;
 
 
     public LogsScreen(ManagerContainerMenu menu) {
         super(Constants.LocalizationKeys.LOGS_SCREEN_TITLE.getComponent());
         this.MENU = menu;
+        this.lastKnownLogLevel = MENU.logLevel;
     }
 
     @Override
@@ -68,7 +69,7 @@ public class LogsScreen extends Screen {
             MutableInstant instant = new MutableInstant();
             instant.initFromEpochMilli(System.currentTimeMillis(), 0);
             toProcess.add(new TranslatableLogEvent(
-                    Level.WARN,
+                    Level.INFO,
                     instant,
                     Constants.LocalizationKeys.LOGS_GUI_NO_CONTENT.get()
             ));
@@ -144,6 +145,16 @@ public class LogsScreen extends Screen {
         return player == null || player.isSpectator();
     }
 
+    public void onLogLevelChange() {
+        // disable buttons that equal the current level
+        for (var entry : levelButtons.entrySet()) {
+            var level = entry.getKey();
+            var button = entry.getValue();
+            button.active = !MENU.logLevel.equals(level.name());
+        }
+        lastKnownLogLevel = MENU.logLevel;
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -170,8 +181,9 @@ public class LogsScreen extends Screen {
         int startY = this.height / 2 - 115;
         int buttonIndex = 0;
 
+        this.levelButtons = new HashMap<>();
         for (var level : buttons) {
-            this.addRenderableWidget(new Button(
+            Button levelButton = new Button(
                     startX + (buttonWidth + spacing) * buttonIndex,
                     startY,
                     buttonWidth,
@@ -185,10 +197,14 @@ public class LogsScreen extends Screen {
                                 logLevel
                         ));
                         MENU.logLevel = logLevel;
+                        onLogLevelChange();
                     }
-            ));
+            );
+            levelButtons.put(level, levelButton);
+            this.addRenderableWidget(levelButton);
             buttonIndex++;
         }
+        onLogLevelChange();
 
 
         this.addRenderableWidget(new Button(
@@ -303,6 +319,9 @@ public class LogsScreen extends Screen {
     public void render(PoseStack poseStack, int mx, int my, float partialTicks) {
         this.renderBackground(poseStack);
         super.render(poseStack, mx, my, partialTicks);
+        if (!MENU.logLevel.equals(lastKnownLogLevel)) {
+            onLogLevelChange();
+        }
     }
 
     // TODO: enable scrolling without focus

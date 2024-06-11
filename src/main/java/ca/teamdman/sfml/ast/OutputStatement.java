@@ -89,10 +89,14 @@ public class OutputStatement implements IOStatement {
 
         // extract item for real
         STACK extracted = source.extract(toMove);
+        // TODO: log
+
         // insert item for real
         remainder = destination.insert(extracted, false);
-        var moved = source.type.getAmount(extracted) - source.type.getAmount(remainder);
+        // TODO: log
+
         // track transfer amounts
+        var moved = source.type.getAmount(extracted) - source.type.getAmount(remainder);
         source.tracker.trackTransfer(moved);
         destination.tracker.trackTransfer(moved);
 

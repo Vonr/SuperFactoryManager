@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
+import ca.teamdman.sfm.common.net.ClientboundManagerLogLevelUpdatedPacket;
 import ca.teamdman.sfm.common.net.ClientboundManagerLogsPacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
@@ -95,56 +96,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         }
     }
 
-    private void sendUpdatePacket() {
-        // Create one packet and clone it for each receiver
-        var managerUpdatePacket = new ClientboundManagerGuiUpdatePacket(
-                -1,
-                getProgramString().orElse(""),
-                getState(),
-                getTickTimeNanos()
-        );
-
-        OpenContainerTracker.getOpenManagerMenus(getBlockPos())
-                .forEach(entry -> {
-                    ManagerContainerMenu menu = entry.getValue();
-
-                    // Send a copy of the manager update packet
-                    SFMPackets.MANAGER_CHANNEL.send(
-                            PacketDistributor.PLAYER.with(entry::getKey),
-                            managerUpdatePacket.cloneWithWindowId(menu.containerId)
-                    );
-
-                    // Sync logs
-                    if (!menu.isLogScreenOpen) return;
-                    MutableInstant hasSince = new MutableInstant();
-                    if (!menu.logs.isEmpty()) {
-                        hasSince.initFrom(menu.logs.getLast().instant());
-                    }
-                    var sending = logger.getLogsAfter(hasSince);
-                    if (!sending.isEmpty()) {
-                        // Add the latest entry to the server copy
-                        // since the server copy is only used for checking what the latest log timestamp is
-                        menu.logs.add(sending.getLast());
-
-                        // Send the logs
-                        while (!sending.isEmpty()) {
-                            int remaining = sending.size();
-                            // By passing the same list to the same player in each packet
-                            // as the packets encode, they will drain the list to make
-                            // the packets as full as possible.
-                            // This assumes that the send method immediately invokes the encode method
-                            // which it does as of 2024-06-05 on 1.19.2
-                            SFMPackets.MANAGER_CHANNEL.send(
-                                    PacketDistributor.PLAYER.with(entry::getKey),
-                                    new ClientboundManagerLogsPacket(
-                                            menu.containerId,
-                                            sending
-                                    )
-                            );
-                            assert sending.size() < remaining : "Failed to send logs, infinite loop detected";
-                        }
-                    }
-                });
+    public void setLogLevel(org.apache.logging.log4j.Level logLevelObj) {
+        logger.setLogLevel(logLevelObj);
+        sendUpdatePacket();
     }
 
     public int getTick() {
@@ -203,16 +157,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 .flatMap(itemStack -> DiskItem.compileAndUpdateAttributes(itemStack, this))
                 .orElse(null);
         sendUpdatePacket();
-    }
-
-    @Override
-    protected Component getDefaultName() {
-        return Constants.LocalizationKeys.MANAGER_CONTAINER.getComponent();
-    }
-
-    @Override
-    protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
-        return new ManagerContainerMenu(windowId, inv, this);
     }
 
     @Override
@@ -278,13 +222,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        ContainerHelper.saveAllItems(tag, ITEMS);
-    }
-
-
-    @Override
     public void clearContent() {
         ITEMS.clear();
     }
@@ -303,6 +240,88 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         System.arraycopy(tickTimeNanos, tickIndex, result, 0, tickTimeNanos.length - tickIndex);
         System.arraycopy(tickTimeNanos, 0, result, tickTimeNanos.length - tickIndex, tickIndex);
         return result;
+    }
+
+    private void sendUpdatePacket() {
+        // Create one packet and clone it for each receiver
+        var managerUpdatePacket = new ClientboundManagerGuiUpdatePacket(
+                -1,
+                getProgramString().orElse(""),
+                getState(),
+                getTickTimeNanos()
+        );
+
+        OpenContainerTracker.getOpenManagerMenus(getBlockPos())
+                .forEach(entry -> {
+                    ManagerContainerMenu menu = entry.getValue();
+
+                    // Send a copy of the manager update packet
+                    SFMPackets.MANAGER_CHANNEL.send(
+                            PacketDistributor.PLAYER.with(entry::getKey),
+                            managerUpdatePacket.cloneWithWindowId(menu.containerId)
+                    );
+
+                    // The rest of the sync is only relevant if the log screen is open
+                    if (!menu.isLogScreenOpen) return;
+
+                    // Send log level changes
+                    if (!menu.logLevel.equals(logger.getLogLevel().name())) {
+                        SFMPackets.MANAGER_CHANNEL.send(
+                                PacketDistributor.PLAYER.with(entry::getKey),
+                                new ClientboundManagerLogLevelUpdatedPacket(
+                                        menu.containerId,
+                                        logger.getLogLevel().name()
+                                )
+                        );
+                        menu.logLevel = logger.getLogLevel().name();
+                    }
+
+                    // Send new logs
+                    MutableInstant hasSince = new MutableInstant();
+                    if (!menu.logs.isEmpty()) {
+                        hasSince.initFrom(menu.logs.getLast().instant());
+                    }
+                    var logsToSend = logger.getLogsAfter(hasSince);
+                    if (!logsToSend.isEmpty()) {
+                        // Add the latest entry to the server copy
+                        // since the server copy is only used for checking what the latest log timestamp is
+                        menu.logs.add(logsToSend.getLast());
+
+                        // Send the logs
+                        while (!logsToSend.isEmpty()) {
+                            int remaining = logsToSend.size();
+                            // By passing the same list to the same player in each packet
+                            // as the packets encode, they will drain the list to make
+                            // the packets as full as possible.
+                            // This assumes that the send method immediately invokes the encode method
+                            // which it does as of 2024-06-05 on 1.19.2
+                            SFMPackets.MANAGER_CHANNEL.send(
+                                    PacketDistributor.PLAYER.with(entry::getKey),
+                                    new ClientboundManagerLogsPacket(
+                                            menu.containerId,
+                                            logsToSend
+                                    )
+                            );
+                            assert logsToSend.size() < remaining : "Failed to send logs, infinite loop detected";
+                        }
+                    }
+                });
+    }
+
+    @Override
+    protected Component getDefaultName() {
+        return Constants.LocalizationKeys.MANAGER_CONTAINER.getComponent();
+    }
+
+    @Override
+    protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
+        return new ManagerContainerMenu(windowId, inv, this);
+    }
+
+    @Override
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        ContainerHelper.saveAllItems(tag, ITEMS);
     }
 
     public enum State {

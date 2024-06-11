@@ -12,12 +12,13 @@
 -- add line numbers to program edit screen
 -- add logging for individual managers
 -- program edit screen no longer pauses the game in single player
--- program edit screen and template edit screen now have additional confirmation dialogs
+-- more confirmation dialogs when overwriting programs
 -- make FORGET keyword blue
 -- make NOT,AND,OR keywords gold
 -- allow `redstone` as a label
 -- fix missing dash in changelog
--- support `IF chest HAS EQ 0 THEN`, same as `IF chest HAS EQ 0 item:: THEN`
+-- support `IF chest HAS EQ 0 THEN`
+---- previously only `IF chest HAS EQ 0 item:: THEN`
 -- Add ctrl+space action for IfStatement and BoolExpr
 -- Add git tag action to release process documentation
 -- Add GitHub release to release process documentation

@@ -42,10 +42,17 @@ public record ServerboundManagerSetLogLevelPacket(
                 msg.pos,
                 msg.windowId,
                 (menu, manager) -> {
+                    // get the level
                     Level logLevelObj = Level.getLevel(msg.logLevel());
-                    manager.logger.setLogLevel(logLevelObj);
+
+                    // set the level
+                    manager.setLogLevel(logLevelObj);
+
+                    // log in manager
                     manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOG_LEVEL_UPDATED.get(
                             msg.logLevel())));
+
+                    // log in server console
                     String sender = "UNKNOWN SENDER";
                     ServerPlayer player = contextSupplier.get().getSender();
                     if (player != null) {

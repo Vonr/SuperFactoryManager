@@ -154,7 +154,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 (this.height - this.imageHeight) / 2 + 16 * 10,
                 buttonWidth,
                 16,
-                MANAGER_GUI_VIEW_LOGS_BUTTON.getComponent(),
+                MANAGER_GUI_REBUILD_BUTTON.getComponent(),
                 button -> {
                     SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerRebuildPacket(
                             menu.containerId,

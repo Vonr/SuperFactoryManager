@@ -109,6 +109,13 @@ public class SFMPackets {
                 ServerboundManagerRebuildPacket::decode,
                 ServerboundManagerRebuildPacket::handle
         );
+        MANAGER_CHANNEL.registerMessage(
+                9,
+                ClientboundManagerLogLevelUpdatedPacket.class,
+                ClientboundManagerLogLevelUpdatedPacket::encode,
+                ClientboundManagerLogLevelUpdatedPacket::decode,
+                ClientboundManagerLogLevelUpdatedPacket::handle
+        );
 
 
         LABEL_GUN_ITEM_CHANNEL.registerMessage(

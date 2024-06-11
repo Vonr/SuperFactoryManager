@@ -539,6 +539,10 @@ public class Constants {
                 "gui.sfm.manager.button.view_logs",
                 "View logs"
         );
+        public static final LocalizationEntry MANAGER_GUI_REBUILD_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.button.rebuild",
+                "Rebuild cable network"
+        );
         public static final LocalizationEntry LOG_LEVEL_UPDATED = new LocalizationEntry(
                 "log.sfm.level_updated",
                 "Log level updated to %s"
@@ -561,7 +565,7 @@ public class Constants {
         );
         public static final LocalizationEntry LOGS_GUI_NO_CONTENT = new LocalizationEntry(
                 "gui.sfm.logs.no_content",
-                "No logs have been captured.\nChange the filters at the top of this screen."
+                "Ahoy, world!\nChange the log level using the buttons at the top of this screen.\nTRACE log level will be reset after a single program execution."
         );
         public static final LocalizationEntry LOGS_MISSING_ADJACENT_CABLE = new LocalizationEntry(
                 "gui.sfm.logs.missing_adjacent_cable",
