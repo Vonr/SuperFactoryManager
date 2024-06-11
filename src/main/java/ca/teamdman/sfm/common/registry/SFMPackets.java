@@ -102,6 +102,13 @@ public class SFMPackets {
                 ClientboundManagerLogsPacket::decode,
                 ClientboundManagerLogsPacket::handle
         );
+        MANAGER_CHANNEL.registerMessage(
+                8,
+                ServerboundManagerRebuildPacket.class,
+                ServerboundManagerRebuildPacket::encode,
+                ServerboundManagerRebuildPacket::decode,
+                ServerboundManagerRebuildPacket::handle
+        );
 
 
         LABEL_GUN_ITEM_CHANNEL.registerMessage(
@@ -246,6 +253,7 @@ public class SFMPackets {
 
         var ctx = ctxSupplier.get();
         if (ctx == null) return;
+        // TODO: log return cases about invalid packet received
         ctx.enqueueWork(() -> {
             var sender = ctx.getSender();
             if (sender == null) return;

@@ -425,8 +425,12 @@ public class Constants {
                 "program.sfm.tick.statement.output",
                 "%s"
         );
-        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT = new LocalizationEntry(
-                "program.sfm.tick.statement.output.discovered_input_slot_count",
+        public static final LocalizationEntry LOG_MANAGER_CABLE_NETWORK_REBUILD = new LocalizationEntry(
+                "log.sfm.manager.cable_network_rebuild",
+                "User performed cable network rebuild"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT = new LocalizationEntry(
+                "log.sfm.statement.tick.output.discovered_input_slot_count",
                 "Discovered %d input slots"
         );
         // todo: rename to have prefix LOG_

@@ -76,6 +76,14 @@ public class CableNetworkManager {
         });
     }
 
+    public static void purgeCableNetworkForManager(ManagerBlockEntity manager) {
+        //noinspection DataFlowIssue
+        getNetworkFromCablePosition(
+                manager.getLevel(),
+                manager.getBlockPos()
+        ).ifPresent(CableNetworkManager::removeNetwork);
+    }
+
     /**
      * Gets the cable network object. If none exists and one should, it will create and populate
      * one.

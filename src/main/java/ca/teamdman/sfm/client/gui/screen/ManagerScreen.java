@@ -5,9 +5,7 @@ import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
+import ca.teamdman.sfm.common.net.*;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -53,6 +51,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private ExtendedButton examplesButton;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton logsButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton rebuildButton;
 
     public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -64,7 +64,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 editButton,
                 examplesButton,
                 clipboardCopyButton,
-                logsButton
+                logsButton,
+                rebuildButton
         );
     }
 
@@ -78,6 +79,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         diagButton.visible = shouldShowDiagButton();
         clipboardCopyButton.visible = diskPresent;
         logsButton.visible = diskPresent;
+        rebuildButton.visible = diskPresent && !isReadOnly();
         clipboardPasteButton.visible = diskPresent && !isReadOnly();
         resetButton.visible = diskPresent && !isReadOnly();
         editButton.visible = diskPresent && !isReadOnly();
@@ -146,6 +148,19 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 16,
                 MANAGER_GUI_VIEW_LOGS_BUTTON.getComponent(),
                 button -> onShowLogs()
+        ));
+        rebuildButton = this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16 * 10,
+                buttonWidth,
+                16,
+                MANAGER_GUI_VIEW_LOGS_BUTTON.getComponent(),
+                button -> {
+                    SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerRebuildPacket(
+                            menu.containerId,
+                            menu.MANAGER_POSITION
+                    ));
+                }
         ));
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
