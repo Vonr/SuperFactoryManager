@@ -31,7 +31,10 @@ public record TimerTrigger(
 
     public boolean usesOnlyForgeEnergyResourceIO() {
         return getReferencedIOResourceIds().allMatch(id -> id.resourceTypeNamespace.equals("sfm")
-                                                           && id.resourceTypeName.equals("forge_energy"));
+                                                           && (
+                                                                   id.resourceTypeName.equals("forge_energy")
+                                                                   || id.resourceTypeName.equals("mekanism_energy")
+                                                           ));
     }
 
     @Override
