@@ -93,12 +93,12 @@ public class CableNetworkManager {
     public static Optional<CableNetwork> getOrRegisterNetworkFromCablePosition(Level level, BlockPos pos) {
         if (level.isClientSide()) return Optional.empty();
 
-        // only cables define the main spine of a network
-        if (!CableNetwork.isCable(level, pos)) return Optional.empty();
-
         // discover existing network for this position
         Optional<CableNetwork> existing = getNetworkFromCablePosition(level, pos);
         if (existing.isPresent()) return existing;
+
+        // only cables define the main spine of a network
+        if (!CableNetwork.isCable(level, pos)) return Optional.empty();
 
         // find potential networks
         Set<CableNetwork> candidates = getNetworksFromCableAdjacentPosition(level, pos);
