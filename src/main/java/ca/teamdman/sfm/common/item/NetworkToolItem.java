@@ -56,11 +56,7 @@ public class NetworkToolItem extends Item {
             CompoundTag tag = new CompoundTag();
             ListTag networks = new ListTag();
             CableNetworkManager
-                    .getNetworksForLevel(pLevel)
-                    .filter(net -> net
-                            .getCablePositions()
-                            .anyMatch(cablePos -> cablePos.distSqr(pEntity.blockPosition())
-                                                  < maxDistance * maxDistance))
+                    .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
                     .forEach(net -> {
                         CompoundTag networkTag = new CompoundTag();
                         networkTag.put(

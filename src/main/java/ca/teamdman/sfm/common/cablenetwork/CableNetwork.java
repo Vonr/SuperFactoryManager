@@ -124,6 +124,7 @@ public class CableNetwork {
             @Nullable Direction direction,
             TranslatableLogger logger
     ) {
+        // TODO: move this check higher up the chain
         if (!isAdjacentToCable(pos)) {
             logger.warn(x->x.accept(Constants.LocalizationKeys.LOGS_MISSING_ADJACENT_CABLE.get(pos)));
             return LazyOptional.empty();
@@ -153,6 +154,11 @@ public class CableNetwork {
         return CABLE_POSITIONS.longStream().mapToObj(BlockPos::of);
     }
 
+    public LongSet getCablePositionsRaw() {
+        return CABLE_POSITIONS;
+    }
+
+    // TODO: replace the logging that uses this with something that shows sidedness
     public Stream<BlockPos> getCapabilityProviderPositions() {
         return CAPABILITY_CACHE.getPositions();
     }
