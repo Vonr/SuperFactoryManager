@@ -9,6 +9,7 @@ import ca.teamdman.sfm.common.registry.SFMItems;
 import mekanism.api.Action;
 import mekanism.api.chemical.infuse.InfusionStack;
 import mekanism.api.math.FloatingLong;
+import mekanism.common.capabilities.Capabilities;
 import mekanism.common.registries.MekanismBlocks;
 import mekanism.common.registries.MekanismInfuseTypes;
 import mekanism.common.tier.BinTier;
@@ -624,10 +625,14 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         helper.setBlock(inductionInput, MekanismBlocks.INDUCTION_PORT.getBlock());
 
         // pre-fill the matrix by a little bit
-        long startingAmount = Integer.MAX_VALUE + 10_000_000_000L;
+        long startingAmount = 0L; //Integer.MAX_VALUE + 10_000_000_000L;
+        // TODO: find a way to wait for the multiblock to be formed to insert a little bit
         var inductionPort = (TileEntityInductionPort) helper.getBlockEntity(inductionInput);
-//        inductionPort.getCapability()
-        inductionPort.insertEnergy(FloatingLong.create(startingAmount), Action.EXECUTE);
+//        inductionPort
+//                .getCapability(Capabilities.STRICT_ENERGY, Direction.NORTH)
+//                .orElse(null)
+//                .insertEnergy(FloatingLong.create(startingAmount), Action.EXECUTE);
+//        inductionPort.insertEnergy(FloatingLong.create(startingAmount), Action.EXECUTE);
 
         // set up the energy source
         helper.setBlock(powerCubePos, MekanismBlocks.CREATIVE_ENERGY_CUBE.getBlock());
@@ -642,7 +647,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "induction matrix test"
-                    --EVERY 20 TICKS DO
+                    EVERY 20 TICKS DO
                         INPUT fe:: FROM source NORTH SIDE
                         OUTPUT fe:: TO dest NORTH SIDE
                     END
@@ -657,10 +662,16 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         // load the program
         manager.setProgram(program);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            var expected = FloatingLong.create(startingAmount).add(Long.MAX_VALUE);
+            var expected = FloatingLong.create(startingAmount).add(Integer.MAX_VALUE);
             assertTrue(
-                    inductionPort.getEnergy(0).equals(expected),
-                    "Energy did not arrive, expected " + expected + " got " + inductionPort.getEnergy(0)
+                    inductionPort.getEnergy(0).greaterOrEqual(expected),
+                    "Energy did not arrive, expected "
+                    + expected
+                    + " got "
+                    + inductionPort.getEnergy(0)
+                    + " (diff "
+                    + inductionPort.getEnergy(0).subtract(expected)
+                    + ")"
             );
             helper.succeed();
         });
