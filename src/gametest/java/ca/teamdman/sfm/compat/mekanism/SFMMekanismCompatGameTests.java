@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import mekanism.api.Action;
 import mekanism.api.chemical.infuse.InfusionStack;
 import mekanism.api.math.FloatingLong;
 import mekanism.common.registries.MekanismBlocks;
@@ -16,6 +17,7 @@ import mekanism.common.tier.EnergyCubeTier;
 import mekanism.common.tile.TileEntityBin;
 import mekanism.common.tile.TileEntityChemicalTank;
 import mekanism.common.tile.TileEntityEnergyCube;
+import mekanism.common.tile.multiblock.TileEntityInductionPort;
 import mekanism.common.util.UnitDisplayUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -23,6 +25,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -32,6 +35,7 @@ import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings({"OptionalGetWithoutIsPresent", "DuplicatedCode", "DataFlowIssue"})
@@ -584,6 +588,80 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             assertTrue(a2.getFluidInTank(0).isEmpty(), "a2 did not empty");
             assertTrue(b1.getFluidInTank(0).getFluid() == Fluids.WATER, "b1 did not fill with water");
             assertTrue(b2.getFluidInTank(0).getFluid() == Fluids.LAVA, "b2 did not fill with lava");
+            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "25x3x25")
+    public static void mek_induction(GameTestHelper helper) {
+        // designate positions
+        var managerPos = new BlockPos(1, 3, 0);
+        var powerCubePos = new BlockPos(1, 2, 0);
+        var inductionBeginPos = new BlockPos(0, 2, 1);
+        var inductionInput = new BlockPos(1, 3, 1);
+
+        // set up induction matrix
+        for (int x = 0; x < 18; x++) {
+            for (int z = 0; z < 18; z++) {
+                for (int y = 0; y < 18; y++) {
+                    //noinspection ExtractMethodRecommender
+                    boolean isOutside = x == 0 || x == 17 || z == 0 || z == 17 || y == 0 || y == 17;
+                    Block block;
+                    if (isOutside) {
+                        block = MekanismBlocks.INDUCTION_CASING.getBlock();
+                    } else {
+                        if (y == 1) {
+                            block = MekanismBlocks.ULTIMATE_INDUCTION_CELL.getBlock();
+                        } else {
+                            block = MekanismBlocks.ULTIMATE_INDUCTION_PROVIDER.getBlock();
+                        }
+                    }
+                    helper.setBlock(inductionBeginPos.offset(x, y, z), block);
+                }
+            }
+        }
+        helper.setBlock(inductionInput, MekanismBlocks.INDUCTION_PORT.getBlock());
+
+        // pre-fill the matrix by a little bit
+        long startingAmount = Integer.MAX_VALUE + 10_000_000_000L;
+        var inductionPort = (TileEntityInductionPort) helper.getBlockEntity(inductionInput);
+//        inductionPort.getCapability()
+        inductionPort.insertEnergy(FloatingLong.create(startingAmount), Action.EXECUTE);
+
+        // set up the energy source
+        helper.setBlock(powerCubePos, MekanismBlocks.CREATIVE_ENERGY_CUBE.getBlock());
+        TileEntityEnergyCube powerCube = (TileEntityEnergyCube) helper.getBlockEntity(powerCubePos);
+        powerCube.setEnergy(0, EnergyCubeTier.CREATIVE.getMaxEnergy());
+
+        // set up the manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // create the program
+        var program = """
+                    NAME "induction matrix test"
+                    --EVERY 20 TICKS DO
+                        INPUT fe:: FROM source NORTH SIDE
+                        OUTPUT fe:: TO dest NORTH SIDE
+                    END
+                """;
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .addAll("source", List.of(helper.absolutePos(powerCubePos)))
+                .addAll("dest", List.of(helper.absolutePos(inductionInput)))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram(program);
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            var expected = FloatingLong.create(startingAmount).add(Long.MAX_VALUE);
+            assertTrue(
+                    inductionPort.getEnergy(0).equals(expected),
+                    "Energy did not arrive, expected " + expected + " got " + inductionPort.getEnergy(0)
+            );
             helper.succeed();
         });
     }
