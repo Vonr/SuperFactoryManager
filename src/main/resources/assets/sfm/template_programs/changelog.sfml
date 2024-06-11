@@ -4,6 +4,12 @@
 -- I am aware that managers sometimes stop working.
 -- If you can reproduce this problem, join the Discord and let me know how.
 
+---- KNOWN ISSUES ----
+-- Sometimes managers stop working
+---- use "/sfm bust_cable_network_cache" to hopefully fix
+-- Having like 9000 labels in a label gun will corrupt your world because the NBT is too big
+---- this probably happens with the network tool if you're near a similar situation
+
 ---- next ----
 -- add mekanism_energy:mekanism:energy resource type
 -- make "EVERY TICK DO" valid syntax
