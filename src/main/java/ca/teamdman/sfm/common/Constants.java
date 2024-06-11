@@ -429,6 +429,7 @@ public class Constants {
                 "program.sfm.tick.statement.output.discovered_input_slot_count",
                 "Discovered %d input slots"
         );
+        // todo: rename to have prefix LOG_
         public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT = new LocalizationEntry(
                 "program.sfm.tick.statement.output.discovered_output_slot_count",
                 "Discovered %d output slots"
