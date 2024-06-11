@@ -316,6 +316,7 @@ dependencies {
 
 
     runtimeOnly fg.deobf("curse.maven:construction-wand-399558:4455719") // constructionwand-1.19.2-2.10.jar
+    runtimeOnly fg.deobf("curse.maven:worldedit-225608:3922622") // WorldEdit 7.2.12 (Forge/Fabric for MC 1.19.2)
 
     gametestImplementation fg.deobf("com.teamcofh:cofh_core:1.19.2-10.2.0.+")
     runtimeOnly fg.deobf("com.teamcofh:cofh_core:1.19.2-10.2.0.+")
