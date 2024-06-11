@@ -21,7 +21,7 @@ public record InputStatement(
     @Override
     public void tick(ProgramContext context) {
         context.addInput(this);
-        context.getLogger().debug(x->x.accept(Constants.LocalizationKeys.PROGRAM_TICK_INPUT_STATEMENT.get(
+        context.getLogger().debug(x->x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_INPUT_STATEMENT.get(
                 toString()
         )));
     }

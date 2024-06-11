@@ -230,7 +230,7 @@ public record Program(
         // log if there are unprocessed redstone pulses
         int unprocessedRedstonePulseCount = manager.getUnprocessedRedstonePulseCount();
         if (unprocessedRedstonePulseCount > 0) {
-            manager.logger.debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_WITH_REDSTONE_COUNT.get(
+            manager.logger.debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_WITH_REDSTONE_COUNT.get(
                     unprocessedRedstonePulseCount)));
         }
 
@@ -267,7 +267,7 @@ public record Program(
 
             // Log pretty triggers
             if (triggers instanceof ShortStatement ss) {
-                context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_STATEMENT.get(
+                context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_TRIGGER_STATEMENT.get(
                         ss.toStringShort())));
             }
 

@@ -31,7 +31,7 @@ public record ForgetStatement(
                 .toList();
         context.getInputs().clear();
         context.getInputs().addAll(newInputs);
-        context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_FORGET_STATEMENT.get(
+        context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_FORGET_STATEMENT.get(
                 labels.stream().map(Objects::toString).collect(Collectors.joining(", "))
         )));
     }

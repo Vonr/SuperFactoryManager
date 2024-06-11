@@ -129,7 +129,7 @@ public class OutputStatement implements IOStatement {
         if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return;
 
         // Log the output statement
-        context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT.get(
+        context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT.get(
                 this.toString()
         )));
 
@@ -152,7 +152,7 @@ public class OutputStatement implements IOStatement {
         // Log the number of input slots
         context
                 .getLogger()
-                .debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT.get(
+                .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT.get(
                         inputSlots.size()
                 )));
 
@@ -161,7 +161,7 @@ public class OutputStatement implements IOStatement {
             // Log the short-circuit
             context
                     .getLogger()
-                    .warn(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS.get()));
+                    .warn(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS.get()));
 
             // Free the input slots (we acquired no slots but the assertion is still valid)
             LimitedInputSlotObjectPool.INSTANCE.release(inputSlots, inputCheck);
@@ -187,7 +187,7 @@ public class OutputStatement implements IOStatement {
         // Log the number of output slots
         context
                 .getLogger()
-                .debug(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT.get(
+                .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT.get(
                         outputSlots.size()
                 )));
 
@@ -196,7 +196,7 @@ public class OutputStatement implements IOStatement {
             // Log the short-circuit
             context
                     .getLogger()
-                    .warn(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS.get()));
+                    .warn(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS.get()));
 
             // Free the input slots
             LimitedInputSlotObjectPool.INSTANCE.release(inputSlots, inputCheck);

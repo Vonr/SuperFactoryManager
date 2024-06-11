@@ -410,19 +410,19 @@ public class Constants {
                 "============================="
         );
         public static final LocalizationEntry LOG_PROGRAM_VOIDED_RESOURCES = new LocalizationEntry(
-                "program.sfm.voided_resources",
+                "log.sfm.program.voided_resources",
                 "!!!RESOURCE LOSS HAS OCCURRED!!! Failed to move all promised items, found %s %s:%s, took %d but had %d left over after insertion"
         );
-        public static final LocalizationEntry PROGRAM_TICK_TRIGGER_STATEMENT = new LocalizationEntry(
-                "program.sfm.tick.statement.trigger",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_TRIGGER_STATEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.trigger",
                 "TRIGGERED FROM %s"
         );
-        public static final LocalizationEntry PROGRAM_TICK_INPUT_STATEMENT = new LocalizationEntry(
-                "program.sfm.tick.statement.input",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_INPUT_STATEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.input",
                 "%s"
         );
-        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT = new LocalizationEntry(
-                "program.sfm.tick.statement.output",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.output",
                 "%s"
         );
         public static final LocalizationEntry LOG_MANAGER_CABLE_NETWORK_REBUILD = new LocalizationEntry(
@@ -433,34 +433,33 @@ public class Constants {
                 "log.sfm.statement.tick.output.discovered_input_slot_count",
                 "Discovered %d input slots"
         );
-        // todo: rename to have prefix LOG_
-        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT = new LocalizationEntry(
-                "program.sfm.tick.statement.output.discovered_output_slot_count",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT = new LocalizationEntry(
+                "log.sfm.statement.tick.output.discovered_output_slot_count",
                 "Discovered %d output slots"
         );
-        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS = new LocalizationEntry(
-                "program.sfm.tick.statement.output.short_circuit_no_input_slots",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS = new LocalizationEntry(
+                "log.sfm.statement.tick.output.short_circuit_no_input_slots",
                 "Short-circuiting, no input slots"
         );
-        public static final LocalizationEntry PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS = new LocalizationEntry(
-                "program.sfm.tick.statement.output.short_circuit_no_output_slots",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS = new LocalizationEntry(
+                "log.sfm.statement.tick.output.short_circuit_no_output_slots",
                 "Short-circuiting, no output slots. This probably shouldn't happen."
         );
-        public static final LocalizationEntry PROGRAM_TICK_FORGET_STATEMENT = new LocalizationEntry(
-                "program.sfm.tick.statement.forget",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_FORGET_STATEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.forget",
                 "FORGET %s"
         );
-        public static final LocalizationEntry PROGRAM_TICK_IF_STATEMENT_WAS_TRUE = new LocalizationEntry(
-                "program.sfm.tick.statement.if.true",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE = new LocalizationEntry(
+                "log.sfm.statement.tick.if.true",
                 "TRUE: %s"
         );
-        public static final LocalizationEntry PROGRAM_TICK_IF_STATEMENT_WAS_FALSE = new LocalizationEntry(
-                "program.sfm.tick.statement.if.false",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE = new LocalizationEntry(
+                "log.sfm.statement.tick.if.false",
                 "FALSE: %s"
         );
 
-        public static final LocalizationEntry PROGRAM_TICK_WITH_REDSTONE_COUNT = new LocalizationEntry(
-                "program.sfm.tick.redstone_count",
+        public static final LocalizationEntry LOG_PROGRAM_TICK_WITH_REDSTONE_COUNT = new LocalizationEntry(
+                "log.sfm.program.tick.redstone_count",
                 "Program ticking with %d unprocessed redstone pulses."
         );
 

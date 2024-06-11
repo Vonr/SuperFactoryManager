@@ -21,6 +21,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.CommonComponents;
@@ -138,6 +139,11 @@ public class LogsScreen extends Screen {
         lastSize = MENU.logs.size();
     }
 
+    public boolean isReadOnly() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        return player == null || player.isSpectator();
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -149,7 +155,7 @@ public class LogsScreen extends Screen {
         this.setInitialFocus(textarea);
 
 
-        var buttons = new Level[]{
+        var buttons = isReadOnly() ? new Level[]{} : new Level[]{
                 Level.OFF,
                 Level.TRACE,
                 Level.DEBUG,
@@ -236,20 +242,22 @@ public class LogsScreen extends Screen {
                         my
                 )
         ));
-        this.addRenderableWidget(new Button(
-                this.width / 2 - 2 + 115,
-                this.height / 2 - 100 + 195,
-                80,
-                20,
-                Constants.LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON.getComponent(),
-                (button) -> {
-                    SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerClearLogsPacket(
-                            MENU.containerId,
-                            MENU.MANAGER_POSITION
-                    ));
-                    MENU.logs.clear();
-                }
-        ));
+        if (!isReadOnly()) {
+            this.addRenderableWidget(new Button(
+                    this.width / 2 - 2 + 115,
+                    this.height / 2 - 100 + 195,
+                    80,
+                    20,
+                    Constants.LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON.getComponent(),
+                    (button) -> {
+                        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerClearLogsPacket(
+                                MENU.containerId,
+                                MENU.MANAGER_POSITION
+                        ));
+                        MENU.logs.clear();
+                    }
+            ));
+        }
     }
 
     private Button.OnTooltip buildTooltip(Constants.LocalizationKeys.LocalizationEntry entry) {
