@@ -2825,4 +2825,44 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             helper.succeed();
         });
     }
+
+    @GameTest(template = "3x2x1")
+    public static void multi_io_limits(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = getItemHandler(helper, rightPos);
+        var leftChest = getItemHandler(helper, leftPos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+        leftChest.insertItem(1, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT 64 FROM a
+                                           OUTPUT 63 TO b slots 0
+                                           OUTPUT TO b slots 1-99
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt slot 0 must move");
+            assertTrue(leftChest.getStackInSlot(1).getCount() == 64, "Dirt slot 1 must not move");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 63, "Dirt slot 0 must arrive");
+            assertTrue(rightChest.getStackInSlot(1).getCount() == 1, "Dirt slot 1 must arrive");
+            assertTrue(rightChest.getStackInSlot(2).isEmpty(), "Dirt slot 2 must not arrive");
+            helper.succeed();
+        });
+    }
 }
