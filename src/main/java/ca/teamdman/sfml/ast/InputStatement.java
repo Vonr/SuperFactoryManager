@@ -69,7 +69,8 @@ public record InputStatement(
                             acceptor.accept(LimitedInputSlotObjectPool.INSTANCE.acquire(
                                     capability,
                                     slot,
-                                    (InputResourceTracker<STACK, ITEM, CAP>) tracker
+                                    (InputResourceTracker<STACK, ITEM, CAP>) tracker,
+                                    stack
                             ));
                         }
                     }

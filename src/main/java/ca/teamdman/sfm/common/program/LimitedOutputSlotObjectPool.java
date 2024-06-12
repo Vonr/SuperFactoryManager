@@ -26,14 +26,15 @@ public class LimitedOutputSlotObjectPool {
     public <STACK, ITEM, CAP> LimitedOutputSlot<STACK, ITEM, CAP> acquire(
             CAP handler,
             int slot,
-            OutputResourceTracker<STACK, ITEM, CAP> tracker
+            OutputResourceTracker<STACK, ITEM, CAP> tracker,
+            STACK stack
     ) {
         if (index == -1) {
-            return new LimitedOutputSlot<>(handler, slot, tracker);
+            return new LimitedOutputSlot<>(handler, slot, tracker, stack);
         } else {
             @SuppressWarnings("unchecked") LimitedOutputSlot<STACK, ITEM, CAP> obj = pool[index];
             index--;
-            obj.init(handler, slot, tracker);
+            obj.init(handler, slot, tracker, stack);
             return obj;
         }
     }

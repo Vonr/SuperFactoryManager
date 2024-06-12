@@ -386,7 +386,8 @@ public class OutputStatement implements IOStatement {
                             acceptor.accept(LimitedOutputSlotObjectPool.INSTANCE.acquire(
                                     capability,
                                     slot,
-                                    (OutputResourceTracker<STACK, ITEM, CAP>) tracker
+                                    (OutputResourceTracker<STACK, ITEM, CAP>) tracker,
+                                    stack
                             ));
                         }
                     }

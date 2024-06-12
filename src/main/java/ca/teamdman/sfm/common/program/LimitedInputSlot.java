@@ -16,9 +16,9 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
     private boolean done = false;
 
     public LimitedInputSlot(
-            CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker
+            CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker, STACK stack
     ) {
-        this.init(handler, slot, tracker);
+        this.init(handler, slot, tracker, stack);
     }
 
     public boolean isDone() {
@@ -60,9 +60,9 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
         return extractSimulateCache;
     }
 
-    public void init(CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker) {
+    public void init(CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker, STACK stack) {
         this.done = false;
-        this.extractSimulateCache = null;
+        this.extractSimulateCache = stack;
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
