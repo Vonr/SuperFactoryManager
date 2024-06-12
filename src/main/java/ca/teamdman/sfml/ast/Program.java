@@ -273,7 +273,9 @@ public record Program(
 
             // Perform and measure tick
             long start = System.nanoTime();
-            t.tick(context.copy());
+            ProgramContext forkedContext = context.copy();
+            t.tick(forkedContext);
+            forkedContext.free();
             long nanoTimePassed = System.nanoTime() - start;
 
             // Log trigger time

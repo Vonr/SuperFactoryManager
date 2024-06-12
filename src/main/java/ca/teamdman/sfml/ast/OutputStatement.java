@@ -127,7 +127,11 @@ public class OutputStatement implements IOStatement {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    /**
+     * Input slots are freed when the input statement falls out of scope, see: {@link InputStatement#freeSlots()}
+     * <p/>
+     * Output slots are freed immediately once done in this method.
+     */
     @Override
     public void tick(ProgramContext context) {
         // Don't do anything if performing exploration
@@ -144,6 +148,7 @@ public class OutputStatement implements IOStatement {
            ################ */
 
         // gather the input slots from all the input statements, +27 to hopefully avoid resizing
+        //noinspection rawtypes
         ArrayDeque<LimitedInputSlot> inputSlots = new ArrayDeque<>(lastInputCapacity + 27);
         for (var inputStatement : context.getInputs()) {
             inputStatement.gatherSlots(context, inputSlots::add);
@@ -151,9 +156,6 @@ public class OutputStatement implements IOStatement {
 
         // Update allocation hint
         lastInputCapacity = inputSlots.size();
-
-        // Get assertion hint
-        int inputCheck = LimitedInputSlotObjectPool.INSTANCE.getIndex();
 
         // Log the number of input slots
         context
@@ -169,9 +171,6 @@ public class OutputStatement implements IOStatement {
                     .getLogger()
                     .warn(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS.get()));
 
-            // Free the input slots (we acquired no slots but the assertion is still valid)
-            LimitedInputSlotObjectPool.INSTANCE.release(inputSlots, inputCheck);
-
             // Stop processing
             return;
         }
@@ -181,6 +180,7 @@ public class OutputStatement implements IOStatement {
            ################ */
 
         // collect the output slots, +27 to hopefully avoid resizing
+        //noinspection rawtypes
         ArrayDeque<LimitedOutputSlot> outputSlots = new ArrayDeque<>(lastOutputCapacity + 27);
         gatherSlots(context, outputSlots::add);
 
@@ -204,9 +204,6 @@ public class OutputStatement implements IOStatement {
                     .getLogger()
                     .warn(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS.get()));
 
-            // Free the input slots
-            LimitedInputSlotObjectPool.INSTANCE.release(inputSlots, inputCheck);
-
             // Free the output slots (we acquired no slots but the assertion is still valid)
             LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots, outputCheck);
 
@@ -225,12 +222,9 @@ public class OutputStatement implements IOStatement {
             // Get an input slot
             var inputSlot = inputSlotIter.next();
             if (inputSlot.isDone()) {
-                // Make sure we don't process this slot again
-                inputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
-                // Release it
-                LimitedInputSlotObjectPool.INSTANCE.release(inputSlot);
-                // Update the input check
-                inputCheck++;
+                //// Make sure we don't process this slot again
+                //// inputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
+                // ^^^ not necessary since we moved the slot free logic
                 // Try again
                 continue;
             }
@@ -252,6 +246,7 @@ public class OutputStatement implements IOStatement {
                 }
 
                 // Attempt a move
+                //noinspection unchecked
                 moveTo(context, inputSlot, outputSlot);
 
                 // Continue to the next input slot when the current one is finished
@@ -267,7 +262,6 @@ public class OutputStatement implements IOStatement {
            ################ */
 
         // Release remaining slot objects
-        LimitedInputSlotObjectPool.INSTANCE.release(inputSlots, inputCheck);
         LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots, outputCheck);
     }
 

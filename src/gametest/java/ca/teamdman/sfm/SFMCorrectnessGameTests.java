@@ -2845,7 +2845,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setProgram("""
                                        EVERY 20 TICKS DO
                                            INPUT 64 FROM a
-                                           OUTPUT 63 TO b slots 0
+                                           OUTPUT RETAIN 63 TO b slots 0
                                            OUTPUT TO b slots 1-99
                                        END
                                    """.stripTrailing().stripIndent());

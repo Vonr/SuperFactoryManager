@@ -111,6 +111,10 @@ public class ProgramContext {
         return REDSTONE_PULSES;
     }
 
+    public void free() {
+        getInputs().forEach(InputStatement::freeSlots);
+    }
+
     public enum ExecutionPolicy {
         EXPLORE_BRANCHES,
         UNRESTRICTED
