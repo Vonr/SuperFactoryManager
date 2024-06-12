@@ -6,7 +6,9 @@ import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -305,28 +307,6 @@ public class OutputStatement implements IOStatement {
         }
     }
 
-    private <STACK, ITEM, CAP> void gatherSlots(
-            ResourceType<STACK, ITEM, CAP> type,
-            CAP capability,
-            List<OutputResourceTracker<?, ?, ?>> trackers,
-            Consumer<LimitedOutputSlot<?, ?, ?>> acceptor
-    ) {
-        for (int slot = 0; slot < type.getSlots(capability); slot++) {
-            if (labelAccess.slots().contains(slot)) {
-                for (OutputResourceTracker<?, ?, ?> tracker : trackers) {
-                    if (tracker.matchesCapabilityType(capability)) {
-                        //noinspection unchecked
-                        acceptor.accept(LimitedOutputSlotObjectPool.INSTANCE.acquire(
-                                capability,
-                                slot,
-                                (OutputResourceTracker<STACK, ITEM, CAP>) tracker
-                        ));
-                    }
-                }
-            }
-        }
-    }
-
     public LabelAccess labelAccess() {
         return labelAccess;
     }
@@ -356,7 +336,11 @@ public class OutputStatement implements IOStatement {
 
     @Override
     public String toString() {
-        return "OUTPUT " + resourceLimits.toStringPretty(Limit.MAX_QUANTITY_MAX_RETENTION) + " TO " + (each ? "EACH " : "") + labelAccess;
+        return "OUTPUT " + resourceLimits.toStringPretty(Limit.MAX_QUANTITY_MAX_RETENTION) + " TO " + (
+                each
+                ? "EACH "
+                : ""
+        ) + labelAccess;
     }
 
     @Override
@@ -377,5 +361,49 @@ public class OutputStatement implements IOStatement {
         sb.append(each ? "EACH " : "");
         sb.append(labelAccess);
         return sb.toString();
+    }
+
+    private <STACK, ITEM, CAP> void gatherSlots(
+            ResourceType<STACK, ITEM, CAP> type,
+            CAP capability,
+            List<OutputResourceTracker<?, ?, ?>> trackers,
+            Consumer<LimitedOutputSlot<?, ?, ?>> acceptor
+    ) {
+        for (int slot = 0; slot < type.getSlots(capability); slot++) {
+            if (labelAccess.slots().contains(slot)) {
+                STACK stack = type.getStackInSlot(capability, slot);
+                boolean shouldCreateSlot = shouldCreateSlot(type, capability, stack, slot);
+                //noinspection rawtypes
+                for (OutputResourceTracker tracker : trackers) {
+                    // we don't also test the tracker because we can deposit into empty slots
+                    if (tracker.matchesCapabilityType(capability)) {
+                        //always update retention observations even if !shouldCreateSlot
+                        //noinspection unchecked
+                        tracker.updateRetentionObservation(type, stack);
+
+                        if (shouldCreateSlot) {
+                            //noinspection unchecked
+                            acceptor.accept(LimitedOutputSlotObjectPool.INSTANCE.acquire(
+                                    capability,
+                                    slot,
+                                    (OutputResourceTracker<STACK, ITEM, CAP>) tracker
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private <STACK, ITEM, CAP> boolean shouldCreateSlot(
+            ResourceType<STACK, ITEM, CAP> type,
+            CAP cap,
+            STACK stack,
+            int slot
+    ) {
+        // we check the stack limit on the capability
+        // this is to accommodate drawers/bins/barrels/black hole units/whatever
+        // those blocks hold many more items than normal in a single stack
+        return type.getAmount(stack) < type.getMaxStackSize(cap, slot);
     }
 }

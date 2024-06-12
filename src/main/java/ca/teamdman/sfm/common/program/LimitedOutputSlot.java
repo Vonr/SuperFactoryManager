@@ -58,6 +58,5 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         //noinspection DataFlowIssue
         this.type = tracker.getLimit().resourceId().getResourceType();
         assert type != null;
-        this.tracker.visit(this);
     }
 }

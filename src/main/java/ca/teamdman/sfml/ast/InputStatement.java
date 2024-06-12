@@ -62,7 +62,7 @@ public record InputStatement(
         for (int slot = 0; slot < type.getSlots(capability); slot++) {
             if (labelAccess.slots().contains(slot)) {
                 STACK stack = type.getStackInSlot(capability, slot);
-                if (!type.isEmpty(stack)) {
+                if (shouldCreateSlot(type, stack)) {
                     for (InputResourceTracker<?, ?, ?> tracker : trackers) {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
                             //noinspection unchecked
@@ -76,6 +76,11 @@ public record InputStatement(
                 }
             }
         }
+    }
+
+    private <STACK,ITEM,CAP> boolean shouldCreateSlot(ResourceType<STACK,ITEM,CAP> type, STACK stack) {
+        // make sure there are items to move
+        return !type.isEmpty(stack);
     }
 
     @Override

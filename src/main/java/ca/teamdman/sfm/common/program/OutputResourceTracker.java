@@ -36,10 +36,9 @@ public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object
     /**
      * Update obligation progress as new limited slots are prepared
      */
-    public void visit(LimitedOutputSlot<STACK, ITEM, CAP> slot) {
-        var stack = slot.getStackInSlot();
+    public void updateRetentionObservation(ResourceType<STACK, ITEM, CAP> type, STACK stack) {
         if (test(stack)) {
-            RETENTION_OBLIGATION_PROGRESS.accumulateAndGet(slot.type.getAmount(stack), Long::sum);
+            RETENTION_OBLIGATION_PROGRESS.accumulateAndGet(type.getAmount(stack), Long::sum);
         }
     }
 
