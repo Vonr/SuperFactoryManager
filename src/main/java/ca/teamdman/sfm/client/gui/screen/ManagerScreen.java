@@ -488,6 +488,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     @Override
     protected void renderTooltip(PoseStack pose, int mx, int my) {
+        // avoid rendering tooltips when the manager screen isn't on top
+        // this should fix the annoying Ctrl+E popup when editing
+        if (Minecraft.getInstance().screen != this) return;
+
         super.renderTooltip(pose, mx, my);
         this.renderables
                 .stream()
