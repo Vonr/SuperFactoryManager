@@ -13,6 +13,7 @@ public record ForgetStatement(
     @Override
     public void tick(ProgramContext context) {
         // map-replace existing inputs with ones that exclude the union of the label access
+        context.free();
         var newInputs = context.getInputs()
                 .stream()
                 .map(input -> new InputStatement(
