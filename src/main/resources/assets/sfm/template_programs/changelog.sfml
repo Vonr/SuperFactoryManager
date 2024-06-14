@@ -23,6 +23,9 @@
 ---- Props to @Theradrim for also being bugged by this
 -- optimize more common regex (*seed, seed*, *seed*)
 -- add line numbers to program edit screen
+---- Thanks @Lewi and @Reko for the suggestion <3
+-- remove admin requirement for /sfm bust_cable_network_cache
+---- logs whoever uses the command
 -- add logging for individual managers
 -- program edit screen no longer pauses the game in single player
 -- more confirmation dialogs when overwriting programs
