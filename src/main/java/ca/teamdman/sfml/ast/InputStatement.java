@@ -20,7 +20,7 @@ public final class InputStatement implements IOStatement {
     private final ResourceLimits resourceLimits;
     private final boolean each;
     private @Nullable ArrayDeque<LimitedInputSlot<?, ?, ?>> cachedInputSlots = null;
-    private int inputCheck = -1;
+    private int inputCheck = -2;
 
     public InputStatement(
             LabelAccess labelAccess,
@@ -42,11 +42,22 @@ public final class InputStatement implements IOStatement {
 
     @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
     public void gatherSlots(ProgramContext context, Consumer<LimitedInputSlot<?, ?, ?>> acceptor) {
+        context
+                .getLogger()
+                .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS.get(
+                        toStringPretty()
+                )));
         if (cachedInputSlots != null) {
+            context
+                    .getLogger()
+                    .trace(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_HIT.get()));
             cachedInputSlots.forEach(acceptor);
             return;
         }
 
+        context
+                .getLogger()
+                .trace(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_MISS.get()));
         cachedInputSlots = new ArrayDeque<>();
         var oldAcceptor = acceptor;
         acceptor = slot -> {
@@ -62,18 +73,38 @@ public final class InputStatement implements IOStatement {
                 .distinct();
 
         if (!each) {
+            context
+                    .getLogger()
+                    .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
             // create a single matcher to be shared by all capabilities
-            List<InputResourceTracker<?, ?, ?>> inputMatchers = resourceLimits.createInputTrackers();
+            List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
             for (var type : (Iterable<ResourceType>) types::iterator) {
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
+                                type.CAPABILITY_KIND.getName())));
                 for (var capability : (Iterable) type.getCapabilities(context, labelAccess)::iterator) {
-                    gatherSlots((ResourceType<Object, Object, Object>) type, capability, inputMatchers, acceptor);
+                    gatherSlots(
+                            context,
+                            (ResourceType<Object, Object, Object>) type,
+                            capability,
+                            inputTrackers,
+                            acceptor
+                    );
                 }
             }
         } else {
+            context
+                    .getLogger()
+                    .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
             for (ResourceType type : (Iterable<ResourceType>) types::iterator) {
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
+                                type.CAPABILITY_KIND.getName())));
                 for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
                     List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
-                    gatherSlots((ResourceType<Object, Object, Object>) type, cap, inputTrackers, acceptor);
+                    gatherSlots(context, (ResourceType<Object, Object, Object>) type, cap, inputTrackers, acceptor);
                 }
             }
         }
@@ -148,28 +179,40 @@ public final class InputStatement implements IOStatement {
      */
     public void freeSlots() {
         if (cachedInputSlots != null) {
-            assert inputCheck != -1;
+            // TODO: replace all asserts with throws
+            if (inputCheck == -2) {
+                throw new IllegalStateException("Input slots were not gathered before freeing");
+            }
             LimitedInputSlotObjectPool.INSTANCE.release(
                     cachedInputSlots,
                     inputCheck
             );
             cachedInputSlots = null;
-            inputCheck = -1;
+            inputCheck = -2;
         }
     }
 
     private <STACK, ITEM, CAP> void gatherSlots(
-            ResourceType<STACK, ITEM, CAP> type,
+            ProgramContext context, ResourceType<STACK, ITEM, CAP> type,
             CAP capability,
             List<InputResourceTracker<?, ?, ?>> trackers,
             Consumer<LimitedInputSlot<?, ?, ?>> acceptor
     ) {
+        context
+                .getLogger()
+                .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_RANGE.get(
+                        labelAccess.slots())));
         for (int slot = 0; slot < type.getSlots(capability); slot++) {
+            int finalSlot = slot;
             if (labelAccess.slots().contains(slot)) {
                 STACK stack = type.getStackInSlot(capability, slot);
                 if (shouldCreateSlot(type, stack)) {
                     for (InputResourceTracker<?, ?, ?> tracker : trackers) {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
+                            context
+                                    .getLogger()
+                                    .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
+                                            finalSlot, stack, tracker.toString())));
                             //noinspection unchecked
                             acceptor.accept(LimitedInputSlotObjectPool.INSTANCE.acquire(
                                     capability,
@@ -179,7 +222,17 @@ public final class InputStatement implements IOStatement {
                             ));
                         }
                     }
+                } else {
+                    context
+                            .getLogger()
+                            .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_SHOULD_NOT_CREATE.get(
+                                    finalSlot, stack)));
                 }
+            } else {
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_NOT_IN_RANGE.get(
+                                finalSlot)));
             }
         }
     }

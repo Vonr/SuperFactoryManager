@@ -421,6 +421,87 @@ public class Constants {
                 "log.sfm.statement.tick.input",
                 "%s"
         );
+
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots",
+                "Gathering slots for IO statement \n```\n%s\n```\n"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_HIT = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.cache_hit",
+                "Cache hit - this statement has already gathered slots"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_MISS = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.cache_miss",
+                "Cache miss - this is the first time this statement is being gathered"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.each",
+                "EACH keyword used - trackers will be unique to each block"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.not_each",
+                "EACH keyword not used - trackers will be shared between blocks"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_RANGE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.range",
+                "Gathering slots in range set: %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_NOT_IN_RANGE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.not_in_range",
+                "Slot %d - not in range"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_SHOULD_NOT_CREATE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.should_not_create",
+                "Slot %d - skipping - %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.created",
+                "Slot %d - tracking - %s - %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_BEGIN = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.begin",
+                "Begin moving %s into %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_TYPE_MISMATCH = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.type_mismatch",
+                "Type mismatch, skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_DESTINATION_TRACKER_REJECT = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.destination_tracker_reject",
+                "Destination tracker rejected the transfer, skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.zero_simulated_movement",
+                "Got remainder %d after simulated insertion to dest (equals simulated extraction from source), skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.retention_obligation",
+                "Promised to leave %d in the source slot, still obligated to leave %d"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION_NO_MOVE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.retention_obligation_no_move",
+                "Nothing to move after retention obligations, marking source slot done and skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_STACK_LIMIT_NEW_TO_MOVE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.stack_limit_no_move",
+                "Max transferable dest=%d, source=%d, stack limit=%d; new toMove=%d"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_TO_MOVE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.zero_to_move",
+                "toMove=0, skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_EXTRACTED = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.extracted",
+                "Extracted %d from slot %d"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_END = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.end",
+                "Moved %d from slot %d to %d, new: source=%s, dest=%s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.resource_types",
+                "Gathering for: %s"
+        );
         public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT = new LocalizationEntry(
                 "log.sfm.statement.tick.output",
                 "%s"
@@ -439,11 +520,11 @@ public class Constants {
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS = new LocalizationEntry(
                 "log.sfm.statement.tick.output.short_circuit_no_input_slots",
-                "Short-circuiting, no input slots"
+                "No input slots, skipping"
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS = new LocalizationEntry(
                 "log.sfm.statement.tick.output.short_circuit_no_output_slots",
-                "Short-circuiting, no output slots. This probably shouldn't happen."
+                "No output slots, skipping"
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_FORGET_STATEMENT = new LocalizationEntry(
                 "log.sfm.statement.tick.forget",
