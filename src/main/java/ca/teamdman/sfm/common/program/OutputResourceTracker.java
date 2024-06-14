@@ -69,4 +69,14 @@ public class OutputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object
     public ResourceLimit<STACK, ITEM, CAP> getLimit() {
         return LIMIT;
     }
+
+    @Override
+    public String toString() {
+        return "OutputResourceTracker@" + Integer.toHexString(System.identityHashCode(this)) + "{" +
+               "RESOURCE_LIMIT=" + LIMIT +
+               ", EXCLUSIONS=" + EXCLUSIONS +
+               ", TRANSFERRED=" + TRANSFERRED +
+               ", RETENTION_OBLIGATION_PROGRESS=" + RETENTION_OBLIGATION_PROGRESS +
+               "}";
+    }
 }

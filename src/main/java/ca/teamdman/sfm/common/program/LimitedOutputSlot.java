@@ -59,4 +59,14 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         this.type = tracker.getLimit().resourceId().getResourceType();
         assert type != null;
     }
+
+    @Override
+    public String toString() {
+        return "LimitedOutputSlot{" +
+               "slot=" + slot +
+               ", cap=" + type.CAPABILITY_KIND.getName() +
+               ", stackInSlotCache=" + stackInSlotCache +
+               ", tracker=" + tracker +
+               '}';
+    }
 }

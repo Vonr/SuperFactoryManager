@@ -66,4 +66,14 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
         ResourceType<STACK, ITEM, CAP> resourceType = RESOURCE_LIMIT.resourceId().getResourceType();
         return resourceType != null && resourceType.matchesCapabilityType(capability);
     }
+
+    @Override
+    public String toString() {
+        return "InputResourceTracker@" + Integer.toHexString(System.identityHashCode(this)) + "{" +
+               "RESOURCE_LIMIT=" + RESOURCE_LIMIT +
+               ", EXCLUSIONS=" + EXCLUSIONS +
+               ", TRANSFERRED=" + TRANSFERRED +
+               ", RETENTION_OBLIGATION_PROGRESS=" + RETENTION_OBLIGATION_PROGRESS +
+               "}";
+    }
 }

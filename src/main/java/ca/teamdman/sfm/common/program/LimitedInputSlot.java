@@ -70,4 +70,14 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
         this.type = tracker.getResourceLimit().resourceId().getResourceType();
         assert type != null;
     }
+
+    @Override
+    public String toString() {
+        return "LimitedInputSlot{" +
+               "slot=" + slot +
+               ", cap=" + type.CAPABILITY_KIND.getName() +
+               ", extractSimulateCache=" + extractSimulateCache +
+               ", tracker=" + tracker +
+               '}';
+    }
 }
