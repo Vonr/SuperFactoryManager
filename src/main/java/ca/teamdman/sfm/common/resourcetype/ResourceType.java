@@ -28,6 +28,13 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract long getAmount(STACK stack);
 
+    /**
+     * Some resource types may exceed MAX_LONG, this method should be used to get the difference between two stacks
+     */
+    public long getAmountDifference(STACK stack1, STACK stack2) {
+        return getAmount(stack1) - getAmount(stack2);
+    }
+
     public abstract STACK getStackInSlot(CAP cap, int slot);
 
     public abstract STACK extract(CAP cap, int slot, long amount, boolean simulate);

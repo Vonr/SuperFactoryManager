@@ -133,7 +133,7 @@
   "log.sfm.statement.tick.io.move_to.retention_obligation_no_move": "Nothing to move after retention obligations, marking source slot done and skipping",
   "log.sfm.statement.tick.io.move_to.stack_limit_no_move": "Max transferable dest=%d, source=%d, stack limit=%d; new toMove=%d",
   "log.sfm.statement.tick.io.move_to.type_mismatch": "Type mismatch, skipping",
-  "log.sfm.statement.tick.io.move_to.zero_simulated_movement": "Got remainder %d after simulated insertion to dest (equals simulated extraction from source), skipping",
+  "log.sfm.statement.tick.io.move_to.zero_simulated_movement": "Got remainder %d after simulated insertion of potential %d (0 to move), skipping",
   "log.sfm.statement.tick.io.move_to.zero_to_move": "toMove=0, skipping",
   "log.sfm.statement.tick.output": "%s",
   "log.sfm.statement.tick.output.discovered_input_slot_count": "Discovered %d input slots",
@@ -159,6 +159,5 @@
   "program.sfm.warnings.round_robin_smelly_each": "Round robin by block shouldn't be used with EACH, statement %s",
   "program.sfm.warnings.undefined_label": "Label \"%s\" is assigned in the world but not defined in code.",
   "program.sfm.warnings.unknown_resource_id": "Resource \"%s\" was not found.",
-  "program.sfm.warnings.unknown_resource_type": "The resource type \"%s\" in \"%s\" is not supported.",
   "program.sfm.warnings.unused_label": "Label \"%s\" is used in code but not assigned in the world."
 }

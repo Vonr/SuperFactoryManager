@@ -468,7 +468,7 @@ public class Constants {
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT = new LocalizationEntry(
                 "log.sfm.statement.tick.io.move_to.zero_simulated_movement",
-                "Got remainder %d after simulated insertion to dest (equals simulated extraction from source), skipping"
+                "Got remainder %d after simulated insertion of potential %d (0 to move), skipping"
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION = new LocalizationEntry(
                 "log.sfm.statement.tick.io.move_to.retention_obligation",

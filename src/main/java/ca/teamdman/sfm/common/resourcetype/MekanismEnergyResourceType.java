@@ -25,6 +25,11 @@ public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class
     }
 
     @Override
+    public long getAmountDifference(FloatingLong stack1, FloatingLong stack2) {
+        return stack1.subtract(stack2).longValue();
+    }
+
+    @Override
     public FloatingLong getStackInSlot(IStrictEnergyHandler storage, int slot) {
         return storage.getEnergy(slot);
     }

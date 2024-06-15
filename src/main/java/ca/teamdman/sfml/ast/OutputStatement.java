@@ -74,16 +74,15 @@ public class OutputStatement implements IOStatement {
             return;
         }
         // find out how much we can fit
-        STACK remainder = destination.insert(potential, true);
+        STACK potentialRemainder = destination.insert(potential, true);
 
         // how many can we move before accounting for limits
-        long remainder_amount = source.type.getAmount(remainder);
-        long potential_extract_amount = source.type.getAmount(potential);
-        long toMove = potential_extract_amount - remainder_amount;
-        if (toMove <= 0) {
+        long toMove = source.type.getAmountDifference(potential, potentialRemainder);
+        if (toMove <= 0) {;
             context
                     .getLogger()
-                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT.get(remainder_amount)));
+                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT.get(
+                            potentialRemainder, potential)));
             return;
         }
 
@@ -99,16 +98,18 @@ public class OutputStatement implements IOStatement {
         source.tracker.trackRetentionObligation(source.slot, remainingObligation);
 
         long logRemainingObligation = remainingObligation;
-        context.getLogger().trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION.get(
-                promised_to_leave_in_this_slot,
-                logRemainingObligation
-        )));
+        context
+                .getLogger()
+                .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION.get(
+                        promised_to_leave_in_this_slot,
+                        logRemainingObligation
+                )));
 
         // if we can't move anything after our retention obligations, we're done
         if (toMove <= 0) {
             context
                     .getLogger()
-                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION_NO_MOVE.get(remainder_amount)));
+                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION_NO_MOVE.get()));
             source.setDone();
             return;
         }
@@ -126,14 +127,18 @@ public class OutputStatement implements IOStatement {
         toMove = Math.min(toMove, maxStackSize);
 
         long logToMove = toMove;
-        context.getLogger().trace(x->x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_STACK_LIMIT_NEW_TO_MOVE.get(
-                destinationMaxTransferable,
-                sourceMaxTransferable,
-                maxStackSize,
-                logToMove
-        )));
+        context
+                .getLogger()
+                .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_STACK_LIMIT_NEW_TO_MOVE.get(
+                        destinationMaxTransferable,
+                        sourceMaxTransferable,
+                        maxStackSize,
+                        logToMove
+                )));
         if (toMove <= 0) {
-            context.getLogger().trace(x->x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_TO_MOVE.get()));
+            context
+                    .getLogger()
+                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_TO_MOVE.get()));
             return;
         }
 
@@ -145,12 +150,10 @@ public class OutputStatement implements IOStatement {
         )));
 
         // insert item for real
-        remainder = destination.insert(extracted, false);
-        // TODO: log
+        STACK extractedRemainder = destination.insert(extracted, false);
 
         // track transfer amounts
-        long final_remainder_amount = source.type.getAmount(remainder);
-        var moved = source.type.getAmount(extracted) - final_remainder_amount;
+        var moved = source.type.getAmountDifference(extracted, extractedRemainder);
         source.tracker.trackTransfer(moved);
         destination.tracker.trackTransfer(moved);
 
@@ -161,17 +164,16 @@ public class OutputStatement implements IOStatement {
                 destination
         )));
 
-        // if remainder exists, someone lied.
-        // this should never happen
+        // If remainder exists, someone lied.
+        // THIS SHOULD NEVER HAPPEN
         // will void items if it does
-        if (!destination.type.isEmpty(remainder)) {
-            STACK finalRemainder = remainder;
+        if (!destination.type.isEmpty(extractedRemainder)) {
             context.getLogger().error(x -> x.accept(LocalizationKeys.LOG_PROGRAM_VOIDED_RESOURCES.get(
                     potential,
                     SFMResourceTypes.DEFERRED_TYPES.get().getKey(source.type),
                     destination.type.getRegistryKey(potential),
                     extracted,
-                    finalRemainder
+                    extractedRemainder
             )));
             SFM.LOGGER.error(
                     "!!!RESOURCE LOSS HAS OCCURRED!!! Manager at {} in {} failed to move all promised items, found {} {}:{}, took {} but had {} left over after insertion.",
@@ -181,7 +183,7 @@ public class OutputStatement implements IOStatement {
                     SFMResourceTypes.DEFERRED_TYPES.get().getKey(source.type),
                     destination.type.getRegistryKey(potential),
                     extracted,
-                    finalRemainder
+                    extractedRemainder
             );
         }
     }

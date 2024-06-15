@@ -6,10 +6,8 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import mekanism.api.Action;
 import mekanism.api.chemical.infuse.InfusionStack;
 import mekanism.api.math.FloatingLong;
-import mekanism.common.capabilities.Capabilities;
 import mekanism.common.registries.MekanismBlocks;
 import mekanism.common.registries.MekanismInfuseTypes;
 import mekanism.common.tier.BinTier;
@@ -23,6 +21,7 @@ import mekanism.common.util.UnitDisplayUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -623,19 +622,11 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             }
         }
         helper.setBlock(inductionInput, MekanismBlocks.INDUCTION_PORT.getBlock());
-
-        // pre-fill the matrix by a little bit
-        long startingAmount = 0L; //Integer.MAX_VALUE + 10_000_000_000L;
-        // TODO: find a way to wait for the multiblock to be formed to insert a little bit
         var inductionPort = (TileEntityInductionPort) helper.getBlockEntity(inductionInput);
-//        inductionPort
-//                .getCapability(Capabilities.STRICT_ENERGY, Direction.NORTH)
-//                .orElse(null)
-//                .insertEnergy(FloatingLong.create(startingAmount), Action.EXECUTE);
-//        inductionPort.insertEnergy(FloatingLong.create(startingAmount), Action.EXECUTE);
 
         // set up the energy source
         helper.setBlock(powerCubePos, MekanismBlocks.CREATIVE_ENERGY_CUBE.getBlock());
+
         TileEntityEnergyCube powerCube = (TileEntityEnergyCube) helper.getBlockEntity(powerCubePos);
         powerCube.setEnergy(0, EnergyCubeTier.CREATIVE.getMaxEnergy());
 
@@ -645,13 +636,15 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // create the program
+        long incr = 10_000_000_000L;
+        var startingAmount = FloatingLong.create(0L);
         var program = """
                     NAME "induction matrix test"
                     EVERY 20 TICKS DO
-                        INPUT fe:: FROM source NORTH SIDE
-                        OUTPUT fe:: TO dest NORTH SIDE
+                        INPUT %d mekanism_energy:: FROM source NORTH SIDE
+                        OUTPUT mekanism_energy:: TO dest NORTH SIDE
                     END
-                """;
+                """.formatted(incr);
 
         // set the labels
         LabelPositionHolder.empty()
@@ -659,19 +652,25 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                 .addAll("dest", List.of(helper.absolutePos(inductionInput)))
                 .save(manager.getDisk().get());
 
-        // load the program
+        // we can't prefill since we can't wait a delay AND use succeedIfManagerDidThing
+        // pre-fill the matrix by a little bit
+        // we want to make sure SFM doesn't have problems inserting beyond MAX_INT
+//        var startingAmount = FloatingLong.create(Integer.MAX_VALUE + incr);
+//            inductionPort.insertEnergy(startingAmount, Action.EXECUTE);
+
+        // launch the program
         manager.setProgram(program);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            var expected = FloatingLong.create(startingAmount).add(Integer.MAX_VALUE);
+            if (!inductionPort.getMultiblock().isFormed()) {
+                throw new GameTestAssertException("Induction matrix did not form");
+            }
+
+            var expected = startingAmount.add(incr);
+            FloatingLong energy = inductionPort.getEnergy(0);
+            boolean success = energy.equals(expected);
             assertTrue(
-                    inductionPort.getEnergy(0).greaterOrEqual(expected),
-                    "Energy did not arrive, expected "
-                    + expected
-                    + " got "
-                    + inductionPort.getEnergy(0)
-                    + " (diff "
-                    + inductionPort.getEnergy(0).subtract(expected)
-                    + ")"
+                    success,
+                    "Expected energy did not match"
             );
             helper.succeed();
         });
