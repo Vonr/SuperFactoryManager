@@ -23,7 +23,7 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
 
     public boolean isDone() {
         if (done) return true;
-        // we don't bother setting done because if this returns true it should be the last time this is called
+        // we don't bother setting this.done because if this returns true it should be the last time this is called
         if (tracker.isDone()) {
             return true;
         }

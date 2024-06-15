@@ -78,7 +78,7 @@ public class OutputStatement implements IOStatement {
 
         // how many can we move before accounting for limits
         long toMove = source.type.getAmountDifference(potential, potentialRemainder);
-        if (toMove <= 0) {;
+        if (toMove <= 0) {
             context
                     .getLogger()
                     .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT.get(
@@ -278,15 +278,9 @@ public class OutputStatement implements IOStatement {
            ################ */
 
         // try and move resources from input slots to output slots
-        var inputSlotIter = inputSlots.iterator();
-        while (inputSlotIter.hasNext()) {
+        for (var inputSlot : inputSlots) {
             // Get an input slot
-            var inputSlot = inputSlotIter.next();
             if (inputSlot.isDone()) {
-                //// Make sure we don't process this slot again
-                //// inputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
-                // ^^^ not necessary since we moved the slot free logic
-                // Try again
                 continue;
             }
 
