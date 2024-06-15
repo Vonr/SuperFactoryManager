@@ -442,12 +442,20 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         return resourceIdSet;
     }
 
+
+    private void assertResourceLimitDoesntExpandHuge(ResourceLimits limits) {
+        if (limits.createInputTrackers().size() > 512) {
+            throw new IllegalArgumentException("Resource limit expands to more than 512 trackers, this is likely a mistake where the \"EACH\" keyword is being used. The code: " + limits);
+        }
+    }
+
     @Override
     public ResourceLimits visitInputmatchers(@Nullable SFMLParser.InputmatchersContext ctx) {
         if (ctx == null) {
             return new ResourceLimits(List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE), ResourceIdSet.EMPTY);
         }
         ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(Limit.MAX_QUANTITY_NO_RETENTION);
+        assertResourceLimitDoesntExpandHuge(resourceLimits);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
@@ -459,12 +467,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             return new ResourceLimits(List.of(ResourceLimit.ACCEPT_ALL_WITHOUT_RESTRAINT), ResourceIdSet.EMPTY);
         }
         ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(Limit.MAX_QUANTITY_MAX_RETENTION);
+        assertResourceLimitDoesntExpandHuge(resourceLimits);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
 
     @Override
-    public ASTNode visitResourceLimitMovement(SFMLParser.ResourceLimitMovementContext ctx) {
+    public ResourceLimits visitResourceLimitMovement(SFMLParser.ResourceLimitMovementContext ctx) {
         ResourceLimits resourceLimits = new ResourceLimits(
                 ctx.resourcelimit().stream()
                         .map(this::visitResourcelimit)

@@ -25,6 +25,6 @@ public record ResourceQuantity(
 
     @Override
     public String toString() {
-        return number + (idExpansionBehaviour == IdExpansionBehaviour.EXPAND ? " EACH" : "");
+        return (this == UNSET ? "UNSET" : number) + (idExpansionBehaviour == IdExpansionBehaviour.EXPAND ? " EACH" : "");
     }
 }
