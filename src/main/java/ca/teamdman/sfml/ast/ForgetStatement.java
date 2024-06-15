@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+// todo: optimize for forget-all case
 public record ForgetStatement(
         List<Label> labels
 ) implements Statement {
