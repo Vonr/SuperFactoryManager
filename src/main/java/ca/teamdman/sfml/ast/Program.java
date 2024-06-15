@@ -67,7 +67,7 @@ public record Program(
                 try {
                     ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
                     if (resourceType == null) {
-                        errors.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
+                        errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_UNKNOWN_RESOURCE_TYPE.get(
                                 referencedResource));
                     }
                 } catch (ResourceLocationException e) {
@@ -156,12 +156,7 @@ public record Program(
             // make sure resource type is registered
             var type = resource.getResourceType();
             if (type == null) {
-                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
-                        resource.resourceTypeNamespace
-                        + ":"
-                        + resource.resourceTypeName,
-                        resource
-                ));
+                SFM.LOGGER.error("Resource type not found for resource: {}, should have been validated at program compile", resource);
                 continue;
             }
 

@@ -285,10 +285,6 @@ public class Constants {
                 "program.sfm.warnings.unused_label",
                 "Label \"%s\" is used in code but not assigned in the world."
         );
-        public static final LocalizationEntry PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE = new LocalizationEntry(
-                "program.sfm.warnings.unknown_resource_type",
-                "The resource type \"%s\" in \"%s\" is not supported."
-        );
         public static final LocalizationEntry PROGRAM_WARNING_UNKNOWN_RESOURCE_ID = new LocalizationEntry(
                 "program.sfm.warnings.unknown_resource_id",
                 "Resource \"%s\" was not found."
@@ -547,6 +543,10 @@ public class Constants {
         public static final LocalizationEntry PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE = new LocalizationEntry(
                 "program.sfm.error.malformed_resource_type",
                 "Program has a malformed resource type \"%s\".\nReminder: Resource types must be literals, not wildcards."
+        );
+        public static final LocalizationEntry PROGRAM_ERROR_UNKNOWN_RESOURCE_TYPE = new LocalizationEntry(
+                "program.sfm.error.unknown_resource_type",
+                "Program references an unknown resource type \"%s\""
         );
         public static final LocalizationEntry MANAGER_GUI_STATE_NO_PROGRAM = new LocalizationEntry(
                 "gui.sfm.manager.state.no_program",

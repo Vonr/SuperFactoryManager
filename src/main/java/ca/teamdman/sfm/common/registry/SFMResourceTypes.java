@@ -21,6 +21,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryBuilder;
 import net.minecraftforge.registries.RegistryObject;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -50,12 +51,11 @@ public class SFMResourceTypes {
 
     private static final Int2ObjectArrayMap<ResourceType<?, ?, ?>> DEFERRED_TYPES_BY_ID = new Int2ObjectArrayMap<>();
 
-    public static ResourceType<?, ?, ?> fastLookup(String resourceTypeNamespace, String resourceTypeName) {
-//        return DEFERRED_TYPES.get().getValue(new ResourceLocation(resourceTypeNamespace, resourceTypeName));
-        return Objects.requireNonNull(DEFERRED_TYPES_BY_ID.computeIfAbsent(
+    public static @Nullable ResourceType<?, ?, ?> fastLookup(String resourceTypeNamespace, String resourceTypeName) {
+        return DEFERRED_TYPES_BY_ID.computeIfAbsent(
                 resourceTypeNamespace.hashCode() ^ resourceTypeName.hashCode(),
                 i -> DEFERRED_TYPES.get().getValue(new ResourceLocation(resourceTypeNamespace, resourceTypeName))
-        ));
+        );
     }
 
     static {

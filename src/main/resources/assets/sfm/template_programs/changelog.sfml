@@ -5,6 +5,8 @@
 -- If you can reproduce this problem, join the Discord and let me know how.
 
 ---- next ----
+-- fix crashes using ctrl+space
+---- happened when using on `Gas::` or `fe::`
 -- add manager screen button to rebuild network
 ---- this will do until I can squash the bug
 ---- I'm sorry for the headaches this has caused
@@ -17,6 +19,7 @@
 ---- Thanks @pddshk for the suggestion (#127) <3
 ---- Thanks Blase for the reminder <3
 -- add mekanism_energy:mekanism:energy resource type
+---- This can move MAX_LONG per operation where supported
 -- make "EVERY TICK DO" valid syntax
 ---- this still only allows forge_energy by default
 -- hide "Press Ctrl+E to edit" tooltip in edit screen
