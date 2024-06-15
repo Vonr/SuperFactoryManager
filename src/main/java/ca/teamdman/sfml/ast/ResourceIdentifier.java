@@ -39,6 +39,12 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             String resourceNamespace,
             String resourceName
     ) {
+        // prevent crash on ctrl+space on "Gas::" (capital)
+        // we could throw an exception and let it get bubbled to the user
+        // but why bother when we know we know lowercasing it fixes it
+        resourceTypeNamespace = resourceTypeNamespace.toLowerCase(Locale.ROOT);
+        resourceTypeName = resourceTypeName.toLowerCase(Locale.ROOT);
+
         var check = List.of("fe","rf","energy","power");
         if (resourceTypeNamespace.equals("sfm") && check.contains(resourceTypeName)) {
             resourceTypeName = "forge_energy";
