@@ -38,7 +38,10 @@ public record ServerboundManagerLogDesireUpdatePacket(
                 ManagerBlockEntity.class,
                 msg.pos,
                 msg.windowId,
-                (menu, manager) -> menu.isLogScreenOpen = msg.isLogScreenOpen()
+                (menu, manager) -> {
+                    menu.isLogScreenOpen = msg.isLogScreenOpen();
+                    manager.sendUpdatePacket();
+                }
         );
     }
 }
