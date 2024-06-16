@@ -47,7 +47,13 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
-        String loggerName = SFM.MOD_ID + ":manager@" + blockPos.toShortString();
+        // Logger name should be unique to (isClient,managerpos)
+        // We can't check isClient here, so instead to guarantee uniqueness we can just use hash
+        // This is necessary because setLogLevel in game tests will get clobbered when the client constructs the block entity
+        // so the name must be unique so that the client default logger construction doesn't overwrite changes to the server logger
+        String loggerName = SFM.MOD_ID
+                            + ":manager@"
+                            + blockPos.toShortString() + "@" + Integer.toHexString(System.identityHashCode(this));
         logger = new TranslatableLogger(loggerName);
     }
 
@@ -87,7 +93,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                     org.apache.logging.log4j.Level newLevel = org.apache.logging.log4j.Level.OFF;
                     manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOG_LEVEL_UPDATED.get(newLevel)));
                     var oldLevel = manager.logger.getLogLevel();
-                    manager.logger.setLogLevel(newLevel);
+                    manager.setLogLevel(newLevel);
                     SFM.LOGGER.debug(
                             "SFM updated manager {} {} log level to {} after a single execution at {} level",
                             manager.getBlockPos(),
@@ -246,7 +252,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return result;
     }
 
-    private void sendUpdatePacket() {
+    public void sendUpdatePacket() {
         // Create one packet and clone it for each receiver
         var managerUpdatePacket = new ClientboundManagerGuiUpdatePacket(
                 -1,
