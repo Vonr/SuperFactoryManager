@@ -37,6 +37,11 @@ public abstract class SFMGameTestBase {
             ManagerBlockEntity manager,
             Runnable assertion
     ) {
+        // a nice thing about this method is that you can change a program from
+        // EVERY 20 TICKS DO
+        // to
+        // EVERY REDSTONE PULSE DO
+        // and it will patiently wait
         assertManagerDidThingWithoutLagging(helper, manager, () -> {
             assertion.run();
             helper.succeed();
