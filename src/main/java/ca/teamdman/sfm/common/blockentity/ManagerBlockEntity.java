@@ -81,7 +81,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 manager.sendUpdatePacket();
                 manager.logger.pruneSoWeDontEatAllTheRam();
 
-                if (manager.logger.getLogLevel() == org.apache.logging.log4j.Level.TRACE || manager.logger.getLogLevel() == org.apache.logging.log4j.Level.DEBUG) {
+                if (manager.logger.getLogLevel() == org.apache.logging.log4j.Level.TRACE
+                    || manager.logger.getLogLevel() == org.apache.logging.log4j.Level.DEBUG
+                    || manager.logger.getLogLevel() == org.apache.logging.log4j.Level.INFO) {
                     org.apache.logging.log4j.Level newLevel = org.apache.logging.log4j.Level.OFF;
                     manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOG_LEVEL_UPDATED.get(newLevel)));
                     var oldLevel = manager.logger.getLogLevel();

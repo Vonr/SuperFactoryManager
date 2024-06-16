@@ -646,7 +646,7 @@ public class Constants {
         );
         public static final LocalizationEntry LOGS_GUI_NO_CONTENT = new LocalizationEntry(
                 "gui.sfm.logs.no_content",
-                "Ahoy, world!\nChange the log level using the buttons at the top of this screen.\nTRACE log level will be reset after a single program execution."
+                "Ahoy, world!\nChange the log level using the buttons at the top of this screen.\nLoud log levels will be reset after a single program execution."
         );
         public static final LocalizationEntry LOGS_MISSING_ADJACENT_CABLE = new LocalizationEntry(
                 "gui.sfm.logs.missing_adjacent_cable",
