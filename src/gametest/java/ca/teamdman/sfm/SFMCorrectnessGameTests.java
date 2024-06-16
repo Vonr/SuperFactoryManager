@@ -23,12 +23,14 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import org.apache.logging.log4j.Level;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -2864,5 +2866,56 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(rightChest.getStackInSlot(2).isEmpty(), "Dirt slot 2 must not arrive");
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "3x4x3", batch = "laggy")
+    public static void move_on_pulse(GameTestHelper helper) {
+        var managerPos = new BlockPos(1, 2, 1);
+        var buttonPos = managerPos.offset(Direction.NORTH.getNormal());
+        var leftPos = new BlockPos(2, 2, 1);
+        var rightPos = new BlockPos(0, 2, 1);
+
+        // place and fill the chests
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        var left = (BarrelBlockEntity) helper.getBlockEntity(leftPos);
+        var right = (BarrelBlockEntity) helper.getBlockEntity(rightPos);
+        left.setItem(0, new ItemStack(Items.IRON_INGOT, 64));
+
+        // create the manager block and add the disk
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // create the program
+        var program = """
+                    NAME "move on pulse"
+
+                    EVERY REDSTONE PULSE DO
+                        INPUT FROM left
+                        OUTPUT TO right
+                    END
+                """.stripTrailing().stripIndent();
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram(program);
+        manager.setLogLevel(Level.TRACE);
+        assertTrue(manager.logger.getLogLevel() == Level.TRACE, "Log level should be trace");
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(left.getItem(0).isEmpty(), "Iron should depart");
+            assertTrue(right.getItem(0).getCount() == 64, "Iron should arrive");
+        });
+
+        // create the button
+        helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
+        // push the button
+        helper.pressButton(buttonPos);
     }
 }
