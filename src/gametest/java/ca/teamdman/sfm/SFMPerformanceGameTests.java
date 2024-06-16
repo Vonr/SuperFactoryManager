@@ -80,7 +80,8 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
             sourceBlocks.forEach(pos -> {
                 BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
                 for (int i = 0; i < barrel.getContainerSize(); i++) {
-                    assertTrue(barrel.getItem(i).isEmpty(), "Items did not leave");
+                    ItemStack found = barrel.getItem(i);
+                    assertTrue(found.isEmpty(), "Items did not leave, pos=" + helper.absolutePos(pos) + " i=" + i + " found=" + found);
                 }
             });
             // ensure all the dest chests are full
