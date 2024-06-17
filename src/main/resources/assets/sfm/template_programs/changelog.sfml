@@ -42,6 +42,8 @@
 -- Add ctrl+space action for IfStatement and BoolExpr
 -- Add git tag action to release process documentation
 -- Add GitHub release to release process documentation
+-- Update AE2 example to accommodate case where ingredients are spread between inscribers.
+---- Thanks Kem for the idea <3
 
 NAME "Changelog for 4.15.1"
 ---- 4.15.1 ----
