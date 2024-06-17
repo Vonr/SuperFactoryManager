@@ -496,7 +496,7 @@ public class Constants {
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_END = new LocalizationEntry(
                 "log.sfm.statement.tick.io.move_to.end",
-                "Moved %d from slot %d to %d, new: source=%s, dest=%s"
+                "Moved %d %s - source=%s, dest=%s"
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE = new LocalizationEntry(
                 "log.sfm.statement.tick.io.gather_slots.resource_types",
