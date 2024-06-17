@@ -158,8 +158,9 @@ public class OutputStatement implements IOStatement {
         destination.tracker.trackTransfer(moved);
 
         // log
-        context.getLogger().debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_END.get(
+        context.getLogger().info(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_END.get(
                 moved,
+                destination.type.getRegistryKey(extracted),
                 source,
                 destination
         )));
@@ -221,7 +222,7 @@ public class OutputStatement implements IOStatement {
         // Log the number of input slots
         context
                 .getLogger()
-                .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT.get(
+                .info(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT.get(
                         inputSlots.size()
                 )));
 
@@ -254,7 +255,7 @@ public class OutputStatement implements IOStatement {
         // Log the number of output slots
         context
                 .getLogger()
-                .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT.get(
+                .info(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT.get(
                         outputSlots.size()
                 )));
 

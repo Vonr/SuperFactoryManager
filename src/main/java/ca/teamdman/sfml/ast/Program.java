@@ -254,10 +254,7 @@ public record Program(
             if (!context.didSomething()) {
                 context.setDidSomething(true);
                 context.getLogger().trace(getTraceLogWriter(context));
-                context.getLogger().debug(debug -> {
-                    debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
-                    debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK.get());
-                });
+                context.getLogger().debug(debug -> debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK.get()));
             }
 
             // Log pretty triggers
@@ -333,6 +330,7 @@ public record Program(
                             .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_BODY.get(
                                     body))));
             trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER.get());
+            trace.accept(Constants.LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
         };
     }
 
