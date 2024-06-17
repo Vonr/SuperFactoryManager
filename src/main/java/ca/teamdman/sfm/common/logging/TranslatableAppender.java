@@ -15,6 +15,7 @@ import org.apache.logging.log4j.message.Message;
 
 import java.io.Serializable;
 import java.util.LinkedList;
+import java.util.Objects;
 
 @Plugin(name = "TranslatableAppender", category = "Core", elementType = Appender.ELEMENT_TYPE, printObject = true)
 public class TranslatableAppender extends AbstractAppender {
@@ -44,7 +45,7 @@ public class TranslatableAppender extends AbstractAppender {
         String[] stringParams = new String[params.length];
         // Call toString now instead of later when the object members may have changed
         for (int i = 0; i < params.length; i++) {
-            stringParams[i] = params[i].toString();
+            stringParams[i] = Objects.toString(params[i]);
         }
         TranslatableContents content = new TranslatableContents(message.getFormat(), (Object[]) stringParams);
 
