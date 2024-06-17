@@ -65,7 +65,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         return "LimitedOutputSlot{" +
                "slot=" + slot +
                ", cap=" + type.CAPABILITY_KIND.getName() +
-               ", stackInSlotCache=" + stackInSlotCache +
+//               ", stackInSlotCache=" + stackInSlotCache +
                ", tracker=" + tracker +
                '}';
     }

@@ -40,13 +40,18 @@ public class TranslatableAppender extends AbstractAppender {
         Level level = event.getLevel();
 
         Message message = event.getMessage();
-        TranslatableContents content = new TranslatableContents(message.getFormat(), message.getParameters());
+        Object[] params = message.getParameters();
+        String[] stringParams = new String[params.length];
+        // Call toString now instead of later when the object members may have changed
+        for (int i = 0; i < params.length; i++) {
+            stringParams[i] = params[i].toString();
+        }
+        TranslatableContents content = new TranslatableContents(message.getFormat(), (Object[]) stringParams);
 
         contents.add(new TranslatableLogEvent(
                 level,
                 instant,
                 content
         ));
-//        SFM.LOGGER.debug("Appended log event to {}", System.identityHashCode(this));
     }
 }

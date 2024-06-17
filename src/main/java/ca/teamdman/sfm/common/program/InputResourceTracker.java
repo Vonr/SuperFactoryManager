@@ -70,10 +70,10 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
     @Override
     public String toString() {
         return "InputResourceTracker@" + Integer.toHexString(System.identityHashCode(this)) + "{" +
-               "RESOURCE_LIMIT=" + RESOURCE_LIMIT +
-               ", EXCLUSIONS=" + EXCLUSIONS +
-               ", TRANSFERRED=" + TRANSFERRED +
+               "TRANSFERRED=" + TRANSFERRED +
                ", RETENTION_OBLIGATION_PROGRESS=" + RETENTION_OBLIGATION_PROGRESS +
+               ", RESOURCE_LIMIT=" + RESOURCE_LIMIT +
+               ", EXCLUSIONS=" + EXCLUSIONS +
                "}";
     }
 }
