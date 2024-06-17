@@ -1,3 +1,6 @@
+-- labels:
+-- logic, engineering, calculation, silicon, last => inscribers
+-- materials, results => chests
 EVERY 20 TICKS DO
     INPUT FROM materials
     OUTPUT gold_ingot TO logic SLOTS 2
