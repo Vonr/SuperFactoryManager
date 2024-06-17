@@ -68,6 +68,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     public Stream<CAP> getCapabilities(
             ProgramContext programContext, LabelAccess labelAccess
     ) {
+        // TODO: make this return (BlockPos, Direction, CAP) tuples for better logging
         // Log
         programContext
                 .getLogger()
@@ -79,10 +80,9 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         CableNetwork network = programContext.getNetwork();
 
         // Get positions
-        Iterable<BlockPos> positions = () -> labelAccess
+        Iterable<BlockPos> positions = labelAccess
                 .roundRobin()
-                .gather(labelAccess, programContext.getlabelPositions())
-                .iterator();
+                .gather(labelAccess, programContext.getlabelPositions())::iterator;
 
         for (BlockPos pos : positions) {
             // Expand pos to (pos, direction) pairs
@@ -95,6 +95,9 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                 if (cap.isPresent()) {
                     // Add to stream
                     found.add(cap.get());
+                    programContext.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT.get(
+                            CAPABILITY_KIND.getName(), pos, dir
+                    )));
                 } else {
                     // Log error
                     programContext
@@ -141,10 +144,10 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract STACK copy(STACK stack);
 
-    protected abstract STACK setCount(STACK stack, long amount);
-
     @SuppressWarnings("unused")
     public STACK withCount(STACK stack, long count) {
         return setCount(copy(stack), count);
     }
+
+    protected abstract STACK setCount(STACK stack, long amount);
 }

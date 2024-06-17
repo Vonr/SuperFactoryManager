@@ -353,6 +353,10 @@ public class Constants {
                 "log.sfm.resource_type.get_capabilities.not_present",
                 "Capability %s %s direction=%s not present"
         );
+        public static final LocalizationEntry LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT = new LocalizationEntry(
+                "log.sfm.resource_type.get_capabilities.present",
+                "Capability %s %s direction=%s present"
+        );
         public static final LocalizationEntry LOG_CAPABILITY_CACHE_HIT = new LocalizationEntry(
                 "log.sfm.capability_cache.hit",
                 "Capability cache HIT for %s %s direction=%s"
