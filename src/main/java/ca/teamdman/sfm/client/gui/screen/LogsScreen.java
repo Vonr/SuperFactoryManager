@@ -373,7 +373,9 @@ public class LogsScreen extends Screen {
             int selectionStart = selectedRange.beginIndex();
             int selectionEnd = selectedRange.endIndex();
 
-            for (int line = 0; line < content.size(); ++line) {
+//            for (int line = 0; line < content.size(); ++line) {
+            // draw the last 500 lines
+            for (int line = Math.max(0, content.size() - 500); line < content.size(); ++line) {
                 var componentColoured = content.get(line);
                 int lineLength = componentColoured.getString().length();
                 int lineHeight = this.font.lineHeight + (line == 0 ? 2 : 0);
