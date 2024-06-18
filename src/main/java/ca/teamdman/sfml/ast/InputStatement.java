@@ -209,6 +209,10 @@ public final class InputStatement implements IOStatement {
                 if (shouldCreateSlot(type, stack)) {
                     for (InputResourceTracker<?, ?, ?> tracker : trackers) {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
+                            // when tracker.test fails because of exceptions we aren't logging
+                            // we can't log in an `else` because it should only log if the resource limit test passes
+                            // so we gotta break up the logic into a two step validation where we can log better
+                            // but for now it should be fine
                             context
                                     .getLogger()
                                     .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
