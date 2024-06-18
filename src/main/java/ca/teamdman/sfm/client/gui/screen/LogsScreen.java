@@ -276,6 +276,7 @@ public class LogsScreen extends Screen {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Button.OnTooltip buildTooltip(Constants.LocalizationKeys.LocalizationEntry entry) {
         return (btn, pose, mx, my) -> renderTooltip(
                 pose,
