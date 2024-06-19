@@ -25,6 +25,7 @@ public class WaterTankBlockEntity extends BlockEntity {
     @Override
     public void onLoad() {
         super.onLoad();
+        //noinspection DataFlowIssue
         ((WaterTankBlock) getBlockState().getBlock()).recount(getLevel(), getBlockPos());
     }
 
@@ -36,6 +37,7 @@ public class WaterTankBlockEntity extends BlockEntity {
 
         @Override
         public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
+            //noinspection DataFlowIssue
             if (!getLevel().getBlockState(getBlockPos()).getValue(WaterTankBlock.IN_WATER)) return FluidStack.EMPTY;
             int        drained = Math.min(maxDrain, TANK.getCapacity());
             FluidStack copy    = fluid.copy();

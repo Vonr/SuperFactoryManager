@@ -1,11 +1,10 @@
 package ca.teamdman.sfm.common.resourcetype;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
-import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
-import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -21,10 +20,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
-    private final Map<ITEM, ResourceLocation> registryKeyCache = new Object2ObjectOpenHashMap<>();
-
-
     public final Capability<CAP> CAPABILITY_KIND;
+    private final Map<ITEM, ResourceLocation> registryKeyCache = new Object2ObjectOpenHashMap<>();
 
     public ResourceType(Capability<CAP> CAPABILITY_KIND) {
         this.CAPABILITY_KIND = CAPABILITY_KIND;
@@ -32,6 +29,13 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
 
     public abstract long getAmount(STACK stack);
+
+    /**
+     * Some resource types may exceed MAX_LONG, this method should be used to get the difference between two stacks
+     */
+    public long getAmountDifference(STACK stack1, STACK stack2) {
+        return getAmount(stack1) - getAmount(stack2);
+    }
 
     public abstract STACK getStackInSlot(CAP cap, int slot);
 
@@ -66,37 +70,48 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     public Stream<CAP> getCapabilities(
             ProgramContext programContext, LabelAccess labelAccess
     ) {
-        // Get labels from disk
-        Optional<ItemStack> disk = programContext.getManager().getDisk();
-        if (disk.isEmpty()) return Stream.empty();
-        LabelPositionHolder labelPositions = LabelPositionHolder.from(disk.get());
+        // TODO: make this return (BlockPos, Direction, CAP) tuples for better logging
+        // Log
+        programContext
+                .getLogger()
+                .trace(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_BEGIN.get(
+                        CAPABILITY_KIND.getName(), labelAccess
+                )));
+
+        Stream.Builder<CAP> found = Stream.builder();
+        CableNetwork network = programContext.getNetwork();
 
         // Get positions
-        Stream<BlockPos> positions = labelAccess.roundRobin().gather(labelAccess, labelPositions);
+        Iterable<BlockPos> positions = labelAccess
+                .roundRobin()
+                .gather(labelAccess, programContext.getlabelPositions())::iterator;
 
-        // Expand positions to (pos,direction) pairs
-        Stream<Pair<BlockPos, Direction>> position_direction_pairs = positions.flatMap(pos -> labelAccess
-                .directions()
-                .stream()
-                .map(dir -> Pair.of(pos, dir)));
+        for (BlockPos pos : positions) {
+            // Expand pos to (pos, direction) pairs
+            for (Direction dir : (Iterable<? extends Direction>) labelAccess.directions().stream()::iterator) {
+                // Get capability from the network
+                Optional<CAP> cap = network
+                        .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger())
+                        .resolve();
 
-        // Get capability from the network
-        CableNetwork network = programContext.getNetwork();
-        Stream<LazyOptional<CAP>> caps = position_direction_pairs
-                .map(pair -> {
-                    BlockPos pos = pair.getFirst();
-                    Direction dir = pair.getSecond();
-                    return network.getCapability(CAPABILITY_KIND, pos, dir);
-                });
+                if (cap.isPresent()) {
+                    // Add to stream
+                    found.add(cap.get());
+                    programContext.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT.get(
+                            CAPABILITY_KIND.getName(), pos, dir
+                    )));
+                } else {
+                    // Log error
+                    programContext
+                            .getLogger()
+                            .error(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT.get(
+                                    CAPABILITY_KIND.getName(), pos, dir
+                            )));
+                }
+            }
+        }
 
-        // Unwrap
-        // We use isPresent check to detect validity
-        // We use orElse with null to unwrap
-        //noinspection ConstantValue,DataFlowIssue
-        return caps
-                .filter(LazyOptional::isPresent)
-                .map(x -> x.orElse(null))
-                .filter(Objects::nonNull);
+        return found.build().filter(Objects::nonNull);
     }
 
     public Stream<STACK> collect(CAP cap, LabelAccess labelAccess) {
@@ -131,10 +146,10 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract STACK copy(STACK stack);
 
-    protected abstract STACK setCount(STACK stack, long amount);
-
     @SuppressWarnings("unused")
     public STACK withCount(STACK stack, long count) {
         return setCount(copy(stack), count);
     }
+
+    protected abstract STACK setCount(STACK stack, long amount);
 }

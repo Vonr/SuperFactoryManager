@@ -16,6 +16,7 @@ import net.neoforged.neoforge.common.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 
 import java.text.NumberFormat;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -36,6 +37,11 @@ public abstract class SFMGameTestBase {
             ManagerBlockEntity manager,
             Runnable assertion
     ) {
+        // a nice thing about this method is that you can change a program from
+        // EVERY 20 TICKS DO
+        // to
+        // EVERY REDSTONE PULSE DO
+        // and it will patiently wait
         assertManagerDidThingWithoutLagging(helper, manager, () -> {
             assertion.run();
             helper.succeed();
@@ -71,8 +77,7 @@ public abstract class SFMGameTestBase {
 
             @Override
             public Block getBlock() {
-                //noinspection DataFlowIssue
-                return null;
+                return new Block(Collections.emptyList());
             }
         };
 
@@ -94,8 +99,7 @@ public abstract class SFMGameTestBase {
 
             @Override
             public Block getBlock() {
-                //noinspection DataFlowIssue
-                return null;
+                return new Block(Collections.emptyList());
             }
         };
 

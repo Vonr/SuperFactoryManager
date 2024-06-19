@@ -30,6 +30,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -47,24 +48,6 @@ public class DiskItem extends Item {
                 .getString("sfm:program");
     }
 
-    public static Optional<Program> updateDetails(ItemStack stack, @Nullable ManagerBlockEntity manager) {
-        AtomicReference<Program> rtn = new AtomicReference<>(null);
-        Program.compile(
-                getProgram(stack),
-                (successProgram, builder) -> {
-                    setProgramName(stack, successProgram.name());
-                    setWarnings(stack, successProgram.gatherWarnings(stack, manager));
-                    setErrors(stack, Collections.emptyList());
-                    rtn.set(successProgram);
-                },
-                failure -> {
-                    setWarnings(stack, Collections.emptyList());
-                    setErrors(stack, failure);
-                }
-        );
-        return Optional.ofNullable(rtn.get());
-    }
-
     public static void setProgram(ItemStack stack, String program) {
         stack
                 .getOrCreateTag()
@@ -72,19 +55,60 @@ public class DiskItem extends Item {
 
     }
 
-    @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        var stack = pPlayer.getItemInHand(pUsedHand);
-        if (pLevel.isClientSide) {
-            ClientStuff.showProgramEditScreen(
-                    stack,
-                    programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
-                            programString,
-                            pUsedHand
-                    ))
-            );
+    public static Optional<Program> compileAndUpdateAttributes(ItemStack stack, @Nullable ManagerBlockEntity manager) {
+        if (manager != null) {
+            manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FROM_DISK_BEGIN.get()));
         }
-        return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
+        AtomicReference<Program> rtn = new AtomicReference<>(null);
+        Program.compile(
+                getProgram(stack),
+                (successProgram, builder) -> {
+                    ArrayList<TranslatableContents> warnings = successProgram.gatherWarnings(stack, manager);
+                    List<TranslatableContents> errors = Collections.emptyList();
+
+                    // Log to disk
+                    if (manager != null) {
+                        manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_SUCCEEDED_WITH_WARNINGS.get(
+                                successProgram.name(),
+                                warnings.size()
+                        )));
+                        manager.logger.warn(warnings::forEach);
+                    }
+
+                    // Update disk properties
+                    setProgramName(stack, successProgram.name());
+                    setWarnings(stack, warnings);
+                    setErrors(stack, errors);
+
+                    // Track result
+                    rtn.set(successProgram);
+                },
+                errors -> {
+                    List<TranslatableContents> warnings = Collections.emptyList();
+
+                    // Log to disk
+                    if (manager != null) {
+                        manager.logger.error(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FAILED_WITH_ERRORS.get(
+                                errors.size())));
+                        manager.logger.error(errors::forEach);
+                    }
+
+                    // Update disk properties
+                    setWarnings(stack, warnings);
+                    setErrors(stack, errors);
+                }
+        );
+        return Optional.ofNullable(rtn.get());
+    }
+
+    public static List<TranslatableContents> getErrors(ItemStack stack) {
+        return stack
+                .getOrCreateTag()
+                .getList("sfm:errors", Tag.TAG_COMPOUND)
+                .stream()
+                .map(CompoundTag.class::cast)
+                .map(SFMUtils::deserializeTranslation)
+                .toList();
     }
 
     public static void setErrors(ItemStack stack, List<TranslatableContents> errors) {
@@ -99,6 +123,16 @@ public class DiskItem extends Item {
                 );
     }
 
+    public static List<TranslatableContents> getWarnings(ItemStack stack) {
+        return stack
+                .getOrCreateTag()
+                .getList("sfm:warnings", Tag.TAG_COMPOUND)
+                .stream()
+                .map(CompoundTag.class::cast)
+                .map(SFMUtils::deserializeTranslation)
+                .collect(
+                        Collectors.toList());
+    }
 
     public static void setWarnings(ItemStack stack, List<TranslatableContents> warnings) {
         stack
@@ -110,28 +144,6 @@ public class DiskItem extends Item {
                                 .map(SFMUtils::serializeTranslation)
                                 .collect(ListTag::new, ListTag::add, ListTag::addAll)
                 );
-    }
-
-
-    public static List<TranslatableContents> getErrors(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getList("sfm:errors", Tag.TAG_COMPOUND)
-                .stream()
-                .map(CompoundTag.class::cast)
-                .map(SFMUtils::deserializeTranslation)
-                .toList();
-    }
-
-    public static List<TranslatableContents> getWarnings(ItemStack stack) {
-        return stack
-                .getOrCreateTag()
-                .getList("sfm:warnings", Tag.TAG_COMPOUND)
-                .stream()
-                .map(CompoundTag.class::cast)
-                .map(SFMUtils::deserializeTranslation)
-                .collect(
-                        Collectors.toList());
     }
 
     public static String getProgramName(ItemStack stack) {
@@ -146,6 +158,21 @@ public class DiskItem extends Item {
                     .getOrCreateTag()
                     .putString("sfm:name", name);
         }
+    }
+
+    @Override
+    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+        var stack = pPlayer.getItemInHand(pUsedHand);
+        if (pLevel.isClientSide) {
+            ClientStuff.showProgramEditScreen(
+                    getProgram(stack),
+                    programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
+                                programString,
+                                pUsedHand
+                        ))
+            );
+        }
+        return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
     }
 
     @Override

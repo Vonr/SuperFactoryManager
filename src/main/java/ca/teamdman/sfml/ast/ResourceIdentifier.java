@@ -7,6 +7,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -39,6 +40,12 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             String resourceNamespace,
             String resourceName
     ) {
+        // prevent crash on ctrl+space on "Gas::" (capital)
+        // we could throw an exception and let it get bubbled to the user
+        // but why bother when we know we know lowercasing it fixes it
+        resourceTypeNamespace = resourceTypeNamespace.toLowerCase(Locale.ROOT);
+        resourceTypeName = resourceTypeName.toLowerCase(Locale.ROOT);
+
         var check = List.of("fe","rf","energy","power");
         if (resourceTypeNamespace.equals("sfm") && check.contains(resourceTypeName)) {
             resourceTypeName = "forge_energy";
@@ -126,19 +133,27 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             return (List<ResourceIdentifier<STACK, ITEM, CAP>>) (List) expansionCache.get(this);
         }
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
-        //noinspection DataFlowIssue // if we get here, it should have a registry
-        List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().keySet()
+        try {
+            //noinspection DataFlowIssue // resourceType should never be null
+            List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().keySet()
                 .stream()
                 .filter(this::matchesStack)
-                .map(key -> new ResourceIdentifier<STACK, ITEM, CAP>(
-                        resourceTypeNamespace,
-                        resourceTypeName,
-                        key.getNamespace(),
-                        key.getPath()
-                )).toList();
-        //noinspection unchecked,rawtypes
-        expansionCache.put(this, (List) rtn);
-        return rtn;
+                    .map(key -> new ResourceIdentifier<STACK, ITEM, CAP>(
+                            resourceTypeNamespace,
+                            resourceTypeName,
+                            key.getNamespace(),
+                            key.getPath()
+                    )).toList();
+            //noinspection unchecked,rawtypes
+            expansionCache.put(this, (List) rtn);
+            return rtn;
+        } catch (NotImplementedException e) {
+            // some resource types like energy don't actually have a registry
+            // the check we do above for forge_energy doesn't easily work for mekanism energy because
+            // the mekanism resource types aren't stored in deferred register fields
+            // for now, lets just not crash the game at least
+            return List.of(this);
+        }
     }
 
     public void setResourceTypeCache(@Nullable ResourceType<STACK, ITEM, CAP> resourceTypeCache) {
@@ -161,13 +176,24 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         return resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
     }
 
+    // todo: make this a ShortStatement impl
     public String toStringCondensed() {
         String rtn;
         if (resourceTypeNamespace.equals(SFM.MOD_ID) && resourceTypeName.equals("item")) {
             if (resourceNamespace.equals(".*")) {
-                rtn = resourceName;
+                if (resourceName.equals(".*")) {
+                    rtn = "item::";
+                } else if (RegexCache.isRegexPattern(resourceName)) {
+                    rtn = "\""+resourceName+"\"";
+                } else {
+                    rtn = resourceName;
+                }
             } else {
-                rtn = resourceNamespace + ":" + resourceName;
+                if (RegexCache.isRegexPattern(resourceName) || RegexCache.isRegexPattern(resourceNamespace)) {
+                    rtn = "\"" + resourceNamespace + ":" + resourceName + "\"";
+                } else {
+                    rtn = resourceNamespace + ":" + resourceName;
+                }
             }
         } else if (
                 resourceTypeNamespace.equals(SFM.MOD_ID)
@@ -178,9 +204,17 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         ) {
             rtn = "forge_energy::";
         } else if (resourceTypeNamespace.equals(SFM.MOD_ID)) {
-            rtn = resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            if (RegexCache.isRegexPattern(resourceNamespace) || RegexCache.isRegexPattern(resourceName)) {
+                rtn = "\"" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName + "\"";
+            } else {
+                rtn = resourceTypeName + resourceNamespace + ":" + resourceName;
+            }
         } else {
-            rtn = resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            if (RegexCache.isRegexPattern(resourceNamespace) || RegexCache.isRegexPattern(resourceName)) {
+                rtn = "\"" + resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName + "\"";
+            } else {
+                rtn = resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            }
         }
         return rtn;
     }

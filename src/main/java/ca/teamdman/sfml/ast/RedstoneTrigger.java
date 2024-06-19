@@ -4,7 +4,7 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 
 public record RedstoneTrigger(
         Block block
-) implements Trigger {
+) implements Trigger, ShortStatement {
     @Override
     public Block getBlock() {
         return block;
@@ -21,5 +21,15 @@ public record RedstoneTrigger(
     public boolean shouldTick(ProgramContext context) {
         if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return true;
         return context.getManager().getUnprocessedRedstonePulseCount() > 0;
+    }
+
+    @Override
+    public String toString() {
+        return "EVERY REDSTONE PULSE DO\n" + block.toString().indent(1).stripTrailing() + "\nEND";
+    }
+
+    @Override
+    public String toStringShort() {
+        return "EVERY REDSTONE PULSE DO";
     }
 }

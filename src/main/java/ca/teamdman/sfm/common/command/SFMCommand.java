@@ -19,9 +19,9 @@ public class SFMCommand {
     public static void onRegisterCommand(final RegisterCommandsEvent event) {
         var command = Commands.literal("sfm");
         command.then(Commands.literal("bust_cable_network_cache")
-                             .requires(source -> source.hasPermission(2))
+                             .requires(source -> source.hasPermission(0))
                              .executes(ctx -> {
-                                 SFM.LOGGER.info("Busting cable networks");
+                                 SFM.LOGGER.info("Busting cable networks - slash command used by {}", ctx.getSource().getTextName());
                                  CableNetworkManager.clear();
                                  return SINGLE_SUCCESS;
                              }));

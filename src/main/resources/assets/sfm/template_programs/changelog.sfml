@@ -1,10 +1,49 @@
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
+-- I am aware that managers sometimes stop working.
+-- If you can reproduce this problem, join the Discord and let me know how.
+
 ---- next ----
--- fix missing dash in changelog
+-- fix crashes using ctrl+space
+---- happened when using on `Gas::` or `fe::`
+-- add manager screen button to rebuild network
+---- this will do until I can squash the bug
+---- I'm sorry for the headaches this has caused
+-- Added known issues example program
+-- fix INPUT statement limits not being respected
+---- occurred when using 2+ outputs with one input
+---- https://imgur.com/a/sfm-unintended-behaviour-gBkNyae
+---- Thanks @Lewi for the report <3
+-- fix recipes to use item tags for signs and rods
+---- Thanks @pddshk for the suggestion (#127) <3
+---- Thanks Blase for the reminder <3
+-- add mekanism_energy:mekanism:energy resource type
+---- This can move MAX_LONG per operation where supported
+-- make "EVERY TICK DO" valid syntax
+---- this still only allows forge_energy by default
+-- hide "Press Ctrl+E to edit" tooltip in edit screen
+---- Props to @Theradrim for also being bugged by this
+-- optimize more common regex (*seed, seed*, *seed*)
+-- add line numbers to program edit screen
+---- Thanks @Lewi and @Reko for the suggestion <3
+-- remove admin requirement for /sfm bust_cable_network_cache
+---- logs whoever uses the command
+-- add logging for individual managers
+-- program edit screen no longer pauses the game in single player
+-- more confirmation dialogs when overwriting programs
+---- Thanks @DeeJayh for the report, sorry for ur loss <3
 -- make FORGET keyword blue
+-- make NOT,AND,OR keywords gold
+-- allow `redstone` as a label
+-- fix missing dash in changelog
+-- support `IF chest HAS EQ 0 THEN`
+---- previously only `IF chest HAS EQ 0 item:: THEN`
+-- Add ctrl+space action for IfStatement and BoolExpr
 -- Add git tag action to release process documentation
+-- Add GitHub release to release process documentation
+-- Update AE2 example to accommodate case where ingredients are spread between inscribers.
+---- Thanks Kem for the idea <3
 
 NAME "Changelog for 4.15.1"
 ---- 4.15.1 ----

@@ -39,17 +39,22 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
 
     @Override
     public long getMaxStackSize(IEnergyStorage iEnergyStorage, int slot) {
-        return iEnergyStorage.getMaxEnergyStored();
+        int maxStackSize = iEnergyStorage.getMaxEnergyStored();
+        if (maxStackSize == Integer.MAX_VALUE) {
+            return Long.MAX_VALUE;
+        }
+        return maxStackSize;
     }
 
     @Override
-    public Integer insert(IEnergyStorage iEnergyStorage, int slot, Integer integer, boolean simulate) {
-        return integer - iEnergyStorage.receiveEnergy(integer, simulate);
+    public Integer insert(IEnergyStorage iEnergyStorage, int slot, Integer stack, boolean simulate) {
+        int accepted = iEnergyStorage.receiveEnergy(stack, simulate);
+        return stack - accepted;
     }
 
     @Override
-    public boolean isEmpty(Integer integer) {
-        return integer == 0;
+    public boolean isEmpty(Integer stack) {
+        return stack == 0;
     }
 
     @Override
@@ -70,7 +75,7 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     public static final ResourceLocation REGISTRY_KEY = new ResourceLocation("forge", "energy");
 
     @Override
-    public ResourceLocation getRegistryKey(Integer integer) {
+    public ResourceLocation getRegistryKey(Integer stack) {
         return REGISTRY_KEY;
     }
 
@@ -85,17 +90,17 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public Class<Integer> getItem(Integer integer) {
+    public Class<Integer> getItem(Integer stack) {
         return Integer.class;
     }
 
     @Override
-    public Integer copy(Integer integer) {
-        return integer;
+    public Integer copy(Integer stack) {
+        return stack;
     }
 
     @Override
-    protected Integer setCount(Integer integer, long amount) {
+    protected Integer setCount(Integer stack, long amount) {
         return amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
     }
 }

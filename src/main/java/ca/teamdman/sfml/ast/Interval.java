@@ -17,8 +17,4 @@ public record Interval(int ticks) implements ASTNode {
     public int getTicks() {
         return ticks;
     }
-
-    public int getSeconds() {
-        return ticks / 20;
-    }
 }

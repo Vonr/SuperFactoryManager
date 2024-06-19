@@ -1,9 +1,13 @@
 package ca.teamdman.sfm.common.blockentity;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.net.ClientboundManagerGuiPacket;
+import ca.teamdman.sfm.common.logging.TranslatableLogger;
+import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
+import ca.teamdman.sfm.common.net.ClientboundManagerLogLevelUpdatedPacket;
+import ca.teamdman.sfm.common.net.ClientboundManagerLogsPacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.OpenContainerTracker;
@@ -23,6 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.apache.logging.log4j.core.time.MutableInstant;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -31,6 +36,7 @@ import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public static final int TICK_TIME_HISTORY_SIZE = 20;
+    public final TranslatableLogger logger;
     private final NonNullList<ItemStack> ITEMS = NonNullList.withSize(1, ItemStack.EMPTY);
     private final long[] tickTimeNanos = new long[TICK_TIME_HISTORY_SIZE];
     private @Nullable Program program = null;
@@ -41,43 +47,68 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
+        // Logger name should be unique to (isClient,managerpos)
+        // We can't check isClient here, so instead to guarantee uniqueness we can just use hash
+        // This is necessary because setLogLevel in game tests will get clobbered when the client constructs the block entity
+        // so the name must be unique so that the client default logger construction doesn't overwrite changes to the server logger
+        String loggerName = SFM.MOD_ID
+                            + ":manager@"
+                            + blockPos.toShortString() + "@" + Integer.toHexString(System.identityHashCode(this));
+        logger = new TranslatableLogger(loggerName);
+    }
+
+    @Override
+    public String toString() {
+        return "ManagerBlockEntity{" +
+               "hasDisk=" + getDisk().isPresent() +
+               '}';
     }
 
     public static void serverTick(
             @SuppressWarnings("unused") Level level,
             @SuppressWarnings("unused") BlockPos pos,
             @SuppressWarnings("unused") BlockState state,
-            ManagerBlockEntity tile
+            ManagerBlockEntity manager
     ) {
         long start = System.nanoTime();
-        tile.tick++;
-        if (tile.shouldRebuildProgram) {
-            tile.rebuildProgramAndUpdateDisk();
-            tile.shouldRebuildProgram = false;
+        manager.tick++;
+        if (manager.shouldRebuildProgram) {
+            manager.rebuildProgramAndUpdateDisk();
+            manager.shouldRebuildProgram = false;
         }
-        if (tile.program != null) {
-            boolean didSomething = tile.program.tick(tile);
+        if (manager.program != null) {
+            boolean didSomething = manager.program.tick(manager);
             if (didSomething) {
                 long nanoTimePassed = Long.min(System.nanoTime() - start, Integer.MAX_VALUE);
-                tile.tickTimeNanos[tile.tickIndex] = (int) nanoTimePassed;
-                tile.tickIndex = (tile.tickIndex + 1) % tile.tickTimeNanos.length;
-                tile.sendUpdatePacket();
+                manager.tickTimeNanos[manager.tickIndex] = (int) nanoTimePassed;
+                manager.tickIndex = (manager.tickIndex + 1) % manager.tickTimeNanos.length;
+                manager.logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_MS.get(nanoTimePassed
+                                                                                                       / 1_000_000f)));
+                manager.sendUpdatePacket();
+                manager.logger.pruneSoWeDontEatAllTheRam();
+
+                if (manager.logger.getLogLevel() == org.apache.logging.log4j.Level.TRACE
+                    || manager.logger.getLogLevel() == org.apache.logging.log4j.Level.DEBUG
+                    || manager.logger.getLogLevel() == org.apache.logging.log4j.Level.INFO) {
+                    org.apache.logging.log4j.Level newLevel = org.apache.logging.log4j.Level.OFF;
+                    manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOG_LEVEL_UPDATED.get(newLevel)));
+                    var oldLevel = manager.logger.getLogLevel();
+                    manager.setLogLevel(newLevel);
+                    SFM.LOGGER.debug(
+                            "SFM updated manager {} {} log level to {} after a single execution at {} level",
+                            manager.getBlockPos(),
+                            manager.getLevel(),
+                            newLevel,
+                            oldLevel
+                    );
+                }
             }
         }
     }
 
-    private void sendUpdatePacket() {
-        OpenContainerTracker.getPlayersWithOpenContainer(ManagerContainerMenu.class)
-                .filter(entry -> entry.getValue().MANAGER_POSITION.equals(getBlockPos()))
-                .forEach(entry -> SFMPackets.MANAGER_CHANNEL.send(
-                        PacketDistributor.PLAYER.with(entry::getKey),
-                        new ClientboundManagerGuiPacket(
-                                entry.getValue().containerId,
-                                getProgramString().orElse(""),
-                                getState(),
-                                getTickTimeNanos()
-                        )
-                ));
+    public void setLogLevel(org.apache.logging.log4j.Level logLevelObj) {
+        logger.setLogLevel(logLevelObj);
+        sendUpdatePacket();
     }
 
     public int getTick() {
@@ -133,19 +164,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void rebuildProgramAndUpdateDisk() {
         if (level != null && level.isClientSide()) return;
         this.program = getDisk()
-                .flatMap(itemStack -> DiskItem.updateDetails(itemStack, this))
+                .flatMap(itemStack -> DiskItem.compileAndUpdateAttributes(itemStack, this))
                 .orElse(null);
         sendUpdatePacket();
-    }
-
-    @Override
-    protected Component getDefaultName() {
-        return Constants.LocalizationKeys.MANAGER_CONTAINER.getComponent();
-    }
-
-    @Override
-    protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
-        return new ManagerContainerMenu(windowId, inv, this);
     }
 
     @Override
@@ -211,13 +232,6 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        ContainerHelper.saveAllItems(tag, ITEMS);
-    }
-
-
-    @Override
     public void clearContent() {
         ITEMS.clear();
     }
@@ -236,6 +250,88 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         System.arraycopy(tickTimeNanos, tickIndex, result, 0, tickTimeNanos.length - tickIndex);
         System.arraycopy(tickTimeNanos, 0, result, tickTimeNanos.length - tickIndex, tickIndex);
         return result;
+    }
+
+    public void sendUpdatePacket() {
+        // Create one packet and clone it for each receiver
+        var managerUpdatePacket = new ClientboundManagerGuiUpdatePacket(
+                -1,
+                getProgramString().orElse(""),
+                getState(),
+                getTickTimeNanos()
+        );
+
+        OpenContainerTracker.getOpenManagerMenus(getBlockPos())
+                .forEach(entry -> {
+                    ManagerContainerMenu menu = entry.getValue();
+
+                    // Send a copy of the manager update packet
+                    SFMPackets.MANAGER_CHANNEL.send(
+                            PacketDistributor.PLAYER.with(entry::getKey),
+                            managerUpdatePacket.cloneWithWindowId(menu.containerId)
+                    );
+
+                    // The rest of the sync is only relevant if the log screen is open
+                    if (!menu.isLogScreenOpen) return;
+
+                    // Send log level changes
+                    if (!menu.logLevel.equals(logger.getLogLevel().name())) {
+                        SFMPackets.MANAGER_CHANNEL.send(
+                                PacketDistributor.PLAYER.with(entry::getKey),
+                                new ClientboundManagerLogLevelUpdatedPacket(
+                                        menu.containerId,
+                                        logger.getLogLevel().name()
+                                )
+                        );
+                        menu.logLevel = logger.getLogLevel().name();
+                    }
+
+                    // Send new logs
+                    MutableInstant hasSince = new MutableInstant();
+                    if (!menu.logs.isEmpty()) {
+                        hasSince.initFrom(menu.logs.getLast().instant());
+                    }
+                    var logsToSend = logger.getLogsAfter(hasSince);
+                    if (!logsToSend.isEmpty()) {
+                        // Add the latest entry to the server copy
+                        // since the server copy is only used for checking what the latest log timestamp is
+                        menu.logs.add(logsToSend.getLast());
+
+                        // Send the logs
+                        while (!logsToSend.isEmpty()) {
+                            int remaining = logsToSend.size();
+                            // By passing the same list to the same player in each packet
+                            // as the packets encode, they will drain the list to make
+                            // the packets as full as possible.
+                            // This assumes that the send method immediately invokes the encode method
+                            // which it does as of 2024-06-05 on 1.19.2
+                            SFMPackets.MANAGER_CHANNEL.send(
+                                    PacketDistributor.PLAYER.with(entry::getKey),
+                                    new ClientboundManagerLogsPacket(
+                                            menu.containerId,
+                                            logsToSend
+                                    )
+                            );
+                            assert logsToSend.size() < remaining : "Failed to send logs, infinite loop detected";
+                        }
+                    }
+                });
+    }
+
+    @Override
+    protected Component getDefaultName() {
+        return Constants.LocalizationKeys.MANAGER_CONTAINER.getComponent();
+    }
+
+    @Override
+    protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
+        return new ManagerContainerMenu(windowId, inv, this);
+    }
+
+    @Override
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        ContainerHelper.saveAllItems(tag, ITEMS);
     }
 
     public enum State {

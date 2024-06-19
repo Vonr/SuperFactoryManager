@@ -1,5 +1,7 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
+import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -121,12 +123,15 @@ public class CableNetwork {
     public <CAP> @Nonnull LazyOptional<CAP> getCapability(
             Capability<CAP> cap,
             BlockPos pos,
-            @Nullable Direction direction
+            @Nullable Direction direction,
+            TranslatableLogger logger
     ) {
+        // TODO: move this check higher up the chain
         if (!isAdjacentToCable(pos)) {
+            logger.warn(x->x.accept(Constants.LocalizationKeys.LOGS_MISSING_ADJACENT_CABLE.get(pos)));
             return LazyOptional.empty();
         }
-        return CAPABILITY_CACHE.getOrDiscoverCapability(LEVEL, pos, cap, direction);
+        return CAPABILITY_CACHE.getOrDiscoverCapability(LEVEL, pos, cap, direction, logger);
     }
 
     public int getCableCount() {
@@ -151,6 +156,11 @@ public class CableNetwork {
         return CABLE_POSITIONS.longStream().mapToObj(BlockPos::of);
     }
 
+    public LongSet getCablePositionsRaw() {
+        return CABLE_POSITIONS;
+    }
+
+    // TODO: replace the logging that uses this with something that shows sidedness
     public Stream<BlockPos> getCapabilityProviderPositions() {
         return CAPABILITY_CACHE.getPositions();
     }

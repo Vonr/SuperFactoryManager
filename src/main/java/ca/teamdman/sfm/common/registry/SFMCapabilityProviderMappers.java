@@ -9,7 +9,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.RegistryBuilder;
 
 import java.util.function.Supplier;
 
@@ -24,11 +23,13 @@ public class SFMCapabilityProviderMappers {
     );
     public static final Registry<CapabilityProviderMapper> DEFERRED_MAPPERS = MAPPERS.makeRegistry(registryBuilder->{});
 
+    @SuppressWarnings("unused")
     public static final Supplier<BlockEntityCapabilityProviderMapper> BLOCK_ENTITY_MAPPER = MAPPERS.register(
             "block_entity",
             BlockEntityCapabilityProviderMapper::new
     );
 
+    @SuppressWarnings("unused")
     public static final Supplier<CauldronCapabilityProviderMapper> CAULDRON_MAPPER = MAPPERS.register(
             "cauldron",
             CauldronCapabilityProviderMapper::new

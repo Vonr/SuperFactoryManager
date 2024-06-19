@@ -1,9 +1,7 @@
 package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.net.ServerboundInputInspectionRequestPacket;
-import ca.teamdman.sfm.common.net.ServerboundLabelInspectionRequestPacket;
-import ca.teamdman.sfm.common.net.ServerboundOutputInspectionRequestPacket;
+import ca.teamdman.sfm.common.net.*;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
@@ -26,7 +24,7 @@ public class ProgramTokenContextActions {
         var builder = new ASTBuilder();
         try {
             builder.visitProgram(parser.program());
-            SFM.LOGGER.info("Gathering context actions for cursor position " + cursorPosition);
+            SFM.LOGGER.info("Gathering context actions for cursor position {}", cursorPosition);
             return Stream.concat(
                             builder
                                     .getNodesUnderCursor(cursorPosition)
@@ -41,8 +39,7 @@ public class ProgramTokenContextActions {
                     .findFirst();
         } catch (Throwable t) {
             return Optional.of(() -> ClientStuff.showProgramEditScreen("-- Encountered error, program parse failed:\n--"
-                                                                       + t.getMessage(), next -> {
-            }));
+                                                                       + t.getMessage()));
         }
     }
 
@@ -62,8 +59,7 @@ public class ProgramTokenContextActions {
                         .stream()
                         .map(ResourceIdentifier::toStringCondensed)
                         .collect(Collectors.joining(",\n"));
-                ClientStuff.showProgramEditScreen(expansion, next -> {
-                });
+                ClientStuff.showProgramEditScreen(expansion);
             });
         } else if (node instanceof Label label) {
             SFM.LOGGER.info("Found context action for label node");
@@ -92,13 +88,27 @@ public class ProgramTokenContextActions {
                     programString,
                     nodeIndex
             )));
+        } else if (node instanceof BoolExpr) {
+            SFM.LOGGER.info("Found context action for BoolExpr node");
+            int nodeIndex = builder.getIndexForNode(node);
+            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundBoolExprStatementInspectionRequestPacket(
+                    programString,
+                    nodeIndex
+            )));
+        } else if (node instanceof IfStatement) {
+            SFM.LOGGER.info("Found context action for if statement node");
+            int nodeIndex = builder.getIndexForNode(node);
+            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundIfStatementInspectionRequestPacket(
+                    programString,
+                    nodeIndex
+            )));
         }
         return Optional.empty();
     }
 
     public static boolean hasContextAction(Token token) {
         return switch (token.getType()) {
-            case SFMLLexer.INPUT, SFMLLexer.OUTPUT, SFMLLexer.IDENTIFIER -> true;
+            case SFMLLexer.INPUT, SFMLLexer.OUTPUT, SFMLLexer.IDENTIFIER, SFMLLexer.IF, SFMLLexer.HAS -> true;
             default -> false;
         };
     }

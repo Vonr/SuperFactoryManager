@@ -156,6 +156,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
         ComparisonOperator finalComp = comp;
         assert num.value() <= Integer.MAX_VALUE;
+        //noinspection ExtractMethodRecommender
         int finalNum = (int) num.value();
         //noinspection DataFlowIssue // if the program is ticking, level shouldn't be null
         BoolExpr boolExpr = new BoolExpr(
@@ -187,6 +188,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         Number number = new Number(Long.parseLong(ctx.getText()));
         AST_NODE_CONTEXTS.add(new Pair<>(number, ctx));
         return number;
+    }
+
+    @Override
+    public Interval visitTick(SFMLParser.TickContext ctx) {
+        Interval interval = Interval.fromTicks(1);
+        AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
+        return interval;
     }
 
     @Override
@@ -352,7 +360,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         ComparisonOperator op = visitComparisonOp(ctx.comparisonOp());
         Number num = visitNumber(ctx.number());
         ResourceQuantity quantity = new ResourceQuantity(num, ResourceQuantity.IdExpansionBehaviour.NO_EXPAND);
-        ResourceIdentifier<?, ?, ?> item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
+
+        ResourceIdentifier<?, ?, ?> item;
+        if (ctx.resourceid() == null) {
+            item = ResourceIdentifier.MATCH_ALL;
+        } else {
+            item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceid());
+        }
+
         ResourceComparer<?, ?, ?> resourceComparer = new ResourceComparer<>(op, quantity, item);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceComparer, ctx));
         return resourceComparer;
@@ -427,12 +442,20 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         return resourceIdSet;
     }
 
+
+    private void assertResourceLimitDoesntExpandHuge(ResourceLimits limits) {
+        if (limits.createInputTrackers().size() > 512) {
+            throw new IllegalArgumentException("Resource limit expands to more than 512 trackers, this is likely a mistake where the \"EACH\" keyword is being used. The code: " + limits);
+        }
+    }
+
     @Override
     public ResourceLimits visitInputmatchers(@Nullable SFMLParser.InputmatchersContext ctx) {
         if (ctx == null) {
             return new ResourceLimits(List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE), ResourceIdSet.EMPTY);
         }
         ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(Limit.MAX_QUANTITY_NO_RETENTION);
+        assertResourceLimitDoesntExpandHuge(resourceLimits);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
@@ -444,12 +467,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             return new ResourceLimits(List.of(ResourceLimit.ACCEPT_ALL_WITHOUT_RESTRAINT), ResourceIdSet.EMPTY);
         }
         ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.movement())).withDefaults(Limit.MAX_QUANTITY_MAX_RETENTION);
+        assertResourceLimitDoesntExpandHuge(resourceLimits);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
 
     @Override
-    public ASTNode visitResourceLimitMovement(SFMLParser.ResourceLimitMovementContext ctx) {
+    public ResourceLimits visitResourceLimitMovement(SFMLParser.ResourceLimitMovementContext ctx) {
         ResourceLimits resourceLimits = new ResourceLimits(
                 ctx.resourcelimit().stream()
                         .map(this::visitResourcelimit)

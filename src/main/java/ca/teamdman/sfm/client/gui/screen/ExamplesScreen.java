@@ -17,14 +17,14 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-public class ProgramTemplatePickerScreen extends Screen {
-    private final Consumer<String> CALLBACK;
+public class ExamplesScreen extends Screen {
+    private final BiConsumer<String, Map<String,String>> CALLBACK;
 
-    public ProgramTemplatePickerScreen(Consumer<String> callback) {
-        super(Constants.LocalizationKeys.PROGRAM_TEMPLATE_PICKER_GUI_TITLE.getComponent());
+    public ExamplesScreen(BiConsumer<String, Map<String,String>> callback) {
+        super(Constants.LocalizationKeys.EXAMPLES_GUI_TITLE.getComponent());
         CALLBACK = callback;
     }
 
@@ -91,7 +91,7 @@ public class ProgramTemplatePickerScreen extends Screen {
                                         Component.literal(entry.getKey()),
                                         btn -> {
                                             onClose();
-                                            CALLBACK.accept(entry.getValue());
+                                            CALLBACK.accept(entry.getValue(), templatePrograms);
                                         }
                                 )
                                 .pos(x, y)
@@ -110,7 +110,7 @@ public class ProgramTemplatePickerScreen extends Screen {
         this.renderTransparentBackground(graphics);
         this.renderTransparentBackground(graphics);
         super.render(graphics, pMouseX, pMouseY, pPartialTick);
-        MutableComponent warning1 = Constants.LocalizationKeys.PROGRAM_TEMPLATE_PICKER_GUI_WARNING_1.getComponent();
+        MutableComponent warning1 = Constants.LocalizationKeys.EXAMPLES_GUI_WARNING_1.getComponent();
         graphics.drawString(
                 this.font,
                 warning1,
@@ -127,7 +127,7 @@ public class ProgramTemplatePickerScreen extends Screen {
                 0xffffff,
                 false
         );
-        MutableComponent warning2 = Constants.LocalizationKeys.PROGRAM_TEMPLATE_PICKER_GUI_WARNING_2.getComponent();
+        MutableComponent warning2 = Constants.LocalizationKeys.EXAMPLES_GUI_WARNING_2.getComponent();
         graphics.drawString(
                 this.font,
                 warning2,
