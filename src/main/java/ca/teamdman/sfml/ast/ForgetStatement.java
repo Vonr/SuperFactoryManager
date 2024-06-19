@@ -1,17 +1,20 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.ProgramContext;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+// todo: optimize for forget-all case
 public record ForgetStatement(
         List<Label> labels
 ) implements Statement {
     @Override
     public void tick(ProgramContext context) {
         // map-replace existing inputs with ones that exclude the union of the label access
+        context.free();
         var newInputs = context.getInputs()
                 .stream()
                 .map(input -> new InputStatement(
@@ -30,6 +33,9 @@ public record ForgetStatement(
                 .toList();
         context.getInputs().clear();
         context.getInputs().addAll(newInputs);
+        context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_FORGET_STATEMENT.get(
+                labels.stream().map(Objects::toString).collect(Collectors.joining(", "))
+        )));
     }
 
     @Override

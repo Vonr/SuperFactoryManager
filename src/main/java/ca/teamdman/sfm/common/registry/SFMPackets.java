@@ -38,12 +38,42 @@ public class SFMPackets {
                 ServerboundManagerFixPacket::decode,
                 ServerboundManagerFixPacket::handle
         );
-        registrar.play(
-                ClientboundManagerGuiPacket.ID,
-                ClientboundManagerGuiPacket::decode,
-                ClientboundManagerGuiPacket::handle
-        );
 
+        registrar.play(
+                ClientboundManagerGuiUpdatePacket.ID,
+                ClientboundManagerGuiUpdatePacket::decode,
+                ClientboundManagerGuiUpdatePacket::handle
+        );
+        registrar.play(
+                ServerboundManagerSetLogLevelPacket.ID,
+                ServerboundManagerSetLogLevelPacket::decode,
+                ServerboundManagerSetLogLevelPacket::handle
+        );
+        registrar.play(
+                ServerboundManagerClearLogsPacket.ID,
+                ServerboundManagerClearLogsPacket::decode,
+                ServerboundManagerClearLogsPacket::handle
+        );
+        registrar.play(
+                ServerboundManagerLogDesireUpdatePacket.ID,
+                ServerboundManagerLogDesireUpdatePacket::decode,
+                ServerboundManagerLogDesireUpdatePacket::handle
+        );
+        registrar.play(
+                ClientboundManagerLogsPacket.ID,
+                ClientboundManagerLogsPacket::decode,
+                ClientboundManagerLogsPacket::handle
+        );
+        registrar.play(
+                ServerboundManagerRebuildPacket.ID,
+                ServerboundManagerRebuildPacket::decode,
+                ServerboundManagerRebuildPacket::handle
+        );
+        registrar.play(
+                ClientboundManagerLogLevelUpdatedPacket.ID,
+                ClientboundManagerLogLevelUpdatedPacket::decode,
+                ClientboundManagerLogLevelUpdatedPacket::handle
+        );
 
         registrar.play(
                 ServerboundLabelGunUpdatePacket.ID,
@@ -117,6 +147,26 @@ public class SFMPackets {
                 ServerboundNetworkToolUsePacket::decode,
                 ServerboundNetworkToolUsePacket::handle
         );
+        registrar.play(
+                ServerboundIfStatementInspectionRequestPacket.ID,
+                ServerboundIfStatementInspectionRequestPacket::decode,
+                ServerboundIfStatementInspectionRequestPacket::handle
+        );
+        registrar.play(
+                ClientboundIfStatementInspectionResultsPacket.ID,
+                ClientboundIfStatementInspectionResultsPacket::decode,
+                ClientboundIfStatementInspectionResultsPacket::handle
+        );
+        registrar.play(
+                ServerboundBoolExprStatementInspectionRequestPacket.ID,
+                ServerboundBoolExprStatementInspectionRequestPacket::decode,
+                ServerboundBoolExprStatementInspectionRequestPacket::handle
+        );
+        registrar.play(
+                ClientboundBoolExprStatementInspectionResultsPacket.ID,
+                ClientboundBoolExprStatementInspectionResultsPacket::decode,
+                ClientboundBoolExprStatementInspectionResultsPacket::handle
+        );
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(
@@ -128,6 +178,7 @@ public class SFMPackets {
             BiConsumer<MENU, BE> callback
     ) {
         if (context == null) return;
+        // TODO: log return cases about invalid packet received
         context.workHandler().submitAsync(() -> {
             if (!(context.player().orElse(null) instanceof ServerPlayer sender)) {
                 return;

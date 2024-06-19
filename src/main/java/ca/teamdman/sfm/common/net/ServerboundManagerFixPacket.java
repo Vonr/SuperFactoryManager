@@ -52,5 +52,6 @@ public record ServerboundManagerFixPacket(
                                 .getProgram()
                                 .ifPresent(program -> program.fixWarnings(disk, manager)))
         );
+        
     }
 }

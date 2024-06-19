@@ -20,6 +20,10 @@ public class Constants {
                 "gui.sfm.text_editor.title",
                 "Text Editor"
         );
+        public static final LocalizationEntry LOGS_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.logs.title",
+                "Logs"
+        );
         public static final LocalizationEntry PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.text_editor.done_button.tooltip",
                 "Shift+Enter to submit"
@@ -34,11 +38,27 @@ public class Constants {
         );
         public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
                 "gui.sfm.save_changes_confirm.yes_button",
-                "Save changes"
+                "Overwrite disk"
         );
         public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
                 "gui.sfm.save_changes_confirm.no_button",
-                "Don't save"
+                "Continue editing"
+        );
+        public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.exit_without_saving_confirm.title",
+                "Exit without saving?"
+        );
+        public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+                "gui.sfm.exit_without_saving_confirm.message",
+                "Are you sure you want to abandon your work?"
+        );
+        public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+                "gui.sfm.exit_without_saving_confirm.yes_button",
+                "Exit without saving"
+        );
+        public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+                "gui.sfm.exit_without_saving_confirm.no_button",
+                "Continue editing"
         );
         public static final LocalizationEntry PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN = new LocalizationEntry(
                 "program.sfm.warnings.each_without_pattern",
@@ -212,15 +232,15 @@ public class Constants {
                 "gui.sfm.title.labelgun",
                 "Label Gun"
         );
-        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_WARNING_1 = new LocalizationEntry(
+        public static final LocalizationEntry EXAMPLES_GUI_WARNING_1 = new LocalizationEntry(
                 "gui.sfm.program_template_picker.warning1",
                 "Hitting \"Done\" will on the next screen will overwrite your existing program!"
         );
-        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_WARNING_2 = new LocalizationEntry(
+        public static final LocalizationEntry EXAMPLES_GUI_WARNING_2 = new LocalizationEntry(
                 "gui.sfm.program_template_picker.warning2",
                 "Hit <esc> to cancel instead."
         );
-        public static final LocalizationEntry PROGRAM_TEMPLATE_PICKER_GUI_TITLE = new LocalizationEntry(
+        public static final LocalizationEntry EXAMPLES_GUI_TITLE = new LocalizationEntry(
                 "gui.sfm.title.program_template_picker",
                 "Program Template Picker"
         );
@@ -263,14 +283,9 @@ public class Constants {
                 "container.sfm.manager",
                 "Factory Manager"
         );
-
         public static final LocalizationEntry PROGRAM_WARNING_UNUSED_LABEL = new LocalizationEntry(
                 "program.sfm.warnings.unused_label",
                 "Label \"%s\" is used in code but not assigned in the world."
-        );
-        public static final LocalizationEntry PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE = new LocalizationEntry(
-                "program.sfm.warnings.unknown_resource_type",
-                "The resource type \"%s\" in \"%s\" is not supported."
         );
         public static final LocalizationEntry PROGRAM_WARNING_UNKNOWN_RESOURCE_ID = new LocalizationEntry(
                 "program.sfm.warnings.unknown_resource_id",
@@ -304,9 +319,236 @@ public class Constants {
                 "program.sfm.error.literal",
                 "%s"
         );
+
+        public static final LocalizationEntry PROGRAM_COMPILE_FAILED_WITH_ERRORS = new LocalizationEntry(
+                "program.sfm.error.compile_failed_with_errors",
+                "Failed to compile with %d errors."
+        );
+        public static final LocalizationEntry PROGRAM_COMPILE_SUCCEEDED_WITH_WARNINGS = new LocalizationEntry(
+                "program.sfm.error.compile_success_with_warnings",
+                "Successfully compiled \"%s\" with %d warnings."
+        );
+        public static final LocalizationEntry PROGRAM_COMPILE_FROM_DISK_BEGIN = new LocalizationEntry(
+                "program.sfm.compile_begin",
+                "Compiling program from disk."
+        );
+
+        public static final LocalizationEntry PROGRAM_TICK_TIME_MS = new LocalizationEntry(
+                "program.sfm.tick.time",
+                "Program tick took %.2f ms"
+        );
+
+        public static final LocalizationEntry PROGRAM_TICK_STATEMENT_TIME_MS = new LocalizationEntry(
+                "program.sfm.tick.time_taken.statement",
+                "Program statement tick took %.2f ms:\n```\n%s\n```\n"
+        );
+        public static final LocalizationEntry PROGRAM_TICK_TRIGGER_TIME_MS = new LocalizationEntry(
+                "program.sfm.tick.time_taken.trigger",
+                "Program trigger tick took %.2f ms:\n```\n%s\n```\n"
+        );
+
+        public static final LocalizationEntry LOG_RESOURCE_TYPE_GET_CAPABILITIES_BEGIN = new LocalizationEntry(
+                "log.sfm.resource_type.get_capabilities.begin",
+                "Gathering capabilities of type %s against labels %s"
+        );
+        public static final LocalizationEntry LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT = new LocalizationEntry(
+                "log.sfm.resource_type.get_capabilities.not_present",
+                "Capability %s %s direction=%s not present"
+        );
+        public static final LocalizationEntry LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT = new LocalizationEntry(
+                "log.sfm.resource_type.get_capabilities.present",
+                "Capability %s %s direction=%s present"
+        );
+        public static final LocalizationEntry LOG_CAPABILITY_CACHE_HIT = new LocalizationEntry(
+                "log.sfm.capability_cache.hit",
+                "Capability cache HIT for %s %s direction=%s"
+        );
+        public static final LocalizationEntry LOG_CAPABILITY_CACHE_MISS = new LocalizationEntry(
+                "log.sfm.capability_cache.miss",
+                "Capability cache MISS for %s %s direction=%s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK = new LocalizationEntry(
+                "log.sfm.program.tick",
+                "PROGRAM TICK BEGIN"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_CONTEXT = new LocalizationEntry(
+                "log.sfm.program.context",
+                "Initial program context: %s"
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_HEADER_1 = new LocalizationEntry(
+                "log.sfm.cable_network.header.1",
+                "======= Cable network ======="
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_HEADER_2 = new LocalizationEntry(
+                "log.sfm.cable_network.header.2",
+                "Cable positions:"
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_HEADER_3 = new LocalizationEntry(
+                "log.sfm.cable_network.header.3",
+                "Capability positions:"
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_BODY = new LocalizationEntry(
+                "log.sfm.cable_network.body",
+                "%s"
+        );
+        public static final LocalizationEntry LOG_CABLE_NETWORK_DETAILS_FOOTER = new LocalizationEntry(
+                "log.sfm.cable_network.footer",
+                "============================="
+        );
+        public static final LocalizationEntry LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER = new LocalizationEntry(
+                "log.sfm.label_position_holder.header",
+                "=== Label position holder ==="
+        );
+        public static final LocalizationEntry LOG_LABEL_POSITION_HOLDER_DETAILS_BODY = new LocalizationEntry(
+                "log.sfm.label_position_holder.body",
+                "%s"
+        );
+        public static final LocalizationEntry LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER = new LocalizationEntry(
+                "log.sfm.label_position_holder.footer",
+                "============================="
+        );
+        public static final LocalizationEntry LOG_PROGRAM_VOIDED_RESOURCES = new LocalizationEntry(
+                "log.sfm.program.voided_resources",
+                "!!!RESOURCE LOSS HAS OCCURRED!!! Failed to move all promised items, found %s %s:%s, took %d but had %d left over after insertion"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_TRIGGER_STATEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.trigger",
+                "TRIGGERED FROM %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_INPUT_STATEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.input",
+                "%s"
+        );
+
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots",
+                "Gathering slots for IO statement \n```\n%s\n```\n"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_HIT = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.cache_hit",
+                "Cache hit - this statement has already gathered slots"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_MISS = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.cache_miss",
+                "Cache miss - this is the first time this statement is being gathered"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.each",
+                "EACH keyword used - trackers will be unique to each block"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.not_each",
+                "EACH keyword not used - trackers will be shared between blocks"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_RANGE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.range",
+                "Gathering slots in range set: %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_NOT_IN_RANGE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.not_in_range",
+                "Slot %d - not in range"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_SHOULD_NOT_CREATE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.should_not_create",
+                "Slot %d - skipping - %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.created",
+                "Slot %d - tracking - %s - %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_BEGIN = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.begin",
+                "Begin moving %s into %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_TYPE_MISMATCH = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.type_mismatch",
+                "Type mismatch, skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_DESTINATION_TRACKER_REJECT = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.destination_tracker_reject",
+                "Destination tracker rejected the transfer, skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.zero_simulated_movement",
+                "Got remainder %d after simulated insertion of potential %d (0 to move), skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.retention_obligation",
+                "Promised to leave %d in the source slot, still obligated to leave %d"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION_NO_MOVE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.retention_obligation_no_move",
+                "Nothing to move after retention obligations, marking source slot done and skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_STACK_LIMIT_NEW_TO_MOVE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.stack_limit_no_move",
+                "Max transferable dest=%d, source=%d, stack limit=%d; new toMove=%d"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_TO_MOVE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.zero_to_move",
+                "toMove=0, skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_EXTRACTED = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.extracted",
+                "Extracted %d from slot %d"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_END = new LocalizationEntry(
+                "log.sfm.statement.tick.io.move_to.end",
+                "Moved %d %s - source=%s, dest=%s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE = new LocalizationEntry(
+                "log.sfm.statement.tick.io.gather_slots.resource_types",
+                "Gathering for: %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.output",
+                "%s"
+        );
+        public static final LocalizationEntry LOG_MANAGER_CABLE_NETWORK_REBUILD = new LocalizationEntry(
+                "log.sfm.manager.cable_network_rebuild",
+                "User performed cable network rebuild"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT = new LocalizationEntry(
+                "log.sfm.statement.tick.output.discovered_input_slot_count",
+                "Discovered %d input slots"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT = new LocalizationEntry(
+                "log.sfm.statement.tick.output.discovered_output_slot_count",
+                "Discovered %d output slots"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS = new LocalizationEntry(
+                "log.sfm.statement.tick.output.short_circuit_no_input_slots",
+                "No input slots, skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS = new LocalizationEntry(
+                "log.sfm.statement.tick.output.short_circuit_no_output_slots",
+                "No output slots, skipping"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_FORGET_STATEMENT = new LocalizationEntry(
+                "log.sfm.statement.tick.forget",
+                "FORGET %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE = new LocalizationEntry(
+                "log.sfm.statement.tick.if.true",
+                "TRUE: %s"
+        );
+        public static final LocalizationEntry LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE = new LocalizationEntry(
+                "log.sfm.statement.tick.if.false",
+                "FALSE: %s"
+        );
+
+        public static final LocalizationEntry LOG_PROGRAM_TICK_WITH_REDSTONE_COUNT = new LocalizationEntry(
+                "log.sfm.program.tick.redstone_count",
+                "Program ticking with %d unprocessed redstone pulses."
+        );
+
         public static final LocalizationEntry PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE = new LocalizationEntry(
                 "program.sfm.error.malformed_resource_type",
                 "Program has a malformed resource type \"%s\".\nReminder: Resource types must be literals, not wildcards."
+        );
+        public static final LocalizationEntry PROGRAM_ERROR_UNKNOWN_RESOURCE_TYPE = new LocalizationEntry(
+                "program.sfm.error.unknown_resource_type",
+                "Program references an unknown resource type \"%s\""
         );
         public static final LocalizationEntry MANAGER_GUI_STATE_NO_PROGRAM = new LocalizationEntry(
                 "gui.sfm.manager.state.no_program",
@@ -375,6 +617,50 @@ public class Constants {
         public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON = new LocalizationEntry(
                 "gui.sfm.manager.button.view_examples",
                 "View examples"
+        );
+        public static final LocalizationEntry MANAGER_GUI_VIEW_LOGS_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.button.view_logs",
+                "View logs"
+        );
+        public static final LocalizationEntry MANAGER_GUI_REBUILD_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.button.rebuild",
+                "Rebuild cable network"
+        );
+        public static final LocalizationEntry LOG_LEVEL_UPDATED = new LocalizationEntry(
+                "log.sfm.level_updated",
+                "Log level updated to %s"
+        );
+        public static final LocalizationEntry LOGS_GUI_CLEAR_LOGS_BUTTON_PACKET_RECEIVED = new LocalizationEntry(
+                "gui.sfm.logs.button.clear_logs.packet_received",
+                "Cleared logs"
+        );
+        public static final LocalizationEntry LOGS_GUI_CLEAR_LOGS_BUTTON = new LocalizationEntry(
+                "gui.sfm.logs.button.clear_logs",
+                "Clear logs"
+        );
+        public static final LocalizationEntry LOGS_GUI_COPY_LOGS_BUTTON = new LocalizationEntry(
+                "gui.sfm.logs.button.copy_logs",
+                "Copy logs"
+        );
+        public static final LocalizationEntry LOGS_GUI_COPY_LOGS_BUTTON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.logs.button.copy_logs.tooltip",
+                "Shift-click for raw"
+        );
+        public static final LocalizationEntry LOGS_GUI_NO_CONTENT = new LocalizationEntry(
+                "gui.sfm.logs.no_content",
+                "Ahoy, world!\nChange the log level using the buttons at the top of this screen.\nLoud log levels will be reset after a single program execution.\nLogging can make statements take longer to execute.\nThe scrolling is wacky, I'm working on it.\nOnly a few hundred lines are drawn to reduce lag.\nUse the copy button to view in a better editor for now lol."
+        );
+        public static final LocalizationEntry LOGS_MISSING_ADJACENT_CABLE = new LocalizationEntry(
+                "gui.sfm.logs.missing_adjacent_cable",
+                "No adjacent cable found for %s"
+        );
+        public static final LocalizationEntry LOGS_MISSING_CAPABILITY_PROVIDER = new LocalizationEntry(
+                "gui.sfm.logs.missing_capability_provider",
+                "No capability provider found for %s %s direction=%s"
+        );
+        public static final LocalizationEntry LOGS_EMPTY_CAPABILITY = new LocalizationEntry(
+                "gui.sfm.logs.empty_capability",
+                "Received an empty capability %s %s direction=%s"
         );
         public static final LocalizationEntry MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP = new LocalizationEntry(
                 "gui.sfm.manager.button.view_examples.tooltip",

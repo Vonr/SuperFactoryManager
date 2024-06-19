@@ -46,8 +46,7 @@ public record ClientboundContainerExportsInspectionResultsPacket(
             if (player == null) return;
             var container = player.containerMenu;
             if (container.containerId != msg.windowId) return;
-            ClientStuff.showProgramEditScreen(msg.results, next -> {
-            });
+            ClientStuff.showProgramEditScreen(msg.results);
         });
     }
 }

@@ -1,11 +1,15 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.Constants.LocalizationKeys;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -34,33 +38,60 @@ public class OutputStatement implements IOStatement {
      * Juicy method function here.
      * Given two slots, move as much as possible from one to the other.
      *
-     * @param source      The slot to pull from
-     * @param destination the slot to push to
      * @param <STACK>     the stack type
      * @param <ITEM>      the item type
      * @param <CAP>       the capability type
+     * @param context     program execution context
+     * @param source      The slot to pull from
+     * @param destination the slot to push to
      */
     public static <STACK, ITEM, CAP> void moveTo(
-            LimitedInputSlot<STACK, ITEM, CAP> source, LimitedOutputSlot<STACK, ITEM, CAP> destination
+            ProgramContext context,
+            LimitedInputSlot<STACK, ITEM, CAP> source,
+            LimitedOutputSlot<STACK, ITEM, CAP> destination
     ) {
+        context
+                .getLogger()
+                .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_BEGIN.get(
+                        source,
+                        destination
+                )));
         // always ensure types match
         // items and fluids are incompatible, etc
-        if (!source.type.equals(destination.type)) return;
+        if (!source.type.equals(destination.type)) {
+            context
+                    .getLogger()
+                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_TYPE_MISMATCH.get()));
+            return;
+        }
+
 
         // find out what we can pull out
         // should never be empty by the time we get here
         STACK potential = source.peekExtractPotential();
         // ensure the output slot allows this item
-        if (!destination.tracker.test(potential)) return;
+        if (!destination.tracker.test(potential)) {
+            context
+                    .getLogger()
+                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_DESTINATION_TRACKER_REJECT.get()));
+            return;
+        }
         // find out how much we can fit
-        STACK remainder = destination.insert(potential, true);
+        STACK potentialRemainder = destination.insert(potential, true);
 
         // how many can we move before accounting for limits
-        long toMove = source.type.getAmount(potential) - source.type.getAmount(remainder);
-        if (toMove == 0) return;
+        long toMove = source.type.getAmountDifference(potential, potentialRemainder);
+        if (toMove <= 0) {
+            context
+                    .getLogger()
+                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_SIMULATED_MOVEMENT.get(
+                            potentialRemainder, potential)));
+            return;
+        }
 
         // how many have we promised to RETAIN in this slot
-        toMove -= source.tracker.getExistingRetentionObligation(source.slot);
+        long promised_to_leave_in_this_slot = source.tracker.getExistingRetentionObligation(source.slot);
+        toMove -= promised_to_leave_in_this_slot;
         // how many more need we are obligated to leave to satisfy the remainder of the RETAIN limit
         long remainingObligation = source.tracker.getRemainingRetentionObligation();
         remainingObligation = Long.min(toMove, remainingObligation);
@@ -69,88 +100,228 @@ public class OutputStatement implements IOStatement {
         // update the obligation tracker
         source.tracker.trackRetentionObligation(source.slot, remainingObligation);
 
+        long logRemainingObligation = remainingObligation;
+        context
+                .getLogger()
+                .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION.get(
+                        promised_to_leave_in_this_slot,
+                        logRemainingObligation
+                )));
+
         // if we can't move anything after our retention obligations, we're done
-        if (toMove == 0) {
+        if (toMove <= 0) {
+            context
+                    .getLogger()
+                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_RETENTION_OBLIGATION_NO_MOVE.get()));
             source.setDone();
             return;
         }
 
         // apply output constraints
-        toMove = Math.min(toMove, destination.tracker.getMaxTransferable());
+        long destinationMaxTransferable = destination.tracker.getMaxTransferable();
+        toMove = Math.min(toMove, destinationMaxTransferable);
 
         // apply input constraints
-        toMove = Math.min(toMove, source.tracker.getMaxTransferable());
+        long sourceMaxTransferable = source.tracker.getMaxTransferable();
+        toMove = Math.min(toMove, sourceMaxTransferable);
 
         // apply resource constraints
-        toMove = Math.min(toMove, source.type.getMaxStackSize(potential));
-        if (toMove <= 0) return;
+        long maxStackSize = source.type.getMaxStackSize(potential); // this is cap-agnostic, so source/dest doesn't matter
+        toMove = Math.min(toMove, maxStackSize);
+
+        long logToMove = toMove;
+        context
+                .getLogger()
+                .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_STACK_LIMIT_NEW_TO_MOVE.get(
+                        destinationMaxTransferable,
+                        sourceMaxTransferable,
+                        maxStackSize,
+                        logToMove
+                )));
+        if (toMove <= 0) {
+            context
+                    .getLogger()
+                    .trace(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_ZERO_TO_MOVE.get()));
+            return;
+        }
 
         // extract item for real
         STACK extracted = source.extract(toMove);
+        context.getLogger().debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_EXTRACTED.get(
+                extracted,
+                source
+        )));
+
         // insert item for real
-        remainder = destination.insert(extracted, false);
-        var moved = source.type.getAmount(extracted) - source.type.getAmount(remainder);
+        STACK extractedRemainder = destination.insert(extracted, false);
+
         // track transfer amounts
+        var moved = source.type.getAmountDifference(extracted, extractedRemainder);
         source.tracker.trackTransfer(moved);
         destination.tracker.trackTransfer(moved);
 
-        // if remainder exists, someone lied.
-        // this should never happen
+        // log
+        context.getLogger().info(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_MOVE_TO_END.get(
+                moved,
+                destination.type.getRegistryKey(extracted),
+                source,
+                destination
+        )));
+
+        // If remainder exists, someone lied.
+        // THIS SHOULD NEVER HAPPEN
         // will void items if it does
-        if (!destination.type.isEmpty(remainder)) {
-            SFM.LOGGER.error(
-                    "Failed to move all promised items, found {} {}:{}, took {} but had {} left over after insertion. Resource loss may have occurred!!!",
+        if (!destination.type.isEmpty(extractedRemainder)) {
+            context.getLogger().error(x -> x.accept(LocalizationKeys.LOG_PROGRAM_VOIDED_RESOURCES.get(
                     potential,
                     SFMResourceTypes.DEFERRED_TYPES.getKey(source.type),
                     destination.type.getRegistryKey(potential),
                     extracted,
-                    remainder
+                    extractedRemainder
+            )));
+            SFM.LOGGER.error(
+                    "!!!RESOURCE LOSS HAS OCCURRED!!! Manager at {} in {} failed to move all promised items, found {} {}:{}, took {} but had {} left over after insertion.",
+                    context.getManager().getBlockPos(),
+                    context.getManager().getLevel(),
+                    potential,
+                    SFMResourceTypes.DEFERRED_TYPES.getKey(source.type),
+                    destination.type.getRegistryKey(potential),
+                    extracted,
+                    extractedRemainder
             );
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    /**
+     * Input slots are freed when the input statement falls out of scope, see: {@link InputStatement#freeSlots()}
+     * <p/>
+     * Output slots are freed immediately once done in this method.
+     */
     @Override
     public void tick(ProgramContext context) {
+        // Don't do anything if performing exploration
+        // TODO: move this logic to ast.Block
         if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return;
+
+        // Log the output statement
+        context.getLogger().debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT.get(
+                this.toString()
+        )));
+
+        /* ################
+             INPUT SLOTS
+           ################ */
+
         // gather the input slots from all the input statements, +27 to hopefully avoid resizing
-        List<LimitedInputSlot> inputSlots = new ArrayList<>(lastInputCapacity + 27);
+        //noinspection rawtypes
+        ArrayDeque<LimitedInputSlot> inputSlots = new ArrayDeque<>(lastInputCapacity + 27);
         for (var inputStatement : context.getInputs()) {
             inputStatement.gatherSlots(context, inputSlots::add);
         }
-        if (inputSlots.isEmpty()) return; // stop if we have nothing to move
+
+        // Update allocation hint
         lastInputCapacity = inputSlots.size();
 
-        // collect the output slots, +27 to hopefully avoid resizing
-        List<LimitedOutputSlot> outputSlots = new ArrayList<>(lastOutputCapacity + 27);
-        gatherSlots(context, outputSlots::add);
-        lastOutputCapacity = outputSlots.size();
+        // Log the number of input slots
+        context
+                .getLogger()
+                .info(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_INPUT_SLOT_COUNT.get(
+                        inputSlots.size()
+                )));
 
-        // try and move resources from input slots to output slots
-        var inIt = inputSlots.iterator();
-        while (inIt.hasNext()) {
-            var in = inIt.next();
-            if (in.isDone()) { // this slot is no longer useful
-                inIt.remove(); // ensure we only release slots once
-                InputStatement.releaseSlot(in); // release the slot to the object pool
-                continue;
-            }
-            var outIt = outputSlots.iterator();
-            while (outIt.hasNext()) {
-                var out = outIt.next();
-                if (out.isDone()) { // this slot is no longer useful
-                    outIt.remove(); // ensure we only release slots once
-                    LimitedOutputSlotObjectPool.INSTANCE.release(out); // release the slot to the object pool
-                    continue;
-                }
-                moveTo(in, out); // move the contents from the "in" slot to the "out" slot
-                if (in.isDone()) break; // stop processing output slots if we have nothing to move
-            }
-            if (outputSlots.isEmpty()) break; // stop processing input slots if we have no output slots
+        // Short-circuit if we have nothing to move
+        if (inputSlots.isEmpty()) {
+            // Log the short-circuit
+            context
+                    .getLogger()
+                    .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_INPUT_SLOTS.get()));
+
+            // Stop processing
+            return;
         }
 
-        LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots);
-        InputStatement.releaseSlots(inputSlots);
+        /* ################
+             OUTPUT SLOTS
+           ################ */
+
+        // collect the output slots, +27 to hopefully avoid resizing
+        //noinspection rawtypes
+        ArrayDeque<LimitedOutputSlot> outputSlots = new ArrayDeque<>(lastOutputCapacity + 27);
+        gatherSlots(context, outputSlots::add);
+
+        // Update allocation hint
+        lastOutputCapacity = outputSlots.size();
+
+        // Get assertion hint
+        int outputCheck = LimitedOutputSlotObjectPool.INSTANCE.getIndex();
+
+        // Log the number of output slots
+        context
+                .getLogger()
+                .info(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_DISCOVERED_OUTPUT_SLOT_COUNT.get(
+                        outputSlots.size()
+                )));
+
+        // Short-circuit if we have nothing to move
+        if (outputSlots.isEmpty()) {
+            // Log the short-circuit
+            context
+                    .getLogger()
+                    .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS.get()));
+
+            // Free the output slots (we acquired no slots but the assertion is still valid)
+            LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots, outputCheck);
+
+            // Stop processing
+            return;
+        }
+
+
+        /* ################
+                 MOVE
+           ################ */
+
+        // try and move resources from input slots to output slots
+        for (var inputSlot : inputSlots) {
+            // Get an input slot
+            if (inputSlot.isDone()) {
+                continue;
+            }
+
+            // Try to move into every output slot
+            var outputSlotIter = outputSlots.iterator();
+            while (outputSlotIter.hasNext()) {
+                // Get an output slot
+                var outputSlot = outputSlotIter.next();
+                if (outputSlot.isDone()) {
+                    // Make sure we don't process this slot again
+                    outputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
+                    // Release it
+                    LimitedOutputSlotObjectPool.INSTANCE.release(outputSlot);
+                    // Update the output check
+                    outputCheck++;
+                    // Try again
+                    continue;
+                }
+
+                // Attempt a move
+                //noinspection unchecked
+                moveTo(context, inputSlot, outputSlot);
+
+                // Continue to the next input slot when the current one is finished
+                if (inputSlot.isDone()) break;
+            }
+            // Stop processing when no output slots are left
+            if (outputSlots.isEmpty()) break;
+        }
+
+
+        /* ################
+                FINISH
+           ################ */
+
+        // Release remaining slot objects
+        LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots, outputCheck);
     }
 
     /**
@@ -163,6 +334,11 @@ public class OutputStatement implements IOStatement {
      */
     @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
     public void gatherSlots(ProgramContext context, Consumer<LimitedOutputSlot<?, ?, ?>> acceptor) {
+        context
+                .getLogger()
+                .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS.get(
+                        toStringPretty()
+                )));
         // find all the types referenced in the output statement
         Stream<ResourceType> types = resourceLimits
                 .resourceLimits()
@@ -172,40 +348,32 @@ public class OutputStatement implements IOStatement {
                 .distinct();
 
         if (!each) {
+            context
+                    .getLogger()
+                    .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
             // create a single matcher to be shared by all capabilities
             List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
             for (var type : (Iterable<ResourceType>) types::iterator) {
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
+                                type.CAPABILITY_KIND.name())));
                 for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
-                    gatherSlots((ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
+                    gatherSlots(context, (ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
                 }
             }
         } else {
+            context
+                    .getLogger()
+                    .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
             for (var type : (Iterable<ResourceType>) types::iterator) {
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
+                                type.CAPABILITY_KIND.name())));
                 for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
                     List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
-                    gatherSlots((ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
-                }
-            }
-        }
-    }
-
-    private <STACK, ITEM, CAP> void gatherSlots(
-            ResourceType<STACK, ITEM, CAP> type,
-            CAP capability,
-            List<OutputResourceTracker<?, ?, ?>> trackers,
-            Consumer<LimitedOutputSlot<?, ?, ?>> acceptor
-    ) {
-        for (int slot = 0; slot < type.getSlots(capability); slot++) {
-            if (labelAccess.slots().contains(slot)) {
-                for (OutputResourceTracker<?, ?, ?> tracker : trackers) {
-                    if (tracker.matchesCapabilityType(capability)) {
-                        //noinspection unchecked
-                        acceptor.accept(LimitedOutputSlotObjectPool.INSTANCE.acquire(
-                                capability,
-                                slot,
-                                (OutputResourceTracker<STACK, ITEM, CAP>) tracker
-                        ));
-                    }
+                    gatherSlots(context, (ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
                 }
             }
         }
@@ -240,7 +408,11 @@ public class OutputStatement implements IOStatement {
 
     @Override
     public String toString() {
-        return "OUTPUT " + resourceLimits + " TO " + (each ? "EACH " : "") + labelAccess;
+        return "OUTPUT " + resourceLimits.toStringPretty(Limit.MAX_QUANTITY_MAX_RETENTION) + " TO " + (
+                each
+                ? "EACH "
+                : ""
+        ) + labelAccess;
     }
 
     @Override
@@ -261,5 +433,75 @@ public class OutputStatement implements IOStatement {
         sb.append(each ? "EACH " : "");
         sb.append(labelAccess);
         return sb.toString();
+    }
+
+    private <STACK, ITEM, CAP> void gatherSlots(
+            ProgramContext context, ResourceType<STACK, ITEM, CAP> type,
+            CAP capability,
+            List<OutputResourceTracker<?, ?, ?>> trackers,
+            Consumer<LimitedOutputSlot<?, ?, ?>> acceptor
+    ) {
+        context
+                .getLogger()
+                .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_RANGE.get(
+                        labelAccess.slots())));
+        for (int slot = 0; slot < type.getSlots(capability); slot++) {
+            int finalSlot = slot;
+            if (labelAccess.slots().contains(slot)) {
+                STACK stack = type.getStackInSlot(capability, slot);
+                boolean shouldCreateSlot = shouldCreateSlot(type, capability, stack, slot);
+                //noinspection rawtypes
+                for (OutputResourceTracker tracker : trackers) {
+                    // we don't also test the tracker because we can deposit into empty slots
+                    if (tracker.matchesCapabilityType(capability)) {
+                        //always update retention observations even if !shouldCreateSlot
+                        //noinspection unchecked
+                        tracker.updateRetentionObservation(type, stack);
+
+                        if (shouldCreateSlot) {
+                            context
+                                    .getLogger()
+                                    .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
+                                            finalSlot, stack, tracker.toString())));
+                            //noinspection unchecked
+                            acceptor.accept(LimitedOutputSlotObjectPool.INSTANCE.acquire(
+                                    capability,
+                                    slot,
+                                    (OutputResourceTracker<STACK, ITEM, CAP>) tracker,
+                                    stack
+                            ));
+                        } else {
+                            context
+                                    .getLogger()
+                                    .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_SHOULD_NOT_CREATE.get(
+                                            finalSlot,
+                                            type.getAmount(stack)
+                                            + " of "
+                                            + type.getMaxStackSize(capability, finalSlot)
+                                            + " "
+                                            + type.getItem(stack)
+                                    )));
+                        }
+                    }
+                }
+            } else {
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_NOT_IN_RANGE.get(
+                                finalSlot)));
+            }
+        }
+    }
+
+    private <STACK, ITEM, CAP> boolean shouldCreateSlot(
+            ResourceType<STACK, ITEM, CAP> type,
+            CAP cap,
+            STACK stack,
+            int slot
+    ) {
+        // we check the stack limit on the capability
+        // this is to accommodate drawers/bins/barrels/black hole units/whatever
+        // those blocks hold many more items than normal in a single stack
+        return type.getAmount(stack) < type.getMaxStackSize(cap, slot);
     }
 }

@@ -21,10 +21,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 import org.antlr.v4.runtime.misc.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public record ServerboundOutputInspectionRequestPacket(
@@ -94,6 +92,7 @@ public record ServerboundOutputInspectionRequestPacket(
             PlayPayloadContext context
     ) {
         context.workHandler().submitAsync(() -> {
+            // todo: duplicate code
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
             if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
                 return;
@@ -129,26 +128,43 @@ public record ServerboundOutputInspectionRequestPacket(
                                         outputStatement.resourceLimits(),
                                         outputStatement.each()
                                 ) {
+                                    private final Set<List<ProgramContext.Branch>> seen = new HashSet<>();
+                                    // TODO: overhaul speculative output execution
+                                    // currently performing 2^n speculative executions, where n is the number
+                                    // of if statements in the entire program.
+                                    // Should find out what different scenarios the output can be in
+                                    // instead of brute forcing.
+                                    // If-blocks can affect subsequent statements, so fork on forget statements instead
                                     @Override
                                     public void tick(ProgramContext context) {
                                         StringBuilder branchPayload = new StringBuilder();
 
                                         if (!context.getExecutionPath().isEmpty()) {
+                                            if (!seen.add(context.getExecutionPath())) {
+                                                // not sure this actually works
+                                                return;
+                                            }
                                             payload
                                                     .append("-- POSSIBILITY ")
                                                     .append(context.getExplorationBranchIndex())
-                                                    .append(" --\n");
-                                            context.getExecutionPath().forEach(branch -> {
+                                                    .append(" --");
+                                            if (context.getExecutionPath().stream().allMatch(ProgramContext.Branch::wasTrue)) {
+                                                payload.append(" all true\n");
+                                            } else if (context.getExecutionPath().stream().allMatch(Predicate.not(ProgramContext.Branch::wasTrue))) {
+                                                payload.append(" all false\n");
+                                            } else {
+                                                payload.append('\n');
+                                            }
+                                            context.getExecutionPath()
+                                                    .forEach(branch -> {
                                                 if (branch.wasTrue()) {
                                                     payload
                                                             .append(branch.ifStatement().condition().sourceCode())
                                                             .append(" -- true");
                                                 } else {
-                                                    payload.append(branch
-                                                                           .ifStatement()
-                                                                           .condition()
-                                                                           .negate()
-                                                                           .sourceCode());
+                                                    payload
+                                                            .append(branch.ifStatement().condition().sourceCode())
+                                                            .append(" -- false");
                                                 }
                                                 payload.append("\n");
                                             });
@@ -300,6 +316,7 @@ public record ServerboundOutputInspectionRequestPacket(
                                     ));
                                 }
 
+                                SFM.LOGGER.debug("Sending packet with length {}", payload.length());
                                 PacketDistributor.PLAYER.with(player).send(
                                         new ClientboundOutputInspectionResultsPacket(payload.toString().strip())
                                 );
@@ -312,5 +329,6 @@ public record ServerboundOutputInspectionRequestPacket(
                     }
             );
         });
+        
     }
 }

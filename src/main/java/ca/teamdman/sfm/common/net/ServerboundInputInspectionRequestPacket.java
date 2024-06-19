@@ -48,6 +48,7 @@ public record ServerboundInputInspectionRequestPacket(
             ServerboundInputInspectionRequestPacket msg, PlayPayloadContext context
     ) {
         context.workHandler().submitAsync(() -> {
+            // todo: duplicate code
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
             if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
                 return;
@@ -113,5 +114,6 @@ public record ServerboundInputInspectionRequestPacket(
                     }
             );
         });
+        
     }
 }

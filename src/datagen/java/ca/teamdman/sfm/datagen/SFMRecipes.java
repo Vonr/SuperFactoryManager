@@ -8,6 +8,7 @@ import ca.teamdman.sfm.common.registry.SFMRecipeSerializers;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.*;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
@@ -51,10 +52,10 @@ public class SFMRecipes extends RecipeProvider {
 
         ShapedRecipeBuilder
                 .shaped(RecipeCategory.REDSTONE, SFMItems.LABEL_GUN_ITEM.get())
-                .define('S', Items.STICK)
+                .define('S', Tags.Items.RODS_WOODEN)
                 .define('B', Tags.Items.DYES_BLACK)
                 .define('L', Tags.Items.DYES_BLUE)
-                .define('C', Items.OAK_SIGN)
+                .define('C', ItemTags.SIGNS)
                 .unlockedBy("has_ink", RecipeProvider.has(Tags.Items.DYES_BLACK))
                 .pattern(" LC")
                 .pattern(" SB")
@@ -67,7 +68,7 @@ public class SFMRecipes extends RecipeProvider {
                 .define('S', Items.IRON_INGOT)
                 .define('L', Items.REDSTONE_LAMP)
                 .define('P', Items.HEAVY_WEIGHTED_PRESSURE_PLATE)
-                .define('C', Items.OAK_SIGN)
+                .define('C', ItemTags.SIGNS)
                 .unlockedBy("has_redstone_lamp", RecipeProvider.has(Items.REDSTONE_LAMP))
                 .pattern(" LC")
                 .pattern(" SP")

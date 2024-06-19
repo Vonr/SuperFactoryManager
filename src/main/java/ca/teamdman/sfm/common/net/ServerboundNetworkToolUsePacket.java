@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.compat.SFMCompat;
@@ -22,6 +23,8 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -69,10 +72,19 @@ public record ServerboundNetworkToolUsePacket(
             BlockState state = level.getBlockState(pos);
             payload.append(state).append("\n");
 
-            CableNetworkManager.getNetworkFromPosition(level, pos).ifPresent(net -> {
-                payload.append("---- cable network ----\n");
-                payload.append(net).append("\n");
-            });
+            List<CableNetwork> foundNetworks = new ArrayList<>();
+            for (Direction direction : Direction.values()) {
+                BlockPos cablePosition = pos.relative(direction);
+                CableNetworkManager.getOrRegisterNetworkFromCablePosition(level, cablePosition).ifPresent(foundNetworks::add);
+            }
+            payload.append("---- cable networks ----\n");
+            if (foundNetworks.isEmpty()) {
+                payload.append("No networks found\n");
+            } else {
+                for (CableNetwork network : foundNetworks) {
+                    payload.append(network).append("\n");
+                }
+            }
 
             BlockEntity entity = level.getBlockEntity(pos);
             if (entity != null) {
@@ -130,5 +142,6 @@ public record ServerboundNetworkToolUsePacket(
                             ))
             );
         });
+        
     }
 }

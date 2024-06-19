@@ -25,15 +25,6 @@ public class ObjectPoolPerformanceComparisonTests {
         }
     }
 
-    private static Thingy release(Thingy obj) {
-        if (index == pool.length - 1) {
-            // we need to grow the array
-            pool = java.util.Arrays.copyOf(pool, pool.length * 2);
-        }
-        pool[++index] = obj;
-        return obj;
-    }
-
     private static void release(List<Thingy> slots) {
         // handle resizing
         if (index + slots.size() >= pool.length) {
@@ -83,9 +74,13 @@ public class ObjectPoolPerformanceComparisonTests {
         }
     }
 
+    @SuppressWarnings("unused")
     private static class Thingy {
+        @SuppressWarnings("unused")
         public int x;
+        @SuppressWarnings("unused")
         public int y;
+        @SuppressWarnings("unused")
         public int slot;
 
         public Thingy(int x, int y, int slot) {

@@ -17,8 +17,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.neoforged.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -67,7 +69,7 @@ public record Program(
                 try {
                     ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
                     if (resourceType == null) {
-                        errors.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
+                        errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_UNKNOWN_RESOURCE_TYPE.get(
                                 referencedResource));
                     }
                 } catch (ResourceLocationException e) {
@@ -160,12 +162,7 @@ public record Program(
             // make sure resource type is registered
             var type = resource.getResourceType();
             if (type == null) {
-                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_TYPE.get(
-                        resource.resourceTypeNamespace
-                        + ":"
-                        + resource.resourceTypeName,
-                        resource
-                ));
+                SFM.LOGGER.error("Resource type not found for resource: {}, should have been validated at program compile", resource);
                 continue;
             }
 
@@ -196,8 +193,8 @@ public record Program(
                                 .stream()
                                 .anyMatch(rl -> rl.limit().quantity().idExpansionBehaviour()
                                                 == ResourceQuantity.IdExpansionBehaviour.EXPAND && !rl
-                                                        .resourceId()
-                                                        .usesRegex());
+                                        .resourceId()
+                                        .usesRegex());
                         if (smells) {
                             warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN.get(
                                     statement.toStringPretty()
@@ -223,15 +220,27 @@ public record Program(
         DiskItem.setWarnings(disk, gatherWarnings(disk, manager));
     }
 
+    /**
+     * Create a context and tick the program.
+     *
+     * @return {@code true} if a trigger entered its body
+     */
     public boolean tick(ManagerBlockEntity manager) {
-        // build the context and tick the program
         var context = new ProgramContext(this, manager, ProgramContext.ExecutionPolicy.UNRESTRICTED);
+
+        // log if there are unprocessed redstone pulses
+        int unprocessedRedstonePulseCount = manager.getUnprocessedRedstonePulseCount();
+        if (unprocessedRedstonePulseCount > 0) {
+            manager.logger.debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_WITH_REDSTONE_COUNT.get(
+                    unprocessedRedstonePulseCount)));
+        }
+
+
         tick(context);
 
         manager.clearRedstonePulseQueue();
-        //noinspection UnnecessaryLocalVariable
-        boolean didSomething = triggers.stream().anyMatch(t -> t.shouldTick(context));
-        return didSomething;
+
+        return context.didSomething();
     }
 
     @Override
@@ -242,10 +251,93 @@ public record Program(
     @Override
     public void tick(ProgramContext context) {
         for (Trigger t : triggers) {
-            if (t.shouldTick(context)) {
-                t.tick(context.copy());
+            // Only process triggers that should tick
+            if (!t.shouldTick(context)) {
+                continue;
             }
+
+            // Set flag and log on first trigger
+            if (!context.didSomething()) {
+                context.setDidSomething(true);
+                context.getLogger().trace(getTraceLogWriter(context));
+                context.getLogger().debug(debug -> debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK.get()));
+            }
+
+            // Log pretty triggers
+            if (triggers instanceof ShortStatement ss) {
+                context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_TRIGGER_STATEMENT.get(
+                        ss.toStringShort())));
+            }
+
+            // Perform and measure tick
+            long start = System.nanoTime();
+            ProgramContext forkedContext = context.copy();
+            t.tick(forkedContext);
+            forkedContext.free();
+            long nanoTimePassed = System.nanoTime() - start;
+
+            // Log trigger time
+            context.getLogger().info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_MS.get(
+                    nanoTimePassed / 1_000_000.0,
+                    t.toString()
+            )));
+
         }
+    }
+
+    private static @NotNull Consumer<Consumer<TranslatableContents>> getTraceLogWriter(ProgramContext context) {
+        return trace -> {
+            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_1.get());
+            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_2.get());
+            Level level = context
+                    .getManager()
+                    .getLevel();
+            //noinspection DataFlowIssue
+            context
+                    .getNetwork()
+                    .getCablePositions()
+                    .map(pos -> "- "
+                                + pos.toString()
+                                + " "
+                                + level
+                                        .getBlockState(
+                                                pos))
+                    .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
+                            body)));
+            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_3.get());
+            //noinspection DataFlowIssue
+            context
+                    .getNetwork()
+                    .getCapabilityProviderPositions()
+                    .map(pos -> "- " + pos.toString() + " " + level
+                            .getBlockState(pos))
+                    .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
+                            body)));
+            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_FOOTER.get());
+
+            trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER.get());
+            //noinspection DataFlowIssue
+            context
+                    .getlabelPositions()
+                    .get()
+                    .forEach((label, positions) -> positions
+                            .stream()
+                            .map(
+                                    pos -> "- "
+                                           + label
+                                           + ": "
+                                           + pos.toString()
+                                           + " "
+                                           + level
+                                                   .getBlockState(
+                                                           pos)
+
+                            )
+                            .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_BODY.get(
+                                    body))));
+            trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER.get());
+            trace.accept(Constants.LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
+        };
     }
 
     @Override

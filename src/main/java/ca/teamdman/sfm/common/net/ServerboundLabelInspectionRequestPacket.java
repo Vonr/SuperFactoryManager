@@ -50,7 +50,7 @@ public record ServerboundLabelInspectionRequestPacket(
             if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
                 return;
             }
-            SFM.LOGGER.info("Received label inspection request packet from player " + player.getStringUUID());
+            SFM.LOGGER.info("Received label inspection request packet from player {}", player.getStringUUID());
             LabelPositionHolder labelPositionHolder;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {
                 SFM.LOGGER.info("Player is using a manager container menu - will append additional info to payload");
@@ -119,16 +119,17 @@ public record ServerboundLabelInspectionRequestPacket(
                 payload
                         .append("\n");
             }
-            SFM.LOGGER.info("Sending payload response length="
-                            + payload.length()
-                            + " to player "
-                            + player.getStringUUID());
+            SFM.LOGGER.info(
+                    "Sending payload response length={} to player {}",
+                    payload.length(),
+                    player.getStringUUID()
+            );
             PacketDistributor.PLAYER.with(player).send(
-
                     new ClientboundLabelInspectionResultsPacket(
                             payload.toString()
                     )
             );
         });
+        
     }
 }

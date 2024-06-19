@@ -53,5 +53,6 @@ public record ServerboundManagerProgramPacket(
                 msg.windowId,
                 (menu, manager) -> manager.setProgram(msg.program())
         );
+        
     }
 }

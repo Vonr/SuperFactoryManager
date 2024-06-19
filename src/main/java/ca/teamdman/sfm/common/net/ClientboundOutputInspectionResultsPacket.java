@@ -40,8 +40,7 @@ public record ClientboundOutputInspectionResultsPacket(
     public static void handle(
             ClientboundOutputInspectionResultsPacket msg, PlayPayloadContext context
     ) {
-        context.workHandler().submitAsync(() -> ClientStuff.showProgramEditScreen(msg.results, next -> {
-        }));
-        
+        context.workHandler().submitAsync(() -> ClientStuff.showProgramEditScreen(msg.results));
+
     }
 }
