@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.client.gui.screen;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.client.gui.EditorUtils;
@@ -22,6 +23,8 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraftforge.client.gui.widget.ExtendedButton;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -34,17 +37,17 @@ import java.util.function.Consumer;
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
 public class ProgramEditScreen extends Screen {
-    private final String INITIAL_CONTENT;
-    private final Consumer<String> CALLBACK;
+    protected final String INITIAL_CONTENT;
+    protected final Consumer<String> SAVE_CALLBACK;
     @SuppressWarnings("NotNullFieldNotInitialized")
-    private MyMultiLineEditBox textarea;
-    private String lastProgram = "";
-    private List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
+    protected MyMultiLineEditBox textarea;
+    protected String lastProgram = "";
+    protected List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
 
-    public ProgramEditScreen(String initialContent, Consumer<String> callback) {
+    public ProgramEditScreen(String initialContent, Consumer<String> saveCallback) {
         super(Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TITLE.getComponent());
         this.INITIAL_CONTENT = initialContent;
-        this.CALLBACK = callback;
+        this.SAVE_CALLBACK = saveCallback;
     }
 
     public static MutableComponent substring(MutableComponent component, int start, int end) {
@@ -68,6 +71,11 @@ public class ProgramEditScreen extends Screen {
     }
 
     @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
     protected void init() {
         super.init();
         assert this.minecraft != null;
@@ -78,44 +86,86 @@ public class ProgramEditScreen extends Screen {
         this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 this.width / 2 - 2 - 150,
                 this.height / 2 - 100 + 195,
-                300,
+                200,
                 20,
                 CommonComponents.GUI_DONE,
-                (p_97691_) -> this.onClosePerformCallback(),
+                (button) -> this.saveAndClose(),
                 Tooltip.create(PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP.getComponent())
+        ));
+        this.addRenderableWidget(new ExtendedButton(
+                this.width / 2 - 2 + 100,
+                this.height / 2 - 100 + 195,
+                100,
+                20,
+                CommonComponents.GUI_CANCEL,
+                (button) -> this.onClose()
         ));
     }
 
-    public void onClosePerformCallback() {
-        CALLBACK.accept(textarea.getValue());
+    public void saveAndClose() {
+        SAVE_CALLBACK.accept(textarea.getValue());
 
+        assert this.minecraft != null;
+        this.minecraft.popGuiLayer();
+    }
+
+    public void closeWithoutSaving() {
         assert this.minecraft != null;
         this.minecraft.popGuiLayer();
     }
 
     @Override
     public void onClose() {
+        // The user has requested to close the screen.
+        // If the content is different, ask to save
         if (!INITIAL_CONTENT.equals(textarea.getValue())) {
-            // if content changed => ask to save
             assert this.minecraft != null;
-            // push confirm screen
-            this.minecraft.pushGuiLayer(new ConfirmScreen(
-                    doSave -> {
-                        this.minecraft.popGuiLayer();
-                        if (doSave) {
-                            onClosePerformCallback();
-                        } else {
-                            this.minecraft.popGuiLayer();
-                        }
-                    },
-                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_TITLE.getComponent(),
-                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE.getComponent(),
-                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
-                    Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON.getComponent()
-            ));
+            ConfirmScreen exitWithoutSavingConfirmScreen = getExitWithoutSavingConfirmScreen();
+            this.minecraft.pushGuiLayer(exitWithoutSavingConfirmScreen);
+            exitWithoutSavingConfirmScreen.setDelay(20);
         } else {
             super.onClose();
         }
+    }
+
+    protected @NotNull ConfirmScreen getSaveConfirmScreen(Runnable onConfirm) {
+        return new ConfirmScreen(
+                doSave -> {
+                    assert this.minecraft != null;
+                    this.minecraft.popGuiLayer(); // Close confirm screen
+
+                    //noinspection StatementWithEmptyBody
+                    if (doSave) {
+                        onConfirm.run();
+                    } else {
+                        // do nothing, continue editing
+                    }
+                },
+                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_TITLE.getComponent(),
+                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+        );
+    }
+
+    protected @NotNull ConfirmScreen getExitWithoutSavingConfirmScreen() {
+        return new ConfirmScreen(
+                doSave -> {
+                    assert this.minecraft != null;
+                    this.minecraft.popGuiLayer(); // Close confirm screen
+
+                    //noinspection StatementWithEmptyBody
+                    if (doSave) {
+                        closeWithoutSaving();
+                    } else {
+                        // do nothing; continue editing
+                    }
+                },
+                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE.getComponent(),
+                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+        );
     }
 
     @Override
@@ -139,7 +189,7 @@ public class ProgramEditScreen extends Screen {
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {
-            onClosePerformCallback();
+            saveAndClose();
             return true;
         }
         if (pKeyCode == GLFW.GLFW_KEY_TAB) {
@@ -205,7 +255,8 @@ public class ProgramEditScreen extends Screen {
         super.render(graphics, mx, my, partialTicks);
     }
 
-    private class MyMultiLineEditBox extends MultiLineEditBox {
+    // TODO: enable scrolling without focus
+    protected class MyMultiLineEditBox extends MultiLineEditBox {
         public MyMultiLineEditBox() {
             super(
                     ProgramEditScreen.this.font,
@@ -231,42 +282,32 @@ public class ProgramEditScreen extends Screen {
         }
 
         @Override
-        public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
-            // we need to override the default behaviour because Mojang broke it
-            // if it's not scrolling, it should return false for cursor click movement
-            boolean rtn;
-            if (!this.visible) {
-                rtn = false;
-            } else {
-                //noinspection unused
-                boolean flag = this.withinContentAreaPoint(pMouseX, pMouseY);
-                boolean flag1 = this.scrollbarVisible()
-                                && pMouseX >= (double) (this.getX() + this.width)
-                                && pMouseX <= (double) (this.getX() + this.width + 8)
-                                && pMouseY >= (double) this.getY()
-                                && pMouseY < (double) (this.getY() + this.height);
-                if (flag1 && pButton == 0) {
-                    this.scrolling = true;
-                    rtn = true;
-                } else {
-                    //1.19.4 behaviour:
-                    //rtn=flag || flag1;
-                    // instead, we want to return false if we're not scrolling
-                    // (like how it was in 1.19.2)
-                    // https://bugs.mojang.com/browse/MC-262754
-                    rtn = false;
+        public boolean mouseClicked(double mx, double my, int button) {
+            try {
+                // if mouse in bounds, translate to accommodate line numbers
+                if (mx >= this.getX() + 1 && mx <= this.getX() + this.width - 1) {
+                    mx -= 1 + this.font.width("000");
                 }
-            }
-
-            if (rtn) {
-                return true;
-            } else if (this.withinContentAreaPoint(pMouseX, pMouseY) && pButton == 0) {
-                this.textField.setSelecting(Screen.hasShiftDown());
-                this.seekCursorScreen(pMouseX, pMouseY);
-                return true;
-            } else {
+                return super.mouseClicked(mx , my, button);
+            } catch (Exception e) {
+                SFM.LOGGER.error("Error in ProgramEditScreen.MyMultiLineEditBox.mouseClicked", e);
                 return false;
             }
+        }
+
+        @Override
+        public boolean mouseDragged(
+                double mx,
+                double my,
+                int button,
+                double dx,
+                double dy
+        ) {
+            // if mouse in bounds, translate to accommodate line numbers
+            if (mx >= this.getX() + 1 && mx <= this.getX() + this.width - 1) {
+                mx -= 1 + this.font.width("000");
+            }
+            return super.mouseDragged(mx, my, button, dx, dy);
         }
 
         public int getSelectionCursorPosition() {
@@ -295,7 +336,7 @@ public class ProgramEditScreen extends Screen {
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
-            int lineX = this.getX() + this.innerPadding();
+            int lineX = this.getX() + this.innerPadding() + this.font.width("000");
             int lineY = this.getY() + this.innerPadding();
             int charCount = 0;
             int cursorX = 0;
@@ -313,11 +354,25 @@ public class ProgramEditScreen extends Screen {
                                            && cursorIndex <= charCount + lineLength;
                 var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
 
+                // Draw line number
+                String lineNumber = String.valueOf(line + 1);
+                this.font.drawInBatch(
+                        lineNumber,
+                        lineX - 2 - this.font.width(lineNumber),
+                        lineY,
+                        -1,
+                        true,
+                        matrix4f,
+                        buffer,
+                        Font.DisplayMode.NORMAL,
+                        0,
+                        LightTexture.FULL_BRIGHT
+                );
+
                 if (cursorOnThisLine) {
                     isCursorAtEndOfLine = cursorIndex == charCount + lineLength;
                     cursorY = lineY;
-                    // we draw the raw before coloured in case of token recognition errors
-                    // draw before cursor
+                    // draw text before cursor
                     cursorX = this.font.drawInBatch(
                             substring(componentColoured, 0, cursorIndex - charCount),
                             lineX,
@@ -330,6 +385,7 @@ public class ProgramEditScreen extends Screen {
                             0,
                             LightTexture.FULL_BRIGHT
                     ) - 1;
+                    // draw text after cursor
                     this.font.drawInBatch(
                             substring(componentColoured, cursorIndex - charCount, lineLength),
                             cursorX,

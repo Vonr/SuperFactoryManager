@@ -28,7 +28,7 @@ public class CodegenTests {
 
         var input = """
                     name "hello world"
-                                    
+
                     every 20 ticks do
                         input from a
                         if a has gt 10 * then

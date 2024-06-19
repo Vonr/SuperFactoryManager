@@ -3,7 +3,7 @@
   "category": "redstone",
   "key": {
     "C": {
-      "item": "minecraft:oak_sign"
+      "tag": "minecraft:signs"
     },
     "L": {
       "item": "minecraft:redstone_lamp"

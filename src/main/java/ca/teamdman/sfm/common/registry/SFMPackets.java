@@ -69,10 +69,52 @@ public class SFMPackets {
         );
         MANAGER_CHANNEL.registerMessage(
                 3,
-                ClientboundManagerGuiPacket.class,
-                ClientboundManagerGuiPacket::encode,
-                ClientboundManagerGuiPacket::decode,
-                ClientboundManagerGuiPacket::handle
+                ClientboundManagerGuiUpdatePacket.class,
+                ClientboundManagerGuiUpdatePacket::encode,
+                ClientboundManagerGuiUpdatePacket::decode,
+                ClientboundManagerGuiUpdatePacket::handle
+        );
+        MANAGER_CHANNEL.registerMessage(
+                4,
+                ServerboundManagerSetLogLevelPacket.class,
+                ServerboundManagerSetLogLevelPacket::encode,
+                ServerboundManagerSetLogLevelPacket::decode,
+                ServerboundManagerSetLogLevelPacket::handle
+        );
+        MANAGER_CHANNEL.registerMessage(
+                5,
+                ServerboundManagerClearLogsPacket.class,
+                ServerboundManagerClearLogsPacket::encode,
+                ServerboundManagerClearLogsPacket::decode,
+                ServerboundManagerClearLogsPacket::handle
+        );
+        MANAGER_CHANNEL.registerMessage(
+                6,
+                ServerboundManagerLogDesireUpdatePacket.class,
+                ServerboundManagerLogDesireUpdatePacket::encode,
+                ServerboundManagerLogDesireUpdatePacket::decode,
+                ServerboundManagerLogDesireUpdatePacket::handle
+        );
+        MANAGER_CHANNEL.registerMessage(
+                7,
+                ClientboundManagerLogsPacket.class,
+                ClientboundManagerLogsPacket::encode,
+                ClientboundManagerLogsPacket::decode,
+                ClientboundManagerLogsPacket::handle
+        );
+        MANAGER_CHANNEL.registerMessage(
+                8,
+                ServerboundManagerRebuildPacket.class,
+                ServerboundManagerRebuildPacket::encode,
+                ServerboundManagerRebuildPacket::decode,
+                ServerboundManagerRebuildPacket::handle
+        );
+        MANAGER_CHANNEL.registerMessage(
+                9,
+                ClientboundManagerLogLevelUpdatedPacket.class,
+                ClientboundManagerLogLevelUpdatedPacket::encode,
+                ClientboundManagerLogLevelUpdatedPacket::decode,
+                ClientboundManagerLogLevelUpdatedPacket::handle
         );
 
 
@@ -176,6 +218,34 @@ public class SFMPackets {
                 ServerboundNetworkToolUsePacket::decode,
                 ServerboundNetworkToolUsePacket::handle
         );
+        INSPECTION_CHANNEL.registerMessage(
+                9,
+                ServerboundIfStatementInspectionRequestPacket.class,
+                ServerboundIfStatementInspectionRequestPacket::encode,
+                ServerboundIfStatementInspectionRequestPacket::decode,
+                ServerboundIfStatementInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                10,
+                ClientboundIfStatementInspectionResultsPacket.class,
+                ClientboundIfStatementInspectionResultsPacket::encode,
+                ClientboundIfStatementInspectionResultsPacket::decode,
+                ClientboundIfStatementInspectionResultsPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                11,
+                ServerboundBoolExprStatementInspectionRequestPacket.class,
+                ServerboundBoolExprStatementInspectionRequestPacket::encode,
+                ServerboundBoolExprStatementInspectionRequestPacket::decode,
+                ServerboundBoolExprStatementInspectionRequestPacket::handle
+        );
+        INSPECTION_CHANNEL.registerMessage(
+                12,
+                ClientboundBoolExprStatementInspectionResultsPacket.class,
+                ClientboundBoolExprStatementInspectionResultsPacket::encode,
+                ClientboundBoolExprStatementInspectionResultsPacket::decode,
+                ClientboundBoolExprStatementInspectionResultsPacket::handle
+        );
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(
@@ -190,6 +260,7 @@ public class SFMPackets {
 
         var ctx = ctxSupplier.get();
         if (ctx == null) return;
+        // TODO: log return cases about invalid packet received
         ctx.enqueueWork(() -> {
             var sender = ctx.getSender();
             if (sender == null) return;

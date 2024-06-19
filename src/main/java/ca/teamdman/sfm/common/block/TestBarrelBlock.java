@@ -14,9 +14,6 @@ public class TestBarrelBlock extends BarrelBlock {
 
     @Override
     public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
-//        var container = (Container) pLevel.getBlockEntity(pPos);
-//        int stacks = IntStream.range(0, container.getContainerSize()).mapToObj(container::getItem).mapToInt(ItemStack::getCount).sum();
-//        System.out.println("test barrel removed " + stacks/64);
         if (!pState.is(pNewState.getBlock())) {
             pLevel.removeBlockEntity(pPos);
             super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);

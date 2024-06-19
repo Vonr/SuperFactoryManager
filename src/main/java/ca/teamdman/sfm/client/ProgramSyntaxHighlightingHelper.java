@@ -99,13 +99,13 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.HAS:
             case SFMLLexer.TRUE:
             case SFMLLexer.FALSE:
-            case SFMLLexer.NOT:
             case SFMLLexer.FORGET:
                 return ChatFormatting.BLUE;
             case SFMLLexer.IDENTIFIER:
             case SFMLLexer.STRING:
                 return ChatFormatting.GREEN;
             case SFMLLexer.TICKS:
+            case SFMLLexer.TICK:
             case SFMLLexer.SLOTS:
             case SFMLLexer.EXCEPT:
             case SFMLLexer.RETAIN:
@@ -114,6 +114,8 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.OVERALL:
             case SFMLLexer.SOME:
             case SFMLLexer.AND:
+            case SFMLLexer.NOT:
+            case SFMLLexer.OR:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
             case SFMLLexer.GT:
