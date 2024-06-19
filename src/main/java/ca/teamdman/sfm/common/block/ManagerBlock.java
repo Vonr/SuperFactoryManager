@@ -46,6 +46,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         builder.add(TRIGGERED);
     }
 
+    @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
@@ -123,7 +124,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     @Override
     @SuppressWarnings("deprecation")
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
-        CableNetworkManager.getOrRegisterNetworkFromCablePosition(world, pos);
+        CableNetworkManager.onCablePlaced(world, pos);
     }
 
     @Override
@@ -134,7 +135,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
                 Containers.dropContents(level, pos, container);
                 level.updateNeighbourForOutputSignal(pos, this);
             }
-            CableNetworkManager.removeCable(level, pos);
+            CableNetworkManager.onCableRemoved(level, pos);
             super.onRemove(state, level, pos, newState, isMoving);
         }
     }

@@ -34,6 +34,7 @@ public record ServerboundInputInspectionRequestPacket(
             ServerboundInputInspectionRequestPacket msg, NetworkEvent.Context context
     ) {
         context.enqueueWork(() -> {
+            // todo: duplicate code
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
             ServerPlayer player = context.getSender();
             if (player == null) return;
@@ -99,5 +100,6 @@ public record ServerboundInputInspectionRequestPacket(
                     }
             );
         });
+        context.setPacketHandled(true);
     }
 }

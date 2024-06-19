@@ -15,7 +15,8 @@ trigger : EVERY interval DO block END           #TimerTrigger
         | EVERY REDSTONE PULSE DO block END     #PulseTrigger
         ;
 
-interval: number TICKS     #Ticks
+interval: TICK             #Tick
+        | number TICKS     #Ticks
         | number SECONDS   #Seconds
         ;
 
@@ -83,7 +84,7 @@ boolexpr        : TRUE                                  #BooleanTrue
                 | setOp? labelaccess HAS resourcecomparison #BooleanHas
                 | REDSTONE (comparisonOp number)?       #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp number resourceid ;
+resourcecomparison : comparisonOp number resourceid? ;
 comparisonOp    : GT
                 | LT
                 | EQ
@@ -113,8 +114,8 @@ setOp           : OVERALL
 //
 labelaccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
 roundrobin: ROUND ROBIN BY (LABEL | BLOCK);
-label           : IDENTIFIER #RawLabel
-                | string    #StringLabel
+label           : (IDENTIFIER|REDSTONE)   #RawLabel
+                | string                  #StringLabel
                 ;
 
 resourceid      : (IDENTIFIER|REDSTONE) (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)?)?)?)? # Resource
@@ -193,6 +194,7 @@ SIDE    : S I D E ;
 
 // TRIGGERS
 TICKS           : T I C K S ;
+TICK           : T I C K ;
 SECONDS         : S E C O N D S ;
 // REDSTONE TRIGGER
 REDSTONE        : R E D S T O N E ;

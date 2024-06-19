@@ -1,5 +1,7 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
+import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -76,13 +78,15 @@ public class CapabilityCache {
             Level level,
             BlockPos pos,
             BlockCapability<CAP, @Nullable Direction> capKind,
-            @Nullable Direction direction
+            @Nullable Direction direction,
+            TranslatableLogger logger
     ) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return null;
         }
 
-        var found = getCapability(pos, capKind, direction);
+        @Nullable var found = getCapability(pos, capKind, direction);
+
         if (found == null) {
             // Cache miss, discover and store it
             found = BlockCapabilityCache.<CAP, @Nullable Direction>create(
@@ -94,6 +98,9 @@ public class CapabilityCache {
                     () -> remove(pos, capKind, direction)
             );
             putCapability(pos, capKind, direction, found);
+            logger.trace(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_MISS.get(pos, capKind.name(), direction)));
+        } else {
+            logger.trace(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_HIT.get(pos, capKind.name(), direction)));
         }
         return found;
     }

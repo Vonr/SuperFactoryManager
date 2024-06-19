@@ -1,21 +1,15 @@
 package ca.teamdman.sfm.client.gui.screen;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
+import ca.teamdman.sfm.common.net.*;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.SharedConstants;
-import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -23,7 +17,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -32,9 +25,9 @@ import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 import net.neoforged.neoforge.internal.versions.neoforge.NeoForgeVersion;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
+import org.apache.logging.log4j.Level;
 
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
@@ -59,18 +52,24 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private ExtendedButton editButton;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton examplesButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton logsButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton rebuildButton;
+
+    public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
+        super(menu, inv, title);
+    }
 
     public List<ExtendedButton> getButtonsForJEIExclusionZones() {
         return List.of(
                 clipboardPasteButton,
                 editButton,
                 examplesButton,
-                clipboardCopyButton
+                clipboardCopyButton,
+                logsButton,
+                rebuildButton
         );
-    }
-
-    public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title);
     }
 
     public boolean isReadOnly() {
@@ -82,6 +81,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         boolean diskPresent = menu.getSlot(0).hasItem();
         diagButton.visible = shouldShowDiagButton();
         clipboardCopyButton.visible = diskPresent;
+        logsButton.visible = diskPresent;
+        rebuildButton.visible = diskPresent && !isReadOnly();
         clipboardPasteButton.visible = diskPresent && !isReadOnly();
         resetButton.visible = diskPresent && !isReadOnly();
         editButton.visible = diskPresent && !isReadOnly();
@@ -130,6 +131,27 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 MANAGER_GUI_COPY_TO_CLIPBOARD_BUTTON.getComponent(),
                 button -> this.onSaveClipboard()
         ));
+        logsButton = this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16 * 9,
+                buttonWidth,
+                16,
+                MANAGER_GUI_VIEW_LOGS_BUTTON.getComponent(),
+                button -> onShowLogs()
+        ));
+        rebuildButton = this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16 * 10,
+                buttonWidth,
+                16,
+                MANAGER_GUI_REBUILD_BUTTON.getComponent(),
+                button -> {
+                    SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerRebuildPacket(
+                            menu.containerId,
+                            menu.MANAGER_POSITION
+                    ));
+                }
+        ));
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
                 (this.height - this.imageHeight) / 2 + 10,
@@ -160,16 +182,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onEdit() {
-        ClientStuff.showProgramEditScreen(menu.CONTAINER.getItem(0), this::sendProgram);
+        ClientStuff.showProgramEditScreen(DiskItem.getProgram(menu.getDisk()), this::sendProgram);
     }
 
     private void onShowExamples() {
-        Minecraft
-                .getInstance()
-                .pushGuiLayer(new ProgramTemplatePickerScreen(template -> ClientStuff.showProgramEditScreen(
-                        template,
-                        this::sendProgram
-                )));
+        ClientStuff.showExampleListScreen(DiskItem.getProgram(menu.getDisk()), this::sendProgram);
+    }
+
+    private void onShowLogs() {
+        ClientStuff.showLogsScreen(menu);
     }
 
     private void sendReset() {
@@ -212,7 +233,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private boolean shouldShowDiagButton() {
-        var disk = menu.CONTAINER.getItem(0);
+        var disk = menu.getDisk();
         if (!(disk.getItem() instanceof DiskItem)) return false;
         var errors = DiskItem.getErrors(disk);
         var warnings = DiskItem.getWarnings(disk);
@@ -223,53 +244,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         try {
             var disk = menu.CONTAINER.getItem(0);
             if (!(disk.getItem() instanceof DiskItem)) return;
-            StringBuilder content = new StringBuilder(menu.program);
-
-            content
-                    .append("\n\n-- Diagnostic info --\n");
-
-            content.append("-- DateTime: ")
-                    .append(new SimpleDateFormat("yyyy-MM-dd HH:mm.ss").format(new java.util.Date()))
-                    .append('\n');
-
-            content
-                    .append("-- Game Version: ")
-                    .append("Minecraft ")
-                    .append(SharedConstants.getCurrentVersion().getName())
-                    .append(" (")
-                    .append(this.minecraft.getLaunchedVersion())
-                    .append("/")
-                    .append(ClientBrandRetriever.getClientModName())
-                    .append(")")
-                    .append('\n');
-
-            content.append("-- Forge Version: ")
-                    .append(NeoForgeVersion.getVersion())
-                    .append('\n');
-
-            ModList.get().getModContainerById(SFM.MOD_ID).ifPresent(mod -> {
-                content.append("-- SFM Version: ")
-                        .append(mod.getModInfo().getVersion())
-                        .append('\n');
-            });
-
-            var errors = DiskItem.getErrors(disk);
-            if (!errors.isEmpty()) {
-                content.append("\n-- Errors\n");
-                for (var error : errors) {
-                    content.append("-- * ").append(I18n.get(error.getKey(), error.getArgs())).append("\n");
-                }
-            }
-
-            var warnings = DiskItem.getWarnings(disk);
-            if (!warnings.isEmpty()) {
-                content.append("\n-- Warnings\n");
-                for (var warning : warnings) {
-                    content.append("-- * ").append(I18n.get(warning.getKey(), warning.getArgs())).append("\n");
-                }
-            }
-
-            Minecraft.getInstance().keyboardHandler.setClipboard(content.toString());
+            Minecraft.getInstance().keyboardHandler.setClipboard(ClientDiagnosticInfo.getDiagnosticInfo(
+                    menu.program,
+                    disk
+            ));
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
@@ -309,6 +287,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mx, int my) {
+        PoseStack poseStack = graphics.pose();
         // draw title
         super.renderLabels(graphics, mx, my);
 
@@ -322,6 +301,27 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 0,
                 false
         );
+
+        // draw log level
+        if (!menu.logLevel.equals(Level.OFF.name())) {
+            poseStack.pushPose();
+            poseStack.translate(
+                    titleLabelX,
+                    font.lineHeight * 1.5,
+                    0f
+            );
+            poseStack.scale(0.5f, 0.5f, 1f);
+            graphics.drawString(
+                    this.font,
+                    Component
+                            .literal(menu.logLevel),
+                    0,
+                    0,
+                    0,
+                    false
+            );
+            poseStack.popPose();
+        }
 
         // draw status string
         if (statusCountdown > 0) {
@@ -481,7 +481,18 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
+    protected void renderTooltip(GuiGraphics pGuiGraphics, int pX, int pY) {
+        if (Minecraft.getInstance().screen != this) return;
+        super.renderTooltip(pGuiGraphics, pX, pY);
+    }
+
+    @Override
     protected void renderBg(GuiGraphics graphics, float partialTicks, int mx, int my) {
+        if (!menu.logLevel.equals(Level.OFF.name())) {
+            RenderSystem.setShaderColor(0.2f, 0.8f, 1f, 1f);
+        } else {
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        }
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
         graphics.blit(BACKGROUND_TEXTURE_LOCATION, i, j, 0, 0, this.imageWidth, this.imageHeight);

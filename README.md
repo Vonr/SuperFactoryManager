@@ -31,6 +31,10 @@ for syntax highlighting 🌈
 
 ![](media/vscode%20syntax.png)
 
+## UML Diagram
+
+![](./AST.png)
+
 ## Release process
 
 The following process is designed to catch the most obvious problems that may arise from creating a new release.
@@ -58,6 +62,9 @@ for each version:
     /stop
     Quit game
 
+Action: Tag
+Action: Push all
+
 For each version:
     CurseForge -> Upload file
 "https://authors.curseforge.com/#/projects/306935/files/create"
@@ -81,8 +88,18 @@ For each version:
     Adjust populated version numbers
     Changelog=same as above
 
-Action: Tag
-Action: Push all
+
+GitHub -> Draft a new release
+"https://github.com/TeamDman/SuperFactoryManager/releases/new"
+Choose a tag=latest
+Target=latest
+Release title=mod version
+Description= <<
+    ```
+        $section from changelog.sfml
+    ```
+>>
+Attach=latest jar for each mc version
 ```
 
 ## Optimization

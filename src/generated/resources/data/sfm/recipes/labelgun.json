@@ -6,13 +6,13 @@
       "tag": "forge:dyes/black"
     },
     "C": {
-      "item": "minecraft:oak_sign"
+      "tag": "minecraft:signs"
     },
     "L": {
       "tag": "forge:dyes/blue"
     },
     "S": {
-      "item": "minecraft:stick"
+      "tag": "forge:rods/wooden"
     }
   },
   "pattern": [

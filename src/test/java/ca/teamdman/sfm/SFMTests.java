@@ -3,6 +3,7 @@ package ca.teamdman.sfm;
 import ca.teamdman.sfm.client.gui.screen.ProgramEditScreen;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfml.ast.*;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,9 +13,11 @@ import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SFMTests {
     @Test
@@ -58,5 +61,13 @@ public class SFMTests {
                 List.of(new BlockPos(0, 1, 0)),
                 labelAccess.roundRobin().gather(labelAccess, labelPositions).toList()
         );
+    }
+
+    @Test
+    public void understandFastUtilsLongMap() {
+        Map<Long, String> map = new Long2ObjectOpenHashMap<>();
+        map.put(123L, "hi");
+        assertEquals("hi", map.get(123L));
+        assertNull(map.get(124L));
     }
 }

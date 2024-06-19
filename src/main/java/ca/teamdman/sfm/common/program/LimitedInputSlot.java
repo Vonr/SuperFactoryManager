@@ -16,14 +16,14 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
     private boolean done = false;
 
     public LimitedInputSlot(
-            CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker
+            CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker, STACK stack
     ) {
-        this.init(handler, slot, tracker);
+        this.init(handler, slot, tracker, stack);
     }
 
     public boolean isDone() {
         if (done) return true;
-        // we don't bother setting done because if this returns true it should be the last time this is called
+        // we don't bother setting this.done because if this returns true it should be the last time this is called
         if (tracker.isDone()) {
             return true;
         }
@@ -60,14 +60,24 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
         return extractSimulateCache;
     }
 
-    public void init(CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker) {
+    public void init(CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker, STACK stack) {
         this.done = false;
-        this.extractSimulateCache = null;
+        this.extractSimulateCache = stack;
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
         //noinspection DataFlowIssue
         this.type = tracker.getResourceLimit().resourceId().getResourceType();
         assert type != null;
+    }
+
+    @Override
+    public String toString() {
+        return "LimitedInputSlot{" +
+               "slot=" + slot +
+               ", cap=" + type.CAPABILITY_KIND.name() +
+//               ", extractSimulateCache=" + extractSimulateCache +
+               ", tracker=" + tracker +
+               '}';
     }
 }
