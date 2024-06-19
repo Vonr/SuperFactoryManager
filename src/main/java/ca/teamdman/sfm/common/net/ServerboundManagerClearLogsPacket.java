@@ -39,5 +39,6 @@ public record ServerboundManagerClearLogsPacket(
                     manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON_PACKET_RECEIVED.get()));
                 }
         );
+        contextSupplier.get().setPacketHandled(true);
     }
 }

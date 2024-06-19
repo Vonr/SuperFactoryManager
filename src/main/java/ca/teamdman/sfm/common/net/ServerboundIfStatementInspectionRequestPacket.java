@@ -87,5 +87,6 @@ public record ServerboundIfStatementInspectionRequestPacket(
                     }
             );
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 }

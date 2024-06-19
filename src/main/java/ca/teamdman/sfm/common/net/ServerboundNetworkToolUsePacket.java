@@ -127,5 +127,6 @@ public record ServerboundNetworkToolUsePacket(
                             ))
             );
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 }

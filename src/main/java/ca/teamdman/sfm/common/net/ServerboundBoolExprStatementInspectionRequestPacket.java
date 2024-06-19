@@ -84,6 +84,7 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
                     }
             );
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 
     public void handle() {
