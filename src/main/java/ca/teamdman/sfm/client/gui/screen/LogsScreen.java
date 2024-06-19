@@ -243,20 +243,7 @@ public class LogsScreen extends Screen {
                 20,
                 CommonComponents.GUI_DONE,
                 (p_97691_) -> this.onClose(),
-                (btn, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                buildTooltip(PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP)
         ));
         if (!isReadOnly()) {
             this.addRenderableWidget(new Button(
@@ -305,6 +292,7 @@ public class LogsScreen extends Screen {
     }
 
     public void scrollToBottom() {
+        // todo: move this to the custom class we use and remove the need for the access transformer
         textarea.setScrollAmount(Double.MAX_VALUE);
     }
 
