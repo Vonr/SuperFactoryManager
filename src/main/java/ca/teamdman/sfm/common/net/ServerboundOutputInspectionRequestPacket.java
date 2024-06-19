@@ -319,5 +319,6 @@ public record ServerboundOutputInspectionRequestPacket(
                     }
             );
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 }

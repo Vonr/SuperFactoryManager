@@ -34,5 +34,6 @@ public record ServerboundManagerResetPacket(
                 msg.windowId,
                 (menu, manager) -> manager.reset()
         );
+        contextSupplier.get().setPacketHandled(true);
     }
 }

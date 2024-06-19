@@ -51,5 +51,6 @@ public record ServerboundManagerRebuildPacket(
                     SFM.LOGGER.debug("{} performed rebuild for manager {} {}", sender, msg.pos(), manager.getLevel());
                 }
         );
+        contextSupplier.get().setPacketHandled(true);
     }
 }
