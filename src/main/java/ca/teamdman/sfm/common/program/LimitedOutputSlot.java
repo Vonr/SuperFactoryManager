@@ -15,9 +15,9 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
     private @Nullable STACK stackInSlotCache = null;
 
     public LimitedOutputSlot(
-            CAP handler, int slot, OutputResourceTracker<STACK, ITEM, CAP> tracker
+            CAP handler, int slot, OutputResourceTracker<STACK, ITEM, CAP> tracker, STACK stack
     ) {
-        this.init(handler, slot, tracker);
+        this.init(handler, slot, tracker, stack);
     }
 
     public boolean isDone() {
@@ -50,14 +50,23 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         return type.insert(handler, slot, stack, simulate);
     }
 
-    public void init(CAP handler, int slot, OutputResourceTracker<STACK, ITEM, CAP> tracker) {
-        this.stackInSlotCache = null;
+    public void init(CAP handler, int slot, OutputResourceTracker<STACK, ITEM, CAP> tracker, STACK stack) {
+        this.stackInSlotCache = stack;
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
         //noinspection DataFlowIssue
         this.type = tracker.getLimit().resourceId().getResourceType();
         assert type != null;
-        this.tracker.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return "LimitedOutputSlot{" +
+               "slot=" + slot +
+               ", cap=" + type.CAPABILITY_KIND.getName() +
+//               ", stackInSlotCache=" + stackInSlotCache +
+               ", tracker=" + tracker +
+               '}';
     }
 }

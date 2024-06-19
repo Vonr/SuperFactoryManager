@@ -2,6 +2,8 @@ package ca.teamdman.sfm.common.containermenu;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
+import ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket;
 import ca.teamdman.sfm.common.registry.SFMMenus;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
@@ -14,10 +16,15 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayDeque;
+
 public class ManagerContainerMenu extends AbstractContainerMenu {
     public final Container CONTAINER;
-    public final Inventory INVENTORY;
+    public final Inventory PLAYER_INVENTORY;
     public final BlockPos MANAGER_POSITION;
+    public String logLevel;
+    public ArrayDeque<TranslatableLogEvent> logs;
+    public boolean isLogScreenOpen = false;
     public String program;
     public ManagerBlockEntity.State state;
     public long[] tickTimeNanos;
@@ -29,14 +36,18 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
             Container container,
             BlockPos blockEntityPos,
             String program,
+            String logLevel,
             ManagerBlockEntity.State state,
-            long[] tickTimeNanos
+            long[] tickTimeNanos,
+            ArrayDeque<TranslatableLogEvent> logs
     ) {
         super(SFMMenus.MANAGER_MENU.get(), windowId);
         checkContainerSize(container, 1);
         this.CONTAINER = container;
-        this.INVENTORY = inv;
+        this.PLAYER_INVENTORY = inv;
         this.MANAGER_POSITION = blockEntityPos;
+        this.logLevel = logLevel;
+        this.logs = logs;
         this.program = program;
         this.state = state;
         this.tickTimeNanos = tickTimeNanos;
@@ -71,8 +82,10 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
                 new SimpleContainer(1),
                 buf.readBlockPos(),
                 buf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                buf.readUtf(ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH),
                 buf.readEnum(ManagerBlockEntity.State.class),
-                buf.readLongArray(null, ManagerBlockEntity.TICK_TIME_HISTORY_SIZE)
+                buf.readLongArray(null, ManagerBlockEntity.TICK_TIME_HISTORY_SIZE),
+                new ArrayDeque<>()
         );
     }
 
@@ -83,18 +96,27 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
                 manager,
                 manager.getBlockPos(),
                 manager.getProgramString().orElse(""),
+                manager.logger.getLogLevel().name(),
                 manager.getState(),
-                manager.getTickTimeNanos()
+                manager.getTickTimeNanos(),
+                new ArrayDeque<>()
         );
     }
 
     public static void encode(ManagerBlockEntity manager, FriendlyByteBuf buf) {
         buf.writeBlockPos(manager.getBlockPos());
         buf.writeUtf(manager.getProgramString().orElse(""), Program.MAX_PROGRAM_LENGTH);
+        buf.writeUtf(
+                manager.logger.getLogLevel().name(),
+                ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH
+        );
         buf.writeEnum(manager.getState());
         buf.writeLongArray(manager.getTickTimeNanos());
     }
 
+    public ItemStack getDisk() {
+        return this.CONTAINER.getItem(0);
+    }
 
     @Override
     public boolean stillValid(Player player) {

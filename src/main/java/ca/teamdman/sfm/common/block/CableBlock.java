@@ -21,12 +21,12 @@ public class CableBlock extends Block implements ICableBlock {
     @SuppressWarnings("deprecation")
     @Override
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
-        CableNetworkManager.getOrRegisterNetworkFromCablePosition(world, pos);
+        CableNetworkManager.onCablePlaced(world, pos);
     }
 
     @SuppressWarnings("deprecation")
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        CableNetworkManager.removeCable(level, pos);
+        CableNetworkManager.onCableRemoved(level, pos);
     }
 }

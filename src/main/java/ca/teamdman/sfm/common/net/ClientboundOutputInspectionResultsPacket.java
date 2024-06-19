@@ -26,8 +26,7 @@ public record ClientboundOutputInspectionResultsPacket(
     public static void handle(
             ClientboundOutputInspectionResultsPacket msg, Supplier<NetworkEvent.Context> contextSupplier
     ) {
-        contextSupplier.get().enqueueWork(() -> ClientStuff.showProgramEditScreen(msg.results, next -> {
-        }));
+        contextSupplier.get().enqueueWork(() -> ClientStuff.showProgramEditScreen(msg.results));
         contextSupplier.get().setPacketHandled(true);
     }
 }

@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.ProgramContext;
 
 import java.util.List;
@@ -8,7 +9,20 @@ public record Block(List<Statement> statements) implements Statement {
     @Override
     public void tick(ProgramContext context) {
         for (Statement statement : statements) {
+            long start = System.nanoTime();
             statement.tick(context);
+            float elapsed = (System.nanoTime() - start) / 1_000_000f;
+            if (statement instanceof PrettyStatement ps) {
+                context.getLogger().info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_STATEMENT_TIME_MS.get(
+                        elapsed,
+                        ps.toStringPretty()
+                )));
+            } else {
+                context.getLogger().info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_STATEMENT_TIME_MS.get(
+                        elapsed,
+                        statement.toString()
+                )));
+            }
         }
     }
 

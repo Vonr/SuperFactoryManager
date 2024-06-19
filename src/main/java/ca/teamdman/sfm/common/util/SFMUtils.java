@@ -14,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -78,6 +79,26 @@ public class SFMUtils {
         }
         tag.put("args", args);
         return tag;
+    }
+
+    public static final int MAX_TRANSLATION_ELEMENT_LENGTH = 10240;
+
+    public static void encodeTranslation(TranslatableContents contents, FriendlyByteBuf buf) {
+        buf.writeUtf(contents.getKey(), MAX_TRANSLATION_ELEMENT_LENGTH);
+        buf.writeVarInt(contents.getArgs().length);
+        for (var arg : contents.getArgs()) {
+            buf.writeUtf(String.valueOf(arg), MAX_TRANSLATION_ELEMENT_LENGTH);
+        }
+    }
+
+    public static TranslatableContents decodeTranslation(FriendlyByteBuf buf) {
+        String key = buf.readUtf(MAX_TRANSLATION_ELEMENT_LENGTH);
+        int argCount = buf.readVarInt();
+        Object[] args = new Object[argCount];
+        for (int i = 0; i < argCount; i++) {
+            args[i] = buf.readUtf(MAX_TRANSLATION_ELEMENT_LENGTH);
+        }
+        return getTranslatableContents(key, args);
     }
 
     /**
