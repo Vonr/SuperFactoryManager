@@ -30,9 +30,32 @@ public class RegexCache {
 
     public static Predicate<String> buildPredicate(String possiblePattern) {
         return isRegexPattern(possiblePattern)
-               ? patternCache.computeIfAbsent(possiblePattern, x -> Pattern.compile(x).asMatchPredicate())
+               ? patternCache.computeIfAbsent(possiblePattern, RegexCache::getPredicateFromRegex)
                : possiblePattern::equals;
     }
+
+    private static Predicate<String> getPredicateFromRegex(String x) {
+        // Special cases for common patterns
+        if (x.startsWith(".*") && x.endsWith(".*")) {
+            String substring = x.substring(2, x.length() - 2);
+            if (!isRegexPattern(substring)) {
+                return s -> s.contains(substring);
+            }
+        } else if (x.startsWith(".*")) {
+            String suffix = x.substring(2);
+            if (!isRegexPattern(suffix)) {
+                return s -> s.endsWith(suffix);
+            }
+        } else if (x.endsWith(".*")) {
+            String prefix = x.substring(0, x.length() - 2);
+            if (!isRegexPattern(prefix)) {
+                return s -> s.startsWith(prefix);
+            }
+        }
+        // Default case for other regex patterns
+        return Pattern.compile(x).asMatchPredicate();
+    }
+
 
     public static boolean isRegexPattern(String pattern) {
         String specialChars = ".?*+^$[](){}|\\";

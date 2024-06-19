@@ -1,5 +1,7 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
+import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -74,25 +76,37 @@ public class CapabilityCache {
             Level level,
             BlockPos pos,
             Capability<CAP> capKind,
-            @Nullable Direction direction
+            @Nullable Direction direction,
+            TranslatableLogger logger
     ) {
         // Check cache
         var found = getCapability(pos, capKind, direction);
         if (found != null) {
-            return found;
+            if (found.isPresent()) {
+                logger.trace(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_HIT.get(pos, capKind.getName(), direction)));
+                return found;
+            } else {
+                logger.error(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_HIT_INVALID.get(pos, capKind.getName(), direction)));
+            }
+        } else {
+            logger.trace(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_MISS.get(pos, capKind.getName(), direction)));
         }
 
         // No capability found, discover it
         var provider = SFMUtils.discoverCapabilityProvider(level, pos);
         if (provider.isPresent()) {
             var lazyOptional = provider.get().getCapability(capKind, direction);
-            putCapability(pos, capKind, direction, lazyOptional);
-            lazyOptional.addListener(x -> remove(pos, capKind, direction));
+            if (lazyOptional.isPresent()) {
+                putCapability(pos, capKind, direction, lazyOptional);
+                lazyOptional.addListener(x -> remove(pos, capKind, direction));
+            } else {
+                logger.warn(x -> x.accept(Constants.LocalizationKeys.LOGS_EMPTY_CAPABILITY.get(pos, capKind.getName(), direction)));
+            }
             return lazyOptional;
+        } else {
+            logger.warn(x -> x.accept(Constants.LocalizationKeys.LOGS_MISSING_CAPABILITY_PROVIDER.get(pos, capKind.getName(), direction)));
+            return LazyOptional.empty();
         }
-
-        // Fallback to empty
-        return LazyOptional.empty();
     }
 
     public void remove(

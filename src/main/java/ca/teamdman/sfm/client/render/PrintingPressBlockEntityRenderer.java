@@ -11,7 +11,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
 public class PrintingPressBlockEntityRenderer implements BlockEntityRenderer<PrintingPressBlockEntity> {
-    public PrintingPressBlockEntityRenderer(BlockEntityRendererProvider.Context pContext) {
+    public PrintingPressBlockEntityRenderer(BlockEntityRendererProvider.Context ignoredPContext) {
 
     }
 

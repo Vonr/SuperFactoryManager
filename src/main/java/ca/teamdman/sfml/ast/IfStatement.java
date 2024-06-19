@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.ProgramContext;
 
 import java.util.List;
@@ -9,7 +10,7 @@ public record IfStatement(
         BoolExpr condition,
         Block trueBlock,
         Block falseBlock
-) implements ASTNode, Statement {
+) implements ASTNode, Statement, ShortStatement {
     @Override
     public void tick(ProgramContext context) {
         Predicate<ProgramContext> condition = this.condition;
@@ -22,12 +23,15 @@ public record IfStatement(
 
         if (condition.test(context)) {
             context.pushPath(new ProgramContext.Branch(this, true));
+            context.getLogger().debug(x -> x.accept(
+                    Constants.LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE.get(this.condition.sourceCode())));
             trueBlock.tick(context);
         } else {
             context.pushPath(new ProgramContext.Branch(this, false));
+            context.getLogger().debug(x -> x.accept(
+                    Constants.LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE.get(this.condition.sourceCode())));
             falseBlock.tick(context);
         }
-
     }
 
     @Override
@@ -37,17 +41,16 @@ public record IfStatement(
             rtn += "\nELSE\n" + falseBlock.toString().strip().indent(1);
         }
         rtn += "\nEND";
-//        var rtn = new StringBuilder();
-//        rtn.append("IF ").append(condition).append(" THEN\n").append(trueBlock.toString().indent(1));
-//        if (!falseBlock.getStatements().isEmpty()) {
-//            rtn.append("\nELSE\n").append(falseBlock.toString().indent(1));
-//        }
-//        rtn.append("\nEND");
         return rtn.strip();
     }
 
     @Override
     public List<Statement> getStatements() {
         return List.of(trueBlock, falseBlock);
+    }
+
+    @Override
+    public String toStringShort() {
+        return condition.toString();
     }
 }

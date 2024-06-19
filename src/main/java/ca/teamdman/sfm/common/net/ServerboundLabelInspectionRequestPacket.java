@@ -36,7 +36,7 @@ public record ServerboundLabelInspectionRequestPacket(
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
             ServerPlayer player = contextSupplier.get().getSender();
             if (player == null) return;
-            SFM.LOGGER.info("Received label inspection request packet from player " + player.getStringUUID());
+            SFM.LOGGER.info("Received label inspection request packet from player {}", player.getStringUUID());
             LabelPositionHolder labelPositionHolder;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {
                 SFM.LOGGER.info("Player is using a manager container menu - will append additional info to payload");
@@ -105,10 +105,11 @@ public record ServerboundLabelInspectionRequestPacket(
                 payload
                         .append("\n");
             }
-            SFM.LOGGER.info("Sending payload response length="
-                            + payload.length()
-                            + " to player "
-                            + player.getStringUUID());
+            SFM.LOGGER.info(
+                    "Sending payload response length={} to player {}",
+                    payload.length(),
+                    player.getStringUUID()
+            );
             SFMPackets.INSPECTION_CHANNEL.send(
                     PacketDistributor.PLAYER.with(() -> player),
                     new ClientboundLabelInspectionResultsPacket(

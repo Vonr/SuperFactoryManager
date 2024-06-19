@@ -25,11 +25,13 @@ public class SFMCapabilityProviderMappers {
     public static final  Supplier<IForgeRegistry<CapabilityProviderMapper>> DEFERRED_MAPPERS = MAPPERS.makeRegistry(() -> new RegistryBuilder<CapabilityProviderMapper>().setName(
             REGISTRY_ID));
 
+    @SuppressWarnings("unused")
     public static final RegistryObject<BlockEntityCapabilityProviderMapper> BLOCK_ENTITY_MAPPER = MAPPERS.register(
             "block_entity",
             BlockEntityCapabilityProviderMapper::new
     );
 
+    @SuppressWarnings("unused")
     public static final RegistryObject<CauldronCapabilityProviderMapper> CAULDRON_MAPPER = MAPPERS.register(
             "cauldron",
             CauldronCapabilityProviderMapper::new
