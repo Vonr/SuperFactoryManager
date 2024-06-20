@@ -179,7 +179,6 @@ public final class InputStatement implements IOStatement {
      */
     public void freeSlots() {
         if (cachedInputSlots != null) {
-            // TODO: replace all asserts with throws
             if (inputCheck == -2) {
                 throw new IllegalStateException("Input slots were not gathered before freeing");
             }

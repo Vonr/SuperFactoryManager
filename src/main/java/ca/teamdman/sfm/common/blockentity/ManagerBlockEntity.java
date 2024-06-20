@@ -309,7 +309,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                                             logsToSend
                                     )
                             );
-                            assert logsToSend.size() < remaining : "Failed to send logs, infinite loop detected";
+                            if (logsToSend.size() >= remaining) {
+                                throw new IllegalStateException("Failed to send logs, infinite loop detected");
+                            }
                         }
                     }
                 });

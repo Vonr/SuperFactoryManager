@@ -111,7 +111,9 @@ public class ClientStuff {
     }
 
     public static @Nullable BlockEntity getLookBlockEntity() {
-        assert FMLEnvironment.dist.isClient();
+        if (!FMLEnvironment.dist.isClient()) {
+            throw new IllegalCallerException("getLookBlockEntity must be called on client");
+        }
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return null;
         HitResult hr = Minecraft.getInstance().hitResult;

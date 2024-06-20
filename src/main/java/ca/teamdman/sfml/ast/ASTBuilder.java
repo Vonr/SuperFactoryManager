@@ -155,7 +155,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         }
 
         ComparisonOperator finalComp = comp;
-        assert num.value() <= Integer.MAX_VALUE;
+        if (num.value() > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("Redstone signal strength cannot be greater than " + Integer.MAX_VALUE);
+        }
         //noinspection ExtractMethodRecommender
         int finalNum = (int) num.value();
         //noinspection DataFlowIssue // if the program is ticking, level shouldn't be null
@@ -200,7 +202,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Interval visitTicks(SFMLParser.TicksContext ctx) {
         var num = visitNumber(ctx.number());
-        assert num.value() <= Integer.MAX_VALUE;
+        if (num.value() > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("interval cannot be greater than " + Integer.MAX_VALUE + " ticks.");
+        }
         Interval interval = Interval.fromTicks((int) num.value());
         AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
         return interval;
@@ -209,7 +213,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public Interval visitSeconds(SFMLParser.SecondsContext ctx) {
         var num = visitNumber(ctx.number());
-        assert num.value() <= Integer.MAX_VALUE;
+        if (num.value() > Integer.MAX_VALUE / 20) {
+            throw new IllegalArgumentException("interval cannot be greater than " + Integer.MAX_VALUE + " ticks.");
+        }
         Interval interval = Interval.fromSeconds((int) num.value());
         AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
         return interval;
@@ -313,7 +319,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                     new Block(List.of(nestedStatement))
             );
         }
-        assert conditions.isEmpty();
+        if (conditions.isEmpty()) {
+            throw new IllegalStateException("If statement must have at least one condition.");
+        }
 
         AST_NODE_CONTEXTS.add(new Pair<>(nestedStatement, ctx));
         return nestedStatement;
