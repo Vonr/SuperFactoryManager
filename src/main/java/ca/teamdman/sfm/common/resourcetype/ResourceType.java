@@ -133,7 +133,9 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         var found = registryKeyCache.get(item);
         if (found != null) return found;
         found = getRegistry().getKey(item);
-        assert found != null;
+        if (found == null) {
+            throw new NullPointerException("Registry key not found for item: " + item);
+        }
         registryKeyCache.put(item, found);
         return found;
     }
