@@ -57,7 +57,9 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         this.slot = slot;
         //noinspection DataFlowIssue
         this.type = tracker.getLimit().resourceId().getResourceType();
-        assert type != null;
+        if (type == null) {
+            throw new NullPointerException("type");
+        }
     }
 
     @Override
