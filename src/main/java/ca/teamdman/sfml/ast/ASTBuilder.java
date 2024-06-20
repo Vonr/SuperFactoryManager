@@ -319,8 +319,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                     new Block(List.of(nestedStatement))
             );
         }
-        if (conditions.isEmpty()) {
-            throw new IllegalStateException("If statement must have at least one condition.");
+        if (!conditions.isEmpty()) {
+            throw new IllegalStateException("If statement construction failed to consume all conditions");
         }
 
         AST_NODE_CONTEXTS.add(new Pair<>(nestedStatement, ctx));
