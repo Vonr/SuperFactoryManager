@@ -298,13 +298,8 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                         // Send the logs
                         while (!logsToSend.isEmpty()) {
                             int remaining = logsToSend.size();
-                            // By passing the same list to the same player in each packet
-                            // as the packets encode, they will drain the list to make
-                            // the packets as full as possible.
-                            // This assumes that the send method immediately invokes the encode method
-                            // which it does as of 2024-06-05 on 1.19.2
                             PacketDistributor.PLAYER.with(entry.getKey()).send(
-                                    new ClientboundManagerLogsPacket(
+                                    ClientboundManagerLogsPacket.drainToCreate(
                                             menu.containerId,
                                             logsToSend
                                     )
