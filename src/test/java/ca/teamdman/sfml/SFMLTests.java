@@ -776,4 +776,48 @@ public class SFMLTests {
         var x = ProgramTokenContextActions.getContextAction(programString, cursorPos);
         assertTrue(x.isPresent());
     }
+
+    @Test
+    public void condensedIdentifier1() {
+        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","fluid","minecraft", "water");
+        assertEquals("sfm:fluid:minecraft:water", ident.toString());
+        assertEquals("fluid:minecraft:water", ident.toStringCondensed());
+    }
+
+    @Test
+    public void condensedIdentifier2() {
+        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","item","minecraft", "stick");
+        assertEquals("sfm:item:minecraft:stick", ident.toString());
+        assertEquals("minecraft:stick", ident.toStringCondensed());
+    }
+    @Test
+    public void condensedIdentifier3() {
+        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","item",".*", "stick");
+        assertEquals("sfm:item:.*:stick", ident.toString());
+        assertEquals("stick", ident.toStringCondensed());
+    }
+    @Test
+    public void condensedIdentifier4() {
+        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","item",".*", ".*");
+        assertEquals("sfm:item:.*:.*", ident.toString());
+        assertEquals("", ident.toStringCondensed());
+    }
+    @Test
+    public void condensedIdentifier5() {
+        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","fluid",".*", ".*");
+        assertEquals("sfm:fluid:.*:.*", ident.toString());
+        assertEquals("fluid::", ident.toStringCondensed());
+    }
+    @Test
+    public void condensedIdentifier6() {
+        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","fluid",".*", "lava");
+        assertEquals("sfm:fluid:.*:lava", ident.toString());
+        assertEquals("fluid::lava", ident.toStringCondensed());
+    }
+    @Test
+    public void condensedIdentifier7() {
+        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","fluid","minecraft", ".*");
+        assertEquals("sfm:fluid:minecraft:.*", ident.toString());
+        assertEquals("fluid:minecraft:", ident.toStringCondensed());
+    }
 }
