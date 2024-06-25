@@ -65,12 +65,12 @@ public record ServerboundIfStatementInspectionRequestPacket(
                                 payload
                                         .append(ifStatement.toStringShort())
                                         .append("\n-- peek results --\n");
-                                ProgramContext context = new ProgramContext(
+                                ProgramContext programContext = new ProgramContext(
                                         successProgram,
                                         manager,
                                         ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES
                                 );
-                                boolean result = ifStatement.condition().test(context);
+                                boolean result = ifStatement.condition().test(programContext);
                                 payload.append(result ? "TRUE" : "FALSE");
 
                                 SFMPackets.INSPECTION_CHANNEL.send(
