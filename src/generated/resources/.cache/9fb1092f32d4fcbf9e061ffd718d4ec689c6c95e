@@ -1,4 +1,4 @@
-// 1.20.1	2023-11-08T14:25:16.9481359	Recipes
+// 1.20.1	2024-06-25T00:20:02.132182	Recipes
 21ddf44d8958739f46e499c9445d01a6b7965013 data/minecraft/recipes/disk_reset.json
 69ef243b9636e55ed67ae7ed4ec0cad1015864c2 data/sfm/advancements/recipes/misc/printing_press.json
 05c1f9108d84b90c935b8dd532ded8690e533957 data/sfm/advancements/recipes/misc/xp_goop.json
@@ -11,10 +11,10 @@ b53848574ac628bf9da2703402deb63e42f8fe4f data/sfm/advancements/recipes/redstone/
 e47b25c2550a900e674b99add2b4e06bc49f610e data/sfm/recipes/cable.json
 a2f5c2754efc7f92f6ec84cad0b270adad928b64 data/sfm/recipes/disk.json
 86b45396d6e685d9f816a6da3434eb5d7f49f178 data/sfm/recipes/enchanted_book_copy.json
-231865006b431e9877ff2a34b39d09f880de2ab7 data/sfm/recipes/labelgun.json
+c93f0d02d44007fcd79eb5db392bc8e9f6740086 data/sfm/recipes/labelgun.json
 8d1cf0ec2f6ec7a189d15abb34a66d5c4b69c723 data/sfm/recipes/manager.json
 4432751f9842cae951f8b9dc8e405317ea4dc08f data/sfm/recipes/map_copy.json
-7b0e86c1a161b16041aab322301a8f52c808a7d6 data/sfm/recipes/network_tool.json
+7aece48a5f4b90760a696d3b519b0cb81197b9d6 data/sfm/recipes/network_tool.json
 1de9b03f775c36402c0677e033ea0e5afe5e5b9f data/sfm/recipes/printing_press.json
 ba7da1ba1466172a0c01a861667f7aa599593002 data/sfm/recipes/program_copy.json
 acef664db601c1ea84266ace5f4dd0cb9065531e data/sfm/recipes/water_tank.json
