@@ -23,16 +23,14 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             ".*",
             ".*"
     );
-
+    private static final Map<ResourceIdentifier<?, ?, ?>, List<ResourceIdentifier<?, ?, ?>>> expansionCache = new Object2ObjectOpenHashMap<>();
     public final String resourceTypeNamespace;
     public final String resourceTypeName;
     public final String resourceNamespace;
     public final String resourceName;
-    private @Nullable ResourceType<STACK, ITEM, CAP> resourceTypeCache = null;
-
-
     private final Predicate<String> resourceNamespacePredicate;
     private final Predicate<String> resourceNamePredicate;
+    private @Nullable ResourceType<STACK, ITEM, CAP> resourceTypeCache = null;
 
     public ResourceIdentifier(
             String resourceTypeNamespace,
@@ -46,7 +44,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         resourceTypeNamespace = resourceTypeNamespace.toLowerCase(Locale.ROOT);
         resourceTypeName = resourceTypeName.toLowerCase(Locale.ROOT);
 
-        var check = List.of("fe","rf","energy","power");
+        var check = List.of("fe", "rf", "energy", "power");
         if (resourceTypeNamespace.equals("sfm") && check.contains(resourceTypeName)) {
             resourceTypeName = "forge_energy";
         }
@@ -56,10 +54,6 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         this.resourceName = resourceName;
         this.resourceNamespacePredicate = RegexCache.buildPredicate(resourceNamespace);
         this.resourceNamePredicate = RegexCache.buildPredicate(resourceName);
-    }
-
-    public boolean matchesStack(ResourceLocation stackId) {
-        return resourceNamePredicate.test(stackId.getPath()) && resourceNamespacePredicate.test(stackId.getNamespace());
     }
 
     public ResourceIdentifier(String value) {
@@ -72,6 +66,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
 
     public ResourceIdentifier(String typeName, String resourceNamespace, String resourceName) {
         this(SFM.MOD_ID, typeName, resourceNamespace, resourceName);
+    }
+
+    public boolean matchesStack(ResourceLocation stackId) {
+        return resourceNamePredicate.test(stackId.getPath()) && resourceNamespacePredicate.test(stackId.getNamespace());
     }
 
     public static <STACK, ITEM, CAP> ResourceIdentifier<STACK, ITEM, CAP> fromString(String string) {
@@ -113,28 +111,29 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         }
     }
 
-    private static final Map<ResourceIdentifier<?, ?, ?>, List<ResourceIdentifier<?, ?, ?>>> expansionCache = new Object2ObjectOpenHashMap<>();
-
     public boolean test(Object other) {
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
         return resourceType != null && resourceType.matchesStack(this, other);
     }
 
     public List<ResourceIdentifier<STACK, ITEM, CAP>> expand() {
-        if (this.getResourceType() == SFMResourceTypes.FORGE_ENERGY.get())
-            return List.of(new ResourceIdentifier<>(
-                    this.resourceTypeNamespace,
-                    this.resourceTypeName,
-                    "forge",
-                    "energy"
-            ));
-        if (expansionCache.containsKey(this)) {
-            //noinspection unchecked,rawtypes
-            return (List<ResourceIdentifier<STACK, ITEM, CAP>>) (List) expansionCache.get(this);
-        }
-        ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
         try {
-            //noinspection DataFlowIssue // resourceType should never be null
+            if (this.getResourceType() == SFMResourceTypes.FORGE_ENERGY.get())
+                return List.of(new ResourceIdentifier<>(
+                        this.resourceTypeNamespace,
+                        this.resourceTypeName,
+                        "forge",
+                        "energy"
+                ));
+            if (expansionCache.containsKey(this)) {
+                //noinspection unchecked,rawtypes
+                return (List<ResourceIdentifier<STACK, ITEM, CAP>>) (List) expansionCache.get(this);
+            }
+            ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
+            if (resourceType == null) {
+                // user may be using inspection on a resource type that doesn't exist
+                return List.of(this);
+            }
             List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().keySet()
                 .stream()
                 .filter(this::matchesStack)
@@ -152,6 +151,11 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             // the check we do above for forge_energy doesn't easily work for mekanism energy because
             // the mekanism resource types aren't stored in deferred register fields
             // for now, lets just not crash the game at least
+            return List.of(this);
+        } catch (ResourceLocationException e) {
+            // user may have ctrl+space inspection on an invalid resource identifier
+            // item*::stone
+            // the script should give a compile error but that doesn't prevent the inspection, so we catch here
             return List.of(this);
         }
     }
@@ -178,46 +182,48 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
 
     // todo: make this a ShortStatement impl
     public String toStringCondensed() {
-        String rtn;
-        if (resourceTypeNamespace.equals(SFM.MOD_ID) && resourceTypeName.equals("item")) {
-            if (resourceNamespace.equals(".*")) {
-                if (resourceName.equals(".*")) {
-                    rtn = "item::";
-                } else if (RegexCache.isRegexPattern(resourceName)) {
-                    rtn = "\""+resourceName+"\"";
-                } else {
-                    rtn = resourceName;
-                }
-            } else {
-                if (RegexCache.isRegexPattern(resourceName) || RegexCache.isRegexPattern(resourceNamespace)) {
-                    rtn = "\"" + resourceNamespace + ":" + resourceName + "\"";
-                } else {
-                    rtn = resourceNamespace + ":" + resourceName;
-                }
-            }
-        } else if (
-                resourceTypeNamespace.equals(SFM.MOD_ID)
-                && resourceTypeName.equals("forge_energy")
-                && getLocation()
-                        .filter(rl -> rl.equals(new ResourceLocation("forge", "energy")))
-                        .isPresent()
-        ) {
-            rtn = "forge_energy::";
-        } else if (resourceTypeNamespace.equals(SFM.MOD_ID)) {
-            if (RegexCache.isRegexPattern(resourceNamespace) || RegexCache.isRegexPattern(resourceName)) {
-                rtn = "\"" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName + "\"";
-            } else {
-                rtn = resourceTypeName + resourceNamespace + ":" + resourceName;
+        boolean isRegexNamespace = RegexCache.isRegexPattern(resourceNamespace);
+        boolean isRegexNamespaceMatchAll = resourceNamespace.equals(".*");
+        boolean isRegexName = RegexCache.isRegexPattern(resourceName);
+        boolean isRegexNameMatchAll = resourceName.equals(".*");
+        boolean isSFMMod = resourceTypeNamespace.equals(SFM.MOD_ID);
+        boolean isItemType = resourceTypeName.equals("item");
+        boolean isForgeEnergyType = resourceTypeName.equals("forge_energy") && getLocation()
+                .filter(rl -> rl.equals(new ResourceLocation("forge", "energy")))
+                .isPresent();
+        String resourceNamespaceAlias = isForgeEnergyType ? "fe" : resourceNamespace;
+        boolean shouldQuoteResult = false;
+
+        StringBuilder rtn = new StringBuilder();
+        if (!isSFMMod) {
+            rtn.append(resourceTypeNamespace).append(":");
+        }
+        if (!isItemType) {
+            rtn.append(resourceTypeName).append(":");
+        }
+        if (isRegexNamespaceMatchAll) {
+            if (!isItemType) {
+                rtn.append(":");
             }
         } else {
-            if (RegexCache.isRegexPattern(resourceNamespace) || RegexCache.isRegexPattern(resourceName)) {
-                rtn = "\"" + resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName + "\"";
-            } else {
-                rtn = resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
+            rtn.append(resourceNamespaceAlias).append(":");
+            if (isRegexNamespace) {
+                shouldQuoteResult = true;
             }
         }
-        return rtn;
+        if (!isRegexNameMatchAll) {
+            rtn.append(resourceName);
+            if (isRegexName) {
+                shouldQuoteResult = true;
+            }
+        }
+        if (shouldQuoteResult) {
+            return "\"" + rtn + "\"";
+        } else {
+            return rtn.toString();
+        }
     }
+
 
     @Override
     public boolean equals(Object o) {
