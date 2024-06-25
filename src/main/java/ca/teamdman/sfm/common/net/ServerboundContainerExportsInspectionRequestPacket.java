@@ -71,7 +71,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                     );
                 }
         );
-        contextSupplier.get().setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 
 

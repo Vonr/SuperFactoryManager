@@ -32,9 +32,9 @@ public record ServerboundManagerSetLogLevelPacket(
         );
     }
 
-    public static void handle(ServerboundManagerSetLogLevelPacket msg, NetworkEvent.Context ctx) {
+    public static void handle(ServerboundManagerSetLogLevelPacket msg, NetworkEvent.Context context) {
         SFMPackets.handleServerboundContainerPacket(
-                ctx,
+                context,
                 ManagerContainerMenu.class,
                 ManagerBlockEntity.class,
                 msg.pos,
@@ -52,13 +52,13 @@ public record ServerboundManagerSetLogLevelPacket(
 
                     // log in server console
                     String sender = "UNKNOWN SENDER";
-                    ServerPlayer player = ctx.getSender();
+                    ServerPlayer player = context.getSender();
                     if (player != null) {
                         sender = player.getName().getString();
                     }
                     SFM.LOGGER.debug("{} updated manager {} {} log level to {}", sender, msg.pos(), manager.getLevel(), msg.logLevel());
                 }
         );
-        contextSupplier.get().setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

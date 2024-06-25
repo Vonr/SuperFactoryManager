@@ -29,12 +29,12 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
     }
 
     public static void handle(
-            ServerboundBoolExprStatementInspectionRequestPacket msg, NetworkEvent.Context ctx
+            ServerboundBoolExprStatementInspectionRequestPacket msg, NetworkEvent.Context context
     ) {
-        ctx.enqueueWork(() -> {
+        context.enqueueWork(() -> {
             // todo: duplicate code
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = ctx.getSender();
+            ServerPlayer player = context.getSender();
             if (player == null) return;
             ManagerBlockEntity manager;
             if (player.containerMenu instanceof ManagerContainerMenu mcm) {
@@ -63,12 +63,12 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
                                 payload
                                         .append(expr.sourceCode())
                                         .append("\n-- peek results --\n");
-                                ProgramContext context = new ProgramContext(
+                                ProgramContext programContext = new ProgramContext(
                                         successProgram,
                                         manager,
                                         ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES
                                 );
-                                boolean result = expr.test(context);
+                                boolean result = expr.test(programContext);
                                 payload.append(result ? "TRUE" : "FALSE");
 
                                 SFMPackets.INSPECTION_CHANNEL.send(
@@ -84,7 +84,7 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
                     }
             );
         });
-        contextSupplier.get().setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 
     public void handle() {

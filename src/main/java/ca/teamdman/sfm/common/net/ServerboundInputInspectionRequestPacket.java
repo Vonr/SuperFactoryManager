@@ -100,6 +100,6 @@ public record ServerboundInputInspectionRequestPacket(
                     }
             );
         });
-        contextSupplier.get().setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

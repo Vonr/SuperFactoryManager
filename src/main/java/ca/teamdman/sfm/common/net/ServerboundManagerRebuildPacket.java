@@ -27,9 +27,9 @@ public record ServerboundManagerRebuildPacket(
         );
     }
 
-    public static void handle(ServerboundManagerRebuildPacket msg, NetworkEvent.Context ctx) {
+    public static void handle(ServerboundManagerRebuildPacket msg, NetworkEvent.Context context) {
         SFMPackets.handleServerboundContainerPacket(
-                ctx,
+                context,
                 ManagerContainerMenu.class,
                 ManagerBlockEntity.class,
                 msg.pos,
@@ -41,13 +41,13 @@ public record ServerboundManagerRebuildPacket(
 
                     // log it
                     String sender = "UNKNOWN SENDER";
-                    ServerPlayer player = ctx.getSender();
+                    ServerPlayer player = context.getSender();
                     if (player != null) {
                         sender = player.getName().getString();
                     }
                     SFM.LOGGER.debug("{} performed rebuild for manager {} {}", sender, msg.pos(), manager.getLevel());
                 }
         );
-        contextSupplier.get().setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

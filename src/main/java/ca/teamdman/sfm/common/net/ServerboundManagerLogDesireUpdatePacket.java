@@ -31,10 +31,10 @@ public record ServerboundManagerLogDesireUpdatePacket(
 
     public static void handle(
             ServerboundManagerLogDesireUpdatePacket msg,
-            NetworkEvent.Context ctx
+            NetworkEvent.Context context
     ) {
         SFMPackets.handleServerboundContainerPacket(
-                ctx,
+                context,
                 ManagerContainerMenu.class,
                 ManagerBlockEntity.class,
                 msg.pos,
@@ -44,6 +44,6 @@ public record ServerboundManagerLogDesireUpdatePacket(
                     manager.sendUpdatePacket();
                 }
         );
-        contextSupplier.get().setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

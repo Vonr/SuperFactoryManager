@@ -38,6 +38,6 @@ public record ServerboundManagerFixPacket(
                                 .getProgram()
                                 .ifPresent(program -> program.fixWarnings(disk, manager)))
         );
-        contextSupplier.get().setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

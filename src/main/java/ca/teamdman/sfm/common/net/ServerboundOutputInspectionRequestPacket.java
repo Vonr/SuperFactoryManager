@@ -318,6 +318,6 @@ public record ServerboundOutputInspectionRequestPacket(
                     }
             );
         });
-        contextSupplier.get().setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }
