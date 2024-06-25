@@ -98,7 +98,6 @@
   "log.sfm.cable_network.header.2": "Cable positions:",
   "log.sfm.cable_network.header.3": "Capability positions:",
   "log.sfm.capability_cache.hit": "Capability cache HIT for %s %s direction=%s",
-  "log.sfm.capability_cache.hit_invalid": "Capability cache HIT but NOT PRESENT for %s %s direction=%s",
   "log.sfm.capability_cache.miss": "Capability cache MISS for %s %s direction=%s",
   "log.sfm.label_position_holder.body": "%s",
   "log.sfm.label_position_holder.footer": "=============================",
