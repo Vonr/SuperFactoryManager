@@ -48,10 +48,10 @@ public record ServerboundLabelGunUsePacket(
     }
 
     public static void handle(
-            ServerboundLabelGunUsePacket msg, Supplier<NetworkEvent.Context> ctx
+            ServerboundLabelGunUsePacket msg, Supplier<NetworkEvent.Context> contextSupplier
     ) {
-        ctx.get().enqueueWork(() -> {
-            var sender = ctx.get().getSender();
+        contextSupplier.get().enqueueWork(() -> {
+            var sender = contextSupplier.get().getSender();
             if (sender == null) {
                 return;
             }
@@ -145,6 +145,6 @@ public record ServerboundLabelGunUsePacket(
             // write changes to label gun stack
             gunLabels.save(stack);
         });
-        ctx.get().setPacketHandled(true);
+        contextSupplier.get().setPacketHandled(true);
     }
 }
