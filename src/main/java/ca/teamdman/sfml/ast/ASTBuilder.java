@@ -1,8 +1,10 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
+import cpw.mods.modlauncher.Launcher;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -452,6 +454,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
 
     private void assertResourceLimitDoesntExpandHuge(ResourceLimits limits) {
+        if (Launcher.INSTANCE == null) {
+            SFM.LOGGER.warn("The game isn't loaded, Are we in a unit test? Skipping resource limit expansion check.");
+            return;
+        }
         if (limits.createInputTrackers().size() > 512) {
             throw new IllegalArgumentException("Resource limit expands to more than 512 trackers, this is likely a mistake where the \"EACH\" keyword is being used. The code: " + limits);
         }
