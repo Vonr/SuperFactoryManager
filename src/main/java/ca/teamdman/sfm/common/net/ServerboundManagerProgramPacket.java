@@ -39,6 +39,6 @@ public record ServerboundManagerProgramPacket(
                 msg.windowId,
                 (menu, manager) -> manager.setProgram(msg.program())
         );
-        context.setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

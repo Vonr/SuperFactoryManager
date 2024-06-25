@@ -44,6 +44,6 @@ public record ServerboundManagerLogDesireUpdatePacket(
                     manager.sendUpdatePacket();
                 }
         );
-        context.setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

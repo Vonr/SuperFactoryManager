@@ -117,6 +117,6 @@ public record ServerboundLabelInspectionRequestPacket(
                     )
             );
         });
-        context.setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

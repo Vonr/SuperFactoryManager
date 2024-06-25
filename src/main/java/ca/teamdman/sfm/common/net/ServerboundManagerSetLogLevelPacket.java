@@ -59,6 +59,6 @@ public record ServerboundManagerSetLogLevelPacket(
                     SFM.LOGGER.debug("{} updated manager {} {} log level to {}", sender, msg.pos(), manager.getLevel(), msg.logLevel());
                 }
         );
-        context.setPacketHandled(true);
+       context.setPacketHandled(true);
     }
 }

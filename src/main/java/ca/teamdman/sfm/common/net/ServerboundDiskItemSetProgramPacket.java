@@ -28,10 +28,10 @@ public record ServerboundDiskItemSetProgramPacket(
     }
 
     public static void handle(
-            ServerboundDiskItemSetProgramPacket msg, NetworkEvent.Context ctx
+            ServerboundDiskItemSetProgramPacket msg, NetworkEvent.Context context
     ) {
-        ctx.enqueueWork(() -> {
-            var sender = ctx.getSender();
+        context.enqueueWork(() -> {
+            var sender = context.getSender();
             if (sender == null) {
                 return;
             }
@@ -42,6 +42,6 @@ public record ServerboundDiskItemSetProgramPacket(
             }
 
         });
-        ctx.setPacketHandled(true);
+        context.setPacketHandled(true);
     }
 }
