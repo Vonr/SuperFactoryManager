@@ -1,12 +1,17 @@
 NAME "Known issues"
 
+-- Official SFM Discord:
+-- https://discord.gg/5mbUY3mu6m
+
+-- Official SFM issue tracker:
+-- https://github.com/TeamDman/SuperFactoryManager/issues
+
 -- Sometimes managers stop working for 'no reason'
 ---- "Rebuild cable network" gui button to try fix single
 ---- "/sfm bust_cable_network_cache" to try fix all
 ---- If it happens once, it will probably come back :(
 ---- I have no idea why this happens
 ---- If you can reproduce this, pls tell me how
----- https://github.com/TeamDman/SuperFactoryManager/issues
 
 -- Having like 9000 labels in a label gun corrupts world
 ---- because the NBT is too big
