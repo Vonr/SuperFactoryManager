@@ -98,7 +98,7 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
                     }
             );
         });
-        
+
     }
 
     public void handleInner() {
