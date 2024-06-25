@@ -4,7 +4,8 @@ NAME "Changelog"
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space
----- happened when using on `Gas::` or `fe::`
+---- happened when using on `Gas::` or `fe::` or `bruh::`
+---- Thanks @crystalivel for the report <3
 -- add manager screen button to rebuild network
 ---- this will do until I can squash the bug
 ---- I'm sorry for the headaches this has caused
