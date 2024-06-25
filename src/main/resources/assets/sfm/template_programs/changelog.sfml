@@ -1,10 +1,8 @@
+NAME "Changelog"
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
--- I am aware that managers sometimes stop working.
--- If you can reproduce this problem, join the Discord and let me know how.
-
----- next ----
+---- 4.16.0 ----
 -- fix crashes using ctrl+space
 ---- happened when using on `Gas::` or `fe::`
 -- add manager screen button to rebuild network
@@ -45,7 +43,6 @@
 -- Update AE2 example to accommodate case where ingredients are spread between inscribers.
 ---- Thanks Kem for the idea <3
 
-NAME "Changelog for 4.15.1"
 ---- 4.15.1 ----
 -- Fix crash bug where variable-size inventories (composters) crashed
 -- Fix modloader=forge missing for the mc=1.20.1 CurseForge uploads
