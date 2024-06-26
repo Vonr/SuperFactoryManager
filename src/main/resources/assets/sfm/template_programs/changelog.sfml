@@ -9,7 +9,7 @@ NAME "Changelog"
 -- add manager screen button to rebuild network
 ---- this will do until I can squash the bug
 ---- I'm sorry for the headaches this has caused
--- Added known issues example program
+-- add known issues example program
 -- fix INPUT statement limits not being respected
 ---- occurred when using 2+ outputs with one input
 ---- https://imgur.com/a/sfm-unintended-behaviour-gBkNyae
@@ -36,11 +36,11 @@ NAME "Changelog"
 -- fix missing dash in changelog
 -- support `IF chest HAS EQ 0 THEN`
 ---- previously only `IF chest HAS EQ 0 item:: THEN`
--- Add ctrl+space action for IfStatement and BoolExpr
--- Add git tag action to release process documentation
--- Add GitHub release to release process documentation
--- Update AE2 example to accommodate case where ingredients are spread between inscribers.
----- Thanks Kem for the idea <3
+-- add ctrl+space action for IfStatement and BoolExpr
+-- add git tag action to release process documentation
+-- add GitHub release to release process documentation
+-- update AE2 example to accommodate case where ingredients are spread between inscribers
+---- Thanks @Kem for the idea <3
 
 ---- 4.15.1 ----
 -- Fix crash bug where variable-size inventories (composters) crashed
