@@ -46,8 +46,8 @@ public record ClientboundManagerLogsPacket(
 
     public static ClientboundManagerLogsPacket decode(FriendlyByteBuf friendlyByteBuf) {
         int windowId = friendlyByteBuf.readVarInt();
-        FriendlyByteBuf logsBuf = new FriendlyByteBuf(Unpooled.buffer());
-        friendlyByteBuf.readBytes(logsBuf);
+        FriendlyByteBuf logsBuf = new FriendlyByteBuf(Unpooled.buffer(friendlyByteBuf.readableBytes()));
+        friendlyByteBuf.readBytes(logsBuf, friendlyByteBuf.readableBytes());
         return new ClientboundManagerLogsPacket(
                 windowId,
                 logsBuf
