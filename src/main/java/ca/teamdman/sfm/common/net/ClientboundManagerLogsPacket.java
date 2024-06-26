@@ -29,7 +29,9 @@ public record ClientboundManagerLogsPacket(
     ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeVarInt(msg.logsBuf.readableBytes());
-        friendlyByteBuf.writeBytes(msg.logsBuf);
+        friendlyByteBuf.writeBytes(msg.logsBuf, 0, msg.logsBuf.readableBytes()); // !!!IMPORTANT!!!
+        // We use this write method specifically to NOT modify the reader index.
+        // The encode method may be called multiple times, so we want to ensure it is idempotent.
     }
 
     public static ClientboundManagerLogsPacket decode(FriendlyByteBuf friendlyByteBuf) {
