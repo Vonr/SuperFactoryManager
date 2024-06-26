@@ -282,6 +282,11 @@ public class ProgramEditScreen extends Screen {
 
         @Override
         public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
+            // Accommodate line numbers
+            if (pMouseX >= this.getX() + 1 && pMouseX <= this.getX() + this.width - 1) {
+                pMouseX -= 1 + this.font.width("000");
+            }
+
             // we need to override the default behaviour because Mojang broke it
             // if it's not scrolling, it should return false for cursor click movement
             boolean rtn;
