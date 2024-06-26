@@ -26,4 +26,6 @@ NAME "Known issues"
 
 -- "Press Ctrl+E to edit" and other tooltips show in edit screen
 
+-- scroll bar in the logs gui becomes inaccurate as logs grow
+
 -- Sorry for any inconveniences :(
