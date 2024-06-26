@@ -28,13 +28,18 @@ public record ClientboundManagerLogsPacket(
             ClientboundManagerLogsPacket msg, FriendlyByteBuf friendlyByteBuf
     ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
+        friendlyByteBuf.writeVarInt(msg.logsBuf.readableBytes());
         friendlyByteBuf.writeBytes(msg.logsBuf);
     }
 
     public static ClientboundManagerLogsPacket decode(FriendlyByteBuf friendlyByteBuf) {
         int windowId = friendlyByteBuf.readVarInt();
-        FriendlyByteBuf logsBuf = new FriendlyByteBuf(Unpooled.buffer(friendlyByteBuf.readableBytes()));
-        friendlyByteBuf.readBytes(logsBuf, friendlyByteBuf.readableBytes());
+
+        int size = friendlyByteBuf.readVarInt(); // don't trust readableBytes
+        // https://discord.com/channels/313125603924639766/1154167065519861831/1192251649398419506
+
+        FriendlyByteBuf logsBuf = new FriendlyByteBuf(Unpooled.buffer(size));
+        friendlyByteBuf.readBytes(logsBuf, size);
         return new ClientboundManagerLogsPacket(
                 windowId,
                 logsBuf
