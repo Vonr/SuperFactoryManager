@@ -281,20 +281,50 @@ public class ProgramEditScreen extends Screen {
             this.textField.cursor = cursor;
         }
 
+
         @Override
-        public boolean mouseClicked(double mx, double my, int button) {
-            try {
-                // if mouse in bounds, translate to accommodate line numbers
-                if (mx >= this.getX() + 1 && mx <= this.getX() + this.width - 1) {
-                    mx -= 1 + this.font.width("000");
+        public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
+            // Accommodate line numbers
+            if (pMouseX >= this.getX() + 1 && pMouseX <= this.getX() + this.width - 1) {
+                pMouseX -= 1 + this.font.width("000");
+            }
+
+            // we need to override the default behaviour because Mojang broke it
+            // if it's not scrolling, it should return false for cursor click movement
+            boolean rtn;
+            if (!this.visible) {
+                rtn = false;
+            } else {
+                //noinspection unused
+                boolean flag = this.withinContentAreaPoint(pMouseX, pMouseY);
+                boolean flag1 = this.scrollbarVisible()
+                                && pMouseX >= (double) (this.getX() + this.width)
+                                && pMouseX <= (double) (this.getX() + this.width + 8)
+                                && pMouseY >= (double) this.getY()
+                                && pMouseY < (double) (this.getY() + this.height);
+                if (flag1 && pButton == 0) {
+                    this.scrolling = true;
+                    rtn = true;
+                } else {
+                    //1.19.4 behaviour:
+                    //rtn=flag || flag1;
+                    // instead, we want to return false if we're not scrolling
+                    // (like how it was in 1.19.2)
+                    // https://bugs.mojang.com/browse/MC-262754
+                    rtn = false;
                 }
-                return super.mouseClicked(mx , my, button);
-            } catch (Exception e) {
-                SFM.LOGGER.error("Error in ProgramEditScreen.MyMultiLineEditBox.mouseClicked", e);
+            }
+
+            if (rtn) {
+                return true;
+            } else if (this.withinContentAreaPoint(pMouseX, pMouseY) && pButton == 0) {
+                this.textField.setSelecting(Screen.hasShiftDown());
+                this.seekCursorScreen(pMouseX, pMouseY);
+                return true;
+            } else {
                 return false;
             }
         }
-
         @Override
         public boolean mouseDragged(
                 double mx,
