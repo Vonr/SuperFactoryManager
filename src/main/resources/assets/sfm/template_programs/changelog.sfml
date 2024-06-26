@@ -21,8 +21,6 @@ NAME "Changelog"
 ---- This can move MAX_LONG per operation where supported
 -- make "EVERY TICK DO" valid syntax
 ---- this still only allows forge_energy by default
--- hide "Press Ctrl+E to edit" tooltip in edit screen
----- Props to @Theradrim for also being bugged by this
 -- optimize more common regex (*seed, seed*, *seed*)
 -- add line numbers to program edit screen
 ---- Thanks @Lewi and @Reko for the suggestion <3
