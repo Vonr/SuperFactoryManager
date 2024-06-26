@@ -20,4 +20,10 @@ NAME "Known issues"
 -- mouse drag selection desyncs with mouse position in long scripts
 -- pressing tab jumps to the bottom of long scripts
 
+-- outputting to composters (1.20.3+) without specifying a side
+ -- will skip the check for if the item is compostable
+ -- turning the composter into a trash can
+
+-- "Press Ctrl+E to edit" and other tooltips show in edit screen
+
 -- Sorry for any inconveniences :(
