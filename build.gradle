@@ -194,14 +194,6 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
     runtimeOnly "curse.maven:easy-villagers-400514:5153632" // Easy Villagers 1.20.4-1.1.4
-
-//    runtimeOnly "curse.maven:the-one-probe-245211:4629624" //TheOneProbe - 1.20.1-10.0.1
-//
-//    compileOnly 'mezz.jei:jei-1.20.1-forge:15.2.0.27'
-//    runtimeOnly 'mezz.jei:jei-1.20.1-forge:15.2.0.27'
-//
-//    implementation "curse.maven:mekanism-268560:4807067" //Mekanism-1.20.1-10.4.2.16.jar
-//    implementation "mekanism:Mekanism:1.20.1-10.4.2.16:api"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
