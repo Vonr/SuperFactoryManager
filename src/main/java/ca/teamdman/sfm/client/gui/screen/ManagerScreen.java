@@ -5,8 +5,10 @@ import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.net.*;
-import ca.teamdman.sfm.common.registry.SFMPackets;
+import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
@@ -20,13 +22,11 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
-import net.neoforged.neoforge.internal.versions.neoforge.NeoForgeVersion;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.apache.logging.log4j.Level;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
-import org.apache.logging.log4j.Level;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -146,12 +146,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 buttonWidth,
                 16,
                 MANAGER_GUI_REBUILD_BUTTON.getComponent(),
-                button -> {
-                    PacketDistributor.SERVER.noArg().send(new ServerboundManagerRebuildPacket(
-                            menu.containerId,
-                            menu.MANAGER_POSITION
-                    ));
-                }
+                button -> this.onSendRebuild()
         ));
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
@@ -200,6 +195,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 menu.MANAGER_POSITION
         ));
         status = MANAGER_GUI_STATUS_RESET.getComponent();
+        statusCountdown = STATUS_DURATION;
+    }
+
+    private void onSendRebuild() {
+        PacketDistributor.SERVER.noArg().send(new ServerboundManagerRebuildPacket(
+                menu.containerId,
+                menu.MANAGER_POSITION
+        ));
+        status = MANAGER_GUI_STATUS_REBUILD.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
