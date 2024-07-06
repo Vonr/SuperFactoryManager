@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.neoforged.neoforge.common.capabilities.Capability;
 import net.neoforged.neoforge.common.util.LazyOptional;
 
@@ -184,5 +185,9 @@ public class CableNetwork {
             branches.add(branchNetwork);
         }
         return branches;
+    }
+
+    public void bustCacheForChunk(ChunkAccess chunkAccess) {
+        CAPABILITY_CACHE.bustCacheForChunk(chunkAccess);
     }
 }

@@ -192,14 +192,6 @@ dependencies {
     antlr 'org.antlr:antlr4:4.13.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-
-//    runtimeOnly "curse.maven:the-one-probe-245211:4629624" //TheOneProbe - 1.20.1-10.0.1
-//
-//    compileOnly 'mezz.jei:jei-1.20.1-forge:15.2.0.27'
-//    runtimeOnly 'mezz.jei:jei-1.20.1-forge:15.2.0.27'
-//
-//    implementation "curse.maven:mekanism-268560:4807067" //Mekanism-1.20.1-10.4.2.16.jar
-//    implementation "mekanism:Mekanism:1.20.1-10.4.2.16:api"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
