@@ -695,6 +695,10 @@ public class Constants {
                 "gui.sfm.manager.status.reset",
                 "Reset program and labels!"
         );
+        public static final LocalizationEntry MANAGER_GUI_STATUS_REBUILD = new LocalizationEntry(
+                "gui.sfm.manager.status.rebuild",
+                "Rebuilding cache!"
+        );
         public static final LocalizationEntry MANAGER_GUI_STATUS_FIX = new LocalizationEntry(
                 "gui.sfm.manager.status.fix",
                 "Cleaning up labels!"
