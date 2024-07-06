@@ -145,12 +145,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 buttonWidth,
                 16,
                 MANAGER_GUI_REBUILD_BUTTON.getComponent(),
-                button -> {
-                    SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerRebuildPacket(
-                            menu.containerId,
-                            menu.MANAGER_POSITION
-                    ));
-                }
+                button -> this.onSendRebuild()
         ));
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
@@ -199,6 +194,15 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 menu.MANAGER_POSITION
         ));
         status = MANAGER_GUI_STATUS_RESET.getComponent();
+        statusCountdown = STATUS_DURATION;
+    }
+
+    private void onSendRebuild() {
+        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerRebuildPacket(
+                menu.containerId,
+                menu.MANAGER_POSITION
+        ));
+        status = MANAGER_GUI_STATUS_REBUILD.getComponent();
         statusCountdown = STATUS_DURATION;
     }
 
