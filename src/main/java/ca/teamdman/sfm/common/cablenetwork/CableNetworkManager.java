@@ -6,8 +6,12 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,6 +35,7 @@ import java.util.stream.Stream;
  * - Remove the network if it was the only member
  * - Cause a network to split into other networks if it was a "bridge" block
  */
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SFM.MOD_ID)
 public class CableNetworkManager {
 
     private static final Map<Level, Long2ObjectMap<CableNetwork>> NETWORKS_BY_CABLE_POSITION = new WeakHashMap<>();
@@ -196,5 +201,17 @@ public class CableNetworkManager {
         // when we addNetwork here, it _should_ clobber all the old entries to point to this network instead
         addNetwork(main);
         return Optional.of(main);
+    }
+
+    @SubscribeEvent
+    public static void onChunkUnload(ChunkEvent.Unload event) {
+        if (event.getLevel().isClientSide()) return;
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        var chunk = event.getChunk();
+        purgeChunkFromCableNetworks(level, chunk);
+    }
+
+    public static void purgeChunkFromCableNetworks(ServerLevel level, ChunkAccess chunkAccess) {
+        getNetworksForLevel(level).forEach(network -> network.bustCacheForChunk(chunkAccess));
     }
 }
