@@ -13,12 +13,18 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("UnusedReturnValue")
 public class LabelPositionHolder {
     private final static WeakHashMap<ItemStack, LabelPositionHolder> CACHE = new WeakHashMap<>();
     private final Map<String, Set<BlockPos>> LABELS = new HashMap<>();
 
     private LabelPositionHolder() {
     }
+
+    private LabelPositionHolder(LabelPositionHolder other) {
+        other.LABELS.forEach((key, value) -> LABELS.put(key, new HashSet<>(value)));
+    }
+
 
     public static LabelPositionHolder from(ItemStack stack) {
         return CACHE.computeIfAbsent(stack, s -> {
@@ -51,7 +57,7 @@ public class LabelPositionHolder {
 
     public void save(ItemStack stack) {
         stack.getOrCreateTag().put("sfm:labels", serialize());
-        CACHE.put(stack, this);
+        CACHE.put(stack, new LabelPositionHolder(this));
     }
 
     public CompoundTag serialize() {
