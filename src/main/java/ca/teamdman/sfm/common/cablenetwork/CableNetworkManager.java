@@ -6,7 +6,11 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.*;
@@ -197,5 +201,18 @@ public class CableNetworkManager {
         // when we addNetwork here, it _should_ clobber all the old entries to point to this network instead
         addNetwork(main);
         return Optional.of(main);
+    }
+
+
+    @SubscribeEvent
+    public static void onChunkUnload(ChunkEvent.Unload event) {
+        if (event.getLevel().isClientSide()) return;
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        var chunk = event.getChunk();
+        purgeChunkFromCableNetworks(level, chunk);
+    }
+
+    public static void purgeChunkFromCableNetworks(ServerLevel level, ChunkAccess chunkAccess) {
+        getNetworksForLevel(level).forEach(network -> network.bustCacheForChunk(chunkAccess));
     }
 }
