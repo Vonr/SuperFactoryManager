@@ -8,6 +8,7 @@ NAME "Changelog"
 -- fix label guns sharing internal objects with each other and disks
 ---- this caused disks in managers to get updated without pushing
 ---- sometimes manager disk didn't have labels you thought you pushed
+-- fix reset button not purging labels
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space

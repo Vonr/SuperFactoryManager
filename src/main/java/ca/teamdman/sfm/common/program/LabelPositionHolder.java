@@ -60,6 +60,11 @@ public class LabelPositionHolder {
         CACHE.put(stack, new LabelPositionHolder(this));
     }
 
+    public static void purge(ItemStack stack) {
+        stack.getOrCreateTag().remove("sfm:labels");
+        CACHE.remove(stack);
+    }
+
     public CompoundTag serialize() {
         var tag = new CompoundTag();
         for (var label : get().keySet()) {
