@@ -18,3 +18,7 @@
 # Text Editor Creation
 
 - [Coding My Own Text Editor Again (Ded S02E01) (youtube.com)](https://www.youtube.com/watch?v=w_yXlnjeAy4)
+
+# Action scripts
+
+- Resume propagate after merge conflicts resolved and committed

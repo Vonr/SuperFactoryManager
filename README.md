@@ -45,6 +45,7 @@ Manual: Bump `mod_version` in gradle.properties
 Manual: Commit bump
 Action: Propagate changes
 Action: Run gameTestServer for all versions
+Action: runData for all versions
 Action: Build
 Action: Wipe jars summary dir
 Action: Collect jars
