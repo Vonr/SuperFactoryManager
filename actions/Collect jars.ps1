@@ -14,7 +14,10 @@ try {
     New-Item -ItemType Directory -Path $outdir -ErrorAction SilentlyContinue
 
     # Fetch all jar files in the build/libs directories
-    $jars = Get-ChildItem -Recurse | Where-Object { $_ -like "*build\libs\*.jar" }
+    $jars = Get-ChildItem `
+        | ForEach-Object {
+            Get-ChildItem -File -Path "$_\build\libs\" -Filter "*.jar"
+        }
 
     # Sort and filter jars by semantic version
     $sortedJars = $jars | ForEach-Object {
@@ -34,8 +37,8 @@ try {
         Copy-Item -Path $_.FullPath -Destination $outdir
     }
 
-    # Open output directory
-    Invoke-Item $outdir
+    # Display output directory
+    Get-ChildItem $outdir
 } finally {
     Pop-Location
 }
