@@ -3,6 +3,7 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.net.*;
@@ -13,6 +14,7 @@ import com.mojang.math.Matrix4f;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -201,12 +203,28 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onResetButtonClicked() {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerResetPacket(
-                menu.containerId,
-                menu.MANAGER_POSITION
-        ));
-        status = MANAGER_GUI_STATUS_RESET.getComponent();
-        statusCountdown = STATUS_DURATION;
+        ConfirmScreen confirmScreen = new ConfirmScreen(
+                proceed -> {
+                    assert this.minecraft != null;
+                    this.minecraft.popGuiLayer(); // Close confirm screen
+
+                    if (proceed) {
+                        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerResetPacket(
+                                menu.containerId,
+                                menu.MANAGER_POSITION
+                        ));
+                        status = MANAGER_GUI_STATUS_RESET.getComponent();
+                        statusCountdown = STATUS_DURATION;
+                    }
+                },
+                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_TITLE.getComponent(),
+                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+        );
+        assert this.minecraft != null;
+        this.minecraft.pushGuiLayer(confirmScreen);
+        confirmScreen.setDelay(20);
     }
 
     private void onRebuildButtonClicked() {

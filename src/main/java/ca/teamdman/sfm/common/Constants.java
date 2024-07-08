@@ -44,6 +44,22 @@ public class Constants {
                 "gui.sfm.save_changes_confirm.no_button",
                 "Continue editing"
         );
+        public static final LocalizationEntry MANAGER_RESET_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.manager.reset_confirm_screen.title",
+                "Reset disk?"
+        );
+        public static final LocalizationEntry MANAGER_RESET_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+                "gui.sfm.manager.reset_confirm_screen.message",
+                "Are you sure you want to reset this disk?"
+        );
+        public static final LocalizationEntry MANAGER_RESET_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.reset_confirm_screen.yes_button",
+                "Wipe program and labels"
+        );
+        public static final LocalizationEntry MANAGER_RESET_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.reset_confirm_screen.no_button",
+                "Never mind, make no changes"
+        );
         public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
                 "gui.sfm.exit_without_saving_confirm.title",
                 "Exit without saving?"

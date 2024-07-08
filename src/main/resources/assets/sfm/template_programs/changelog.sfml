@@ -9,6 +9,7 @@ NAME "Changelog"
 ---- this caused disks in managers to get updated without pushing
 ---- sometimes manager disk didn't have labels you thought you pushed
 -- fix reset button not purging labels
+-- add confirmation screen to reset button
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space
