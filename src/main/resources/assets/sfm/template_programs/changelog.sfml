@@ -2,7 +2,7 @@ NAME "Changelog"
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
----- 4.16.1 ----
+---- 4.17.0 ----
 -- fix cache not being invalidated when chunk unloaded
 ---- this is caused by other mods not invalidating capabilities
 -- fix label guns sharing internal objects with each other and disks
