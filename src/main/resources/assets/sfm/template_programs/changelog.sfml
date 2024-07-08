@@ -11,6 +11,7 @@ NAME "Changelog"
 -- fix reset button not purging labels
 -- add confirmation screen to reset button
 -- remove confirmation screen when overwriting empty program
+-- add client config for showing line numbers
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space

@@ -5,6 +5,7 @@ import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.client.gui.EditorUtils;
 import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.SFMConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
@@ -287,12 +288,24 @@ public class ProgramEditScreen extends Screen {
             this.textField.cursor = cursor;
         }
 
+        public int getLineNumberWidth() {
+            if (shouldShowLineNumbers()) {
+                return this.font.width("000");
+            } else {
+                return 0;
+            }
+        }
+
+        private static boolean shouldShowLineNumbers() {
+            return SFMConfig.getOrDefault(SFMConfig.CLIENT.showLineNumbers);
+        }
+
         @Override
         public boolean mouseClicked(double mx, double my, int button) {
             try {
                 // if mouse in bounds, translate to accommodate line numbers
                 if (mx >= this.x + 1 && mx <= this.x + this.width - 1) {
-                    mx -= 1 + this.font.width("000");
+                    mx -= 1 + getLineNumberWidth();
                 }
                 return super.mouseClicked(mx , my, button);
             } catch (Exception e) {
@@ -311,7 +324,7 @@ public class ProgramEditScreen extends Screen {
         ) {
             // if mouse in bounds, translate to accommodate line numbers
             if (mx >= this.x + 1 && mx <= this.x + this.width - 1) {
-                mx -= 1 + this.font.width("000");
+                mx -= 1 + getLineNumberWidth();
             }
             return super.mouseDragged(mx, my, button, dx, dy);
         }
@@ -342,7 +355,7 @@ public class ProgramEditScreen extends Screen {
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
-            int lineX = this.x + this.innerPadding() + this.font.width("000");
+            int lineX = this.x + this.innerPadding() + getLineNumberWidth();
             int lineY = this.y + this.innerPadding();
             int charCount = 0;
             int cursorX = 0;
@@ -360,20 +373,22 @@ public class ProgramEditScreen extends Screen {
                                            && cursorIndex <= charCount + lineLength;
                 var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
 
-                // Draw line number
-                String lineNumber = String.valueOf(line + 1);
-                this.font.drawInBatch(
-                        lineNumber,
-                        lineX - 2 - this.font.width(lineNumber),
-                        lineY,
-                        -1,
-                        true,
-                        matrix4f,
-                        buffer,
-                        false,
-                        0,
-                        LightTexture.FULL_BRIGHT
-                );
+                if (shouldShowLineNumbers()) {
+                    // Draw line number
+                    String lineNumber = String.valueOf(line + 1);
+                    this.font.drawInBatch(
+                            lineNumber,
+                            lineX - 2 - this.font.width(lineNumber),
+                            lineY,
+                            -1,
+                            true,
+                            matrix4f,
+                            buffer,
+                            false,
+                            0,
+                            LightTexture.FULL_BRIGHT
+                    );
+                }
 
                 if (cursorOnThisLine) {
                     isCursorAtEndOfLine = cursorIndex == charCount + lineLength;

@@ -7,11 +7,16 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class SFMConfig {
     public static final ForgeConfigSpec COMMON_SPEC;
+    public static final ForgeConfigSpec CLIENT_SPEC;
     public static final SFMConfig.Common COMMON;
+    public static final SFMConfig.Client CLIENT;
     static {
         final Pair<SFMConfig.Common, ForgeConfigSpec> commonSpecPair = new ForgeConfigSpec.Builder().configure(SFMConfig.Common::new);
         COMMON_SPEC = commonSpecPair.getRight();
         COMMON = commonSpecPair.getLeft();
+        final Pair<SFMConfig.Client, ForgeConfigSpec> clientSpecPair = new ForgeConfigSpec.Builder().configure(SFMConfig.Client::new);
+        CLIENT_SPEC = clientSpecPair.getRight();
+        CLIENT = clientSpecPair.getLeft();
     }
 
     public static class Common {
@@ -23,6 +28,14 @@ public class SFMConfig {
                     .defineInRange("timerTriggerMinimumIntervalInTicks", 20, 1, Integer.MAX_VALUE);
             timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO = builder
                     .defineInRange("timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIOStatementsPresent", 1, 1, Integer.MAX_VALUE);
+        }
+    }
+    public static class Client {
+        public final ForgeConfigSpec.BooleanValue showLineNumbers;
+
+        Client(ForgeConfigSpec.Builder builder) {
+            showLineNumbers = builder
+                    .define("showLineNumbers", true);
         }
     }
 
@@ -39,5 +52,6 @@ public class SFMConfig {
 
     public static void register(ModLoadingContext context) {
         context.registerConfig(ModConfig.Type.COMMON, SFMConfig.COMMON_SPEC);
+        context.registerConfig(ModConfig.Type.CLIENT, SFMConfig.CLIENT_SPEC);
     }
 }
