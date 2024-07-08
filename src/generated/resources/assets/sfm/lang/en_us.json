@@ -55,6 +55,7 @@
   "gui.sfm.manager.state.running": "running",
   "gui.sfm.manager.status.fix": "Cleaning up labels!",
   "gui.sfm.manager.status.loaded_clipboard": "Loaded from clipboard!",
+  "gui.sfm.manager.status.rebuild": "Rebuilding cache!",
   "gui.sfm.manager.status.reset": "Reset program and labels!",
   "gui.sfm.manager.status.saved_clipboard": "Saved to clipboard!",
   "gui.sfm.manager.tooltip.paste": "Press Ctrl+V to paste.",
