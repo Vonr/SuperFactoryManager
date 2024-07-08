@@ -28,6 +28,10 @@ public class Constants {
                 "gui.sfm.text_editor.done_button.tooltip",
                 "Shift+Enter to submit"
         );
+        public static final LocalizationEntry PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.text_editor.toggle_line_numbers_button.tooltip",
+                "Toggle line numbers"
+        );
         public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
                 "gui.sfm.save_changes_confirm.title",
                 "Save changes"

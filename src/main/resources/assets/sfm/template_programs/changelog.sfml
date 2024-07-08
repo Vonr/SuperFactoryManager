@@ -12,6 +12,7 @@ NAME "Changelog"
 -- add confirmation screen to reset button
 -- remove confirmation screen when overwriting empty program
 -- add client config for showing line numbers
+---- add toggle button in program edit screen
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space

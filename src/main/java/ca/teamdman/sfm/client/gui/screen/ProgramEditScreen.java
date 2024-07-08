@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
+import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP;
 
 public class ProgramEditScreen extends Screen {
     protected final String INITIAL_CONTENT;
@@ -77,6 +78,16 @@ public class ProgramEditScreen extends Screen {
         textarea.setValue(INITIAL_CONTENT);
         this.setInitialFocus(textarea);
 
+
+        this.addRenderableWidget(new Button(
+                this.width / 2 - 200,
+                this.height / 2 - 100 + 195,
+                16,
+                20,
+                Component.literal("#"),
+                (button) -> this.onToggleLineNumbersButtonClicked(),
+                buildTooltip(PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP)
+        ));
         this.addRenderableWidget(new Button(
                 this.width / 2 - 2 - 150,
                 this.height / 2 - 100 + 195,
@@ -84,20 +95,7 @@ public class ProgramEditScreen extends Screen {
                 20,
                 CommonComponents.GUI_DONE,
                 (button) -> this.saveAndClose(),
-                (button, pose, mx, my) -> renderTooltip(
-                        pose,
-                        font.split(
-                                PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP.getComponent(),
-                                Math.max(
-                                        width
-                                        / 2
-                                        - 43,
-                                        170
-                                )
-                        ),
-                        mx,
-                        my
-                )
+                buildTooltip(PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP)
         ));
         this.addRenderableWidget(new Button(
                 this.width / 2 - 2 + 100,
@@ -107,6 +105,30 @@ public class ProgramEditScreen extends Screen {
                 CommonComponents.GUI_CANCEL,
                 (button) -> this.onClose()
         ));
+    }
+
+    private Button.OnTooltip buildTooltip(Constants.LocalizationKeys.LocalizationEntry entry) {
+        return (btn, pose, mx, my) -> renderTooltip(
+                pose,
+                font.split(
+                        entry.getComponent(),
+                        Math.max(
+                                width
+                                / 2
+                                - 43,
+                                170
+                        )
+                ),
+                mx,
+                my
+        );
+    }
+
+    private static boolean shouldShowLineNumbers() {
+        return SFMConfig.getOrDefault(SFMConfig.CLIENT.showLineNumbers);
+    }
+    private void onToggleLineNumbersButtonClicked() {
+        SFMConfig.CLIENT.showLineNumbers.set(!shouldShowLineNumbers());
     }
 
     public void saveAndClose() {
@@ -296,16 +318,12 @@ public class ProgramEditScreen extends Screen {
             }
         }
 
-        private static boolean shouldShowLineNumbers() {
-            return SFMConfig.getOrDefault(SFMConfig.CLIENT.showLineNumbers);
-        }
-
         @Override
         public boolean mouseClicked(double mx, double my, int button) {
             try {
                 // if mouse in bounds, translate to accommodate line numbers
                 if (mx >= this.x + 1 && mx <= this.x + this.width - 1) {
-                    mx -= 1 + getLineNumberWidth();
+                    mx -= getLineNumberWidth();
                 }
                 return super.mouseClicked(mx , my, button);
             } catch (Exception e) {
@@ -324,7 +342,7 @@ public class ProgramEditScreen extends Screen {
         ) {
             // if mouse in bounds, translate to accommodate line numbers
             if (mx >= this.x + 1 && mx <= this.x + this.width - 1) {
-                mx -= 1 + getLineNumberWidth();
+                mx -= getLineNumberWidth();
             }
             return super.mouseDragged(mx, my, button, dx, dy);
         }

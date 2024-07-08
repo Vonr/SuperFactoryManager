@@ -74,6 +74,7 @@
   "gui.sfm.save_changes_confirm.yes_button": "Overwrite disk",
   "gui.sfm.text_editor.done_button.tooltip": "Shift+Enter to submit",
   "gui.sfm.text_editor.title": "Text Editor",
+  "gui.sfm.text_editor.toggle_line_numbers_button.tooltip": "Toggle line numbers",
   "gui.sfm.title.labelgun": "Label Gun",
   "gui.sfm.title.program_template_picker": "Program Template Picker",
   "item.sfm.disk": "Factory Manager Program Disk",

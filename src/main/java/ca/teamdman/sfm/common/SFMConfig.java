@@ -35,7 +35,7 @@ public class SFMConfig {
 
         Client(ForgeConfigSpec.Builder builder) {
             showLineNumbers = builder
-                    .define("showLineNumbers", true);
+                    .define("showLineNumbers", false);
         }
     }
 
