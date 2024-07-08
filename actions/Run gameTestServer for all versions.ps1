@@ -38,8 +38,7 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
             .\gradlew.bat runGameTestServer --no-daemon | Tee-Object -FilePath $test_log_file
             # Gradle 
             if ((Get-Content $test_log_file -Raw ) -notlike "*All * required tests passed :)*") {
-                Write-Warning "Test failed for $repo, opening logs"
-                code $test_log_file &
+                Write-Warning "Test failed for $repo, check out `"$test_log_file`" for more information"
                 break
             } else {
                 Write-Host -ForegroundColor Green "All tests passed for $repo"
