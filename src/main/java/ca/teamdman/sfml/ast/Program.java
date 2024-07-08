@@ -57,38 +57,45 @@ public record Program(
         SFMLParser.ProgramContext context = parser.program();
         buildErrors.stream().map(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL::get).forEach(errors::add);
 
+
         // build AST
         Program program = null;
-        try {
-            program = builder.visitProgram(context);
-            // make sure all referenced resources exist now during compilation instead of waiting for the program to tick
+        if (errors.isEmpty()) {
+            try {
+                program = builder.visitProgram(context);
+                // make sure all referenced resources exist now during compilation instead of waiting for the program to tick
 
-            for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {
-                try {
-                    ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
-                    if (resourceType == null) {
-                        errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_UNKNOWN_RESOURCE_TYPE.get(
-                                referencedResource));
+                for (ResourceIdentifier<?, ?, ?> referencedResource : program.referencedResources) {
+                    try {
+                        ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
+                        if (resourceType == null) {
+                            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_UNKNOWN_RESOURCE_TYPE.get(
+                                    referencedResource));
+                        }
+                    } catch (ResourceLocationException e) {
+                        errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(referencedResource));
                     }
-                } catch (ResourceLocationException e) {
-                    errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(referencedResource));
                 }
-            }
-        } catch (ResourceLocationException | IllegalArgumentException | AssertionError e) {
-            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
-        } catch (Throwable t) {
-            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
-            SFM.LOGGER.error("Encountered unhandled error while compiling program", t);
-            if (!FMLEnvironment.production) {
-                var message = t.getMessage();
-                if (message != null) {
-                    errors.add(SFMUtils.getTranslatableContents(t.getClass().getSimpleName() + ": " + message));
-                } else {
-                    errors.add(SFMUtils.getTranslatableContents(t.getClass().getSimpleName()));
+            } catch (ResourceLocationException | IllegalArgumentException | AssertionError e) {
+                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
+            } catch (Throwable t) {
+                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
+                SFM.LOGGER.error("Encountered unhandled error \"{}\" while compiling program\n```\n{}\n```", t, programString);
+                if (!FMLEnvironment.production) {
+                    var message = t.getMessage();
+                    if (message != null) {
+                        errors.add(SFMUtils.getTranslatableContents(t.getClass().getSimpleName() + ": " + message));
+                    } else {
+                        errors.add(SFMUtils.getTranslatableContents(t.getClass().getSimpleName()));
+                    }
                 }
             }
         }
 
+        if (program == null && errors.isEmpty()) {
+            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
+            SFM.LOGGER.error("Program was somehow null after a successful compile. I have no idea how this could happen, but it definitely shouldn't.\n```\n{}\n```", programString);
+        }
 
         if (errors.isEmpty()) {
             onSuccess.accept(program, builder);
