@@ -32,12 +32,6 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
     foreach ($repo in $repo_clones) {
         try {
             Push-Location $repo
-            Write-Host "Running runData for $repo"
-            .\gradlew.bat runData --no-daemon
-            if ($? -eq $false) {
-                Write-Warning "runData failed for ${repo}"
-            }
-
             Write-Host "Running build for $repo"
             .\gradlew.bat build --no-daemon
             if ($? -eq $false) {
