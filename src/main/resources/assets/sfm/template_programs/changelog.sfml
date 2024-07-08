@@ -7,7 +7,7 @@ NAME "Changelog"
 ---- this is caused by other mods not invalidating capabilities
 -- fix label guns sharing internal objects with each other and disks
 ---- this caused disks in managers to get updated without pushing
----- sometimes programs didn't have labels you thought you pushed
+---- sometimes manager disk didn't have labels you thought you pushed
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space
