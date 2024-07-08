@@ -4,7 +4,8 @@ NAME "Changelog"
 
 ---- 4.17.0 ----
 -- fix cache not being invalidated when chunk unloaded
----- this is caused by other mods not invalidating capabilities
+---- this was caused by other mods not invalidating capabilities
+---- this caused managers to stop working (rejoining a server, etc)
 -- fix label guns sharing internal objects with each other and disks
 ---- this caused disks in managers to get updated without pushing
 ---- sometimes manager disk didn't have labels you thought you pushed
