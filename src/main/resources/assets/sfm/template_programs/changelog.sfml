@@ -13,6 +13,8 @@ NAME "Changelog"
 -- remove confirmation screen when overwriting empty program
 -- add client config for showing line numbers
 ---- add toggle button in program edit screen
+-- reduce log spam from syntax errors
+---- build process now properly stops when parsing fails
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space
