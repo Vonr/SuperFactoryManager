@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.resourcetype;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfml.ast.LabelAccess;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -25,6 +26,17 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         this.CAPABILITY_KIND = CAPABILITY_KIND;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ResourceType<?, ?, ?> that)) return false;
+        return Objects.equals(CAPABILITY_KIND, that.CAPABILITY_KIND);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(CAPABILITY_KIND);
+    }
 
     public abstract long getAmount(STACK stack);
 
@@ -65,7 +77,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract boolean matchesCapabilityType(Object o);
 
-    public Stream<CAP> getCapabilities(
+    public Stream<CAP> getAllLabelCapabilities(
             ProgramContext programContext, LabelAccess labelAccess
     ) {
         // TODO: make this return (BlockPos, Direction, CAP) tuples for better logging
@@ -73,7 +85,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         programContext
                 .getLogger()
                 .trace(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_BEGIN.get(
-                        CAPABILITY_KIND.getName(), labelAccess
+                        displayAsCode(), displayAsCapabilityClass(), labelAccess
                 )));
 
         Stream.Builder<CAP> found = Stream.builder();
@@ -82,7 +94,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         // Get positions
         Iterable<BlockPos> positions = labelAccess
                 .roundRobin()
-                .gather(labelAccess, programContext.getlabelPositions())::iterator;
+                .gather(labelAccess, programContext.getLabelPositionHolder())::iterator;
 
         for (BlockPos pos : positions) {
             // Expand pos to (pos, direction) pairs
@@ -95,15 +107,17 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                 if (cap.isPresent()) {
                     // Add to stream
                     found.add(cap.get());
-                    programContext.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT.get(
-                            CAPABILITY_KIND.getName(), pos, dir
-                    )));
+                    programContext
+                            .getLogger()
+                            .debug(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT.get(
+                                    displayAsCapabilityClass(), pos, dir
+                            )));
                 } else {
                     // Log error
                     programContext
                             .getLogger()
                             .error(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT.get(
-                                    CAPABILITY_KIND.getName(), pos, dir
+                                    displayAsCapabilityClass(), pos, dir
                             )));
                 }
             }
@@ -151,5 +165,15 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         return setCount(copy(stack), count);
     }
 
+    public String displayAsCode() {
+        ResourceLocation thisKey = SFMResourceTypes.DEFERRED_TYPES.get().getKey(this);
+        return thisKey != null ? thisKey.toString() : "null";
+    }
+
+    public String displayAsCapabilityClass() {
+        return CAPABILITY_KIND.getName();
+    }
+
     protected abstract STACK setCount(STACK stack, long amount);
+
 }
