@@ -368,35 +368,21 @@ public record Program(
         }
     }
 
-    public int getConditionIndex(IfStatement statement) {
-        Deque<Statement> toVisit = new ArrayDeque<>();
-        toVisit.add(this);
-        int seen = 0;
-        while (!toVisit.isEmpty()) {
-            Statement current = toVisit.pollFirst();
-            if (current instanceof IfStatement ifStatement) {
-                if (ifStatement == statement) {
-                    return seen;
+    public void replaceAllOutputStatements(Function<OutputStatement, OutputStatement> mapper) {
+        Deque<Statement> toPatch = new ArrayDeque<>();
+        toPatch.add(this);
+        while (!toPatch.isEmpty()) {
+            Statement statement = toPatch.pollFirst();
+            List<Statement> children = statement.getStatements();
+            for (int i = 0; i < children.size(); i++) {
+                Statement child = children.get(i);
+                if (child instanceof OutputStatement outputStatement) {
+                    children.set(i, mapper.apply(outputStatement));
+                } else {
+                    toPatch.add(child);
                 }
-                seen++;
             }
-            toVisit.addAll(current.getStatements());
         }
-        return -1;
-    }
-
-    public int getConditionCount() {
-        Deque<Statement> toVisit = new ArrayDeque<>();
-        toVisit.add(this);
-        int seen = 0;
-        while (!toVisit.isEmpty()) {
-            Statement current = toVisit.pollFirst();
-            if (current instanceof IfStatement) {
-                seen++;
-            }
-            toVisit.addAll(current.getStatements());
-        }
-        return seen;
     }
 
     public static class ListErrorListener extends BaseErrorListener {
