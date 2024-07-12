@@ -196,14 +196,17 @@ public class OutputStatement implements IOStatement {
      */
     @Override
     public void tick(ProgramContext context) {
-        // Don't do anything if performing exploration
-        // TODO: move this logic to ast.Block
-        if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return;
-
         // Log the output statement
         context.getLogger().debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT.get(
                 this.toString()
         )));
+
+        // Skip if simulating
+        if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour behaviour)  {
+            behaviour.onOutputStatementExecution(this);
+            return;
+        }
+
 
         /* ################
              INPUT SLOTS
@@ -336,13 +339,8 @@ public class OutputStatement implements IOStatement {
                 .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS.get(
                         toStringPretty()
                 )));
-        // find all the types referenced in the output statement
-        Stream<ResourceType> types = resourceLimits
-                .resourceLimits()
-                .stream()
-                .map(ResourceLimit::resourceId)
-                .map((ResourceIdentifier x) -> x.getResourceType())
-                .distinct();
+
+        Stream<ResourceType> types = resourceLimits.getReferencedResourceTypes();
 
         if (!each) {
             context
@@ -354,8 +352,8 @@ public class OutputStatement implements IOStatement {
                 context
                         .getLogger()
                         .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.CAPABILITY_KIND.getName())));
-                for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
+                                type.displayAsCapabilityClass(), type.displayAsCapabilityClass())));
+                for (var cap : (Iterable<?>) type.getAllLabelCapabilities(context, labelAccess)::iterator) {
                     gatherSlots(context, (ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
                 }
             }
@@ -367,8 +365,8 @@ public class OutputStatement implements IOStatement {
                 context
                         .getLogger()
                         .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.CAPABILITY_KIND.getName())));
-                for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
+                                type.displayAsCapabilityClass(), type.displayAsCapabilityClass())));
+                for (var cap : (Iterable<?>) type.getAllLabelCapabilities(context, labelAccess)::iterator) {
                     List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
                     gatherSlots(context, (ResourceType<Object, Object, Object>) type, cap, outputTracker, acceptor);
                 }
