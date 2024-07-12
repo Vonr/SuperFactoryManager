@@ -28,4 +28,14 @@ NAME "Known issues"
 
 -- scroll bar in the logs gui becomes inaccurate as logs grow
 
+-- FORGET statements always reset input statement trackers
+-- consider the following:
+---- INPUT 5 FROM a,b,c
+---- OUTPUT 1 TO z1
+---- FORGET a
+---- OUTPUT TO z2
+-- 1 item will move to z1, but 5 will incorrectly be moved to z2
+-- usually everyone just does FORGET without specifying a label
+-- so most people won't encounter this
+
 -- Sorry for any inconveniences :(
