@@ -165,7 +165,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void rebuildProgramAndUpdateDisk() {
         if (level != null && level.isClientSide()) return;
         this.program = getDisk()
-                .flatMap(itemStack -> DiskItem.compileAndUpdateAttributes(itemStack, this))
+                .flatMap(itemStack -> DiskItem.compileAndUpdateErrorsAndWarnings(itemStack, this))
                 .orElse(null);
         sendUpdatePacket();
     }
