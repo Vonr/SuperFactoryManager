@@ -1,6 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 
 public record RedstoneTrigger(
         Block block
@@ -15,11 +16,14 @@ public record RedstoneTrigger(
         for (int i = 0; i < context.getRedstonePulses(); i++) {
             block.tick(context);
         }
+        if (context.getBehaviour() instanceof  SimulateExploreAllPathsProgramBehaviour simulation) {
+            simulation.onTriggerDropped(context);
+        }
     }
 
     @Override
     public boolean shouldTick(ProgramContext context) {
-        if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return true;
+        if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour) return true;
         return context.getManager().getUnprocessedRedstonePulseCount() > 0;
     }
 
