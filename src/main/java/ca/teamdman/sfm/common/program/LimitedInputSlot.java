@@ -77,7 +77,7 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
     public String toString() {
         return "LimitedInputSlot{" +
                "slot=" + slot +
-               ", cap=" + type.CAPABILITY_KIND.getName() +
+               ", cap=" + type.displayAsCapabilityClass() +
 //               ", extractSimulateCache=" + extractSimulateCache +
                ", tracker=" + tracker +
                '}';
