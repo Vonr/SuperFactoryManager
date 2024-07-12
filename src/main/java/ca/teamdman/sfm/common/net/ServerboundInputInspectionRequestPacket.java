@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.InputStatement;
@@ -69,7 +70,7 @@ public record ServerboundInputInspectionRequestPacket(
                                 ProgramContext context = new ProgramContext(
                                         successProgram,
                                         manager,
-                                        ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES
+                                        new SimulateExploreAllPathsProgramBehaviour()
                                 );
                                 int preLen = payload.length();
                                 inputStatement.gatherSlots(
