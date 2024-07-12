@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfml.ast.Block;
+import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.Trigger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestAssertException;
@@ -22,6 +23,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
@@ -30,6 +32,21 @@ public abstract class SFMGameTestBase {
         if (!condition) {
             throw new GameTestAssertException(message);
         }
+    }
+
+    protected static Program compile(String code) {
+        AtomicReference<Program> rtn = new AtomicReference<>();
+        Program.compile(
+                code,
+                (program, builder) -> rtn.set(program),
+                errors -> {
+                    throw new GameTestAssertException("Failed to compile program: " + errors
+                            .stream()
+                            .map(Object::toString)
+                            .reduce("", (a, b) -> a + "\n" + b));
+                }
+        );
+        return rtn.get();
     }
 
     protected static void succeedIfManagerDidThingWithoutLagging(
