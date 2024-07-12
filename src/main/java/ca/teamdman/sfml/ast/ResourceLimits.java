@@ -2,10 +2,12 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.program.InputResourceTracker;
 import ca.teamdman.sfm.common.program.OutputResourceTracker;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public record ResourceLimits(
         List<? extends ResourceLimit<?, ?, ?>> resourceLimits,
@@ -29,6 +31,15 @@ public record ResourceLimits(
 
     public ResourceLimits withExclusions(ResourceIdSet exclusions) {
         return new ResourceLimits(resourceLimits, exclusions);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public Stream<ResourceType> getReferencedResourceTypes() {
+        return resourceLimits()
+                .stream()
+                .map(ResourceLimit::resourceId)
+                .map((ResourceIdentifier x) -> x.getResourceType())
+                .distinct();
     }
 
     @Override
