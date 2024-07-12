@@ -15,6 +15,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -156,7 +157,9 @@ public record Program(
 
             // Perform tick
             if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
-                for (int i = 0; i < Math.max(1, Math.pow(2,trigger.getConditionCount())); i++) {
+                int numPossibleStates = (int) Math.max(1, Math.pow(2, trigger.getConditionCount()));
+                throw new NotImplementedException("add common config for max limit before linting turns off");
+                for (int i = 0; i < numPossibleStates; i++) {
                     ProgramContext forkedContext = context.fork();
                     trigger.tick(forkedContext);
                     forkedContext.free();
