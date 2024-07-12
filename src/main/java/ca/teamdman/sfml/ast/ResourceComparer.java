@@ -17,7 +17,7 @@ public record ResourceComparer<STACK, ITEM, CAP>(
                     if (type == null) return false;
                     // get the inventories to check
 
-                    var handlers = type.getCapabilities(context, labelAccess);
+                    var handlers = type.getAllLabelCapabilities(context, labelAccess);
 
                     // track how many items seen
                     long overallCount = 0;
