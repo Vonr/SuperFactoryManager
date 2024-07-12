@@ -26,6 +26,13 @@ public class LabelPositionHolder {
     }
 
 
+    /**
+     * Get the label position holder for this disk.
+     * <p>
+     * Saves it in the cache for faster future lookups.
+     * <p>
+     * This mutably borrows the cache entry.
+     */
     public static LabelPositionHolder from(ItemStack stack) {
         return CACHE.computeIfAbsent(stack, s -> {
             var tag = stack.getOrCreateTag().getCompound("sfm:labels");
@@ -55,9 +62,10 @@ public class LabelPositionHolder {
         return labels;
     }
 
-    public void save(ItemStack stack) {
+    public LabelPositionHolder save(ItemStack stack) {
         stack.getOrCreateTag().put("sfm:labels", serialize());
         CACHE.put(stack, new LabelPositionHolder(this));
+        return this;
     }
 
     public static void purge(ItemStack stack) {
