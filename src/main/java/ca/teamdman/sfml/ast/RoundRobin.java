@@ -1,9 +1,7 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import net.minecraft.core.BlockPos;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -21,15 +19,8 @@ public class RoundRobin implements ASTNode {
         return new RoundRobin(Behaviour.UNMODIFIED);
     }
 
-    public @Nullable Constants.LocalizationKeys.LocalizationEntry getSmell(LabelAccess labelAccess, boolean each) {
-        if (behaviour == Behaviour.BY_BLOCK && each) {
-            return Constants.LocalizationKeys.PROGRAM_WARNING_ROUND_ROBIN_SMELLY_EACH;
-        }
-        if (behaviour == Behaviour.BY_LABEL && labelAccess.labels().size() == 1) {
-            return Constants.LocalizationKeys.PROGRAM_WARNING_ROUND_ROBIN_SMELLY_COUNT;
-        }
-
-        return null;
+    public Behaviour getBehaviour() {
+        return behaviour;
     }
 
     public Stream<BlockPos> gather(LabelAccess labelAccess, LabelPositionHolder labelPositions) {
