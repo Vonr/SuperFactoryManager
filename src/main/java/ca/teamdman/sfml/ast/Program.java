@@ -3,27 +3,24 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.program.LabelPositionHolder;
+import ca.teamdman.sfm.common.program.DefaultProgramBehaviour;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public record Program(
         String name,
@@ -104,130 +101,13 @@ public record Program(
         }
     }
 
-    public ArrayList<TranslatableContents> gatherWarnings(ItemStack disk, @Nullable ManagerBlockEntity manager) {
-        var warnings = new ArrayList<TranslatableContents>();
-        var labels = LabelPositionHolder.from(disk);
-        // labels in code but not in world
-        for (String label : referencedLabels) {
-            var isUsed = !labels.getPositions(label).isEmpty();
-            if (!isUsed) {
-                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_LABEL.get(label));
-            }
-        }
-
-        // labels used in world but not defined in code
-        labels.get().keySet()
-                .stream()
-                .filter(x -> !referencedLabels.contains(x))
-                .forEach(label -> warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNDEFINED_LABEL.get(label)));
-
-        var level = manager != null ? manager.getLevel() : null;
-        if (level != null) {
-            // labels in world but not connected via cables
-            CableNetworkManager
-                    .getOrRegisterNetworkFromManagerPosition(manager)
-                    .ifPresent(network -> labels.forEach((label, pos) -> {
-                        var adjacent = network.isAdjacentToCable(pos);
-                        if (!adjacent) {
-                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_DISCONNECTED_LABEL.get(
-                                    label,
-                                    String.format(
-                                            "[%d,%d,%d]",
-                                            pos.getX(),
-                                            pos.getY(),
-                                            pos.getZ()
-                                    )
-                            ));
-                        }
-                        var viable = SFMUtils.discoverCapabilityProvider(level, pos).isPresent();
-                        if (!viable && adjacent) {
-                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_CONNECTED_BUT_NOT_VIABLE_LABEL.get(
-                                    label,
-                                    String.format(
-                                            "[%d,%d,%d]",
-                                            pos.getX(),
-                                            pos.getY(),
-                                            pos.getZ()
-                                    )
-                            ));
-                        }
-                    }));
-        }
-
-        // try and validate that references resources exist
-        for (var resource : referencedResources) {
-            // skip regex resources
-            Optional<ResourceLocation> loc = resource.getLocation();
-            if (loc.isEmpty()) continue;
-
-            // make sure resource type is registered
-            var type = resource.getResourceType();
-            if (type == null) {
-                SFM.LOGGER.error("Resource type not found for resource: {}, should have been validated at program compile", resource);
-                continue;
-            }
-
-            // make sure resource exists in the registry
-            if (!type.registryKeyExists(loc.get())) {
-                warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_UNKNOWN_RESOURCE_ID.get(resource));
-            }
-        }
-
-        // check for poor round-robin usage
-        getDescendantStatements()
-                .filter(IOStatement.class::isInstance)
-                .map(IOStatement.class::cast)
-                .forEach(statement -> {
-                    { // round robin smells
-                        var smell = statement
-                                .labelAccess()
-                                .roundRobin()
-                                .getSmell(statement.labelAccess(), statement.each());
-                        if (smell != null) {
-                            warnings.add(smell.get(statement.toStringPretty()));
-                        }
-                    }
-                    { // resource each without pattern
-                        boolean smells = statement
-                                .resourceLimits()
-                                .resourceLimits()
-                                .stream()
-                                .anyMatch(rl -> rl.limit().quantity().idExpansionBehaviour()
-                                                == ResourceQuantity.IdExpansionBehaviour.EXPAND && !rl
-                                        .resourceId()
-                                        .usesRegex());
-                        if (smells) {
-                            warnings.add(Constants.LocalizationKeys.PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN.get(
-                                    statement.toStringPretty()
-                            ));
-                        }
-                    }
-                });
-        return warnings;
-    }
-
-    public void fixWarnings(ItemStack disk, ManagerBlockEntity manager) {
-        var labels = LabelPositionHolder.from(disk);
-        // remove labels not defined in code
-        labels.removeIf(label -> !referencedLabels.contains(label));
-
-        // remove labels not connected via cables
-        CableNetworkManager
-                .getOrRegisterNetworkFromManagerPosition(manager)
-                .ifPresent(network -> labels.removeIf((label, pos) -> !network.isAdjacentToCable(pos)));
-        labels.save(disk);
-
-        // update warnings
-        DiskItem.setWarnings(disk, gatherWarnings(disk, manager));
-    }
-
     /**
      * Create a context and tick the program.
      *
      * @return {@code true} if a trigger entered its body
      */
     public boolean tick(ManagerBlockEntity manager) {
-        var context = new ProgramContext(this, manager, ProgramContext.ExecutionPolicy.UNRESTRICTED);
+        var context = new ProgramContext(this, manager, new DefaultProgramBehaviour());
 
         // log if there are unprocessed redstone pulses
         int unprocessedRedstonePulseCount = manager.getUnprocessedRedstonePulseCount();
@@ -246,14 +126,15 @@ public record Program(
 
     @Override
     public List<Statement> getStatements() {
-        return triggers.stream().map(x -> (Statement) x).toList();
+        //noinspection unchecked
+        return (List<Statement>) (List<? extends Statement>) triggers;
     }
 
     @Override
     public void tick(ProgramContext context) {
-        for (Trigger t : triggers) {
+        for (Trigger trigger : triggers) {
             // Only process triggers that should tick
-            if (!t.shouldTick(context)) {
+            if (!trigger.shouldTick(context)) {
                 continue;
             }
 
@@ -270,20 +151,47 @@ public record Program(
                         ss.toStringShort())));
             }
 
-            // Perform and measure tick
+            // Start stopwatch
             long start = System.nanoTime();
-            ProgramContext forkedContext = context.copy();
-            t.tick(forkedContext);
-            forkedContext.free();
+
+            // Perform tick
+            if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
+                for (int i = 0; i < Math.max(1, Math.pow(2,trigger.getConditionCount())); i++) {
+                    ProgramContext forkedContext = context.fork();
+                    trigger.tick(forkedContext);
+                    forkedContext.free();
+                    simulation.terminatePathAndBeginAnew();
+                }
+                simulation.prepareNextTrigger();
+            } else {
+                ProgramContext forkedContext = context.fork();
+                trigger.tick(forkedContext);
+                forkedContext.free();
+            }
+
+            // End stopwatch
             long nanoTimePassed = System.nanoTime() - start;
 
             // Log trigger time
             context.getLogger().info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_MS.get(
                     nanoTimePassed / 1_000_000.0,
-                    t.toString()
+                    trigger.toString()
             )));
-
         }
+
+        if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
+            simulation.onProgramFinished(this);
+        }
+    }
+
+    public int getConditionIndex(IfStatement ifStatement) {
+        for (Trigger trigger : triggers) {
+            int conditionIndex = trigger.getConditionIndex(ifStatement);
+            if (conditionIndex != -1) {
+                return conditionIndex;
+            }
+        }
+        return -1;
     }
 
     private static @NotNull Consumer<Consumer<TranslatableContents>> getTraceLogWriter(ProgramContext context) {
@@ -319,7 +227,7 @@ public record Program(
             trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER.get());
             //noinspection DataFlowIssue
             context
-                    .getlabelPositions()
+                    .getLabelPositionHolder()
                     .get()
                     .forEach((label, positions) -> positions
                             .stream()
