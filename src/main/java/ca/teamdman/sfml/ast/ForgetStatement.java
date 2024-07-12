@@ -3,6 +3,7 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,13 @@ public record ForgetStatement(
 //            newInputs.add(newInputStatement);
 //        }
 
+        throw new NotImplementedException("todo");
+        // add test for the free below causing problems
+        // INPUT 32 FROM a, b
+        // OUTPUT 1 TO c
+        // FORGET a
+        // OUTPUT TO d -- should only move 31, I predict will move 32
+        // solve problems by transferring slots before destroying old
 
         // map-replace existing inputs with ones that exclude the union of the label access
         context.free();
