@@ -7,7 +7,9 @@ import com.google.common.collect.Multimap;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.chat.contents.TranslatableContents;
 
+import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -26,19 +28,29 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
         this.sharedMultiverseWarningDisplay = sharedMultiverseWarningDisplay;
         this.sharedMultiverseWarningsByPath = new ArrayList<>();
     }
-    public GatherWarningsProgramBehaviour(Consumer<Collection<TranslatableContents>> sharedMultiverseWarningDisplay, List<Pair<ExecutionPath, List<TranslatableContents>>> sharedMultiverseWarningsByPath) {
+
+    public GatherWarningsProgramBehaviour(
+            List<ExecutionPath> seenPaths,
+            ExecutionPath currentPath,
+            AtomicReference<BigInteger> triggerPathCount,
+            Consumer<Collection<TranslatableContents>> sharedMultiverseWarningDisplay,
+            List<Pair<ExecutionPath, List<TranslatableContents>>> sharedMultiverseWarningsByPath,
+            List<TranslatableContents> warnings
+    ) {
+        super(seenPaths, currentPath, triggerPathCount);
+        this.warnings.addAll(warnings);
         this.sharedMultiverseWarningDisplay = sharedMultiverseWarningDisplay;
         this.sharedMultiverseWarningsByPath = sharedMultiverseWarningsByPath;
     }
 
+
     @Override
     public ProgramBehaviour fork() {
-        var copy = new GatherWarningsProgramBehaviour(sharedMultiverseWarningDisplay, sharedMultiverseWarningsByPath);
-        copy.warnings.addAll(this.warnings);
-        copy.seenPaths = this.seenPaths; // share the reference
-        copy.currentPath = this.currentPath.fork();
-        copy.triggerPathCount = this.triggerPathCount;
-        return copy;
+        return new GatherWarningsProgramBehaviour(
+                this.seenPaths, this.currentPath, this.triggerPathCount, this.sharedMultiverseWarningDisplay,
+                this.sharedMultiverseWarningsByPath,
+                this.warnings
+        );
     }
 
     @Override
@@ -103,7 +115,7 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
                 // if the label was never used, warn
                 if (!resourceTypesOutputted.contains(resourceType)) {
                     warnings.add(PROGRAM_WARNING_UNUSED_INPUT_LABEL.get(
-                            old, resourceType.displayAsCode(), label,resourceType.displayAsCode()));
+                            old, resourceType.displayAsCode(), label, resourceType.displayAsCode()));
                 }
                 // mark as no longer active
                 resourceTypesInputted.remove(resourceType, label);
@@ -112,9 +124,14 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
     }
 
     @Override
-    public void free() {
+    public void terminatePathAndBeginAnew() {
         // save the path and its warnings
         sharedMultiverseWarningsByPath.add(Pair.of(currentPath, new ArrayList<>(warnings)));
+
+        // default path push and clear
+        super.terminatePathAndBeginAnew();
+
+        // clear warnings to start fresh on this new path
         warnings.clear();
     }
 
@@ -141,7 +158,7 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
                 // if the label was never used, warn
                 if (!resourceTypesOutputted.contains(resourceType)) {
                     warnings.add(PROGRAM_WARNING_UNUSED_INPUT_LABEL.get(
-                            inputStatement, resourceType.displayAsCode(), label,resourceType.displayAsCode()));
+                            inputStatement, resourceType.displayAsCode(), label, resourceType.displayAsCode()));
                 }
                 // mark as no longer active
                 resourceTypesInputted.remove(resourceType, label);
@@ -165,9 +182,9 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
         }
 
         // second pass - remove warning on miss
-//        for (var path: warningsByPath) {
-//            seen.retainAll(path.getSecond());
-//        }
+        for (var path : sharedMultiverseWarningsByPath) {
+            seen.retainAll(path.getSecond());
+        }
 
         // return true warnings
         sharedMultiverseWarningDisplay.accept(seen);

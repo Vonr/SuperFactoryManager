@@ -6,8 +6,4 @@ public class DefaultProgramBehaviour implements ProgramBehaviour {
         return this; // this is stateless so this should be fine
     }
 
-    @Override
-    public void free() {
-
-    }
 }

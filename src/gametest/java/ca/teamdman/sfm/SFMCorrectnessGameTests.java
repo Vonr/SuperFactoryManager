@@ -3124,7 +3124,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 simulation
         ));
 
-        List<Integer> expectedPathSizes = new ArrayList<>(List.of(2,3));
+        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1,2));
         assertTrue(simulation.getSeenPaths().size() == expectedPathSizes.size(), "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size());
         int[] actualPathIOSizes = simulation.getSeenIOStatementCountForEachPath();
         // don't assume the order, just that each path size has occurred the specified number of times
@@ -3183,7 +3183,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 0,
                 simulation
         ));
-        List<Integer> expectedPathSizes = new ArrayList<>(List.of(3,4,4,5));
+        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1,2,2,3));
         assertTrue(simulation.getSeenPaths().size() == expectedPathSizes.size(), "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size());
         int[] actualPathIOSizes = simulation.getSeenIOStatementCountForEachPath();
         // don't assume the order, just that each path size has occurred the specified number of times
@@ -3259,7 +3259,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(warnings
                            .get(0)
                            .getKey()
-                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_OUTPUT_RESOURCE_TYPE_NOT_FOUND_IN_INPUTS // should be unused input
+                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
                                            .key()
                                            .get()), "expected output without matching input warning");
         helper.succeed();
@@ -3292,8 +3292,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // set the program
         String code = """
                     EVERY 20 TICKS DO
-                        IF a HAS > 0 dirt THEN
-                            INPUT FROM a
+                        IF a HAS = 64 dirt THEN
+                            INPUT RETAIN 32 FROM a
                         END
                         OUTPUT TO b
                     END
@@ -3320,7 +3320,22 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         //noinspection TrailingWhitespacesInTextBlock
         String expected = """
-                todo
+                OUTPUT  TO b
+                -- predictions may differ from actual execution results
+                -- POSSIBILITY 0 -- all false
+                OVERALL a HAS = 64 dirt -- false
+                                
+                    -- predicted inputs:
+                    none
+                    -- predicted outputs:
+                    none
+                -- POSSIBILITY 1 -- all true
+                OVERALL a HAS = 64 dirt -- true
+                                
+                    -- predicted inputs:
+                    INPUT 32 minecraft:dirt FROM a SLOTS 0
+                    -- predicted outputs:
+                    OUTPUT 32 minecraft:dirt TO b
                 """.stripLeading().stripIndent().stripTrailing();
         if (!inspectionResults.equals(expected)) {
             System.out.println("Received results:");
@@ -3340,8 +3355,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt did not move");
-            assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt did not move");
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 32, "Dirt did not depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 32, "Dirt did not arrive");
         });
     }
 }

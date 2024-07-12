@@ -9,29 +9,40 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour {
     protected List<ExecutionPath> seenPaths = new ArrayList<>();
     protected ExecutionPath currentPath = new ExecutionPath();
-    protected BigInteger triggerPathCount = BigInteger.ZERO;
+    protected AtomicReference<BigInteger> triggerPathCount = new AtomicReference<>(BigInteger.ZERO);
 
     public SimulateExploreAllPathsProgramBehaviour() {
+    }
+
+    public SimulateExploreAllPathsProgramBehaviour(
+            List<ExecutionPath> seenPaths,
+            ExecutionPath currentPath,
+            AtomicReference<BigInteger> triggerPathCount
+    ) {
+        this.seenPaths = seenPaths;
+        this.currentPath = currentPath.fork();
+        this.triggerPathCount = triggerPathCount;
     }
 
     public void terminatePathAndBeginAnew() {
         seenPaths.add(currentPath);
         currentPath = new ExecutionPath();
-        triggerPathCount = triggerPathCount.add(BigInteger.ONE);
+        triggerPathCount.set(triggerPathCount.get().add(BigInteger.ONE));
     }
 
     public BigInteger getTriggerPathCount() {
-        return triggerPathCount;
+        return triggerPathCount.get();
     }
 
     public void prepareNextTrigger() {
-        triggerPathCount = BigInteger.ZERO;
+        triggerPathCount.set(BigInteger.ZERO);
     }
 
     public void pushPathElement(ExecutionPathElement statement) {
@@ -59,15 +70,7 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
 
     @Override
     public ProgramBehaviour fork() {
-        var copy = new SimulateExploreAllPathsProgramBehaviour();
-        copy.seenPaths = this.seenPaths; // share the reference
-        copy.currentPath = this.currentPath.fork();
-        return this;
-    }
-
-    @Override
-    public void free() {
-
+        return new SimulateExploreAllPathsProgramBehaviour(this.seenPaths, this.currentPath, this.triggerPathCount);
     }
 
     public ExecutionPath getCurrentPath() {

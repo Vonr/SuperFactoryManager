@@ -132,7 +132,6 @@ public class ProgramContext {
         for (int i = INPUTS.size() - 1; i >= 0; i--) {
             INPUTS.get(i).freeSlots();
         }
-        getBehaviour().free();
     }
 
 

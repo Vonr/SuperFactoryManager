@@ -160,7 +160,7 @@ public record Program(
                     ProgramContext forkedContext = context.fork();
                     trigger.tick(forkedContext);
                     forkedContext.free();
-                    simulation.terminatePathAndBeginAnew();
+                    ((SimulateExploreAllPathsProgramBehaviour) forkedContext.getBehaviour()).terminatePathAndBeginAnew();
                 }
                 simulation.prepareNextTrigger();
             } else {
