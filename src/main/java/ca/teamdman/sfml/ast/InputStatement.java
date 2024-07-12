@@ -1,16 +1,14 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.Constants;
-import ca.teamdman.sfm.common.program.InputResourceTracker;
-import ca.teamdman.sfm.common.program.LimitedInputSlot;
-import ca.teamdman.sfm.common.program.LimitedInputSlotObjectPool;
-import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,7 +17,7 @@ public final class InputStatement implements IOStatement {
     private final LabelAccess labelAccess;
     private final ResourceLimits resourceLimits;
     private final boolean each;
-    private @Nullable ArrayDeque<LimitedInputSlot<?, ?, ?>> cachedInputSlots = null;
+    private @Nullable ArrayDeque<LimitedInputSlot<?, ?, ?>> limitedInputSlotsCache = null;
     private int inputCheck = -2;
 
     public InputStatement(
@@ -38,73 +36,95 @@ public final class InputStatement implements IOStatement {
         context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_INPUT_STATEMENT.get(
                 toString()
         )));
+
+        // Track simulation
+        if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
+            simulation.onInputStatementExecution(this);
+        }
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
-    public void gatherSlots(ProgramContext context, Consumer<LimitedInputSlot<?, ?, ?>> acceptor) {
+    public void gatherSlots(ProgramContext context, Consumer<LimitedInputSlot<?, ?, ?>> acceptResult) {
         context
                 .getLogger()
                 .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS.get(
                         toStringPretty()
                 )));
-        if (cachedInputSlots != null) {
+
+        // do we have a cached result?
+        if (limitedInputSlotsCache != null) {
+            // log cache hit
             context
                     .getLogger()
                     .trace(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_HIT.get()));
-            cachedInputSlots.forEach(acceptor);
+            // return cached results
+            limitedInputSlotsCache.forEach(acceptResult);
             return;
         }
 
+        // log cache miss
         context
                 .getLogger()
                 .trace(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_MISS.get()));
-        cachedInputSlots = new ArrayDeque<>();
-        var oldAcceptor = acceptor;
-        acceptor = slot -> {
-            cachedInputSlots.add(slot);
-            oldAcceptor.accept(slot);
+
+        // prepare cache state
+        limitedInputSlotsCache = new ArrayDeque<>();
+
+        // monkey patch the results acceptor to update the cache before returning results
+        var finalAcceptor = acceptResult;
+        acceptResult = slot -> {
+            limitedInputSlotsCache.add(slot);
+            finalAcceptor.accept(slot);
         };
 
-        Stream<ResourceType> types = resourceLimits
-                .resourceLimits()
-                .stream()
-                .map(ResourceLimit::resourceId)
-                .map((ResourceIdentifier x) -> x.getResourceType())
-                .distinct();
+        // identify distinct resource types for capability gathering
+        Set<ResourceType> referencedResourceTypes = resourceLimits.getReferencedResourceTypes().collect(Collectors.toSet());
 
         if (!each) {
+            // log not each
             context
                     .getLogger()
                     .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
+
             // create a single matcher to be shared by all capabilities
             List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
-            for (var type : (Iterable<ResourceType>) types::iterator) {
+            for (var type : referencedResourceTypes) {
+                // log gather for resource type
                 context
                         .getLogger()
                         .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.CAPABILITY_KIND.getName())));
-                for (var capability : (Iterable) type.getCapabilities(context, labelAccess)::iterator) {
+                                type.displayAsCapabilityClass(), type.displayAsCapabilityClass())));
+
+                // gather slots for each capability found for positions tagged by a provided label
+                Stream foundCapabilities = type.getAllLabelCapabilities(context, labelAccess);
+                for (var capability : (Iterable) foundCapabilities::iterator) {
                     gatherSlots(
                             context,
                             (ResourceType<Object, Object, Object>) type,
                             capability,
                             inputTrackers,
-                            acceptor
+                            acceptResult
                     );
                 }
             }
         } else {
+            // log yes each
             context
                     .getLogger()
                     .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
-            for (ResourceType type : (Iterable<ResourceType>) types::iterator) {
+
+            for (ResourceType type : referencedResourceTypes) {
+                // log gather for resource type
                 context
                         .getLogger()
                         .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.CAPABILITY_KIND.getName())));
-                for (var cap : (Iterable<?>) type.getCapabilities(context, labelAccess)::iterator) {
+                                type.displayAsCapabilityClass(), type.displayAsCapabilityClass())));
+
+                // gather slots for each capability found for positions tagged by a provided label
+                Stream foundCapabilities = type.getAllLabelCapabilities(context, labelAccess);
+                for (var cap : (Iterable<?>) foundCapabilities::iterator) {
                     List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
-                    gatherSlots(context, (ResourceType<Object, Object, Object>) type, cap, inputTrackers, acceptor);
+                    gatherSlots(context, (ResourceType<Object, Object, Object>) type, cap, inputTrackers, acceptResult);
                 }
             }
         }
@@ -178,17 +198,29 @@ public final class InputStatement implements IOStatement {
      * to keep their counts when used by multiple output statements.
      */
     public void freeSlots() {
-        if (cachedInputSlots != null) {
+        if (limitedInputSlotsCache != null) {
             if (inputCheck == -2) {
                 throw new IllegalStateException("Input slots were not gathered before freeing");
             }
             LimitedInputSlotObjectPool.INSTANCE.release(
-                    cachedInputSlots,
+                    limitedInputSlotsCache,
                     inputCheck
             );
-            cachedInputSlots = null;
+            limitedInputSlotsCache = null;
             inputCheck = -2;
         }
+    }
+
+    public void transferSlotsTo(InputStatement other) {
+        if (limitedInputSlotsCache != null) {
+            if (other.limitedInputSlotsCache == null) {
+                other.limitedInputSlotsCache = new ArrayDeque<>();
+            }
+            other.limitedInputSlotsCache.addAll(limitedInputSlotsCache);
+        }
+        other.inputCheck = inputCheck;
+        limitedInputSlotsCache = null;
+        inputCheck = -2;
     }
 
     private <STACK, ITEM, CAP> void gatherSlots(
