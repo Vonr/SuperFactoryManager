@@ -65,8 +65,7 @@ public class DiskItem extends Item {
         Program.compile(
                 getProgram(stack),
                 (successProgram, builder) -> {
-                    ArrayList<TranslatableContents> warnings = successProgram.gatherWarnings(stack, manager);
-                    List<TranslatableContents> errors = Collections.emptyList();
+                    ArrayList<TranslatableContents> warnings = ProgramLinter.gatherWarnings(successProgram, LabelPositionHolder.from(stack), manager);
 
                     // Log to disk
                     if (manager != null) {
