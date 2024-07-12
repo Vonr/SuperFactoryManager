@@ -1,7 +1,9 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -14,23 +16,25 @@ public record IfStatement(
     @Override
     public void tick(ProgramContext context) {
         Predicate<ProgramContext> condition = this.condition;
-        if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) {
+        boolean test;
+        if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
             condition = ctx -> {
                 int conditionIndex = ctx.getProgram().getConditionIndex(this);
-                return (ctx.getExplorationBranchIndex() & (1 << conditionIndex)) != 0;
+                if (conditionIndex == -1) {
+                    SFM.LOGGER.warn("Condition index not found for {}", this);
+                }
+                return simulation.getTriggerPathCount().testBit(conditionIndex);
             };
+            test = condition.test(context);
+            simulation.pushPathElement(new SimulateExploreAllPathsProgramBehaviour.Branch(this, test));
+        } else {
+            test = condition.test(context);
         }
 
-        if (condition.test(context)) {
-            context.pushPath(new ProgramContext.Branch(this, true));
-            context.getLogger().debug(x -> x.accept(
-                    Constants.LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE.get(this.condition.sourceCode())));
-            trueBlock.tick(context);
+        if (test) {
+            tickTrueBlock(context);
         } else {
-            context.pushPath(new ProgramContext.Branch(this, false));
-            context.getLogger().debug(x -> x.accept(
-                    Constants.LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE.get(this.condition.sourceCode())));
-            falseBlock.tick(context);
+            tickFalseBlock(context);
         }
     }
 
@@ -52,5 +56,17 @@ public record IfStatement(
     @Override
     public String toStringShort() {
         return condition.toString();
+    }
+
+    private void tickFalseBlock(ProgramContext context) {
+        context.getLogger().debug(x -> x.accept(
+                Constants.LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE.get(this.condition.sourceCode())));
+        falseBlock.tick(context);
+    }
+
+    private void tickTrueBlock(ProgramContext context) {
+        context.getLogger().debug(x -> x.accept(
+                Constants.LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE.get(this.condition.sourceCode())));
+        trueBlock.tick(context);
     }
 }
