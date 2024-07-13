@@ -41,17 +41,6 @@ public class LimitedInputSlotObjectPool {
 
     /**
      * Release a {@link LimitedInputSlot} back into the pool for it to be reused instead of garbage collected
-     */
-    public void release(LimitedInputSlot<?, ?, ?> obj) {
-        if (index == pool.length - 1) {
-            // we need to grow the array
-            pool = Arrays.copyOf(pool, pool.length * 2);
-        }
-        pool[++index] = obj;
-    }
-
-    /**
-     * Release a {@link LimitedInputSlot} back into the pool for it to be reused instead of garbage collected
      * <p>
      * After acquiring slots, the end the index after release should be {@code check + slots.size()}
      */
