@@ -3175,6 +3175,47 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
     @GameTest(template = "3x2x1", batch="linting")
+    public static void count_execution_paths_conditional_1b(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // set the labels
+        LabelPositionHolder labelPositionHolder = LabelPositionHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           IF left HAS gt 0 stone THEN
+                                               INPUT FROM left
+                                           END
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+        var program = manager.getProgram().get();
+
+        // ensure no warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.size() == 1, "expected 1 warning, got " + warnings.size());
+        assertTrue(warnings
+                           .get(0)
+                           .getKey()
+                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
+                                           .key()
+                                           .get()), "expected output without matching input warning");
+        helper.succeed();
+    }
+    @GameTest(template = "3x2x1", batch="linting")
     public static void count_execution_paths_conditional_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
