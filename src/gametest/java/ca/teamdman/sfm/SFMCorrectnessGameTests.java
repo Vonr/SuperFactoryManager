@@ -2871,7 +2871,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3", batch = "laggy")
+    @GameTest(template = "3x4x3")
     public static void move_on_pulse(GameTestHelper helper) {
         var managerPos = new BlockPos(1, 2, 1);
         var buttonPos = managerPos.offset(Direction.NORTH.getNormal());
@@ -2922,7 +2922,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.pressButton(buttonPos);
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", batch="linting")
     public static void count_execution_paths_1(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -2968,7 +2968,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", batch="linting")
     public static void count_execution_paths_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3020,7 +3020,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", batch="linting")
     public static void count_execution_paths_3(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3080,7 +3080,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", batch="linting")
     public static void count_execution_paths_conditional_1(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3136,7 +3136,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
         helper.succeed();
     }
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", batch="linting")
     public static void count_execution_paths_conditional_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3196,7 +3196,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", batch="linting")
     public static void unused_io_warning_output_label_not_presnet_in_input(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3231,7 +3231,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", batch="linting")
     public static void unused_io_warning_input_label_not_present_in_output(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3266,7 +3266,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", batch="linting")
     public static void conditional_output_inspection(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
