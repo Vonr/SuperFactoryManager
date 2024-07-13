@@ -252,9 +252,6 @@ public class OutputStatement implements IOStatement {
         // Update allocation hint
         lastOutputCapacity = outputSlots.size();
 
-        // Get assertion hint
-        int outputCheck = LimitedOutputSlotObjectPool.INSTANCE.getIndex();
-
         // Log the number of output slots
         context
                 .getLogger()
@@ -270,7 +267,7 @@ public class OutputStatement implements IOStatement {
                     .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_OUTPUT_STATEMENT_SHORT_CIRCUIT_NO_OUTPUT_SLOTS.get()));
 
             // Free the output slots (we acquired no slots but the assertion is still valid)
-            LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots, outputCheck);
+            LimitedOutputSlotObjectPool.release(outputSlots);
 
             // Stop processing
             return;
@@ -297,9 +294,7 @@ public class OutputStatement implements IOStatement {
                     // Make sure we don't process this slot again
                     outputSlotIter.remove(); // IMPORTANT!!!!! DONT FREE SLOTS TWICE WHEN FREEING REMAINDER BELOW
                     // Release it
-                    LimitedOutputSlotObjectPool.INSTANCE.release(outputSlot);
-                    // Update the output check
-                    outputCheck++;
+                    LimitedOutputSlotObjectPool.release(outputSlot);
                     // Try again
                     continue;
                 }
@@ -321,7 +316,7 @@ public class OutputStatement implements IOStatement {
            ################ */
 
         // Release remaining slot objects
-        LimitedOutputSlotObjectPool.INSTANCE.release(outputSlots, outputCheck);
+        LimitedOutputSlotObjectPool.release(outputSlots);
     }
 
     /**
@@ -459,7 +454,7 @@ public class OutputStatement implements IOStatement {
                                     .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
                                             finalSlot, stack, tracker.toString())));
                             //noinspection unchecked
-                            acceptor.accept(LimitedOutputSlotObjectPool.INSTANCE.acquire(
+                            acceptor.accept(LimitedOutputSlotObjectPool.acquire(
                                     capability,
                                     slot,
                                     (OutputResourceTracker<STACK, ITEM, CAP>) tracker,

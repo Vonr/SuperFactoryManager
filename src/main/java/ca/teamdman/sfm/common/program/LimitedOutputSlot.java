@@ -10,6 +10,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public CAP handler;
     public int slot;
+    public boolean freed;
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public OutputResourceTracker<STACK, ITEM, CAP> tracker;
     private @Nullable STACK stackInSlotCache = null;
@@ -55,6 +56,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
+        this.freed = false;
         //noinspection DataFlowIssue
         this.type = tracker.getLimit().resourceId().getResourceType();
         if (type == null) {

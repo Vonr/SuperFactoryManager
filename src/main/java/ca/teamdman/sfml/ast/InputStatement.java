@@ -128,8 +128,6 @@ public final class InputStatement implements IOStatement {
                 }
             }
         }
-
-        inputCheck = LimitedInputSlotObjectPool.INSTANCE.getIndex();
     }
 
     @Override
@@ -199,15 +197,10 @@ public final class InputStatement implements IOStatement {
      */
     public void freeSlots() {
         if (limitedInputSlotsCache != null) {
-            if (inputCheck == -2) {
-                throw new IllegalStateException("Input slots were not gathered before freeing");
-            }
-            LimitedInputSlotObjectPool.INSTANCE.release(
-                    limitedInputSlotsCache,
-                    inputCheck
+            LimitedInputSlotObjectPool.release(
+                    limitedInputSlotsCache
             );
             limitedInputSlotsCache = null;
-            inputCheck = -2;
         }
     }
 
@@ -218,9 +211,7 @@ public final class InputStatement implements IOStatement {
             }
             other.limitedInputSlotsCache.addAll(limitedInputSlotsCache);
         }
-        other.inputCheck = inputCheck;
         limitedInputSlotsCache = null;
-        inputCheck = -2;
     }
 
     private <STACK, ITEM, CAP> void gatherSlots(
@@ -249,7 +240,7 @@ public final class InputStatement implements IOStatement {
                                     .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
                                             finalSlot, stack, tracker.toString())));
                             //noinspection unchecked
-                            acceptor.accept(LimitedInputSlotObjectPool.INSTANCE.acquire(
+                            acceptor.accept(LimitedInputSlotObjectPool.acquire(
                                     capability,
                                     slot,
                                     (InputResourceTracker<STACK, ITEM, CAP>) tracker,

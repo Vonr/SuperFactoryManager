@@ -4,9 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.program.DefaultProgramBehaviour;
-import ca.teamdman.sfm.common.program.ProgramContext;
-import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
+import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.SFMLLexer;
@@ -141,6 +139,9 @@ public record Program(
 
     @Override
     public void tick(ProgramContext context) {
+        LimitedInputSlotObjectPool.checkInvariant();
+        LimitedOutputSlotObjectPool.checkInvariant();
+
         for (Trigger trigger : triggers) {
             // Only process triggers that should tick
             if (!trigger.shouldTick(context)) {
@@ -192,6 +193,9 @@ public record Program(
                     trigger.toString()
             )));
         }
+
+        LimitedInputSlotObjectPool.checkInvariant();
+        LimitedOutputSlotObjectPool.checkInvariant();
 
         if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
             simulation.onProgramFinished(this);
