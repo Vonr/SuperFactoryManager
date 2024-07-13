@@ -3188,9 +3188,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
-        LabelPositionHolder labelPositionHolder = LabelPositionHolder.empty()
+        LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
-                .add("right", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
 
         // load the program
@@ -3202,9 +3201,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        END
                                    """.stripTrailing().stripIndent());
         assertManagerRunning(manager);
-        var program = manager.getProgram().get();
 
-        // ensure no warnings
+        // assert expected warnings
         var warnings = DiskItem.getWarnings(manager.getDisk().get());
         assertTrue(warnings.size() == 1, "expected 1 warning, got " + warnings.size());
         assertTrue(warnings

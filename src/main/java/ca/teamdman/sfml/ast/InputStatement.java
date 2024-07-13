@@ -18,7 +18,6 @@ public final class InputStatement implements IOStatement {
     private final ResourceLimits resourceLimits;
     private final boolean each;
     private @Nullable ArrayDeque<LimitedInputSlot<?, ?, ?>> limitedInputSlotsCache = null;
-    private int inputCheck = -2;
 
     public InputStatement(
             LabelAccess labelAccess,
