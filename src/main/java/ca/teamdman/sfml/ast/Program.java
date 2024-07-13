@@ -2,6 +2,7 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.DefaultProgramBehaviour;
 import ca.teamdman.sfm.common.program.ProgramContext;
@@ -15,7 +16,6 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
-import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -71,14 +71,19 @@ public record Program(
                                     referencedResource));
                         }
                     } catch (ResourceLocationException e) {
-                        errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(referencedResource));
+                        errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(
+                                referencedResource));
                     }
                 }
             } catch (ResourceLocationException | IllegalArgumentException | AssertionError e) {
                 errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
             } catch (Throwable t) {
                 errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
-                SFM.LOGGER.error("Encountered unhandled error \"{}\" while compiling program\n```\n{}\n```", t, programString);
+                SFM.LOGGER.error(
+                        "Encountered unhandled error \"{}\" while compiling program\n```\n{}\n```",
+                        t,
+                        programString
+                );
                 if (!FMLEnvironment.production) {
                     var message = t.getMessage();
                     if (message != null) {
@@ -92,7 +97,10 @@ public record Program(
 
         if (program == null && errors.isEmpty()) {
             errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
-            SFM.LOGGER.error("Program was somehow null after a successful compile. I have no idea how this could happen, but it definitely shouldn't.\n```\n{}\n```", programString);
+            SFM.LOGGER.error(
+                    "Program was somehow null after a successful compile. I have no idea how this could happen, but it definitely shouldn't.\n```\n{}\n```",
+                    programString
+            );
         }
 
         if (errors.isEmpty()) {
@@ -148,8 +156,10 @@ public record Program(
 
             // Log pretty triggers
             if (triggers instanceof ShortStatement ss) {
-                context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_TRIGGER_STATEMENT.get(
-                        ss.toStringShort())));
+                context
+                        .getLogger()
+                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_TRIGGER_STATEMENT.get(
+                                ss.toStringShort())));
             }
 
             // Start stopwatch
@@ -157,8 +167,9 @@ public record Program(
 
             // Perform tick
             if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
-                int numPossibleStates = (int) Math.max(1, Math.pow(2, trigger.getConditionCount()));
-                throw new NotImplementedException("add common config for max limit before linting turns off");
+                int maxConditionCount = SFMConfig.getOrDefault(SFMConfig.COMMON.maxIfStatementsInTriggerBeforeSimulationIsntAllowed);
+                int conditionCount = Math.min(trigger.getConditionCount(), maxConditionCount);
+                int numPossibleStates = (int) Math.max(1, Math.pow(2, conditionCount));
                 for (int i = 0; i < numPossibleStates; i++) {
                     ProgramContext forkedContext = context.fork();
                     trigger.tick(forkedContext);
@@ -195,6 +206,50 @@ public record Program(
             }
         }
         return -1;
+    }
+
+    @Override
+    public String toString() {
+        var rtn = new StringBuilder();
+        rtn.append("NAME \"").append(name).append("\"\n");
+        for (Trigger trigger : triggers) {
+            rtn.append(trigger).append("\n");
+        }
+        return rtn.toString();
+    }
+
+    public void replaceOutputStatement(OutputStatement oldStatement, OutputStatement newStatement) {
+        Deque<Statement> toPatch = new ArrayDeque<>();
+        toPatch.add(this);
+        while (!toPatch.isEmpty()) {
+            Statement statement = toPatch.pollFirst();
+            List<Statement> children = statement.getStatements();
+            for (int i = 0; i < children.size(); i++) {
+                Statement child = children.get(i);
+                if (child == oldStatement) {
+                    children.set(i, newStatement);
+                } else {
+                    toPatch.add(child);
+                }
+            }
+        }
+    }
+
+    public void replaceAllOutputStatements(Function<OutputStatement, OutputStatement> mapper) {
+        Deque<Statement> toPatch = new ArrayDeque<>();
+        toPatch.add(this);
+        while (!toPatch.isEmpty()) {
+            Statement statement = toPatch.pollFirst();
+            List<Statement> children = statement.getStatements();
+            for (int i = 0; i < children.size(); i++) {
+                Statement child = children.get(i);
+                if (child instanceof OutputStatement outputStatement) {
+                    children.set(i, mapper.apply(outputStatement));
+                } else {
+                    toPatch.add(child);
+                }
+            }
+        }
     }
 
     private static @NotNull Consumer<Consumer<TranslatableContents>> getTraceLogWriter(ProgramContext context) {
@@ -250,50 +305,6 @@ public record Program(
             trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER.get());
             trace.accept(Constants.LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
         };
-    }
-
-    @Override
-    public String toString() {
-        var rtn = new StringBuilder();
-        rtn.append("NAME \"").append(name).append("\"\n");
-        for (Trigger trigger : triggers) {
-            rtn.append(trigger).append("\n");
-        }
-        return rtn.toString();
-    }
-
-    public void replaceOutputStatement(OutputStatement oldStatement, OutputStatement newStatement) {
-        Deque<Statement> toPatch = new ArrayDeque<>();
-        toPatch.add(this);
-        while (!toPatch.isEmpty()) {
-            Statement statement = toPatch.pollFirst();
-            List<Statement> children = statement.getStatements();
-            for (int i = 0; i < children.size(); i++) {
-                Statement child = children.get(i);
-                if (child == oldStatement) {
-                    children.set(i, newStatement);
-                } else {
-                    toPatch.add(child);
-                }
-            }
-        }
-    }
-
-    public void replaceAllOutputStatements(Function<OutputStatement, OutputStatement> mapper) {
-        Deque<Statement> toPatch = new ArrayDeque<>();
-        toPatch.add(this);
-        while (!toPatch.isEmpty()) {
-            Statement statement = toPatch.pollFirst();
-            List<Statement> children = statement.getStatements();
-            for (int i = 0; i < children.size(); i++) {
-                Statement child = children.get(i);
-                if (child instanceof OutputStatement outputStatement) {
-                    children.set(i, mapper.apply(outputStatement));
-                } else {
-                    toPatch.add(child);
-                }
-            }
-        }
     }
 
     public static class ListErrorListener extends BaseErrorListener {

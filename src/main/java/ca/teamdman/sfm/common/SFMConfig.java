@@ -10,6 +10,7 @@ public class SFMConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final SFMConfig.Common COMMON;
     public static final SFMConfig.Client CLIENT;
+
     static {
         final Pair<SFMConfig.Common, ForgeConfigSpec> commonSpecPair = new ForgeConfigSpec.Builder().configure(SFMConfig.Common::new);
         COMMON_SPEC = commonSpecPair.getRight();
@@ -17,26 +18,6 @@ public class SFMConfig {
         final Pair<SFMConfig.Client, ForgeConfigSpec> clientSpecPair = new ForgeConfigSpec.Builder().configure(SFMConfig.Client::new);
         CLIENT_SPEC = clientSpecPair.getRight();
         CLIENT = clientSpecPair.getLeft();
-    }
-
-    public static class Common {
-        public final ForgeConfigSpec.IntValue timerTriggerMinimumIntervalInTicks;
-        public final ForgeConfigSpec.IntValue timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO;
-
-        Common(ForgeConfigSpec.Builder builder) {
-            timerTriggerMinimumIntervalInTicks = builder
-                    .defineInRange("timerTriggerMinimumIntervalInTicks", 20, 1, Integer.MAX_VALUE);
-            timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO = builder
-                    .defineInRange("timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIOStatementsPresent", 1, 1, Integer.MAX_VALUE);
-        }
-    }
-    public static class Client {
-        public final ForgeConfigSpec.BooleanValue showLineNumbers;
-
-        Client(ForgeConfigSpec.Builder builder) {
-            showLineNumbers = builder
-                    .define("showLineNumbers", false);
-        }
     }
 
     /**
@@ -53,5 +34,36 @@ public class SFMConfig {
     public static void register(ModLoadingContext context) {
         context.registerConfig(ModConfig.Type.COMMON, SFMConfig.COMMON_SPEC);
         context.registerConfig(ModConfig.Type.CLIENT, SFMConfig.CLIENT_SPEC);
+    }
+
+    public static class Common {
+        public final ForgeConfigSpec.IntValue timerTriggerMinimumIntervalInTicks;
+        public final ForgeConfigSpec.IntValue timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO;
+        public final ForgeConfigSpec.IntValue maxIfStatementsInTriggerBeforeSimulationIsntAllowed;
+
+        Common(ForgeConfigSpec.Builder builder) {
+            timerTriggerMinimumIntervalInTicks = builder
+                    .defineInRange("timerTriggerMinimumIntervalInTicks", 20, 1, Integer.MAX_VALUE);
+            timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO = builder
+                    .defineInRange(
+                            "timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIOStatementsPresent",
+                            1,
+                            1,
+                            Integer.MAX_VALUE
+                    );
+            maxIfStatementsInTriggerBeforeSimulationIsntAllowed = builder
+                    .comment(
+                            "The number of scenarios to check is 2^n where n is the number of if statements in a trigger")
+                    .defineInRange("maxIfStatementsInTriggerBeforeSimulationIsntAllowed", 10, 0, Integer.MAX_VALUE);
+        }
+    }
+
+    public static class Client {
+        public final ForgeConfigSpec.BooleanValue showLineNumbers;
+
+        Client(ForgeConfigSpec.Builder builder) {
+            showLineNumbers = builder
+                    .define("showLineNumbers", false);
+        }
     }
 }
