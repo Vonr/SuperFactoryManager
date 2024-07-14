@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 public record ResourceComparer<STACK, ITEM, CAP>(
         ComparisonOperator op,
@@ -15,26 +16,23 @@ public record ResourceComparer<STACK, ITEM, CAP>(
                 context -> {
                     ResourceType<STACK, ITEM, CAP> type = res.getResourceType();
                     if (type == null) return false;
-                    // get the inventories to check
-
-                    var handlers = type.getCapabilities(context, labelAccess);
 
                     // track how many items seen
-                    long overallCount = 0;
+                    AtomicLong overallCount = new AtomicLong(0);
                     // track how many inventories satisfied the condition
                     List<Boolean> satisfiedSet = new ArrayList<>();
-
-                    for (var cap : (Iterable<CAP>) handlers::iterator) {
-                        long invCount = 0;
-                        for (var stack : (Iterable<STACK>) type.collect(cap, labelAccess)::iterator) {
+                    type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
+                        long inThisInv = 0;
+                        for (var stack : (Iterable<STACK>) type.getStacksInSlots(cap, labelAccess.slots())::iterator) {
                             if (this.res.test(stack)) {
-                                invCount += type.getAmount(stack);
-                                overallCount += type.getAmount(stack);
+                                inThisInv += type.getAmount(stack);
+                                overallCount.addAndGet(type.getAmount(stack));
                             }
                         }
-                        satisfiedSet.add(this.op.test(invCount, this.quantity.number().value()));
-                    }
-                    var isOverallSatisfied = this.op.test(overallCount, this.quantity.number().value());
+                        satisfiedSet.add(this.op.test(inThisInv, this.quantity.number().value()));
+                    });
+
+                    var isOverallSatisfied = this.op.test(overallCount.get(), this.quantity.number().value());
                     return setOp.test(isOverallSatisfied, satisfiedSet);
                 },
                 sourceCode

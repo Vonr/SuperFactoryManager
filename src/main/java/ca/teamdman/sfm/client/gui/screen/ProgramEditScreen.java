@@ -5,11 +5,13 @@ import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.client.gui.EditorUtils;
 import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.SFMConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.components.Tooltip;
@@ -33,6 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
+import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP;
+import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP;
 
 public class ProgramEditScreen extends Screen {
     protected final String INITIAL_CONTENT;
@@ -82,6 +86,15 @@ public class ProgramEditScreen extends Screen {
         this.setInitialFocus(textarea);
 
         this.addRenderableWidget(new ExtendedButtonWithTooltip(
+                this.width / 2 - 200,
+                this.height / 2 - 100 + 195,
+                16,
+                20,
+                Component.literal("#"),
+                (button) -> this.onToggleLineNumbersButtonClicked(),
+                Tooltip.create(PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP.getComponent())
+        ));
+        this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 this.width / 2 - 2 - 150,
                 this.height / 2 - 100 + 195,
                 200,
@@ -98,6 +111,13 @@ public class ProgramEditScreen extends Screen {
                 CommonComponents.GUI_CANCEL,
                 (button) -> this.onClose()
         ));
+    }
+
+    private static boolean shouldShowLineNumbers() {
+        return SFMConfig.getOrDefault(SFMConfig.CLIENT.showLineNumbers);
+    }
+    private void onToggleLineNumbersButtonClicked() {
+        SFMConfig.CLIENT.showLineNumbers.set(!shouldShowLineNumbers());
     }
 
     public void saveAndClose() {
@@ -279,12 +299,18 @@ public class ProgramEditScreen extends Screen {
             this.textField.cursor = cursor;
         }
 
+        public int getLineNumberWidth() {
+            if (shouldShowLineNumbers()) {
+                return this.font.width("000");
+            } else {
+                return 0;
+            }
+        }
 
-        @Override
         public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
             // Accommodate line numbers
             if (pMouseX >= this.getX() + 1 && pMouseX <= this.getX() + this.width - 1) {
-                pMouseX -= 1 + this.font.width("000");
+                pMouseX -= getLineNumberWidth();
             }
 
             // we need to override the default behaviour because Mojang broke it
@@ -333,7 +359,7 @@ public class ProgramEditScreen extends Screen {
         ) {
             // if mouse in bounds, translate to accommodate line numbers
             if (mx >= this.getX() + 1 && mx <= this.getX() + this.width - 1) {
-                mx -= 1 + this.font.width("000");
+                mx -= getLineNumberWidth();
             }
             return super.mouseDragged(mx, my, button, dx, dy);
         }
@@ -355,7 +381,12 @@ public class ProgramEditScreen extends Screen {
         }
 
         @Override
-        protected void renderContents(PoseStack poseStack, int mx, int my, float partialTicks) {
+        protected void renderContents(
+                PoseStack poseStack,
+                int mx,
+                int my,
+                float partialTicks
+        ) {
             Matrix4f matrix4f = poseStack.last().pose();
             if (!lastProgram.equals(this.textField.value())) {
                 rebuild(Screen.hasControlDown());
@@ -364,7 +395,7 @@ public class ProgramEditScreen extends Screen {
             boolean isCursorVisible = this.isFocused() && this.frame / 6 % 2 == 0;
             boolean isCursorAtEndOfLine = false;
             int cursorIndex = textField.cursor();
-            int lineX = this.getX() + this.innerPadding() + this.font.width("000");
+            int lineX = this.getX() + this.innerPadding() + getLineNumberWidth();
             int lineY = this.getY() + this.innerPadding();
             int charCount = 0;
             int cursorX = 0;
@@ -382,20 +413,23 @@ public class ProgramEditScreen extends Screen {
                                            && cursorIndex <= charCount + lineLength;
                 var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
 
-                // Draw line number
-                String lineNumber = String.valueOf(line + 1);
-                this.font.drawInBatch(
-                        lineNumber,
-                        lineX - 2 - this.font.width(lineNumber),
-                        lineY,
-                        -1,
-                        true,
-                        matrix4f,
-                        buffer,
-                        Font.DisplayMode.NORMAL,
-                        0,
-                        LightTexture.FULL_BRIGHT
-                );
+
+                if (shouldShowLineNumbers()) {
+                    // Draw line number
+                    String lineNumber = String.valueOf(line + 1);
+                    this.font.drawInBatch(
+                            lineNumber,
+                            lineX - 2 - this.font.width(lineNumber),
+                            lineY,
+                            -1,
+                            true,
+                            matrix4f,
+                            buffer,
+                            Font.DisplayMode.NORMAL,
+                            0,
+                            LightTexture.FULL_BRIGHT
+                    );
+                }
 
                 if (cursorOnThisLine) {
                     isCursorAtEndOfLine = cursorIndex == charCount + lineLength;

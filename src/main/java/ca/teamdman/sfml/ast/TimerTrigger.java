@@ -1,6 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 
 import java.util.List;
 
@@ -15,13 +16,16 @@ public record TimerTrigger(
 
     @Override
     public boolean shouldTick(ProgramContext context) {
-        if (context.getExecutionPolicy() == ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES) return true;
+        if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour) return true;
         return context.getManager().getTick() % interval.getTicks() == 0;
     }
 
     @Override
     public void tick(ProgramContext context) {
         block.tick(context);
+        if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
+            simulation.onTriggerDropped(context, this);
+        }
     }
 
     @Override

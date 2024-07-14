@@ -71,45 +71,50 @@ public class CodegenTests {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     public void codegen() {
-        var aLabel =
-                new LabelAccess(
-                        List.of(new Label("a")),
-                        DirectionQualifier.NULL_DIRECTION,
-                        NumberRangeSet.MAX_RANGE,
-                        RoundRobin.disabled()
-                );
+        var aLabel = new LabelAccess(
+                List.of(new Label("a")),
+                DirectionQualifier.NULL_DIRECTION,
+                NumberRangeSet.MAX_RANGE,
+                RoundRobin.disabled()
+        );
         var program = new Program(
+                new ASTBuilder(),
                 "hello world",
                 List.of(new TimerTrigger(
                         Interval.fromTicks(20),
-                        new Block(List.of(
-                                new IfStatement(
-                                        new ResourceComparer(
-                                                ComparisonOperator.GREATER_OR_EQUAL,
-                                                new ResourceQuantity(
-                                                        new Number(10L),
-                                                        ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
+                        new Block(List.of(new IfStatement(
+                                new ResourceComparer(
+                                        ComparisonOperator.GREATER_OR_EQUAL,
+                                        new ResourceQuantity(
+                                                new Number(10L),
+                                                ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
+                                        ),
+                                        ResourceIdentifier.fromString("sfm:item:.*:.*")
+                                ).toBooleanExpression(
+                                        SetOperator.OVERALL,
+                                        aLabel,
+                                        "gt 10 sfm:item:.*:.*"
+                                ),
+                                new Block(List.of(
+                                        // if true
+                                        new InputStatement(
+                                                aLabel,
+                                                new ResourceLimits(
+                                                        List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE),
+                                                        ResourceIdSet.EMPTY
                                                 ),
-                                                ResourceIdentifier.fromString("sfm:item:.*:.*")
-                                        ).toBooleanExpression(SetOperator.OVERALL, aLabel, "gt 10 sfm:item:.*:.*"),
-                                        new Block(List.of( // if true
-                                                           new InputStatement(
-                                                                   aLabel,
-                                                                   new ResourceLimits(
-                                                                           List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE),
-                                                                           ResourceIdSet.EMPTY
-                                                                   ),
-                                                                   // empty exclusion list
-                                                                   false
-                                                                   // each=false
-                                                           )
-                                        )),
-                                        new Block(List.of()) // if false
-                                )
-                        ))
+                                                // empty exclusion list
+                                                false
+                                                // each=false
+                                        ))),
+                                new Block(List.of())
+                                // if false
+                        )))
                 )),
-                Collections.emptySet(), // not needed for codegen
-                Collections.emptySet() // not needed for codegen
+                Collections.emptySet(),
+                // not needed for codegen
+                Collections.emptySet()
+                // not needed for codegen
         );
         System.out.println(program);
         /* outputs:
