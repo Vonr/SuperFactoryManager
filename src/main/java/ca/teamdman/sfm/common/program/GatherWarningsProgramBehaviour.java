@@ -58,8 +58,10 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
     }
 
     @Override
-    public void onInputStatementExecution(InputStatement inputStatement) {
-        super.onInputStatementExecution(inputStatement);
+    public void onInputStatementExecution(
+            ProgramContext context,
+            InputStatement inputStatement) {
+        super.onInputStatementExecution(context, inputStatement);
         Set<? extends ResourceType<?, ?, ?>> inputtingResourceTypes = inputStatement
                 .getReferencedIOResourceIds()
                 .map(ResourceIdentifier::getResourceType)
@@ -72,8 +74,11 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
     }
 
     @Override
-    public void onOutputStatementExecution(OutputStatement outputStatement) {
-        super.onOutputStatementExecution(outputStatement);
+    public void onOutputStatementExecution(
+            ProgramContext context,
+            OutputStatement outputStatement
+    ) {
+        super.onOutputStatementExecution(context, outputStatement);
 
 
         // identify resource types being outputted
@@ -89,6 +94,7 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
                         getLatestPathElement(),
                         PROGRAM_WARNING_OUTPUT_RESOURCE_TYPE_NOT_FOUND_IN_INPUTS.get(
                                 outputStatement,
+                                context.getProgram().builder().getLineColumnForNode(outputStatement),
                                 resourceType.displayAsCode()
                         )
                 ));
@@ -102,10 +108,11 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
 
     @Override
     public void onInputStatementForgetTransform(
+            ProgramContext context,
             InputStatement old,
             InputStatement next
     ) {
-        super.onInputStatementForgetTransform(old, next);
+        super.onInputStatementForgetTransform(context, old, next);
 
         /*
         INPUT stick FROM a,b
@@ -126,7 +133,7 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
                 .map(ResourceIdentifier::getResourceType)
                 .collect(Collectors.toSet());
 
-        warnUnusedInputLabels(old, removedLabels, droppingResourceTypes);
+        warnUnusedInputLabels(context, old, removedLabels, droppingResourceTypes);
     }
 
     @Override
@@ -142,8 +149,10 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
     }
 
     @Override
-    public void onInputStatementDropped(InputStatement inputStatement) {
-        super.onInputStatementDropped(inputStatement);
+    public void onInputStatementDropped(
+            ProgramContext context,
+            InputStatement inputStatement) {
+        super.onInputStatementDropped(context, inputStatement);
 
         /*
         INPUT stick FROM a
@@ -159,12 +168,14 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
         // identify the labels being dropped from
         Set<Label> droppingLabels = new HashSet<>(inputStatement.labelAccess().labels());
 
-        warnUnusedInputLabels(inputStatement, droppingLabels, droppingResourceTypes);
+        warnUnusedInputLabels(context, inputStatement, droppingLabels, droppingResourceTypes);
     }
 
     @Override
-    public void onProgramFinished(Program program) {
-        super.onProgramFinished(program);
+    public void onProgramFinished(
+            ProgramContext context,
+            Program program) {
+        super.onProgramFinished(context, program);
         // we need to calculate what warnings were present in ALL paths
 
         // for each warning in each path
@@ -211,6 +222,7 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
     }
 
     private void warnUnusedInputLabels(
+            ProgramContext context,
             InputStatement old,
             Set<Label> removedLabels,
             Set<? extends ResourceType<?, ?, ?>> droppingResourceTypes
@@ -227,6 +239,7 @@ public class GatherWarningsProgramBehaviour extends SimulateExploreAllPathsProgr
                             offendingNode,
                             PROGRAM_WARNING_UNUSED_INPUT_LABEL.get(
                                     old,
+                                    context.getProgram().builder().getLineColumnForNode(old),
                                     resourceType.displayAsCode(),
                                     label,
                                     resourceType.displayAsCode()

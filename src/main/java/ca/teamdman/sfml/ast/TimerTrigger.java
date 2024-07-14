@@ -24,7 +24,7 @@ public record TimerTrigger(
     public void tick(ProgramContext context) {
         block.tick(context);
         if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
-            simulation.onTriggerDropped(context);
+            simulation.onTriggerDropped(context, this);
         }
     }
 

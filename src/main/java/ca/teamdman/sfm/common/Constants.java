@@ -307,11 +307,11 @@ public class Constants {
         );
         public static final LocalizationEntry PROGRAM_WARNING_OUTPUT_RESOURCE_TYPE_NOT_FOUND_IN_INPUTS = new LocalizationEntry(
                 "program.sfm.warnings.output_label_not_found_in_inputs",
-                "Statement \"%s\" uses resource type \"%s\" which has no matching input statement."
+                "Statement \"%s\" at %s uses resource type \"%s\" which has no matching input statement."
         );
         public static final LocalizationEntry PROGRAM_WARNING_UNUSED_INPUT_LABEL = new LocalizationEntry(
                 "program.sfm.warnings.unused_input_label",
-                "Statement \"%s\" inputs \"%s\" from \"%s\" but no future output statement consume \"%s\"."
+                "Statement \"%s\" at %s inputs \"%s\" from \"%s\" but no future output statement consume \"%s\"."
         );
         public static final LocalizationEntry PROGRAM_WARNING_UNKNOWN_RESOURCE_ID = new LocalizationEntry(
                 "program.sfm.warnings.unknown_resource_id",

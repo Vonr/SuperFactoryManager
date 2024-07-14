@@ -70,26 +70,39 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
         return null;
     }
 
-    public void onOutputStatementExecution(OutputStatement outputStatement) {
+    public void onOutputStatementExecution(
+            ProgramContext context,
+            OutputStatement outputStatement
+    ) {
         pushPathElement(new SimulateExploreAllPathsProgramBehaviour.IO(outputStatement));
     }
 
-    public void onInputStatementExecution(InputStatement inputStatement) {
+    public void onInputStatementExecution(
+            ProgramContext context,
+            InputStatement inputStatement
+    ) {
         pushPathElement(new SimulateExploreAllPathsProgramBehaviour.IO(inputStatement));
     }
 
     public void onInputStatementForgetTransform(
+            ProgramContext context,
             InputStatement old,
             InputStatement next
     ) {
     }
 
-    public void onInputStatementDropped(InputStatement inputStatement) {
+    public void onInputStatementDropped(
+            ProgramContext context,
+            InputStatement inputStatement
+    ) {
     }
 
 
-    public void onTriggerDropped(ProgramContext context) {
-        context.getInputs().forEach(this::onInputStatementDropped);
+    public void onTriggerDropped(
+            ProgramContext context,
+            Trigger trigger
+    ) {
+        context.getInputs().forEach(inputStatement -> onInputStatementDropped(context, inputStatement));
     }
 
     @Override
@@ -112,14 +125,16 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
                 .toArray();
     }
 
-    public void onProgramFinished(Program program) {
+    public void onProgramFinished(
+            ProgramContext context,
+            Program program
+    ) {
 
     }
 
 
     public enum IOKind {
-        INPUT,
-        OUTPUT
+        INPUT, OUTPUT
     }
 
     public interface ExecutionPathElement {

@@ -64,7 +64,7 @@ public class DiskItem extends Item {
         AtomicReference<Program> rtn = new AtomicReference<>(null);
         Program.compile(
                 getProgram(stack),
-                (successProgram, builder) -> {
+                successProgram -> {
                     ArrayList<TranslatableContents> warnings = ProgramLinter.gatherWarnings(successProgram, LabelPositionHolder.from(stack), manager);
 
                     // Log to disk

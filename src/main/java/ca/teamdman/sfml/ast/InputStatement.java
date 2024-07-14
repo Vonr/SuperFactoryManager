@@ -37,7 +37,7 @@ public final class InputStatement implements IOStatement {
 
         // Track simulation
         if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
-            simulation.onInputStatementExecution(this);
+            simulation.onInputStatementExecution(context, this);
         }
     }
 

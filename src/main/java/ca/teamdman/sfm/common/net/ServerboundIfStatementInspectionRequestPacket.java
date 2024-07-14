@@ -57,7 +57,7 @@ public record ServerboundIfStatementInspectionRequestPacket(
             }
             Program.compile(
                     msg.programString,
-                    (successProgram, builder) -> builder
+                    successProgram -> successProgram.builder()
                             .getNodeAtIndex(msg.inputNodeIndex)
                             .filter(IfStatement.class::isInstance)
                             .map(IfStatement.class::cast)

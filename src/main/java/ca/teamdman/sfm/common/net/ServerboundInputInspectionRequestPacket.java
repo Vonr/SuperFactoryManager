@@ -19,7 +19,10 @@ public record ServerboundInputInspectionRequestPacket(
         String programString,
         int inputNodeIndex
 ) {
-    public static void encode(ServerboundInputInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundInputInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
         friendlyByteBuf.writeInt(msg.inputNodeIndex());
     }
@@ -32,7 +35,8 @@ public record ServerboundInputInspectionRequestPacket(
     }
 
     public static void handle(
-            ServerboundInputInspectionRequestPacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ServerboundInputInspectionRequestPacket msg,
+            Supplier<NetworkEvent.Context> contextSupplier
     ) {
         contextSupplier.get().enqueueWork(() -> {
             // todo: duplicate code
@@ -57,7 +61,7 @@ public record ServerboundInputInspectionRequestPacket(
             }
             Program.compile(
                     msg.programString,
-                    (successProgram, builder) -> builder
+                    successProgram -> successProgram.builder()
                             .getNodeAtIndex(msg.inputNodeIndex)
                             .filter(InputStatement.class::isInstance)
                             .map(InputStatement.class::cast)

@@ -4,12 +4,12 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
+import com.mojang.datafixers.util.Pair;
 import cpw.mods.modlauncher.Launcher;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,23 +21,42 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public List<Pair<ASTNode, ParserRuleContext>> getNodesUnderCursor(int cursorPos) {
         return AST_NODE_CONTEXTS
                 .stream()
-                .filter(pair -> pair.b != null)
-                .filter(pair -> pair.b.start.getStartIndex() <= cursorPos && pair.b.stop.getStopIndex() >= cursorPos)
+                .filter(pair -> pair.getSecond() != null)
+                .filter(pair -> pair.getSecond().start.getStartIndex() <= cursorPos
+                                && pair.getSecond().stop.getStopIndex() >= cursorPos)
                 .collect(Collectors.toList());
     }
 
     public Optional<ASTNode> getNodeAtIndex(int index) {
         if (index < 0 || index >= AST_NODE_CONTEXTS.size()) return Optional.empty();
-        return Optional.ofNullable(AST_NODE_CONTEXTS.get(index).a);
+        return Optional.ofNullable(AST_NODE_CONTEXTS.get(index).getFirst());
+    }
+
+    public void setLocationFromOtherNode(ASTNode node, ASTNode otherNode) {
+        AST_NODE_CONTEXTS.add(new Pair<>(node, AST_NODE_CONTEXTS.get(getIndexForNode(otherNode)).getSecond()));
     }
 
     public int getIndexForNode(ASTNode node) {
         return AST_NODE_CONTEXTS
                 .stream()
-                .filter(pair -> pair.a == node)
+                .filter(pair -> pair.getFirst() == node)
                 .map(AST_NODE_CONTEXTS::indexOf)
                 .findFirst()
                 .orElse(-1);
+    }
+
+    public Optional<ParserRuleContext> getContextForNode(ASTNode node) {
+        return AST_NODE_CONTEXTS
+                .stream()
+                .filter(pair -> pair.getFirst() == node)
+                .map(Pair::getSecond)
+                .findFirst();
+    }
+
+    public String getLineColumnForNode(ASTNode node) {
+        return getContextForNode(node)
+                .map(ctx -> "Line " + ctx.start.getLine() + ", Column " + ctx.start.getCharPositionInLine())
+                .orElse("Unknown location");
     }
 
     @Override
@@ -121,7 +140,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .stream()
                 .map(Label::name)
                 .collect(Collectors.toSet());
-        Program program = new Program(name.value(), triggers, labels, USED_RESOURCES);
+        Program program = new Program(this, name.value(), triggers, labels, USED_RESOURCES);
         AST_NODE_CONTEXTS.add(new Pair<>(program, ctx));
         return program;
     }
@@ -452,17 +471,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         return resourceIdSet;
     }
 
-
-    private void assertResourceLimitDoesntExpandHuge(ResourceLimits limits) {
-        if (Launcher.INSTANCE == null) {
-            SFM.LOGGER.warn("The game isn't loaded, Are we in a unit test? Skipping resource limit expansion check.");
-            return;
-        }
-        if (limits.createInputTrackers().size() > 512) {
-            throw new IllegalArgumentException("Resource limit expands to more than 512 trackers, this is likely a mistake where the \"EACH\" keyword is being used. The code: " + limits);
-        }
-    }
-
     @Override
     public ResourceLimits visitInputmatchers(@Nullable SFMLParser.InputmatchersContext ctx) {
         if (ctx == null) {
@@ -473,7 +481,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
-
 
     @Override
     public ResourceLimits visitOutputmatchers(@Nullable SFMLParser.OutputmatchersContext ctx) {
@@ -580,7 +587,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         }
     }
 
-
     @Override
     public Limit visitRetentionLimit(SFMLParser.RetentionLimitContext ctx) {
         var retain = visitRetention(ctx.retention());
@@ -662,5 +668,17 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         Block block = new Block(statements);
         AST_NODE_CONTEXTS.add(new Pair<>(block, ctx));
         return block;
+    }
+
+    private void assertResourceLimitDoesntExpandHuge(ResourceLimits limits) {
+        if (Launcher.INSTANCE == null) {
+            SFM.LOGGER.warn("The game isn't loaded, Are we in a unit test? Skipping resource limit expansion check.");
+            return;
+        }
+        if (limits.createInputTrackers().size() > 512) {
+            throw new IllegalArgumentException(
+                    "Resource limit expands to more than 512 trackers, this is likely a mistake where the \"EACH\" keyword is being used. The code: "
+                    + limits);
+        }
     }
 }

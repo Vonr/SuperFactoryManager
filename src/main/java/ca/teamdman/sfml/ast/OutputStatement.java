@@ -205,7 +205,7 @@ public class OutputStatement implements IOStatement {
 
         // Skip if simulating
         if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour behaviour) {
-            behaviour.onOutputStatementExecution(this);
+            behaviour.onOutputStatementExecution(context, this);
             return;
         }
 

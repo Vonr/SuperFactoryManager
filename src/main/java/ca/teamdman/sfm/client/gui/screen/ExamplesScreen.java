@@ -53,7 +53,7 @@ public class ExamplesScreen extends Screen {
                 String finalProgram = program;
                 Program.compile(
                         program,
-                        (successProgram, builder) -> templatePrograms.put(
+                        successProgram -> templatePrograms.put(
                                 successProgram.name().isBlank() ? entry.getKey().toString() : successProgram.name(),
                                 finalProgram
                         ),

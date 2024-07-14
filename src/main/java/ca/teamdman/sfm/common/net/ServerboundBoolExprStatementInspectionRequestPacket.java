@@ -19,7 +19,10 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
         String programString,
         int inputNodeIndex
 ) {
-    public static void encode(ServerboundBoolExprStatementInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundBoolExprStatementInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
         friendlyByteBuf.writeInt(msg.inputNodeIndex());
     }
@@ -32,7 +35,8 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
     }
 
     public static void handle(
-            ServerboundBoolExprStatementInspectionRequestPacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ServerboundBoolExprStatementInspectionRequestPacket msg,
+            Supplier<NetworkEvent.Context> contextSupplier
     ) {
         contextSupplier.get().enqueueWork(() -> {
             // todo: duplicate code
@@ -57,7 +61,7 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
             }
             Program.compile(
                     msg.programString,
-                    (successProgram, builder) -> builder
+                    successProgram -> successProgram.builder()
                             .getNodeAtIndex(msg.inputNodeIndex)
                             .filter(BoolExpr.class::isInstance)
                             .map(BoolExpr.class::cast)

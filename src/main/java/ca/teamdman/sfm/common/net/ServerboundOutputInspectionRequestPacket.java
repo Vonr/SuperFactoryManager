@@ -72,7 +72,7 @@ public record ServerboundOutputInspectionRequestPacket(
             }
             Program.compile(
                     msg.programString,
-                    (successProgram, builder) -> builder
+                    successProgram -> successProgram.builder()
                             .getNodeAtIndex(msg.outputNodeIndex)
                             .filter(OutputStatement.class::isInstance)
                             .map(OutputStatement.class::cast)

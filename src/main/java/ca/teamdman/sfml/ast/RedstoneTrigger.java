@@ -17,7 +17,7 @@ public record RedstoneTrigger(
             block.tick(context);
         }
         if (context.getBehaviour() instanceof  SimulateExploreAllPathsProgramBehaviour simulation) {
-            simulation.onTriggerDropped(context);
+            simulation.onTriggerDropped(context, this);
         }
     }
 

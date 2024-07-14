@@ -17,11 +17,11 @@ import org.antlr.v4.runtime.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public record Program(
+        ASTBuilder builder,
         String name,
         List<Trigger> triggers,
         Set<String> referencedLabels,
@@ -32,7 +32,7 @@ public record Program(
 
     public static void compile(
             String programString,
-            BiConsumer<Program, ASTBuilder> onSuccess,
+            Consumer<Program> onSuccess,
             Consumer<List<TranslatableContents>> onFailure
     ) {
         SFMLLexer lexer = new SFMLLexer(CharStreams.fromString(programString));
@@ -102,7 +102,7 @@ public record Program(
         }
 
         if (errors.isEmpty()) {
-            onSuccess.accept(program, builder);
+            onSuccess.accept(program);
         } else {
             onFailure.accept(errors);
         }
@@ -198,7 +198,7 @@ public record Program(
         LimitedOutputSlotObjectPool.checkInvariant();
 
         if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
-            simulation.onProgramFinished(this);
+            simulation.onProgramFinished(context, this);
         }
     }
 

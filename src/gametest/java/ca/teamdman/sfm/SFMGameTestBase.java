@@ -38,7 +38,7 @@ public abstract class SFMGameTestBase {
         AtomicReference<Program> rtn = new AtomicReference<>();
         Program.compile(
                 code,
-                (program, builder) -> rtn.set(program),
+                rtn::set,
                 errors -> {
                     throw new GameTestAssertException("Failed to compile program: " + errors
                             .stream()

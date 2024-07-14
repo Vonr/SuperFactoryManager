@@ -16,6 +16,7 @@ NAME "Changelog"
 ---- add toggle button in program edit screen
 -- reduce log spam from syntax errors
 ---- build process now properly stops when parsing fails
+
 -- fix partial forgets resetting trackers
 EVERY 20 TICKS DO
     INPUT 10 FROM a,b
@@ -23,12 +24,12 @@ EVERY 20 TICKS DO
     FORGET b
     OUTPUT to z -- this used to move 10, should be/is now 9
 END
--- add warnings for unused input statements
+
+-- add warnings
 EVERY 20 TICKS DO
-    INPUT fluid:: FROM a
-    OUTPUT TO b
+    INPUT fluid:: FROM a -- fluid:: never gets used
+    OUTPUT TO b          -- item:: never get inputted
 END
--- add warning for output statements missing corresponding inputs
 
 
 ---- 4.16.0 ----

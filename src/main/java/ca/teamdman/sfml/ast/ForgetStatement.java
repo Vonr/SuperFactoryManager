@@ -1,6 +1,5 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 
@@ -35,8 +34,9 @@ public record ForgetStatement(
                     oldInputStatement.resourceLimits(),
                     oldInputStatement.each()
             );
+            context.getProgram().builder().setLocationFromOtherNode(newInputStatement, oldInputStatement);
             if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
-                simulation.onInputStatementForgetTransform(oldInputStatement, newInputStatement);
+                simulation.onInputStatementForgetTransform(context, oldInputStatement, newInputStatement);
             }
             // this could be a set instead of list contains check, but whatever. Should be small
             oldInputStatement.freeSlotsIf(slot -> labelToForget.contains(slot.label));
