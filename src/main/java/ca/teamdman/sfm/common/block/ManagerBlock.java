@@ -5,6 +5,8 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
+import ca.teamdman.sfm.common.program.ProgramLinter;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -97,7 +99,8 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
                     .getDisk()
                     .ifPresent(disk -> manager
                             .getProgram()
-                            .ifPresent(program -> DiskItem.setWarnings(disk, program.gatherWarnings(disk, manager))));
+                            .ifPresent(program -> DiskItem.setWarnings(disk, ProgramLinter.gatherWarnings(program,
+                                                                                                          LabelPositionHolder.from(disk), manager))));
             NetworkHooks.openScreen(sp, manager, buf -> ManagerContainerMenu.encode(manager, buf));
             return InteractionResult.CONSUME;
         }
