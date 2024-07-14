@@ -1,6 +1,9 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfml.ast.Label;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,25 +22,27 @@ public class LimitedOutputSlotObjectPool {
      * Acquire a {@link LimitedOutputSlot} from the pool, or creates a new one if none available
      */
     public static <STACK, ITEM, CAP> LimitedOutputSlot<STACK, ITEM, CAP> acquire(
-            CAP handler,
+            Label label,
+            BlockPos pos,
+            Direction direction,
             int slot,
+            CAP handler,
             OutputResourceTracker<STACK, ITEM, CAP> tracker,
             STACK stack
     ) {
         if (index == -1) {
-            var rtn = new LimitedOutputSlot<>(
-                    handler,
-                    slot,
-                    tracker,
-                    stack
-            );
-            LEASED.put(rtn, true);
+            var rtn = new LimitedOutputSlot<>(label, pos, direction, slot, handler, tracker, stack);
+            if (LEASED.put(rtn, true) != null) {
+                SFM.LOGGER.warn("new output slot was somehow already leased, this should literally never happen: {}", rtn);
+            }
             return rtn;
         } else {
             @SuppressWarnings("unchecked") LimitedOutputSlot<STACK, ITEM, CAP> obj = pool[index];
             index--;
-            obj.init(handler, slot, tracker, stack);
-            LEASED.put(obj, true);
+            obj.init(handler, label, pos, direction, slot, tracker, stack);
+            if (LEASED.put(obj, true) != null) {
+                SFM.LOGGER.warn("tried to lease output slot a second time: {}", obj);
+            }
             return obj;
         }
     }
@@ -92,6 +97,7 @@ public class LimitedOutputSlotObjectPool {
     public static void checkInvariant() {
         if (!LEASED.isEmpty()) {
             SFM.LOGGER.warn("Leased objects not released: {}", LEASED);
+            LEASED.clear();
         }
     }
 }

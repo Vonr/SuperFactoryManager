@@ -1,6 +1,9 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfml.ast.Label;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,25 +22,27 @@ public class LimitedInputSlotObjectPool {
      * Acquire a {@link LimitedInputSlot} from the pool, or creates a new one if none available
      */
     public static <STACK, ITEM, CAP> LimitedInputSlot<STACK, ITEM, CAP> acquire(
-            CAP handler,
+            Label label,
+            BlockPos pos,
+            Direction direction,
             int slot,
+            CAP handler,
             InputResourceTracker<STACK, ITEM, CAP> tracker,
             STACK stack
     ) {
         if (index == -1) {
-            var rtn = new LimitedInputSlot<>(
-                    handler,
-                    slot,
-                    tracker,
-                    stack
-            );
-            LEASED.put(rtn, true);
+            var rtn = new LimitedInputSlot<>(label, pos, direction, slot, handler, tracker, stack);
+            if (LEASED.put(rtn, true) != null) {
+                SFM.LOGGER.warn("new input slot was somehow already leased, this should literally never happen: {}", rtn);
+            };
             return rtn;
         } else {
             @SuppressWarnings("unchecked") LimitedInputSlot<STACK, ITEM, CAP> obj = pool[index];
             index--;
-            obj.init(handler, slot, tracker, stack);
-            LEASED.put(obj, true);
+            obj.init(handler, label, pos, direction, slot, tracker, stack);
+            if (LEASED.put(obj, true) != null) {
+                SFM.LOGGER.warn("tried to lease input slot a second time: {}", obj);
+            };
             return obj;
         }
     }
@@ -92,6 +97,7 @@ public class LimitedInputSlotObjectPool {
     public static void checkInvariant() {
         if (!LEASED.isEmpty()) {
             SFM.LOGGER.warn("Leased objects not released: {}", LEASED);
+            LEASED.clear();
         }
     }
 }

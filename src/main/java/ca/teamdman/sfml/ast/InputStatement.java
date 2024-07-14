@@ -3,15 +3,16 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
 
 public final class InputStatement implements IOStatement {
     private final LabelAccess labelAccess;
@@ -32,9 +33,7 @@ public final class InputStatement implements IOStatement {
     @Override
     public void tick(ProgramContext context) {
         context.addInput(this);
-        context.getLogger().debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_INPUT_STATEMENT.get(
-                toString()
-        )));
+        context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_INPUT_STATEMENT.get(toString())));
 
         // Track simulation
         if (context.getBehaviour() instanceof SimulateExploreAllPathsProgramBehaviour simulation) {
@@ -43,47 +42,47 @@ public final class InputStatement implements IOStatement {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
-    public void gatherSlots(ProgramContext context, Consumer<LimitedInputSlot<?, ?, ?>> acceptResult) {
-        context
-                .getLogger()
-                .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS.get(
-                        toStringPretty()
-                )));
+    public void gatherSlots(
+            ProgramContext context,
+            Consumer<LimitedInputSlot<?, ?, ?>> slotConsumer
+    ) {
+        context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS.get(toStringPretty())));
 
         // do we have a cached result?
         if (limitedInputSlotsCache != null) {
             // log cache hit
-            context
-                    .getLogger()
-                    .trace(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_HIT.get()));
+            context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_HIT.get()));
             // return cached results
-            limitedInputSlotsCache.forEach(acceptResult);
+            for (var slot : limitedInputSlotsCache) {
+                slotConsumer.accept(slot);
+            }
+            limitedInputSlotsCache.forEach(slotConsumer);
             return;
         }
 
         // log cache miss
-        context
-                .getLogger()
-                .trace(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_MISS.get()));
+        context.getLogger().trace(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_CACHE_MISS.get()));
 
         // prepare cache state
         limitedInputSlotsCache = new ArrayDeque<>();
 
         // monkey patch the results acceptor to update the cache before returning results
-        var finalAcceptor = acceptResult;
-        acceptResult = slot -> {
-            limitedInputSlotsCache.add(slot);
-            finalAcceptor.accept(slot);
-        };
+        {
+            var original = slotConsumer;
+            slotConsumer = slot -> {
+                limitedInputSlotsCache.add(slot);
+                original.accept(slot);
+            };
+        }
 
         // identify distinct resource types for capability gathering
-        Set<ResourceType> referencedResourceTypes = resourceLimits.getReferencedResourceTypes().collect(Collectors.toSet());
+        Set<ResourceType> referencedResourceTypes = resourceLimits
+                .getReferencedResourceTypes()
+                .collect(Collectors.toSet());
 
         if (!each) {
             // log not each
-            context
-                    .getLogger()
-                    .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
+            context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
 
             // create a single matcher to be shared by all capabilities
             List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
@@ -91,40 +90,46 @@ public final class InputStatement implements IOStatement {
                 // log gather for resource type
                 context
                         .getLogger()
-                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(), type.displayAsCapabilityClass())));
+                        .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
+                                type.displayAsCapabilityClass(),
+                                type.displayAsCapabilityClass()
+                        )));
 
                 // gather slots for each capability found for positions tagged by a provided label
-                Stream foundCapabilities = type.getAllLabelCapabilities(context, labelAccess);
-                for (var capability : (Iterable) foundCapabilities::iterator) {
-                    gatherSlots(
-                            context,
-                            (ResourceType<Object, Object, Object>) type,
-                            capability,
-                            inputTrackers,
-                            acceptResult
-                    );
-                }
+                Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
+                type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> gatherSlotsForCap(
+                        context,
+                        (ResourceType<Object, Object, Object>) type,
+                        label, pos, direction, cap,
+                        inputTrackers,
+                        finalSlotConsumer
+                ));
             }
         } else {
             // log yes each
-            context
-                    .getLogger()
-                    .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
+            context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
 
             for (ResourceType type : referencedResourceTypes) {
                 // log gather for resource type
                 context
                         .getLogger()
-                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(), type.displayAsCapabilityClass())));
+                        .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
+                                type.displayAsCapabilityClass(),
+                                type.displayAsCapabilityClass()
+                        )));
 
                 // gather slots for each capability found for positions tagged by a provided label
-                Stream foundCapabilities = type.getAllLabelCapabilities(context, labelAccess);
-                for (var cap : (Iterable<?>) foundCapabilities::iterator) {
+                Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
+                type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
                     List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
-                    gatherSlots(context, (ResourceType<Object, Object, Object>) type, cap, inputTrackers, acceptResult);
-                }
+                    gatherSlotsForCap(
+                            context,
+                            (ResourceType<Object, Object, Object>) type,
+                            label, pos, direction, cap,
+                            inputTrackers,
+                            finalSlotConsumer
+                    );
+                });
             }
         }
     }
@@ -132,9 +137,7 @@ public final class InputStatement implements IOStatement {
     @Override
     public String toString() {
         return "INPUT " + resourceLimits.toStringPretty(Limit.MAX_QUANTITY_NO_RETENTION) + " FROM " + (
-                each
-                ? "EACH "
-                : ""
+                each ? "EACH " : ""
         ) + labelAccess;
     }
 
@@ -178,9 +181,10 @@ public final class InputStatement implements IOStatement {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (InputStatement) obj;
-        return Objects.equals(this.labelAccess, that.labelAccess) &&
-               Objects.equals(this.resourceLimits, that.resourceLimits) &&
-               this.each == that.each;
+        return Objects.equals(this.labelAccess, that.labelAccess) && Objects.equals(
+                this.resourceLimits,
+                that.resourceLimits
+        ) && this.each == that.each;
     }
 
     @Override
@@ -196,10 +200,24 @@ public final class InputStatement implements IOStatement {
      */
     public void freeSlots() {
         if (limitedInputSlotsCache != null) {
-            LimitedInputSlotObjectPool.release(
-                    limitedInputSlotsCache
-            );
+            LimitedInputSlotObjectPool.release(limitedInputSlotsCache);
             limitedInputSlotsCache = null;
+        }
+    }
+
+    public void freeSlotsIf(Predicate<LimitedInputSlot<?,?,?>> condition) {
+        if (limitedInputSlotsCache != null) {
+            Iterator<LimitedInputSlot<?, ?, ?>> iterator = limitedInputSlotsCache.iterator();
+            while (iterator.hasNext()) {
+                LimitedInputSlot<?, ?, ?> slot = iterator.next();
+                if (condition.test(slot)) {
+                    iterator.remove();
+                    LimitedInputSlotObjectPool.release(slot);
+                }
+            }
+            if (limitedInputSlotsCache.isEmpty()) {
+                limitedInputSlotsCache = null;
+            }
         }
     }
 
@@ -213,8 +231,12 @@ public final class InputStatement implements IOStatement {
         limitedInputSlotsCache = null;
     }
 
-    private <STACK, ITEM, CAP> void gatherSlots(
-            ProgramContext context, ResourceType<STACK, ITEM, CAP> type,
+    private <STACK, ITEM, CAP> void gatherSlotsForCap(
+            ProgramContext context,
+            ResourceType<STACK, ITEM, CAP> type,
+            Label label,
+            BlockPos pos,
+            Direction direction,
             CAP capability,
             List<InputResourceTracker<?, ?, ?>> trackers,
             Consumer<LimitedInputSlot<?, ?, ?>> acceptor
@@ -230,18 +252,16 @@ public final class InputStatement implements IOStatement {
                 if (shouldCreateSlot(type, stack)) {
                     for (InputResourceTracker<?, ?, ?> tracker : trackers) {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
-                            // when tracker.test fails because of exceptions we aren't logging
-                            // we can't log in an `else` because it should only log if the resource limit test passes
-                            // so we gotta break up the logic into a two step validation where we can log better
-                            // but for now it should be fine
                             context
                                     .getLogger()
                                     .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
-                                            finalSlot, stack, tracker.toString())));
+                                            finalSlot,
+                                            stack,
+                                            tracker.toString()
+                                    )));
                             //noinspection unchecked
                             acceptor.accept(LimitedInputSlotObjectPool.acquire(
-                                    capability,
-                                    slot,
+                                    label, pos, direction, slot, capability,
                                     (InputResourceTracker<STACK, ITEM, CAP>) tracker,
                                     stack
                             ));
@@ -250,19 +270,23 @@ public final class InputStatement implements IOStatement {
                 } else {
                     context
                             .getLogger()
-                            .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_SHOULD_NOT_CREATE.get(
-                                    finalSlot, stack)));
+                            .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_SHOULD_NOT_CREATE.get(
+                                    finalSlot,
+                                    stack
+                            )));
                 }
             } else {
                 context
                         .getLogger()
-                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_NOT_IN_RANGE.get(
-                                finalSlot)));
+                        .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_NOT_IN_RANGE.get(finalSlot)));
             }
         }
     }
 
-    private <STACK, ITEM, CAP> boolean shouldCreateSlot(ResourceType<STACK, ITEM, CAP> type, STACK stack) {
+    private <STACK, ITEM, CAP> boolean shouldCreateSlot(
+            ResourceType<STACK, ITEM, CAP> type,
+            STACK stack
+    ) {
         // make sure there are items to move
         return !type.isEmpty(stack);
     }

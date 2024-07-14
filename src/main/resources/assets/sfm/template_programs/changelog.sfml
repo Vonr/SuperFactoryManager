@@ -16,6 +16,20 @@ NAME "Changelog"
 ---- add toggle button in program edit screen
 -- reduce log spam from syntax errors
 ---- build process now properly stops when parsing fails
+-- fix partial forgets resetting trackers
+EVERY 20 TICKS DO
+    INPUT 10 FROM a,b
+    OUTPUT 1 to z
+    FORGET b
+    OUTPUT to z -- this used to move 10, should be/is now 9
+END
+-- add warnings for unused input statements
+EVERY 20 TICKS DO
+    INPUT fluid:: FROM a
+    OUTPUT TO b
+END
+-- add warning for output statements missing corresponding inputs
+
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space

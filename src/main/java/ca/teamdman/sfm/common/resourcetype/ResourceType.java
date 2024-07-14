@@ -2,10 +2,13 @@ package ca.teamdman.sfm.common.resourcetype;
 
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
+import ca.teamdman.sfm.common.program.CapabilityConsumer;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
-import ca.teamdman.sfml.ast.LabelAccess;
-import ca.teamdman.sfml.ast.ResourceIdentifier;
+import ca.teamdman.sfml.ast.*;
+import com.mojang.datafixers.util.Pair;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -13,9 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.registries.IForgeRegistry;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
@@ -43,22 +44,41 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     /**
      * Some resource types may exceed MAX_LONG, this method should be used to get the difference between two stacks
      */
-    public long getAmountDifference(STACK stack1, STACK stack2) {
+    public long getAmountDifference(
+            STACK stack1,
+            STACK stack2
+    ) {
         return getAmount(stack1) - getAmount(stack2);
     }
 
-    public abstract STACK getStackInSlot(CAP cap, int slot);
+    public abstract STACK getStackInSlot(
+            CAP cap,
+            int slot
+    );
 
-    public abstract STACK extract(CAP cap, int slot, long amount, boolean simulate);
+    public abstract STACK extract(
+            CAP cap,
+            int slot,
+            long amount,
+            boolean simulate
+    );
 
     public abstract int getSlots(CAP handler);
 
     public abstract long getMaxStackSize(STACK stack);
 
-    public abstract long getMaxStackSize(CAP cap, int slot);
+    public abstract long getMaxStackSize(
+            CAP cap,
+            int slot
+    );
 
 
-    public abstract STACK insert(CAP cap, int slot, STACK stack, boolean simulate);
+    public abstract STACK insert(
+            CAP cap,
+            int slot,
+            STACK stack,
+            boolean simulate
+    );
 
     public abstract boolean isEmpty(STACK stack);
 
@@ -67,7 +87,10 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract boolean matchesStackType(Object o);
 
-    public boolean matchesStack(ResourceIdentifier<STACK, ITEM, CAP> resourceId, Object stack) {
+    public boolean matchesStack(
+            ResourceIdentifier<STACK, ITEM, CAP> resourceId,
+            Object stack
+    ) {
         if (!matchesStackType(stack)) return false;
         @SuppressWarnings("unchecked") STACK stack_ = (STACK) stack;
         if (isEmpty(stack_)) return false;
@@ -77,59 +100,95 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract boolean matchesCapabilityType(Object o);
 
-    public Stream<CAP> getAllLabelCapabilities(
-            ProgramContext programContext, LabelAccess labelAccess
+    public void forEachCapability(
+            ProgramContext programContext,
+            LabelAccess labelAccess,
+            CapabilityConsumer<CAP> consumer
     ) {
-        // TODO: make this return (BlockPos, Direction, CAP) tuples for better logging
         // Log
         programContext
                 .getLogger()
                 .trace(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_BEGIN.get(
-                        displayAsCode(), displayAsCapabilityClass(), labelAccess
+                        displayAsCode(),
+                        displayAsCapabilityClass(),
+                        labelAccess
                 )));
 
-        Stream.Builder<CAP> found = Stream.builder();
         CableNetwork network = programContext.getNetwork();
+        RoundRobin roundRobin = labelAccess.roundRobin();
+        LabelPositionHolder labelPositionHolder = programContext.getLabelPositionHolder();
 
-        // Get positions
-        Iterable<BlockPos> positions = labelAccess
-                .roundRobin()
-                .gather(labelAccess, programContext.getLabelPositionHolder())::iterator;
+        ArrayList<Pair<Label, BlockPos>> positions = new ArrayList<>();
+        switch (roundRobin.getBehaviour()) {
+            case BY_LABEL -> {
+                int index = roundRobin.next(labelAccess.labels().size());
+                Label label = labelAccess.labels().get(index);
+                for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
+                    positions.add(Pair.of(label, pos));
+                }
+            }
+            case BY_BLOCK -> {
+                List<Pair<Label, BlockPos>> candidates = new ArrayList<>();
+                LongOpenHashSet seen = new LongOpenHashSet();
+                for (Label label : labelAccess.labels()) {
+                    for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
+                        if (!seen.add(pos.asLong())) continue;
+                        candidates.add(Pair.of(label, pos));
+                    }
+                }
+                if (!candidates.isEmpty()) {
+                    positions.add(candidates.get(roundRobin.next(candidates.size())));
+                }
+            }
+            case UNMODIFIED -> {
+                for (Label label : labelAccess.labels()) {
+                    for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
+                        positions.add(Pair.of(label, pos));
+                    }
+                }
+            }
+        }
 
-        for (BlockPos pos : positions) {
+        for (var pair : positions) {
+            Label label = pair.getFirst();
+            BlockPos pos = pair.getSecond();
             // Expand pos to (pos, direction) pairs
             for (Direction dir : (Iterable<? extends Direction>) labelAccess.directions().stream()::iterator) {
                 // Get capability from the network
-                Optional<CAP> cap = network
+                Optional<CAP> maybeCap = network
                         .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger())
                         .resolve();
-
-                if (cap.isPresent()) {
-                    // Add to stream
-                    found.add(cap.get());
+                if (maybeCap.isPresent()) {
                     programContext
                             .getLogger()
                             .debug(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT.get(
-                                    displayAsCapabilityClass(), pos, dir
+                                    displayAsCapabilityClass(),
+                                    pos,
+                                    dir
                             )));
+                    CAP cap = maybeCap.get();
+                    consumer.accept(label, pos, dir, cap);
                 } else {
                     // Log error
                     programContext
                             .getLogger()
                             .error(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT.get(
-                                    displayAsCapabilityClass(), pos, dir
+                                    displayAsCapabilityClass(),
+                                    pos,
+                                    dir
                             )));
                 }
             }
         }
-
-        return found.build().filter(Objects::nonNull);
     }
 
-    public Stream<STACK> collect(CAP cap, LabelAccess labelAccess) {
+    public Stream<STACK> getStacksInSlots(
+            CAP cap,
+            NumberRangeSet slots
+    ) {
         var rtn = Stream.<STACK>builder();
         for (int slot = 0; slot < getSlots(cap); slot++) {
-            if (!labelAccess.slots().contains(slot)) continue;
+            if (!slots.contains(slot)) continue;
             var stack = getStackInSlot(cap, slot);
             if (!isEmpty(stack)) {
                 rtn.add(stack);
@@ -161,7 +220,10 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
     public abstract STACK copy(STACK stack);
 
     @SuppressWarnings("unused")
-    public STACK withCount(STACK stack, long count) {
+    public STACK withCount(
+            STACK stack,
+            long count
+    ) {
         return setCount(copy(stack), count);
     }
 
@@ -174,6 +236,9 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         return CAPABILITY_KIND.getName();
     }
 
-    protected abstract STACK setCount(STACK stack, long amount);
+    protected abstract STACK setCount(
+            STACK stack,
+            long amount
+    );
 
 }
