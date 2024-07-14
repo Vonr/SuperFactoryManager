@@ -8,6 +8,7 @@ import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
 import ca.teamdman.sfm.common.net.ClientboundManagerLogLevelUpdatedPacket;
 import ca.teamdman.sfm.common.net.ClientboundManagerLogsPacket;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.OpenContainerTracker;
@@ -164,7 +165,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void rebuildProgramAndUpdateDisk() {
         if (level != null && level.isClientSide()) return;
         this.program = getDisk()
-                .flatMap(itemStack -> DiskItem.compileAndUpdateAttributes(itemStack, this))
+                .flatMap(itemStack -> DiskItem.compileAndUpdateErrorsAndWarnings(itemStack, this))
                 .orElse(null);
         sendUpdatePacket();
     }
@@ -238,6 +239,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     public void reset() {
         getDisk().ifPresent(disk -> {
+            LabelPositionHolder.purge(disk);
             disk.setTag(null);
             setItem(0, disk);
             setChanged();

@@ -1,40 +1,48 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfml.ast.Label;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.IdentityHashMap;
 
 /**
  * A pool of {@link LimitedInputSlot} objects to avoid the garbage collector
- * <p>
- * This assumes that the pool will be used in a single thread.
  */
 public class LimitedInputSlotObjectPool {
-    public static final LimitedInputSlotObjectPool INSTANCE = new LimitedInputSlotObjectPool();
+    public static final IdentityHashMap<LimitedInputSlot<?, ?, ?>, Boolean> LEASED = new IdentityHashMap<>();
     @SuppressWarnings("rawtypes")
-    private LimitedInputSlot[] pool = new LimitedInputSlot[1];
-    private int index = -1;
-
-    public int getIndex() {
-        return index;
-    }
+    private static LimitedInputSlot[] pool = new LimitedInputSlot[27];
+    private static int index = -1;
 
     /**
      * Acquire a {@link LimitedInputSlot} from the pool, or creates a new one if none available
      */
-    public <STACK, ITEM, CAP> LimitedInputSlot<STACK, ITEM, CAP> acquire(
-            CAP handler,
+    public static <STACK, ITEM, CAP> LimitedInputSlot<STACK, ITEM, CAP> acquire(
+            Label label,
+            BlockPos pos,
+            Direction direction,
             int slot,
+            CAP handler,
             InputResourceTracker<STACK, ITEM, CAP> tracker,
             STACK stack
     ) {
         if (index == -1) {
-            return new LimitedInputSlot<>(handler, slot, tracker, stack);
+            var rtn = new LimitedInputSlot<>(label, pos, direction, slot, handler, tracker, stack);
+            if (LEASED.put(rtn, true) != null) {
+                SFM.LOGGER.warn("new input slot was somehow already leased, this should literally never happen: {}", rtn);
+            };
+            return rtn;
         } else {
             @SuppressWarnings("unchecked") LimitedInputSlot<STACK, ITEM, CAP> obj = pool[index];
             index--;
-            obj.init(handler, slot, tracker, stack);
+            obj.init(handler, label, pos, direction, slot, tracker, stack);
+            if (LEASED.put(obj, true) != null) {
+                SFM.LOGGER.warn("tried to lease input slot a second time: {}", obj);
+            };
             return obj;
         }
     }
@@ -42,12 +50,20 @@ public class LimitedInputSlotObjectPool {
     /**
      * Release a {@link LimitedInputSlot} back into the pool for it to be reused instead of garbage collected
      */
-    public void release(LimitedInputSlot<?, ?, ?> obj) {
+    public static void release(LimitedInputSlot<?, ?, ?> slot) {
+        if (slot.freed) {
+            SFM.LOGGER.warn("Release called on already freed input slot {}", slot);
+            return;
+        }
+        slot.freed = true;
+        if (LEASED.remove(slot) == null) {
+            SFM.LOGGER.warn("Freed an input slot that wasn't tracked as leased: {}", slot);
+        }
         if (index == pool.length - 1) {
             // we need to grow the array
             pool = Arrays.copyOf(pool, pool.length * 2);
         }
-        pool[++index] = obj;
+        pool[++index] = slot;
     }
 
     /**
@@ -56,7 +72,7 @@ public class LimitedInputSlotObjectPool {
      * After acquiring slots, the end the index after release should be {@code check + slots.size()}
      */
     @SuppressWarnings("rawtypes")
-    public void release(Collection<LimitedInputSlot<?,?,?>> slots, int check) {
+    public static void release(Collection<LimitedInputSlot<?, ?, ?>> slots) {
         // handle resizing
         if (index + slots.size() >= pool.length) {
             int slotsFree = pool.length - index - 1;
@@ -65,18 +81,23 @@ public class LimitedInputSlotObjectPool {
         }
         // add to pool
         for (LimitedInputSlot slot : slots) {
+            if (slot.freed) {
+                SFM.LOGGER.warn("Release batch called on already freed input slot {}", slot);
+                continue;
+            }
+            slot.freed = true;
             index++;
             pool[index] = slot;
+            if (LEASED.remove(slot) == null) {
+                SFM.LOGGER.warn("Freed in batch an object that wasn't tracked as leased: {}", slot);
+            }
         }
-        // assert
-        if (index != check + slots.size()) {
-            SFM.LOGGER.warn(
-                    "Index mismatch after releasing input slots, got {} expected {}",
-                    index,
-                    check + slots.size()
-            );
+    }
 
-//            throw new IllegalStateException("Index mismatch after releasing slots, got " + index + " expected " + (check + slots.size()));
+    public static void checkInvariant() {
+        if (!LEASED.isEmpty()) {
+            SFM.LOGGER.warn("Leased objects not released: {}", LEASED);
+            LEASED.clear();
         }
     }
 }

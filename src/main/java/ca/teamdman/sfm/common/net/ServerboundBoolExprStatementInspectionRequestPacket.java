@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.BoolExpr;
@@ -12,11 +13,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.NetworkEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.function.Supplier;
+
 public record ServerboundBoolExprStatementInspectionRequestPacket(
         String programString,
         int inputNodeIndex
 ) {
-    public static void encode(ServerboundBoolExprStatementInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundBoolExprStatementInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
         friendlyByteBuf.writeInt(msg.inputNodeIndex());
     }
@@ -29,7 +35,8 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
     }
 
     public static void handle(
-            ServerboundBoolExprStatementInspectionRequestPacket msg, NetworkEvent.Context context
+            ServerboundBoolExprStatementInspectionRequestPacket msg,
+            NetworkEvent.Context context
     ) {
         context.enqueueWork(() -> {
             // todo: duplicate code
@@ -54,7 +61,7 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
             }
             Program.compile(
                     msg.programString,
-                    (successProgram, builder) -> builder
+                    successProgram -> successProgram.builder()
                             .getNodeAtIndex(msg.inputNodeIndex)
                             .filter(BoolExpr.class::isInstance)
                             .map(BoolExpr.class::cast)
@@ -66,7 +73,7 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
                                 ProgramContext programContext = new ProgramContext(
                                         successProgram,
                                         manager,
-                                        ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES
+                                        new SimulateExploreAllPathsProgramBehaviour()
                                 );
                                 boolean result = expr.test(programContext);
                                 payload.append(result ? "TRUE" : "FALSE");

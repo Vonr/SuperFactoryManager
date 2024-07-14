@@ -18,6 +18,10 @@ public interface ASTNode {
     }
 
     default Stream<ResourceIdentifier<?, ?, ?>> getReferencedIOResourceIds() {
+        if (this instanceof IOStatement ioStatement) {
+            return ioStatement.resourceLimits().resourceLimits().stream()
+                    .map(ResourceLimit::resourceId);
+        }
         return getDescendantStatements()
                 .filter(IOStatement.class::isInstance)
                 .map(IOStatement.class::cast)
