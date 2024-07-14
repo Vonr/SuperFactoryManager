@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.program;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.*;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -49,6 +50,26 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
         currentPath.history.add(statement);
     }
 
+    public @Nullable ExecutionPathElement getLatestPathElement() {
+        if (currentPath.history.isEmpty()) {
+            return null;
+        }
+        return currentPath.history.get(currentPath.history.size() - 1);
+    }
+
+    public @Nullable ExecutionPathElement getPathElementForNode(ASTNode node) {
+        var iterator = currentPath.history.listIterator(currentPath.history.size());
+        while (iterator.hasPrevious()) {
+            var element = iterator.previous();
+            if (element instanceof Branch branch && branch.ifStatement == node) {
+                return element;
+            } else if (element instanceof IO io && io.statement == node) {
+                return element;
+            }
+        }
+        return null;
+    }
+
     public void onOutputStatementExecution(OutputStatement outputStatement) {
         pushPathElement(new SimulateExploreAllPathsProgramBehaviour.IO(outputStatement));
     }
@@ -57,7 +78,10 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
         pushPathElement(new SimulateExploreAllPathsProgramBehaviour.IO(inputStatement));
     }
 
-    public void onInputStatementForgetTransform(InputStatement old, InputStatement next) {
+    public void onInputStatementForgetTransform(
+            InputStatement old,
+            InputStatement next
+    ) {
     }
 
     public void onInputStatementDropped(InputStatement inputStatement) {
@@ -145,6 +169,7 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
 
     @SuppressWarnings("rawtypes")
     public record IO(
+            IOStatement statement,
             IOKind kind,
             Set<ResourceType> usedResourceTypes,
             Set<Label> usedLabels
@@ -152,6 +177,7 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
         public IO(IOStatement statement) {
             //noinspection DataFlowIssue
             this(
+                    statement,
                     statement instanceof InputStatement
                     ? IOKind.INPUT
                     : (statement instanceof OutputStatement ? IOKind.OUTPUT : null),

@@ -9,7 +9,6 @@ import ca.teamdman.sfml.ast.IOStatement;
 import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceQuantity;
 import ca.teamdman.sfml.ast.RoundRobin;
-import cpw.mods.modlauncher.Launcher;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
