@@ -8,7 +8,6 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfml.ast.*;
 import com.mojang.datafixers.util.Pair;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -117,37 +116,10 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         CableNetwork network = programContext.getNetwork();
         RoundRobin roundRobin = labelAccess.roundRobin();
         LabelPositionHolder labelPositionHolder = programContext.getLabelPositionHolder();
-
-        ArrayList<Pair<Label, BlockPos>> positions = new ArrayList<>();
-        switch (roundRobin.getBehaviour()) {
-            case BY_LABEL -> {
-                int index = roundRobin.next(labelAccess.labels().size());
-                Label label = labelAccess.labels().get(index);
-                for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
-                    positions.add(Pair.of(label, pos));
-                }
-            }
-            case BY_BLOCK -> {
-                List<Pair<Label, BlockPos>> candidates = new ArrayList<>();
-                LongOpenHashSet seen = new LongOpenHashSet();
-                for (Label label : labelAccess.labels()) {
-                    for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
-                        if (!seen.add(pos.asLong())) continue;
-                        candidates.add(Pair.of(label, pos));
-                    }
-                }
-                if (!candidates.isEmpty()) {
-                    positions.add(candidates.get(roundRobin.next(candidates.size())));
-                }
-            }
-            case UNMODIFIED -> {
-                for (Label label : labelAccess.labels()) {
-                    for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
-                        positions.add(Pair.of(label, pos));
-                    }
-                }
-            }
-        }
+        ArrayList<Pair<Label, BlockPos>> positions = roundRobin.getPositionsForLabels(
+                labelAccess,
+                labelPositionHolder
+        );
 
         for (var pair : positions) {
             Label label = pair.getFirst();
