@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.program.ProgramLinter;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -36,7 +37,11 @@ public record ServerboundManagerFixPacket(
                         .getDisk()
                         .ifPresent(disk -> manager
                                 .getProgram()
-                                .ifPresent(program -> program.fixWarnings(disk, manager)))
+                                .ifPresent(program -> ProgramLinter.fixWarningsByRemovingBadLabelsFromDisk(
+                                        manager,
+                                        disk,
+                                        program
+                                )))
         );
         contextSupplier.get().setPacketHandled(true);
     }

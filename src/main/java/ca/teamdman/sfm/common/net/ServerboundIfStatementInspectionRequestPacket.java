@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.ProgramContext;
+import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.IfStatement;
@@ -56,7 +57,7 @@ public record ServerboundIfStatementInspectionRequestPacket(
             }
             Program.compile(
                     msg.programString,
-                    (successProgram, builder) -> builder
+                    successProgram -> successProgram.builder()
                             .getNodeAtIndex(msg.inputNodeIndex)
                             .filter(IfStatement.class::isInstance)
                             .map(IfStatement.class::cast)
@@ -68,7 +69,7 @@ public record ServerboundIfStatementInspectionRequestPacket(
                                 ProgramContext programContext = new ProgramContext(
                                         successProgram,
                                         manager,
-                                        ProgramContext.ExecutionPolicy.EXPLORE_BRANCHES
+                                        new SimulateExploreAllPathsProgramBehaviour()
                                 );
                                 boolean result = ifStatement.condition().test(programContext);
                                 payload.append(result ? "TRUE" : "FALSE");

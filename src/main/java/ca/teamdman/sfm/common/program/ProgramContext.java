@@ -4,14 +4,13 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
-import ca.teamdman.sfml.ast.IfStatement;
 import ca.teamdman.sfml.ast.InputStatement;
 import ca.teamdman.sfml.ast.Program;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ProgramContext {
     private final Program PROGRAM;
@@ -19,12 +18,10 @@ public class ProgramContext {
     private final CableNetwork NETWORK;
     private final List<InputStatement> INPUTS = new ArrayList<>();
     private final Level LEVEL;
-    private final ExecutionPolicy EXECUTION_POLICY;
-    private final List<Branch> PATH_TAKEN = new ArrayList<>();
-    private final int EXPLORATION_BRANCH_INDEX;
+    private final ProgramBehaviour BEHAVIOUR;
     private final int REDSTONE_PULSES;
-    private final ItemStack DISK_STACK;
     private final LabelPositionHolder LABEL_POSITIONS;
+    private final TranslatableLogger LOGGER;
     private boolean did_something = false;
 
     public boolean didSomething() {
@@ -35,15 +32,44 @@ public class ProgramContext {
         this.did_something = value;
     }
 
-    public ProgramContext(Program program, ManagerBlockEntity manager, ExecutionPolicy executionPolicy) {
-        this(program, manager, executionPolicy, 0);
+    private ProgramContext(
+            Program program,
+            ManagerBlockEntity manager,
+            CableNetwork network,
+            Level level,
+            int redstonePulses,
+            ProgramBehaviour executionBehaviour,
+            LabelPositionHolder labelPositions,
+            TranslatableLogger logger
+    ) {
+        this.PROGRAM = program;
+        this.MANAGER = manager;
+        this.NETWORK = network;
+        this.LEVEL = level;
+        this.REDSTONE_PULSES = redstonePulses;
+        this.BEHAVIOUR = executionBehaviour;
+        this.LABEL_POSITIONS = labelPositions;
+        this.LOGGER = logger;
+    }
+
+    public static ProgramContext createSimulationContext(Program program, LabelPositionHolder labelPositionHolder, int redstonePulses, SimulateExploreAllPathsProgramBehaviour behaviour) {
+        //noinspection DataFlowIssue // simulation mode must be able to run without world access
+        return new ProgramContext(
+                program,
+                null,
+                null,
+                null,
+                redstonePulses,
+                behaviour,
+                labelPositionHolder,
+                new TranslatableLogger("simulated" + Objects.hash(program, labelPositionHolder, behaviour))
+        );
     }
 
     public ProgramContext(
             Program program,
             ManagerBlockEntity manager,
-            ExecutionPolicy executionPolicy,
-            int branchIndex
+            ProgramBehaviour executionBehaviour
     ) {
         this.PROGRAM = program;
         this.MANAGER = manager;
@@ -54,18 +80,13 @@ public class ProgramContext {
         assert MANAGER.getLevel() != null;
         LEVEL = MANAGER.getLevel();
         REDSTONE_PULSES = MANAGER.getUnprocessedRedstonePulseCount();
-        EXECUTION_POLICY = executionPolicy;
-        EXPLORATION_BRANCH_INDEX = branchIndex;
-        //noinspection OptionalGetWithoutIsPresent // program shouldn't be ticking if there is no disk
-        DISK_STACK = MANAGER.getDisk().get();
-        LABEL_POSITIONS = LabelPositionHolder.from(DISK_STACK);
+        BEHAVIOUR = executionBehaviour;
+        //noinspection OptionalGetWithoutIsPresent
+        LABEL_POSITIONS = LabelPositionHolder.from(manager.getDisk().get());
+        LOGGER = manager.logger;
     }
 
-    public ItemStack getDisk() {
-        return DISK_STACK;
-    }
-
-    public LabelPositionHolder getlabelPositions() {
+    public LabelPositionHolder getLabelPositionHolder() {
         return LABEL_POSITIONS;
     }
 
@@ -75,35 +96,28 @@ public class ProgramContext {
         NETWORK = other.NETWORK;
         LEVEL = other.LEVEL;
         REDSTONE_PULSES = other.REDSTONE_PULSES;
-        EXECUTION_POLICY = other.EXECUTION_POLICY;
-        EXPLORATION_BRANCH_INDEX = other.EXPLORATION_BRANCH_INDEX;
+        BEHAVIOUR = other.BEHAVIOUR.fork();
         INPUTS.addAll(other.INPUTS);
         did_something = other.did_something;
-        DISK_STACK = other.DISK_STACK;
         LABEL_POSITIONS = other.LABEL_POSITIONS;
+        LOGGER = other.LOGGER;
     }
 
-    public ExecutionPolicy getExecutionPolicy() {
-        return EXECUTION_POLICY;
-    }
-
-    public List<Branch> getExecutionPath() {
-        return PATH_TAKEN;
-    }
-
-    public int getExplorationBranchIndex() {
-        return EXPLORATION_BRANCH_INDEX;
+    public ProgramBehaviour getBehaviour() {
+        return BEHAVIOUR;
     }
 
     public Program getProgram() {
         return PROGRAM;
     }
 
-    public void pushPath(Branch branch) {
-        this.PATH_TAKEN.add(branch);
-    }
-
-    public ProgramContext copy() {
+    /**
+     * Copy the context, used in branch investigation.
+     * <p>
+     * This does not fork input statement state.
+     * @return shallow copy of this context
+     */
+    public ProgramContext fork() {
         return new ProgramContext(this);
     }
 
@@ -120,17 +134,13 @@ public class ProgramContext {
         }
     }
 
-    public enum ExecutionPolicy {
-        EXPLORE_BRANCHES,
-        UNRESTRICTED
-    }
 
     public ManagerBlockEntity getManager() {
         return MANAGER;
     }
 
     public TranslatableLogger getLogger() {
-        return MANAGER.logger;
+        return LOGGER;
     }
 
     public void addInput(InputStatement input) {
@@ -146,12 +156,6 @@ public class ProgramContext {
         return NETWORK;
     }
 
-    public record Branch(
-            IfStatement ifStatement,
-            boolean wasTrue
-    ) {
-    }
-
     @Override
     public String toString() {
         return "ProgramContext{" +
@@ -160,11 +164,8 @@ public class ProgramContext {
                ", NETWORK=" + NETWORK +
                ", INPUTS=" + INPUTS +
                ", LEVEL=" + LEVEL +
-               ", EXECUTION_POLICY=" + EXECUTION_POLICY +
-               ", PATH_TAKEN=" + PATH_TAKEN +
-               ", EXPLORATION_BRANCH_INDEX=" + EXPLORATION_BRANCH_INDEX +
+               ", EXECUTION_POLICY=" + BEHAVIOUR +
                ", REDSTONE_PULSES=" + REDSTONE_PULSES +
-               ", DISK_STACK=" + DISK_STACK +
                ", LABEL_POSITIONS=" + LABEL_POSITIONS +
                ", did_something=" + did_something +
                '}';
