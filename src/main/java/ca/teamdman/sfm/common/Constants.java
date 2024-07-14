@@ -28,6 +28,10 @@ public class Constants {
                 "gui.sfm.text_editor.done_button.tooltip",
                 "Shift+Enter to submit"
         );
+        public static final LocalizationEntry PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP = new LocalizationEntry(
+                "gui.sfm.text_editor.toggle_line_numbers_button.tooltip",
+                "Toggle line numbers"
+        );
         public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
                 "gui.sfm.save_changes_confirm.title",
                 "Save changes"
@@ -43,6 +47,22 @@ public class Constants {
         public static final LocalizationEntry SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
                 "gui.sfm.save_changes_confirm.no_button",
                 "Continue editing"
+        );
+        public static final LocalizationEntry MANAGER_RESET_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+                "gui.sfm.manager.reset_confirm_screen.title",
+                "Reset disk?"
+        );
+        public static final LocalizationEntry MANAGER_RESET_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+                "gui.sfm.manager.reset_confirm_screen.message",
+                "Are you sure you want to reset this disk?"
+        );
+        public static final LocalizationEntry MANAGER_RESET_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.reset_confirm_screen.yes_button",
+                "Wipe program and labels"
+        );
+        public static final LocalizationEntry MANAGER_RESET_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+                "gui.sfm.manager.reset_confirm_screen.no_button",
+                "Never mind, make no changes"
         );
         public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
                 "gui.sfm.exit_without_saving_confirm.title",
@@ -287,6 +307,14 @@ public class Constants {
                 "program.sfm.warnings.unused_label",
                 "Label \"%s\" is used in code but not assigned in the world."
         );
+        public static final LocalizationEntry PROGRAM_WARNING_OUTPUT_RESOURCE_TYPE_NOT_FOUND_IN_INPUTS = new LocalizationEntry(
+                "program.sfm.warnings.output_label_not_found_in_inputs",
+                "Statement \"%s\" at %s uses resource type \"%s\" which has no matching input statement."
+        );
+        public static final LocalizationEntry PROGRAM_WARNING_UNUSED_INPUT_LABEL = new LocalizationEntry(
+                "program.sfm.warnings.unused_input_label",
+                "Statement \"%s\" at %s inputs \"%s\" from \"%s\" but no future output statement consume \"%s\"."
+        );
         public static final LocalizationEntry PROGRAM_WARNING_UNKNOWN_RESOURCE_ID = new LocalizationEntry(
                 "program.sfm.warnings.unknown_resource_id",
                 "Resource \"%s\" was not found."
@@ -349,7 +377,7 @@ public class Constants {
 
         public static final LocalizationEntry LOG_RESOURCE_TYPE_GET_CAPABILITIES_BEGIN = new LocalizationEntry(
                 "log.sfm.resource_type.get_capabilities.begin",
-                "Gathering capabilities of type %s against labels %s"
+                "Gathering capabilities of type %s (%s) against labels %s"
         );
         public static final LocalizationEntry LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT = new LocalizationEntry(
                 "log.sfm.resource_type.get_capabilities.not_present",
@@ -498,7 +526,7 @@ public class Constants {
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE = new LocalizationEntry(
                 "log.sfm.statement.tick.io.gather_slots.resource_types",
-                "Gathering for: %s"
+                "Gathering for: %s (%s)"
         );
         public static final LocalizationEntry LOG_PROGRAM_TICK_OUTPUT_STATEMENT = new LocalizationEntry(
                 "log.sfm.statement.tick.output",

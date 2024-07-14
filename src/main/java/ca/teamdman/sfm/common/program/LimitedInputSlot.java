@@ -1,6 +1,9 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfml.ast.Label;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 import javax.annotation.Nullable;
 
@@ -9,16 +12,29 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
     public ResourceType<STACK, ITEM, CAP> type;
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public CAP handler;
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
+    public BlockPos pos;
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
+    public Label label;
+    @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
+    public Direction direction;
     public int slot;
+    public boolean freed;
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     public InputResourceTracker<STACK, ITEM, CAP> tracker;
     private @Nullable STACK extractSimulateCache = null;
     private boolean done = false;
 
     public LimitedInputSlot(
-            CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker, STACK stack
+            Label label,
+            BlockPos pos,
+            Direction direction,
+            int slot,
+            CAP handler,
+            InputResourceTracker<STACK, ITEM, CAP> tracker,
+            STACK stack
     ) {
-        this.init(handler, slot, tracker, stack);
+        this.init(handler, label, pos, direction, slot, tracker, stack);
     }
 
     public boolean isDone() {
@@ -60,12 +76,26 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
         return extractSimulateCache;
     }
 
-    public void init(CAP handler, int slot, InputResourceTracker<STACK, ITEM, CAP> tracker, STACK stack) {
+    public void init(
+            CAP handler,
+            Label label,
+            BlockPos pos,
+            Direction direction,
+            int slot,
+            InputResourceTracker<STACK, ITEM, CAP> tracker,
+            STACK stack
+    ) {
         this.done = false;
         this.extractSimulateCache = stack;
+
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
+        this.pos = pos;
+        this.label = label;
+        this.direction = direction;
+        this.freed = false;
+
         //noinspection DataFlowIssue
         this.type = tracker.getResourceLimit().resourceId().getResourceType();
         if (type == null) {
@@ -75,11 +105,13 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
 
     @Override
     public String toString() {
-        return "LimitedInputSlot{" +
-               "slot=" + slot +
-               ", cap=" + type.CAPABILITY_KIND.name() +
-//               ", extractSimulateCache=" + extractSimulateCache +
-               ", tracker=" + tracker +
-               '}';
+        return "LimitedInputSlot{"
+               + "label=" + label
+               + ", pos=" + pos
+               + ", direction=" + direction
+               + ", slot=" + slot
+               + ", cap=" + type.displayAsCapabilityClass()
+               + ", tracker=" + tracker
+               + '}';
     }
 }

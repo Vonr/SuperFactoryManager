@@ -7,6 +7,8 @@ import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
+import ca.teamdman.sfm.common.program.ProgramLinter;
+import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Program;
@@ -55,16 +57,15 @@ public class DiskItem extends Item {
 
     }
 
-    public static Optional<Program> compileAndUpdateAttributes(ItemStack stack, @Nullable ManagerBlockEntity manager) {
+    public static Optional<Program> compileAndUpdateErrorsAndWarnings(ItemStack stack, @Nullable ManagerBlockEntity manager) {
         if (manager != null) {
             manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FROM_DISK_BEGIN.get()));
         }
         AtomicReference<Program> rtn = new AtomicReference<>(null);
         Program.compile(
                 getProgram(stack),
-                (successProgram, builder) -> {
-                    ArrayList<TranslatableContents> warnings = successProgram.gatherWarnings(stack, manager);
-                    List<TranslatableContents> errors = Collections.emptyList();
+                successProgram -> {
+                    ArrayList<TranslatableContents> warnings = ProgramLinter.gatherWarnings(successProgram, LabelPositionHolder.from(stack), manager);
 
                     // Log to disk
                     if (manager != null) {
@@ -78,7 +79,7 @@ public class DiskItem extends Item {
                     // Update disk properties
                     setProgramName(stack, successProgram.name());
                     setWarnings(stack, warnings);
-                    setErrors(stack, errors);
+                    setErrors(stack, Collections.emptyList());
 
                     // Track result
                     rtn.set(successProgram);
