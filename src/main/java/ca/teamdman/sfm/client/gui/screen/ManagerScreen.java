@@ -3,18 +3,21 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
+import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -103,7 +106,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 buttonWidth,
                 16,
                 MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON.getComponent(),
-                button -> this.onLoadClipboard(),
+                button -> this.onClipboardPasteButtonClicked(),
                 buildTooltip(MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP)
         ));
         editButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
@@ -112,7 +115,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 buttonWidth,
                 16,
                 MANAGER_GUI_EDIT_BUTTON.getComponent(),
-                button -> onEdit(),
+                button -> onEditButtonClicked(),
                 buildTooltip(MANAGER_GUI_EDIT_BUTTON_TOOLTIP)
         ));
         examplesButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
@@ -121,7 +124,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 buttonWidth,
                 16,
                 MANAGER_GUI_VIEW_EXAMPLES_BUTTON.getComponent(),
-                button -> onShowExamples(),
+                button -> onExamplesButtonClicked(),
                 buildTooltip(MANAGER_GUI_VIEW_EXAMPLES_BUTTON_TOOLTIP)
         ));
         clipboardCopyButton = this.addRenderableWidget(new ExtendedButton(
@@ -130,7 +133,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 buttonWidth,
                 16,
                 MANAGER_GUI_COPY_TO_CLIPBOARD_BUTTON.getComponent(),
-                button -> this.onSaveClipboard()
+                button -> this.onClipboardCopyButtonClicked()
         ));
         logsButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -138,7 +141,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 buttonWidth,
                 16,
                 MANAGER_GUI_VIEW_LOGS_BUTTON.getComponent(),
-                button -> onShowLogs()
+                button -> onLogsButtonClicked()
         ));
         rebuildButton = this.addRenderableWidget(new ExtendedButton(
                 (this.width - this.imageWidth) / 2 - buttonWidth,
@@ -146,7 +149,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 buttonWidth,
                 16,
                 MANAGER_GUI_REBUILD_BUTTON.getComponent(),
-                button -> this.onSendRebuild()
+                button -> this.onRebuildButtonClicked()
         ));
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
@@ -154,7 +157,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 50,
                 12,
                 MANAGER_GUI_RESET_BUTTON.getComponent(),
-                button -> sendReset(),
+                button -> onResetButtonClicked(),
                 buildTooltip(MANAGER_GUI_RESET_BUTTON_TOOLTIP)
         ));
         diagButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
@@ -163,13 +166,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 12,
                 14,
                 Component.literal("!"),
-                button -> {
-                    if (Screen.hasShiftDown() && !isReadOnly()) {
-                        sendAttemptFix();
-                    } else {
-                        this.onSaveDiagClipboard();
-                    }
-                },
+                button -> onDiagButtonClicked(),
                 buildTooltip(isReadOnly()
                              ? MANAGER_GUI_WARNING_BUTTON_TOOLTIP_READ_ONLY
                              : MANAGER_GUI_WARNING_BUTTON_TOOLTIP)
@@ -177,28 +174,52 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         updateVisibilities();
     }
 
-    private void onEdit() {
+    private void onDiagButtonClicked() {
+        if (Screen.hasShiftDown() && !isReadOnly()) {
+            sendAttemptFix();
+        } else {
+            this.onSaveDiagClipboard();
+        }
+    }
+
+    private void onEditButtonClicked() {
         ClientStuff.showProgramEditScreen(DiskItem.getProgram(menu.getDisk()), this::sendProgram);
     }
 
-    private void onShowExamples() {
+    private void onExamplesButtonClicked() {
         ClientStuff.showExampleListScreen(DiskItem.getProgram(menu.getDisk()), this::sendProgram);
     }
 
-    private void onShowLogs() {
+    private void onLogsButtonClicked() {
         ClientStuff.showLogsScreen(menu);
     }
 
-    private void sendReset() {
-        PacketDistributor.SERVER.noArg().send(new ServerboundManagerResetPacket(
-                menu.containerId,
-                menu.MANAGER_POSITION
-        ));
-        status = MANAGER_GUI_STATUS_RESET.getComponent();
-        statusCountdown = STATUS_DURATION;
+    private void onResetButtonClicked() {
+        ConfirmScreen confirmScreen = new ConfirmScreen(
+                proceed -> {
+                    assert this.minecraft != null;
+                    this.minecraft.popGuiLayer(); // Close confirm screen
+
+                    if (proceed) {
+                        PacketDistributor.SERVER.noArg().send(new ServerboundManagerResetPacket(
+                                menu.containerId,
+                                menu.MANAGER_POSITION
+                        ));
+                        status = MANAGER_GUI_STATUS_RESET.getComponent();
+                        statusCountdown = STATUS_DURATION;
+                    }
+                },
+                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_TITLE.getComponent(),
+                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+        );
+        assert this.minecraft != null;
+        this.minecraft.pushGuiLayer(confirmScreen);
+        confirmScreen.setDelay(20);
     }
 
-    private void onSendRebuild() {
+    private void onRebuildButtonClicked() {
         PacketDistributor.SERVER.noArg().send(new ServerboundManagerRebuildPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION
@@ -227,7 +248,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         statusCountdown = STATUS_DURATION;
     }
 
-    private void onSaveClipboard() {
+    private void onClipboardCopyButtonClicked() {
         try {
             Minecraft.getInstance().keyboardHandler.setClipboard(menu.program);
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
@@ -260,7 +281,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         }
     }
 
-    private void onLoadClipboard() {
+    private void onClipboardPasteButtonClicked() {
         try {
             String contents = Minecraft.getInstance().keyboardHandler.getClipboard();
             sendProgram(contents);
@@ -272,19 +293,19 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if (Screen.isPaste(pKeyCode) && clipboardPasteButton.visible) {
-            onLoadClipboard();
+            onClipboardPasteButtonClicked();
             return true;
         } else if (Screen.isCopy(pKeyCode) && clipboardCopyButton.visible) {
-            onSaveClipboard();
+            onClipboardCopyButtonClicked();
             return true;
         } else if (pKeyCode == GLFW.GLFW_KEY_E
                    && Screen.hasControlDown()
                    && Screen.hasShiftDown()
                    && examplesButton.visible) {
-            onShowExamples();
+            onExamplesButtonClicked();
             return true;
         } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown() && editButton.visible) {
-            onEdit();
+            onEditButtonClicked();
             return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);

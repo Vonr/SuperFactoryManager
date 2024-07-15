@@ -52,7 +52,7 @@ public record ServerboundDiskItemSetProgramPacket(
             var stack = sender.getItemInHand(msg.hand);
             if (stack.getItem() instanceof DiskItem) {
                 DiskItem.setProgram(stack, msg.programString);
-                DiskItem.compileAndUpdateAttributes(stack, null);
+                DiskItem.compileAndUpdateErrorsAndWarnings(stack, null);
             }
 
         });

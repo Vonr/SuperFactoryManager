@@ -4,6 +4,7 @@ import ca.teamdman.sfm.client.gui.screen.ProgramEditScreen;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfml.ast.*;
+import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -53,14 +54,16 @@ public class SFMTests {
         labelPositions.add("b", new BlockPos(0, 0, 0));
         labelPositions.add("c", new BlockPos(0, 0, 0));
         labelPositions.add("c", new BlockPos(0, 1, 0));
+        RoundRobin roundRobin1 = labelAccess.roundRobin();
         assertEquals(
-                List.of(new BlockPos(0, 0, 0)),
-                labelAccess.roundRobin().gather(labelAccess, labelPositions).toList()
+                List.of(Pair.of(new Label("a"), new BlockPos(0, 0, 0))),
+                roundRobin1.getPositionsForLabels(labelAccess, labelPositions)
         );
         // should not repeat the same block
+        RoundRobin roundRobin = labelAccess.roundRobin();
         assertEquals(
-                List.of(new BlockPos(0, 1, 0)),
-                labelAccess.roundRobin().gather(labelAccess, labelPositions).toList()
+                List.of(Pair.of(new Label("c"), new BlockPos(0, 1, 0))),
+                roundRobin.getPositionsForLabels(labelAccess, labelPositions)
         );
     }
 

@@ -27,7 +27,7 @@ public class ExampleEditScreen extends ProgramEditScreen {
     @Override
     public void saveAndClose() {
         // The user is attempting to apply a code change to the disk
-        if (equalsAnyTemplate(program)) {
+        if (program.isBlank() || equalsAnyTemplate(program)) {
             // The disk contains template code, safe to overwrite
             super.saveAndClose();
         } else {

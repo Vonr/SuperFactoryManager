@@ -2,12 +2,35 @@ NAME "Changelog"
 -- Official SFM Discord:
 -- https://discord.gg/5mbUY3mu6m
 
----- 4.16.1 ----
+---- 4.17.0 ----
 -- fix cache not being invalidated when chunk unloaded
----- this is caused by other mods not invalidating capabilities
+---- this was caused by other mods not invalidating capabilities
+---- this caused managers to stop working (rejoining a server, etc)
 -- fix label guns sharing internal objects with each other and disks
 ---- this caused disks in managers to get updated without pushing
 ---- sometimes manager disk didn't have labels you thought you pushed
+-- fix reset button not purging labels
+-- add confirmation screen to reset button
+-- remove confirmation screen when overwriting empty program
+-- add client config for showing line numbers
+---- add toggle button in program edit screen
+-- reduce log spam from syntax errors
+---- build process now properly stops when parsing fails
+
+-- fix partial forgets resetting trackers
+EVERY 20 TICKS DO
+    INPUT 10 FROM a,b
+    OUTPUT 1 to z
+    FORGET b
+    OUTPUT to z -- this used to move 10, should be/is now 9
+END
+
+-- add warnings
+EVERY 20 TICKS DO
+    INPUT fluid:: FROM a -- fluid:: never gets used
+    OUTPUT TO b          -- item:: never get inputted
+END
+
 
 ---- 4.16.0 ----
 -- fix crashes using ctrl+space

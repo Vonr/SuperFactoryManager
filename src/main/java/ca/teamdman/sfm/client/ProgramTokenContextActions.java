@@ -33,7 +33,7 @@ public class ProgramTokenContextActions {
                                     .getNodesUnderCursor(cursorPosition - 1)
                                     .stream()
                     )
-                    .map(pair -> getContextAction(programString, builder, pair.a, pair.b, cursorPosition))
+                    .map(pair -> getContextAction(programString, builder, pair.getFirst(), pair.getSecond(), cursorPosition))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .findFirst();

@@ -1,14 +1,20 @@
 package ca.teamdman.sfm;
 
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.item.FormItem;
+import ca.teamdman.sfm.common.net.ServerboundOutputInspectionRequestPacket;
+import ca.teamdman.sfm.common.program.GatherWarningsProgramBehaviour;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
+import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfml.ast.OutputStatement;
+import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -74,9 +80,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    /**
-     * Ensure moving everything a single stack of
-     */
     @GameTest(template = "3x2x1")
     public static void move_1_stack(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -2469,6 +2472,44 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
 
     @GameTest(template = "3x2x1")
+    public static void forget_input_count_state(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = getItemHandler(helper, rightPos);
+        var leftChest = getItemHandler(helper, leftPos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT 10 FROM a,b
+                                           OUTPUT 1 to z
+                                           FORGET b
+                                           OUTPUT to z
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(leftPos))
+                .add("z", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64-10, "did not remain");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 10, "did not arrive");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x2x1")
     public static void reorder_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2939,7 +2980,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3", batch = "laggy")
+    @GameTest(template = "3x4x3")
     public static void move_on_pulse(GameTestHelper helper) {
         var managerPos = new BlockPos(1, 2, 1);
         var buttonPos = managerPos.offset(Direction.NORTH.getNormal());
@@ -2988,5 +3029,482 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
         // push the button
         helper.pressButton(buttonPos);
+    }
+
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void count_execution_paths_1(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // set the labels
+        LabelPositionHolder labelPositionHolder = LabelPositionHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM left
+                                           OUTPUT TO right
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+        var program = manager.getProgram().get();
+
+        // ensure no warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
+
+        // count the execution paths
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        program.tick(ProgramContext.createSimulationContext(
+                program,
+                labelPositionHolder,
+                0,
+                simulation
+        ));
+        assertTrue(simulation.getSeenPaths().size() == 1, "expected single execution path");
+        assertTrue(simulation.getSeenPaths().get(0).history().size() == 2, "expected two elements in execution path");
+        helper.succeed();
+    }
+
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void count_execution_paths_2(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // set the labels
+        LabelPositionHolder labelPositionHolder = LabelPositionHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM left
+                                           OUTPUT TO right
+                                       END
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM left
+                                           OUTPUT TO right
+                                           OUTPUT TO right
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+        var program = manager.getProgram().get();
+
+        // ensure no warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
+
+        // count the execution paths
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        program.tick(ProgramContext.createSimulationContext(
+                program,
+                labelPositionHolder,
+                0,
+                simulation
+        ));
+        assertTrue(simulation.getSeenPaths().size() == 2, "expected single execution path");
+        assertTrue(simulation.getSeenPaths().get(0).history().size() == 2, "expected two elements in execution path");
+        assertTrue(simulation.getSeenPaths().get(1).history().size() == 3, "expected two elements in execution path");
+        helper.succeed();
+    }
+
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void count_execution_paths_3(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // set the labels
+        LabelPositionHolder labelPositionHolder = LabelPositionHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM left
+                                           OUTPUT TO right
+                                       END
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM left
+                                           INPUT FROM left
+                                           OUTPUT TO right
+                                           OUTPUT TO right
+                                       END
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM left
+                                           INPUT FROM left
+                                           OUTPUT TO right
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+        var program = manager.getProgram().get();
+
+        // ensure no warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
+
+        // count the execution paths
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        program.tick(ProgramContext.createSimulationContext(
+                program,
+                labelPositionHolder,
+                0,
+                simulation
+        ));
+        assertTrue(simulation.getSeenPaths().size() == 3, "expected single execution path");
+        assertTrue(simulation.getSeenPaths().get(0).history().size() == 2, "expected two elements in execution path");
+        assertTrue(simulation.getSeenPaths().get(1).history().size() == 4, "expected two elements in execution path");
+        assertTrue(simulation.getSeenPaths().get(2).history().size() == 3, "expected two elements in execution path");
+        helper.succeed();
+    }
+
+
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void count_execution_paths_conditional_1(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // set the labels
+        LabelPositionHolder labelPositionHolder = LabelPositionHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           IF left HAS gt 0 stone THEN
+                                               INPUT FROM left
+                                           END
+                                           OUTPUT TO right
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+        var program = manager.getProgram().get();
+
+        // ensure no warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
+
+        // count the execution paths
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        program.tick(ProgramContext.createSimulationContext(
+                program,
+                labelPositionHolder,
+                0,
+                simulation
+        ));
+
+        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1,2));
+        assertTrue(simulation.getSeenPaths().size() == expectedPathSizes.size(), "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size());
+        int[] actualPathIOSizes = simulation.getSeenIOStatementCountForEachPath();
+        // don't assume the order, just that each path size has occurred the specified number of times
+        for (int i = 0; i < actualPathIOSizes.length; i++) {
+            int pathSize = actualPathIOSizes[i];
+            if (!expectedPathSizes.remove((Integer) pathSize)) {
+                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation.getSeenPaths().size() + " paths");
+            }
+        }
+        helper.succeed();
+    }
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void count_execution_paths_conditional_1b(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           IF left HAS gt 0 stone THEN
+                                               INPUT FROM left
+                                           END
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+
+        // assert expected warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.size() == 1, "expected 1 warning, got " + warnings.size());
+        assertTrue(warnings
+                           .get(0)
+                           .getKey()
+                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
+                                           .key()
+                                           .get()), "expected output without matching input warning");
+        helper.succeed();
+    }
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void count_execution_paths_conditional_2(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // set the labels
+        LabelPositionHolder labelPositionHolder = LabelPositionHolder.empty()
+                .add("left1", helper.absolutePos(leftPos))
+                .add("left2", helper.absolutePos(leftPos))
+                .add("right", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           IF left2 HAS gt 0 stone THEN
+                                               INPUT FROM left1
+                                           END
+                                           IF left1 HAS gt 0 stone THEN
+                                               INPUT FROM left2
+                                           END
+                                           OUTPUT TO right
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+        var program = manager.getProgram().get();
+
+        // ensure no warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
+
+        // count the execution paths
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        program.tick(ProgramContext.createSimulationContext(
+                program,
+                labelPositionHolder,
+                0,
+                simulation
+        ));
+        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1,2,2,3));
+        assertTrue(simulation.getSeenPaths().size() == expectedPathSizes.size(), "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size());
+        int[] actualPathIOSizes = simulation.getSeenIOStatementCountForEachPath();
+        // don't assume the order, just that each path size has occurred the specified number of times
+        for (int i = 0; i < actualPathIOSizes.length; i++) {
+            int pathSize = actualPathIOSizes[i];
+            if (!expectedPathSizes.remove((Integer) pathSize)) {
+                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation.getSeenPaths().size() + " paths");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void unused_io_warning_output_label_not_presnet_in_input(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        LabelPositionHolder.empty()
+                .add("bruh", helper.absolutePos(leftPos))
+                .save(manager.getDisk().get());
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           OUTPUT TO bruh
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+
+        // assert expected warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.size() == 1, "expected 1 warning, got " + warnings.size());
+        assertTrue(warnings
+                           .get(0)
+                           .getKey()
+                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_OUTPUT_RESOURCE_TYPE_NOT_FOUND_IN_INPUTS
+                                           .key()
+                                           .get()), "expected output without matching input warning");
+        helper.succeed();
+    }
+
+
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void unused_io_warning_input_label_not_present_in_output(GameTestHelper helper) {
+        // place inventories
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        // place manager
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        LabelPositionHolder.empty()
+                .add("left", helper.absolutePos(leftPos))
+                .save(manager.getDisk().get());
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM left
+                                       END
+                                   """.stripTrailing().stripIndent());
+        assertManagerRunning(manager);
+
+        // assert expected warnings
+        var warnings = DiskItem.getWarnings(manager.getDisk().get());
+        assertTrue(warnings.size() == 1, "expected 1 warning, got " + warnings.size());
+        assertTrue(warnings
+                           .get(0)
+                           .getKey()
+                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
+                                           .key()
+                                           .get()), "expected output without matching input warning");
+        helper.succeed();
+    }
+
+
+    @GameTest(template = "3x2x1", batch="linting")
+    public static void conditional_output_inspection(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = getItemHandler(helper, rightPos);
+        var leftChest = getItemHandler(helper, leftPos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        // set the program
+        String code = """
+                    EVERY 20 TICKS DO
+                        IF a HAS = 64 dirt THEN
+                            INPUT RETAIN 32 FROM a
+                        END
+                        OUTPUT TO b
+                    END
+                """.stripTrailing().stripIndent();
+        manager.setProgram(code);
+        assertManagerRunning(manager);
+
+        // compile new program for inspection
+        Program program = compile(code);
+
+
+        OutputStatement outputStatement = (OutputStatement) program
+                .triggers()
+                .get(0)
+                .getBlock()
+                .getStatements()
+                .get(1);
+
+        String inspectionResults = ServerboundOutputInspectionRequestPacket.getOutputStatementInspectionResultsString(
+                manager,
+                program,
+                outputStatement
+        );
+
+        //noinspection TrailingWhitespacesInTextBlock
+        String expected = """
+                OUTPUT  TO b
+                -- predictions may differ from actual execution results
+                -- POSSIBILITY 0 -- all false
+                OVERALL a HAS = 64 dirt -- false
+                                
+                    -- predicted inputs:
+                    none
+                    -- predicted outputs:
+                    none
+                -- POSSIBILITY 1 -- all true
+                OVERALL a HAS = 64 dirt -- true
+                                
+                    -- predicted inputs:
+                    INPUT 32 minecraft:dirt FROM a SLOTS 0
+                    -- predicted outputs:
+                    OUTPUT 32 minecraft:dirt TO b
+                """.stripLeading().stripIndent().stripTrailing();
+        if (!inspectionResults.equals(expected)) {
+            System.out.println("Received results:");
+            System.out.println(inspectionResults);
+            System.out.println("Expected:");
+            System.out.println(expected);
+
+            // get the position of the difference and show it
+            for (int i = 0; i < inspectionResults.length(); i++) {
+                if (inspectionResults.charAt(i) != expected.charAt(i)) {
+                    System.out.println("Difference at position " + i + ":" + inspectionResults.charAt(i) + " vs " + expected.charAt(i));
+                    break;
+                }
+            }
+
+            helper.fail("inspection didn't match results");
+        }
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 32, "Dirt did not depart");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 32, "Dirt did not arrive");
+        });
     }
 }
