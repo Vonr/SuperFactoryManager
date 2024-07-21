@@ -1,20 +1,19 @@
-package ca.teamdman.sfm.common.resourcetype.exclude;
+package ca.teamdman.sfm.common.resourcetype;
 
-import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.slurry.ISlurryHandler;
 import mekanism.api.chemical.slurry.Slurry;
 import mekanism.api.chemical.slurry.SlurryStack;
+import mekanism.common.capabilities.Capabilities;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.capabilities.CapabilityManager;
-import net.neoforged.neoforge.common.capabilities.CapabilityToken;
+import net.neoforged.neoforge.capabilities.BlockCapability;
 import org.apache.commons.lang3.NotImplementedException;
+import org.jetbrains.annotations.Nullable;
 
 public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurryHandler> {
-    public static final Capability<ISlurryHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
-    });
+    public static final BlockCapability<ISlurryHandler, @Nullable Direction> CAP = Capabilities.SLURRY.block();
 
     public SlurryResourceType() {
         super(CAP);
@@ -83,8 +82,7 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
 
     @Override
     public Registry<Slurry> getRegistry() {
-        throw new NotImplementedException();
-//        return MekanismAPI.slurryRegistry();
+        return MekanismAPI.SLURRY_REGISTRY;
     }
 
     @Override

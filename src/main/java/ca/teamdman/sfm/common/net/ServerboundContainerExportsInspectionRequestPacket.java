@@ -21,30 +21,38 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
 
 public record ServerboundContainerExportsInspectionRequestPacket(
         int windowId,
         BlockPos pos
 ) implements CustomPacketPayload {
+    public static final ResourceLocation ID = new ResourceLocation(
+            SFM.MOD_ID,
+            "serverbound_container_exports_inspection_request_packet"
+    );
+
     @Override
     public void write(FriendlyByteBuf friendlyByteBuf) {
         encode(this, friendlyByteBuf);
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_container_exports_inspection_request_packet");
     @Override
     public ResourceLocation id() {
         return ID;
     }
 
-    public static void encode(ServerboundContainerExportsInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundContainerExportsInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
     }
@@ -86,7 +94,10 @@ public record ServerboundContainerExportsInspectionRequestPacket(
     }
 
 
-    public static String buildInspectionResults(Level level, BlockPos pos) {
+    public static String buildInspectionResults(
+            Level level,
+            BlockPos pos
+    ) {
         StringBuilder sb = new StringBuilder();
         Direction[] dirs = Arrays.copyOf(Direction.values(), Direction.values().length + 1);
         dirs[dirs.length - 1] = null;
@@ -112,7 +123,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         if (SFMCompat.isMekanismLoaded()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be != null) {
-//                sb.append(ca.teamdman.sfm.common.compat.SFMMekanismCompat.gatherInspectionResults(be)).append("\n");
+                sb.append(ca.teamdman.sfm.common.compat.SFMMekanismCompat.gatherInspectionResults(be)).append("\n");
             }
         }
 

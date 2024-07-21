@@ -1,20 +1,19 @@
-package ca.teamdman.sfm.common.resourcetype.exclude;
+package ca.teamdman.sfm.common.resourcetype;
 
-import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasHandler;
+import mekanism.common.capabilities.Capabilities;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.capabilities.CapabilityManager;
-import net.neoforged.neoforge.common.capabilities.CapabilityToken;
+import net.neoforged.neoforge.capabilities.BlockCapability;
 import org.apache.commons.lang3.NotImplementedException;
+import org.jetbrains.annotations.Nullable;
 
 public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
-    public static final Capability<IGasHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
-    });
+    public static final BlockCapability<IGasHandler, @Nullable Direction> CAP = Capabilities.GAS.block();
 
     public GasResourceType() {
         super(CAP);
@@ -78,8 +77,7 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
 
     @Override
     public Registry<Gas> getRegistry() {
-        throw new NotImplementedException();
-//        return MekanismAPI.gasRegistry();
+        return MekanismAPI.GAS_REGISTRY;
     }
 
     @Override

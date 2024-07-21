@@ -25,10 +25,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.fluids.FluidStack;
-import net.neoforged.fluids.capability.IFluidHandler;
-import net.neoforged.gametest.GameTestHolder;
-import net.neoforged.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -516,9 +517,8 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             ));
             int found = destBlocks
                     .stream()
-                    .map(helper::getBlockEntity)
-                    .map(be -> be.getCapability(ForgeCapabilities.FLUID_HANDLER))
-                    .map(x -> x.orElse(null))
+                    .map(helper::absolutePos)
+                    .map(pos -> helper.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, pos, Direction.DOWN))
                     .peek(Objects::requireNonNull)
                     .map(x -> x.getFluidInTank(0))
                     .mapToInt(FluidStack::getAmount)
@@ -541,21 +541,13 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         helper.setBlock(b1Pos, MekanismBlocks.BASIC_FLUID_TANK.getBlock());
         helper.setBlock(b2Pos, MekanismBlocks.BASIC_FLUID_TANK.getBlock());
         var a1 = helper
-                .getBlockEntity(a1Pos)
-                .getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.NORTH)
-                .orElse(null);
+                .getLevel().getCapability(Capabilities.FluidHandler.BLOCK, helper.absolutePos(a1Pos), Direction.UP);
         var a2 = helper
-                .getBlockEntity(a2Pos)
-                .getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.NORTH)
-                .orElse(null);
+                .getLevel().getCapability(Capabilities.FluidHandler.BLOCK, helper.absolutePos(a2Pos), Direction.UP);
         var b1 = helper
-                .getBlockEntity(b1Pos)
-                .getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.NORTH)
-                .orElse(null);
+                .getLevel().getCapability(Capabilities.FluidHandler.BLOCK, helper.absolutePos(b1Pos), Direction.UP);
         var b2 = helper
-                .getBlockEntity(b2Pos)
-                .getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.NORTH)
-                .orElse(null);
+                .getLevel().getCapability(Capabilities.FluidHandler.BLOCK, helper.absolutePos(b2Pos), Direction.UP);
 
         a1.fill(new FluidStack(Fluids.WATER, 3000), IFluidHandler.FluidAction.EXECUTE);
         a2.fill(new FluidStack(Fluids.LAVA, 3000), IFluidHandler.FluidAction.EXECUTE);

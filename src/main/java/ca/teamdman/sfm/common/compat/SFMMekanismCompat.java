@@ -4,10 +4,6 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.*;
-import ca.teamdman.sfm.common.resourcetype.exclude.GasResourceType;
-import ca.teamdman.sfm.common.resourcetype.exclude.InfuseResourceType;
-import ca.teamdman.sfm.common.resourcetype.exclude.PigmentResourceType;
-import ca.teamdman.sfm.common.resourcetype.exclude.SlurryResourceType;
 import ca.teamdman.sfml.ast.DirectionQualifier;
 import mekanism.api.RelativeSide;
 import mekanism.common.lib.transmitter.TransmissionType;
@@ -31,14 +27,12 @@ public class SFMMekanismCompat {
         return switch (trans) {
             case ITEM -> Optional.of(SFMResourceTypes.ITEM.get());
             case FLUID -> Optional.of(SFMResourceTypes.FLUID.get());
-            case GAS -> Optional.of(SFMResourceTypes.DEFERRED_TYPES
-                                            .get(new ResourceLocation(SFM.MOD_ID, "gas")));
-            case INFUSION -> Optional.of(SFMResourceTypes.DEFERRED_TYPES
-                                                 .get(new ResourceLocation(SFM.MOD_ID, "infusion")));
-            case PIGMENT -> Optional.of(SFMResourceTypes.DEFERRED_TYPES
-                                                .get(new ResourceLocation(SFM.MOD_ID, "pigment")));
-            case SLURRY -> Optional.of(SFMResourceTypes.DEFERRED_TYPES
-                                               .get(new ResourceLocation(SFM.MOD_ID, "slurry")));
+            case GAS -> Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(new ResourceLocation(SFM.MOD_ID, "gas")));
+            case INFUSION ->
+                    Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(new ResourceLocation(SFM.MOD_ID, "infusion")));
+            case PIGMENT ->
+                    Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(new ResourceLocation(SFM.MOD_ID, "pigment")));
+            case SLURRY -> Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(new ResourceLocation(SFM.MOD_ID, "slurry")));
             default -> Optional.empty();
         };
     }
@@ -56,7 +50,14 @@ public class SFMMekanismCompat {
                     .ifPresent(resourceTypeKey -> {
                         ConfigInfo info = config.getConfig(type);
                         if (info != null) {
-                            Set<Direction> outputSides = info.getSides(DataType::canOutput);
+//                            Set<Direction> outputSides = info.getSides(DataType::canOutput);
+                            Set<Direction> outputSides = info
+                                    .getSideConfig()
+                                    .stream()
+                                    .filter(x -> x.getValue().canOutput())
+                                    .map(x -> x.getKey().getDirection(sideConfiguration.getDirection()))
+                                    .collect(
+                                            Collectors.toSet());
                             if (!outputSides.isEmpty()) {
                                 sb
                                         .append("-- ")
@@ -99,22 +100,10 @@ public class SFMMekanismCompat {
     }
 
     public static void register(DeferredRegister<ResourceType<?, ?, ?>> types) {
-        types.register(
-                "gas",
-                GasResourceType::new
-        );
-        types.register(
-                "infusion",
-                InfuseResourceType::new
-        );
+        types.register("gas", GasResourceType::new);
+        types.register("infusion", InfuseResourceType::new);
 
-        types.register(
-                "pigment",
-                PigmentResourceType::new
-        );
-        types.register(
-                "slurry",
-                SlurryResourceType::new
-        );
+        types.register("pigment", PigmentResourceType::new);
+        types.register("slurry", SlurryResourceType::new);
     }
 }

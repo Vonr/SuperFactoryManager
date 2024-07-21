@@ -1,20 +1,19 @@
-package ca.teamdman.sfm.common.resourcetype.exclude;
+package ca.teamdman.sfm.common.resourcetype;
 
-import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.infuse.IInfusionHandler;
 import mekanism.api.chemical.infuse.InfuseType;
 import mekanism.api.chemical.infuse.InfusionStack;
+import mekanism.common.capabilities.Capabilities;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.capabilities.CapabilityManager;
-import net.neoforged.neoforge.common.capabilities.CapabilityToken;
+import net.neoforged.neoforge.capabilities.BlockCapability;
 import org.apache.commons.lang3.NotImplementedException;
+import org.jetbrains.annotations.Nullable;
 
 public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, IInfusionHandler> {
-    public static final Capability<IInfusionHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
-    });
+    public static final BlockCapability<IInfusionHandler, @Nullable Direction> CAP = Capabilities.INFUSION.block();
 
     public InfuseResourceType() {
         super(CAP);
@@ -83,8 +82,7 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
 
     @Override
     public Registry<InfuseType> getRegistry() {
-        throw new NotImplementedException();
-//        return MekanismAPI.infuseTypeRegistry();
+        return MekanismAPI.INFUSE_TYPE_REGISTRY;
     }
 
     @Override

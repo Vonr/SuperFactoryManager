@@ -26,12 +26,12 @@ repositories {
             includeGroup 'curse.maven'
         }
     }
-//
-//    maven {
-//        name 'mekanism'
-//        url 'https://modmaven.dev/'
-//    }
-//
+
+    maven {
+        name 'mekanism'
+        url 'https://modmaven.dev/'
+    }
+
 //    maven {
 //        name 'thermal'
 //        url 'https://maven.covers1624.net/'
@@ -61,8 +61,6 @@ sourceSets {
 
         java {
             exclude "ca/teamdman/sfm/client/jei/**"
-            exclude "ca/teamdman/sfm/common/resourcetype/exclude/**"
-            exclude "ca/teamdman/sfm/common/compat/SFMMekanismCompat.java"
         }
     }
     // https://docs.gradle.org/current/userguide/java_testing.html#sec:configuring_java_integration_tests
@@ -76,7 +74,6 @@ sourceSets {
     gametest {
         java {
             srcDir "src/gametest/java"
-            exclude "ca/teamdman/sfm/compat/**"
         }
         compileClasspath += main.output
         resources {
@@ -194,6 +191,10 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
     runtimeOnly "curse.maven:easy-villagers-400514:5153632" // Easy Villagers 1.20.4-1.1.4
+
+
+    implementation "curse.maven:mekanism-268560:5316226" //Mekanism-1.20.4-10.5.20.41.jar
+    implementation "mekanism:Mekanism:1.20.4-10.5.20.41:api"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

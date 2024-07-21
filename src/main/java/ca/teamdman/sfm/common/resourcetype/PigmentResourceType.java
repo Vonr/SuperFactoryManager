@@ -1,20 +1,18 @@
-package ca.teamdman.sfm.common.resourcetype.exclude;
+package ca.teamdman.sfm.common.resourcetype;
 
-import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.pigment.IPigmentHandler;
 import mekanism.api.chemical.pigment.Pigment;
 import mekanism.api.chemical.pigment.PigmentStack;
+import mekanism.common.capabilities.Capabilities;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.capabilities.CapabilityManager;
-import net.neoforged.neoforge.common.capabilities.CapabilityToken;
-import org.apache.commons.lang3.NotImplementedException;
+import net.neoforged.neoforge.capabilities.BlockCapability;
+import org.jetbrains.annotations.Nullable;
 
 public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPigmentHandler> {
-    public static final Capability<IPigmentHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
-    });
+    public static final BlockCapability<IPigmentHandler, @Nullable Direction> CAP = Capabilities.PIGMENT.block();
 
     public PigmentResourceType() {
         super(CAP);
@@ -83,8 +81,7 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
 
     @Override
     public Registry<Pigment> getRegistry() {
-        throw new NotImplementedException();
-//        return MekanismAPI.pigmentRegistry();
+        return MekanismAPI.PIGMENT_REGISTRY;
     }
 
     @Override

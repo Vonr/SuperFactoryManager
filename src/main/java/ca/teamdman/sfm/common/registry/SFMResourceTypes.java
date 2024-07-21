@@ -62,7 +62,7 @@ public class SFMResourceTypes {
 
     static {
         if (SFMCompat.isMekanismLoaded()) {
-//            ca.teamdman.sfm.common.compat.SFMMekanismCompat.register(RESOURCE_TYPES);
+            ca.teamdman.sfm.common.compat.SFMMekanismCompat.register(RESOURCE_TYPES);
         }
     }
 
