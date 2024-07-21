@@ -47,8 +47,6 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         STACK stack = getStackInSlot();
         long count = type.getAmount(stack);
         if (count >= type.getMaxStackSize(handler, slot)) {
-            // if the maxStackSize is different, that will be handled by moveTo
-            // for the general case, it will be faster to just assume 64 is the max stack size
             return true;
         }
         return count != 0 && !tracker.test(stack);
