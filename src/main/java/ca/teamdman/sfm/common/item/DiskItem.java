@@ -6,19 +6,22 @@ import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramLinter;
-import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Program;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -40,6 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class DiskItem extends Item {
+
     public DiskItem() {
         super(new Item.Properties());
     }
@@ -50,14 +54,26 @@ public class DiskItem extends Item {
                 .getString("sfm:program");
     }
 
-    public static void setProgram(ItemStack stack, String program) {
+    public static void setProgram(
+            ItemStack stack,
+            String program
+    ) {
+//        stack.update(DataComponents.CUSTOM_NAME, Component.literal("Default if not set"), component ->
+//                component.copy().withStyle(ChatFormatting.AQUA)
+//        );
         stack
                 .getOrCreateTag()
                 .putString("sfm:program", program.replaceAll("\r", ""));
-
     }
 
-    public static Optional<Program> compileAndUpdateErrorsAndWarnings(ItemStack stack, @Nullable ManagerBlockEntity manager) {
+    public static void clearData(ItemStack stack) {
+        stack.setTag(null);
+    }
+
+    public static Optional<Program> compileAndUpdateErrorsAndWarnings(
+            ItemStack stack,
+            @Nullable ManagerBlockEntity manager
+    ) {
         if (manager != null) {
             manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FROM_DISK_BEGIN.get()));
         }
@@ -65,7 +81,11 @@ public class DiskItem extends Item {
         Program.compile(
                 getProgram(stack),
                 successProgram -> {
-                    ArrayList<TranslatableContents> warnings = ProgramLinter.gatherWarnings(successProgram, LabelPositionHolder.from(stack), manager);
+                    ArrayList<TranslatableContents> warnings = ProgramLinter.gatherWarnings(
+                            successProgram,
+                            LabelPositionHolder.from(stack),
+                            manager
+                    );
 
                     // Log to disk
                     if (manager != null) {
@@ -112,7 +132,10 @@ public class DiskItem extends Item {
                 .toList();
     }
 
-    public static void setErrors(ItemStack stack, List<TranslatableContents> errors) {
+    public static void setErrors(
+            ItemStack stack,
+            List<TranslatableContents> errors
+    ) {
         stack
                 .getOrCreateTag()
                 .put(
@@ -135,7 +158,10 @@ public class DiskItem extends Item {
                         Collectors.toList());
     }
 
-    public static void setWarnings(ItemStack stack, List<TranslatableContents> warnings) {
+    public static void setWarnings(
+            ItemStack stack,
+            List<TranslatableContents> warnings
+    ) {
         stack
                 .getOrCreateTag()
                 .put(
@@ -153,7 +179,10 @@ public class DiskItem extends Item {
                 .getString("sfm:name");
     }
 
-    public static void setProgramName(ItemStack stack, String name) {
+    public static void setProgramName(
+            ItemStack stack,
+            String name
+    ) {
         if (stack.getItem() instanceof DiskItem) {
             stack
                     .getOrCreateTag()
@@ -162,15 +191,19 @@ public class DiskItem extends Item {
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(
+            Level pLevel,
+            Player pPlayer,
+            InteractionHand pUsedHand
+    ) {
         var stack = pPlayer.getItemInHand(pUsedHand);
         if (pLevel.isClientSide) {
             ClientStuff.showProgramEditScreen(
                     getProgram(stack),
-                    programString -> PacketDistributor.SERVER.noArg().send(new ServerboundDiskItemSetProgramPacket(
-                                programString,
-                                pUsedHand
-                        ))
+                    programString -> PacketDistributor.sendToServer(new ServerboundDiskItemSetProgramPacket(
+                            programString,
+                            pUsedHand
+                    ))
             );
         }
         return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
@@ -188,7 +221,10 @@ public class DiskItem extends Item {
 
     @Override
     public void appendHoverText(
-            ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag detail
+            ItemStack stack,
+            @Nullable Level level,
+            List<Component> list,
+            TooltipFlag detail
     ) {
         if (stack.hasTag()) {
             boolean showProgram = FMLEnvironment.dist.isClient() && ClientStuff.isMoreInfoKeyDown();

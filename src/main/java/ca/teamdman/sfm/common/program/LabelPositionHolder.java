@@ -1,10 +1,13 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.Constants;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
@@ -17,6 +20,7 @@ import java.util.stream.Collectors;
 public class LabelPositionHolder {
     private final static WeakHashMap<ItemStack, LabelPositionHolder> CACHE = new WeakHashMap<>();
     private final Map<String, Set<BlockPos>> LABELS = new HashMap<>();
+    // MIGRATION TODO: LabelPositionHolder STREAM CODEC
 
     private LabelPositionHolder() {
     }
