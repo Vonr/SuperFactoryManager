@@ -30,7 +30,7 @@ public class NetworkToolItem extends Item {
     public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext pContext) {
         if (pContext.getLevel().isClientSide) return InteractionResult.SUCCESS;
 
-        PacketDistributor.SERVER.noArg().send(new ServerboundNetworkToolUsePacket(
+        PacketDistributor.sendToServer(new ServerboundNetworkToolUsePacket(
                 pContext.getClickedPos(),
                 pContext.getClickedFace()
         ));
@@ -39,11 +39,14 @@ public class NetworkToolItem extends Item {
 
     @Override
     public void appendHoverText(
-            ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
+            ItemStack pStack,
+            TooltipContext pContext,
+            List<Component> pTooltipComponents,
+            TooltipFlag pTooltipFlag
     ) {
-        lines.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_3.getComponent(
+        pTooltipComponents.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_3.getComponent(
                 SFMKeyMappings.CONTAINER_INSPECTOR_KEY.get().getTranslatedKeyMessage()
         ).withStyle(ChatFormatting.AQUA));
     }

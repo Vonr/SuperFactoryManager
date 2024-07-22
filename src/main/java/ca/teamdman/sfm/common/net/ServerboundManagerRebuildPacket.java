@@ -11,25 +11,27 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record ServerboundManagerRebuildPacket(
         int windowId,
         BlockPos pos
 ) implements CustomPacketPayload {
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_manager_rebuild_packet");
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_manager_rebuild_packet"
+    ));
 
     @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void encode(ServerboundManagerRebuildPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundManagerRebuildPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
     }
@@ -41,7 +43,10 @@ public record ServerboundManagerRebuildPacket(
         );
     }
 
-    public static void handle(ServerboundManagerRebuildPacket msg, PlayPayloadContext context) {
+    public static void handle(
+            ServerboundManagerRebuildPacket msg,
+            IPayloadContext context
+    ) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
                 ManagerContainerMenu.class,
@@ -55,12 +60,12 @@ public record ServerboundManagerRebuildPacket(
 
                     // log it
                     String sender = "UNKNOWN SENDER";
-                    if (context.player().orElse(null) instanceof ServerPlayer player) {
+                    if (context.player() instanceof ServerPlayer player) {
                         sender = player.getName().getString();
                     }
                     SFM.LOGGER.debug("{} performed rebuild for manager {} {}", sender, msg.pos(), manager.getLevel());
                 }
         );
-        
+
     }
 }

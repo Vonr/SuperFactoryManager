@@ -21,7 +21,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.loading.FMLEnvironment;
 
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,17 +32,21 @@ public record ServerboundNetworkToolUsePacket(
         BlockPos blockPosition,
         Direction blockFace
 ) implements CustomPacketPayload {
+
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_network_tool_use_packet"
+    ));
+
     @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_network_tool_use_packet");
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    public static void encode(ServerboundNetworkToolUsePacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundNetworkToolUsePacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeBlockPos(msg.blockPosition);
         friendlyByteBuf.writeEnum(msg.blockFace);
     }
@@ -55,93 +59,94 @@ public record ServerboundNetworkToolUsePacket(
     }
 
     public static void handle(
-            ServerboundNetworkToolUsePacket msg, PlayPayloadContext context
+            ServerboundNetworkToolUsePacket msg,
+            IPayloadContext context
     ) {
-        context.workHandler().submitAsync(() -> {
-            // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
-                return;
+        // we don't know if the player has the program edit screen open from a manager or a disk in hand
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
+        Level level = player.level();
+        BlockPos pos = msg.blockPosition();
+        if (!level.isLoaded(pos)) return;
+        StringBuilder payload = new StringBuilder()
+                .append("---- block position ----\n")
+                .append(pos)
+                .append("\n---- block state ----\n");
+        BlockState state = level.getBlockState(pos);
+        payload.append(state).append("\n");
+
+        List<CableNetwork> foundNetworks = new ArrayList<>();
+        for (Direction direction : Direction.values()) {
+            BlockPos cablePosition = pos.relative(direction);
+            CableNetworkManager
+                    .getOrRegisterNetworkFromCablePosition(level, cablePosition)
+                    .ifPresent(foundNetworks::add);
+        }
+        payload.append("---- cable networks ----\n");
+        if (foundNetworks.isEmpty()) {
+            payload.append("No networks found\n");
+        } else {
+            for (CableNetwork network : foundNetworks) {
+                payload.append(network).append("\n");
             }
-            Level level = player.level();
-            BlockPos pos = msg.blockPosition();
-            if (!level.isLoaded(pos)) return;
-            StringBuilder payload = new StringBuilder()
-                    .append("---- block position ----\n")
-                    .append(pos)
-                    .append("\n---- block state ----\n");
-            BlockState state = level.getBlockState(pos);
-            payload.append(state).append("\n");
+        }
 
-            List<CableNetwork> foundNetworks = new ArrayList<>();
-            for (Direction direction : Direction.values()) {
-                BlockPos cablePosition = pos.relative(direction);
-                CableNetworkManager.getOrRegisterNetworkFromCablePosition(level, cablePosition).ifPresent(foundNetworks::add);
+        BlockEntity entity = level.getBlockEntity(pos);
+        if (entity != null) {
+            if (!FMLEnvironment.production) {
+                payload.append("---- (dev only) block entity ----\n");
+                payload.append(entity).append("\n");
             }
-            payload.append("---- cable networks ----\n");
-            if (foundNetworks.isEmpty()) {
-                payload.append("No networks found\n");
-            } else {
-                for (CableNetwork network : foundNetworks) {
-                    payload.append(network).append("\n");
-                }
+        }
+
+        payload.append("---- capability directions ----\n");
+        for (var cap : SFMCompat.getCapabilities()) {
+            payload
+                    .append(cap.name())
+                    .append(": ");
+            String directions = DirectionQualifier.EVERY_DIRECTION
+                    .stream()
+                    .filter(dir -> level.getCapability(cap, pos, dir) != null)
+                    .map(dir -> dir == null ? "NULL DIRECTION" : DirectionQualifier.directionToString(dir))
+                    .collect(Collectors.joining(", ", "[", "]"));
+            payload.append(directions).append("\n");
+        }
+
+        payload.append("---- exports ----\n");
+        int len = payload.length();
+        //noinspection unchecked,rawtypes
+        SFMResourceTypes.DEFERRED_TYPES
+                .entrySet()
+                .forEach(entry -> payload.append(ServerboundContainerExportsInspectionRequestPacket.buildInspectionResults(
+                        (ResourceKey) entry.getKey(),
+                        entry.getValue(),
+                        level,
+                        pos,
+                        msg.blockFace
+                )));
+        if (payload.length() == len) {
+            payload.append("No exports found");
+        }
+        payload.append("\n");
+
+
+        if (entity != null) {
+            if (player.hasPermissions(2)) {
+                payload.append("---- (op only) nbt data ----\n");
+                payload.append(entity.serializeNBT()).append("\n");
             }
-
-            BlockEntity entity = level.getBlockEntity(pos);
-            if (entity != null) {
-                if (!FMLEnvironment.production) {
-                    payload.append("---- (dev only) block entity ----\n");
-                    payload.append(entity).append("\n");
-                }
-            }
-
-            payload.append("---- capability directions ----\n");
-            for (var cap : SFMCompat.getCapabilities()) {
-                payload
-                        .append(cap.name())
-                        .append(": ");
-                String directions = DirectionQualifier.EVERY_DIRECTION
-                        .stream()
-                        .filter(dir -> level.getCapability(cap, pos, dir) != null)
-                        .map(dir -> dir == null ? "NULL DIRECTION" : DirectionQualifier.directionToString(dir))
-                        .collect(Collectors.joining(", ", "[", "]"));
-                payload.append(directions).append("\n");
-            }
-
-            payload.append("---- exports ----\n");
-            int len = payload.length();
-            //noinspection unchecked,rawtypes
-            SFMResourceTypes.DEFERRED_TYPES
-                    .entrySet()
-                    .forEach(entry -> payload.append(ServerboundContainerExportsInspectionRequestPacket.buildInspectionResults(
-                            (ResourceKey) entry.getKey(),
-                            entry.getValue(),
-                            level,
-                            pos,
-                            msg.blockFace
-                    )));
-            if (payload.length() == len) {
-                payload.append("No exports found");
-            }
-            payload.append("\n");
+        }
 
 
-            if (entity != null) {
-                if (player.hasPermissions(2)) {
-                    payload.append("---- (op only) nbt data ----\n");
-                    payload.append(entity.serializeNBT()).append("\n");
-                }
-            }
+        PacketDistributor.sendToPlayer(player,
 
+                new ClientboundInputInspectionResultsPacket(
+                        SFMUtils.truncate(
+                                payload.toString(),
+                                ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH
+                        ))
+        );
 
-            PacketDistributor.PLAYER.with(player).send(
-
-                    new ClientboundInputInspectionResultsPacket(
-                            SFMUtils.truncate(
-                                    payload.toString(),
-                                    ClientboundInputInspectionResultsPacket.MAX_RESULTS_LENGTH
-                            ))
-            );
-        });
-        
     }
 }

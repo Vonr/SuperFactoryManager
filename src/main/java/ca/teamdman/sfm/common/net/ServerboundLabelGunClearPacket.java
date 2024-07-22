@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 import java.util.function.Supplier;
@@ -15,17 +15,21 @@ import java.util.function.Supplier;
 public record ServerboundLabelGunClearPacket(
         InteractionHand hand
 ) implements CustomPacketPayload {
+
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_label_gun_clear_packet"
+    ));
+
     @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_label_gun_clear_packet");
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    public static void encode(ServerboundLabelGunClearPacket msg, FriendlyByteBuf buf) {
+    public static void encode(
+            ServerboundLabelGunClearPacket msg,
+            FriendlyByteBuf buf
+    ) {
         buf.writeEnum(msg.hand);
     }
 
@@ -36,19 +40,15 @@ public record ServerboundLabelGunClearPacket(
     }
 
     public static void handle(
-            ServerboundLabelGunClearPacket msg, PlayPayloadContext context
+            ServerboundLabelGunClearPacket msg,
+            IPayloadContext context
     ) {
-        context.workHandler().submitAsync(() -> {
-            var sender = context.player();
-            if (sender.isEmpty()) {
-                return;
-            }
-            
-            var stack = sender.get().getItemInHand(msg.hand);
-            if (stack.getItem() instanceof LabelGunItem) {
-                LabelPositionHolder.empty().save(stack);
-            }
-        });
-        
+        var sender = context.player();
+
+        var stack = sender.getItemInHand(msg.hand);
+        if (stack.getItem() instanceof LabelGunItem) {
+            LabelPositionHolder.empty().save(stack);
+        }
+
     }
 }

@@ -89,14 +89,12 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public InteractionResult use(
-            BlockState state,
+    protected InteractionResult useWithoutItem(
+            BlockState pState,
             Level level,
             BlockPos pos,
             Player player,
-            InteractionHand hand,
-            BlockHitResult hit
+            BlockHitResult pHitResult
     ) {
         if (level.getBlockEntity(pos) instanceof ManagerBlockEntity manager && player instanceof ServerPlayer sp) {
             // update warnings on disk as we open the gui

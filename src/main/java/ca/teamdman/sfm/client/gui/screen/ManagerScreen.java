@@ -37,7 +37,7 @@ import java.util.List;
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
 
 public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu> {
-    private static final ResourceLocation BACKGROUND_TEXTURE_LOCATION = new ResourceLocation(
+    private static final ResourceLocation BACKGROUND_TEXTURE_LOCATION = ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "textures/gui/container/manager.png"
     );
@@ -201,7 +201,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                     this.minecraft.popGuiLayer(); // Close confirm screen
 
                     if (proceed) {
-                        PacketDistributor.SERVER.noArg().send(new ServerboundManagerResetPacket(
+                        PacketDistributor.sendToServer(new ServerboundManagerResetPacket(
                                 menu.containerId,
                                 menu.MANAGER_POSITION
                         ));
@@ -220,7 +220,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onRebuildButtonClicked() {
-        PacketDistributor.SERVER.noArg().send(new ServerboundManagerRebuildPacket(
+        PacketDistributor.sendToServer(new ServerboundManagerRebuildPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION
         ));
@@ -229,7 +229,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void sendAttemptFix() {
-        PacketDistributor.SERVER.noArg().send(new ServerboundManagerFixPacket(
+        PacketDistributor.sendToServer(new ServerboundManagerFixPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION
         ));
@@ -238,7 +238,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void sendProgram(String program) {
-        PacketDistributor.SERVER.noArg().send(new ServerboundManagerProgramPacket(
+        PacketDistributor.sendToServer(new ServerboundManagerProgramPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION,
                 program

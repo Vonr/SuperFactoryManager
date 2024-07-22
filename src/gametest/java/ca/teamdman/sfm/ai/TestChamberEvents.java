@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
 @SuppressWarnings("unused")
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(bus = EventBusSubscriber.Bus.GAME)
 public class TestChamberEvents {
     @Nullable
     private static Thread integrationServer = null;

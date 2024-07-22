@@ -11,7 +11,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.apache.logging.log4j.Level;
 
 public record ServerboundManagerSetLogLevelPacket(
@@ -20,18 +20,20 @@ public record ServerboundManagerSetLogLevelPacket(
         String logLevel
 ) implements CustomPacketPayload {
     public static final int MAX_LOG_LEVEL_NAME_LENGTH = 64;
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_manager_set_log_level_packet");
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_manager_set_log_level_packet"
+    ));
 
     @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void encode(ServerboundManagerSetLogLevelPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundManagerSetLogLevelPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
         friendlyByteBuf.writeUtf(msg.logLevel(), MAX_LOG_LEVEL_NAME_LENGTH);
@@ -45,7 +47,10 @@ public record ServerboundManagerSetLogLevelPacket(
         );
     }
 
-    public static void handle(ServerboundManagerSetLogLevelPacket msg, PlayPayloadContext context) {
+    public static void handle(
+            ServerboundManagerSetLogLevelPacket msg,
+            IPayloadContext context
+    ) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
                 ManagerContainerMenu.class,
@@ -65,12 +70,18 @@ public record ServerboundManagerSetLogLevelPacket(
 
                     // log in server console
                     String sender = "UNKNOWN SENDER";
-                    if (context.player().orElse(null) instanceof ServerPlayer player) {
+                    if (context.player() instanceof ServerPlayer player) {
                         sender = player.getName().getString();
                     }
-                    SFM.LOGGER.debug("{} updated manager {} {} log level to {}", sender, msg.pos(), manager.getLevel(), msg.logLevel());
+                    SFM.LOGGER.debug(
+                            "{} updated manager {} {} log level to {}",
+                            sender,
+                            msg.pos(),
+                            manager.getLevel(),
+                            msg.logLevel()
+                    );
                 }
         );
-        
+
     }
 }

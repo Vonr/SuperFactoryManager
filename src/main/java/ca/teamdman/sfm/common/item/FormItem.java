@@ -35,19 +35,21 @@ public class FormItem extends Item {
         consumer.accept(new FormItemExtensions());
     }
 
+
     @Override
     public void appendHoverText(
             ItemStack pStack,
-            @Nullable Level pLevel,
+            TooltipContext pContext,
             List<Component> pTooltipComponents,
-            TooltipFlag pIsAdvanced
+            TooltipFlag pTooltipFlag
     ) {
         if (pStack.hasTag()) {
             var reference = getReference(pStack);
             if (!reference.isEmpty()) {
                 pTooltipComponents.add(reference.getHoverName());
-                reference.getItem().appendHoverText(reference, pLevel, pTooltipComponents, pIsAdvanced);
+                reference.getItem().appendHoverText(reference, pContext, pTooltipComponents, pTooltipFlag);
             }
         }
     }
+
 }

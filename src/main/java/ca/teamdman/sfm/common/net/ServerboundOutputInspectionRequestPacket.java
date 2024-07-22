@@ -20,7 +20,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.antlr.v4.runtime.misc.Pair;
 
 import java.util.ArrayList;
@@ -35,18 +35,21 @@ public record ServerboundOutputInspectionRequestPacket(
         String programString,
         int outputNodeIndex
 ) implements CustomPacketPayload {
+
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_output_inspection_request_packet"
+    ));
+
     @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_output_inspection_request_packet");
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-
-    public static void encode(ServerboundOutputInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundOutputInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
         friendlyByteBuf.writeInt(msg.outputNodeIndex());
     }
@@ -60,59 +63,59 @@ public record ServerboundOutputInspectionRequestPacket(
 
     public static void handle(
             ServerboundOutputInspectionRequestPacket msg,
-            PlayPayloadContext context
+            IPayloadContext context
     ) {
-        context.workHandler().submitAsync(() -> {
-            // todo: duplicate code
-            // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
-                return;
-            }
-            ManagerBlockEntity manager;
-            if (player.containerMenu instanceof ManagerContainerMenu mcm) {
-                if (player.level().getBlockEntity(mcm.MANAGER_POSITION) instanceof ManagerBlockEntity mbe) {
-                    manager = mbe;
-                } else {
-                    return;
-                }
+        // todo: duplicate code
+        // we don't know if the player has the program edit screen open from a manager or a disk in hand
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
+        ManagerBlockEntity manager;
+        if (player.containerMenu instanceof ManagerContainerMenu mcm) {
+            if (player.level().getBlockEntity(mcm.MANAGER_POSITION) instanceof ManagerBlockEntity mbe) {
+                manager = mbe;
             } else {
-                //todo: localize
-                PacketDistributor.PLAYER.with(player).send(
-                        new ClientboundInputInspectionResultsPacket(
-                                "This inspection is only available when editing inside a manager.")
-                );
                 return;
             }
-            Program.compile(
-                    msg.programString,
-                    successProgram -> successProgram.builder()
-                            .getNodeAtIndex(msg.outputNodeIndex)
-                            .filter(OutputStatement.class::isInstance)
-                            .map(OutputStatement.class::cast)
-                            .ifPresent(outputStatement -> {
-                                String payload = getOutputStatementInspectionResultsString(
-                                        manager,
-                                        successProgram,
-                                        outputStatement
-                                );
-
-                                SFM.LOGGER.debug("Sending packet with length {}", payload.length());
-                                PacketDistributor.PLAYER.with(player).send(
-                                        new ClientboundOutputInspectionResultsPacket(payload.toString().strip())
-                                );
-                            }),
-                    failure -> {
-                        //todo: translate
-                        PacketDistributor.PLAYER.with(player).send(
-                                new ClientboundOutputInspectionResultsPacket("failed to compile program")
-                        );
-                    }
+        } else {
+            //todo: localize
+            PacketDistributor.sendToPlayer(player,
+                    new ClientboundInputInspectionResultsPacket(
+                            "This inspection is only available when editing inside a manager.")
             );
-        });
+            return;
+        }
+        Program.compile(
+                msg.programString,
+                successProgram -> successProgram.builder()
+                        .getNodeAtIndex(msg.outputNodeIndex)
+                        .filter(OutputStatement.class::isInstance)
+                        .map(OutputStatement.class::cast)
+                        .ifPresent(outputStatement -> {
+                            String payload = getOutputStatementInspectionResultsString(
+                                    manager,
+                                    successProgram,
+                                    outputStatement
+                            );
+
+                            SFM.LOGGER.debug("Sending packet with length {}", payload.length());
+                            PacketDistributor.sendToPlayer(player,
+                                    new ClientboundOutputInspectionResultsPacket(payload.toString().strip())
+                            );
+                        }),
+                failure -> {
+                    //todo: translate
+                    PacketDistributor.sendToPlayer(player,
+                            new ClientboundOutputInspectionResultsPacket("failed to compile program")
+                    );
+                }
+        );
     }
 
     public static String getOutputStatementInspectionResultsString(
-            ManagerBlockEntity manager, Program successProgram, OutputStatement outputStatement
+            ManagerBlockEntity manager,
+            Program successProgram,
+            OutputStatement outputStatement
     ) {
         StringBuilder payload = new StringBuilder();
         payload.append(outputStatement.toStringPretty()).append("\n");
@@ -226,7 +229,7 @@ public record ServerboundOutputInspectionRequestPacket(
                                 ResourceLimit<?, ?, ?> resourceLimit = iter.next();
                                 // because these resource limits were generated from resource stacks
                                 // they should always be valid resource locations (not patterns)
-                                ResourceLocation resourceLimitLocation = new ResourceLocation(
+                                ResourceLocation resourceLimitLocation = ResourceLocation.fromNamespaceAndPath(
                                         resourceLimit.resourceId().resourceNamespace,
                                         resourceLimit.resourceId().resourceName
                                 );

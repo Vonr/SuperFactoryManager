@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.compat.SFMCompat;
+import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -22,7 +23,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -34,19 +35,14 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         int windowId,
         BlockPos pos
 ) implements CustomPacketPayload {
-    public static final ResourceLocation ID = new ResourceLocation(
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_container_exports_inspection_request_packet"
-    );
+    ));
 
     @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
-    }
-
-    @Override
-    public ResourceLocation id() {
-        return ID;
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     public static void encode(
@@ -66,7 +62,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
 
     public static void handle(
             ServerboundContainerExportsInspectionRequestPacket msg,
-            PlayPayloadContext context
+            IPayloadContext context
     ) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
@@ -76,11 +72,11 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                 msg.windowId,
                 (menu, blockEntity) -> {
                     assert blockEntity.getLevel() != null;
-                    if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
+                    if (!(context.player() instanceof ServerPlayer player)) {
                         return;
                     }
                     String payload = buildInspectionResults(blockEntity.getLevel(), blockEntity.getBlockPos());
-                    PacketDistributor.PLAYER.with(player).send(
+                    PacketDistributor.sendToPlayer(player,
                             new ClientboundContainerExportsInspectionResultsPacket(
                                     msg.windowId,
                                     SFMUtils.truncate(
@@ -123,7 +119,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         if (SFMCompat.isMekanismLoaded()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be != null) {
-                sb.append(ca.teamdman.sfm.common.compat.SFMMekanismCompat.gatherInspectionResults(be)).append("\n");
+                sb.append(SFMMekanismCompat.gatherInspectionResults(be)).append("\n");
             }
         }
 

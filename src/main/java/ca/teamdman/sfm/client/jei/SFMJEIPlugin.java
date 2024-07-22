@@ -26,7 +26,7 @@ import java.util.List;
 public class SFMJEIPlugin implements IModPlugin {
     @Override
     public ResourceLocation getPluginUid() {
-        return new ResourceLocation(SFM.MOD_ID, "sfm");
+        return ResourceLocation.fromNamespaceAndPath(SFM.MOD_ID, "sfm");
     }
 
     @Override

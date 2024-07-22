@@ -9,7 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 import java.util.function.Supplier;
@@ -17,19 +17,21 @@ import java.util.function.Supplier;
 public record ServerboundManagerClearLogsPacket(
         int windowId,
         BlockPos pos
-) implements CustomPacketPayload  {
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_manager_clear_logs_packet");
+) implements CustomPacketPayload {
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_manager_clear_logs_packet"
+    ));
 
     @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void encode(ServerboundManagerClearLogsPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundManagerClearLogsPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
     }
@@ -41,7 +43,10 @@ public record ServerboundManagerClearLogsPacket(
         );
     }
 
-    public static void handle(ServerboundManagerClearLogsPacket msg, PlayPayloadContext context) {
+    public static void handle(
+            ServerboundManagerClearLogsPacket msg,
+            IPayloadContext context
+    ) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
                 ManagerContainerMenu.class,
@@ -53,6 +58,6 @@ public record ServerboundManagerClearLogsPacket(
                     manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON_PACKET_RECEIVED.get()));
                 }
         );
-        
+
     }
 }

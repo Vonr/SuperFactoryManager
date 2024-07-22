@@ -78,7 +78,7 @@ public class LogsScreen extends Screen {
 
     @Override
     public void onClose() {
-        PacketDistributor.SERVER.noArg().send(new ServerboundManagerLogDesireUpdatePacket(
+        PacketDistributor.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
                 MENU.containerId,
                 MENU.MANAGER_POSITION,
                 false
@@ -228,7 +228,7 @@ public class LogsScreen extends Screen {
                     Component.literal(level.name()),
                     button -> {
                         String logLevel = level.name();
-                        PacketDistributor.SERVER.noArg().send(new ServerboundManagerSetLogLevelPacket(
+                        PacketDistributor.sendToServer(new ServerboundManagerSetLogLevelPacket(
                                 MENU.containerId,
                                 MENU.MANAGER_POSITION,
                                 logLevel
@@ -290,7 +290,7 @@ public class LogsScreen extends Screen {
                     20,
                     Constants.LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON.getComponent(),
                     (button) -> {
-                        PacketDistributor.SERVER.noArg().send(new ServerboundManagerClearLogsPacket(
+                        PacketDistributor.sendToServer(new ServerboundManagerClearLogsPacket(
                                 MENU.containerId,
                                 MENU.MANAGER_POSITION
                         ));

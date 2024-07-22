@@ -10,7 +10,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record ClientboundManagerGuiUpdatePacket(
@@ -19,19 +19,19 @@ public record ClientboundManagerGuiUpdatePacket(
         ManagerBlockEntity.State state,
         long[] tickTimes
 ) implements CustomPacketPayload {
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "clientbound_manager_gui_update_packet");
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "clientbound_manager_gui_update_packet"
+    ));
 
     @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     public static void encode(
-            ClientboundManagerGuiUpdatePacket msg, FriendlyByteBuf friendlyByteBuf
+            ClientboundManagerGuiUpdatePacket msg,
+            FriendlyByteBuf friendlyByteBuf
     ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeUtf(msg.program(), Program.MAX_PROGRAM_LENGTH);
@@ -49,10 +49,11 @@ public record ClientboundManagerGuiUpdatePacket(
     }
 
     public static void handle(
-            ClientboundManagerGuiUpdatePacket msg, PlayPayloadContext context
+            ClientboundManagerGuiUpdatePacket msg,
+            IPayloadContext context
     ) {
-        context.workHandler().submitAsync(msg::handleInner);
-        
+        msg.handleInner();
+
     }
 
     public ClientboundManagerGuiUpdatePacket cloneWithWindowId(int windowId) {

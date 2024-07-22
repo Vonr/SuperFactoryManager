@@ -3,29 +3,27 @@ package ca.teamdman.sfm.common.registry;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.net.*;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
-import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 import javax.annotation.Nullable;
-import java.util.Locale;
 import java.util.function.BiConsumer;
 
-@Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = SFM.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class SFMPackets {
     @SubscribeEvent
-    public static void register(final RegisterPayloadHandlerEvent event) {
-        final IPayloadRegistrar registrar = event.registrar(SFM.MOD_ID)
+    public static void register(final RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar(SFM.MOD_ID)
                 .versioned("1.0.0");
-        registrar.play(
-                ServerboundManagerProgramPacket.ID,
-                ServerboundManagerProgramPacket::decode,
+        registrar.playToServer(
+                ServerboundManagerProgramPacket.TYPE,
+                ServerboundManagerProgramPacket.STREAM_CODEC,
                 ServerboundManagerProgramPacket::handle
         );
         registrar.play(
@@ -170,7 +168,7 @@ public class SFMPackets {
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(
-            @Nullable PlayPayloadContext context,
+            @Nullable IPayloadContext context,
             Class<MENU> menuClass,
             Class<BE> blockEntityClass,
             BlockPos pos,
@@ -179,8 +177,8 @@ public class SFMPackets {
     ) {
         if (context == null) return;
         // TODO: log return cases about invalid packet received
-        context.workHandler().submitAsync(() -> {
-            if (!(context.player().orElse(null) instanceof ServerPlayer sender)) {
+        {
+            if (!(context.player() instanceof ServerPlayer sender)) {
                 return;
             }
             if (sender.isSpectator()) return; // ignore packets from spectators
@@ -198,6 +196,6 @@ public class SFMPackets {
             if (!blockEntityClass.isInstance(blockEntity)) return;
             //noinspection unchecked
             callback.accept((MENU) menu, (BE) blockEntity);
-        });
+        }
     }
 }

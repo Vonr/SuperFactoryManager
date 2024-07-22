@@ -50,7 +50,7 @@ public class LabelGunScreen extends Screen {
         this.addRenderableWidget(new Button.Builder(
                                          Constants.LocalizationKeys.LABEL_GUN_GUI_CLEAR_BUTTON.getComponent(),
                                          __ -> {
-                                             PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunClearPacket(HAND));
+                                             PacketDistributor.sendToServer(new ServerboundLabelGunClearPacket(HAND));
                                              LABEL_HOLDER.clear();
                                              shouldRebuildWidgets = true;
                                          }
@@ -61,7 +61,7 @@ public class LabelGunScreen extends Screen {
         this.addRenderableWidget(new Button.Builder(
                 Constants.LocalizationKeys.LABEL_GUN_GUI_PRUNE_BUTTON.getComponent(),
                 (btn) -> {
-                    PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunPrunePacket(HAND));
+                    PacketDistributor.sendToServer(new ServerboundLabelGunPrunePacket(HAND));
                     LABEL_HOLDER.prune();
                     shouldRebuildWidgets = true;
                 }
@@ -121,7 +121,7 @@ public class LabelGunScreen extends Screen {
     }
 
     public void onDone() {
-        PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunUpdatePacket(
+        PacketDistributor.sendToServer(new ServerboundLabelGunUpdatePacket(
                 labelField.getValue(),
                 HAND
         ));

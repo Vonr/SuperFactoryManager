@@ -8,7 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 import java.util.function.Supplier;
@@ -18,20 +18,20 @@ public record ServerboundManagerLogDesireUpdatePacket(
         BlockPos pos,
         boolean isLogScreenOpen
 ) implements CustomPacketPayload {
-    public static final ResourceLocation ID = new ResourceLocation(
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_manager_log_desire_update_packet"
-    );
+    ));
+
     @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void encode(ServerboundManagerLogDesireUpdatePacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundManagerLogDesireUpdatePacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
         friendlyByteBuf.writeBoolean(msg.isLogScreenOpen());
@@ -47,7 +47,7 @@ public record ServerboundManagerLogDesireUpdatePacket(
 
     public static void handle(
             ServerboundManagerLogDesireUpdatePacket msg,
-            PlayPayloadContext context
+            IPayloadContext context
     ) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
@@ -60,6 +60,6 @@ public record ServerboundManagerLogDesireUpdatePacket(
                     manager.sendUpdatePacket();
                 }
         );
-        
+
     }
 }

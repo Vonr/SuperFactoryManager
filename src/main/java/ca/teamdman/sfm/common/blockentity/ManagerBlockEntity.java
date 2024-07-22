@@ -10,15 +10,16 @@ import ca.teamdman.sfm.common.net.ClientboundManagerLogLevelUpdatedPacket;
 import ca.teamdman.sfm.common.net.ClientboundManagerLogsPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.OpenContainerTracker;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -186,6 +187,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return ITEMS.get(slot);
     }
 
+
     @Override
     public ItemStack removeItem(int slot, int amount) {
         var result = ContainerHelper.removeItem(ITEMS, slot, amount);
@@ -211,6 +213,17 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
+    protected NonNullList<ItemStack> getItems() {
+        return ITEMS;
+    }
+
+    @Override
+    protected void setItems(NonNullList<ItemStack> pItems) {
+        ITEMS.clear();
+        ITEMS.addAll(pItems);
+    }
+
+    @Override
     public int getMaxStackSize() {
         return 1;
     }
@@ -225,12 +238,27 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return SFMContainerUtil.stillValid(this, player);
     }
 
+
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        ContainerHelper.loadAllItems(tag, ITEMS);
+    protected void saveAdditional(
+            CompoundTag pTag,
+            HolderLookup.Provider pRegistries
+    ) {
+        super.saveAdditional(pTag, pRegistries);
+        ContainerHelper.saveAllItems(pTag, ITEMS, pRegistries);
+    }
+
+    @Override
+    protected void loadAdditional(
+            CompoundTag pTag,
+            HolderLookup.Provider pRegistries
+    ) {
+        super.loadAdditional(pTag, pRegistries);
+        ContainerHelper.loadAllItems(pTag, ITEMS, pRegistries);
         this.shouldRebuildProgram = true;
     }
+
+
 
     @Override
     public void clearContent() {
@@ -240,7 +268,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public void reset() {
         getDisk().ifPresent(disk -> {
             LabelPositionHolder.purge(disk);
-            disk.setTag(null);
+            DiskItem.clearData(disk);
             setItem(0, disk);
             setChanged();
         });
@@ -268,7 +296,8 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                     ManagerContainerMenu menu = entry.getValue();
 
                     // Send a copy of the manager update packet
-                    PacketDistributor.PLAYER.with(entry.getKey()).send(
+                    ServerPlayer player = entry.getKey();
+                    PacketDistributor.sendToPlayer(player,
                             managerUpdatePacket.cloneWithWindowId(menu.containerId)
                     );
 
@@ -277,7 +306,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
                     // Send log level changes
                     if (!menu.logLevel.equals(logger.getLogLevel().name())) {
-                        PacketDistributor.PLAYER.with(entry.getKey()).send(
+                        PacketDistributor.sendToPlayer(player,
                                 new ClientboundManagerLogLevelUpdatedPacket(
                                         menu.containerId,
                                         logger.getLogLevel().name()
@@ -300,7 +329,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                         // Send the logs
                         while (!logsToSend.isEmpty()) {
                             int remaining = logsToSend.size();
-                            PacketDistributor.PLAYER.with(entry.getKey()).send(
+                            PacketDistributor.sendToPlayer(player,
                                     ClientboundManagerLogsPacket.drainToCreate(
                                             menu.containerId,
                                             logsToSend
@@ -319,16 +348,12 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return Constants.LocalizationKeys.MANAGER_CONTAINER.getComponent();
     }
 
+
     @Override
     protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
         return new ManagerContainerMenu(windowId, inv, this);
     }
 
-    @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        ContainerHelper.saveAllItems(tag, ITEMS);
-    }
 
     public enum State {
         NO_PROGRAM(

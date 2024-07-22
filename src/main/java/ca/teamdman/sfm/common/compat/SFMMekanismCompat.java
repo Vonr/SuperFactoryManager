@@ -27,12 +27,12 @@ public class SFMMekanismCompat {
         return switch (trans) {
             case ITEM -> Optional.of(SFMResourceTypes.ITEM.get());
             case FLUID -> Optional.of(SFMResourceTypes.FLUID.get());
-            case GAS -> Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(new ResourceLocation(SFM.MOD_ID, "gas")));
+            case GAS -> Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(ResourceLocation.fromNamespaceAndPath(SFM.MOD_ID, "gas")));
             case INFUSION ->
-                    Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(new ResourceLocation(SFM.MOD_ID, "infusion")));
+                    Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(ResourceLocation.fromNamespaceAndPath(SFM.MOD_ID, "infusion")));
             case PIGMENT ->
-                    Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(new ResourceLocation(SFM.MOD_ID, "pigment")));
-            case SLURRY -> Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(new ResourceLocation(SFM.MOD_ID, "slurry")));
+                    Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(ResourceLocation.fromNamespaceAndPath(SFM.MOD_ID, "pigment")));
+            case SLURRY -> Optional.of(SFMResourceTypes.DEFERRED_TYPES.get(ResourceLocation.fromNamespaceAndPath(SFM.MOD_ID, "slurry")));
             default -> Optional.empty();
         };
     }

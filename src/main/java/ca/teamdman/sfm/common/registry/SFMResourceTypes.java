@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public class SFMResourceTypes {
-    public static final ResourceKey<Registry<ResourceType<?, ?, ?>>> REGISTRY_ID = ResourceKey.createRegistryKey(new ResourceLocation(
+    public static final ResourceKey<Registry<ResourceType<?, ?, ?>>> REGISTRY_ID = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "resource_type"
     ));
@@ -56,7 +56,7 @@ public class SFMResourceTypes {
     public static @Nullable ResourceType<?, ?, ?> fastLookup(String resourceTypeNamespace, String resourceTypeName) {
         return DEFERRED_TYPES_BY_ID.computeIfAbsent(
                 resourceTypeNamespace.hashCode() ^ resourceTypeName.hashCode(),
-                i -> DEFERRED_TYPES.get(new ResourceLocation(resourceTypeNamespace, resourceTypeName))
+                i -> DEFERRED_TYPES.get(ResourceLocation.fromNamespaceAndPath(resourceTypeNamespace, resourceTypeName))
         );
     }
 

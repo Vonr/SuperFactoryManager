@@ -26,7 +26,7 @@ public class KillCowTest extends SFMGameTestBase {
             }
         }
         // spawn the animal
-        var cowType = BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation("minecraft", "cow"));
+        var cowType = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.fromNamespaceAndPath("minecraft", "cow"));
 
         // begin agent code
         // item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos)));

@@ -5,7 +5,7 @@ import ca.teamdman.sfm.client.ClientStuff;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 import java.util.function.Supplier;
@@ -13,20 +13,22 @@ import java.util.function.Supplier;
 public record ClientboundLabelInspectionResultsPacket(
         String results
 ) implements CustomPacketPayload {
+
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "clientbound_label_inspection_results_packet"
+    ));
+
     @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "clientbound_label_inspection_results_packet");
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
     public static final int MAX_RESULTS_LENGTH = 50_000;
 
     public static void encode(
-            ClientboundLabelInspectionResultsPacket msg, FriendlyByteBuf friendlyByteBuf
+            ClientboundLabelInspectionResultsPacket msg,
+            FriendlyByteBuf friendlyByteBuf
     ) {
         friendlyByteBuf.writeUtf(msg.results(), MAX_RESULTS_LENGTH);
     }
@@ -38,9 +40,10 @@ public record ClientboundLabelInspectionResultsPacket(
     }
 
     public static void handle(
-            ClientboundLabelInspectionResultsPacket msg, PlayPayloadContext context
+            ClientboundLabelInspectionResultsPacket msg,
+            IPayloadContext context
     ) {
-        context.workHandler().submitAsync(() -> ClientStuff.showProgramEditScreen(msg.results));
+        ClientStuff.showProgramEditScreen(msg.results);
 
     }
 }

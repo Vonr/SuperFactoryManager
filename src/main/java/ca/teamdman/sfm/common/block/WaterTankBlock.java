@@ -12,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -63,17 +64,18 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
         }
     }
 
+
     @Override
     public void appendHoverText(
             ItemStack pStack,
-            @Nullable BlockGetter pLevel,
-            List<Component> pTooltip,
-            TooltipFlag pFlag
+            Item.TooltipContext pContext,
+            List<Component> pTootipComponents,
+            TooltipFlag pTooltipFlag
     ) {
-        pTooltip.add(Constants.LocalizationKeys.WATER_TANK_ITEM_TOOLTIP_1
+        pTootipComponents.add(Constants.LocalizationKeys.WATER_TANK_ITEM_TOOLTIP_1
                              .getComponent()
                              .withStyle(ChatFormatting.GRAY));
-        pTooltip.add(Constants.LocalizationKeys.WATER_TANK_ITEM_TOOLTIP_2
+        pTootipComponents.add(Constants.LocalizationKeys.WATER_TANK_ITEM_TOOLTIP_2
                              .getComponent()
                              .withStyle(ChatFormatting.GRAY));
     }

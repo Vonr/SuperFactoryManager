@@ -125,7 +125,7 @@ public class SFMRecipes extends RecipeProvider {
 
         addPrintingPressRecipe(
                 output,
-                new ResourceLocation("sfm", "written_book_copy"),
+                ResourceLocation.fromNamespaceAndPath("sfm", "written_book_copy"),
                 Ingredient.of(Items.WRITTEN_BOOK),
                 Ingredient.of(Tags.Items.DYES_BLACK),
                 Ingredient.of(Items.BOOK)
@@ -133,7 +133,7 @@ public class SFMRecipes extends RecipeProvider {
 
         addPrintingPressRecipe(
                 output,
-                new ResourceLocation("sfm", "enchanted_book_copy"),
+                ResourceLocation.fromNamespaceAndPath("sfm", "enchanted_book_copy"),
                 Ingredient.of(Items.ENCHANTED_BOOK),
                 Ingredient.of(SFMItems.EXPERIENCE_GOOP_ITEM.get()),
                 Ingredient.of(Items.BOOK)
@@ -141,7 +141,7 @@ public class SFMRecipes extends RecipeProvider {
 
         addPrintingPressRecipe(
                 output,
-                new ResourceLocation("sfm", "map_copy"),
+                ResourceLocation.fromNamespaceAndPath("sfm", "map_copy"),
                 Ingredient.of(Items.FILLED_MAP),
                 Ingredient.of(Tags.Items.DYES_BLACK),
                 Ingredient.of(Items.MAP)
@@ -149,7 +149,7 @@ public class SFMRecipes extends RecipeProvider {
 
         addPrintingPressRecipe(
                 output,
-                new ResourceLocation("sfm", "program_copy"),
+                ResourceLocation.fromNamespaceAndPath("sfm", "program_copy"),
                 Ingredient.of(SFMItems.DISK_ITEM.get()),
                 Ingredient.of(Tags.Items.DYES_BLACK),
                 Ingredient.of(SFMItems.DISK_ITEM.get())

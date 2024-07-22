@@ -8,7 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 import java.util.function.Supplier;
@@ -17,17 +17,21 @@ public record ServerboundManagerResetPacket(
         int windowId,
         BlockPos pos
 ) implements CustomPacketPayload {
+
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_manager_reset_packet"
+    ));
+
     @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_manager_reset_packet");
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    public static void encode(ServerboundManagerResetPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundManagerResetPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
     }
@@ -39,7 +43,10 @@ public record ServerboundManagerResetPacket(
         );
     }
 
-    public static void handle(ServerboundManagerResetPacket msg, PlayPayloadContext context) {
+    public static void handle(
+            ServerboundManagerResetPacket msg,
+            IPayloadContext context
+    ) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
                 ManagerContainerMenu.class,
@@ -48,6 +55,6 @@ public record ServerboundManagerResetPacket(
                 msg.windowId,
                 (menu, manager) -> manager.reset()
         );
-        
+
     }
 }

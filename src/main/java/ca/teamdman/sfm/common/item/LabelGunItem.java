@@ -64,7 +64,7 @@ public class LabelGunItem extends Item {
     ) {
         var level = ctx.getLevel();
         if (level.isClientSide && ctx.getPlayer() != null) {
-            PacketDistributor.SERVER.noArg().send(new ServerboundLabelGunUsePacket(
+            PacketDistributor.sendToServer(new ServerboundLabelGunUsePacket(
                     ctx.getHand(),
                     ctx.getClickedPos(),
                     Screen.hasControlDown(),
@@ -77,12 +77,15 @@ public class LabelGunItem extends Item {
 
     @Override
     public void appendHoverText(
-            ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
+            ItemStack pStack,
+            TooltipContext pContext,
+            List<Component> pTooltipComponents,
+            TooltipFlag pTooltipFlag
     ) {
-        lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.addAll(LabelPositionHolder.from(stack).asHoverText());
+        pTooltipComponents.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.addAll(LabelPositionHolder.from(pStack).asHoverText());
     }
 
     @Override

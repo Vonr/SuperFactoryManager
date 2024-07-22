@@ -8,7 +8,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 import java.util.function.Supplier;
@@ -16,17 +16,21 @@ import java.util.function.Supplier;
 public record ServerboundLabelGunPrunePacket(
         InteractionHand hand
 ) implements CustomPacketPayload {
+
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_label_gun_prune_packet"
+    ));
+
     @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_label_gun_prune_packet");
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    public static void encode(ServerboundLabelGunPrunePacket msg, FriendlyByteBuf buf) {
+    public static void encode(
+            ServerboundLabelGunPrunePacket msg,
+            FriendlyByteBuf buf
+    ) {
         buf.writeEnum(msg.hand);
     }
 
@@ -37,17 +41,16 @@ public record ServerboundLabelGunPrunePacket(
     }
 
     public static void handle(
-            ServerboundLabelGunPrunePacket msg, PlayPayloadContext context
+            ServerboundLabelGunPrunePacket msg,
+            IPayloadContext context
     ) {
-        context.workHandler().submitAsync(() -> {
-            if (!(context.player().orElse(null) instanceof ServerPlayer sender)) {
-                return;
-            }
-            var stack = sender.getItemInHand(msg.hand);
-            if (stack.getItem() instanceof LabelGunItem) {
-                LabelPositionHolder.from(stack).prune().save(stack);
-            }
-        });
-        
+        if (!(context.player() instanceof ServerPlayer sender)) {
+            return;
+        }
+        var stack = sender.getItemInHand(msg.hand);
+        if (stack.getItem() instanceof LabelGunItem) {
+            LabelPositionHolder.from(stack).prune().save(stack);
+        }
+
     }
 }

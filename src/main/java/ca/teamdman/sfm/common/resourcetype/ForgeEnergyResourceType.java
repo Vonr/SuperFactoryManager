@@ -72,7 +72,7 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
         return 0;
     }
 
-    public static final ResourceLocation REGISTRY_KEY = new ResourceLocation("forge", "energy");
+    public static final ResourceLocation REGISTRY_KEY = ResourceLocation.fromNamespaceAndPath("forge", "energy");
 
     @Override
     public ResourceLocation getRegistryKey(Integer stack) {

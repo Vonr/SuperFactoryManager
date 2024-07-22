@@ -7,25 +7,25 @@ import net.minecraft.network.FriendlyByteBuf;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record ClientboundIfStatementInspectionResultsPacket(
         String results
 ) implements CustomPacketPayload {
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "clientbound_if_statement_inspection_results_packet");
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "clientbound_if_statement_inspection_results_packet"
+    ));
     public static final int MAX_RESULTS_LENGTH = 2048;
 
     @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     public static void encode(
-            ClientboundIfStatementInspectionResultsPacket msg, FriendlyByteBuf friendlyByteBuf
+            ClientboundIfStatementInspectionResultsPacket msg,
+            FriendlyByteBuf friendlyByteBuf
     ) {
         friendlyByteBuf.writeUtf(msg.results(), MAX_RESULTS_LENGTH);
     }
@@ -37,10 +37,11 @@ public record ClientboundIfStatementInspectionResultsPacket(
     }
 
     public static void handle(
-            ClientboundIfStatementInspectionResultsPacket msg, PlayPayloadContext context
+            ClientboundIfStatementInspectionResultsPacket msg,
+            IPayloadContext context
     ) {
-        context.workHandler().submitAsync(msg::handleInner);
-        
+        msg.handleInner();
+
     }
 
     public void handleInner() {

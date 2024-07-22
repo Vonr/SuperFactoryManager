@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Set;
 import java.util.function.Supplier;
@@ -21,17 +21,21 @@ import java.util.function.Supplier;
 public record ServerboundLabelInspectionRequestPacket(
         String label
 ) implements CustomPacketPayload {
+
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_label_inspection_request_packet"
+    ));
+
     @Override
-    public void write(FriendlyByteBuf friendlyByteBuf) {
-        encode(this, friendlyByteBuf);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(SFM.MOD_ID, "serverbound_label_inspection_request_packet");
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-    public static void encode(ServerboundLabelInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundLabelInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeUtf(msg.label(), Program.MAX_LABEL_LENGTH);
     }
 
@@ -43,93 +47,91 @@ public record ServerboundLabelInspectionRequestPacket(
 
     public static void handle(
             ServerboundLabelInspectionRequestPacket msg,
-            PlayPayloadContext context
+            IPayloadContext context
     ) {
-        context.workHandler().submitAsync(() -> {
-            // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            if (!(context.player().orElse(null) instanceof ServerPlayer player)) {
-                return;
-            }
-            SFM.LOGGER.info("Received label inspection request packet from player {}", player.getStringUUID());
-            LabelPositionHolder labelPositionHolder;
-            if (player.containerMenu instanceof ManagerContainerMenu mcm) {
-                SFM.LOGGER.info("Player is using a manager container menu - will append additional info to payload");
-                labelPositionHolder = LabelPositionHolder.from(mcm.CONTAINER.getItem(0));
+        // we don't know if the player has the program edit screen open from a manager or a disk in hand
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
+        SFM.LOGGER.info("Received label inspection request packet from player {}", player.getStringUUID());
+        LabelPositionHolder labelPositionHolder;
+        if (player.containerMenu instanceof ManagerContainerMenu mcm) {
+            SFM.LOGGER.info("Player is using a manager container menu - will append additional info to payload");
+            labelPositionHolder = LabelPositionHolder.from(mcm.CONTAINER.getItem(0));
+        } else {
+            if (player.getMainHandItem().is(SFMItems.DISK_ITEM.get())) {
+                labelPositionHolder = LabelPositionHolder.from(player.getMainHandItem());
+            } else if (player.getOffhandItem().is(SFMItems.DISK_ITEM.get())) {
+                labelPositionHolder = LabelPositionHolder.from(player.getOffhandItem());
             } else {
-                if (player.getMainHandItem().is(SFMItems.DISK_ITEM.get())) {
-                    labelPositionHolder = LabelPositionHolder.from(player.getMainHandItem());
-                } else if (player.getOffhandItem().is(SFMItems.DISK_ITEM.get())) {
-                    labelPositionHolder = LabelPositionHolder.from(player.getOffhandItem());
-                } else {
-                    labelPositionHolder = null;
-                }
+                labelPositionHolder = null;
             }
-            if (labelPositionHolder == null) {
-                SFM.LOGGER.info("Label holder wasn't found - aborting");
-                return;
+        }
+        if (labelPositionHolder == null) {
+            SFM.LOGGER.info("Label holder wasn't found - aborting");
+            return;
+        }
+        SFM.LOGGER.info("building payload");
+        StringBuilder payload = new StringBuilder();
+        payload.append("-- Positions for label \"").append(msg.label()).append("\" --\n");
+        payload.append(labelPositionHolder.getPositions(msg.label()).size()).append(" assignments\n");
+        payload.append("-- Summary --\n");
+        labelPositionHolder.get().getOrDefault(msg.label(), Set.of()).forEach(pos -> {
+            payload
+                    .append(pos.getX())
+                    .append(",")
+                    .append(pos.getY())
+                    .append(",")
+                    .append(pos.getZ());
+            if (player.level().isLoaded(pos)) {
+                payload
+                        .append(" -- ")
+                        .append(player.level().getBlockState(pos).getBlock().getName().getString());
+            } else {
+                payload
+                        .append(" -- chunk not loaded");
             }
-            SFM.LOGGER.info("building payload");
-            StringBuilder payload = new StringBuilder();
-            payload.append("-- Positions for label \"").append(msg.label()).append("\" --\n");
-            payload.append(labelPositionHolder.getPositions(msg.label()).size()).append(" assignments\n");
-            payload.append("-- Summary --\n");
-            labelPositionHolder.get().getOrDefault(msg.label(), Set.of()).forEach(pos -> {
-                payload
-                        .append(pos.getX())
-                        .append(",")
-                        .append(pos.getY())
-                        .append(",")
-                        .append(pos.getZ());
-                if (player.level().isLoaded(pos)) {
-                    payload
-                            .append(" -- ")
-                            .append(player.level().getBlockState(pos).getBlock().getName().getString());
-                } else {
-                    payload
-                            .append(" -- chunk not loaded");
-                }
-                payload
-                        .append("\n");
-            });
-
-            payload.append("\n\n\n-- Detailed --\n");
-            for (BlockPos pos : labelPositionHolder.get().getOrDefault(msg.label(), Set.of())) {
-                if (payload.length() > 20_000) {
-                    payload.append("... (truncated)");
-                    break;
-                }
-                payload
-                        .append(pos.getX())
-                        .append(",")
-                        .append(pos.getY())
-                        .append(",")
-                        .append(pos.getZ());
-                if (player.level().isLoaded(pos)) {
-                    payload
-                            .append(" -- ")
-                            .append(player.level().getBlockState(pos).getBlock().getName().getString());
-
-                    payload.append("\n").append(ServerboundContainerExportsInspectionRequestPacket
-                                                        .buildInspectionResults(player.level(), pos)
-                                                        .indent(1));
-                } else {
-                    payload
-                            .append(" -- chunk not loaded");
-                }
-                payload
-                        .append("\n");
-            }
-            SFM.LOGGER.info(
-                    "Sending payload response length={} to player {}",
-                    payload.length(),
-                    player.getStringUUID()
-            );
-            PacketDistributor.PLAYER.with(player).send(
-                    new ClientboundLabelInspectionResultsPacket(
-                            payload.toString()
-                    )
-            );
+            payload
+                    .append("\n");
         });
-        
+
+        payload.append("\n\n\n-- Detailed --\n");
+        for (BlockPos pos : labelPositionHolder.get().getOrDefault(msg.label(), Set.of())) {
+            if (payload.length() > 20_000) {
+                payload.append("... (truncated)");
+                break;
+            }
+            payload
+                    .append(pos.getX())
+                    .append(",")
+                    .append(pos.getY())
+                    .append(",")
+                    .append(pos.getZ());
+            if (player.level().isLoaded(pos)) {
+                payload
+                        .append(" -- ")
+                        .append(player.level().getBlockState(pos).getBlock().getName().getString());
+
+                payload.append("\n").append(ServerboundContainerExportsInspectionRequestPacket
+                                                    .buildInspectionResults(player.level(), pos)
+                                                    .indent(1));
+            } else {
+                payload
+                        .append(" -- chunk not loaded");
+            }
+            payload
+                    .append("\n");
+        }
+        SFM.LOGGER.info(
+                "Sending payload response length={} to player {}",
+                payload.length(),
+                player.getStringUUID()
+        );
+        PacketDistributor.sendToPlayer(player,
+                new ClientboundLabelInspectionResultsPacket(
+                        payload.toString()
+                )
+        );
+
     }
 }

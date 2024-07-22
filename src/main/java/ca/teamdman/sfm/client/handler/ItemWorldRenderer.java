@@ -22,6 +22,7 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.jetbrains.annotations.Nullable;
@@ -30,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@EventBusSubscriber(modid = SFM.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 /*
  * This class uses code from tasgon's "observable" mod, also using MPLv2
  * https://github.com/tasgon/observable/blob/master/common/src/main/kotlin/observable/client/Overlay.kt
@@ -250,15 +251,15 @@ public class ItemWorldRenderer {
         poseStack.popPose();
     }
 
-    public static BufferBuilder.RenderedBuffer createCapabilityProviderVBO() {
+    public static MeshData createCapabilityProviderVBO() {
         return createShape(100, 0, 255, 100);
     }
 
-    public static BufferBuilder.RenderedBuffer createCableVBO() {
+    public static MeshData createCableVBO() {
         return createShape(100, 255, 0, 100);
     }
 
-    public static BufferBuilder.RenderedBuffer createShape(int r, int g, int b, int a) {
+    public static MeshData createShape(int r, int g, int b, int a) {
         var builder = new BufferBuilder(4 * 6 * 8);
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 

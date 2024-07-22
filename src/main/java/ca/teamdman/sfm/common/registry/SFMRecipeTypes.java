@@ -18,7 +18,7 @@ public class SFMRecipeTypes {
 
     public static final Supplier<RecipeType<PrintingPressRecipe>> PRINTING_PRESS = RECIPE_TYPES.register(
             "printing_press",
-            () -> RecipeType.simple(new ResourceLocation(SFM.MOD_ID, "printing_press"))
+            () -> RecipeType.simple(ResourceLocation.fromNamespaceAndPath(SFM.MOD_ID, "printing_press"))
     );
 
     public static void register(IEventBus bus) {

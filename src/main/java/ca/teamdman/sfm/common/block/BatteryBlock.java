@@ -37,17 +37,15 @@ public class BatteryBlock extends Block implements EntityBlock {
         builder.add(LEVEL);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public InteractionResult use(
+    protected InteractionResult useWithoutItem(
             BlockState pState,
             Level pLevel,
             BlockPos pPos,
             Player pPlayer,
-            InteractionHand pHand,
-            BlockHitResult pHit
+            BlockHitResult pHitResult
     ) {
-        var cap = pLevel.getCapability(Capabilities.EnergyStorage.BLOCK, pPos, pHit.getDirection());
+        var cap = pLevel.getCapability(Capabilities.EnergyStorage.BLOCK, pPos, pHitResult.getDirection());
         if (cap != null) {
             if (pPlayer.isShiftKeyDown()) {
                 cap.extractEnergy(1000, false);

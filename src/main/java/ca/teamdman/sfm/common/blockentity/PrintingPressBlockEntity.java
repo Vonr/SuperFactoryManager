@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMRecipeTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
@@ -98,28 +99,37 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
 
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        readItems(tag);
+    protected void loadAdditional(
+            CompoundTag pTag,
+            HolderLookup.Provider pRegistries
+    ) {
+        super.loadAdditional(pTag, pRegistries);
+        readItems(pTag, pRegistries);
     }
-
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        writeItems(tag);
+    protected void saveAdditional(
+            CompoundTag pTag,
+            HolderLookup.Provider pRegistries
+    ) {
+        super.saveAdditional(pTag, pRegistries);
+        writeItems(pTag, pRegistries);
     }
 
-    private void writeItems(CompoundTag tag) {
-        tag.put("form", FORM.serializeNBT());
-        tag.put("paper", PAPER.serializeNBT());
-        tag.put("ink", INK.serializeNBT());
+    private void writeItems(CompoundTag tag,
+                            HolderLookup.Provider pRegistries
+    ) {
+        tag.put("form", FORM.serializeNBT(pRegistries));
+        tag.put("paper", PAPER.serializeNBT(pRegistries));
+        tag.put("ink", INK.serializeNBT(pRegistries));
     }
 
-    private void readItems(CompoundTag tag) {
-        INK.deserializeNBT(tag.getCompound("ink"));
-        PAPER.deserializeNBT(tag.getCompound("paper"));
-        FORM.deserializeNBT(tag.getCompound("form"));
+    private void readItems(CompoundTag tag,
+                           HolderLookup.Provider pRegistries
+    ) {
+        INK.deserializeNBT(pRegistries, tag.getCompound("ink"));
+        PAPER.deserializeNBT(pRegistries, tag.getCompound("paper"));
+        FORM.deserializeNBT(pRegistries, tag.getCompound("form"));
     }
 
 
@@ -162,7 +172,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
     @Override
     public CompoundTag getUpdateTag() {
         var tag = super.getUpdateTag();
-        writeItems(tag);
+        writeItems(tag, pRegistries);
         return tag;
     }
 
@@ -177,7 +187,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
         super.onDataPacket(net, pkt);
         CompoundTag tag = pkt.getTag();
         if (tag != null)
-            readItems(tag);
+            readItems(tag, pRegistries);
     }
 
     public ItemStack getPaper() {
