@@ -14,7 +14,7 @@ public record ClientboundManagerLogLevelUpdatedPacket(
         int windowId,
         String logLevel
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ClientboundManagerLogLevelUpdatedPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "clientbound_manager_log_level_updated_packet"
     ));
@@ -62,3 +62,4 @@ public record ClientboundManagerLogLevelUpdatedPacket(
         menu.logLevel = this.logLevel;
     }
 }
+

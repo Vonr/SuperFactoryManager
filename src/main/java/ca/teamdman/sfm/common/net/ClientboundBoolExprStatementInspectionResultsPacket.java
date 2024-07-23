@@ -11,7 +11,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public record ClientboundBoolExprStatementInspectionResultsPacket(
         String results
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ClientboundBoolExprStatementInspectionResultsPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "clientbound_bool_expr_statement_inspection_results_packet"
     ));
@@ -51,3 +51,4 @@ public record ClientboundBoolExprStatementInspectionResultsPacket(
         ClientStuff.showProgramEditScreen(results);
     }
 }
+

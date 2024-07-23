@@ -14,7 +14,7 @@ public record ServerboundLabelGunClearPacket(
         InteractionHand hand
 ) implements CustomPacketPayload {
 
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundLabelGunClearPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_label_gun_clear_packet"
     ));
@@ -54,3 +54,4 @@ public record ServerboundLabelGunClearPacket(
 
     }
 }
+

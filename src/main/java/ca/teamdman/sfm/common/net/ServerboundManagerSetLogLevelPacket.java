@@ -20,7 +20,7 @@ public record ServerboundManagerSetLogLevelPacket(
         String logLevel
 ) implements CustomPacketPayload {
     public static final int MAX_LOG_LEVEL_NAME_LENGTH = 64;
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundManagerSetLogLevelPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_manager_set_log_level_packet"
     ));
@@ -89,3 +89,4 @@ public record ServerboundManagerSetLogLevelPacket(
 
     }
 }
+

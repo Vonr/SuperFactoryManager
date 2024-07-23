@@ -20,7 +20,7 @@ public record ServerboundIfStatementInspectionRequestPacket(
         String programString,
         int inputNodeIndex
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundIfStatementInspectionRequestPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_if_statement_inspection_request_packet"
     ));
@@ -108,3 +108,4 @@ public record ServerboundIfStatementInspectionRequestPacket(
 
     }
 }
+

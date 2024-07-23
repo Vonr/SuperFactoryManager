@@ -19,7 +19,7 @@ public record ClientboundManagerLogsPacket(
         int windowId,
         FriendlyByteBuf logsBuf
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ClientboundManagerLogsPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "clientbound_manager_logs_packet"
     ));
@@ -87,3 +87,4 @@ public record ClientboundManagerLogsPacket(
         menu.logs.addAll(logs);
     }
 }
+

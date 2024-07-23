@@ -31,7 +31,7 @@ public record ServerboundNetworkToolUsePacket(
         Direction blockFace
 ) implements CustomPacketPayload {
 
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundNetworkToolUsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_network_tool_use_packet"
     ));
@@ -153,3 +153,4 @@ public record ServerboundNetworkToolUsePacket(
 
     }
 }
+

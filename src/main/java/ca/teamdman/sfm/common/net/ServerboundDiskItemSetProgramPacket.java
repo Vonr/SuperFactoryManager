@@ -16,7 +16,7 @@ public record ServerboundDiskItemSetProgramPacket(
         InteractionHand hand
 ) implements CustomPacketPayload {
 
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundDiskItemSetProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_disk_item_set_program_packet"
     ));
@@ -62,3 +62,4 @@ public record ServerboundDiskItemSetProgramPacket(
 
     }
 }
+

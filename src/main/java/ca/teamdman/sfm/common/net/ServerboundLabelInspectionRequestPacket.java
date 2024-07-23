@@ -20,7 +20,7 @@ public record ServerboundLabelInspectionRequestPacket(
         String label
 ) implements CustomPacketPayload {
 
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundLabelInspectionRequestPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_label_inspection_request_packet"
     ));
@@ -138,3 +138,4 @@ public record ServerboundLabelInspectionRequestPacket(
 
     }
 }
+

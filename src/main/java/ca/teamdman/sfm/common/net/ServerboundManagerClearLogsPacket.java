@@ -16,7 +16,7 @@ public record ServerboundManagerClearLogsPacket(
         int windowId,
         BlockPos pos
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundManagerClearLogsPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_manager_clear_logs_packet"
     ));
@@ -63,3 +63,4 @@ public record ServerboundManagerClearLogsPacket(
 
     }
 }
+

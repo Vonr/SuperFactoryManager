@@ -36,7 +36,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         int windowId,
         BlockPos pos
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundContainerExportsInspectionRequestPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_container_exports_inspection_request_packet"
     ));
@@ -218,3 +218,4 @@ public record ServerboundContainerExportsInspectionRequestPacket(
     }
 
 }
+

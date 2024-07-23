@@ -20,7 +20,7 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
         String programString,
         int inputNodeIndex
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundBoolExprStatementInspectionRequestPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_bool_expr_statement_inspection_request_packet"
     ));
@@ -112,3 +112,4 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
 
     }
 }
+

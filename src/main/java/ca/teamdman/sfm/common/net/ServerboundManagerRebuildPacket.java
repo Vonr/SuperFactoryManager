@@ -19,7 +19,7 @@ public record ServerboundManagerRebuildPacket(
         int windowId,
         BlockPos pos
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundManagerRebuildPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_manager_rebuild_packet"
     ));
@@ -74,3 +74,4 @@ public record ServerboundManagerRebuildPacket(
 
     }
 }
+

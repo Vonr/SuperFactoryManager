@@ -12,7 +12,7 @@ public record ClientboundOutputInspectionResultsPacket(
         String results
 ) implements CustomPacketPayload {
 
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ClientboundOutputInspectionResultsPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "clientbound_output_inspection_results_packet"
     ));
@@ -48,3 +48,4 @@ public record ClientboundOutputInspectionResultsPacket(
 
     }
 }
+

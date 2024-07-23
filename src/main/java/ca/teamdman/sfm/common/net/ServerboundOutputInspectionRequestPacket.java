@@ -34,7 +34,7 @@ public record ServerboundOutputInspectionRequestPacket(
         int outputNodeIndex
 ) implements CustomPacketPayload {
 
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundOutputInspectionRequestPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_output_inspection_request_packet"
     ));
@@ -340,3 +340,4 @@ public record ServerboundOutputInspectionRequestPacket(
         );
     }
 }
+

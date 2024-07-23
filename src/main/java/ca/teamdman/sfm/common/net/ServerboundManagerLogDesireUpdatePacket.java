@@ -16,7 +16,7 @@ public record ServerboundManagerLogDesireUpdatePacket(
         BlockPos pos,
         boolean isLogScreenOpen
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundManagerLogDesireUpdatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_manager_log_desire_update_packet"
     ));
@@ -65,3 +65,4 @@ public record ServerboundManagerLogDesireUpdatePacket(
 
     }
 }
+

@@ -33,7 +33,7 @@ public record ServerboundLabelGunUsePacket(
         boolean isShiftKeyDown
 ) implements CustomPacketPayload {
 
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundLabelGunUsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_label_gun_use_packet"
     ));
@@ -167,3 +167,4 @@ public record ServerboundLabelGunUsePacket(
 
     }
 }
+
