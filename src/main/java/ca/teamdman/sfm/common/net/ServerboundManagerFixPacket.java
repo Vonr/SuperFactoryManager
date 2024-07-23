@@ -21,9 +21,9 @@ public record ServerboundManagerFixPacket(
             SFM.MOD_ID,
             "serverbound_manager_fix_packet"
     ));
-    public static final StreamCodec<FriendlyByteBuf, ClientboundContainerExportsInspectionResultsPacket> STREAM_CODEC = StreamCodec.ofMember(
-            ClientboundContainerExportsInspectionResultsPacket::encode,
-            ClientboundContainerExportsInspectionResultsPacket::decode
+    public static final StreamCodec<FriendlyByteBuf, ServerboundManagerFixPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundManagerFixPacket::encode,
+            ServerboundManagerFixPacket::decode
     );
 
     @Override

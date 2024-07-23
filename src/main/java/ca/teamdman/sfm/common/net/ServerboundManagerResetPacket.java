@@ -20,9 +20,9 @@ public record ServerboundManagerResetPacket(
             SFM.MOD_ID,
             "serverbound_manager_reset_packet"
     ));
-    public static final StreamCodec<FriendlyByteBuf, ClientboundContainerExportsInspectionResultsPacket> STREAM_CODEC = StreamCodec.ofMember(
-            ClientboundContainerExportsInspectionResultsPacket::encode,
-            ClientboundContainerExportsInspectionResultsPacket::decode
+    public static final StreamCodec<FriendlyByteBuf, ServerboundManagerResetPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundManagerResetPacket::encode,
+            ServerboundManagerResetPacket::decode
     );
 
     @Override
