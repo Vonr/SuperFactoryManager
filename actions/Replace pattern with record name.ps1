@@ -1,3 +1,8 @@
+if ((git diff --name-only | Measure-Object).Count -gt 1) {
+    Write-Host "More than one file is changed. Please commit the changes first."
+    exit 1
+}
+
 $pattern = Read-Host "Enter the pattern to find"
 $replace_token = Read-Host "Enter the token to replace with the name of the current record"
 $files = rg --files-with-matches $pattern
