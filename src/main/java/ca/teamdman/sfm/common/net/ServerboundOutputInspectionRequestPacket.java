@@ -7,18 +7,17 @@ import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour.Branch;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Number;
 import ca.teamdman.sfml.ast.*;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.antlr.v4.runtime.misc.Pair;
@@ -29,7 +28,6 @@ import java.util.ListIterator;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public record ServerboundOutputInspectionRequestPacket(
         String programString,
@@ -40,6 +38,10 @@ public record ServerboundOutputInspectionRequestPacket(
             SFM.MOD_ID,
             "serverbound_output_inspection_request_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundOutputInspectionRequestPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundOutputInspectionRequestPacket::encode,
+            ServerboundOutputInspectionRequestPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -79,7 +81,8 @@ public record ServerboundOutputInspectionRequestPacket(
             }
         } else {
             //todo: localize
-            PacketDistributor.sendToPlayer(player,
+            PacketDistributor.sendToPlayer(
+                    player,
                     new ClientboundInputInspectionResultsPacket(
                             "This inspection is only available when editing inside a manager.")
             );
@@ -99,13 +102,15 @@ public record ServerboundOutputInspectionRequestPacket(
                             );
 
                             SFM.LOGGER.debug("Sending packet with length {}", payload.length());
-                            PacketDistributor.sendToPlayer(player,
+                            PacketDistributor.sendToPlayer(
+                                    player,
                                     new ClientboundOutputInspectionResultsPacket(payload.toString().strip())
                             );
                         }),
                 failure -> {
                     //todo: translate
-                    PacketDistributor.sendToPlayer(player,
+                    PacketDistributor.sendToPlayer(
+                            player,
                             new ClientboundOutputInspectionResultsPacket("failed to compile program")
                     );
                 }

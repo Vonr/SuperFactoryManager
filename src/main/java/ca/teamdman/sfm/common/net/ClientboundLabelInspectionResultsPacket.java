@@ -3,12 +3,10 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-
-
-import java.util.function.Supplier;
 
 public record ClientboundLabelInspectionResultsPacket(
         String results
@@ -18,13 +16,16 @@ public record ClientboundLabelInspectionResultsPacket(
             SFM.MOD_ID,
             "clientbound_label_inspection_results_packet"
     ));
+    public static final int MAX_RESULTS_LENGTH = 50_000;
+    public static final StreamCodec<FriendlyByteBuf, ClientboundLabelInspectionResultsPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ClientboundLabelInspectionResultsPacket::encode,
+            ClientboundLabelInspectionResultsPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
-
-    public static final int MAX_RESULTS_LENGTH = 50_000;
 
     public static void encode(
             ClientboundLabelInspectionResultsPacket msg,

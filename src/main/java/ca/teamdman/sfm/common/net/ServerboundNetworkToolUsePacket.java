@@ -1,16 +1,16 @@
 package ca.teamdman.sfm.common.net;
 
-import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.compat.SFMCompat;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.DirectionQualifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -19,13 +19,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.loading.FMLEnvironment;
-
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public record ServerboundNetworkToolUsePacket(
@@ -37,6 +35,10 @@ public record ServerboundNetworkToolUsePacket(
             SFM.MOD_ID,
             "serverbound_network_tool_use_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundNetworkToolUsePacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundNetworkToolUsePacket::encode,
+            ServerboundNetworkToolUsePacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -139,7 +141,8 @@ public record ServerboundNetworkToolUsePacket(
         }
 
 
-        PacketDistributor.sendToPlayer(player,
+        PacketDistributor.sendToPlayer(
+                player,
 
                 new ClientboundInputInspectionResultsPacket(
                         SFMUtils.truncate(

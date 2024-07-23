@@ -7,22 +7,24 @@ import ca.teamdman.sfm.common.program.ProgramLinter;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-
-
-import java.util.function.Supplier;
 
 public record ServerboundManagerFixPacket(
         int windowId,
         BlockPos pos
 ) implements CustomPacketPayload {
 
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ServerboundManagerFixPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "serverbound_manager_fix_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ClientboundContainerExportsInspectionResultsPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ClientboundContainerExportsInspectionResultsPacket::encode,
+            ClientboundContainerExportsInspectionResultsPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

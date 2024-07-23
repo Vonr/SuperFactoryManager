@@ -7,10 +7,10 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.apache.logging.log4j.Level;
 
@@ -24,6 +24,10 @@ public record ServerboundManagerSetLogLevelPacket(
             SFM.MOD_ID,
             "serverbound_manager_set_log_level_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundManagerSetLogLevelPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundManagerSetLogLevelPacket::encode,
+            ServerboundManagerSetLogLevelPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

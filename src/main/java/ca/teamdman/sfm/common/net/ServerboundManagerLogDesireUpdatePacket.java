@@ -6,12 +6,10 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-
-
-import java.util.function.Supplier;
 
 public record ServerboundManagerLogDesireUpdatePacket(
         int windowId,
@@ -22,6 +20,10 @@ public record ServerboundManagerLogDesireUpdatePacket(
             SFM.MOD_ID,
             "serverbound_manager_log_desire_update_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundManagerLogDesireUpdatePacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundManagerLogDesireUpdatePacket::encode,
+            ServerboundManagerLogDesireUpdatePacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

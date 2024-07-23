@@ -1,13 +1,13 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -19,10 +19,15 @@ public record ClientboundManagerGuiUpdatePacket(
         ManagerBlockEntity.State state,
         long[] tickTimes
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+    public static final Type<ClientboundManagerGuiUpdatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
             SFM.MOD_ID,
             "clientbound_manager_gui_update_packet"
     ));
+
+    public static final StreamCodec<FriendlyByteBuf, ClientboundManagerGuiUpdatePacket> STREAM_CODEC = StreamCodec.ofMember(
+            ClientboundManagerGuiUpdatePacket::encode,
+            ClientboundManagerGuiUpdatePacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

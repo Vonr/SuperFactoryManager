@@ -26,143 +26,143 @@ public class SFMPackets {
                 ServerboundManagerProgramPacket.STREAM_CODEC,
                 ServerboundManagerProgramPacket::handle
         );
-        registrar.play(
-                ServerboundManagerResetPacket.ID,
-                ServerboundManagerResetPacket::decode,
+        registrar.playToServer(
+                ServerboundManagerResetPacket.TYPE,
+                ServerboundManagerResetPacket.STREAM_CODEC,
                 ServerboundManagerResetPacket::handle
         );
-        registrar.play(
-                ServerboundManagerFixPacket.ID,
-                ServerboundManagerFixPacket::decode,
+        registrar.playToServer(
+                ServerboundManagerFixPacket.TYPE,
+                ServerboundManagerFixPacket.STREAM_CODEC,
                 ServerboundManagerFixPacket::handle
         );
 
-        registrar.play(
-                ClientboundManagerGuiUpdatePacket.ID,
-                ClientboundManagerGuiUpdatePacket::decode,
+        registrar.playToClient(
+                ClientboundManagerGuiUpdatePacket.TYPE,
+                ClientboundManagerGuiUpdatePacket.STREAM_CODEC,
                 ClientboundManagerGuiUpdatePacket::handle
         );
-        registrar.play(
-                ServerboundManagerSetLogLevelPacket.ID,
-                ServerboundManagerSetLogLevelPacket::decode,
+        registrar.playToServer(
+                ServerboundManagerSetLogLevelPacket.TYPE,
+                ServerboundManagerSetLogLevelPacket.STREAM_CODEC,
                 ServerboundManagerSetLogLevelPacket::handle
         );
-        registrar.play(
-                ServerboundManagerClearLogsPacket.ID,
-                ServerboundManagerClearLogsPacket::decode,
+        registrar.playToServer(
+                ServerboundManagerClearLogsPacket.TYPE,
+                ServerboundManagerClearLogsPacket.STREAM_CODEC,
                 ServerboundManagerClearLogsPacket::handle
         );
-        registrar.play(
-                ServerboundManagerLogDesireUpdatePacket.ID,
-                ServerboundManagerLogDesireUpdatePacket::decode,
+        registrar.playToServer(
+                ServerboundManagerLogDesireUpdatePacket.TYPE,
+                ServerboundManagerLogDesireUpdatePacket.STREAM_CODEC,
                 ServerboundManagerLogDesireUpdatePacket::handle
         );
-        registrar.play(
-                ClientboundManagerLogsPacket.ID,
-                ClientboundManagerLogsPacket::decode,
+        registrar.playToClient(
+                ClientboundManagerLogsPacket.TYPE,
+                ClientboundManagerLogsPacket.STREAM_CODEC,
                 ClientboundManagerLogsPacket::handle
         );
-        registrar.play(
-                ServerboundManagerRebuildPacket.ID,
-                ServerboundManagerRebuildPacket::decode,
+        registrar.playToServer(
+                ServerboundManagerRebuildPacket.TYPE,
+                ServerboundManagerRebuildPacket.STREAM_CODEC,
                 ServerboundManagerRebuildPacket::handle
         );
-        registrar.play(
-                ClientboundManagerLogLevelUpdatedPacket.ID,
-                ClientboundManagerLogLevelUpdatedPacket::decode,
+        registrar.playToClient(
+                ClientboundManagerLogLevelUpdatedPacket.TYPE,
+                ClientboundManagerLogLevelUpdatedPacket.STREAM_CODEC,
                 ClientboundManagerLogLevelUpdatedPacket::handle
         );
 
-        registrar.play(
-                ServerboundLabelGunUpdatePacket.ID,
-                ServerboundLabelGunUpdatePacket::decode,
+        registrar.playToServer(
+                ServerboundLabelGunUpdatePacket.TYPE,
+                ServerboundLabelGunUpdatePacket.STREAM_CODEC,
                 ServerboundLabelGunUpdatePacket::handle
         );
-        registrar.play(
-                ServerboundLabelGunPrunePacket.ID,
-                ServerboundLabelGunPrunePacket::decode,
+        registrar.playToServer(
+                ServerboundLabelGunPrunePacket.TYPE,
+                ServerboundLabelGunPrunePacket.STREAM_CODEC,
                 ServerboundLabelGunPrunePacket::handle
         );
-        registrar.play(
-                ServerboundLabelGunClearPacket.ID,
-                ServerboundLabelGunClearPacket::decode,
+        registrar.playToServer(
+                ServerboundLabelGunClearPacket.TYPE,
+                ServerboundLabelGunClearPacket.STREAM_CODEC,
                 ServerboundLabelGunClearPacket::handle
         );
-        registrar.play(
-                ServerboundLabelGunUsePacket.ID,
-                ServerboundLabelGunUsePacket::decode,
+        registrar.playToServer(
+                ServerboundLabelGunUsePacket.TYPE,
+                ServerboundLabelGunUsePacket.STREAM_CODEC,
                 ServerboundLabelGunUsePacket::handle
         );
 
-        registrar.play(
-                ServerboundDiskItemSetProgramPacket.ID,
-                ServerboundDiskItemSetProgramPacket::decode,
+        registrar.playToServer(
+                ServerboundDiskItemSetProgramPacket.TYPE,
+                ServerboundDiskItemSetProgramPacket.STREAM_CODEC,
                 ServerboundDiskItemSetProgramPacket::handle
         );
 
-        registrar.play(
-                ServerboundContainerExportsInspectionRequestPacket.ID,
-                ServerboundContainerExportsInspectionRequestPacket::decode,
+        registrar.playToServer(
+                ServerboundContainerExportsInspectionRequestPacket.TYPE,
+                ServerboundContainerExportsInspectionRequestPacket.STREAM_CODEC,
                 ServerboundContainerExportsInspectionRequestPacket::handle
         );
-        registrar.play(
-                ClientboundContainerExportsInspectionResultsPacket.ID,
-                ClientboundContainerExportsInspectionResultsPacket::decode,
+        registrar.playToClient(
+                ClientboundContainerExportsInspectionResultsPacket.TYPE,
+                ClientboundContainerExportsInspectionResultsPacket.STREAM_CODEC,
                 ClientboundContainerExportsInspectionResultsPacket::handle
         );
-        registrar.play(
-                ServerboundLabelInspectionRequestPacket.ID,
-                ServerboundLabelInspectionRequestPacket::decode,
+        registrar.playToServer(
+                ServerboundLabelInspectionRequestPacket.TYPE,
+                ServerboundLabelInspectionRequestPacket.STREAM_CODEC,
                 ServerboundLabelInspectionRequestPacket::handle
         );
-        registrar.play(
-                ClientboundLabelInspectionResultsPacket.ID,
-                ClientboundLabelInspectionResultsPacket::decode,
+        registrar.playToClient(
+                ClientboundLabelInspectionResultsPacket.TYPE,
+                ClientboundLabelInspectionResultsPacket.STREAM_CODEC,
                 ClientboundLabelInspectionResultsPacket::handle
         );
-        registrar.play(
-                ServerboundInputInspectionRequestPacket.ID,
-                ServerboundInputInspectionRequestPacket::decode,
+        registrar.playToServer(
+                ServerboundInputInspectionRequestPacket.TYPE,
+                ServerboundInputInspectionRequestPacket.STREAM_CODEC,
                 ServerboundInputInspectionRequestPacket::handle
         );
-        registrar.play(
-                ClientboundInputInspectionResultsPacket.ID,
-                ClientboundInputInspectionResultsPacket::decode,
+        registrar.playToClient(
+                ClientboundInputInspectionResultsPacket.TYPE,
+                ClientboundInputInspectionResultsPacket.STREAM_CODEC,
                 ClientboundInputInspectionResultsPacket::handle
         );
-        registrar.play(
-                ServerboundOutputInspectionRequestPacket.ID,
-                ServerboundOutputInspectionRequestPacket::decode,
+        registrar.playToServer(
+                ServerboundOutputInspectionRequestPacket.TYPE,
+                ServerboundOutputInspectionRequestPacket.STREAM_CODEC,
                 ServerboundOutputInspectionRequestPacket::handle
         );
-        registrar.play(
-                ClientboundOutputInspectionResultsPacket.ID,
-                ClientboundOutputInspectionResultsPacket::decode,
+        registrar.playToClient(
+                ClientboundOutputInspectionResultsPacket.TYPE,
+                ClientboundOutputInspectionResultsPacket.STREAM_CODEC,
                 ClientboundOutputInspectionResultsPacket::handle
         );
-        registrar.play(
-                ServerboundNetworkToolUsePacket.ID,
-                ServerboundNetworkToolUsePacket::decode,
+        registrar.playToServer(
+                ServerboundNetworkToolUsePacket.TYPE,
+                ServerboundNetworkToolUsePacket.STREAM_CODEC,
                 ServerboundNetworkToolUsePacket::handle
         );
-        registrar.play(
-                ServerboundIfStatementInspectionRequestPacket.ID,
-                ServerboundIfStatementInspectionRequestPacket::decode,
+        registrar.playToServer(
+                ServerboundIfStatementInspectionRequestPacket.TYPE,
+                ServerboundIfStatementInspectionRequestPacket.STREAM_CODEC,
                 ServerboundIfStatementInspectionRequestPacket::handle
         );
-        registrar.play(
-                ClientboundIfStatementInspectionResultsPacket.ID,
-                ClientboundIfStatementInspectionResultsPacket::decode,
+        registrar.playToClient(
+                ClientboundIfStatementInspectionResultsPacket.TYPE,
+                ClientboundIfStatementInspectionResultsPacket.STREAM_CODEC,
                 ClientboundIfStatementInspectionResultsPacket::handle
         );
-        registrar.play(
-                ServerboundBoolExprStatementInspectionRequestPacket.ID,
-                ServerboundBoolExprStatementInspectionRequestPacket::decode,
+        registrar.playToServer(
+                ServerboundBoolExprStatementInspectionRequestPacket.TYPE,
+                ServerboundBoolExprStatementInspectionRequestPacket.STREAM_CODEC,
                 ServerboundBoolExprStatementInspectionRequestPacket::handle
         );
-        registrar.play(
-                ClientboundBoolExprStatementInspectionResultsPacket.ID,
-                ClientboundBoolExprStatementInspectionResultsPacket::decode,
+        registrar.playToClient(
+                ClientboundBoolExprStatementInspectionResultsPacket.TYPE,
+                ClientboundBoolExprStatementInspectionResultsPacket.STREAM_CODEC,
                 ClientboundBoolExprStatementInspectionResultsPacket::handle
         );
     }

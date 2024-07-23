@@ -5,6 +5,7 @@ import ca.teamdman.sfm.client.ClientStuff;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -19,7 +20,10 @@ public record ClientboundContainerExportsInspectionResultsPacket(
             "clientbound_container_exports_inspection_results_packet"
     ));
     public static final int MAX_RESULTS_LENGTH = 20480;
-
+    public static final StreamCodec<FriendlyByteBuf, ClientboundContainerExportsInspectionResultsPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ClientboundContainerExportsInspectionResultsPacket::encode,
+            ClientboundContainerExportsInspectionResultsPacket::decode
+    );
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;

@@ -3,8 +3,7 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import net.minecraft.network.FriendlyByteBuf;
-
-
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -17,6 +16,10 @@ public record ClientboundBoolExprStatementInspectionResultsPacket(
             "clientbound_bool_expr_statement_inspection_results_packet"
     ));
     public static final int MAX_RESULTS_LENGTH = 2048;
+    public static final StreamCodec<FriendlyByteBuf, ClientboundBoolExprStatementInspectionResultsPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ClientboundBoolExprStatementInspectionResultsPacket::encode,
+            ClientboundBoolExprStatementInspectionResultsPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

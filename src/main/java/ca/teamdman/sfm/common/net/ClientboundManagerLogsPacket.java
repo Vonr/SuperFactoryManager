@@ -8,13 +8,12 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-
 import java.util.Collection;
-import java.util.function.Supplier;
 
 public record ClientboundManagerLogsPacket(
         int windowId,
@@ -24,6 +23,10 @@ public record ClientboundManagerLogsPacket(
             SFM.MOD_ID,
             "clientbound_manager_logs_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ClientboundManagerLogsPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ClientboundManagerLogsPacket::encode,
+            ClientboundManagerLogsPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

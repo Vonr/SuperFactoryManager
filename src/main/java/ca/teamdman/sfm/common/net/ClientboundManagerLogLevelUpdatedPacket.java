@@ -5,12 +5,10 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-
-
-import java.util.function.Supplier;
 
 public record ClientboundManagerLogLevelUpdatedPacket(
         int windowId,
@@ -20,6 +18,10 @@ public record ClientboundManagerLogLevelUpdatedPacket(
             SFM.MOD_ID,
             "clientbound_manager_log_level_updated_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ClientboundManagerLogLevelUpdatedPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ClientboundManagerLogLevelUpdatedPacket::encode,
+            ClientboundManagerLogLevelUpdatedPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

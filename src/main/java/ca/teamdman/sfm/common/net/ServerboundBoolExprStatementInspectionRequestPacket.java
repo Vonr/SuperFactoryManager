@@ -5,19 +5,16 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.BoolExpr;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-
-import java.util.function.Supplier;
 
 public record ServerboundBoolExprStatementInspectionRequestPacket(
         String programString,
@@ -27,6 +24,10 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
             SFM.MOD_ID,
             "serverbound_bool_expr_statement_inspection_request_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundBoolExprStatementInspectionRequestPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundBoolExprStatementInspectionRequestPacket::encode,
+            ServerboundBoolExprStatementInspectionRequestPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -66,7 +67,8 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
             }
         } else {
             //todo: localize
-            PacketDistributor.sendToPlayer(player,
+            PacketDistributor.sendToPlayer(
+                    player,
                     new ClientboundInputInspectionResultsPacket(
                             "This inspection is only available when editing inside a manager.")
             );
@@ -91,7 +93,8 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
                             boolean result = expr.test(programContext);
                             payload.append(result ? "TRUE" : "FALSE");
 
-                            PacketDistributor.sendToPlayer(player,
+                            PacketDistributor.sendToPlayer(
+                                    player,
                                     new ClientboundBoolExprStatementInspectionResultsPacket(
                                             SFMUtils.truncate(
                                                     payload.toString(),

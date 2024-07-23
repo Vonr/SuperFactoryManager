@@ -11,6 +11,7 @@ import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,13 +19,11 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public record ServerboundLabelGunUsePacket(
@@ -38,6 +37,10 @@ public record ServerboundLabelGunUsePacket(
             SFM.MOD_ID,
             "serverbound_label_gun_use_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundLabelGunUsePacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundLabelGunUsePacket::encode,
+            ServerboundLabelGunUsePacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

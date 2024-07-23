@@ -5,19 +5,16 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.InputStatement;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-
-import java.util.function.Supplier;
 
 public record ServerboundInputInspectionRequestPacket(
         String programString,
@@ -28,6 +25,10 @@ public record ServerboundInputInspectionRequestPacket(
             SFM.MOD_ID,
             "serverbound_input_inspection_request_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundInputInspectionRequestPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundInputInspectionRequestPacket::encode,
+            ServerboundInputInspectionRequestPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -67,7 +68,8 @@ public record ServerboundInputInspectionRequestPacket(
             }
         } else {
             //todo: localize
-            PacketDistributor.sendToPlayer(player,
+            PacketDistributor.sendToPlayer(
+                    player,
                     new ClientboundInputInspectionResultsPacket(
                             "This inspection is only available when editing inside a manager.")
             );
@@ -106,7 +108,8 @@ public record ServerboundInputInspectionRequestPacket(
                                 payload.append("none");
                             }
 
-                            PacketDistributor.sendToPlayer(player,
+                            PacketDistributor.sendToPlayer(
+                                    player,
 
                                     new ClientboundInputInspectionResultsPacket(
                                             SFMUtils.truncate(

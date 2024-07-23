@@ -4,9 +4,9 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import io.netty.buffer.ByteBuf;
+import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -17,16 +17,14 @@ public record ServerboundManagerProgramPacket(
         BlockPos pos,
         String program
 ) implements CustomPacketPayload {
-    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SFM.MOD_ID, "serverbound_manager_program_packet"));
+    public static final Type<ServerboundManagerProgramPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(
+            SFM.MOD_ID,
+            "serverbound_manager_program_packet"
+    ));
 
-    public static final StreamCodec<ByteBuf, ServerboundManagerProgramPacket> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.INT,
-            ServerboundManagerProgramPacket::windowId,
-            BlockPos.STREAM_CODEC,
-            ServerboundManagerProgramPacket::pos,
-            ByteBufCodecs.STRING_UTF8,
-            ServerboundManagerProgramPacket::program,
-            ServerboundManagerProgramPacket::new
+    public static final StreamCodec<FriendlyByteBuf, ServerboundManagerProgramPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundManagerProgramPacket::encode,
+            ServerboundManagerProgramPacket::decode
     );
 
     @Override
@@ -34,7 +32,27 @@ public record ServerboundManagerProgramPacket(
         return TYPE;
     }
 
-    public static void handle(ServerboundManagerProgramPacket msg, IPayloadContext context) {
+    public static void encode(
+            ServerboundManagerProgramPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
+        friendlyByteBuf.writeVarInt(msg.windowId());
+        friendlyByteBuf.writeBlockPos(msg.pos());
+        friendlyByteBuf.writeUtf(msg.program(), Program.MAX_PROGRAM_LENGTH);
+    }
+
+    public static ServerboundManagerProgramPacket decode(FriendlyByteBuf friendlyByteBuf) {
+        return new ServerboundManagerProgramPacket(
+                friendlyByteBuf.readVarInt(),
+                friendlyByteBuf.readBlockPos(),
+                friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH)
+        );
+    }
+
+    public static void handle(
+            ServerboundManagerProgramPacket msg,
+            IPayloadContext context
+    ) {
         SFMPackets.handleServerboundContainerPacket(
                 context,
                 ManagerContainerMenu.class,

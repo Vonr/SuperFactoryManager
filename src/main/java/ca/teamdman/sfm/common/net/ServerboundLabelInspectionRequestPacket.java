@@ -4,19 +4,17 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Set;
-import java.util.function.Supplier;
 
 public record ServerboundLabelInspectionRequestPacket(
         String label
@@ -26,6 +24,10 @@ public record ServerboundLabelInspectionRequestPacket(
             SFM.MOD_ID,
             "serverbound_label_inspection_request_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundLabelInspectionRequestPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundLabelInspectionRequestPacket::encode,
+            ServerboundLabelInspectionRequestPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -127,7 +129,8 @@ public record ServerboundLabelInspectionRequestPacket(
                 payload.length(),
                 player.getStringUUID()
         );
-        PacketDistributor.sendToPlayer(player,
+        PacketDistributor.sendToPlayer(
+                player,
                 new ClientboundLabelInspectionResultsPacket(
                         payload.toString()
                 )

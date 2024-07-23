@@ -15,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -39,6 +40,10 @@ public record ServerboundContainerExportsInspectionRequestPacket(
             SFM.MOD_ID,
             "serverbound_container_exports_inspection_request_packet"
     ));
+    public static final StreamCodec<FriendlyByteBuf, ServerboundContainerExportsInspectionRequestPacket> STREAM_CODEC = StreamCodec.ofMember(
+            ServerboundContainerExportsInspectionRequestPacket::encode,
+            ServerboundContainerExportsInspectionRequestPacket::decode
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -76,14 +81,16 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                         return;
                     }
                     String payload = buildInspectionResults(blockEntity.getLevel(), blockEntity.getBlockPos());
-                    PacketDistributor.sendToPlayer(player,
+                    PacketDistributor.sendToPlayer(
+                            player,
                             new ClientboundContainerExportsInspectionResultsPacket(
                                     msg.windowId,
                                     SFMUtils.truncate(
                                             payload,
                                             ClientboundContainerExportsInspectionResultsPacket.MAX_RESULTS_LENGTH
                                     )
-                            ));
+                            )
+                    );
                 }
         );
 
