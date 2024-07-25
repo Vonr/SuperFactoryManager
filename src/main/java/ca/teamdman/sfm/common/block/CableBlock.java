@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.block;
 
+import ca.teamdman.sfm.common.block.shape.ShapeCache;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import com.google.common.collect.ImmutableMap;
@@ -69,8 +70,10 @@ public class CableBlock extends Block implements ICableBlock {
     }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
-        pBuilder.add(NORTH, SOUTH, EAST, WEST, UP, DOWN);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
+
+        builder.add(NORTH, SOUTH, EAST, WEST, UP, DOWN);
     }
 
     @Nullable
@@ -90,7 +93,13 @@ public class CableBlock extends Block implements ICableBlock {
     @SuppressWarnings("deprecation")
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext ctx) {
-        return getShape(state);
+        return ShapeCache.getOrCompute(state, CableBlock::getShape);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public BlockState updateShape(BlockState state, Direction dir, BlockState facingState, LevelAccessor world, BlockPos pos, BlockPos facingPos) {
+        return getState(state, world, pos);
     }
 
     @SuppressWarnings("deprecation")
