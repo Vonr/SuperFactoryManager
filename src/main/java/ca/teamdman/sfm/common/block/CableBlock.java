@@ -114,7 +114,7 @@ public class CableBlock extends Block implements ICableBlock {
         CableNetworkManager.onCableRemoved(level, pos);
     }
 
-    private BlockState getState(BlockState currentState, LevelAccessor level, BlockPos pos) {
+    protected BlockState getState(BlockState currentState, LevelAccessor level, BlockPos pos) {
         boolean north = hasConnection(level, pos, Direction.NORTH);
         boolean south = hasConnection(level, pos, Direction.SOUTH);
         boolean east = hasConnection(level, pos, Direction.EAST);
@@ -131,7 +131,7 @@ public class CableBlock extends Block implements ICableBlock {
                 .setValue(DOWN, down);
     }
 
-    private boolean hasConnection(LevelAccessor level, BlockPos pos, Direction direction) {
+    protected boolean hasConnection(LevelAccessor level, BlockPos pos, Direction direction) {
         // Directly connect to other cables
         // TODO: Perhaps we should make all SFM blocks implement something like 'INetworkNode' and just check that?
         if (level.getBlockState(pos.relative(direction)).getBlock() instanceof CableBlock) {

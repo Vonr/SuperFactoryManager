@@ -23,6 +23,7 @@ public class SFMItemModels extends ItemModelProvider {
     protected void registerModels() {
         justParent(SFMItems.MANAGER_ITEM, SFMBlocks.MANAGER_BLOCK);
         justParent(SFMItems.CABLE_ITEM, SFMBlocks.CABLE_BLOCK, "_core");
+        justParent(SFMItems.CABLE_BLOCK_ITEM, SFMBlocks.CABLE_BLOCK_BLOCK);
         justParent(SFMItems.PRINTING_PRESS_ITEM, SFMBlocks.PRINTING_PRESS_BLOCK);
         justParent(SFMItems.WATER_TANK_ITEM, SFMBlocks.WATER_TANK_BLOCK, "_active");
         basicItem(SFMItems.DISK_ITEM);

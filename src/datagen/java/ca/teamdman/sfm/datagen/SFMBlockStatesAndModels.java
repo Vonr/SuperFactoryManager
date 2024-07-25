@@ -24,8 +24,9 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
                 modLoc("block/manager_top")
         ).texture("particle", "#top"));
 
-        simpleBlock(SFMBlocks.PRINTING_PRESS_BLOCK.get(), models().getExistingFile(modLoc("block/printing_press")));
         registerCableBlock();
+        simpleBlock(SFMBlocks.CABLE_BLOCK_BLOCK.get());
+        simpleBlock(SFMBlocks.PRINTING_PRESS_BLOCK.get(), models().getExistingFile(modLoc("block/printing_press")));
 
         ModelFile waterIntakeModelActive = models()
                 .cubeAll(
