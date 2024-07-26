@@ -5,7 +5,6 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.*;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
@@ -14,9 +13,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
 import static ca.teamdman.sfml.ast.RoundRobin.Behaviour.BY_BLOCK;
@@ -184,8 +181,7 @@ public class ProgramLinter {
     private static void addWarningsForLabelsInHolderButNotInProgram(
             Program program, LabelPositionHolder labels, ArrayList<TranslatableContents> warnings
     ) {
-        labels
-                .get()
+        labels.labels()
                 .keySet()
                 .stream()
                 .filter(x -> !program.referencedLabels().contains(x))

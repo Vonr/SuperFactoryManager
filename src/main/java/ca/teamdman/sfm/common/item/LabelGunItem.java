@@ -4,6 +4,7 @@ import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUsePacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
+import ca.teamdman.sfm.common.registry.SFMDataComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -18,7 +19,6 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 
@@ -30,16 +30,16 @@ public class LabelGunItem extends Item {
     public static void setActiveLabel(ItemStack gun, String label) {
         if (label.isEmpty()) return;
         LabelPositionHolder.from(gun).addReferencedLabel(label).save(gun);
-        gun.getOrCreateTag().putString("sfm:active_label", label);
+        gun.set(SFMDataComponents.ACTIVE_LABEL, label);
     }
 
     public static String getActiveLabel(ItemStack stack) {
-        //noinspection DataFlowIssue
-        return !stack.hasTag() ? "" : stack.getTag().getString("sfm:active_label");
+        return stack.getOrDefault(SFMDataComponents.ACTIVE_LABEL, "");
     }
 
     public static String getNextLabel(ItemStack gun, int change) {
-        var labels = LabelPositionHolder.from(gun).get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
+        LabelPositionHolder labelPositionHolder = LabelPositionHolder.from(gun);
+        var labels = labelPositionHolder.labels().keySet().stream().sorted(Comparator.naturalOrder()).toList();
         if (labels.isEmpty()) return "";
         var currentLabel = getActiveLabel(gun);
 

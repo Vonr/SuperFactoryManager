@@ -4,7 +4,9 @@ import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.net.ServerboundNetworkToolUsePacket;
+import ca.teamdman.sfm.common.registry.SFMDataComponents;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -19,7 +21,9 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class NetworkToolItem extends Item {
     public NetworkToolItem() {
@@ -52,35 +56,20 @@ public class NetworkToolItem extends Item {
     }
 
     @Override
-    public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
-        if (pIsSelected && !pLevel.isClientSide && pEntity.tickCount % 20 == 0) {
-            final long maxDistance = 128;
-            CompoundTag tag = new CompoundTag();
-            ListTag networks = new ListTag();
-            CableNetworkManager
-                    .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
-                    .forEach(net -> {
-                        CompoundTag networkTag = new CompoundTag();
-                        networkTag.put(
-                                "cable_positions",
-                                net
-                                        .getCablePositions()
-                                        .map(NbtUtils::writeBlockPos)
-                                        .collect(ListTag::new, ListTag::add, ListTag::addAll)
-                        );
-                        networkTag.put(
-                                "capability_provider_positions",
-                                net
-                                        .getCapabilityProviderPositions()
-                                        .map(NbtUtils::writeBlockPos)
-                                        .collect(ListTag::new, ListTag::add, ListTag::addAll)
-                        );
-                        networks.add(networkTag);
-                    });
-            tag.put("networks", networks);
-            pStack.setTag(tag);
+    public void inventoryTick(ItemStack stack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
+        if (!pIsSelected || pLevel.isClientSide || pEntity.tickCount % 20 != 0) {
+            return;
         }
+        final long maxDistance = 128;
+        Set<BlockPos> cablePositions = new HashSet <>();
+        Set<BlockPos> capabilityPositions = new HashSet <>();
+        CableNetworkManager
+                .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
+                .forEach(net -> {
+                    net.getCablePositions().forEach(cablePositions::add);
+                    net.getCapabilityProviderPositions().forEach(capabilityPositions::add);
+                });
+        stack.set(SFMDataComponents.CABLE_POSITIONS, cablePositions);
+        stack.set(SFMDataComponents.CAPABILITY_POSITIONS, capabilityPositions);
     }
-
-
 }

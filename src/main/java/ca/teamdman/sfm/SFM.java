@@ -18,6 +18,7 @@ public class SFM {
     public SFM(IEventBus bus) {
         SFMBlocks.register(bus);
         SFMItems.register(bus);
+        SFMDataComponents.register(bus);
         SFMCreativeTabs.register(bus);
         SFMResourceTypes.register(bus);
         SFMBlockEntities.register(bus);

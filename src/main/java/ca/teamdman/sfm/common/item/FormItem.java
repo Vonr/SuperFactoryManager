@@ -1,15 +1,13 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.render.FormItemExtensions;
+import ca.teamdman.sfm.common.registry.SFMDataComponents;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -22,12 +20,12 @@ public class FormItem extends Item {
 
     public static ItemStack getForm(@Nonnull ItemStack stack) {
         var formStack = new ItemStack(SFMItems.FORM_ITEM.get());
-        formStack.getOrCreateTag().put("reference", stack.save(new CompoundTag()));
+        formStack.set(SFMDataComponents.FORM_REFERENCE, stack);
         return formStack;
     }
 
     public static ItemStack getReference(ItemStack stack) {
-        return ItemStack.of(stack.getOrCreateTag().getCompound("reference"));
+        return stack.getOrDefault(SFMDataComponents.FORM_REFERENCE, ItemStack.EMPTY);
     }
 
     @Override
@@ -43,13 +41,10 @@ public class FormItem extends Item {
             List<Component> pTooltipComponents,
             TooltipFlag pTooltipFlag
     ) {
-        if (pStack.hasTag()) {
-            var reference = getReference(pStack);
-            if (!reference.isEmpty()) {
-                pTooltipComponents.add(reference.getHoverName());
-                reference.getItem().appendHoverText(reference, pContext, pTooltipComponents, pTooltipFlag);
-            }
+        var reference = getReference(pStack);
+        if (!reference.isEmpty()) {
+            pTooltipComponents.add(reference.getHoverName());
+            reference.getItem().appendHoverText(reference, pContext, pTooltipComponents, pTooltipFlag);
         }
     }
-
 }

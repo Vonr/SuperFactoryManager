@@ -4,6 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.LabelGunItem;
 import ca.teamdman.sfm.common.item.NetworkToolItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
+import ca.teamdman.sfm.common.registry.SFMDataComponents;
 import com.google.common.collect.HashMultimap;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -17,19 +18,15 @@ import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @EventBusSubscriber(modid = SFM.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 /*
@@ -135,22 +132,11 @@ public class ItemWorldRenderer {
         var networkTool = player.getMainHandItem();
         if (!(networkTool.getItem() instanceof NetworkToolItem)) networkTool = player.getOffhandItem();
         if (networkTool.getItem() instanceof NetworkToolItem) {
-            List<BlockPos> cablePositions = new ArrayList<>();
-            List<BlockPos> capabilityProviderPositions = new ArrayList<>();
-            // gather network positions from item
-            networkTool.getOrCreateTag().getList("networks", Tag.TAG_COMPOUND).forEach(networkTag -> {
-                ((CompoundTag) networkTag).getList("cable_positions", Tag.TAG_COMPOUND)
-                        .stream()
-                        .map(CompoundTag.class::cast)
-                        .map(NbtUtils::readBlockPos)
-                        .forEach(cablePositions::add);
-                ((CompoundTag) networkTag)
-                        .getList("capability_provider_positions", Tag.TAG_COMPOUND)
-                        .stream()
-                        .map(CompoundTag.class::cast)
-                        .map(NbtUtils::readBlockPos)
-                        .forEach(capabilityProviderPositions::add);
-            });
+            Set<BlockPos> cablePositions = networkTool.getOrDefault(SFMDataComponents.CABLE_POSITIONS, new HashSet<>());
+            Set<BlockPos> capabilityProviderPositions = networkTool.getOrDefault(
+                    SFMDataComponents.CAPABILITY_POSITIONS,
+                    new HashSet<>()
+            );
 
             var poseStack = event.getPoseStack();
             var camera = Minecraft.getInstance().gameRenderer.getMainCamera();
@@ -220,37 +206,6 @@ public class ItemWorldRenderer {
         }
     }
 
-    private static void drawLabel(
-            PoseStack poseStack,
-            Camera camera,
-            BlockPos pos,
-            MultiBufferSource mbs,
-            Collection<String> labels
-    ) {
-        poseStack.pushPose();
-        poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        poseStack.mulPose(camera.rotation());
-        poseStack.scale(-0.025f, -0.025f, 0.025f);
-        Font font = Minecraft.getInstance().font;
-        poseStack.translate(0, labels.size() * (font.lineHeight + 0.1) / -2f, 0);
-        for (var label : labels) {
-            font.drawInBatch(
-                    label,
-                    -font.width(label) / 2f,
-                    0,
-                    -0x1,
-                    false,
-                    poseStack.last().pose(),
-                    mbs,
-                    Font.DisplayMode.SEE_THROUGH,
-                    0,
-                    0xF000F0
-            );
-            poseStack.translate(0, font.lineHeight + 0.1, 0);
-        }
-        poseStack.popPose();
-    }
-
     public static MeshData createCapabilityProviderVBO() {
         return createShape(100, 0, 255, 100);
     }
@@ -259,7 +214,12 @@ public class ItemWorldRenderer {
         return createShape(100, 255, 0, 100);
     }
 
-    public static MeshData createShape(int r, int g, int b, int a) {
+    public static MeshData createShape(
+            int r,
+            int g,
+            int b,
+            int a
+    ) {
         var builder = new BufferBuilder(4 * 6 * 8);
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
@@ -294,6 +254,37 @@ public class ItemWorldRenderer {
         builder.vertex(0F, 0F, 0F).color(r, g, b, a).endVertex();
 
         return builder.end();
+    }
+
+    private static void drawLabel(
+            PoseStack poseStack,
+            Camera camera,
+            BlockPos pos,
+            MultiBufferSource mbs,
+            Collection<String> labels
+    ) {
+        poseStack.pushPose();
+        poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        poseStack.mulPose(camera.rotation());
+        poseStack.scale(-0.025f, -0.025f, 0.025f);
+        Font font = Minecraft.getInstance().font;
+        poseStack.translate(0, labels.size() * (font.lineHeight + 0.1) / -2f, 0);
+        for (var label : labels) {
+            font.drawInBatch(
+                    label,
+                    -font.width(label) / 2f,
+                    0,
+                    -0x1,
+                    false,
+                    poseStack.last().pose(),
+                    mbs,
+                    Font.DisplayMode.SEE_THROUGH,
+                    0,
+                    0xF000F0
+            );
+            poseStack.translate(0, font.lineHeight + 0.1, 0);
+        }
+        poseStack.popPose();
     }
 
 }

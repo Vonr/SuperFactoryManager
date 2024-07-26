@@ -5,12 +5,12 @@ import ca.teamdman.sfm.common.net.ServerboundLabelGunClearPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunPrunePacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -18,6 +18,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Comparator;
+import java.util.Map;
+import java.util.Set;
 
 public class LabelGunScreen extends Screen {
     private final InteractionHand HAND;
@@ -73,9 +75,9 @@ public class LabelGunScreen extends Screen {
                                          .size(300, 20)
                                          .build());
         {
-            var labels = LABEL_HOLDER.get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
+            var labels = LABEL_HOLDER.labels().keySet().stream().sorted(Comparator.naturalOrder()).toList();
             int i = 0;
-            int buttonWidth = LABEL_HOLDER.get()
+            int buttonWidth = ((Map<String, ? extends Set<BlockPos>>) LABEL_HOLDER.labels())
                                       .entrySet()
                                       .stream()
                                       .map(entry -> Constants.LocalizationKeys.LABEL_GUN_GUI_LABEL_BUTTON.getComponent(
