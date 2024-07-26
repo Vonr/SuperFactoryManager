@@ -2,20 +2,18 @@ package ca.teamdman.sfm.common.cablenetwork;
 
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
-import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.stream.Stream;

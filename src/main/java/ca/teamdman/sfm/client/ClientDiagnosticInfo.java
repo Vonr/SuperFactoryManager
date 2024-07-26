@@ -49,7 +49,7 @@ public class ClientDiagnosticInfo {
             if (!errors.isEmpty()) {
                 content.append("\n-- Errors\n");
                 for (var error : errors) {
-                    content.append("-- * ").append(I18n.get(error.getKey(), error.getArgs())).append("\n");
+                    content.append("-- * ").append(error.getString()).append("\n");
                 }
             }
 
@@ -57,7 +57,7 @@ public class ClientDiagnosticInfo {
             if (!warnings.isEmpty()) {
                 content.append("\n-- Warnings\n");
                 for (var warning : warnings) {
-                    content.append("-- * ").append(I18n.get(warning.getKey(), warning.getArgs())).append("\n");
+                    content.append("-- * ").append(warning.getString()).append("\n");
                 }
             }
         } catch (Throwable t) {

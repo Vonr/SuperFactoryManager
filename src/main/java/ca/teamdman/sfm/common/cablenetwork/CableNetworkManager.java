@@ -11,7 +11,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 
 import java.util.*;
@@ -157,7 +156,7 @@ public class CableNetworkManager {
         // Unregister network from cable position lookup
         Long2ObjectMap<CableNetwork> posMap = NETWORKS_BY_CABLE_POSITION
                 .computeIfAbsent(network.getLevel(), k -> new Long2ObjectOpenHashMap<>());
-        network.getCablePositionsRaw().forEach(posMap::remove);
+        network.CABLE_POSITIONS.forEach(posMap::remove);
     }
 
     private static void addNetwork(CableNetwork network) {
@@ -167,7 +166,7 @@ public class CableNetworkManager {
         // Register network to cable position lookup
         Long2ObjectMap<CableNetwork> posMap = NETWORKS_BY_CABLE_POSITION
                 .computeIfAbsent(network.getLevel(), k -> new Long2ObjectOpenHashMap<>());
-        network.getCablePositionsRaw().forEach(cablePos -> posMap.put(cablePos, network));
+        network.CABLE_POSITIONS.forEach(cablePos -> posMap.put(cablePos, network));
     }
 
     /**

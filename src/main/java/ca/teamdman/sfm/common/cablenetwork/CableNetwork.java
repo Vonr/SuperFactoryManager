@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class CableNetwork {
-
     protected final Level LEVEL;
     protected final LongSet CABLE_POSITIONS = new LongOpenHashSet();
     protected final CapabilityCache CAPABILITY_CACHE = new CapabilityCache();
@@ -156,11 +155,6 @@ public class CableNetwork {
         return CABLE_POSITIONS.longStream().mapToObj(BlockPos::of);
     }
 
-    public LongSet getCablePositionsRaw() {
-        return CABLE_POSITIONS;
-    }
-
-    // TODO: replace the logging that uses this with something that shows sidedness
     public Stream<BlockPos> getCapabilityProviderPositions() {
         return CAPABILITY_CACHE.getPositions();
     }
