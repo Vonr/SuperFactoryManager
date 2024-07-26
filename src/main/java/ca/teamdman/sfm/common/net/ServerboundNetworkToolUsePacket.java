@@ -136,7 +136,7 @@ public record ServerboundNetworkToolUsePacket(
         if (entity != null) {
             if (player.hasPermissions(2)) {
                 payload.append("---- (op only) nbt data ----\n");
-                payload.append(entity.serializeNBT()).append("\n");
+                payload.append(entity.getPersistentData()).append("\n");
             }
         }
 
