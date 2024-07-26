@@ -7,6 +7,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -36,7 +37,7 @@ public class SFMMenus {
                         public ManagerContainerMenu create(
                                 int windowId,
                                 Inventory inv,
-                                FriendlyByteBuf data
+                                RegistryFriendlyByteBuf data
                         ) {
                             return new ManagerContainerMenu(
                                     windowId,

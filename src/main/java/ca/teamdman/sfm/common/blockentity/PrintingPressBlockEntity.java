@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.common.blockentity;
 
-import ca.teamdman.sfm.common.recipe.NotContainer;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMRecipeTypes;
@@ -12,6 +11,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
  * Accepts a paper item and a form item.
  * When a piston is pressed on top of this block, it will print the form onto the paper.
  */
-public class PrintingPressBlockEntity extends BlockEntity implements NotContainer {
+public class PrintingPressBlockEntity extends BlockEntity implements RecipeInput {
 
 
     private final ItemStackHandler FORM = new ItemStackHandler(1) {
@@ -61,7 +61,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
                     .getRecipeManager()
                     .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get())
                     .stream()
-                    .anyMatch(r -> r.value().INK.test(stack));
+                    .anyMatch(r -> r.value().ink().test(stack));
         }
     };
 
@@ -85,7 +85,7 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
                     .getRecipeManager()
                     .getAllRecipesFor(SFMRecipeTypes.PRINTING_PRESS.get())
                     .stream()
-                    .anyMatch(r -> r.value().PAPER.test(stack));
+                    .anyMatch(r -> r.value().paper().test(stack));
         }
     };
     public final CombinedInvWrapper INVENTORY = new CombinedInvWrapper(FORM, INK, PAPER);
@@ -95,6 +95,16 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
             BlockPos pPos, BlockState pBlockState
     ) {
         super(SFMBlockEntities.PRINTING_PRESS_BLOCK_ENTITY.get(), pPos, pBlockState);
+    }
+
+    @Override
+    public ItemStack getItem(int slot) {
+        return INVENTORY.getStackInSlot(slot);
+    }
+
+    @Override
+    public int size() {
+        return INVENTORY.getSlots();
     }
 
 
@@ -170,8 +180,8 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
-        var tag = super.getUpdateTag();
+    public CompoundTag getUpdateTag(HolderLookup.Provider pRegistries) {
+        var tag = super.getUpdateTag(pRegistries);
         writeItems(tag, pRegistries);
         return tag;
     }
@@ -183,11 +193,13 @@ public class PrintingPressBlockEntity extends BlockEntity implements NotContaine
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
-        super.onDataPacket(net, pkt);
-        CompoundTag tag = pkt.getTag();
-        if (tag != null)
-            readItems(tag, pRegistries);
+    public void onDataPacket(
+            Connection net,
+            ClientboundBlockEntityDataPacket pkt,
+            HolderLookup.Provider lookupProvider
+    ) {
+        super.onDataPacket(net, pkt, lookupProvider);
+        readItems(pkt.getTag(), lookupProvider);
     }
 
     public ItemStack getPaper() {

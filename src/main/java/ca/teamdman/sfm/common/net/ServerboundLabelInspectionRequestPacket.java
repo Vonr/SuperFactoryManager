@@ -14,7 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.Set;
+import java.util.HashSet;
 
 public record ServerboundLabelInspectionRequestPacket(
         String label
@@ -78,7 +78,8 @@ public record ServerboundLabelInspectionRequestPacket(
         payload.append("-- Positions for label \"").append(msg.label()).append("\" --\n");
         payload.append(labelPositionHolder.getPositions(msg.label()).size()).append(" assignments\n");
         payload.append("-- Summary --\n");
-        labelPositionHolder.get().getOrDefault(msg.label(), Set.of()).forEach(pos -> {
+        labelPositionHolder.labels()
+                .getOrDefault(msg.label(), new HashSet<>()).forEach(pos -> {
             payload
                     .append(pos.getX())
                     .append(",")
@@ -98,7 +99,7 @@ public record ServerboundLabelInspectionRequestPacket(
         });
 
         payload.append("\n\n\n-- Detailed --\n");
-        for (BlockPos pos : labelPositionHolder.get().getOrDefault(msg.label(), Set.of())) {
+        for (BlockPos pos : (labelPositionHolder.labels()).getOrDefault(msg.label(), new HashSet<>())) {
             if (payload.length() > 20_000) {
                 payload.append("... (truncated)");
                 break;
