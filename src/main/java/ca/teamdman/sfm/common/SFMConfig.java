@@ -54,8 +54,8 @@ public class SFMConfig {
     }
 
     public static void register(ModLoadingContext context) {
-        context.registerConfig(ModConfig.Type.COMMON, SFMConfig.COMMON_SPEC);
-        context.registerConfig(ModConfig.Type.CLIENT, SFMConfig.CLIENT_SPEC);
+        context.getActiveContainer().registerConfig(ModConfig.Type.COMMON, SFMConfig.COMMON_SPEC);
+        context.getActiveContainer().registerConfig(ModConfig.Type.CLIENT, SFMConfig.CLIENT_SPEC);
     }
 
     public static class Client {
