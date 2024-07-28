@@ -220,40 +220,39 @@ public class ItemWorldRenderer {
             int b,
             int a
     ) {
-        var builder = new BufferBuilder(4 * 6 * 8);
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-        builder.vertex(0F, 1F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 1F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 1F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 1F, 0F).color(r, g, b, a).endVertex();
+        builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
+        builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
+        builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
+        builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
 
-        builder.vertex(0F, 1F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 1F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 0F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 0F, 0F).color(r, g, b, a).endVertex();
+        builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
+        builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
+        builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
+        builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
 
-        builder.vertex(1F, 1F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 1F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 0F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 0F, 1F).color(r, g, b, a).endVertex();
+        builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
+        builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
+        builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
+        builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
 
-        builder.vertex(0F, 1F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 1F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 0F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 0F, 1F).color(r, g, b, a).endVertex();
+        builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
+        builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
+        builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
+        builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
 
-        builder.vertex(1F, 0F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 0F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 1F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 1F, 1F).color(r, g, b, a).endVertex();
+        builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
+        builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
+        builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
+        builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
 
-        builder.vertex(1F, 0F, 0F).color(r, g, b, a).endVertex();
-        builder.vertex(1F, 0F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 0F, 1F).color(r, g, b, a).endVertex();
-        builder.vertex(0F, 0F, 0F).color(r, g, b, a).endVertex();
+        builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
+        builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
+        builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
+        builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
 
-        return builder.end();
+        return builder.buildOrThrow();
     }
 
     private static void drawLabel(
