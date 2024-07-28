@@ -2,9 +2,10 @@ package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import com.google.common.collect.ImmutableList;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.data.loot.LootTableSubProvider;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -22,23 +23,32 @@ public class SFMLootTables extends LootTableProvider {
     public SFMLootTables(GatherDataEvent event) {
         super(
                 event.getGenerator().getPackOutput(),
-              // specify registry names of the tables that are required to generate, or can leave empty
-              Collections.emptySet(),
-              // Sub providers which generate the loot
-              ImmutableList.of(new SubProviderEntry(SFMBlockLootProvider::new, LootContextParamSets.BLOCK)));
+                // specify registry names of the tables that are required to generate, or can leave empty
+                Collections.emptySet(),
+                // Sub providers which generate the loot
+                ImmutableList.of(new SubProviderEntry(SFMBlockLootProvider::new, LootContextParamSets.BLOCK)),
+                event.getLookupProvider()
+        );
     }
 
     public static class SFMBlockLootProvider implements LootTableSubProvider {
 
-        public void generate(BiConsumer<ResourceLocation, LootTable.Builder> writer) {
+        public SFMBlockLootProvider(HolderLookup.Provider provider) {
+
+        }
+
+        @Override
+        public void generate(BiConsumer<ResourceKey<LootTable>, LootTable.Builder> writer) {
             dropSelf(SFMBlocks.MANAGER_BLOCK, writer);
             dropSelf(SFMBlocks.CABLE_BLOCK, writer);
             dropSelf(SFMBlocks.WATER_TANK_BLOCK, writer);
             dropSelf(SFMBlocks.PRINTING_PRESS_BLOCK, writer);
-
         }
 
-        private void dropSelf(Supplier<Block> block, BiConsumer<ResourceLocation, LootTable.Builder> writer) {
+        private void dropSelf(
+                Supplier<Block> block,
+                BiConsumer<ResourceKey<LootTable>, LootTable.Builder> writer
+        ) {
             var pool = LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1))
                     .add(LootItem.lootTableItem(block.get()));

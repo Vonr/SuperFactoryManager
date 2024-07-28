@@ -88,7 +88,7 @@ public class SFMDataComponents {
                                                  .map(HashSet::new, ArrayList::new)).build()
     );
     public static final Supplier<DataComponentType<Set<BlockPos>>> CAPABILITY_POSITIONS = DATA_COMPONENT_TYPES.register(
-            "cable_positions",
+            "capability_positions",
             () -> DataComponentType.<Set<BlockPos>>builder()
                     .networkSynchronized(BlockPos.STREAM_CODEC
                                                  .apply(ByteBufCodecs.list())
