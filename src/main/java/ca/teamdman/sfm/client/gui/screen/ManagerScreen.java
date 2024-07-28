@@ -382,23 +382,20 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         Tesselator tesselator = Tesselator.getInstance();
         Matrix4f pose = graphics.pose().last().pose();
-        MultiBufferSource.BufferSource bufferSource = graphics.bufferSource();
-//        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.TRANSLUCENT);
         BufferBuilder bufferbuilder;
 
 
         // Draw the plot background
-        bufferbuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder = tesselator.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         bufferbuilder.addVertex(pose, plotX, plotY, 0).setColor(0, 0, 0, 0.5f);
         bufferbuilder.addVertex(pose, plotX + plotWidth, plotY, 0).setColor(0, 0, 0, 0.5f);
         bufferbuilder.addVertex(pose, plotX + plotWidth, plotY + plotHeight, 0).setColor(0, 0, 0, 0.5f);
         bufferbuilder.addVertex(pose, plotX, plotY + plotHeight, 0).setColor(0, 0, 0, 0.5f);
         bufferbuilder.addVertex(pose, plotX, plotY, 0).setColor(0, 0, 0, 0.5f);
-//        bufferbuilder.buildOrThrow();
-//        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
 
         // Draw lines for each data point
-        bufferbuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder = tesselator.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         int mouseTickTimeIndex = -1;
         for (int i = 0; i < menu.tickTimeNanos.length; i++) {
             long y = menu.tickTimeNanos[i];
@@ -426,7 +423,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 mouseTickTimeIndex = i;
             }
         }
-//        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
 
         // Draw the tick time text
         var format = new DecimalFormat("0.000");
@@ -451,7 +448,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             // draw a vertical line
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
             tesselator = Tesselator.getInstance();
-            bufferbuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            bufferbuilder = tesselator.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
             pose = graphics.pose().last().pose();
 
             int x = plotX + spaceBetweenPoints * mouseTickTimeIndex;
@@ -461,7 +458,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             bufferbuilder
                     .addVertex(pose, (float) x, (float) plotY + plotHeight, 0f)
                     .setColor(1f, 1f, 1f, 1f);
-//            BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+            BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
         } else {
             // Draw the tick time text for peak value
             var peakTickTimeMilliseconds = peakTickTimeNanoseconds / 1_000_000f;
