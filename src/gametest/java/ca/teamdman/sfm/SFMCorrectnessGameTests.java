@@ -17,9 +17,12 @@ import ca.teamdman.sfml.ast.OutputStatement;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -27,6 +30,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
@@ -35,11 +39,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import org.apache.logging.log4j.Level;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.items.IItemHandler;
+import org.apache.logging.log4j.Level;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +58,7 @@ import java.util.stream.IntStream;
 // https://docs.minecraftforge.net/en/1.19.x/misc/gametest/
 // https://github.com/MinecraftForge/MinecraftForge/blob/1.19.x/src/test/java/net/minecraftforge/debug/misc/GameTestTest.java#LL101-L116C6
 // https://github.com/XFactHD/FramedBlocks/blob/1.19.4/src/main/java/xfacthd/framedblocks/api/test/TestUtils.java#L65-L87
-@SuppressWarnings({"DataFlowIssue", "deprecation", "OptionalGetWithoutIsPresent", "DuplicatedCode", "unused"})
+@SuppressWarnings({"DataFlowIssue", "OptionalGetWithoutIsPresent", "DuplicatedCode", "unused"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMCorrectnessGameTests extends SFMGameTestBase {
@@ -65,7 +69,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     @GameTest(template = "1x2x1")
     public static void manager_state_update(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(0, 2, 0));
         assertTrue(manager.getState() == ManagerBlockEntity.State.NO_DISK, "Manager did not start with no disk");
         assertTrue(manager.getDisk().isEmpty(), "Manager did not start with no disk");
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
@@ -93,7 +97,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -132,7 +136,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             leftChest.insertItem(i, new ItemStack(Blocks.DIRT, 64), false);
         }
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -190,7 +194,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // set up manager
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -248,7 +252,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                    EVERY 20 TICKS DO
@@ -283,7 +287,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
         leftChest.insertItem(1, new ItemStack(Items.STONE, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -325,7 +329,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos right = new BlockPos(0, 2, 0);
         helper.setBlock(right, Blocks.CAULDRON);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -369,7 +373,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos right = new BlockPos(0, 2, 0);
         helper.setBlock(right, Blocks.CAULDRON);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -421,12 +425,12 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(end, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // add some items
-        Container startChest = (Container) helper.getBlockEntity(start);
+        Container startChest = helper.getBlockEntity(start);
         startChest.setItem(0, new ItemStack(Items.IRON_INGOT, 64));
-        Container endChest = (Container) helper.getBlockEntity(end);
+        Container endChest = helper.getBlockEntity(end);
 
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -465,7 +469,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos left = new BlockPos(2, 2, 1);
         helper.setBlock(left, SFMBlocks.TEST_BARREL_BLOCK.get());
         // add sticks to the chest
-        Container chest = (Container) helper.getBlockEntity(left);
+        Container chest = helper.getBlockEntity(left);
         chest.setItem(0, new ItemStack(Items.STICK, 64));
 
         BlockPos right = new BlockPos(0, 2, 1);
@@ -477,7 +481,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos back = new BlockPos(1, 2, 0);
         helper.setBlock(back, Blocks.CAULDRON);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -510,7 +514,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             // ensure sticks departed
             assertTrue(chest.getItem(0).getCount() == 0, "Items did not move");
             // ensure sticks arrived
-            Container rightChest = (Container) helper.getBlockEntity(right);
+            Container rightChest = helper.getBlockEntity(right);
             assertTrue(rightChest.getItem(0).getCount() == 64, "Items did not move");
 
             helper.succeed();
@@ -758,7 +762,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos right = new BlockPos(0, 2, 0);
         helper.setBlock(right, Blocks.CAULDRON);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // create the program
@@ -805,7 +809,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(4, new ItemStack(Items.DIAMOND, 5), false);
         leftChest.insertItem(5, new ItemStack(Items.DIAMOND, 5), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -850,35 +854,25 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(chestPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
-        Player player = helper.makeMockPlayer();
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BLACK_DYE));
         BlockState pressState = helper.getBlockState(printingPos);
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(printingPos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(printingPos),
-                        false
-                )
+        helper.useBlock(printingPos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(printingPos),
+                                false
+                        )
         );
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(SFMItems.DISK_ITEM.get()));
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(printingPos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(printingPos),
-                        false
-                )
+        helper.useBlock(printingPos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(printingPos),
+                                false
+                        )
         );
         var disk = new ItemStack(SFMItems.DISK_ITEM.get());
         DiskItem.setProgram(disk, """
@@ -888,48 +882,33 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                     END
                 """.stripTrailing().stripIndent());
         player.setItemInHand(InteractionHand.MAIN_HAND, FormItem.getForm(disk));
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(printingPos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(printingPos),
-                        false
-                )
+        helper.useBlock(printingPos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(printingPos),
+                                false
+                        )
         );
 
         BlockState buttonState = helper.getBlockState(buttonPos);
-        buttonState.getBlock().use(
-                buttonState,
-                helper.getLevel(),
-                helper.absolutePos(buttonPos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(printingPos),
-                        false
-                )
+        helper.useBlock(buttonPos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(printingPos),
+                                false
+                        )
         );
 
         helper.runAfterDelay(5, () -> {
-            pressState.getBlock().use(
-                    pressState,
-                    helper.getLevel(),
-                    helper.absolutePos(printingPos),
-                    player,
-                    InteractionHand.MAIN_HAND,
-                    new BlockHitResult(
-                            new Vec3(0.5, 0.5, 0.5),
-                            Direction.UP,
-                            helper.absolutePos(printingPos),
-                            false
-                    )
+            helper.useBlock(printingPos, player,
+                            new BlockHitResult(
+                                    new Vec3(0.5, 0.5, 0.5),
+                                    Direction.UP,
+                                    helper.absolutePos(printingPos),
+                                    false
+                            )
             );
             ItemStack held = player.getMainHandItem();
             if (held.is(SFMItems.DISK_ITEM.get()) && DiskItem.getProgram(held).equals(DiskItem.getProgram(disk))) {
@@ -950,23 +929,18 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var pos = new BlockPos(0, 2, 0);
         helper.setBlock(pos, SFMBlocks.PRINTING_PRESS_BLOCK.get());
         var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(pos);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
         // put black dye in player hand
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BLACK_DYE, 23));
         // right click on printing press
         BlockState pressState = helper.getBlockState(pos);
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(pos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(pos),
-                        false
-                )
+        helper.useBlock(pos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(pos),
+                                false
+                        )
         );
         // assert the ink was inserted
         assertTrue(!printingPress.getInk().isEmpty(), "Ink was not inserted");
@@ -974,18 +948,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // put book in player hand
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOOK));
         // right click on printing press
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(pos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(pos),
-                        false
-                )
+        helper.useBlock(pos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(pos),
+                                false
+                        )
         );
         // assert the book was inserted
         assertTrue(!printingPress.getPaper().isEmpty(), "Paper was not inserted");
@@ -994,18 +963,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var form = FormItem.getForm(new ItemStack(Items.WRITTEN_BOOK));
         player.setItemInHand(InteractionHand.MAIN_HAND, form.copy());
         // right click on printing press
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(pos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(pos),
-                        false
-                )
+        helper.useBlock(pos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(pos),
+                                false
+                        )
         );
         // assert the form was inserted
         assertTrue(!printingPress.getForm().isEmpty(), "Form was not inserted");
@@ -1014,18 +978,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // pull out item
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         // right click on printing press
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(pos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(pos),
-                        false
-                )
+        helper.useBlock(pos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(pos),
+                                false
+                        )
         );
         // assert the paper was extracted
         assertTrue(printingPress.getPaper().isEmpty(), "Paper was not extracted");
@@ -1036,38 +995,28 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // pull out an item
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         // right click on printing press
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(pos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(pos),
-                        false
-                )
+        helper.useBlock(pos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(pos),
+                                false
+                        )
         );
         // assert the form was extracted
         assertTrue(printingPress.getForm().isEmpty(), "Form was not extracted");
         assertTrue(!player.getMainHandItem().isEmpty(), "Form was not given to player");
-        assertTrue(ItemStack.isSameItemSameTags(player.getMainHandItem(), form), "Form doesn't match");
+        assertTrue(ItemStack.isSameItemSameComponents(player.getMainHandItem(), form), "Form doesn't match");
         // pull out item
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         // right click on printing press
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(pos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(pos),
-                        false
-                )
+        helper.useBlock(pos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(pos),
+                                false
+                        )
         );
         // assert the ink was extracted
         assertTrue(printingPress.getInk().isEmpty(), "Ink was not extracted");
@@ -1077,18 +1026,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // try to pull out another item
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         // right click on printing press
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(pos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(pos),
-                        false
-                )
+        helper.useBlock(pos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(pos),
+                                false
+                        )
         );
         // assert nothing was extracted
         assertTrue(player.getMainHandItem().isEmpty(), "Nothing should have been extracted");
@@ -1110,86 +1054,67 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(chestPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
-        Player player = helper.makeMockPlayer();
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(SFMItems.EXPERIENCE_GOOP_ITEM.get(), 10));
         BlockState pressState = helper.getBlockState(printingPos);
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(printingPos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(printingPos),
-                        false
-                )
+        helper.useBlock(printingPos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(printingPos),
+                                false
+                        )
         );
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOOK));
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(printingPos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(printingPos),
-                        false
-                )
+        helper.useBlock(printingPos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(printingPos),
+                                false
+                        )
         );
         ItemStack reference = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
-                Enchantments.SHARPNESS,
+                helper
+                        .getLevel()
+                        .registryAccess()
+                        .registry(Registries.ENCHANTMENT)
+                        .get()
+                        .getHolder(Enchantments.SHARPNESS)
+                        .get(),
                 3
         ));
         player.setItemInHand(InteractionHand.MAIN_HAND, FormItem.getForm(reference));
-        pressState.getBlock().use(
-                pressState,
-                helper.getLevel(),
-                helper.absolutePos(printingPos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(printingPos),
-                        false
-                )
+        helper.useBlock(printingPos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(printingPos),
+                                false
+                        )
         );
 
         BlockState buttonState = helper.getBlockState(buttonPos);
-        buttonState.getBlock().use(
-                buttonState,
-                helper.getLevel(),
-                helper.absolutePos(buttonPos),
-                player,
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(
-                        new Vec3(0.5, 0.5, 0.5),
-                        Direction.UP,
-                        helper.absolutePos(printingPos),
-                        false
-                )
+        helper.useBlock(buttonPos, player,
+                        new BlockHitResult(
+                                new Vec3(0.5, 0.5, 0.5),
+                                Direction.UP,
+                                helper.absolutePos(printingPos),
+                                false
+                        )
         );
 
         helper.runAfterDelay(5, () -> {
-            pressState.getBlock().use(
-                    pressState,
-                    helper.getLevel(),
-                    helper.absolutePos(printingPos),
-                    player,
-                    InteractionHand.MAIN_HAND,
-                    new BlockHitResult(
-                            new Vec3(0.5, 0.5, 0.5),
-                            Direction.UP,
-                            helper.absolutePos(printingPos),
-                            false
-                    )
+            helper.useBlock(printingPos, player,
+                            new BlockHitResult(
+                                    new Vec3(0.5, 0.5, 0.5),
+                                    Direction.UP,
+                                    helper.absolutePos(printingPos),
+                                    false
+                            )
             );
             ItemStack held = player.getMainHandItem();
-            if (ItemStack.isSameItemSameTags(held, reference)) {
+            if (ItemStack.isSameItemSameComponents(held, reference)) {
                 var chest = getItemHandler(helper, chestPos);
                 chest.insertItem(0, held, false);
                 assertTrue(printingPress.getInk().getCount() == 9, "Ink was not consumed properly");
@@ -1197,7 +1122,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 assertTrue(!printingPress.getForm().isEmpty(), "Form should not be consumed");
                 helper.succeed();
             } else {
-                helper.fail("cloned item wasnt same");
+                helper.fail("cloned item wasn't same");
             }
         });
     }
@@ -1230,7 +1155,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                             ItemEntity.class,
                             new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
                     );
-            if (found.stream().anyMatch(e -> ItemStack.isSameItemSameTags(e.getItem(), FormItem.getForm(disk)))) {
+            if (found.stream().anyMatch(e -> ItemStack.isSameItemSameComponents(e.getItem(), FormItem.getForm(disk)))) {
                 helper.succeed();
             } else {
                 helper.fail("no form found");
@@ -1243,7 +1168,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.IRON_BLOCK);
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
         ItemStack reference = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
-                Enchantments.SHARPNESS,
+                helper
+                        .getLevel()
+                        .registryAccess()
+                        .registry(Registries.ENCHANTMENT)
+                        .get()
+                        .getHolder(Enchantments.SHARPNESS)
+                        .get(),
                 3
         ));
         helper
@@ -1262,7 +1193,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                             ItemEntity.class,
                             new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
                     );
-            if (found.stream().anyMatch(e -> ItemStack.isSameItemSameTags(e.getItem(), FormItem.getForm(reference)))) {
+            if (found
+                    .stream()
+                    .anyMatch(e -> ItemStack.isSameItemSameComponents(e.getItem(), FormItem.getForm(reference)))) {
                 helper.succeed();
             } else {
                 helper.fail("no form found");
@@ -1283,8 +1216,18 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                         0, 0, 0
                 ));
         var axe = new ItemStack(Items.GOLDEN_AXE);
-        axe.enchant(Enchantments.BLOCK_EFFICIENCY, 3);
-        axe.enchant(Enchantments.SHARPNESS, 2);
+        axe.enchant(helper
+                            .getLevel()
+                            .registryAccess()
+                            .registry(Registries.ENCHANTMENT)
+                            .get()
+                            .getHolder(Enchantments.EFFICIENCY).get(), 3);
+        axe.enchant(helper
+                            .getLevel()
+                            .registryAccess()
+                            .registry(Registries.ENCHANTMENT)
+                            .get()
+                            .getHolder(Enchantments.SHARPNESS).get(), 2);
         helper.getLevel().addFreshEntity(new ItemEntity(
                 helper.getLevel(),
                 pos.x, pos.y, pos.z,
@@ -1301,21 +1244,34 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                     );
             boolean foundDisenchantedAxe = found
                     .stream()
-                    .anyMatch(e -> ItemStack.isSameItemSameTags(e.getItem(), new ItemStack(Items.GOLDEN_AXE)));
+                    .anyMatch(e -> ItemStack.isSameItemSameComponents(e.getItem(), new ItemStack(Items.GOLDEN_AXE)));
             boolean foundEfficiencyBook = found
                     .stream()
-                    .anyMatch(e -> ItemStack.isSameItemSameTags(
+                    .anyMatch(e -> ItemStack.isSameItemSameComponents(
                             e.getItem(),
                             EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
-                                    Enchantments.BLOCK_EFFICIENCY,
+                                    helper
+                                            .getLevel()
+                                            .registryAccess()
+                                            .registry(Registries.ENCHANTMENT)
+                                            .get()
+                                            .getHolder(Enchantments.EFFICIENCY).get(),
                                     3
                             ))
                     ));
             boolean foundSharpnessBook = found
                     .stream()
-                    .anyMatch(e -> ItemStack.isSameItemSameTags(
+                    .anyMatch(e -> ItemStack.isSameItemSameComponents(
                             e.getItem(),
-                            EnchantedBookItem.createForEnchantment(new EnchantmentInstance(Enchantments.SHARPNESS, 2))
+                            EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
+                                    helper
+                                            .getLevel()
+                                            .registryAccess()
+                                            .registry(Registries.ENCHANTMENT)
+                                            .get()
+                                            .getHolder(Enchantments.SHARPNESS).get(),
+                                    2
+                            ))
                     ));
             boolean foundRemainingBooks = found
                                                   .stream()
@@ -1340,7 +1296,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                         helper.getLevel(),
                         pos.x, pos.y, pos.z,
                         EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
-                                Enchantments.SHARPNESS,
+                                helper
+                                        .getLevel()
+                                        .registryAccess()
+                                        .registry(Registries.ENCHANTMENT)
+                                        .get()
+                                        .getHolder(Enchantments.SHARPNESS)
+                                        .get(),
                                 3
                         )),
                         0, 0, 0
@@ -1354,8 +1316,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                             new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
                     );
             assertTrue(found.size() == 1, "should only be one item");
-            assertTrue(found.get(0).getItem().is(SFMItems.EXPERIENCE_SHARD_ITEM.get()), "should be an xp shard");
-            assertTrue(found.get(0).getItem().getCount() == 1, "should only be one");
+            assertTrue(found.getFirst().getItem().is(SFMItems.EXPERIENCE_SHARD_ITEM.get()), "should be an xp shard");
+            assertTrue(found.getFirst().getItem().getCount() == 1, "should only be one");
             helper.succeed();
         });
     }
@@ -1364,8 +1326,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void falling_anvil_xp_shard_many(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.OBSIDIAN);
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
-        ItemStack enchBook = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
-                Enchantments.SHARPNESS,
+        ItemStack enchantedBook = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
+                helper
+                        .getLevel()
+                        .registryAccess()
+                        .registry(Registries.ENCHANTMENT)
+                        .get()
+                        .getHolder(Enchantments.SHARPNESS)
+                        .get(),
                 3
         ));
         for (int i = 0; i < 10; i++) {
@@ -1374,7 +1342,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                     .addFreshEntity(new ItemEntity(
                             helper.getLevel(),
                             pos.x, pos.y, pos.z,
-                            enchBook,
+                            enchantedBook,
                             0, 0, 0
                     ));
         }
@@ -1401,7 +1369,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         stack.getDisplayName();
         stack.getHoverName();
         stack.getItem().getName(stack);
-        stack.getItem().appendHoverText(stack, helper.getLevel(), new ArrayList<>(), TooltipFlag.Default.NORMAL);
+        stack
+                .getItem()
+                .appendHoverText(stack, Item.TooltipContext.EMPTY, new ArrayList<>(), TooltipFlag.Default.NORMAL);
         Vec3 pos = helper.absoluteVec(new Vec3(0.5, 2, 0.5));
         ItemEntity itemEntity = new ItemEntity(helper.getLevel(), pos.x, pos.y, pos.z, stack, 0, 0, 0);
         helper.getLevel().addFreshEntity(itemEntity);
@@ -1412,7 +1382,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void program_crlf_line_endings_conversion(GameTestHelper helper) {
         var managerPos = new BlockPos(0, 2, 0);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         String program = """
                 NAME "line endings test"
@@ -1820,7 +1790,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -1857,7 +1827,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -1894,7 +1864,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.IRON_BLOCK, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -1933,7 +1903,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 64), false);
         leftChest.insertItem(2, new ItemStack(Items.NETHERITE_INGOT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -1976,7 +1946,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 2), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 2), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2019,7 +1989,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 2), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 2), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2063,7 +2033,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 64), false);
         leftChest.insertItem(2, new ItemStack(Items.NETHERITE_INGOT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2109,7 +2079,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 64), false);
         leftChest.insertItem(2, new ItemStack(Items.NETHERITE_INGOT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2152,7 +2122,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 2), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 2), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2193,7 +2163,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 8), false);
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 8), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2235,7 +2205,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(1, new ItemStack(Items.GOLD_INGOT, 64), false);
         leftChest.insertItem(2, new ItemStack(Items.NETHERITE_INGOT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2293,7 +2263,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             leftChest.insertItem(i, new ItemStack(items[i], 64), false);
         }
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        NAME "SFM 4.12.0 change overview"
@@ -2360,7 +2330,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2399,7 +2369,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2441,7 +2411,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
         leftChest.insertItem(1, new ItemStack(Items.IRON_INGOT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2484,7 +2454,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2503,7 +2473,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            assertTrue(leftChest.getStackInSlot(0).getCount() == 64-10, "did not remain");
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64 - 10, "did not remain");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 10, "did not arrive");
             helper.succeed();
         });
@@ -2522,7 +2492,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2560,7 +2530,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2598,7 +2568,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2649,7 +2619,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // set up manager
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2710,7 +2680,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // set up manager
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2756,7 +2726,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftChest = getItemHandler(helper, leftPos);
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2809,7 +2779,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // set up manager
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2850,7 +2820,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2918,7 +2888,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Items.POTATO, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2954,7 +2924,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
         leftChest.insertItem(1, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                        EVERY 20 TICKS DO
@@ -2996,7 +2966,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // create the manager block and add the disk
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // create the program
@@ -3031,7 +3001,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.pressButton(buttonPos);
     }
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_1(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3041,7 +3011,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -3065,7 +3035,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
 
         // count the execution paths
-        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(x -> {
+            for (TranslatableContents problem : x) {
+                warnings.add(MutableComponent.create(problem));
+            }
+        });
         program.tick(ProgramContext.createSimulationContext(
                 program,
                 labelPositionHolder,
@@ -3073,11 +3047,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 simulation
         ));
         assertTrue(simulation.getSeenPaths().size() == 1, "expected single execution path");
-        assertTrue(simulation.getSeenPaths().get(0).history().size() == 2, "expected two elements in execution path");
+        assertTrue(simulation.getSeenPaths().getFirst().history().size() == 2, "expected two elements in execution path");
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3087,7 +3061,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -3116,7 +3090,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
 
         // count the execution paths
-        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(x -> {
+            for (TranslatableContents problem : x) {
+                warnings.add(MutableComponent.create(problem));
+            }
+        });
         program.tick(ProgramContext.createSimulationContext(
                 program,
                 labelPositionHolder,
@@ -3124,12 +3102,12 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 simulation
         ));
         assertTrue(simulation.getSeenPaths().size() == 2, "expected single execution path");
-        assertTrue(simulation.getSeenPaths().get(0).history().size() == 2, "expected two elements in execution path");
+        assertTrue(simulation.getSeenPaths().getFirst().history().size() == 2, "expected two elements in execution path");
         assertTrue(simulation.getSeenPaths().get(1).history().size() == 3, "expected two elements in execution path");
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_3(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3139,7 +3117,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -3174,7 +3152,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
 
         // count the execution paths
-        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(x -> {
+            for (TranslatableContents problem : x) {
+                warnings.add(MutableComponent.create(problem));
+            }
+        });
         program.tick(ProgramContext.createSimulationContext(
                 program,
                 labelPositionHolder,
@@ -3182,14 +3164,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 simulation
         ));
         assertTrue(simulation.getSeenPaths().size() == 3, "expected single execution path");
-        assertTrue(simulation.getSeenPaths().get(0).history().size() == 2, "expected two elements in execution path");
+        assertTrue(simulation.getSeenPaths().getFirst().history().size() == 2, "expected two elements in execution path");
         assertTrue(simulation.getSeenPaths().get(1).history().size() == 4, "expected two elements in execution path");
         assertTrue(simulation.getSeenPaths().get(2).history().size() == 3, "expected two elements in execution path");
         helper.succeed();
     }
 
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_conditional_1(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3199,7 +3181,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -3225,7 +3207,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
 
         // count the execution paths
-        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(x -> {
+            for (TranslatableContents problem : x) {
+                warnings.add(MutableComponent.create(problem));
+            }
+        });
         program.tick(ProgramContext.createSimulationContext(
                 program,
                 labelPositionHolder,
@@ -3233,19 +3219,25 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 simulation
         ));
 
-        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1,2));
-        assertTrue(simulation.getSeenPaths().size() == expectedPathSizes.size(), "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size());
+        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1, 2));
+        assertTrue(
+                simulation.getSeenPaths().size() == expectedPathSizes.size(),
+                "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size()
+        );
         int[] actualPathIOSizes = simulation.getSeenIOStatementCountForEachPath();
         // don't assume the order, just that each path size has occurred the specified number of times
         for (int i = 0; i < actualPathIOSizes.length; i++) {
             int pathSize = actualPathIOSizes[i];
             if (!expectedPathSizes.remove((Integer) pathSize)) {
-                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation.getSeenPaths().size() + " paths");
+                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation
+                        .getSeenPaths()
+                        .size() + " paths");
             }
         }
         helper.succeed();
     }
-    @GameTest(template = "3x2x1", batch="linting")
+
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_conditional_1b(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3255,7 +3247,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -3276,15 +3268,19 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // assert expected warnings
         var warnings = DiskItem.getWarnings(manager.getDisk().get());
         assertTrue(warnings.size() == 1, "expected 1 warning, got " + warnings.size());
-        assertTrue(warnings
-                           .get(0)
-                           .getKey()
-                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
-                                           .key()
-                                           .get()), "expected output without matching input warning");
+        assertTrue(
+                (
+                        (TranslatableContents) warnings
+                                .getFirst()
+                                .getContents()
+                ).getKey()
+                        .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
+                                        .key()
+                                        .get()), "expected output without matching input warning");
         helper.succeed();
     }
-    @GameTest(template = "3x2x1", batch="linting")
+
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_conditional_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3294,7 +3290,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // set the labels
@@ -3324,28 +3320,37 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         assertTrue(warnings.isEmpty(), "expected 0 warning, got " + warnings.size());
 
         // count the execution paths
-        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(warnings::addAll);
+        GatherWarningsProgramBehaviour simulation = new GatherWarningsProgramBehaviour(x -> {
+            for (TranslatableContents problem : x) {
+                warnings.add(MutableComponent.create(problem));
+            }
+        });
         program.tick(ProgramContext.createSimulationContext(
                 program,
                 labelPositionHolder,
                 0,
                 simulation
         ));
-        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1,2,2,3));
-        assertTrue(simulation.getSeenPaths().size() == expectedPathSizes.size(), "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size());
+        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1, 2, 2, 3));
+        assertTrue(
+                simulation.getSeenPaths().size() == expectedPathSizes.size(),
+                "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size()
+        );
         int[] actualPathIOSizes = simulation.getSeenIOStatementCountForEachPath();
         // don't assume the order, just that each path size has occurred the specified number of times
         for (int i = 0; i < actualPathIOSizes.length; i++) {
             int pathSize = actualPathIOSizes[i];
             if (!expectedPathSizes.remove((Integer) pathSize)) {
-                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation.getSeenPaths().size() + " paths");
+                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation
+                        .getSeenPaths()
+                        .size() + " paths");
             }
         }
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch="linting")
-    public static void unused_io_warning_output_label_not_presnet_in_input(GameTestHelper helper) {
+    @GameTest(template = "3x2x1", batch = "linting")
+    public static void unused_io_warning_output_label_not_present_in_input(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -3354,7 +3359,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         LabelPositionHolder.empty()
                 .add("bruh", helper.absolutePos(leftPos))
@@ -3369,9 +3374,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // assert expected warnings
         var warnings = DiskItem.getWarnings(manager.getDisk().get());
         assertTrue(warnings.size() == 1, "expected 1 warning, got " + warnings.size());
-        assertTrue(warnings
-                           .get(0)
-                           .getKey()
+        assertTrue((
+                           (TranslatableContents) warnings
+                                   .getFirst()
+                                   .getContents()
+                   ).getKey()
                            .equals(Constants.LocalizationKeys.PROGRAM_WARNING_OUTPUT_RESOURCE_TYPE_NOT_FOUND_IN_INPUTS
                                            .key()
                                            .get()), "expected output without matching input warning");
@@ -3379,7 +3386,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void unused_io_warning_input_label_not_present_in_output(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3389,7 +3396,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         LabelPositionHolder.empty()
                 .add("left", helper.absolutePos(leftPos))
@@ -3404,9 +3411,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // assert expected warnings
         var warnings = DiskItem.getWarnings(manager.getDisk().get());
         assertTrue(warnings.size() == 1, "expected 1 warning, got " + warnings.size());
-        assertTrue(warnings
-                           .get(0)
-                           .getKey()
+        assertTrue((
+                           (TranslatableContents) warnings
+                                   .getFirst()
+                                   .getContents()
+                   ).getKey()
                            .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
                                            .key()
                                            .get()), "expected output without matching input warning");
@@ -3414,7 +3423,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void conditional_output_inspection(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -3427,7 +3436,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
 
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(1, 2, 0));
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
 
@@ -3455,7 +3464,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         OutputStatement outputStatement = (OutputStatement) program
                 .triggers()
-                .get(0)
+                .getFirst()
                 .getBlock()
                 .getStatements()
                 .get(1);
@@ -3494,7 +3503,12 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             // get the position of the difference and show it
             for (int i = 0; i < inspectionResults.length(); i++) {
                 if (inspectionResults.charAt(i) != expected.charAt(i)) {
-                    System.out.println("Difference at position " + i + ":" + inspectionResults.charAt(i) + " vs " + expected.charAt(i));
+                    System.out.println("Difference at position "
+                                       + i
+                                       + ":"
+                                       + inspectionResults.charAt(i)
+                                       + " vs "
+                                       + expected.charAt(i));
                     break;
                 }
             }

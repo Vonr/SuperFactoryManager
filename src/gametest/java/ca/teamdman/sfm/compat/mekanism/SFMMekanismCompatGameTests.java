@@ -7,7 +7,6 @@ import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import mekanism.api.chemical.infuse.InfusionStack;
-import mekanism.api.math.FloatingLong;
 import mekanism.common.registries.MekanismBlocks;
 import mekanism.common.registries.MekanismInfuseTypes;
 import mekanism.common.tier.BinTier;
@@ -321,10 +320,10 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                 .save(manager.getDisk().get());
 
         left.setEnergy(0, EnergyCubeTier.ULTIMATE.getMaxEnergy());
-        right.setEnergy(0, FloatingLong.ZERO);
+        right.setEnergy(0, 0);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            assertTrue(left.getEnergy(0).equals(FloatingLong.ZERO), "Contents did not depart");
-            assertTrue(right.getEnergy(0).equals(EnergyCubeTier.ULTIMATE.getMaxEnergy()), "Contents did not arrive");
+            assertTrue(left.getEnergy(0) == 0, "Contents did not depart");
+            assertTrue(right.getEnergy(0) == EnergyCubeTier.ULTIMATE.getMaxEnergy(), "Contents did not arrive");
             helper.succeed();
         });
     }
@@ -360,11 +359,11 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
 
-        left.setEnergy(0, FloatingLong.create(1_000));
-        right.setEnergy(0, FloatingLong.create(1_000));
+        left.setEnergy(0, 1_000);
+        right.setEnergy(0, 1_000);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            assertTrue(left.getEnergy(0).equals(FloatingLong.ZERO), "Contents did not depart");
-            assertTrue(right.getEnergy(0).equals(FloatingLong.create(2_000)), "Contents did not arrive");
+            assertTrue(left.getEnergy(0) == 0, "Contents did not depart");
+            assertTrue(right.getEnergy(0) == 2_000, "Contents did not arrive");
             helper.succeed();
         });
     }
@@ -401,13 +400,13 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                 .save(manager.getDisk().get());
 
         left.setEnergy(0, EnergyCubeTier.ULTIMATE.getMaxEnergy());
-        right.setEnergy(0, EnergyCubeTier.ULTIMATE.getMaxEnergy().subtract(1_000));
+        right.setEnergy(0, EnergyCubeTier.ULTIMATE.getMaxEnergy() - (1_000));
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(
-                    left.getEnergy(0).equals(EnergyCubeTier.ULTIMATE.getMaxEnergy().subtract(1_000)),
+                    left.getEnergy(0) == (EnergyCubeTier.ULTIMATE.getMaxEnergy() - (1_000)),
                     "Contents did not depart"
             );
-            assertTrue(right.getEnergy(0).equals(EnergyCubeTier.ULTIMATE.getMaxEnergy()), "Contents did not arrive");
+            assertTrue(right.getEnergy(0) == EnergyCubeTier.ULTIMATE.getMaxEnergy(), "Contents did not arrive");
             helper.succeed();
         });
     }
@@ -443,19 +442,16 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                 .add("b", helper.absolutePos(rightPos))
                 .save(manager.getDisk().get());
 
-        left.setEnergy(0, FloatingLong.create(100));
-        right.setEnergy(0, FloatingLong.ZERO);
+        left.setEnergy(0, 100);
+        right.setEnergy(0, 0);
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(
                     left
-                            .getEnergy(0)
-                            .equals(FloatingLong
-                                            .create(100)
-                                            .subtract(UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(1))),
+                            .getEnergy(0) == 100 - UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(1),
                     "Contents did not depart"
             );
             assertTrue(
-                    right.getEnergy(0).equals(UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(1)),
+                    right.getEnergy(0) == UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(1),
                     "Contents did not arrive"
             );
             helper.succeed();
@@ -488,7 +484,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the manager
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        ManagerBlockEntity manager = helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
 
         // create the program
