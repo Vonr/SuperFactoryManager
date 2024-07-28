@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.neoforged.api.distmarker.Dist;
@@ -72,7 +73,7 @@ public class ItemWorldRenderer {
 
     @SubscribeEvent
     public static void renderLabelHighlights(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
         var player = Minecraft.getInstance().player;
         if (player == null) return;
 
@@ -90,12 +91,18 @@ public class ItemWorldRenderer {
             RenderSystem.disableDepthTest();
 
             poseStack.pushPose();
+            poseStack.mulPose(camera.rotation().invert());
             poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 
             { // draw labels
+                poseStack.pushPose();
+//                poseStack.mulPose(camera.rotation());
+//                poseStack.mulPose(camera.rotation().invert());
+
                 for (var entry : labelPositions.asMap().entrySet()) {
                     drawLabel(poseStack, camera, entry.getKey(), bufferSource, entry.getValue());
                 }
+                poseStack.popPose();
             }
             { // draw highlights
                 RENDER_TYPE.setupRenderState();
@@ -150,6 +157,7 @@ public class ItemWorldRenderer {
                     -camera.getPosition().y,
                     -camera.getPosition().z
             );
+            poseStack.mulPose(camera.rotation().invert());
 
             { // draw highlights
                 RENDER_TYPE.setupRenderState();
@@ -220,7 +228,12 @@ public class ItemWorldRenderer {
             int b,
             int a
     ) {
-        BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(4 * 6 * 8);
+        BufferBuilder builder = new BufferBuilder(
+                byteBufferBuilder,
+                VertexFormat.Mode.QUADS,
+                DefaultVertexFormat.POSITION_COLOR
+        );
 
         builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
         builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
@@ -264,7 +277,8 @@ public class ItemWorldRenderer {
     ) {
         poseStack.pushPose();
         poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        poseStack.mulPose(camera.rotation());
+        poseStack.mulPose(camera.rotation().invert());
+//        poseStack.mulPose(camera.rotation().);
         poseStack.scale(-0.025f, -0.025f, 0.025f);
         Font font = Minecraft.getInstance().font;
         poseStack.translate(0, labels.size() * (font.lineHeight + 0.1) / -2f, 0);
@@ -282,6 +296,7 @@ public class ItemWorldRenderer {
                     0xF000F0
             );
             poseStack.translate(0, font.lineHeight + 0.1, 0);
+
         }
         poseStack.popPose();
     }

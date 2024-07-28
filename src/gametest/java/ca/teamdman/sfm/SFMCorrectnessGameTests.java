@@ -84,6 +84,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
+    /// If the /test command fails with "Structure not found" problems, manually place a structure block in the world
     @GameTest(template = "3x2x1")
     public static void move_1_stack(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
