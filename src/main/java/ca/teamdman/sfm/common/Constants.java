@@ -749,6 +749,10 @@ public class Constants {
                 "key.categories.sfm",
                 "Super Factory Manager"
         );
+        public static final LocalizationEntry SFM_BAD_TRANSLATION_ARGUMENT = new LocalizationEntry(
+                "sfm.error.bad_translation_argument",
+                "Failed to create translatable contents for key \"{}\" with error {}"
+        );
 
         public static List<LocalizationEntry> getEntries() {
             // use reflection to get all the public static LocalizationEntry fields

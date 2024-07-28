@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.util;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -100,7 +101,12 @@ public class SFMUtils {
      * Helper method to avoid noisy git merges between versions
      */
     public static TranslatableContents getTranslatableContents(String key, Object... args) {
-        return new TranslatableContents(key, null, args);
+        try {
+            return new TranslatableContents(key, null, args);
+        } catch (IllegalArgumentException e) {
+            SFM.LOGGER.error("Failed to create translatable contents for key \"{}\" with error {}", key, e);
+            return Constants.LocalizationKeys.SFM_BAD_TRANSLATION_ARGUMENT.get(key, e.getMessage());
+        }
     }
 
     /**
