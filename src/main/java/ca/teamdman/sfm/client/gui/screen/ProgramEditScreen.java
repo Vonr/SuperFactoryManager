@@ -309,6 +309,7 @@ public class ProgramEditScreen extends Screen {
             }
         }
 
+        @Override
         public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
             // Accommodate line numbers
             if (pMouseX >= this.getX() + 1 && pMouseX <= this.getX() + this.width - 1) {
@@ -408,7 +409,7 @@ public class ProgramEditScreen extends Screen {
                 boolean cursorOnThisLine = isCursorVisible
                                            && cursorIndex >= charCount
                                            && cursorIndex <= charCount + lineLength;
-                var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+                var buffer = graphics.bufferSource();
 
 
                 if (shouldShowLineNumbers()) {

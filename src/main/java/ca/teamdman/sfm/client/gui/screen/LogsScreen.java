@@ -369,7 +369,7 @@ public class LogsScreen extends Screen {
                 boolean cursorOnThisLine = isCursorVisible
                                            && cursorIndex >= charCount
                                            && cursorIndex <= charCount + lineLength;
-                var buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+                var buffer = pGuiGraphics.bufferSource();
 
                 if (cursorOnThisLine) {
                     isCursorAtEndOfLine = cursorIndex == charCount + lineLength;
