@@ -167,5 +167,6 @@
   "program.sfm.warnings.undefined_label": "Label \"%s\" is assigned in the world but not defined in code.",
   "program.sfm.warnings.unknown_resource_id": "Resource \"%s\" was not found.",
   "program.sfm.warnings.unused_input_label": "Statement \"%s\" at %s inputs \"%s\" from \"%s\" but no future output statement consume \"%s\".",
-  "program.sfm.warnings.unused_label": "Label \"%s\" is used in code but not assigned in the world."
+  "program.sfm.warnings.unused_label": "Label \"%s\" is used in code but not assigned in the world.",
+  "sfm.error.bad_translation_argument": "Failed to create translatable contents for key \"{}\" with error {}"
 }
