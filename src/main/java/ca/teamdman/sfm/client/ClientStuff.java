@@ -3,10 +3,12 @@ package ca.teamdman.sfm.client;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.screen.*;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
+import ca.teamdman.sfm.client.render.FormItemExtensions;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.net.ServerboundManagerLogDesireUpdatePacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
@@ -25,6 +27,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -96,6 +99,11 @@ public class ClientStuff {
                 SFMBlockEntities.PRINTING_PRESS_BLOCK_ENTITY.get(),
                 PrintingPressBlockEntityRenderer::new
         );
+    }
+
+    @SubscribeEvent
+    public static void onRegisterClientExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(new FormItemExtensions(), SFMItems.FORM_ITEM.get());
     }
 
     public static boolean isMoreInfoKeyDown() {

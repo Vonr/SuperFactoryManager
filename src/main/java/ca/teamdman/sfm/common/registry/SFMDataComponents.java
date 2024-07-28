@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.component.ItemStackBox;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
@@ -70,12 +71,12 @@ public class SFMDataComponents {
                     .build()
     );
 
-    public static final Supplier<DataComponentType<ItemStack>> FORM_REFERENCE = DATA_COMPONENT_TYPES.register(
+    public static final Supplier<DataComponentType<ItemStackBox>> FORM_REFERENCE = DATA_COMPONENT_TYPES.register(
             "form_reference",
             () -> DataComponentType
-                    .<ItemStack>builder()
-                    .persistent(ItemStack.CODEC)
-                    .networkSynchronized(ItemStack.STREAM_CODEC)
+                    .<ItemStackBox>builder()
+                    .persistent(ItemStackBox.CODEC)
+                    .networkSynchronized(ItemStackBox.STREAM_CODEC)
                     .cacheEncoding()
                     .build()
     );

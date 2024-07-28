@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.render.FormItemExtensions;
+import ca.teamdman.sfm.common.component.ItemStackBox;
 import ca.teamdman.sfm.common.registry.SFMDataComponents;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import net.minecraft.network.chat.Component;
@@ -20,19 +21,13 @@ public class FormItem extends Item {
 
     public static ItemStack getForm(@Nonnull ItemStack stack) {
         var formStack = new ItemStack(SFMItems.FORM_ITEM.get());
-        formStack.set(SFMDataComponents.FORM_REFERENCE, stack);
+        formStack.set(SFMDataComponents.FORM_REFERENCE, new ItemStackBox(stack));
         return formStack;
     }
 
     public static ItemStack getReference(ItemStack stack) {
-        return stack.getOrDefault(SFMDataComponents.FORM_REFERENCE, ItemStack.EMPTY);
+        return stack.getOrDefault(SFMDataComponents.FORM_REFERENCE, ItemStackBox.EMPTY).stack();
     }
-
-    @Override
-    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-        consumer.accept(new FormItemExtensions());
-    }
-
 
     @Override
     public void appendHoverText(
