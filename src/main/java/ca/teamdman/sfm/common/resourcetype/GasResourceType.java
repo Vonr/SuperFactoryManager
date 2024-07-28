@@ -82,7 +82,7 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
 
     @Override
     public Gas getItem(GasStack gasStack) {
-        return gasStack.getType();
+        return gasStack.getChemical();
     }
 
     @Override

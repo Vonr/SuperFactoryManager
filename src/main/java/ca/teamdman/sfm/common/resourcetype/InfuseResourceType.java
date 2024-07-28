@@ -87,7 +87,7 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
 
     @Override
     public InfuseType getItem(InfusionStack stack) {
-        return stack.getType();
+        return stack.getChemical();
     }
 
     @Override

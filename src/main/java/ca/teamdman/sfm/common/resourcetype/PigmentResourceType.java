@@ -86,7 +86,7 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
 
     @Override
     public Pigment getItem(PigmentStack stack) {
-        return stack.getType();
+        return stack.getChemical();
     }
 
     @Override

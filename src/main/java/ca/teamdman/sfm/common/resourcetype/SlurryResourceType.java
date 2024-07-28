@@ -87,7 +87,7 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
 
     @Override
     public Slurry getItem(SlurryStack stack) {
-        return stack.getType();
+        return stack.getChemical();
     }
 
     @Override
