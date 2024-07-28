@@ -23,8 +23,9 @@ public class ProgramLinter {
     public static ArrayList<TranslatableContents> gatherWarnings(
             Program program, LabelPositionHolder labelPositionHolder , @Nullable ManagerBlockEntity manager
     ) {
-        var warnings = new ArrayList<TranslatableContents>();
-        var level = manager != null ? manager.getLevel() : null;
+        labelPositionHolder = labelPositionHolder.toOwned();
+        ArrayList<TranslatableContents> warnings = new ArrayList<>();
+        Level level = manager != null ? manager.getLevel() : null;
 
         // label smells
         addWarningsForLabelsInProgramButNotInHolder(program, labelPositionHolder, warnings);

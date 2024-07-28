@@ -132,6 +132,10 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
     }
 
     public Set<BlockPos> getPositions(String label) {
+        return labels().getOrDefault(label, new HashSet<>());
+    }
+
+    public Set<BlockPos> getPositionsMut(String label) {
         return labels().computeIfAbsent(label, s -> new HashSet<>());
     }
 
@@ -139,12 +143,12 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
             String label,
             Collection<BlockPos> positions
     ) {
-        getPositions(label).addAll(positions);
+        getPositionsMut(label).addAll(positions);
         return this;
     }
 
     public LabelPositionHolder addReferencedLabel(String label) {
-        getPositions(label);
+        getPositionsMut(label);
         return this;
     }
 
@@ -182,7 +186,7 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
             String label,
             BlockPos position
     ) {
-        getPositions(label).add(position);
+        getPositionsMut(label).add(position);
         return this;
     }
 
@@ -190,7 +194,7 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
             String label,
             BlockPos pos
     ) {
-        getPositions(label).remove(pos);
+        getPositionsMut(label).remove(pos);
         return this;
     }
 
@@ -218,5 +222,9 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
                        .map(entry -> entry.getKey() + "=" + entry.getValue().size())
                        .collect(Collectors.joining(", ")) +
                "}";
+    }
+
+    public LabelPositionHolder toOwned() {
+        return new LabelPositionHolder(this);
     }
 }
