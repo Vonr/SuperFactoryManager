@@ -9,6 +9,7 @@ import com.google.common.collect.HashMultimap;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -16,7 +17,6 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.neoforged.api.distmarker.Dist;
@@ -73,16 +73,37 @@ public class ItemWorldRenderer {
 
     @SubscribeEvent
     public static void renderLabelHighlights(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
+        var stages = new RenderLevelStageEvent.Stage[]{
+//                RenderLevelStageEvent.Stage.AFTER_SKY,
+//                RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS,
+//                RenderLevelStageEvent.Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS,
+//                RenderLevelStageEvent.Stage.AFTER_CUTOUT_BLOCKS,
+//                RenderLevelStageEvent.Stage.AFTER_ENTITIES,
+//                RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES,
+//                RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS,
+//                RenderLevelStageEvent.Stage.AFTER_TRIPWIRE_BLOCKS,
+RenderLevelStageEvent.Stage.AFTER_PARTICLES,
+//                RenderLevelStageEvent.Stage.AFTER_WEATHER,
+//RenderLevelStageEvent.Stage.AFTER_LEVEL
+        };
+
+        int index = (event.getRenderTick() / 30) % stages.length;
+        int oldIndex = ((event.getRenderTick() - 1) / 30) % stages.length;
+        var targetStage = stages[index];
+        if (index != oldIndex) {
+            System.out.println("New stage: " + targetStage);
+        }
+//        targetStage = RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS;
+        if (event.getStage() != targetStage) return;
         var player = Minecraft.getInstance().player;
         if (player == null) return;
 
         var labelGun = player.getMainHandItem();
         if (!(labelGun.getItem() instanceof LabelGunItem)) labelGun = player.getOffhandItem();
         if (labelGun.getItem() instanceof LabelGunItem) {
-            var labels = LabelPositionHolder.from(labelGun);
-            var labelPositions = HashMultimap.<BlockPos, String>create();
-            labels.forEach((label, pos1) -> labelPositions.put(pos1, label));
+            var labelPositionHolder = LabelPositionHolder.from(labelGun);
+            var labelsByPosition = HashMultimap.<BlockPos, String>create();
+            labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
 
             var poseStack = event.getPoseStack();
             var camera = Minecraft.getInstance().gameRenderer.getMainCamera();
@@ -91,20 +112,21 @@ public class ItemWorldRenderer {
             RenderSystem.disableDepthTest();
 
             poseStack.pushPose();
-            poseStack.mulPose(camera.rotation().invert());
-            poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-
             { // draw labels
                 poseStack.pushPose();
-//                poseStack.mulPose(camera.rotation());
-//                poseStack.mulPose(camera.rotation().invert());
-
-                for (var entry : labelPositions.asMap().entrySet()) {
-                    drawLabel(poseStack, camera, entry.getKey(), bufferSource, entry.getValue());
+                poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+                for (var entry : labelsByPosition.asMap().entrySet()) {
+                    BlockPos pos = entry.getKey();
+                    Collection<String> labels = entry.getValue();
+                    drawLabelsForPos(event, poseStack, camera, pos, bufferSource, labels);
                 }
                 poseStack.popPose();
             }
             { // draw highlights
+                poseStack.pushPose();
+                poseStack.mulPose(camera.rotation().invert());
+                poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+
                 RENDER_TYPE.setupRenderState();
 
                 if (capabilityProviderVBO == null) {
@@ -115,7 +137,7 @@ public class ItemWorldRenderer {
                     capabilityProviderVBO.bind();
                 }
 
-                for (var pos : labelPositions.keySet()) {
+                for (var pos : labelsByPosition.keySet()) {
                     poseStack.pushPose();
                     poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
 
@@ -130,6 +152,7 @@ public class ItemWorldRenderer {
 
                 VertexBuffer.unbind();
                 RENDER_TYPE.clearRenderState();
+                poseStack.popPose();
             }
             bufferSource.endBatch();
             poseStack.popPose();
@@ -152,14 +175,19 @@ public class ItemWorldRenderer {
             RenderSystem.disableDepthTest();
 
             poseStack.pushPose();
-            poseStack.translate(
-                    -camera.getPosition().x,
-                    -camera.getPosition().y,
-                    -camera.getPosition().z
-            );
-            poseStack.mulPose(camera.rotation().invert());
+//            poseStack.translate(
+//                    -camera.getPosition().x,
+//                    -camera.getPosition().y,
+//                    -camera.getPosition().z
+//            );
+//            poseStack.mulPose(camera.rotation());
+////            poseStack.mulPose(camera.rotation().invert());
 
             { // draw highlights
+                poseStack.pushPose();
+                poseStack.mulPose(camera.rotation().invert());
+                poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+
                 RENDER_TYPE.setupRenderState();
 
                 if (capabilityProviderVBO == null) {
@@ -207,6 +235,7 @@ public class ItemWorldRenderer {
 
                 VertexBuffer.unbind();
                 RENDER_TYPE.clearRenderState();
+                poseStack.popPose();
             }
             bufferSource.endBatch();
             poseStack.popPose();
@@ -268,7 +297,8 @@ public class ItemWorldRenderer {
         return builder.buildOrThrow();
     }
 
-    private static void drawLabel(
+    private static void drawLabelsForPos(
+            RenderLevelStageEvent event,
             PoseStack poseStack,
             Camera camera,
             BlockPos pos,
@@ -277,9 +307,10 @@ public class ItemWorldRenderer {
     ) {
         poseStack.pushPose();
         poseStack.translate(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        poseStack.mulPose(camera.rotation().invert());
-//        poseStack.mulPose(camera.rotation().);
+        poseStack.mulPose(camera.rotation());
+        poseStack.mulPose(Axis.YP.rotationDegrees(180));
         poseStack.scale(-0.025f, -0.025f, 0.025f);
+
         Font font = Minecraft.getInstance().font;
         poseStack.translate(0, labels.size() * (font.lineHeight + 0.1) / -2f, 0);
         for (var label : labels) {
