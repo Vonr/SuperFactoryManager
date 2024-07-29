@@ -273,11 +273,21 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         } else {
             directionQualifier = (DirectionQualifier) visit(directionQualifierCtx);
         }
+
+        var whereCtx = ctx.where();
+        WhereStatement where;
+        if (whereCtx == null) {
+            where = WhereStatement.ALWAYS_TRUE;
+        } else {
+            where = (WhereStatement) visit(whereCtx);
+        }
+
         LabelAccess labelAccess = new LabelAccess(
                 ctx.label().stream().map(this::visit).map(Label.class::cast).collect(Collectors.toList()),
                 directionQualifier,
                 visitSlotqualifier(ctx.slotqualifier()),
-                visitRoundrobin(ctx.roundrobin())
+                visitRoundrobin(ctx.roundrobin()),
+                where
         );
         AST_NODE_CONTEXTS.add(new Pair<>(labelAccess, ctx));
         return labelAccess;
@@ -626,6 +636,47 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         Side side = Side.valueOf(ctx.getText().toUpperCase(Locale.ROOT));
         AST_NODE_CONTEXTS.add(new Pair<>(side, ctx));
         return side;
+    }
+
+    @Override
+    public WhereStatement visitWhereConjunction(SFMLParser.WhereConjunctionContext ctx) {
+        var left = (WhereStatement) visit(ctx.where(0));
+        var right = (WhereStatement) visit(ctx.where(1));
+        WhereStatement where = new WhereStatement(left.and(right), left.sourceCode() + " AND " + right.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
+    }
+
+    @Override
+    public WhereStatement visitWhereParen(SFMLParser.WhereParenContext ctx) {
+        WhereStatement where = (WhereStatement) visit(ctx.where());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
+    }
+
+    @Override
+    public WhereStatement visitWhereDisjunction(SFMLParser.WhereDisjunctionContext ctx) {
+        var left = (WhereStatement) visit(ctx.where(0));
+        var right = (WhereStatement) visit(ctx.where(1));
+        WhereStatement where = new WhereStatement(left.or(right), left.sourceCode() + " OR " + right.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
+    }
+
+    @Override
+    public WhereStatement visitWhereNegation(SFMLParser.WhereNegationContext ctx) {
+        var x = (WhereStatement) visit(ctx.where());
+        WhereStatement where = new WhereStatement(x.negate(), "NOT " + x.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
+    }
+
+    @Override
+    public WhereStatement visitWhereComparison(SFMLParser.WhereComparisonContext ctx) {
+        var resourceComparison = visitResourcecomparison(ctx.resourcecomparison());
+        WhereStatement where = resourceComparison.toWhereExpression("WHERE " + resourceComparison.toString());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
     }
 
     @Override

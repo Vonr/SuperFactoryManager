@@ -5,15 +5,13 @@ import ca.teamdman.sfm.common.Constants.LocalizationKeys;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
 
@@ -332,54 +330,43 @@ public class OutputStatement implements IOStatement {
     ) {
         context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS.get(toStringPretty())));
 
-        Stream<ResourceType> types = resourceLimits.getReferencedResourceTypes();
+        Set<ResourceType> referencedResourceTypes = resourceLimits
+                .getReferencedResourceTypes()
+                .collect(Collectors.toSet());
 
+        List<OutputResourceTracker<?, ?, ?>> outputTracker = null;
         if (!each) {
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
-            // create a single matcher to be shared by all capabilities
-            List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
-            for (var type : (Iterable<ResourceType>) types::iterator) {
-                context
-                        .getLogger()
-                        .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(),
-                                type.displayAsCapabilityClass()
-                        )));
-                type.forEachCapability(context, labelAccess, (
-                        (label, pos, direction, cap) -> gatherSlotsForCap(
-                                context,
-                                (ResourceType<Object, Object, Object>) type,
-                                label,
-                                pos,
-                                direction,
-                                cap,
-                                outputTracker,
-                                slotConsumer
-                        )
-                ));
-            }
+            outputTracker = resourceLimits.createOutputTrackers();
         } else {
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
-            for (var type : (Iterable<ResourceType>) types::iterator) {
-                context
-                        .getLogger()
-                        .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(),
-                                type.displayAsCapabilityClass()
-                        )));
-                type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
-                    List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
-                    gatherSlotsForCap(
-                            context,
-                            (ResourceType<Object, Object, Object>) type,
-                            label,
-                            pos,
-                            direction,
-                            cap,
-                            outputTracker,
-                            slotConsumer
-                    );
-                });
+        }
+
+        for (var labelPosPair : getBlocksFromLabels(context)) {
+            // Tracker for block
+            if (each) {
+                outputTracker = resourceLimits.createOutputTrackers();
+            }
+            List<LimitedOutputSlot<?, ?, ?>> limitedOutputSlotList = new ArrayList<>();
+            HashMap<Object, Long> resourceTable = new HashMap<>();
+            // Loop over capability
+            for (var type : referencedResourceTypes) {
+                // Get slots to loop over
+                List<OutputResourceTracker<?, ?, ?>> finalOutputTracker = outputTracker;
+                type.forCapabilityOfBlock(context, labelAccess.directions(), labelPosPair, (label, pos, direction, cap) -> gatherSlotsForCap(
+                        context,
+                        (ResourceType<Object, Object, Object>) type,
+                        label, pos, direction, cap,
+                        finalOutputTracker,
+                        limitedOutputSlotList,
+                        resourceTable
+                ));
+            }
+
+            if (labelAccess().where().test(context, resourceTable)) {
+                for (var slotList : limitedOutputSlotList) {
+                    slotConsumer.accept(slotList);
+                }
             }
         }
     }
@@ -447,7 +434,8 @@ public class OutputStatement implements IOStatement {
             Direction direction,
             CAP capability,
             List<OutputResourceTracker<?, ?, ?>> trackers,
-            Consumer<LimitedOutputSlot<?, ?, ?>> acceptor
+            List<LimitedOutputSlot<?, ?, ?>> limitedOutputSlotList,
+            HashMap<Object, Long> resourceTable
     ) {
         context
                 .getLogger()
@@ -457,6 +445,10 @@ public class OutputStatement implements IOStatement {
             if (labelAccess.slots().contains(slot)) {
                 STACK stack = type.getStackInSlot(capability, slot);
                 boolean shouldCreateSlot = shouldCreateSlot(type, capability, stack, slot);
+                if (type.matchesCapabilityType(capability)) {
+                    // Add items to resourceTable
+                    resourceTable.put(stack, resourceTable.getOrDefault(stack, 0L) + type.getAmount(stack));
+                }
                 //noinspection rawtypes
                 for (OutputResourceTracker tracker : trackers) {
                     // we don't also test the tracker because we can deposit into empty slots
@@ -474,7 +466,7 @@ public class OutputStatement implements IOStatement {
                                             tracker.toString()
                                     )));
                             //noinspection unchecked
-                            acceptor.accept(LimitedOutputSlotObjectPool.acquire(
+                            limitedOutputSlotList.add(LimitedOutputSlotObjectPool.acquire(
                                     label,
                                     pos,
                                     direction,
@@ -516,5 +508,17 @@ public class OutputStatement implements IOStatement {
         // this is to accommodate drawers/bins/barrels/black hole units/whatever
         // those blocks hold many more items than normal in a single stack
         return type.getAmount(stack) < type.getMaxStackSize(cap, slot);
+    }
+
+    private List<Pair<Label, BlockPos>> getBlocksFromLabels(ProgramContext context) {
+        LabelPositionHolder labelPositionHolder = context.getLabelPositionHolder();
+        ArrayList<Pair<Label, BlockPos>> blocks = new ArrayList<>();
+        for (Label label : labelAccess.labels()) {
+            for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
+                blocks.add(Pair.of(label, pos));
+            }
+        }
+
+        return blocks;
     }
 }

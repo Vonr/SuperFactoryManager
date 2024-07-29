@@ -8,7 +8,8 @@ public record LabelAccess(
         List<Label> labels,
         DirectionQualifier directions,
         NumberRangeSet slots,
-        RoundRobin roundRobin
+        RoundRobin roundRobin,
+        WhereStatement where
 ) implements ASTNode {
     @Override
     public String toString() {
@@ -34,6 +35,7 @@ public record LabelAccess(
                 }
             }
         }
+        builder.append(" ").append(where);
         return builder.toString();
     }
 }

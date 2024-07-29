@@ -112,11 +112,19 @@ setOp           : OVERALL
 //
 // IO HELPERS
 //
-labelaccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
-roundrobin: ROUND ROBIN BY (LABEL | BLOCK);
+labelaccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier? (WHERE where)?;
+roundrobin      : ROUND ROBIN BY (LABEL | BLOCK);
 label           : (IDENTIFIER|REDSTONE)   #RawLabel
                 | string                  #StringLabel
                 ;
+
+where           : LPAREN where RPAREN             # WhereParen
+                | NOT where                       # WhereNegation
+                | where AND where                 # WhereConjunction
+                | where OR where                  # WhereDisjunction
+                | resourcecomparison              # WhereComparison
+                ;
+
 
 resourceid      : (IDENTIFIER|REDSTONE) (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)?)?)?)? # Resource
                 | string                             # StringResource

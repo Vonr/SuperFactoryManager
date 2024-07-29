@@ -39,6 +39,23 @@ public record ResourceComparer<STACK, ITEM, CAP>(
         );
     }
 
+    public WhereStatement toWhereExpression(String sourceCode) {
+        return new WhereStatement(
+                (context, resourceTable) -> {
+                    AtomicLong count = new AtomicLong(0);
+
+                    resourceTable.forEach((key, value) -> {
+                        if (res.test(key)) {
+                            count.addAndGet(value);
+                        }
+                    });
+
+                    return op.test(count.longValue(), quantity.number().value());
+                },
+                sourceCode
+        );
+    }
+
     @Override
     public String toString() {
         return op().getSourceCode() + " " + quantity() + " " + res().toStringCondensed();
