@@ -3436,4 +3436,97 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(rightChest.getStackInSlot(0).getCount() == 32, "Dirt did not arrive");
         });
     }
+
+    @GameTest(template = "3x3x1")
+    public static void input_where(GameTestHelper helper) {
+        // Only the right chest should move items
+        BlockPos managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        // Create positions
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        BlockPos abovePos = new BlockPos(1, 3, 0);
+        // Set blocks
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(abovePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var leftChest = getItemHandler(helper, leftPos);
+        var rightChest = getItemHandler(helper, rightPos);
+        var topChest = getItemHandler(helper, abovePos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 1), false);
+
+        rightChest.insertItem(0, new ItemStack(Blocks.DIRT, 1), false);
+        rightChest.insertItem(1, new ItemStack(Blocks.STONE, 1), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   EVERY 20 TICKS DO
+                                       INPUT FROM a WHERE > 0 stone
+                                       OUTPUT dirt TO b
+                                   END
+                                   """.stripTrailing().stripIndent());
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("a", helper.absolutePos(rightPos))
+                .add("b", helper.absolutePos(abovePos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 1, "Dirt moved");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 0, "Dirt did not move");
+            assertTrue(topChest.getStackInSlot(0).getCount() == 1, "Dirt did not move");
+
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "3x3x1")
+    public static void output_where(GameTestHelper helper) {
+        // Only the right chest should get items
+        BlockPos managerPos = new BlockPos(1, 2, 0);
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        // Create positions
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        BlockPos abovePos = new BlockPos(1, 3, 0);
+        // Set blocks
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(abovePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var leftChest = getItemHandler(helper, leftPos);
+        var rightChest = getItemHandler(helper, rightPos);
+        var topChest = getItemHandler(helper, abovePos);
+
+        rightChest.insertItem(1, new ItemStack(Blocks.STONE, 1), false);
+
+        topChest.insertItem(0, new ItemStack(Blocks.DIRT, 2), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                   EVERY 20 TICKS DO
+                                       INPUT FROM a
+                                       OUTPUT RETAIN 1 dirt TO EACH b WHERE > 0 stone
+                                   END
+                                   """.stripTrailing().stripIndent());
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("b", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .add("a", helper.absolutePos(abovePos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 0, "Dirt moved");
+            assertTrue(rightChest.getStackInSlot(0).getCount() == 1, "Dirt did not move");
+            assertTrue(topChest.getStackInSlot(0).getCount() == 1, "Dirt did not move");
+
+            helper.succeed();
+        });
+    }
 }
