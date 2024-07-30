@@ -1,0 +1,43 @@
+NAME "WHERE Statements"
+
+-- WHERE statements allow you to filter blocks in
+-- a label by the contents of the block
+-- They support most of the same functionality as
+-- IF statements though they can't compare 2
+-- inventories (or slots) against each other
+
+EVERY 20 TICKS DO
+    INPUT FROM source WHERE > 5 dirt AND < 5 stone
+    OUTPUT TO EACH dest WHERE (= 0 dirt)
+END
+
+-- An issue with resource types
+EVERY 20 TICKS DO
+    -- If you are moving resource type X
+    -- but WHERE is checking resource type Y
+    -- you need to specify that you want to move
+    -- 0 of resource type Y on the input or output
+    -- statement with the WHERE condition
+    -- This is only necessary if you are not planning
+    -- on moving resource type Y in this statement
+
+    INPUT fluid:: FROM source
+    -- The following statement will not work
+    OUTPUT fluid:: TO dest WHERE > 0 dirt
+
+    -- To fix this, do
+    OUTPUT 0 item::, fluid:: TO dest WHERE > 0 dirt
+END
+
+-- Slots
+EVERY 20 TICKS DO
+    -- WHERE statements will use the same slots as
+    -- the SLOTS statement. This can be useful for
+    -- machines with distinct groups of slots, such as
+    -- extended inscribers
+    INPUT FROM source
+    OUTPUT gold_ingot, silicon
+        TO EACH exinscriber SLOTS 0-3 WHERE > 0 universal_press
+    OUTPUT gold_ingot, silicon
+        TO EACH exinscriber SLOTS 4-7 WHERE > 0 universal_press
+END
