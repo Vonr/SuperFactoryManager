@@ -511,14 +511,11 @@ public class OutputStatement implements IOStatement {
     }
 
     private List<Pair<Label, BlockPos>> getBlocksFromLabels(ProgramContext context) {
+        RoundRobin roundRobin = labelAccess.roundRobin();
         LabelPositionHolder labelPositionHolder = context.getLabelPositionHolder();
-        ArrayList<Pair<Label, BlockPos>> blocks = new ArrayList<>();
-        for (Label label : labelAccess.labels()) {
-            for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
-                blocks.add(Pair.of(label, pos));
-            }
-        }
-
-        return blocks;
+        return roundRobin.getPositionsForLabels(
+                labelAccess,
+                labelPositionHolder
+        );
     }
 }
