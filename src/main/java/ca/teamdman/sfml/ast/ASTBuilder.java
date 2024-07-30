@@ -674,7 +674,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public WhereStatement visitWhereComparison(SFMLParser.WhereComparisonContext ctx) {
         var resourceComparison = visitResourcecomparison(ctx.resourcecomparison());
-        WhereStatement where = resourceComparison.toWhereExpression("WHERE " + resourceComparison.toString());
+        WhereStatement where = resourceComparison.toWhereExpression(" WHERE " + resourceComparison.toString());
         AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
         return where;
     }

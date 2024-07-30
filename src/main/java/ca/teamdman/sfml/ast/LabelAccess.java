@@ -35,7 +35,7 @@ public record LabelAccess(
                 }
             }
         }
-        builder.append(" ").append(where);
+        builder.append(where);
         return builder.toString();
     }
 }
