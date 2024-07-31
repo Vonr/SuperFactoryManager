@@ -40,12 +40,12 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     }
 
     @Override
-    public long getMaxStackSize(GasStack gasStack) {
+    public long getMaxStackSizeForStack(GasStack gasStack) {
         return Long.MAX_VALUE;
     }
 
     @Override
-    public long getMaxStackSize(IGasHandler handler, int slot) {
+    public long getMaxStackSizeForSlot(IGasHandler handler, int slot) {
         return handler.getTankCapacity(slot);
     }
 

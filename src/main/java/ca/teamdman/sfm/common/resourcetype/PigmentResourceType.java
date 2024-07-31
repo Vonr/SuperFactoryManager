@@ -39,12 +39,12 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     }
 
     @Override
-    public long getMaxStackSize(PigmentStack stack) {
+    public long getMaxStackSizeForStack(PigmentStack stack) {
         return Long.MAX_VALUE;
     }
 
     @Override
-    public long getMaxStackSize(IPigmentHandler handler, int slot) {
+    public long getMaxStackSizeForSlot(IPigmentHandler handler, int slot) {
         return handler.getTankCapacity(slot);
     }
 

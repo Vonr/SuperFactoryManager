@@ -5,11 +5,11 @@ import ca.teamdman.sfm.common.Constants.LocalizationKeys;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import com.mojang.math.Constants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.Registries;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -125,7 +125,7 @@ public class OutputStatement implements IOStatement {
         toMove = Math.min(toMove, sourceMaxTransferable);
 
         // apply resource constraints
-        long maxStackSize = source.type.getMaxStackSize(potential); // this is cap-agnostic, so source/dest doesn't matter
+        long maxStackSize = source.type.getMaxStackSizeForStack(potential); // this is cap-agnostic, so source/dest doesn't matter
         toMove = Math.min(toMove, maxStackSize);
 
         long logToMove = toMove;
@@ -490,7 +490,7 @@ public class OutputStatement implements IOStatement {
                                             finalSlot,
                                             type.getAmount(stack)
                                             + " of "
-                                            + type.getMaxStackSize(capability, finalSlot)
+                                            + Math.min(type.getMaxStackSizeForStack(stack), type.getMaxStackSizeForSlot(capability, finalSlot))
                                             + " "
                                             + type.getItem(stack)
                                     )));
@@ -506,15 +506,31 @@ public class OutputStatement implements IOStatement {
         }
     }
 
+    @SuppressWarnings("RedundantIfStatement")
     private <STACK, ITEM, CAP> boolean shouldCreateSlot(
             ResourceType<STACK, ITEM, CAP> type,
             CAP cap,
             STACK stack,
             int slot
     ) {
-        // we check the stack limit on the capability
-        // this is to accommodate drawers/bins/barrels/black hole units/whatever
-        // those blocks hold many more items than normal in a single stack
-        return type.getAmount(stack) < type.getMaxStackSize(cap, slot);
+        // Chest holding dirt: maxStackSizeForStack=64 maxStackSizeForSlot=99
+        // Bin holding sticks: maxStackSizeForStack=64 maxStackSizeForSlot=102400
+        long amount = type.getAmount(stack);
+        long maxStackSizeForSlot = type.getMaxStackSizeForSlot(cap, slot);
+        if (maxStackSizeForSlot > 99) {
+            // If the slot is bigger than normal, ignore stack size
+            // This is for barrels/bins/drawers
+            return amount < maxStackSizeForSlot;
+        }
+        if (amount >= maxStackSizeForSlot) {
+            // Respect traditional slot limits
+            return false;
+        }
+        long maxStackSizeForStack = type.getMaxStackSizeForStack(stack);
+        if (amount >= maxStackSizeForStack) {
+            // Respect stack limits
+            return false;
+        }
+        return true;
     }
 }

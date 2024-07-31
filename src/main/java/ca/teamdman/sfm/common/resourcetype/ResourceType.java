@@ -2,7 +2,6 @@ package ca.teamdman.sfm.common.resourcetype;
 
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
-import ca.teamdman.sfm.common.cablenetwork.CapabilityCache;
 import ca.teamdman.sfm.common.program.CapabilityConsumer;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
@@ -14,9 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.capabilities.BlockCapability;
-import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -70,13 +67,12 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract int getSlots(CAP handler);
 
-    public abstract long getMaxStackSize(STACK stack);
+    public abstract long getMaxStackSizeForStack(STACK stack);
 
-    public abstract long getMaxStackSize(
+    public abstract long getMaxStackSizeForSlot(
             CAP cap,
             int slot
     );
-
 
     public abstract STACK insert(
             CAP cap,

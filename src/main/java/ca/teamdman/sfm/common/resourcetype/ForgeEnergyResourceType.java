@@ -33,12 +33,12 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public long getMaxStackSize(Integer integer) {
+    public long getMaxStackSizeForStack(Integer integer) {
         return Long.MAX_VALUE;
     }
 
     @Override
-    public long getMaxStackSize(IEnergyStorage iEnergyStorage, int slot) {
+    public long getMaxStackSizeForSlot(IEnergyStorage iEnergyStorage, int slot) {
         int maxStackSize = iEnergyStorage.getMaxEnergyStored();
         if (maxStackSize == Integer.MAX_VALUE) {
             return Long.MAX_VALUE;

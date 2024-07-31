@@ -40,12 +40,12 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     }
 
     @Override
-    public long getMaxStackSize(InfusionStack stack) {
+    public long getMaxStackSizeForStack(InfusionStack stack) {
         return Long.MAX_VALUE;
     }
 
     @Override
-    public long getMaxStackSize(IInfusionHandler handler, int slot) {
+    public long getMaxStackSizeForSlot(IInfusionHandler handler, int slot) {
         return handler.getTankCapacity(slot);
     }
 

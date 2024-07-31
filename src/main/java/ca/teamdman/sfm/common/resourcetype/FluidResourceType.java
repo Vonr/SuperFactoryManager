@@ -71,12 +71,12 @@ public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHan
     }
 
     @Override
-    public long getMaxStackSize(FluidStack fluidStack) {
+    public long getMaxStackSizeForStack(FluidStack fluidStack) {
         return Integer.MAX_VALUE;
     }
 
     @Override
-    public long getMaxStackSize(IFluidHandler iFluidHandler, int slot) {
+    public long getMaxStackSizeForSlot(IFluidHandler iFluidHandler, int slot) {
         return iFluidHandler.getTankCapacity(slot);
     }
 

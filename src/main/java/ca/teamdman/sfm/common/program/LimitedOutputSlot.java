@@ -45,11 +45,22 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
             return true;
         }
         STACK stack = getStackInSlot();
-        long count = type.getAmount(stack);
-        if (count >= type.getMaxStackSize(handler, slot)) {
-            return true;
+        long amount = type.getAmount(stack);
+        long maxStackSizeForSlot = type.getMaxStackSizeForSlot(handler, slot);
+        if (maxStackSizeForSlot > 99) {
+            if (amount >= maxStackSizeForSlot) {
+                return true;
+            }
+        } else {
+            if (amount >= maxStackSizeForSlot) {
+                return true;
+            }
+            long maxStackSizeForStack = type.getMaxStackSizeForStack(stack);
+            if (amount >= maxStackSizeForStack) {
+                return true;
+            }
         }
-        return count != 0 && !tracker.test(stack);
+        return amount != 0 && !tracker.test(stack);
     }
 
     public STACK getStackInSlot() {
