@@ -918,28 +918,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BLACK_DYE, 23));
         // right click on printing press
         BlockState pressState = helper.getBlockState(pos);
-        helper.useBlock(pos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(pos),
-                                false
-                        )
-        );
+        helper.useBlock(pos, player);
         // assert the ink was inserted
         assertTrue(!printingPress.getInk().isEmpty(), "Ink was not inserted");
         assertTrue(player.getMainHandItem().isEmpty(), "Ink was not taken from hand");
         // put book in player hand
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOOK));
         // right click on printing press
-        helper.useBlock(pos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(pos),
-                                false
-                        )
-        );
+        helper.useBlock(pos, player);
         // assert the book was inserted
         assertTrue(!printingPress.getPaper().isEmpty(), "Paper was not inserted");
         assertTrue(player.getMainHandItem().isEmpty(), "Paper was not taken from hand");
@@ -947,14 +933,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var form = FormItem.getForm(new ItemStack(Items.WRITTEN_BOOK));
         player.setItemInHand(InteractionHand.MAIN_HAND, form.copy());
         // right click on printing press
-        helper.useBlock(pos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(pos),
-                                false
-                        )
-        );
+        helper.useBlock(pos, player);
         // assert the form was inserted
         assertTrue(!printingPress.getForm().isEmpty(), "Form was not inserted");
         assertTrue(player.getMainHandItem().isEmpty(), "Form was not taken from hand");
@@ -962,14 +941,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // pull out item
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         // right click on printing press
-        helper.useBlock(pos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(pos),
-                                false
-                        )
-        );
+        helper.useBlock(pos, player);
         // assert the paper was extracted
         assertTrue(printingPress.getPaper().isEmpty(), "Paper was not extracted");
         assertTrue(!player.getMainHandItem().isEmpty(), "Paper was not given to player");
@@ -979,14 +951,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // pull out an item
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         // right click on printing press
-        helper.useBlock(pos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(pos),
-                                false
-                        )
-        );
+        helper.useBlock(pos, player);
         // assert the form was extracted
         assertTrue(printingPress.getForm().isEmpty(), "Form was not extracted");
         assertTrue(!player.getMainHandItem().isEmpty(), "Form was not given to player");
@@ -994,14 +959,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // pull out item
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         // right click on printing press
-        helper.useBlock(pos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(pos),
-                                false
-                        )
-        );
+        helper.useBlock(pos, player);
         // assert the ink was extracted
         assertTrue(printingPress.getInk().isEmpty(), "Ink was not extracted");
         assertTrue(!player.getMainHandItem().isEmpty(), "Ink was not given to player");
@@ -1010,14 +968,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // try to pull out another item
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         // right click on printing press
-        helper.useBlock(pos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(pos),
-                                false
-                        )
-        );
+        helper.useBlock(pos, player);
         // assert nothing was extracted
         assertTrue(player.getMainHandItem().isEmpty(), "Nothing should have been extracted");
         helper.succeed();
