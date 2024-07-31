@@ -66,7 +66,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     /**
      * Ensure that the manager state gets updated as the disk is inserted and the program is set
      */
-    @GameTest(template = "1x2x1")
+    @GameTest(template = "1x2x1", skyAccess = true)
     public static void manager_state_update(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         ManagerBlockEntity manager = helper.getBlockEntity(new BlockPos(0, 2, 0));
@@ -85,7 +85,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
     /// If the /test command fails with "Structure not found" problems, manually place a structure block in the world
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void move_1_stack(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -120,7 +120,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void move_full_chest(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -170,7 +170,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void many_outputs(GameTestHelper helper) {
         BlockPos managerPos = new BlockPos(1, 2, 1);
         BlockPos sourcePos = new BlockPos(1, 3, 1);
@@ -240,7 +240,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void retain_5(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
@@ -274,7 +274,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void move_multiple_item_names(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -321,7 +321,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     /**
      * Ensure that cauldrons can be treated as water fluid holders
      */
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void move_cauldron_water(GameTestHelper helper) {
         // fill in the blocks needed for the test
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -365,7 +365,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     /**
      * Ensure that a cauldrons can be treated as a lava fluid holder
      */
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void move_cauldron_lava(GameTestHelper helper) {
         // fill in the blocks needed for the test
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -401,7 +401,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "25x4x25")
+    @GameTest(template = "25x4x25", skyAccess = true)
     public static void cable_spiral(GameTestHelper helper) {
         BlockPos start = new BlockPos(0, 2, 0);
         BlockPos end = new BlockPos(12, 2, 12);
@@ -461,7 +461,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void regression_crash_type_mixing(GameTestHelper helper) {
         // fill in the blocks needed for the test
         BlockPos managerPos = new BlockPos(1, 2, 1);
@@ -522,7 +522,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "25x4x25") // start with empty platform
+    @GameTest(template = "25x4x25") // start with empty platfor, skyAccess = truem
     public static void cable_network_formation(GameTestHelper helper) {
         // create a row of cables
         for (int i = 0; i < 10; i++) {
@@ -733,7 +733,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void cable_network_rebuilding(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.CABLE_BLOCK.get());
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.CABLE_BLOCK.get());
@@ -754,7 +754,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1") // start with empty platform
+    @GameTest(template = "3x2x1") // start with empty platfor, skyAccess = truem
     public static void CauldronLavaMovement(GameTestHelper helper) {
         // fill in the blocks needed for the test
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -793,7 +793,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void move_slots(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -840,7 +840,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void printing_press_clone_program(GameTestHelper helper) {
         var printingPos = new BlockPos(1, 2, 1);
         var pistonPos = new BlockPos(1, 4, 1);
@@ -925,7 +925,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "1x2x1")
+    @GameTest(template = "1x2x1", skyAccess = true)
     public static void printing_press_insertion_extraction(GameTestHelper helper) {
         var pos = new BlockPos(0, 2, 0);
         helper.setBlock(pos, SFMBlocks.PRINTING_PRESS_BLOCK.get());
@@ -1040,7 +1040,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void printing_press_clone_enchantment(GameTestHelper helper) {
         var printingPos = new BlockPos(1, 2, 1);
         var pistonPos = new BlockPos(1, 4, 1);
@@ -1128,7 +1128,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void falling_anvil_program_form(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.IRON_BLOCK);
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
@@ -1164,7 +1164,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void falling_anvil_enchantment_form(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.IRON_BLOCK);
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
@@ -1204,7 +1204,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void falling_anvil_disenchant(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.OBSIDIAN);
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
@@ -1287,7 +1287,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void falling_anvil_xp_shard(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.OBSIDIAN);
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
@@ -1323,7 +1323,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void falling_anvil_xp_shard_many(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.OBSIDIAN);
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
@@ -1364,7 +1364,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "1x2x1")
+    @GameTest(template = "1x2x1", skyAccess = true)
     public static void disk_item_clientside_regression(GameTestHelper helper) {
         var stack = new ItemStack(SFMItems.DISK_ITEM.get());
         stack.getDisplayName();
@@ -1379,7 +1379,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "1x2x1")
+    @GameTest(template = "1x2x1", skyAccess = true)
     public static void program_crlf_line_endings_conversion(GameTestHelper helper) {
         var managerPos = new BlockPos(0, 2, 0);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
@@ -1404,7 +1404,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         }
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void comparison_gt(GameTestHelper helper) {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
@@ -1479,7 +1479,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void comparison_ge(GameTestHelper helper) {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
@@ -1554,7 +1554,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void comparison_eq(GameTestHelper helper) {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
@@ -1629,7 +1629,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void comparison_lt(GameTestHelper helper) {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
@@ -1704,7 +1704,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void comparison_le(GameTestHelper helper) {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
@@ -1778,7 +1778,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void pattern_cache_regression_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -1815,7 +1815,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void pattern_cache_regression_2(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -1852,7 +1852,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void pattern_cache_regression_3(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -1889,7 +1889,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void each_src_quantity(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -1933,7 +1933,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void each_src_quantity_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -1976,7 +1976,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void each_src_quantity_each_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2019,7 +2019,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void each_src_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2065,7 +2065,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void each_dest_quantity(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2109,7 +2109,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void each_dest_quantity_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2150,7 +2150,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void each_dest_quantity_each_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2191,7 +2191,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void each_dest_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2235,7 +2235,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void sfm_v4_12_0_changelog(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2318,7 +2318,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void forget_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2357,7 +2357,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void forget_2(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2398,7 +2398,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void forget_slot(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2442,7 +2442,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void forget_input_count_state(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2480,7 +2480,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void reorder_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2518,7 +2518,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void reorder_2(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2556,7 +2556,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void reorder_3(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2595,7 +2595,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void round_robin_by_block_1(GameTestHelper helper) {
         BlockPos managerPos = new BlockPos(1, 2, 1);
         BlockPos sourcePos = new BlockPos(1, 3, 1);
@@ -2646,7 +2646,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void round_robin_by_block_2(GameTestHelper helper) {
         for (int x = 0; x < 3; x++) {
             for (int z = 0; z < 3; z++) {
@@ -2714,7 +2714,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void round_robin_no_blocks_crash_regression(GameTestHelper helper) {
         BlockPos leftPos = new BlockPos(2, 2, 0);
         BlockPos managerPos = new BlockPos(1, 2, 0);
@@ -2745,7 +2745,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, helper::succeed);
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void round_robin_by_label(GameTestHelper helper) {
         for (int x = 0; x < 3; x++) {
             for (int z = 0; z < 3; z++) {
@@ -2808,7 +2808,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void wireless_regression(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2843,7 +2843,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "1x2x1")
+    @GameTest(template = "1x2x1", skyAccess = true)
     public static void compost_crash_investigation(GameTestHelper helper) {
         // Place the composter
         var pos = new BlockPos(0, 2, 0);
@@ -2876,7 +2876,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void compost_crash_program(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2911,7 +2911,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void multi_io_limits(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -2951,7 +2951,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void move_on_pulse(GameTestHelper helper) {
         var managerPos = new BlockPos(1, 2, 1);
         var buttonPos = managerPos.offset(Direction.NORTH.getNormal());
@@ -3002,7 +3002,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.pressButton(buttonPos);
     }
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void count_execution_paths_1(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3052,7 +3052,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void count_execution_paths_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3108,7 +3108,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void count_execution_paths_3(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3172,7 +3172,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void count_execution_paths_conditional_1(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3238,7 +3238,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void count_execution_paths_conditional_1b(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3281,7 +3281,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void count_execution_paths_conditional_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3350,7 +3350,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void unused_io_warning_output_label_not_present_in_input(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3387,7 +3387,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void unused_io_warning_input_label_not_present_in_output(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3424,7 +3424,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1", batch = "linting")
+    @GameTest(template = "3x2x1", batch = "linting", skyAccess = true)
     public static void conditional_output_inspection(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);

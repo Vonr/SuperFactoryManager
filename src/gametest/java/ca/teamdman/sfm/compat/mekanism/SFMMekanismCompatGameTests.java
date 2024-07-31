@@ -6,7 +6,9 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import mekanism.api.RelativeSide;
 import mekanism.api.chemical.infuse.InfusionStack;
+import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.registries.MekanismBlocks;
 import mekanism.common.registries.MekanismInfuseTypes;
 import mekanism.common.tier.BinTier;
@@ -15,6 +17,9 @@ import mekanism.common.tier.EnergyCubeTier;
 import mekanism.common.tile.TileEntityBin;
 import mekanism.common.tile.TileEntityChemicalTank;
 import mekanism.common.tile.TileEntityEnergyCube;
+import mekanism.common.tile.component.TileComponentConfig;
+import mekanism.common.tile.component.config.ConfigInfo;
+import mekanism.common.tile.component.config.DataType;
 import mekanism.common.util.UnitDisplayUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -37,7 +42,7 @@ import java.util.Objects;
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMMekanismCompatGameTests extends SFMGameTestBase {
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_chemtank_infusion_empty(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -77,7 +82,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_chemtank_infusion_some(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -117,7 +122,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_chemtank_infusion_full(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -166,7 +171,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_bin_empty(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -207,7 +212,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_bin_some(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -248,7 +253,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_bin_full(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -289,7 +294,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_energy_empty(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -329,7 +334,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_energy_some(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -369,7 +374,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
+    @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_energy_full(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
@@ -469,7 +474,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "25x3x25")
+    @GameTest(template = "25x3x25", skyAccess = true)
     public static void mana_lava_cauldrons(GameTestHelper helper) {
         // designate positions
         var sourceBlocks = new ArrayList<BlockPos>();
@@ -535,7 +540,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void multi_fluid(GameTestHelper helper) {
         var a1Pos = new BlockPos(2, 2, 1);
         var a2Pos = new BlockPos(1, 2, 0);
