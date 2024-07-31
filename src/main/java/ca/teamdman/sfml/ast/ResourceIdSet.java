@@ -1,13 +1,20 @@
 package ca.teamdman.sfml.ast;
 
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public record ResourceIdSet(
-        Set<ResourceIdentifier<?, ?, ?>> resourceIds
+        LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds
 ) implements ASTNode, Predicate<Object> {
-    public static final ResourceIdSet EMPTY = new ResourceIdSet(Set.of());
+    public ResourceIdSet(Collection<ResourceIdentifier<?,?,?>> contents) {
+        this(new LinkedHashSet<>(contents));
+    }
+    public static final ResourceIdSet EMPTY = new ResourceIdSet(new ObjectArraySet<>());
 
     @Override
     public boolean test(Object stack) {
