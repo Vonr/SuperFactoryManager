@@ -5,10 +5,12 @@ NAME "Changelog"
 -- https://ko-fi.com/teamdman
 
 ---- 4.18.0 ----
+-- Add 1.21.0 build with Mekanism support
 -- Set up a Ko-fi for donations
 ---- Thanks to @micrwvae for being first!
--- Add Mekanism support for Minecraft 1.20.4
+-- Restore Mekanism support for Minecraft 1.20.4
 -- Add syntax highlighting for SECONDS keyword
+-- Improve performance iterating over EXCLUDE resources
 
 ---- 4.17.0 ----
 -- fix cache not being invalidated when chunk unloaded
