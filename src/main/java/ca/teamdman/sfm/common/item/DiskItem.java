@@ -165,6 +165,7 @@ public class DiskItem extends Item {
         return InteractionResultHolder.sidedSuccess(stack, pLevel.isClientSide());
     }
 
+    @SuppressWarnings("UnnecessaryLocalVariable")
     @Override
     public void appendHoverText(
             ItemStack stack,
@@ -172,7 +173,9 @@ public class DiskItem extends Item {
             List<Component> list,
             TooltipFlag detail
     ) {
-        boolean showProgram = FMLEnvironment.dist.isClient() && ClientStuff.isMoreInfoKeyDown();
+        boolean isClient = FMLEnvironment.dist.isClient();
+        boolean isMoreInfoKeyDown = isClient && ClientStuff.isMoreInfoKeyDown();
+        boolean showProgram = isMoreInfoKeyDown;
         if (!showProgram) {
             list.addAll(LabelPositionHolder.from(stack).asHoverText());
             getErrors(stack)
@@ -183,9 +186,11 @@ public class DiskItem extends Item {
                     .stream()
                     .map(line -> line.copy().withStyle(ChatFormatting.YELLOW))
                     .forEach(list::add);
-            list.add(Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
-                             .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getTranslatedKeyMessage())
-                             .withStyle(ChatFormatting.AQUA));
+            if (isClient) {
+                list.add(Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
+                                 .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getTranslatedKeyMessage())
+                                 .withStyle(ChatFormatting.AQUA));
+            }
         } else {
             var program = getProgram(stack);
             if (!program.isEmpty()) {
