@@ -461,12 +461,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ResourceIdSet visitResourceexclusion(@Nullable SFMLParser.ResourceexclusionContext ctx) {
         if (ctx == null) return ResourceIdSet.EMPTY;
-        ResourceIdSet resourceIdSet = new ResourceIdSet(ctx
-                                                                .resourceid()
-                                                                .stream()
-                                                                .map(this::visit)
-                                                                .map(ResourceIdentifier.class::cast)
-                                                                .collect(HashSet::new, HashSet::add, HashSet::addAll));
+        HashSet<ResourceIdentifier<?,?,?>> ids = ctx
+                .resourceid()
+                .stream()
+                .map(this::visit)
+                .map(ResourceIdentifier.class::cast)
+                .collect(HashSet::new, HashSet::add, HashSet::addAll);
+        ResourceIdSet resourceIdSet = new ResourceIdSet(ids);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceIdSet, ctx));
         return resourceIdSet;
     }
