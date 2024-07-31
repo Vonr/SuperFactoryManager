@@ -6,6 +6,8 @@ NAME "Known issues"
 -- Official SFM issue tracker:
 -- https://github.com/TeamDman/SuperFactoryManager/issues
 
+-- JEI support is missing from some versions
+
 -- Sometimes managers stop working for 'no reason'
 ---- "Rebuild cable network" gui button to try fix single
 ---- "/sfm bust_cable_network_cache" to try fix all
