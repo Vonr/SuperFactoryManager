@@ -731,6 +731,7 @@ public class SFMLTests {
     @Test
     public void demos() throws IOException {
         var rootDir = System.getProperty("user.dir");
+        rootDir = rootDir.replaceAll("runs" + System.getProperty("file.separator").replaceAll("\\\\","\\\\\\\\") + "junit$", "");
         var examplesDir = Paths.get(rootDir, "examples").toFile();
         var found = 0;
         //noinspection DataFlowIssue
@@ -748,6 +749,7 @@ public class SFMLTests {
     @Test
     public void templates() throws IOException {
         var rootDir = System.getProperty("user.dir");
+        rootDir = rootDir.replaceAll("runs" + System.getProperty("file.separator").replaceAll("\\\\","\\\\\\\\") + "junit$", "");
         var examplesDir = Paths.get(rootDir, "src/main/resources/assets/sfm/template_programs").toFile();
         var found = 0;
         //noinspection DataFlowIssue
