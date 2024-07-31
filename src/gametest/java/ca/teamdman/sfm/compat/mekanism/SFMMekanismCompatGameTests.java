@@ -412,8 +412,8 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1")
-    public static void mek_energy_one(GameTestHelper helper) {
+    @GameTest(template = "3x2x1", skyAccess = true)
+    public static void mek_energy_ten(GameTestHelper helper) {
         // designate positions
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
@@ -422,8 +422,18 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
         var left = ((TileEntityEnergyCube) helper.getBlockEntity(leftPos));
+        TileComponentConfig leftConfig = left.getConfig();
+        ConfigInfo leftInfo = leftConfig.getConfig(TransmissionType.ENERGY);
+        leftInfo.setDataType(DataType.INPUT_OUTPUT, RelativeSide.TOP);
+        leftConfig.sideChanged(TransmissionType.ENERGY, RelativeSide.TOP);
+
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
         var right = ((TileEntityEnergyCube) helper.getBlockEntity(rightPos));
+        TileComponentConfig rightConfig = right.getConfig();
+        ConfigInfo rightInfo = rightConfig.getConfig(TransmissionType.ENERGY);
+        rightInfo.setDataType(DataType.INPUT_OUTPUT, RelativeSide.TOP);
+        rightConfig.sideChanged(TransmissionType.ENERGY, RelativeSide.TOP);
+
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -431,7 +441,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
                                    EVERY 20 TICKS DO
-                                     INPUT 1 forge_energy:forge:energy FROM a NORTH SIDE
+                                     INPUT 10 forge_energy:forge:energy FROM a TOP SIDE
                                      OUTPUT forge_energy:forge:energy TO b TOP SIDE
                                    END
                                    """.stripIndent());
@@ -447,11 +457,11 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(
                     left
-                            .getEnergy(0) == 100 - UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(1),
+                            .getEnergy(0) == 100 - UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(10),
                     "Contents did not depart"
             );
             assertTrue(
-                    right.getEnergy(0) == UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(1),
+                    right.getEnergy(0) == UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(10),
                     "Contents did not arrive"
             );
             helper.succeed();
