@@ -30,6 +30,7 @@ foreach ($repo in $chosen_repos) {
     try {
         Push-Location $repo
         Write-Host "Running runData for $repo"
+        New-Item -ItemType Directory -Force -Path "logs" | Out-Null
         $test_log_file = "logs\runData.log"
         .\gradlew.bat runData --no-daemon | Tee-Object -FilePath $test_log_file
         if ((Get-Content $test_log_file -Raw ) -notlike "*All providers took*") {
