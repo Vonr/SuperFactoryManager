@@ -18,7 +18,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class OpenDoorTest extends SFMGameTestBase {
-    @GameTest(template = "3x4x3")
+    @GameTest(template = "3x4x3", skyAccess = true)
     public static void open_door(GameTestHelper helper) {
         var pressurePlatePos = new BlockPos(0, 2, 1);
         var redstonePos = new BlockPos(1, 2, 1);
@@ -50,9 +50,9 @@ public class OpenDoorTest extends SFMGameTestBase {
         item.setDeltaMovement(0, 0, 0);
 
         // is this the right position? There might be an improvement here 👀
-        item.setPos(Vec3.atCenterOf(helper.absolutePos(doorPos).offset(0, 3, 0)));
+        item.setPos(Vec3.atCenterOf(helper.absolutePos(doorPos).offset(0, 1, 0)));
         // begin agent code
-            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 3, 0)));
+            item.setPos(Vec3.atCenterOf(helper.absolutePos(pressurePlatePos).offset(0, 1, 0)));
         // end agent code
         helper.getLevel().addFreshEntity(item);
         helper.succeedWhen(() -> helper.assertBlockProperty(doorPos, DoorBlock.OPEN, true));
