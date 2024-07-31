@@ -976,39 +976,33 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
     @GameTest(template = "3x4x3", skyAccess = true)
     public static void printing_press_clone_enchantment(GameTestHelper helper) {
+        // Positions
         var printingPos = new BlockPos(1, 2, 1);
         var pistonPos = new BlockPos(1, 4, 1);
         var woodPos = new BlockPos(0, 4, 1);
         var buttonPos = new BlockPos(0, 4, 0);
         var chestPos = new BlockPos(0, 2, 1);
 
+        // Place blocks
         helper.setBlock(printingPos, SFMBlocks.PRINTING_PRESS_BLOCK.get());
         helper.setBlock(pistonPos, Blocks.PISTON.defaultBlockState().setValue(DirectionalBlock.FACING, Direction.DOWN));
         helper.setBlock(woodPos, Blocks.OAK_PLANKS);
         helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
         helper.setBlock(chestPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
+        // Get helper objects
         var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
         Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+
+        // Place ink
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(SFMItems.EXPERIENCE_GOOP_ITEM.get(), 10));
-        BlockState pressState = helper.getBlockState(printingPos);
-        helper.useBlock(printingPos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(printingPos),
-                                false
-                        )
-        );
+        helper.useBlock(printingPos, player);
+
+        // Place paper
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOOK));
-        helper.useBlock(printingPos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(printingPos),
-                                false
-                        )
-        );
+        helper.useBlock(printingPos, player);
+
+        // Place form
         ItemStack reference = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
                 helper
                         .getLevel()
@@ -1019,46 +1013,35 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                         .get(),
                 3
         ));
-        player.setItemInHand(InteractionHand.MAIN_HAND, FormItem.getForm(reference));
-        helper.useBlock(printingPos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(printingPos),
-                                false
-                        )
-        );
+        ItemStack form = FormItem.getForm(reference);
+        player.setItemInHand(InteractionHand.MAIN_HAND, form);
+        helper.useBlock(printingPos, player);
 
-        BlockState buttonState = helper.getBlockState(buttonPos);
-        helper.useBlock(buttonPos, player,
-                        new BlockHitResult(
-                                new Vec3(0.5, 0.5, 0.5),
-                                Direction.UP,
-                                helper.absolutePos(printingPos),
-                                false
-                        )
-        );
+        // Activate printing press
+        helper.useBlock(buttonPos, player);
 
+        // Completion criteria
         helper.runAfterDelay(5, () -> {
-            helper.useBlock(printingPos, player,
-                            new BlockHitResult(
-                                    new Vec3(0.5, 0.5, 0.5),
-                                    Direction.UP,
-                                    helper.absolutePos(printingPos),
-                                    false
-                            )
-            );
+            // Pull out result
+            helper.useBlock(printingPos, player);
             ItemStack held = player.getMainHandItem();
-            if (ItemStack.isSameItemSameComponents(held, reference)) {
-                var chest = getItemHandler(helper, chestPos);
-                chest.insertItem(0, held, false);
-                assertTrue(printingPress.getInk().getCount() == 9, "Ink was not consumed properly");
-                assertTrue(printingPress.getPaper().isEmpty(), "Paper was not consumed");
-                assertTrue(!printingPress.getForm().isEmpty(), "Form should not be consumed");
-                helper.succeed();
-            } else {
+
+            // Fail if result is not a clone of the enchantment
+            if (!ItemStack.isSameItemSameComponents(held, reference)) {
                 helper.fail("cloned item wasn't same");
             }
+
+            // Place result in chest
+            var chest = getItemHandler(helper, chestPos);
+            chest.insertItem(0, held, false);
+
+            // Assert ingredient transformations
+            assertTrue(printingPress.getInk().getCount() == 9, "Ink was not consumed properly");
+            assertTrue(printingPress.getPaper().isEmpty(), "Paper was not consumed");
+            assertTrue(!printingPress.getForm().isEmpty(), "Form should not be consumed");
+
+            // Succeed test
+            helper.succeed();
         });
     }
 
