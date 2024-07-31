@@ -9,9 +9,10 @@ public record ResourceIdSet(
 ) implements ASTNode, Predicate<Object> {
     public static final ResourceIdSet EMPTY = new ResourceIdSet(Set.of());
 
+    @Override
     public boolean test(Object stack) {
-        for (ResourceIdentifier<?, ?, ?> exclude : resourceIds) {
-            if (exclude.test(stack)) {
+        for (ResourceIdentifier<?, ?, ?> entry : resourceIds) {
+            if (entry.test(stack)) {
                 return true;
             }
         }
