@@ -17,9 +17,11 @@ import mekanism.common.tier.EnergyCubeTier;
 import mekanism.common.tile.TileEntityBin;
 import mekanism.common.tile.TileEntityChemicalTank;
 import mekanism.common.tile.TileEntityEnergyCube;
+import mekanism.common.tile.base.TileEntityMekanism;
 import mekanism.common.tile.component.TileComponentConfig;
 import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
+import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.UnitDisplayUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -42,6 +44,29 @@ import java.util.Objects;
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMMekanismCompatGameTests extends SFMGameTestBase {
+    private static void set_all_io(TileComponentConfig config) {
+        for (TransmissionType type : TransmissionType.values()) {
+            ConfigInfo info = config.getConfig(type);
+            if (info != null) {
+                for (RelativeSide side : RelativeSide.values()) {
+                    info.setDataType(DataType.INPUT_OUTPUT, side);
+                    config.sideChanged(type, side);
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends TileEntityMekanism> T getAndPrepMekTile(GameTestHelper helper, BlockPos mekanismPos) {
+        var tile = helper.getBlockEntity(mekanismPos);
+        if (tile instanceof TileEntityConfigurableMachine mek) {
+            set_all_io(mek.getConfig());
+            return (T) mek;
+        } else if (tile instanceof TileEntityBin bin) {
+        }
+        return (T) tile;
+    }
+
     @GameTest(template = "3x2x1", skyAccess = true)
     public static void mek_chemtank_infusion_empty(GameTestHelper helper) {
         // designate positions
@@ -51,9 +76,11 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_CHEMICAL_TANK.getBlock());
-        var leftTank = ((TileEntityChemicalTank) helper.getBlockEntity(leftPos));
+        TileEntityChemicalTank leftTank = getAndPrepMekTile(helper, leftPos);
+
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_CHEMICAL_TANK.getBlock());
-        var rightTank = ((TileEntityChemicalTank) helper.getBlockEntity(rightPos));
+        TileEntityChemicalTank rightTank = getAndPrepMekTile(helper, rightPos);
+
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -91,9 +118,9 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_CHEMICAL_TANK.getBlock());
-        var leftTank = ((TileEntityChemicalTank) helper.getBlockEntity(leftPos));
+        TileEntityChemicalTank leftTank = getAndPrepMekTile(helper,leftPos);
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_CHEMICAL_TANK.getBlock());
-        var rightTank = ((TileEntityChemicalTank) helper.getBlockEntity(rightPos));
+        TileEntityChemicalTank rightTank = getAndPrepMekTile(helper,rightPos);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -131,9 +158,9 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_CHEMICAL_TANK.getBlock());
-        var leftTank = ((TileEntityChemicalTank) helper.getBlockEntity(leftPos));
+        TileEntityChemicalTank leftTank = getAndPrepMekTile(helper,leftPos);
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_CHEMICAL_TANK.getBlock());
-        var rightTank = ((TileEntityChemicalTank) helper.getBlockEntity(rightPos));
+        TileEntityChemicalTank rightTank = getAndPrepMekTile(helper,rightPos);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -180,9 +207,10 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_BIN.getBlock());
-        var left = ((TileEntityBin) helper.getBlockEntity(leftPos));
+        TileEntityBin left = getAndPrepMekTile(helper,leftPos);
+
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_BIN.getBlock());
-        var right = ((TileEntityBin) helper.getBlockEntity(rightPos));
+        TileEntityBin right = getAndPrepMekTile(helper,rightPos);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -221,9 +249,9 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_BIN.getBlock());
-        var left = ((TileEntityBin) helper.getBlockEntity(leftPos));
+        TileEntityBin left = getAndPrepMekTile(helper,leftPos);
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_BIN.getBlock());
-        var right = ((TileEntityBin) helper.getBlockEntity(rightPos));
+        TileEntityBin right = getAndPrepMekTile(helper,rightPos);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -262,9 +290,9 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_BIN.getBlock());
-        var left = ((TileEntityBin) helper.getBlockEntity(leftPos));
+        TileEntityBin left = getAndPrepMekTile(helper,leftPos);
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_BIN.getBlock());
-        var right = ((TileEntityBin) helper.getBlockEntity(rightPos));
+        TileEntityBin right = getAndPrepMekTile(helper,rightPos);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -303,9 +331,11 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        var left = ((TileEntityEnergyCube) helper.getBlockEntity(leftPos));
+        TileEntityEnergyCube left = getAndPrepMekTile(helper,leftPos);
+
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        var right = ((TileEntityEnergyCube) helper.getBlockEntity(rightPos));
+        TileEntityEnergyCube right = getAndPrepMekTile(helper,rightPos);
+
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -343,9 +373,9 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        var left = ((TileEntityEnergyCube) helper.getBlockEntity(leftPos));
+        TileEntityEnergyCube left = getAndPrepMekTile(helper,leftPos);
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        var right = ((TileEntityEnergyCube) helper.getBlockEntity(rightPos));
+        TileEntityEnergyCube right = getAndPrepMekTile(helper,rightPos);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -383,9 +413,9 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        var left = ((TileEntityEnergyCube) helper.getBlockEntity(leftPos));
+        TileEntityEnergyCube left = getAndPrepMekTile(helper,leftPos);
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        var right = ((TileEntityEnergyCube) helper.getBlockEntity(rightPos));
+        TileEntityEnergyCube right = getAndPrepMekTile(helper,rightPos);
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
 
@@ -426,18 +456,10 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
 
         // set up the world
         helper.setBlock(leftPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        var left = ((TileEntityEnergyCube) helper.getBlockEntity(leftPos));
-        TileComponentConfig leftConfig = left.getConfig();
-        ConfigInfo leftInfo = leftConfig.getConfig(TransmissionType.ENERGY);
-        leftInfo.setDataType(DataType.INPUT_OUTPUT, RelativeSide.TOP);
-        leftConfig.sideChanged(TransmissionType.ENERGY, RelativeSide.TOP);
+        var left = getAndPrepMekTile(helper, leftPos);
 
         helper.setBlock(rightPos, MekanismBlocks.ULTIMATE_ENERGY_CUBE.getBlock());
-        var right = ((TileEntityEnergyCube) helper.getBlockEntity(rightPos));
-        TileComponentConfig rightConfig = right.getConfig();
-        ConfigInfo rightInfo = rightConfig.getConfig(TransmissionType.ENERGY);
-        rightInfo.setDataType(DataType.INPUT_OUTPUT, RelativeSide.TOP);
-        rightConfig.sideChanged(TransmissionType.ENERGY, RelativeSide.TOP);
+        var right = getAndPrepMekTile(helper, rightPos);
 
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var manager = ((ManagerBlockEntity) helper.getBlockEntity(managerPos));
