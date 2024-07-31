@@ -186,16 +186,16 @@ public class DiskItem extends Item {
         return Component.literal(name).withStyle(ChatFormatting.AQUA);
     }
 
+    @SuppressWarnings("UnnecessaryLocalVariable")
     @Override
     public void appendHoverText(
             ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag detail
     ) {
 
         if (stack.hasTag()) {
-            boolean showProgram = DistExecutor.unsafeRunForDist(
-                    () -> ClientStuff::isMoreInfoKeyDown,
-                    () -> () -> false
-            );
+            boolean isClient = FMLEnvironment.dist.isClient();
+            boolean isMoreInfoKeyDown = isClient && ClientStuff.isMoreInfoKeyDown();
+            boolean showProgram = isMoreInfoKeyDown;
             if (!showProgram) {
                 list.addAll(LabelPositionHolder.from(stack).asHoverText());
                 getErrors(stack)
@@ -208,9 +208,11 @@ public class DiskItem extends Item {
                         .map(MutableComponent::create)
                         .map(line -> line.withStyle(ChatFormatting.YELLOW))
                         .forEach(list::add);
-                list.add(Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
-                                 .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getTranslatedKeyMessage())
-                                 .withStyle(ChatFormatting.AQUA));
+                if (isClient) {
+                    list.add(Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
+                                     .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getTranslatedKeyMessage())
+                                     .withStyle(ChatFormatting.AQUA));
+                }
             } else {
                 var program = getProgram(stack);
                 if (!program.isEmpty()) {
