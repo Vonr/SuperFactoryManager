@@ -122,6 +122,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
         }
     }
 
+    @Override
     public boolean test(Object stack) {
         return resourceId.test(stack);
     }
