@@ -27,3 +27,9 @@
 # Modelling
 
 - [Block Display Models - A place for your Minecraft models (block-display.com)](https://block-display.com/)
+
+# Worldgen, datagen
+
+- https://github.com/misode/misode.github.io
+- https://misode.github.io/
+- https://misode.github.io/worldgen/
