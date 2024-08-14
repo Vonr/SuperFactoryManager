@@ -23,7 +23,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .stream()
                 .filter(pair -> pair.getSecond() != null)
                 .filter(pair -> pair.getSecond().start.getStartIndex() <= cursorPos
-                                && pair.getSecond().stop.getStopIndex() >= cursorPos)
+                        && pair.getSecond().stop.getStopIndex() >= cursorPos)
                 .collect(Collectors.toList());
     }
 
@@ -106,8 +106,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var label = new Label(ctx.getText());
         if (label.name().length() > Program.MAX_LABEL_LENGTH) {
             throw new IllegalArgumentException("Label name cannot be longer than "
-                                               + Program.MAX_LABEL_LENGTH
-                                               + " characters.");
+                    + Program.MAX_LABEL_LENGTH
+                    + " characters.");
         }
         USED_LABELS.add(label);
         AST_NODE_CONTEXTS.add(new Pair<>(label, ctx));
@@ -119,8 +119,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         var label = new Label(visitString(ctx.string()).value());
         if (label.name().length() > Program.MAX_LABEL_LENGTH) {
             throw new IllegalArgumentException("Label name cannot be longer than "
-                                               + Program.MAX_LABEL_LENGTH
-                                               + " characters.");
+                    + Program.MAX_LABEL_LENGTH
+                    + " characters.");
         }
         USED_LABELS.add(label);
         AST_NODE_CONTEXTS.add(new Pair<>(label, ctx));
@@ -154,8 +154,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
         // get default min interval
         int minInterval = timerTrigger.usesOnlyForgeEnergyResourceIO()
-                          ? SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO)
-                          : SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicks);
+                ? SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO)
+                : SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicks);
 
         // validate interval
         if (time.getTicks() < minInterval) {
@@ -188,8 +188,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                                 .getManager()
                                 .getLevel()
                                 .getBestNeighborSignal(programContext
-                                                               .getManager()
-                                                               .getBlockPos()),
+                                        .getManager()
+                                        .getBlockPos()),
                         (long) finalNum
                 ),
                 ctx.getText()
@@ -243,21 +243,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public InputStatement visitInputStatementStatement(SFMLParser.InputStatementStatementContext ctx) {
-        InputStatement input = (InputStatement) visit(ctx.inputstatement());
-        AST_NODE_CONTEXTS.add(new Pair<>(input, ctx));
-        return input;
-    }
-
-    @Override
-    public OutputStatement visitOutputStatementStatement(SFMLParser.OutputStatementStatementContext ctx) {
-        OutputStatement output = (OutputStatement) visit(ctx.outputstatement());
-        AST_NODE_CONTEXTS.add(new Pair<>(output, ctx));
-        return output;
-    }
-
-    @Override
-    public InputStatement visitInputstatement(SFMLParser.InputstatementContext ctx) {
+    public InputStatement visitInputStatement(SFMLParser.InputStatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
         var matchers = visitInputmatchers(ctx.inputmatchers());
         var exclusions = visitResourceexclusion(ctx.resourceexclusion());
@@ -268,7 +254,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public OutputStatement visitOutputstatement(SFMLParser.OutputstatementContext ctx) {
+    public OutputStatement visitOutputStatement(SFMLParser.OutputStatementContext ctx) {
         var labelAccess = visitLabelaccess(ctx.labelaccess());
         var matchers = visitOutputmatchers(ctx.outputmatchers());
         var exclusions = visitResourceexclusion(ctx.resourceexclusion());
@@ -287,11 +273,21 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         } else {
             directionQualifier = (DirectionQualifier) visit(directionQualifierCtx);
         }
+
+        var whereCtx = ctx.where();
+        WhereStatement where;
+        if (whereCtx == null) {
+            where = WhereStatement.ALWAYS_TRUE;
+        } else {
+            where = (WhereStatement) visit(whereCtx);
+        }
+
         LabelAccess labelAccess = new LabelAccess(
                 ctx.label().stream().map(this::visit).map(Label.class::cast).collect(Collectors.toList()),
                 directionQualifier,
                 visitSlotqualifier(ctx.slotqualifier()),
-                visitRoundrobin(ctx.roundrobin())
+                visitRoundrobin(ctx.roundrobin()),
+                where
         );
         AST_NODE_CONTEXTS.add(new Pair<>(labelAccess, ctx));
         return labelAccess;
@@ -301,12 +297,12 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public RoundRobin visitRoundrobin(@Nullable SFMLParser.RoundrobinContext ctx) {
         if (ctx == null) return RoundRobin.disabled();
         return ctx.BLOCK() != null
-               ? new RoundRobin(RoundRobin.Behaviour.BY_BLOCK)
-               : new RoundRobin(RoundRobin.Behaviour.BY_LABEL);
+                ? new RoundRobin(RoundRobin.Behaviour.BY_BLOCK)
+                : new RoundRobin(RoundRobin.Behaviour.BY_LABEL);
     }
 
     @Override
-    public IfStatement visitIfstatement(SFMLParser.IfstatementContext ctx) {
+    public IfStatement visitIfStatement(SFMLParser.IfStatementContext ctx) {
         var conditions = ctx
                 .boolexpr()
                 .stream()
@@ -346,13 +342,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
         AST_NODE_CONTEXTS.add(new Pair<>(nestedStatement, ctx));
         return nestedStatement;
-    }
-
-    @Override
-    public IfStatement visitIfStatementStatement(SFMLParser.IfStatementStatementContext ctx) {
-        IfStatement ifStatement = visitIfstatement(ctx.ifstatement());
-        AST_NODE_CONTEXTS.add(new Pair<>(ifStatement, ctx));
-        return ifStatement;
     }
 
     @Override
@@ -540,14 +529,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ASTNode visitForgetStatementStatement(SFMLParser.ForgetStatementStatementContext ctx) {
-        ForgetStatement statement = (ForgetStatement) visit(ctx.forgetstatement());
-        AST_NODE_CONTEXTS.add(new Pair<>(statement, ctx));
-        return statement;
-    }
-
-    @Override
-    public ForgetStatement visitForgetstatement(SFMLParser.ForgetstatementContext ctx) {
+    public ForgetStatement visitForgetStatement(SFMLParser.ForgetStatementContext ctx) {
         Set<Label> labels = ctx
                 .label()
                 .stream()
@@ -564,10 +546,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public NumberRangeSet visitRangeset(@Nullable SFMLParser.RangesetContext ctx) {
         if (ctx == null) return NumberRangeSet.MAX_RANGE;
         NumberRangeSet numberRangeSet = new NumberRangeSet(ctx
-                                                                   .range()
-                                                                   .stream()
-                                                                   .map(this::visitRange)
-                                                                   .toArray(NumberRange[]::new));
+                .range()
+                .stream()
+                .map(this::visitRange)
+                .toArray(NumberRange[]::new));
         AST_NODE_CONTEXTS.add(new Pair<>(numberRangeSet, ctx));
         return numberRangeSet;
     }
@@ -611,8 +593,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         ResourceQuantity quantity = new ResourceQuantity(
                 visitNumber(ctx.number()),
                 ctx.EACH() != null
-                ? ResourceQuantity.IdExpansionBehaviour.EXPAND
-                : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
+                        ? ResourceQuantity.IdExpansionBehaviour.EXPAND
+                        : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
         );
         AST_NODE_CONTEXTS.add(new Pair<>(quantity, ctx));
         return quantity;
@@ -624,8 +606,8 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         ResourceQuantity quantity = new ResourceQuantity(
                 visitNumber(ctx.number()),
                 ctx.EACH() != null
-                ? ResourceQuantity.IdExpansionBehaviour.EXPAND
-                : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
+                        ? ResourceQuantity.IdExpansionBehaviour.EXPAND
+                        : ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
         );
         AST_NODE_CONTEXTS.add(new Pair<>(quantity, ctx));
         return quantity;
@@ -642,9 +624,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public DirectionQualifier visitListedSides(SFMLParser.ListedSidesContext ctx) {
         DirectionQualifier directionQualifier = new DirectionQualifier(
                 EnumSet.copyOf(ctx.side().stream()
-                                       .map(this::visitSide)
-                                       .map(DirectionQualifier::lookup)
-                                       .toList())
+                        .map(this::visitSide)
+                        .map(DirectionQualifier::lookup)
+                        .toList())
         );
         AST_NODE_CONTEXTS.add(new Pair<>(directionQualifier, ctx));
         return directionQualifier;
@@ -655,6 +637,47 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         Side side = Side.valueOf(ctx.getText().toUpperCase(Locale.ROOT));
         AST_NODE_CONTEXTS.add(new Pair<>(side, ctx));
         return side;
+    }
+
+    @Override
+    public WhereStatement visitWhereConjunction(SFMLParser.WhereConjunctionContext ctx) {
+        var left = (WhereStatement) visit(ctx.where(0));
+        var right = (WhereStatement) visit(ctx.where(1));
+        WhereStatement where = new WhereStatement(left.and(right), left.sourceCode() + " AND " + right.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
+    }
+
+    @Override
+    public WhereStatement visitWhereParen(SFMLParser.WhereParenContext ctx) {
+        WhereStatement where = (WhereStatement) visit(ctx.where());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
+    }
+
+    @Override
+    public WhereStatement visitWhereDisjunction(SFMLParser.WhereDisjunctionContext ctx) {
+        var left = (WhereStatement) visit(ctx.where(0));
+        var right = (WhereStatement) visit(ctx.where(1));
+        WhereStatement where = new WhereStatement(left.or(right), left.sourceCode() + " OR " + right.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
+    }
+
+    @Override
+    public WhereStatement visitWhereNegation(SFMLParser.WhereNegationContext ctx) {
+        var x = (WhereStatement) visit(ctx.where());
+        WhereStatement where = new WhereStatement(x.negate(), "NOT " + x.sourceCode());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
+    }
+
+    @Override
+    public WhereStatement visitWhereComparison(SFMLParser.WhereComparisonContext ctx) {
+        var resourceComparison = visitResourcecomparison(ctx.resourcecomparison());
+        WhereStatement where = resourceComparison.toWhereExpression(" WHERE " + resourceComparison.toString());
+        AST_NODE_CONTEXTS.add(new Pair<>(where, ctx));
+        return where;
     }
 
     @Override

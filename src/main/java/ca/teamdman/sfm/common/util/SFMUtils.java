@@ -155,7 +155,8 @@ public class SFMUtils {
                         labelAccess.directions(),
                         inputStatement.labelAccess()
                                 .slots(),
-                        RoundRobin.disabled()
+                        RoundRobin.disabled(),
+                        labelAccess.where()
                 ), inputStatement.resourceLimits(), inputStatement.each()));
     }
 
@@ -178,7 +179,8 @@ public class SFMUtils {
                 new NumberRangeSet(
                         new NumberRange[]{new NumberRange(slot, slot)}
                 ),
-                RoundRobin.disabled()
+                RoundRobin.disabled(),
+                WhereStatement.ALWAYS_TRUE
         );
         Limit limit = new Limit(
                 new ResourceQuantity(

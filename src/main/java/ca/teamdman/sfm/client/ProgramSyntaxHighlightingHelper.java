@@ -100,6 +100,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.TRUE:
             case SFMLLexer.FALSE:
             case SFMLLexer.FORGET:
+            case SFMLLexer.WHERE:
                 return ChatFormatting.BLUE;
             case SFMLLexer.IDENTIFIER:
             case SFMLLexer.STRING:

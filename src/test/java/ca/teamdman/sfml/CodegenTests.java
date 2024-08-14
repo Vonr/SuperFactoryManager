@@ -75,7 +75,8 @@ public class CodegenTests {
                 List.of(new Label("a")),
                 DirectionQualifier.NULL_DIRECTION,
                 NumberRangeSet.MAX_RANGE,
-                RoundRobin.disabled()
+                RoundRobin.disabled(),
+                WhereStatement.ALWAYS_TRUE
         );
         var program = new Program(
                 new ASTBuilder(),

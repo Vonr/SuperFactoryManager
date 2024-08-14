@@ -154,6 +154,46 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         }
     }
 
+    public void forCapabilityOfBlock(
+            ProgramContext programContext,
+            DirectionQualifier directionQualifier,
+            Pair<Label, BlockPos> labelPosPair,
+            CapabilityConsumer<CAP> consumer
+    ) {
+        CableNetwork network = programContext.getNetwork();
+
+        var label = labelPosPair.getFirst();
+        var blockPos =  labelPosPair.getSecond();
+
+        for (Direction dir : (Iterable<? extends Direction>) directionQualifier.stream()::iterator) {
+            // Get capability from the network
+            Optional<CAP> maybeCap = network
+                    .getCapability(CAPABILITY_KIND, blockPos, dir, programContext.getLogger())
+                    .resolve();
+            if (maybeCap.isPresent()) {
+                programContext
+                        .getLogger()
+                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT.get(
+                                displayAsCapabilityClass(),
+                                blockPos,
+                                dir
+                        )));
+                CAP cap = maybeCap.get();
+                consumer.accept(label, blockPos, dir, cap);
+
+            } else {
+                // Log error
+                programContext
+                        .getLogger()
+                        .error(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT.get(
+                                displayAsCapabilityClass(),
+                                blockPos,
+                                dir
+                        )));
+            }
+        }
+    }
+
     public Stream<STACK> getStacksInSlots(
             CAP cap,
             NumberRangeSet slots

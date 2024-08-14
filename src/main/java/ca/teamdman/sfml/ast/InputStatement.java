@@ -1,8 +1,8 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
@@ -80,56 +80,41 @@ public final class InputStatement implements IOStatement {
                 .getReferencedResourceTypes()
                 .collect(Collectors.toSet());
 
+        Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
+
+        List<InputResourceTracker<?, ?, ?>> inputTrackers = null;
         if (!each) {
-            // log not each
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
+            inputTrackers = resourceLimits.createInputTrackers();
+        } else {
+            context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
+        }
 
-            // create a single matcher to be shared by all capabilities
-            List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
+        for (var labelPosPair : getBlocksFromLabels(context)) {
+            // Tracker for block
+            if (each) {
+                inputTrackers = resourceLimits.createInputTrackers();
+            }
+            List<LimitedInputSlot<?, ?, ?>> limitedInputSlotList = new ArrayList<>();
+            HashMap<Object, Long> resourceTable = new HashMap<>();
+            // Loop over capability
             for (var type : referencedResourceTypes) {
-                // log gather for resource type
-                context
-                        .getLogger()
-                        .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(),
-                                type.displayAsCapabilityClass()
-                        )));
-
-                // gather slots for each capability found for positions tagged by a provided label
-                Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
-                type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> gatherSlotsForCap(
+                // Get slots to loop over
+                List<InputResourceTracker<?, ?, ?>> finalInputTrackers = inputTrackers;
+                type.forCapabilityOfBlock(context, labelAccess.directions(), labelPosPair, (label, pos, direction, cap) -> gatherSlotsForCap(
                         context,
                         (ResourceType<Object, Object, Object>) type,
                         label, pos, direction, cap,
-                        inputTrackers,
-                        finalSlotConsumer
+                        finalInputTrackers,
+                        limitedInputSlotList,
+                        resourceTable
                 ));
             }
-        } else {
-            // log yes each
-            context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
 
-            for (ResourceType type : referencedResourceTypes) {
-                // log gather for resource type
-                context
-                        .getLogger()
-                        .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(),
-                                type.displayAsCapabilityClass()
-                        )));
-
-                // gather slots for each capability found for positions tagged by a provided label
-                Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
-                type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
-                    List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
-                    gatherSlotsForCap(
-                            context,
-                            (ResourceType<Object, Object, Object>) type,
-                            label, pos, direction, cap,
-                            inputTrackers,
-                            finalSlotConsumer
-                    );
-                });
+            if (labelAccess().where().test(context, resourceTable)) {
+                for (var slotList : limitedInputSlotList) {
+                    finalSlotConsumer.accept(slotList);
+                }
             }
         }
     }
@@ -205,7 +190,7 @@ public final class InputStatement implements IOStatement {
         }
     }
 
-    public void freeSlotsIf(Predicate<LimitedInputSlot<?,?,?>> condition) {
+    public void freeSlotsIf(Predicate<LimitedInputSlot<?, ?, ?>> condition) {
         if (limitedInputSlotsCache != null) {
             Iterator<LimitedInputSlot<?, ?, ?>> iterator = limitedInputSlotsCache.iterator();
             while (iterator.hasNext()) {
@@ -239,28 +224,33 @@ public final class InputStatement implements IOStatement {
             Direction direction,
             CAP capability,
             List<InputResourceTracker<?, ?, ?>> trackers,
-            Consumer<LimitedInputSlot<?, ?, ?>> acceptor
+            List<LimitedInputSlot<?, ?, ?>> limitedInputSlotList,
+            HashMap<STACK, Long> resourceTable
     ) {
         context
                 .getLogger()
-                .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_RANGE.get(
+                .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_RANGE.get(
                         labelAccess.slots())));
         for (int slot = 0; slot < type.getSlots(capability); slot++) {
             int finalSlot = slot;
             if (labelAccess.slots().contains(slot)) {
                 STACK stack = type.getStackInSlot(capability, slot);
                 if (shouldCreateSlot(type, stack)) {
+                    if (type.matchesCapabilityType(capability)) {
+                        // Add items to resourceTable, this is done before checking if it's a resource we want to move
+                        resourceTable.put(stack, resourceTable.getOrDefault(stack, 0L) + type.getAmount(stack));
+                    }
                     for (InputResourceTracker<?, ?, ?> tracker : trackers) {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
                             context
                                     .getLogger()
-                                    .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
+                                    .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
                                             finalSlot,
                                             stack,
                                             tracker.toString()
                                     )));
                             //noinspection unchecked
-                            acceptor.accept(LimitedInputSlotObjectPool.acquire(
+                            limitedInputSlotList.add(LimitedInputSlotObjectPool.acquire(
                                     label, pos, direction, slot, capability,
                                     (InputResourceTracker<STACK, ITEM, CAP>) tracker,
                                     stack
@@ -291,4 +281,12 @@ public final class InputStatement implements IOStatement {
         return !type.isEmpty(stack);
     }
 
+    private List<Pair<Label, BlockPos>> getBlocksFromLabels(ProgramContext context) {
+        RoundRobin roundRobin = labelAccess.roundRobin();
+        LabelPositionHolder labelPositionHolder = context.getLabelPositionHolder();
+        return roundRobin.getPositionsForLabels(
+                labelAccess,
+                labelPositionHolder
+        );
+    }
 }

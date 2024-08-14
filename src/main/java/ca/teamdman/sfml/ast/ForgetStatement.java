@@ -29,7 +29,8 @@ public record ForgetStatement(
                             newLabels,
                             oldInputStatement.labelAccess().directions(),
                             oldInputStatement.labelAccess().slots(),
-                            oldInputStatement.labelAccess().roundRobin()
+                            oldInputStatement.labelAccess().roundRobin(),
+                            oldInputStatement.labelAccess().where()
                     ),
                     oldInputStatement.resourceLimits(),
                     oldInputStatement.each()

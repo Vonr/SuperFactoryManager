@@ -46,7 +46,8 @@ public class SFMTests {
                 Stream.of("a", "b", "c").map(Label::new).toList(),
                 new DirectionQualifier(EnumSet.of(Direction.DOWN)),
                 NumberRangeSet.MAX_RANGE,
-                new RoundRobin(RoundRobin.Behaviour.BY_BLOCK)
+                new RoundRobin(RoundRobin.Behaviour.BY_BLOCK),
+                WhereStatement.ALWAYS_TRUE
         );
         LabelPositionHolder labelPositions = LabelPositionHolder.empty();
         labelPositions.add("a", new BlockPos(0, 0, 0));
