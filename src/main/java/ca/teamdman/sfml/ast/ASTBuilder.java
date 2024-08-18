@@ -336,7 +336,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public BoolExpr visitBooleanTrue(SFMLParser.BooleanTrueContext ctx) {
-        BoolExpr boolExpr = new BoolExpr(__ -> true, "TRUE");
+        BoolExpr boolExpr = BoolExpr.TRUE;
         AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
@@ -408,7 +408,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public BoolExpr visitBooleanFalse(SFMLParser.BooleanFalseContext ctx) {
-        BoolExpr boolExpr = new BoolExpr(__ -> false, "FALSE");
+        BoolExpr boolExpr = BoolExpr.FALSE;
         AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
