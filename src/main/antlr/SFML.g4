@@ -25,18 +25,18 @@ interval: TICK             #Tick
 //
 
 block           : statement* ;
-statement       : inputstatement    #InputStatementStatement
-                | outputstatement   #OutputStatementStatement
-                | ifstatement       #IfStatementStatement
-                | forgetstatement   #ForgetStatementStatement
+statement       : inputStatement
+                | outputStatement
+                | ifStatement
+                | forgetStatement
                 ;
 
 // IO STATEMENT
-forgetstatement : FORGET label? (COMMA label)* COMMA?;
-inputstatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess
+forgetStatement : FORGET label? (COMMA label)* COMMA?;
+inputStatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess
                 | FROM EACH? labelaccess INPUT inputmatchers? resourceexclusion?
                 ;
-outputstatement : OUTPUT outputmatchers? resourceexclusion? TO EACH? labelaccess
+outputStatement : OUTPUT outputmatchers? resourceexclusion? TO EACH? labelaccess
                 | TO EACH? labelaccess OUTPUT outputmatchers? resourceexclusion?
                 ;
 inputmatchers   : movement; // separate for different defaults
@@ -74,7 +74,7 @@ rangeset        : range (COMMA range)*;
 range           : number (DASH number)? ;
 
 
-ifstatement     : IF boolexpr THEN block (ELSE IF boolexpr THEN block)* (ELSE block)? END;
+ifStatement     : IF boolexpr THEN block (ELSE IF boolexpr THEN block)* (ELSE block)? END;
 boolexpr        : TRUE                                  #BooleanTrue
                 | FALSE                                 #BooleanFalse
                 | LPAREN boolexpr RPAREN                #BooleanParen
@@ -113,7 +113,7 @@ setOp           : OVERALL
 // IO HELPERS
 //
 labelaccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
-roundrobin: ROUND ROBIN BY (LABEL | BLOCK);
+roundrobin      : ROUND ROBIN BY (LABEL | BLOCK);
 label           : (IDENTIFIER|REDSTONE)   #RawLabel
                 | string                  #StringLabel
                 ;
