@@ -125,7 +125,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             Label label = pair.getFirst();
             BlockPos pos = pair.getSecond();
             // Expand pos to (pos, direction) pairs
-            for (Direction dir : (Iterable<? extends Direction>) labelAccess.directions().stream()::iterator) {
+            for (Direction dir : labelAccess.directions()) {
                 // Get capability from the network
                 Optional<CAP> maybeCap = network
                         .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger())
