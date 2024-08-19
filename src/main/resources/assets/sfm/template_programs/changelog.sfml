@@ -4,6 +4,9 @@ NAME "Changelog"
 -- Official SFM Donation Page:
 -- https://ko-fi.com/teamdman
 
+---- 4.19.0 ----
+-- Fix uppercase resource identifiers not being auto-lowercased internally
+
 ---- 4.18.0 ----
 -- Add 1.21.0 build with Mekanism support
 -- Set up a Ko-fi for donations
