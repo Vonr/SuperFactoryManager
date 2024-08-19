@@ -33,30 +33,41 @@ statement       : inputStatement
 
 // IO STATEMENT
 forgetStatement : FORGET label? (COMMA label)* COMMA?;
-inputStatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess
-                | FROM EACH? labelaccess INPUT inputmatchers? resourceexclusion?
+inputStatement  : INPUT inputResourceLimits? resourceExclusion? FROM EACH? labelAccess
+                | FROM EACH? labelAccess INPUT inputResourceLimits? resourceExclusion?
                 ;
-outputStatement : OUTPUT outputmatchers? resourceexclusion? TO EACH? labelaccess
-                | TO EACH? labelaccess OUTPUT outputmatchers? resourceexclusion?
+outputStatement : OUTPUT outputResourceLimits? resourceExclusion? TO EACH? labelAccess
+                | TO EACH? labelAccess OUTPUT outputResourceLimits? resourceExclusion?
                 ;
-inputmatchers   : movement; // separate for different defaults
-outputmatchers  : movement; // separate for different defaults
+resourceExclusion       : EXCEPT resourceId (COMMA resourceId)* COMMA?;
 
-movement        : resourcelimit (COMMA resourcelimit)* COMMA?    #ResourceLimitMovement
-                | limit                                          #LimitMovement
+inputResourceLimits   : resourceLimits; // separate for different defaults
+outputResourceLimits  : resourceLimits; // separate for different defaults
+resourceLimits  : resourceLimit (COMMA resourceLimit)* COMMA?;
+resourceLimit   : limit? resourceId with?
+                | limit with?
+                | with
                 ;
-
-resourceexclusion       : EXCEPT resourceid (COMMA resourceid)* COMMA?;
-
-resourcelimit   : limit? resourceid;
-
 limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
                 | quantity              #QuantityLimit
                 ;
-
 quantity        : number EACH?;
 retention       : RETAIN number EACH?;
+
+with        : WITH withClause
+            | WITHOUT withClause
+            ;
+withClause  : LPAREN withClause RPAREN          # WithParen
+            | NOT withClause                    # WithNegation
+            | withClause AND withClause         # WithConjunction
+            | withClause OR withClause          # WithDisjunction
+            | BLOCK (TAG|HASHTAG) tagMatcher         # WithBlockTag
+            | (TAG|HASHTAG) tagMatcher               # WithItemTag
+            ;
+
+tagMatcher: identifier (COLON identifier (SLASH identifier)+)?;
+
 
 sidequalifier   : EACH SIDE                 #EachSide
                 | side(COMMA side)* SIDE    #ListedSides
@@ -81,10 +92,10 @@ boolexpr        : TRUE                                  #BooleanTrue
                 | NOT boolexpr                          #BooleanNegation
                 | boolexpr AND boolexpr                 #BooleanConjunction
                 | boolexpr OR boolexpr                  #BooleanDisjunction
-                | setOp? labelaccess HAS resourcecomparison #BooleanHas
+                | setOp? labelAccess HAS resourcecomparison #BooleanHas
                 | REDSTONE (comparisonOp number)?       #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp number resourceid? ;
+resourcecomparison : comparisonOp number resourceId? ;
 comparisonOp    : GT
                 | LT
                 | EQ
@@ -112,15 +123,17 @@ setOp           : OVERALL
 //
 // IO HELPERS
 //
-labelaccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
+labelAccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
 roundrobin      : ROUND ROBIN BY (LABEL | BLOCK);
-label           : (IDENTIFIER|REDSTONE)   #RawLabel
+label           : (identifier)   #RawLabel
                 | string                  #StringLabel
                 ;
 
-resourceid      : (IDENTIFIER|REDSTONE) (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)?)?)?)? # Resource
-                | string                             # StringResource
+resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON (identifier)?)?)?)? # Resource
+                | string                                                                            # StringResource
                 ;
+
+identifier : (IDENTIFIER | REDSTONE) ;
 
 // GENERAL
 string: STRING ;
@@ -175,6 +188,12 @@ EACH    : E A C H ;
 EXCEPT  : E X C E P T ;
 FORGET  : F O R G E T ;
 
+// WITH LOGIC
+WITHOUT    : W I T H O U T;
+WITH    : W I T H ;
+TAG     : T A G ;
+HASHTAG : '#' ;
+
 // ROUND ROBIN
 ROUND : R O U N D ;
 ROBIN : R O B I N ;
@@ -212,6 +231,7 @@ EVERY           : E V E R Y ;
 
 COMMA   : ',';
 COLON   : ':';
+SLASH   : '/';
 DASH    : '-';
 LPAREN  : '(';
 RPAREN  : ')';

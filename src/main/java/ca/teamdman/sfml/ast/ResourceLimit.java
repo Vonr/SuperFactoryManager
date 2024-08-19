@@ -12,21 +12,24 @@ import static ca.teamdman.sfml.ast.ResourceQuantity.IdExpansionBehaviour.NO_EXPA
 
 public record ResourceLimit<STACK, ITEM, CAP>(
         ResourceIdentifier<STACK, ITEM, CAP> resourceId,
-        Limit limit
+        Limit limit,
+        With<STACK, ITEM, CAP> with
 ) implements ASTNode, Predicate<Object> {
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static final ResourceLimit<?, ?, ?> TAKE_ALL_LEAVE_NONE = new ResourceLimit<>(
-            ResourceIdentifier.MATCH_ALL, Limit.MAX_QUANTITY_NO_RETENTION
+            (ResourceIdentifier) ResourceIdentifier.MATCH_ALL, Limit.MAX_QUANTITY_NO_RETENTION, With.ALWAYS_TRUE
     );
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static final ResourceLimit<?, ?, ?> ACCEPT_ALL_WITHOUT_RESTRAINT = new ResourceLimit<>(
-            ResourceIdentifier.MATCH_ALL, Limit.MAX_QUANTITY_MAX_RETENTION
+            (ResourceIdentifier) ResourceIdentifier.MATCH_ALL, Limit.MAX_QUANTITY_MAX_RETENTION, With.ALWAYS_TRUE
     );
 
-    public ResourceLimit<STACK, ITEM, CAP> withDefaults(Limit defaults) {
-        return new ResourceLimit<>(resourceId, limit.withDefaults(defaults));
+    public ResourceLimit<STACK, ITEM, CAP> withDefaultLimit(Limit defaults) {
+        return new ResourceLimit<>(resourceId, limit.withDefaults(defaults), with);
     }
 
     public ResourceLimit<STACK, ITEM, CAP> withLimit(Limit limit) {
-        return new ResourceLimit<>(resourceId, limit);
+        return new ResourceLimit<>(resourceId, limit, with);
     }
 
     public void gatherInputTrackers(Consumer<InputResourceTracker<?, ?, ?>> gatherer, ResourceIdSet exclusions) {
@@ -46,7 +49,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 quantity,
                                 new AtomicLong(0)
@@ -60,7 +63,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 new AtomicLong(0),
                                 retention
@@ -70,7 +73,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 new AtomicLong(0),
                                 new AtomicLong(0)
@@ -90,7 +93,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 quantity,
                                 new AtomicLong(0)
@@ -103,7 +106,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 new AtomicLong(0),
                                 retained
@@ -113,7 +116,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 new AtomicLong(0),
                                 new AtomicLong(0)
@@ -122,16 +125,17 @@ public record ResourceLimit<STACK, ITEM, CAP>(
         }
     }
 
+    @Override
     public boolean test(Object stack) {
         return resourceId.test(stack);
     }
 
     @Override
     public String toString() {
-        return limit + " " + resourceId;
+        return limit + " " + resourceId + (with == With.ALWAYS_TRUE ? "" : " WITH " + with);
     }
 
     public String toStringCondensed(Limit defaults) {
-        return (limit.toStringCondensed(defaults) + " " + resourceId.toStringCondensed()).trim();
+        return (limit.toStringCondensed(defaults) + " " + resourceId.toStringCondensed() + (with == With.ALWAYS_TRUE ? "" : " WITH " + with)).trim();
     }
 }
