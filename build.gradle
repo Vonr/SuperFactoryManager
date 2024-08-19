@@ -450,3 +450,11 @@ generateGrammarSource {
     outputDirectory = file("${project.buildDir}/generated-src/antlr/main/ca/teamdman/sfml")
 }
 compileJava.dependsOn generateGrammarSource
+
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
