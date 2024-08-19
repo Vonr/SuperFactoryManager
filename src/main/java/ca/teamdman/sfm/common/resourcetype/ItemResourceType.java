@@ -73,7 +73,7 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
 
     /**
      * We want to also return block tags here.
-     *
+     * <p>
      * <a href="https://github.com/CoFH/CoFHCore/blob/58b83bd0ef1676783323dce54788c3161faab49d/src/main/java/cofh/core/event/CoreClientEvents.java#L127">CoFH Core adds the "Press Ctrl for Tags" tooltip</a>
      * See: {@link cofh.core.event.CoreClientEvents#handleItemTooltipEvent(ItemTooltipEvent)}
      */

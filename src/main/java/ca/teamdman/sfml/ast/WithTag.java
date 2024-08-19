@@ -1,7 +1,6 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
-import net.minecraft.tags.TagKey;
 
 public record WithTag<STACK>(TagMatcher tagMatcher) implements ASTNode, WithClause<STACK> {
     @Override

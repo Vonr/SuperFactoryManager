@@ -4,7 +4,6 @@ import mekanism.api.Action;
 import mekanism.api.energy.IStrictEnergyHandler;
 import mekanism.api.math.FloatingLong;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -17,6 +16,7 @@ import static net.minecraftforge.common.capabilities.CapabilityManager.get;
 public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class<FloatingLong>, IStrictEnergyHandler> {
     public static final Capability<IStrictEnergyHandler> CAP = get(new CapabilityToken<>() {
     });
+    public static final ResourceLocation REGISTRY_KEY = new ResourceLocation("mekanism", "energy");
 
     public MekanismEnergyResourceType() {
         super(CAP);
@@ -28,17 +28,28 @@ public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class
     }
 
     @Override
-    public long getAmountDifference(FloatingLong stack1, FloatingLong stack2) {
+    public long getAmountDifference(
+            FloatingLong stack1,
+            FloatingLong stack2
+    ) {
         return stack1.subtract(stack2).longValue();
     }
 
     @Override
-    public FloatingLong getStackInSlot(IStrictEnergyHandler storage, int slot) {
+    public FloatingLong getStackInSlot(
+            IStrictEnergyHandler storage,
+            int slot
+    ) {
         return storage.getEnergy(slot);
     }
 
     @Override
-    public FloatingLong extract(IStrictEnergyHandler storage, int slot, long amount, boolean simulate) {
+    public FloatingLong extract(
+            IStrictEnergyHandler storage,
+            int slot,
+            long amount,
+            boolean simulate
+    ) {
         return storage.extractEnergy(FloatingLong.create(amount), simulate ? Action.SIMULATE : Action.EXECUTE);
     }
 
@@ -53,12 +64,20 @@ public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class
     }
 
     @Override
-    public long getMaxStackSize(IStrictEnergyHandler storage, int slot) {
+    public long getMaxStackSize(
+            IStrictEnergyHandler storage,
+            int slot
+    ) {
         return storage.getMaxEnergy(slot).longValue();
     }
 
     @Override
-    public FloatingLong insert(IStrictEnergyHandler storage, int slot, FloatingLong amount, boolean simulate) {
+    public FloatingLong insert(
+            IStrictEnergyHandler storage,
+            int slot,
+            FloatingLong amount,
+            boolean simulate
+    ) {
         // note that mekanism returns the remainder, while forge IEnergyStorage returns the accepted amount
         //noinspection UnnecessaryLocalVariable
         FloatingLong remainder = storage.insertEnergy(amount, simulate ? Action.SIMULATE : Action.EXECUTE);
@@ -90,8 +109,6 @@ public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class
         return FloatingLong.ZERO;
     }
 
-    public static final ResourceLocation REGISTRY_KEY = new ResourceLocation("mekanism", "energy");
-
     @Override
     public ResourceLocation getRegistryKey(FloatingLong stack) {
         return REGISTRY_KEY;
@@ -118,7 +135,10 @@ public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class
     }
 
     @Override
-    protected FloatingLong setCount(FloatingLong stack, long amount) {
+    protected FloatingLong setCount(
+            FloatingLong stack,
+            long amount
+    ) {
         return FloatingLong.create(amount);
     }
 }

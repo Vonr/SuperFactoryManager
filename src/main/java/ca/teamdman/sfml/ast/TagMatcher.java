@@ -43,20 +43,6 @@ public class TagMatcher implements Predicate<Object>, ASTNode {
         return new TagMatcher(".*", pathElements);
     }
 
-    public static TagMatcher fromString(String string) {
-        var parts = string.split(":", 1);
-        if (parts.length == 1) {
-            String path = parts[0];
-            List<String> pathElements = List.of(path.split("/"));
-            return new TagMatcher(".*", pathElements);
-        } else {
-            String namespace = parts[0];
-            String path = parts[1];
-            List<String> pathElements = List.of(path.split("/"));
-            return new TagMatcher(namespace, pathElements);
-        }
-    }
-
     @Override
     public boolean test(Object o) {
         if (o instanceof ResourceLocation resourceLocation) {

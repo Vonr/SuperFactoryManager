@@ -12,11 +12,13 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.registries.IForgeRegistry;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
