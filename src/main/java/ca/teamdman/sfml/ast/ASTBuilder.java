@@ -512,11 +512,11 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             limit = (Limit) visit(ctx.limit());
         }
 
-        With<?, ?, ?> with;
+        With<?> with;
         if (ctx.with() == null) {
             with = With.ALWAYS_TRUE;
         } else {
-            with = (With<?, ?, ?>) visit(ctx.with());
+            with = (With<?>) visit(ctx.with());
         }
 
         // we have to assume that the WITH<?,?,?> is the same <STACK, ITEM, CAP> as the ResourceLimit<?,?,?>
@@ -529,23 +529,23 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitWith(SFMLParser.WithContext ctx) {
-        WithClause<?, ?, ?> clause = (WithClause<?, ?, ?>) visit(ctx.withClause());
+        WithClause<?> clause = (WithClause<?>) visit(ctx.withClause());
         With.WithMode mode = ctx.WITHOUT() != null ? With.WithMode.WITHOUT : With.WithMode.WITH;
-        With<?, ?, ?> rtn = new With<>(clause, mode, ctx.getText());
+        With<?> rtn = new With<>(clause, mode, ctx.getText());
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
 
     @Override
-    public WithTag visitWithItemTag(SFMLParser.WithItemTagContext ctx) {
-        WithTag rtn = new WithTag((TagMatcher) visit(ctx.tagMatcher()));
+    public WithTag<?> visitWithItemTag(SFMLParser.WithItemTagContext ctx) {
+        WithTag<?> rtn = new WithTag<>((TagMatcher) visit(ctx.tagMatcher()));
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
 
     @Override
     public ASTNode visitWithBlockTag(SFMLParser.WithBlockTagContext ctx) {
-        WithTag rtn = new WithTag((TagMatcher) visit(ctx.tagMatcher()));
+        WithTag<?> rtn = new WithTag<>((TagMatcher) visit(ctx.tagMatcher()));
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }

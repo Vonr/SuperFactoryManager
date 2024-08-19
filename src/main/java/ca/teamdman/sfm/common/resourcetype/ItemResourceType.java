@@ -1,11 +1,18 @@
 package ca.teamdman.sfm.common.resourcetype;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
+
+import java.util.stream.Stream;
 
 public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler> {
     public ItemResourceType() {
@@ -29,24 +36,25 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     }
 
     @Override
-    protected ItemStack setCount(ItemStack stack, long amount) {
-        int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
-        stack.setCount(finalAmount);
-        return stack;
-    }
-
-    @Override
     public long getAmount(ItemStack stack) {
         return stack.getCount();
     }
 
     @Override
-    public ItemStack getStackInSlot(IItemHandler cap, int slot) {
+    public ItemStack getStackInSlot(
+            IItemHandler cap,
+            int slot
+    ) {
         return cap.getStackInSlot(slot);
     }
 
     @Override
-    public ItemStack extract(IItemHandler handler, int slot, long amount, boolean simulate) {
+    public ItemStack extract(
+            IItemHandler handler,
+            int slot,
+            long amount,
+            boolean simulate
+    ) {
         int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
         // Mekanism bin intentionally only returns 64x stacks without going past the max stack size
         // https://github.com/mekanism/Mekanism/blob/f92b48a49e0766cd3aa78e95c9c4a47ba90402f5/src/main/java/mekanism/common/inventory/slot/BasicInventorySlot.java#L174-L175
@@ -63,6 +71,36 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
         return o instanceof IItemHandler;
     }
 
+    /**
+     * We want to also return block tags here.
+     *
+     * <a href="https://github.com/CoFH/CoFHCore/blob/58b83bd0ef1676783323dce54788c3161faab49d/src/main/java/cofh/core/event/CoreClientEvents.java#L127">CoFH Core adds the "Press Ctrl for Tags" tooltip</a>
+     * See: {@link cofh.core.event.CoreClientEvents#handleItemTooltipEvent(ItemTooltipEvent)}
+     */
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(ItemStack itemStack) {
+        // Get block tags
+        Stream<TagKey<Block>> blockTagKeys;
+        if (!itemStack.isEmpty()) {
+            Block block = Block.byItem(itemStack.getItem());
+            if (block != Blocks.AIR) {
+                //noinspection deprecation
+                blockTagKeys = block.builtInRegistryHolder().getTagKeys();
+            } else {
+                blockTagKeys = Stream.empty();
+            }
+        } else {
+            blockTagKeys = Stream.empty();
+        }
+
+        // Get item tags
+        //noinspection deprecation
+        Stream<TagKey<Item>> itemTagKeys = itemStack.getItem().builtInRegistryHolder().getTagKeys();
+
+        // Return union
+        return Stream.concat(itemTagKeys, blockTagKeys).map(TagKey::location);
+    }
+
     @Override
     public int getSlots(IItemHandler handler) {
         return handler.getSlots();
@@ -74,7 +112,10 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     }
 
     @Override
-    public long getMaxStackSize(IItemHandler handler, int slot) {
+    public long getMaxStackSize(
+            IItemHandler handler,
+            int slot
+    ) {
         return handler.getSlotLimit(slot);
     }
 
@@ -82,7 +123,12 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
      * @return remaining stack that was not inserted
      */
     @Override
-    public ItemStack insert(IItemHandler handler, int slot, ItemStack stack, boolean simulate) {
+    public ItemStack insert(
+            IItemHandler handler,
+            int slot,
+            ItemStack stack,
+            boolean simulate
+    ) {
         return handler.insertItem(slot, stack, simulate);
     }
 
@@ -94,6 +140,16 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     @Override
     public ItemStack getEmptyStack() {
         return ItemStack.EMPTY;
+    }
+
+    @Override
+    protected ItemStack setCount(
+            ItemStack stack,
+            long amount
+    ) {
+        int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
+        stack.setCount(finalAmount);
+        return stack;
     }
 
 }

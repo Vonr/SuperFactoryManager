@@ -175,7 +175,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         return resourceTypeCache;
     }
 
-    public With<STACK,ITEM,CAP> getDefaultWith() {
+    public With<STACK> getDefaultWith() {
         return With.alwaysTrue();
     }
 

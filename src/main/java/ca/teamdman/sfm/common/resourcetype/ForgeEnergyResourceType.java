@@ -1,10 +1,13 @@
 package ca.teamdman.sfm.common.resourcetype;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.registries.IForgeRegistry;
 import org.apache.commons.lang3.NotImplementedException;
+
+import java.util.stream.Stream;
 
 public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer>, IEnergyStorage> {
     public ForgeEnergyResourceType() {
@@ -25,6 +28,11 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     public Integer extract(IEnergyStorage iEnergyStorage, int slot, long amount, boolean simulate) {
         int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
         return iEnergyStorage.extractEnergy(finalAmount, simulate);
+    }
+
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(Integer integer) {
+        return Stream.empty();
     }
 
     @Override

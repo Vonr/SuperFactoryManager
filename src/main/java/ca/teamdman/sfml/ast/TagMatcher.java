@@ -16,6 +16,11 @@ public class TagMatcher implements Predicate<Object>, ASTNode {
     private final Predicate<String> namespacePredicate;
     private final List<Predicate<String>> pathElementPredicates;
 
+    @Override
+    public String toString() {
+        return namespacePattern + ":" + String.join("/", pathElementPatterns);
+    }
+
     private TagMatcher(
             String namespacePattern,
             List<String> pathElementPatterns

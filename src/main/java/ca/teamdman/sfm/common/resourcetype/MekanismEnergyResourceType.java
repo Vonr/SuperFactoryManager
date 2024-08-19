@@ -4,10 +4,13 @@ import mekanism.api.Action;
 import mekanism.api.energy.IStrictEnergyHandler;
 import mekanism.api.math.FloatingLong;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.registries.IForgeRegistry;
 import org.apache.commons.lang3.NotImplementedException;
+
+import java.util.stream.Stream;
 
 import static net.minecraftforge.common.capabilities.CapabilityManager.get;
 
@@ -75,6 +78,11 @@ public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class
     @Override
     public boolean matchesCapabilityType(Object o) {
         return o instanceof IStrictEnergyHandler;
+    }
+
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(FloatingLong floatingLong) {
+        return Stream.empty();
     }
 
     @Override

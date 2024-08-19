@@ -5,9 +5,13 @@ import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasHandler;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.registries.IForgeRegistry;
+
+import java.util.stream.Stream;
 
 import static net.minecraftforge.common.capabilities.CapabilityManager.get;
 
@@ -27,6 +31,11 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     @Override
     public GasStack getStackInSlot(IGasHandler iGasHandler, int slot) {
         return iGasHandler.getChemicalInTank(slot);
+    }
+
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(GasStack gasStack) {
+        return gasStack.getType().getTags().map(TagKey::location);
     }
 
     @Override

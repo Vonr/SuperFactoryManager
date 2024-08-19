@@ -39,7 +39,10 @@ inputStatement  : INPUT inputResourceLimits? resourceExclusion? FROM EACH? label
 outputStatement : OUTPUT outputResourceLimits? resourceExclusion? TO EACH? labelAccess
                 | TO EACH? labelAccess OUTPUT outputResourceLimits? resourceExclusion?
                 ;
+
 resourceExclusion       : EXCEPT resourceId (COMMA resourceId)* COMMA?;
+        // TODO: support `EXCEPT TAG minecraft:mineable/shovel` syntax
+
 
 inputResourceLimits   : resourceLimits; // separate for different defaults
 outputResourceLimits  : resourceLimits; // separate for different defaults
