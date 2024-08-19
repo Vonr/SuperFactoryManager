@@ -131,6 +131,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.LE_SYMBOL:
             case SFMLLexer.WITH:
             case SFMLLexer.TAG:
+            case SFMLLexer.DATA:
                 return ChatFormatting.AQUA;
             case SFMLLexer.UNUSED:
             case SFMLLexer.REDSTONE:

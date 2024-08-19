@@ -136,7 +136,7 @@ resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON 
                 | string                                                                            # StringResource
                 ;
 
-identifier : (IDENTIFIER | REDSTONE) ;
+identifier : (IDENTIFIER | REDSTONE | DATA) ;
 
 // GENERAL
 string: STRING ;
@@ -195,6 +195,7 @@ FORGET  : F O R G E T ;
 WITHOUT    : W I T H O U T;
 WITH    : W I T H ;
 TAG     : T A G ;
+DATA     : D A T A ;
 HASHTAG : '#' ;
 
 // ROUND ROBIN
