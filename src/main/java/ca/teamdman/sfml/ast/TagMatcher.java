@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class TagMatcher implements Predicate<Object>, ASTNode {
-    public static final TagMatcher MATCH_ALL = TagMatcher.fromNamespaceAndPath(".*", ".*");
     public final String namespacePattern;
     public final List<String> pathElementPatterns;
     private final Predicate<String> namespacePredicate;
