@@ -543,10 +543,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         return rtn;
     }
 
-    @Override
-    public ASTNode visitWithData(SFMLParser.WithDataContext ctx) {
-        return super.visitWithData(ctx);
-    }
+//    @Override
+//    public ASTNode visitWithData(SFMLParser.WithDataContext ctx) {
+//        return super.visitWithData(ctx);
+//    }
 
     @Override
     public TagMatcher visitTagMatcher(SFMLParser.TagMatcherContext ctx) {

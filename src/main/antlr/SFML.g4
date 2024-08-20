@@ -66,13 +66,13 @@ withClause  : LPAREN withClause RPAREN          # WithParen
             | withClause AND withClause         # WithConjunction
             | withClause OR withClause          # WithDisjunction
             | (TAG|HASHTAG) tagMatcher          # WithTag
-            | DATA dataCondition                # WithData
+//            | DATA dataCondition                # WithData
             ;
 
 tagMatcher: identifier (COLON identifier (SLASH identifier)+)?;
 
+//dataCondition: ; // TODO: implement some kind of pattern matching
 
-dataCondition: ; // TODO: implement some kind of pattern matching
 
 sidequalifier   : EACH SIDE                 #EachSide
                 | side(COMMA side)* SIDE    #ListedSides
