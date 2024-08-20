@@ -67,4 +67,15 @@ public class SFMResourceTypes {
     public static void register(IEventBus bus) {
         TYPES.register(bus);
     }
+
+    /** TODO: add support for
+     * - mekanism heat
+     * - botania mana
+     * - ars nouveau source
+     * - flux plugs
+     * - PNC pressure
+     * - PNC heat
+     * - nature's aura aura
+     * - create rotation
+     */
 }
