@@ -537,17 +537,15 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public WithTag<?> visitWithItemTag(SFMLParser.WithItemTagContext ctx) {
+    public WithTag<?> visitWithTag(SFMLParser.WithTagContext ctx) {
         WithTag<?> rtn = new WithTag<>((TagMatcher) visit(ctx.tagMatcher()));
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
 
     @Override
-    public ASTNode visitWithBlockTag(SFMLParser.WithBlockTagContext ctx) {
-        WithTag<?> rtn = new WithTag<>((TagMatcher) visit(ctx.tagMatcher()));
-        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
-        return rtn;
+    public ASTNode visitWithData(SFMLParser.WithDataContext ctx) {
+        return super.visitWithData(ctx);
     }
 
     @Override

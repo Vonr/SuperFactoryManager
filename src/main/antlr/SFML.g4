@@ -65,12 +65,14 @@ withClause  : LPAREN withClause RPAREN          # WithParen
             | NOT withClause                    # WithNegation
             | withClause AND withClause         # WithConjunction
             | withClause OR withClause          # WithDisjunction
-            | BLOCK (TAG|HASHTAG) tagMatcher         # WithBlockTag
-            | (TAG|HASHTAG) tagMatcher               # WithItemTag
+            | (TAG|HASHTAG) tagMatcher          # WithTag
+            | DATA dataCondition                # WithData
             ;
 
 tagMatcher: identifier (COLON identifier (SLASH identifier)+)?;
 
+
+dataCondition: ; // TODO: implement some kind of pattern matching
 
 sidequalifier   : EACH SIDE                 #EachSide
                 | side(COMMA side)* SIDE    #ListedSides
@@ -192,10 +194,11 @@ EXCEPT  : E X C E P T ;
 FORGET  : F O R G E T ;
 
 // WITH LOGIC
-WITHOUT    : W I T H O U T;
+WITHOUT : W I T H O U T;
 WITH    : W I T H ;
 TAG     : T A G ;
-DATA     : D A T A ;
+DATA    : D A T A ;
+ITEM    : I T E M ;
 HASHTAG : '#' ;
 
 // ROUND ROBIN
