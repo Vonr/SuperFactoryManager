@@ -71,7 +71,7 @@ withClause  : LPAREN withClause RPAREN          # WithParen
 
 tagMatcher: identifier (COLON identifier (SLASH identifier)+)?;
 
-//dataCondition: ; // TODO: implement some kind of pattern matching
+//dataCondition: ;
 
 
 sidequalifier   : EACH SIDE                 #EachSide
