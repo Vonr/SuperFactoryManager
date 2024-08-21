@@ -1,12 +1,14 @@
 package ca.teamdman.sfml.ast;
 
 import net.minecraft.core.Direction;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
-public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNode {
+public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNode, Iterable<Direction> {
 
     public static final DirectionQualifier NULL_DIRECTION = new DirectionQualifier(EnumSet.noneOf(Direction.class));
     public static final DirectionQualifier EVERY_DIRECTION = new DirectionQualifier(EnumSet.allOf(Direction.class));
@@ -39,5 +41,10 @@ public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNo
             return Stream.concat(directions.stream(), Stream.<Direction>builder().add(null).build());
         if (directions.isEmpty()) return Stream.<Direction>builder().add(null).build();
         return directions.stream();
+    }
+
+    @Override
+    public @NotNull Iterator<Direction> iterator() {
+        return stream().iterator();
     }
 }

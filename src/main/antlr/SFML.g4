@@ -25,38 +25,54 @@ interval: TICK             #Tick
 //
 
 block           : statement* ;
-statement       : inputstatement    #InputStatementStatement
-                | outputstatement   #OutputStatementStatement
-                | ifstatement       #IfStatementStatement
-                | forgetstatement   #ForgetStatementStatement
+statement       : inputStatement
+                | outputStatement
+                | ifStatement
+                | forgetStatement
                 ;
 
 // IO STATEMENT
-forgetstatement : FORGET label? (COMMA label)* COMMA?;
-inputstatement  : INPUT inputmatchers? resourceexclusion? FROM EACH? labelaccess
-                | FROM EACH? labelaccess INPUT inputmatchers? resourceexclusion?
+forgetStatement : FORGET label? (COMMA label)* COMMA?;
+inputStatement  : INPUT inputResourceLimits? resourceExclusion? FROM EACH? labelAccess
+                | FROM EACH? labelAccess INPUT inputResourceLimits? resourceExclusion?
                 ;
-outputstatement : OUTPUT outputmatchers? resourceexclusion? TO EACH? labelaccess
-                | TO EACH? labelaccess OUTPUT outputmatchers? resourceexclusion?
-                ;
-inputmatchers   : movement; // separate for different defaults
-outputmatchers  : movement; // separate for different defaults
-
-movement        : resourcelimit (COMMA resourcelimit)* COMMA?    #ResourceLimitMovement
-                | limit                                          #LimitMovement
+outputStatement : OUTPUT outputResourceLimits? resourceExclusion? TO EACH? labelAccess
+                | TO EACH? labelAccess OUTPUT outputResourceLimits? resourceExclusion?
                 ;
 
-resourceexclusion       : EXCEPT resourceid (COMMA resourceid)* COMMA?;
+resourceExclusion       : EXCEPT resourceId (COMMA resourceId)* COMMA?;
+        // TODO: support `EXCEPT TAG minecraft:mineable/shovel` syntax
 
-resourcelimit   : limit? resourceid;
 
+inputResourceLimits   : resourceLimits; // separate for different defaults
+outputResourceLimits  : resourceLimits; // separate for different defaults
+resourceLimits  : resourceLimit (COMMA resourceLimit)* COMMA?;
+resourceLimit   : limit? resourceId with?
+                | limit with?
+                | with
+                ;
 limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
                 | quantity              #QuantityLimit
                 ;
-
 quantity        : number EACH?;
 retention       : RETAIN number EACH?;
+
+with        : WITH withClause
+            | WITHOUT withClause
+            ;
+withClause  : LPAREN withClause RPAREN          # WithParen
+            | NOT withClause                    # WithNegation
+            | withClause AND withClause         # WithConjunction
+            | withClause OR withClause          # WithDisjunction
+            | (TAG|HASHTAG) tagMatcher          # WithTag
+//            | DATA dataCondition                # WithData
+            ;
+
+tagMatcher: identifier (COLON identifier (SLASH identifier)+)?;
+
+//dataCondition: ;
+
 
 sidequalifier   : EACH SIDE                 #EachSide
                 | side(COMMA side)* SIDE    #ListedSides
@@ -74,17 +90,17 @@ rangeset        : range (COMMA range)*;
 range           : number (DASH number)? ;
 
 
-ifstatement     : IF boolexpr THEN block (ELSE IF boolexpr THEN block)* (ELSE block)? END;
+ifStatement     : IF boolexpr THEN block (ELSE IF boolexpr THEN block)* (ELSE block)? END;
 boolexpr        : TRUE                                  #BooleanTrue
                 | FALSE                                 #BooleanFalse
                 | LPAREN boolexpr RPAREN                #BooleanParen
                 | NOT boolexpr                          #BooleanNegation
                 | boolexpr AND boolexpr                 #BooleanConjunction
                 | boolexpr OR boolexpr                  #BooleanDisjunction
-                | setOp? labelaccess HAS resourcecomparison #BooleanHas
+                | setOp? labelAccess HAS resourcecomparison #BooleanHas
                 | REDSTONE (comparisonOp number)?       #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp number resourceid? ;
+resourcecomparison : comparisonOp number resourceId? ;
 comparisonOp    : GT
                 | LT
                 | EQ
@@ -112,15 +128,17 @@ setOp           : OVERALL
 //
 // IO HELPERS
 //
-labelaccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
-roundrobin: ROUND ROBIN BY (LABEL | BLOCK);
-label           : (IDENTIFIER|REDSTONE)   #RawLabel
+labelAccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?;
+roundrobin      : ROUND ROBIN BY (LABEL | BLOCK);
+label           : (identifier)   #RawLabel
                 | string                  #StringLabel
                 ;
 
-resourceid      : (IDENTIFIER|REDSTONE) (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)? (COLON (IDENTIFIER|REDSTONE)?)?)?)? # Resource
-                | string                             # StringResource
+resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON (identifier)?)?)?)? # Resource
+                | string                                                                            # StringResource
                 ;
+
+identifier : (IDENTIFIER | REDSTONE | DATA) ;
 
 // GENERAL
 string: STRING ;
@@ -175,6 +193,14 @@ EACH    : E A C H ;
 EXCEPT  : E X C E P T ;
 FORGET  : F O R G E T ;
 
+// WITH LOGIC
+WITHOUT : W I T H O U T;
+WITH    : W I T H ;
+TAG     : T A G ;
+DATA    : D A T A ;
+ITEM    : I T E M ;
+HASHTAG : '#' ;
+
 // ROUND ROBIN
 ROUND : R O U N D ;
 ROBIN : R O B I N ;
@@ -212,6 +238,7 @@ EVERY           : E V E R Y ;
 
 COMMA   : ',';
 COLON   : ':';
+SLASH   : '/';
 DASH    : '-';
 LPAREN  : '(';
 RPAREN  : ')';

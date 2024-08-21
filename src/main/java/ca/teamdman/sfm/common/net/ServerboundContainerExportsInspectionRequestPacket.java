@@ -33,7 +33,10 @@ public record ServerboundContainerExportsInspectionRequestPacket(
         int windowId,
         BlockPos pos
 ) {
-    public static void encode(ServerboundContainerExportsInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundContainerExportsInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeVarInt(msg.windowId());
         friendlyByteBuf.writeBlockPos(msg.pos());
     }
@@ -76,7 +79,10 @@ public record ServerboundContainerExportsInspectionRequestPacket(
     }
 
 
-    public static String buildInspectionResults(Level level, BlockPos pos) {
+    public static String buildInspectionResults(
+            Level level,
+            BlockPos pos
+    ) {
         StringBuilder sb = new StringBuilder();
         Direction[] dirs = Arrays.copyOf(Direction.values(), Direction.values().length + 1);
         dirs[dirs.length - 1] = null;
@@ -156,7 +162,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                             );
                             ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
                                     resourceIdentifier,
-                                    Limit.MAX_QUANTITY_NO_RETENTION
+                                    Limit.MAX_QUANTITY_NO_RETENTION, resourceIdentifier.getDefaultWith()
                             );
                             resourceLimitList.add(resourceLimit);
                         });
