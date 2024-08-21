@@ -8,15 +8,14 @@ import mekanism.api.chemical.gas.IGasHandler;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.stream.Stream;
 
-import static net.minecraftforge.common.capabilities.CapabilityManager.get;
-
 public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
-    public static final Capability<IGasHandler> CAP = get(new CapabilityToken<>() {
+    public static final Capability<IGasHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
     });
 
     public GasResourceType() {

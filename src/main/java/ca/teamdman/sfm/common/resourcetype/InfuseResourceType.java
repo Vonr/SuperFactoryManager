@@ -8,15 +8,14 @@ import mekanism.api.chemical.infuse.InfusionStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.stream.Stream;
 
-import static net.minecraftforge.common.capabilities.CapabilityManager.get;
-
 public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, IInfusionHandler> {
-    public static final Capability<IInfusionHandler> CAP = get(new CapabilityToken<>() {
+    public static final Capability<IInfusionHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
     });
 
     public InfuseResourceType() {

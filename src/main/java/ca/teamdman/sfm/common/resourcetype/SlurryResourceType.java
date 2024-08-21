@@ -8,15 +8,14 @@ import mekanism.api.chemical.slurry.SlurryStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.stream.Stream;
 
-import static net.minecraftforge.common.capabilities.CapabilityManager.get;
-
 public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurryHandler> {
-    public static final Capability<ISlurryHandler> CAP = get(new CapabilityToken<>() {
+    public static final Capability<ISlurryHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
     });
 
     public SlurryResourceType() {

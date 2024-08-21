@@ -5,16 +5,15 @@ import mekanism.api.energy.IStrictEnergyHandler;
 import mekanism.api.math.FloatingLong;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.registries.IForgeRegistry;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.stream.Stream;
 
-import static net.minecraftforge.common.capabilities.CapabilityManager.get;
-
 public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class<FloatingLong>, IStrictEnergyHandler> {
-    public static final Capability<IStrictEnergyHandler> CAP = get(new CapabilityToken<>() {
+    public static final Capability<IStrictEnergyHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
     });
     public static final ResourceLocation REGISTRY_KEY = new ResourceLocation("mekanism", "energy");
 
