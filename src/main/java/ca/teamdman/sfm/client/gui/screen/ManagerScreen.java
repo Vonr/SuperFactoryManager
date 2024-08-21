@@ -13,6 +13,7 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -512,17 +513,25 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     @Override
     protected void renderTooltip(PoseStack pose, int mx, int my) {
-        // avoid rendering tooltips when the manager screen isn't on top
-        // this should fix the annoying Ctrl+E popup when editing
-        if (Minecraft.getInstance().screen != this) return;
+        if (Minecraft.getInstance().screen != this) {
+            // this should fix the annoying Ctrl+E popup when editing
+            this.renderables
+                    .stream()
+                    .filter(AbstractWidget.class::isInstance)
+                    .map(AbstractWidget.class::cast)
+                    .forEach(w -> w.setFocused(false));
+            return;
+        }
 
-        super.renderTooltip(pose, mx, my);
+        // 1.19.2: manually render button tooltips
         this.renderables
                 .stream()
                 .filter(ExtendedButtonWithTooltip.class::isInstance)
                 .map(ExtendedButtonWithTooltip.class::cast)
                 .forEach(x -> x.renderToolTip(pose, mx, my));
 
+        // render hovered item
+        super.renderTooltip(pose, mx, my);
     }
 
     @Override
