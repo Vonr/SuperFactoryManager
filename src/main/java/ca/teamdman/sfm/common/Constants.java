@@ -616,11 +616,11 @@ public class Constants {
         );
 
 
-        public static final LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME = new LocalizationEntry(
+        public static final LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME_MS = new LocalizationEntry(
                 "gui.sfm.manager.peak_tick_time",
                 "Peak tick time: %s ms"
         );
-        public static final LocalizationEntry MANAGER_GUI_HOVERED_TICK_TIME = new LocalizationEntry(
+        public static final LocalizationEntry MANAGER_GUI_HOVERED_TICK_TIME_MS = new LocalizationEntry(
                 "gui.sfm.manager.hovered_tick_time",
                 "Hovered tick time: %s ms"
         );
