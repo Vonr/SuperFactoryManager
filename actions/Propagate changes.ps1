@@ -110,7 +110,7 @@ D:\Repos\Minecraft\SFM\SuperFactoryManager 1.20.2 D:\Repos\Minecraft\SFM\SuperFa
             }
             
             Write-Host "`nMerging $old_git_branch -> $new_git_branch"
-            git merge FETCH_HEAD
+            git merge FETCH_HEAD --no-edit
             if ($? -eq $false) {
                 Write-Warning "Failed to merge $old_git_branch into $new_git_branch"
                 return
