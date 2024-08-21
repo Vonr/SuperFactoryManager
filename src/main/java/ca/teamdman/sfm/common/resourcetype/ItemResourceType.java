@@ -95,7 +95,7 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
 
         // Get item tags
         //noinspection deprecation
-        Stream<TagKey<Item>> itemTagKeys = itemStack.getItem().builtInRegistryHolder().getTagKeys();
+        Stream<TagKey<Item>> itemTagKeys = itemStack.getItem().builtInRegistryHolder().tags();
 
         // Return union
         return Stream.concat(itemTagKeys, blockTagKeys).map(TagKey::location);
