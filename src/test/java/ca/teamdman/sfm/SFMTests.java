@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
@@ -17,8 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SFMTests {
     @Test
@@ -72,5 +72,42 @@ public class SFMTests {
         map.put(123L, "hi");
         assertEquals("hi", map.get(123L));
         assertNull(map.get(124L));
+    }
+
+    @Test
+    public void testTagMatcher() {
+        TagMatcher matcher = TagMatcher.fromNamespaceAndPath("namespace", "path");
+        assertTrue(matcher.test("namespace:path"));
+        assertFalse(matcher.test("namespace:other"));
+        assertFalse(matcher.test("whatever:path"));
+        assertFalse(matcher.test("something:here"));
+        assertFalse(matcher.test(":"));
+        assertFalse(matcher.test(":path"));
+        assertFalse(matcher.test("namespace:"));
+    }
+    @Test
+    public void testTagMatcherPattern() {
+        TagMatcher matcher = TagMatcher.fromNamespaceAndPath("forge", ".*");
+        assertTrue(matcher.test("forge:path"));
+        assertTrue(matcher.test("forge:idk"));
+        assertTrue(matcher.test("forge:something"));
+        assertFalse(matcher.test("forge:who/knows"));
+    }
+
+    @Test
+    public void testTagMatcherDeepPattern() {
+        TagMatcher matcher = TagMatcher.fromNamespaceAndPath("forge", ".*.*");
+        assertTrue(matcher.test("forge:path"));
+        assertTrue(matcher.test("forge:idk"));
+        assertTrue(matcher.test("forge:something"));
+        assertTrue(matcher.test("forge:who/knows"));
+        assertTrue(matcher.test("forge:who/knows/what"));
+        assertFalse(matcher.test("namespace:path"));
+        assertFalse(matcher.test("namespace:other"));
+        assertFalse(matcher.test("whatever:path"));
+        assertFalse(matcher.test("something:here"));
+        assertFalse(matcher.test(":"));
+        assertFalse(matcher.test(":path"));
+        assertFalse(matcher.test("namespace:"));
     }
 }
