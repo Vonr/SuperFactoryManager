@@ -69,7 +69,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract long getMaxStackSize(STACK stack);
 
-    public abstract long getMaxStackSize(
+    public abstract long getMaxStackSizeForSlot(
             CAP cap,
             int slot
     );
