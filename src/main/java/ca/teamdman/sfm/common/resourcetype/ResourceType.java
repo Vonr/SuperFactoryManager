@@ -17,7 +17,10 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.capabilities.Capability;
 import net.neoforged.neoforge.common.util.LazyOptional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
@@ -127,7 +130,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             Label label = pair.getFirst();
             BlockPos pos = pair.getSecond();
             // Expand pos to (pos, direction) pairs
-            for (Direction dir : (Iterable<? extends Direction>) labelAccess.directions().stream()::iterator) {
+            for (Direction dir : labelAccess.directions()) {
                 // Get capability from the network
                 Optional<CAP> maybeCap = network
                         .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger())
@@ -155,6 +158,8 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             }
         }
     }
+
+    public abstract Stream<ResourceLocation> getTagsForStack(STACK stack);
 
     public Stream<STACK> getStacksInSlots(
             CAP cap,

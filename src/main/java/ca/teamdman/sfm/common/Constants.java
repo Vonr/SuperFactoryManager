@@ -748,6 +748,10 @@ public class Constants {
                 "key.sfm.container_inspector.activation_key",
                 "Toggle Container Inspector"
         );
+        public static final LocalizationEntry ITEM_INSPECTOR_TOGGLE_KEY = new LocalizationEntry(
+                "key.sfm.item_inspector.activation_key",
+                "(WIP) Copy Hovered Item NBT To Clipboard"
+        );
 
         public static final LocalizationEntry SFM_KEY_CATEGORY = new LocalizationEntry(
                 "key.categories.sfm",

@@ -28,6 +28,8 @@ import java.util.stream.Stream;
 
 public class SFMUtils {
 
+    public static final int MAX_TRANSLATION_ELEMENT_LENGTH = 10240;
+
     /**
      * Gets a stream using a self-feeding mapping function. Prevents the
      * re-traversal of elements that have been visited before.
@@ -39,7 +41,8 @@ public class SFMUtils {
      * @return Stream result after termination of the recursive mapping process
      */
     public static <T> Stream<T> getRecursiveStream(
-            RecursiveBuilder<T> operator, T first
+            RecursiveBuilder<T> operator,
+            T first
     ) {
         Stream.Builder<T> builder = Stream.builder();
         Set<T> debounce = new HashSet<>();
@@ -80,9 +83,10 @@ public class SFMUtils {
         return tag;
     }
 
-    public static final int MAX_TRANSLATION_ELEMENT_LENGTH = 10240;
-
-    public static void encodeTranslation(TranslatableContents contents, FriendlyByteBuf buf) {
+    public static void encodeTranslation(
+            TranslatableContents contents,
+            FriendlyByteBuf buf
+    ) {
         buf.writeUtf(contents.getKey(), MAX_TRANSLATION_ELEMENT_LENGTH);
         buf.writeVarInt(contents.getArgs().length);
         for (var arg : contents.getArgs()) {
@@ -113,6 +117,7 @@ public class SFMUtils {
     public static TranslatableContents getTranslatableContents(String key) {
         return getTranslatableContents(key, new Object[]{});
     }
+
     public static <STACK, ITEM, CAP> Optional<InputStatement> getInputStatementForSlot(
             LimitedInputSlot<STACK, ITEM, CAP> slot,
             LabelAccess labelAccess
@@ -150,13 +155,6 @@ public class SFMUtils {
                         RoundRobin.disabled()
                 ), inputStatement.resourceLimits(), inputStatement.each()));
     }
-
-
-    public interface RecursiveBuilder<T> {
-
-        void accept(T current, Consumer<T> next, Consumer<T> results);
-    }
-
 
     public static <STACK, ITEM, CAP> InputStatement getInputStatementForStack(
             ResourceKey<ResourceType<STACK, ITEM, CAP>> resourceTypeResourceKey,
@@ -196,12 +194,16 @@ public class SFMUtils {
                 stackId.getPath()
         );
         ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
-                resourceIdentifier, limit
+                resourceIdentifier,
+                limit,
+                resourceIdentifier.getDefaultWith()
         );
         ResourceLimits resourceLimits = new ResourceLimits(
                 List.of(resourceLimit),
                 ResourceIdSet.EMPTY
         );
+
+        // todo: add WITH logic here to also build code to match any item/block tags present
         return new InputStatement(
                 labelAccess,
                 resourceLimits,
@@ -209,7 +211,10 @@ public class SFMUtils {
         );
     }
 
-    public static String truncate(String input, int maxLength) {
+    public static String truncate(
+            String input,
+            int maxLength
+    ) {
         if (input.length() > maxLength) {
             SFM.LOGGER.warn(
                     "input too big, truncation has occurred! (len={}, max={}, over={})",
@@ -228,7 +233,10 @@ public class SFMUtils {
      * If multiple {@link CapabilityProviderMapper}s match, the first one is returned.
      */
     @SuppressWarnings("UnstableApiUsage") // for the javadoc lol
-    public static Optional<ICapabilityProvider> discoverCapabilityProvider(Level level, BlockPos pos) {
+    public static Optional<ICapabilityProvider> discoverCapabilityProvider(
+            Level level,
+            BlockPos pos
+    ) {
         if (!level.isLoaded(pos)) return Optional.empty();
         return SFMCapabilityProviderMappers.DEFERRED_MAPPERS
                 .stream()
@@ -249,5 +257,14 @@ public class SFMUtils {
             }
         }
         return builder.build();
+    }
+
+    public interface RecursiveBuilder<T> {
+
+        void accept(
+                T current,
+                Consumer<T> next,
+                Consumer<T> results
+        );
     }
 }

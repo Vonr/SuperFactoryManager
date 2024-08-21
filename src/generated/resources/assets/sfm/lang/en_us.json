@@ -97,6 +97,7 @@
   "item_group.sfm.main": "Super Factory Manager",
   "key.categories.sfm": "Super Factory Manager",
   "key.sfm.container_inspector.activation_key": "Toggle Container Inspector",
+  "key.sfm.item_inspector.activation_key": "(WIP) Copy Hovered Item NBT To Clipboard",
   "key.sfm.more_info": "Show More Item Hover Info",
   "log.sfm.cable_network.body": "%s",
   "log.sfm.cable_network.footer": "=============================",
