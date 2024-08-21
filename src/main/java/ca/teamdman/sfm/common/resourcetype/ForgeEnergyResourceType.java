@@ -6,7 +6,11 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.util.stream.Stream;
+
 public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer>, IEnergyStorage> {
+    public static final ResourceLocation REGISTRY_KEY = new ResourceLocation("forge", "energy");
+
     public ForgeEnergyResourceType() {
         super(Capabilities.EnergyStorage.BLOCK);
     }
@@ -17,14 +21,27 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public Integer getStackInSlot(IEnergyStorage iEnergyStorage, int slot) {
+    public Integer getStackInSlot(
+            IEnergyStorage iEnergyStorage,
+            int slot
+    ) {
         return iEnergyStorage.getEnergyStored();
     }
 
     @Override
-    public Integer extract(IEnergyStorage iEnergyStorage, int slot, long amount, boolean simulate) {
+    public Integer extract(
+            IEnergyStorage iEnergyStorage,
+            int slot,
+            long amount,
+            boolean simulate
+    ) {
         int finalAmount = amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
         return iEnergyStorage.extractEnergy(finalAmount, simulate);
+    }
+
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(Integer integer) {
+        return Stream.empty();
     }
 
     @Override
@@ -38,7 +55,10 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public long getMaxStackSize(IEnergyStorage iEnergyStorage, int slot) {
+    public long getMaxStackSize(
+            IEnergyStorage iEnergyStorage,
+            int slot
+    ) {
         int maxStackSize = iEnergyStorage.getMaxEnergyStored();
         if (maxStackSize == Integer.MAX_VALUE) {
             return Long.MAX_VALUE;
@@ -47,7 +67,12 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public Integer insert(IEnergyStorage iEnergyStorage, int slot, Integer stack, boolean simulate) {
+    public Integer insert(
+            IEnergyStorage iEnergyStorage,
+            int slot,
+            Integer stack,
+            boolean simulate
+    ) {
         int accepted = iEnergyStorage.receiveEnergy(stack, simulate);
         return stack - accepted;
     }
@@ -71,8 +96,6 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     public Integer getEmptyStack() {
         return 0;
     }
-
-    public static final ResourceLocation REGISTRY_KEY = new ResourceLocation("forge", "energy");
 
     @Override
     public ResourceLocation getRegistryKey(Integer stack) {
@@ -100,7 +123,10 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    protected Integer setCount(Integer stack, long amount) {
+    protected Integer setCount(
+            Integer stack,
+            long amount
+    ) {
         return amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
     }
 }

@@ -96,7 +96,10 @@ public record ServerboundOutputInspectionRequestPacket(
                                         outputStatement
                                 );
 
-                                SFM.LOGGER.debug("Sending packet with length {}", payload.length());
+                                SFM.LOGGER.debug(
+                                        "Sending output inspection results packet with length {}",
+                                        payload.length()
+                                );
                                 PacketDistributor.PLAYER.with(player).send(
                                         new ClientboundOutputInspectionResultsPacket(payload.toString().strip())
                                 );
@@ -112,7 +115,9 @@ public record ServerboundOutputInspectionRequestPacket(
     }
 
     public static String getOutputStatementInspectionResultsString(
-            ManagerBlockEntity manager, Program successProgram, OutputStatement outputStatement
+            ManagerBlockEntity manager,
+            Program successProgram,
+            OutputStatement outputStatement
     ) {
         StringBuilder payload = new StringBuilder();
         payload.append(outputStatement.toStringPretty()).append("\n");
@@ -328,7 +333,8 @@ public record ServerboundOutputInspectionRequestPacket(
         );
         return new ResourceLimit<>(
                 resourceIdentifier,
-                amountLimit
+                amountLimit,
+                resourceIdentifier.getDefaultWith()
         );
     }
 }
