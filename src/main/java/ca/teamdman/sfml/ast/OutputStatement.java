@@ -490,7 +490,7 @@ public class OutputStatement implements IOStatement {
                                             finalSlot,
                                             type.getAmount(stack)
                                             + " of "
-                                            + type.getMaxStackSize(capability, finalSlot)
+                                            + type.getMaxStackSizeForSlot(capability, finalSlot)
                                             + " "
                                             + type.getItem(stack)
                                     )));
@@ -515,6 +515,6 @@ public class OutputStatement implements IOStatement {
         // we check the stack limit on the capability
         // this is to accommodate drawers/bins/barrels/black hole units/whatever
         // those blocks hold many more items than normal in a single stack
-        return type.getAmount(stack) < type.getMaxStackSize(cap, slot);
+        return type.getAmount(stack) < type.getMaxStackSizeForSlot(cap, slot);
     }
 }
