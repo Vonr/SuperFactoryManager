@@ -101,7 +101,10 @@ public record ServerboundOutputInspectionRequestPacket(
                                     outputStatement
                             );
 
-                            SFM.LOGGER.debug("Sending packet with length {}", payload.length());
+                            SFM.LOGGER.debug(
+                                    "Sending output inspection results packet with length {}",
+                                    payload.length()
+                            );
                             PacketDistributor.sendToPlayer(
                                     player,
                                     new ClientboundOutputInspectionResultsPacket(payload.toString().strip())
@@ -336,7 +339,8 @@ public record ServerboundOutputInspectionRequestPacket(
         );
         return new ResourceLimit<>(
                 resourceIdentifier,
-                amountLimit
+                amountLimit,
+                resourceIdentifier.getDefaultWith()
         );
     }
 }

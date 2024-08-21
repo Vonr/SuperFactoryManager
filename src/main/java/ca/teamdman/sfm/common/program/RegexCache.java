@@ -31,7 +31,7 @@ public class RegexCache {
     public static Predicate<String> buildPredicate(String possiblePattern) {
         return isRegexPattern(possiblePattern)
                ? patternCache.computeIfAbsent(possiblePattern, RegexCache::getPredicateFromRegex)
-               : possiblePattern::equals;
+               : possiblePattern::equalsIgnoreCase;
     }
 
     private static Predicate<String> getPredicateFromRegex(String x) {

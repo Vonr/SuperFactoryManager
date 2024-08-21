@@ -208,12 +208,16 @@ public class SFMUtils {
                 stackId.getPath()
         );
         ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
-                resourceIdentifier, limit
+                resourceIdentifier,
+                limit,
+                resourceIdentifier.getDefaultWith()
         );
         ResourceLimits resourceLimits = new ResourceLimits(
                 List.of(resourceLimit),
                 ResourceIdSet.EMPTY
         );
+
+        // todo: add WITH logic here to also build code to match any item/block tags present
         return new InputStatement(
                 labelAccess,
                 resourceLimits,

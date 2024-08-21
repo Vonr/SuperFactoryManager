@@ -178,7 +178,8 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                     );
                     ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
                             resourceIdentifier,
-                            Limit.MAX_QUANTITY_NO_RETENTION
+                            Limit.MAX_QUANTITY_NO_RETENTION,
+                            resourceIdentifier.getDefaultWith()
                     );
                     resourceLimitList.add(resourceLimit);
                 });

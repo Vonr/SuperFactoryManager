@@ -176,6 +176,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         return resourceTypeCache;
     }
 
+    public With<STACK> getDefaultWith() {
+        return With.alwaysTrue();
+    }
+
     @Override
     public String toString() {
         return resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;

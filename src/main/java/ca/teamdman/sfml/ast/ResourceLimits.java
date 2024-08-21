@@ -25,8 +25,8 @@ public record ResourceLimits(
         return rtn;
     }
 
-    public ResourceLimits withDefaults(Limit limit) {
-        return new ResourceLimits(resourceLimits.stream().map(il -> il.withDefaults(limit)).toList(), exclusions);
+    public ResourceLimits withDefaultLimit(Limit limit) {
+        return new ResourceLimits(resourceLimits.stream().map(il -> il.withDefaultLimit(limit)).toList(), exclusions);
     }
 
     public ResourceLimits withExclusions(ResourceIdSet exclusions) {

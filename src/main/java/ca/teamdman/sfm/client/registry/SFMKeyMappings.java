@@ -35,9 +35,20 @@ public class SFMKeyMappings {
             Constants.LocalizationKeys.SFM_KEY_CATEGORY.key().get()
     ));
 
+    public static final Lazy<KeyMapping> ITEM_INSPECTOR_KEY = Lazy.of(() -> new KeyMapping(
+            Constants.LocalizationKeys.ITEM_INSPECTOR_TOGGLE_KEY.key().get(),
+            KeyConflictContext.GUI,
+            KeyModifier.NONE,
+            InputConstants.Type.KEYSYM,
+//            GLFW.GLFW_KEY_GRAVE_ACCENT,
+            InputConstants.UNKNOWN.getValue(),
+            Constants.LocalizationKeys.SFM_KEY_CATEGORY.key().get()
+    ));
+
     @SubscribeEvent
     public static void registerBindings(RegisterKeyMappingsEvent event) {
         event.register(MORE_INFO_TOOLTIP_KEY.get());
         event.register(CONTAINER_INSPECTOR_KEY.get());
+        event.register(ITEM_INSPECTOR_KEY.get());
     }
 }

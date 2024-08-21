@@ -2,6 +2,7 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.program.InputResourceTracker;
 import ca.teamdman.sfm.common.program.OutputResourceTracker;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -12,24 +13,34 @@ import static ca.teamdman.sfml.ast.ResourceQuantity.IdExpansionBehaviour.NO_EXPA
 
 public record ResourceLimit<STACK, ITEM, CAP>(
         ResourceIdentifier<STACK, ITEM, CAP> resourceId,
-        Limit limit
+        Limit limit,
+        With<STACK> with
 ) implements ASTNode, Predicate<Object> {
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static final ResourceLimit<?, ?, ?> TAKE_ALL_LEAVE_NONE = new ResourceLimit<>(
-            ResourceIdentifier.MATCH_ALL, Limit.MAX_QUANTITY_NO_RETENTION
+            (ResourceIdentifier) ResourceIdentifier.MATCH_ALL,
+            Limit.MAX_QUANTITY_NO_RETENTION,
+            With.ALWAYS_TRUE
     );
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static final ResourceLimit<?, ?, ?> ACCEPT_ALL_WITHOUT_RESTRAINT = new ResourceLimit<>(
-            ResourceIdentifier.MATCH_ALL, Limit.MAX_QUANTITY_MAX_RETENTION
+            (ResourceIdentifier) ResourceIdentifier.MATCH_ALL,
+            Limit.MAX_QUANTITY_MAX_RETENTION,
+            With.ALWAYS_TRUE
     );
 
-    public ResourceLimit<STACK, ITEM, CAP> withDefaults(Limit defaults) {
-        return new ResourceLimit<>(resourceId, limit.withDefaults(defaults));
+    public ResourceLimit<STACK, ITEM, CAP> withDefaultLimit(Limit defaults) {
+        return new ResourceLimit<>(resourceId, limit.withDefaults(defaults), with);
     }
 
     public ResourceLimit<STACK, ITEM, CAP> withLimit(Limit limit) {
-        return new ResourceLimit<>(resourceId, limit);
+        return new ResourceLimit<>(resourceId, limit, with);
     }
 
-    public void gatherInputTrackers(Consumer<InputResourceTracker<?, ?, ?>> gatherer, ResourceIdSet exclusions) {
+    public void gatherInputTrackers(
+            Consumer<InputResourceTracker<?, ?, ?>> gatherer,
+            ResourceIdSet exclusions
+    ) {
         if (limit.quantity().idExpansionBehaviour() == NO_EXPAND) {
             if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
                 // no sharing, single tracker
@@ -46,7 +57,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 quantity,
                                 new AtomicLong(0)
@@ -60,7 +71,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 new AtomicLong(0),
                                 retention
@@ -70,7 +81,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 new AtomicLong(0),
                                 new AtomicLong(0)
@@ -79,7 +90,10 @@ public record ResourceLimit<STACK, ITEM, CAP>(
         }
     }
 
-    public void gatherOutputTrackers(Consumer<OutputResourceTracker<?, ?, ?>> gatherer, ResourceIdSet exclusions) {
+    public void gatherOutputTrackers(
+            Consumer<OutputResourceTracker<?, ?, ?>> gatherer,
+            ResourceIdSet exclusions
+    ) {
         if (limit.quantity().idExpansionBehaviour() == NO_EXPAND) {
             if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
                 // single tracker
@@ -90,7 +104,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 quantity,
                                 new AtomicLong(0)
@@ -103,7 +117,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 new AtomicLong(0),
                                 retained
@@ -113,7 +127,7 @@ public record ResourceLimit<STACK, ITEM, CAP>(
                 resourceId
                         .expand()
                         .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit),
+                                new ResourceLimit<>(rid, limit, with),
                                 exclusions,
                                 new AtomicLong(0),
                                 new AtomicLong(0)
@@ -122,17 +136,39 @@ public record ResourceLimit<STACK, ITEM, CAP>(
         }
     }
 
+    @SuppressWarnings("RedundantIfStatement")
     @Override
-    public boolean test(Object stack) {
-        return resourceId.test(stack);
+    public boolean test(Object obj) {
+        // ensure the object is a stack matching the id pattern
+        if (!resourceId.test(obj)) {
+            return false;
+        }
+
+        // the resource id validation performs the necessary checks
+        @SuppressWarnings("unchecked")
+        STACK stack = (STACK) obj;
+        ResourceType<STACK, ITEM, CAP> resourceType = resourceId().getResourceType();
+        assert resourceType != null;
+
+        // ensure the stack meets the with condition
+        if (!with.test(resourceType, stack)) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public String toString() {
-        return limit + " " + resourceId;
+        return limit + " " + resourceId + (with == With.ALWAYS_TRUE ? "" : " WITH " + with);
     }
 
     public String toStringCondensed(Limit defaults) {
-        return (limit.toStringCondensed(defaults) + " " + resourceId.toStringCondensed()).trim();
+        return (
+                limit.toStringCondensed(defaults) + " " + resourceId.toStringCondensed() + (
+                        with == With.ALWAYS_TRUE
+                        ? ""
+                        : " WITH " + with
+                )
+        ).trim();
     }
 }

@@ -14,6 +14,8 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -128,11 +130,29 @@ public class ContainerScreenInspectorHandler {
 
     @SubscribeEvent
     public static void onKeyDown(ScreenEvent.KeyPressed.Pre event) {
+        // Handle Ctrl+I hotkey to toggle overlay
         var toggleKey = SFMKeyMappings.CONTAINER_INSPECTOR_KEY.get();
         var toggleKeyPressed = toggleKey.isActiveAndMatches(InputConstants.Type.KEYSYM.getOrCreate(event.getKeyCode()));
         if (toggleKeyPressed) {
             visible = !visible;
             event.setCanceled(true);
+            return;
+        }
+
+        // Handle ~ hotkey to inspect hovered item
+        var activateKey = SFMKeyMappings.ITEM_INSPECTOR_KEY.get();
+        var activateKeyPressed = activateKey.isActiveAndMatches(InputConstants.Type.KEYSYM.getOrCreate(event.getKeyCode()));
+        if (activateKeyPressed) {
+            // This doesn't work when activated hovering a JEI item.
+            if (event.getScreen() instanceof AbstractContainerScreen<?> acs) {
+                Slot hoveredSlot = acs.hoveredSlot;
+                if (hoveredSlot != null) {
+                    ItemStack hoveredStack = hoveredSlot.getItem();
+                    if (!hoveredStack.isEmpty()) {
+                        ClientStuff.showItemInspectorScreen(hoveredStack);
+                    }
+                }
+            }
         }
     }
 }

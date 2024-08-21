@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -134,5 +135,14 @@ public class ClientStuff {
 
     public static String resolveTranslation(TranslatableContents contents) {
         return I18n.get(contents.getKey(), contents.getArgs());
+    }
+
+    public static void showItemInspectorScreen(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        if (tag != null) {
+            String content = tag.toString();
+            Minecraft.getInstance().keyboardHandler.setClipboard(content);
+            SFM.LOGGER.info("Copied {} characters to clipboard", content.length());
+        }
     }
 }
