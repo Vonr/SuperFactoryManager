@@ -29,7 +29,7 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
         try {
             Push-Location $repo
             idea . &
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 3
         } finally {
             Pop-Location
         }

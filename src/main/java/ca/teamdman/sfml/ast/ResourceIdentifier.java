@@ -111,6 +111,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         }
     }
 
+    @Override
     public boolean test(Object other) {
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
         return resourceType != null && resourceType.matchesStack(this, other);
@@ -173,6 +174,10 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             ));
         }
         return resourceTypeCache;
+    }
+
+    public With<STACK> getDefaultWith() {
+        return With.alwaysTrue();
     }
 
     @Override

@@ -83,10 +83,10 @@ public record Program(
                 errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
             } catch (Throwable t) {
                 errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
-                SFM.LOGGER.error(
-                        "Encountered unhandled error \"{}\" while compiling program\n```\n{}\n```",
-                        t,
-                        programString
+                SFM.LOGGER.warn(
+                        "Encountered unhandled error while compiling program\n```\n{}\n```",
+                        programString,
+                        t
                 );
                 if (!FMLEnvironment.production) {
                     var message = t.getMessage();

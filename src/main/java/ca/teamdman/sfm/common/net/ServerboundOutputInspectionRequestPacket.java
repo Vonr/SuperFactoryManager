@@ -33,7 +33,10 @@ public record ServerboundOutputInspectionRequestPacket(
         String programString,
         int outputNodeIndex
 ) {
-    public static void encode(ServerboundOutputInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundOutputInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
         friendlyByteBuf.writeInt(msg.outputNodeIndex());
     }
@@ -82,7 +85,10 @@ public record ServerboundOutputInspectionRequestPacket(
                                         successProgram,
                                         outputStatement
                                 );
-                                SFM.LOGGER.debug("Sending output inspection results packet with length {}", payload.length());
+                                SFM.LOGGER.debug(
+                                        "Sending output inspection results packet with length {}",
+                                        payload.length()
+                                );
                                 SFMPackets.INSPECTION_CHANNEL.send(
                                         PacketDistributor.PLAYER.with(() -> player),
                                         new ClientboundOutputInspectionResultsPacket(payload)
@@ -101,7 +107,9 @@ public record ServerboundOutputInspectionRequestPacket(
     }
 
     public static String getOutputStatementInspectionResultsString(
-            ManagerBlockEntity manager, Program successProgram, OutputStatement outputStatement
+            ManagerBlockEntity manager,
+            Program successProgram,
+            OutputStatement outputStatement
     ) {
         StringBuilder payload = new StringBuilder();
         payload.append(outputStatement.toStringPretty()).append("\n");
@@ -317,7 +325,8 @@ public record ServerboundOutputInspectionRequestPacket(
         );
         return new ResourceLimit<>(
                 resourceIdentifier,
-                amountLimit
+                amountLimit,
+                resourceIdentifier.getDefaultWith()
         );
     }
 }
