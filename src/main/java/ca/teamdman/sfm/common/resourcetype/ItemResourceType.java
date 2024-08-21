@@ -109,7 +109,7 @@ public class ItemResourceType extends ResourceType<ItemStack, Item, IItemHandler
     }
 
     @Override
-    public long getMaxStackSize(
+    public long getMaxStackSizeForSlot(
             IItemHandler handler,
             int slot
     ) {

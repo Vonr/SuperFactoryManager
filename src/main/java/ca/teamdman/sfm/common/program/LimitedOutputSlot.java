@@ -46,7 +46,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         }
         STACK stack = getStackInSlot();
         long count = type.getAmount(stack);
-        if (count >= type.getMaxStackSize(handler, slot)) {
+        if (count >= type.getMaxStackSizeForSlot(handler, slot)) {
             return true;
         }
         return count != 0 && !tracker.test(stack);
