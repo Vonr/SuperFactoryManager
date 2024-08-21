@@ -381,14 +381,17 @@ public class OutputStatement implements IOStatement {
         }
     }
 
+    @Override
     public LabelAccess labelAccess() {
         return labelAccess;
     }
 
+    @Override
     public ResourceLimits resourceLimits() {
         return resourceLimits;
     }
 
+    @Override
     public boolean each() {
         return each;
     }
