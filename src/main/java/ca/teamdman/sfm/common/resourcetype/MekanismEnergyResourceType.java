@@ -64,7 +64,7 @@ public class MekanismEnergyResourceType extends ResourceType<FloatingLong, Class
     }
 
     @Override
-    public long getMaxStackSize(
+    public long getMaxStackSizeForSlot(
             IStrictEnergyHandler storage,
             int slot
     ) {

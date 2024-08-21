@@ -57,7 +57,7 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     }
 
     @Override
-    public long getMaxStackSize(
+    public long getMaxStackSizeForSlot(
             IInfusionHandler handler,
             int slot
     ) {

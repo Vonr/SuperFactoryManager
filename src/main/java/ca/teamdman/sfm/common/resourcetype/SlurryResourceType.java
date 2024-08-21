@@ -57,7 +57,7 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    public long getMaxStackSize(
+    public long getMaxStackSizeForSlot(
             ISlurryHandler handler,
             int slot
     ) {
