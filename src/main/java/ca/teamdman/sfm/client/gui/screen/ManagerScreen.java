@@ -6,7 +6,10 @@ import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.net.*;
+import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -57,7 +60,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton rebuildButton;
 
-    public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
+    public ManagerScreen(
+            ManagerContainerMenu menu,
+            Inventory inv,
+            Component title
+    ) {
         super(menu, inv, title);
     }
 
@@ -86,6 +93,58 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         clipboardPasteButton.visible = diskPresent && !isReadOnly();
         resetButton.visible = diskPresent && !isReadOnly();
         editButton.visible = diskPresent && !isReadOnly();
+    }
+
+    @Override
+    public boolean keyPressed(
+            int pKeyCode,
+            int pScanCode,
+            int pModifiers
+    ) {
+        if (Screen.isPaste(pKeyCode) && clipboardPasteButton.visible) {
+            onClipboardPasteButtonClicked();
+            return true;
+        } else if (Screen.isCopy(pKeyCode) && clipboardCopyButton.visible) {
+            onClipboardCopyButtonClicked();
+            return true;
+        } else if (pKeyCode == GLFW.GLFW_KEY_E
+                   && Screen.hasControlDown()
+                   && Screen.hasShiftDown()
+                   && examplesButton.visible) {
+            onExamplesButtonClicked();
+            return true;
+        } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown() && editButton.visible) {
+            onEditButtonClicked();
+            return true;
+        }
+        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
+    }
+
+    public ChatFormatting getMillisecondColour(float ms) {
+        if (ms <= 5) {
+            return ChatFormatting.GREEN;
+        } else if (ms <= 15) {
+            return ChatFormatting.YELLOW;
+        } else {
+            return ChatFormatting.RED;
+        }
+    }
+
+    @Override
+    public void render(
+            PoseStack poseStack,
+            int mx,
+            int my,
+            float partialTicks
+    ) {
+        this.renderBackground(poseStack);
+        super.render(poseStack, mx, my, partialTicks);
+        this.renderTooltip(poseStack, mx, my);
+
+        updateVisibilities();
+
+        // update status countdown
+        statusCountdown -= partialTicks;
     }
 
     private Button.OnTooltip buildTooltip(LocalizationEntry entry) {
@@ -300,28 +359,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
-    public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
-        if (Screen.isPaste(pKeyCode) && clipboardPasteButton.visible) {
-            onClipboardPasteButtonClicked();
-            return true;
-        } else if (Screen.isCopy(pKeyCode) && clipboardCopyButton.visible) {
-            onClipboardCopyButtonClicked();
-            return true;
-        } else if (pKeyCode == GLFW.GLFW_KEY_E
-                   && Screen.hasControlDown()
-                   && Screen.hasShiftDown()
-                   && examplesButton.visible) {
-            onExamplesButtonClicked();
-            return true;
-        } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown() && editButton.visible) {
-            onEditButtonClicked();
-            return true;
-        }
-        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
-    }
-
-    @Override
-    protected void renderLabels(PoseStack poseStack, int mx, int my) {
+    protected void renderLabels(
+            PoseStack poseStack,
+            int mx,
+            int my
+    ) {
         // draw title
         super.renderLabels(poseStack, mx, my);
 
@@ -489,30 +531,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         RenderSystem.enableTexture();
     }
 
-    public ChatFormatting getMillisecondColour(float ms) {
-        if (ms <= 5) {
-            return ChatFormatting.GREEN;
-        } else if (ms <= 15) {
-            return ChatFormatting.YELLOW;
-        } else {
-            return ChatFormatting.RED;
-        }
-    }
-
     @Override
-    public void render(PoseStack poseStack, int mx, int my, float partialTicks) {
-        this.renderBackground(poseStack);
-        super.render(poseStack, mx, my, partialTicks);
-        this.renderTooltip(poseStack, mx, my);
-
-        updateVisibilities();
-
-        // update status countdown
-        statusCountdown -= partialTicks;
-    }
-
-    @Override
-    protected void renderTooltip(PoseStack pose, int mx, int my) {
+    protected void renderTooltip(
+            PoseStack pose,
+            int mx,
+            int my
+    ) {
         if (Minecraft.getInstance().screen != this) {
             // this should fix the annoying Ctrl+E popup when editing
             this.renderables
@@ -535,7 +559,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int mx, int my) {
+    protected void renderBg(
+            PoseStack matrixStack,
+            float partialTicks,
+            int mx,
+            int my
+    ) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         if (!menu.logLevel.equals(Level.OFF.name())) {
             RenderSystem.setShaderColor(0.2f, 0.8f, 1f, 1f);
