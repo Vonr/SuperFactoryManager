@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
@@ -70,7 +69,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
 
     public abstract int getSlots(CAP handler);
 
-    public abstract long getMaxStackSizeForStack(STACK stack);
+    public abstract long getMaxStackSize(STACK stack);
 
     public abstract long getMaxStackSizeForSlot(
             CAP cap,

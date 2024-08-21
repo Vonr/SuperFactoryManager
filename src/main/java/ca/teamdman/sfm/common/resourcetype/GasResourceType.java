@@ -40,7 +40,7 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     }
 
     @Override
-    public long getMaxStackSizeForStack(GasStack gasStack) {
+    public long getMaxStackSize(GasStack gasStack) {
         return Long.MAX_VALUE;
     }
 

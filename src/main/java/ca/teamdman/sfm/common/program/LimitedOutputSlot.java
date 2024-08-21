@@ -55,7 +55,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
             if (amount >= maxStackSizeForSlot) {
                 return true;
             }
-            long maxStackSizeForStack = type.getMaxStackSizeForStack(stack);
+            long maxStackSizeForStack = type.getMaxStackSize(stack);
             if (amount >= maxStackSizeForStack) {
                 return true;
             }

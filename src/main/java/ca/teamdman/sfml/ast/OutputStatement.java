@@ -125,7 +125,7 @@ public class OutputStatement implements IOStatement {
         toMove = Math.min(toMove, sourceMaxTransferable);
 
         // apply resource constraints
-        long maxStackSize = source.type.getMaxStackSizeForStack(potential); // this is cap-agnostic, so source/dest doesn't matter
+        long maxStackSize = source.type.getMaxStackSize(potential); // this is cap-agnostic, so source/dest doesn't matter
         toMove = Math.min(toMove, maxStackSize);
 
         long logToMove = toMove;
@@ -490,7 +490,7 @@ public class OutputStatement implements IOStatement {
                                             finalSlot,
                                             type.getAmount(stack)
                                             + " of "
-                                            + Math.min(type.getMaxStackSizeForStack(stack), type.getMaxStackSizeForSlot(capability, finalSlot))
+                                            + Math.min(type.getMaxStackSize(stack), type.getMaxStackSizeForSlot(capability, finalSlot))
                                             + " "
                                             + type.getItem(stack)
                                     )));
@@ -526,7 +526,7 @@ public class OutputStatement implements IOStatement {
             // Respect traditional slot limits
             return false;
         }
-        long maxStackSizeForStack = type.getMaxStackSizeForStack(stack);
+        long maxStackSizeForStack = type.getMaxStackSize(stack);
         if (amount >= maxStackSizeForStack) {
             // Respect stack limits
             return false;

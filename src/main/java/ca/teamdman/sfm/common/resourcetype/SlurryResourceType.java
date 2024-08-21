@@ -40,7 +40,7 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    public long getMaxStackSizeForStack(SlurryStack stack) {
+    public long getMaxStackSize(SlurryStack stack) {
         return Long.MAX_VALUE;
     }
 
