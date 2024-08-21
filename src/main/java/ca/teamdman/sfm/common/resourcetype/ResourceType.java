@@ -15,7 +15,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.registries.IForgeRegistry;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public abstract class ResourceType<STACK, ITEM, CAP> {
@@ -125,7 +128,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             Label label = pair.getFirst();
             BlockPos pos = pair.getSecond();
             // Expand pos to (pos, direction) pairs
-            for (Direction dir : (Iterable<? extends Direction>) labelAccess.directions().stream()::iterator) {
+            for (Direction dir : labelAccess.directions()) {
                 // Get capability from the network
                 Optional<CAP> maybeCap = network
                         .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger())
@@ -153,6 +156,8 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             }
         }
     }
+
+    public abstract Stream<ResourceLocation> getTagsForStack(STACK stack);
 
     public Stream<STACK> getStacksInSlots(
             CAP cap,
