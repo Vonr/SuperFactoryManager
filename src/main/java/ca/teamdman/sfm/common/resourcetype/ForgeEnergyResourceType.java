@@ -55,7 +55,7 @@ public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer
     }
 
     @Override
-    public long getMaxStackSize(
+    public long getMaxStackSizeForSlot(
             IEnergyStorage iEnergyStorage,
             int slot
     ) {
