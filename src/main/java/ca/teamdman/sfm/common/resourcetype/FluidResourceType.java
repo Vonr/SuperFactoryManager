@@ -34,7 +34,7 @@ public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHan
     @Override
     public Stream<ResourceLocation> getTagsForStack(FluidStack fluidStack) {
         //noinspection deprecation
-        return fluidStack.getFluid().builtInRegistryHolder().getTagKeys().map(TagKey::location);
+        return fluidStack.getFluid().builtInRegistryHolder().tags().map(TagKey::location);
     }
 
     @Override
