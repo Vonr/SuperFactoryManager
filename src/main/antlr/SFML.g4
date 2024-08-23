@@ -66,13 +66,9 @@ withClause  : LPAREN withClause RPAREN          # WithParen
             | withClause AND withClause         # WithConjunction
             | withClause OR withClause          # WithDisjunction
             | (TAG|HASHTAG) tagMatcher          # WithTag
-//            | DATA dataCondition                # WithData
             ;
 
 tagMatcher: identifier (COLON identifier (SLASH identifier)+)?;
-
-//dataCondition: ;
-
 
 sidequalifier   : EACH SIDE                 #EachSide
                 | side(COMMA side)* SIDE    #ListedSides
@@ -138,7 +134,7 @@ resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON 
                 | string                                                                            # StringResource
                 ;
 
-identifier : (IDENTIFIER | REDSTONE | DATA) ;
+identifier : (IDENTIFIER | REDSTONE) ;
 
 // GENERAL
 string: STRING ;
@@ -197,8 +193,6 @@ FORGET  : F O R G E T ;
 WITHOUT : W I T H O U T;
 WITH    : W I T H ;
 TAG     : T A G ;
-DATA    : D A T A ;
-ITEM    : I T E M ;
 HASHTAG : '#' ;
 
 // ROUND ROBIN
