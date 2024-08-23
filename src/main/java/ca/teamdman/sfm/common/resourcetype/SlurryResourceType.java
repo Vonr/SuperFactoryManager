@@ -5,9 +5,13 @@ import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.slurry.ISlurryHandler;
 import mekanism.api.chemical.slurry.Slurry;
 import mekanism.api.chemical.slurry.SlurryStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.registries.IForgeRegistry;
+
+import java.util.stream.Stream;
 
 import static net.minecraftforge.common.capabilities.CapabilityManager.get;
 
@@ -25,12 +29,20 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    public SlurryStack getStackInSlot(ISlurryHandler handler, int slot) {
+    public SlurryStack getStackInSlot(
+            ISlurryHandler handler,
+            int slot
+    ) {
         return handler.getChemicalInTank(slot);
     }
 
     @Override
-    public SlurryStack extract(ISlurryHandler handler, int slot, long amount, boolean simulate) {
+    public SlurryStack extract(
+            ISlurryHandler handler,
+            int slot,
+            long amount,
+            boolean simulate
+    ) {
         return handler.extractChemical(slot, amount, simulate ? Action.SIMULATE : Action.EXECUTE);
     }
 
@@ -45,7 +57,10 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    public long getMaxStackSize(ISlurryHandler handler, int slot) {
+    public long getMaxStackSizeForSlot(
+            ISlurryHandler handler,
+            int slot
+    ) {
         return handler.getTankCapacity(slot);
     }
 
@@ -79,6 +94,10 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
         return o instanceof ISlurryHandler;
     }
 
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(SlurryStack slurryStack) {
+        return slurryStack.getType().getTags().map(TagKey::location);
+    }
 
     @Override
     public IForgeRegistry<Slurry> getRegistry() {
@@ -96,7 +115,10 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    protected SlurryStack setCount(SlurryStack stack, long amount) {
+    protected SlurryStack setCount(
+            SlurryStack stack,
+            long amount
+    ) {
         stack.setAmount(amount);
         return stack;
     }
