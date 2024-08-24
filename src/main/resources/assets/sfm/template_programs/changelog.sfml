@@ -8,7 +8,7 @@ NAME "Changelog"
 -- Fix uppercase resource identifiers not being auto-lowercased internally
 -- Add WITH TAG support
 EVERY 20 TICKS DO
-    INPUT minecraft:* WITH TAG mineable/shovel FROM chest
+    INPUT minecraft:* WITH TAG minecraft:mineable/shovel FROM chest
     OUTPUT TO idk
 END
 -- Add WIP hotkey for copying item NBT to clipboard, doesn't work with JEI
