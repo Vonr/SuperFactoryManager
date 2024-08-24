@@ -12,6 +12,7 @@ EVERY 20 TICKS DO
     OUTPUT TO idk
 END
 -- Add WIP hotkey for copying item NBT to clipboard, doesn't work with JEI
+-- Fix tooltips for manager screen showing over the program edit screen... again
 
 ---- 4.18.0 ----
 -- Add 1.21.0 build with Mekanism support

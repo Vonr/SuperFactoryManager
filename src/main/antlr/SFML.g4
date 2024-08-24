@@ -47,7 +47,7 @@ resourceExclusion       : EXCEPT resourceId (COMMA resourceId)* COMMA?;
 inputResourceLimits   : resourceLimits; // separate for different defaults
 outputResourceLimits  : resourceLimits; // separate for different defaults
 resourceLimits  : resourceLimit (COMMA resourceLimit)* COMMA?;
-resourceLimit   : limit? resourceId with?
+resourceLimit   : limit? resourceId with? // TODO: rename resourceId to resourceMatcher, add support for AND, OR; 5 RETAIN 4 EACH *ingot* or #c:ingot
                 | limit with?
                 | with
                 ;
@@ -69,6 +69,7 @@ withClause  : LPAREN withClause RPAREN          # WithParen
             ;
 
 tagMatcher: identifier (COLON identifier (SLASH identifier)+)?;
+
 
 sidequalifier   : EACH SIDE                 #EachSide
                 | side(COMMA side)* SIDE    #ListedSides
@@ -96,7 +97,7 @@ boolexpr        : TRUE                                  #BooleanTrue
                 | setOp? labelAccess HAS resourcecomparison #BooleanHas
                 | REDSTONE (comparisonOp number)?       #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp number resourceId? ;
+resourcecomparison : comparisonOp number resourceId? ; // TODO: add EXCEPT support here
 comparisonOp    : GT
                 | LT
                 | EQ
