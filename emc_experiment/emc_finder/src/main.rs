@@ -115,7 +115,6 @@ struct HistoryEntry {
     ingredients: Vec<String>,
     resulting_emc: f32,
 }
-
 fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
     // Create a HashMap for quick lookup of item EMC values
     let item_map: HashMap<String, f32> = items.iter()
@@ -126,6 +125,9 @@ fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
     let relevant_recipes: Vec<&Recipe> = recipes.iter()
         .filter(|recipe| recipe.ingredients.iter().any(|ingredient| ingredient.ingredient_id == start_item_id && ingredient.role == "INPUT"))
         .collect();
+
+    // Depth limit
+    let max_depth = 1;
 
     // Iterate over each relevant recipe as a starting point
     for recipe in relevant_recipes {
@@ -150,7 +152,7 @@ fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
         }
         println!("Initial EMC: {}\n", start_emc);
 
-        // Start the cycle detection from this recipe
+        // Start the cycle detection from this recipe with depth limit
         traverse_recipes(
             start_emc,
             initial_buffer,
@@ -159,9 +161,12 @@ fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
             recipes,
             items,
             &item_map, // Pass the item_map to the recursive function
+            0,         // Start with depth 0
+            max_depth, // Set maximum depth to 1
         );
     }
 }
+
 
 
 fn traverse_recipes(
@@ -172,8 +177,14 @@ fn traverse_recipes(
     recipes: &[Recipe],
     items: &[Item],
     item_map: &HashMap<String, f32>, // Use a HashMap for faster item lookup
+    depth: usize,                     // Add depth parameter
+    max_depth: usize,                  // Add max_depth parameter
 ) -> Vec<HistoryEntry> {
-    recipes.par_iter().map(|recipe| {
+    if depth >= max_depth {
+        return history; // Return if the max depth is reached
+    }
+
+    recipes.iter().map(|recipe| {
         let mut local_buffer = buffer.clone();
         let mut local_visited_recipes = visited_recipes.clone();
         let mut local_history = history.clone();
@@ -267,12 +278,14 @@ fn traverse_recipes(
             println!("  Total EMC: {}", total_output_emc);
             println!();
 
-            // Recur to explore further chains
-            local_history = traverse_recipes(total_output_emc, local_buffer, local_visited_recipes, local_history, recipes, items, item_map);
+            // Stop recursion if depth is reached
+            if depth + 1 < max_depth {
+                local_history = traverse_recipes(total_output_emc, local_buffer, local_visited_recipes, local_history, recipes, items, item_map, depth + 1, max_depth);
+            }
         }
 
         local_history
-    }).reduce(Vec::new, |mut acc, history| {
+    }).fold(Vec::new(), |mut acc, history| {
         acc.extend(history);
         acc
     })
