@@ -9,12 +9,14 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct DerivedEmc {
     pub emc: f32,
     pub path: Vec<String>,
+}
+pub trait HasEmc {
+    fn get_emc(&self) -> Option<f32>;
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -26,6 +28,11 @@ pub struct Item {
     pub tooltip: String,
     pub emc: Option<f32>,
     pub derived_emc: Option<DerivedEmc>,
+}
+impl HasEmc for Item {
+    fn get_emc(&self) -> Option<f32> {
+        self.emc.or(self.derived_emc.as_ref().map(|de| de.emc))
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -42,6 +49,11 @@ pub struct Ingredient {
     pub ingredient: String,
     pub emc: Option<f32>,
     pub derived_emc: Option<DerivedEmc>,
+}
+impl HasEmc for Ingredient {
+    fn get_emc(&self) -> Option<f32> {
+        self.emc.or(self.derived_emc.as_ref().map(|de| de.emc))
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -67,35 +79,33 @@ pub struct ProcessedRecipe {
     pub outputs: Vec<Ingredient>,
     pub base_input_emc: f32,
     pub base_output_emc: f32,
-    pub has_non_emc_ingredient: bool,
-    pub has_non_emc_output: bool,
+    pub has_non_base_emc_input: bool,
+    pub has_non_base_emc_output: bool,
 }
 impl ProcessedRecipe {
     pub fn get_input_emc(&self) -> f32 {
         self.inputs
             .iter()
-            .map(|ing| {
-                ing.emc
-                    .or(ing.derived_emc.as_ref().map(|de| de.emc))
-                    .unwrap_or(0.0)
-            })
+            .map(|ing| ing.get_emc().unwrap_or(0.0))
             .sum()
     }
     pub fn get_output_emc(&self) -> f32 {
         self.outputs
             .iter()
-            .map(|ing| {
-                ing.emc
-                    .or(ing.derived_emc.as_ref().map(|de| de.emc))
-                    .unwrap_or(0.0)
-            })
+            .map(|ing| ing.get_emc().unwrap_or(0.0))
             .sum()
+    }
+    pub fn has_non_emc_input(&self) -> bool {
+        self.inputs.iter().any(|ing| ing.get_emc().is_none())
+    }
+    pub fn has_non_emc_output(&self) -> bool {
+        self.outputs.iter().any(|ing| ing.get_emc().is_none())
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProcessedData {
-    pub items: Vec<Item>,
+    pub items: HashMap<String, Item>,
     pub recipes: Vec<ProcessedRecipe>,
 }
 
@@ -233,8 +243,8 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
                 outputs,
                 base_input_emc: total_input_emc,
                 base_output_emc: total_output_emc,
-                has_non_emc_ingredient,
-                has_non_emc_output,
+                has_non_base_emc_input: has_non_emc_ingredient,
+                has_non_base_emc_output: has_non_emc_output,
             })
         })
         .collect()
@@ -278,6 +288,7 @@ pub fn get_data() -> ProcessedData {
             raw_recipes.len(),
             processed_recipes.len()
         );
+        let items = items.into_iter().map(|item| (item.id.clone(), item)).collect();
         let rtn = ProcessedData {
             items,
             recipes: processed_recipes,
