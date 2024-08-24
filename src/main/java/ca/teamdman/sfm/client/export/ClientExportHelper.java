@@ -9,7 +9,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import mezz.jei.api.helpers.IJeiHelpers;
-import mezz.jei.api.recipe.*;
+import mezz.jei.api.recipe.IRecipeLookup;
+import mezz.jei.api.recipe.IRecipeManager;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IJeiRuntime;
@@ -130,56 +133,43 @@ public class ClientExportHelper {
                 .includeHidden()
                 .get();
 
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    Collection<ResourceType<?, ?, ?>> resourceTypes = SFMResourceTypes.DEFERRED_TYPES.get().getValues();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Collection<ResourceType<?, ?, ?>> resourceTypes = SFMResourceTypes.DEFERRED_TYPES.get().getValues();
 
-    // Ensure the folder exists
-    var gameDir = FMLPaths.GAMEDIR.get();
-    var folder = Paths.get(gameDir.toString(), SFM.MOD_ID,"jei");
-    try {
-        Files.createDirectories(folder);
-    } catch (IOException e) {
-        SFM.LOGGER.error("Failed to create directories: {}", folder.toString(), e);
-        player.sendSystemMessage(Component.literal("Failed to create directories for saving recipes.")
-                                         .withStyle(ChatFormatting.RED));
-        return;
-    }
-
-    // Process each recipe category in parallel
-    recipeCategoryStream.parallel().forEach(recipeCategory -> {
-        JsonArray jsonArray = new JsonArray();
-        extractCategory(gson, jeiHelpers, recipeCategory, recipeManager, ingredientManager, jsonArray,
-                        resourceTypes,
-                        includeHidden,
-                        player
-        );
-
-        // Serialize the JSON content
-        String content = gson.toJson(jsonArray);
-
-
-        // Write to a separate file for each category
-        String fileName = recipeCategory.getTitle().getString().replaceAll("[<>:\"/\\\\|?*]", "-") + ".json";
-        File file = new File(folder.toFile(), fileName);
-        try (FileOutputStream str = new FileOutputStream(file)) {
-            str.write(content.getBytes(StandardCharsets.UTF_8));
+        // Ensure the folder exists
+        var gameDir = FMLPaths.GAMEDIR.get();
+        var folder = Paths.get(gameDir.toString(), SFM.MOD_ID, "jei");
+        try {
+            Files.createDirectories(folder);
         } catch (IOException e) {
-            SFM.LOGGER.error("Failed to write JEI category data for category: {}", recipeCategory.getTitle().getString(), e);
-            player.sendSystemMessage(Component.literal("Failed to save recipe category: ")
-                    .append(recipeCategory.getTitle()).withStyle(ChatFormatting.RED));
+            SFM.LOGGER.error("Failed to create directories: {}", folder.toString(), e);
+            player.sendSystemMessage(Component.literal("Failed to create directories for saving recipes.")
+                                             .withStyle(ChatFormatting.RED));
             return;
         }
 
-        // Notify the player
-        player.sendSystemMessage(Component.literal(String.format(
-                "Exported %d JEI entries for category \"%s\" to \"%s\"",
-                jsonArray.size(),
-                recipeCategory.getTitle().getString(),
-                file.getAbsolutePath()
-        )));
-    });
-}
+        // Process each recipe category in parallel
+        recipeCategoryStream.parallel().forEach(recipeCategory -> {
+            ConcurrentLinkedDeque<JsonObject> recipeResults = new ConcurrentLinkedDeque<>();
+            AtomicInteger counter = new AtomicInteger();
+            AtomicInteger fileIndex = new AtomicInteger();
 
+            extractCategory(gson, jeiHelpers, recipeCategory, recipeManager, ingredientManager, recipeResults,
+                            resourceTypes, includeHidden, player, counter, fileIndex, folder
+            );
+
+            // Write any remaining recipes in the final chunk
+            if (!recipeResults.isEmpty()) {
+                writeChunkToFile(gson, recipeResults, recipeCategory, fileIndex.getAndIncrement(), folder, player);
+            }
+
+            // Notify the player that the category is fully processed
+            player.sendSystemMessage(Component.literal(String.format(
+                    "Completed exporting all JEI entries for category \"%s\"",
+                    recipeCategory.getTitle().getString()
+            )));
+        });
+    }
 
     private static <T> void extractCategory(
             Gson gson,
@@ -187,23 +177,25 @@ public class ClientExportHelper {
             IRecipeCategory<T> recipeCategory,
             IRecipeManager recipeManager,
             IIngredientManager ingredientManager,
-            JsonArray jsonArray,
+            ConcurrentLinkedDeque<JsonObject> recipeResults,
             Collection<ResourceType<?, ?, ?>> resourceTypes,
             boolean includeHidden,
-            Player player
+            Player player,
+            AtomicInteger counter,
+            AtomicInteger fileIndex,
+            java.nio.file.Path folder
     ) {
+        String categoryString = recipeCategory.toString();
+        String categoryTitle = recipeCategory.getTitle().getString();
+
         RecipeType<T> recipeType = recipeCategory.getRecipeType();
-        // do not include hidden recipes because this takes a long time in modded packs
         IRecipeLookup<T> recipeLookup = recipeManager.createRecipeLookup(recipeType);
         if (includeHidden) {
             recipeLookup = recipeLookup.includeHidden();
         }
         Stream<T> recipes = recipeLookup.get();
-        ConcurrentLinkedDeque<JsonObject> recipeResults = new ConcurrentLinkedDeque<>();
-        AtomicInteger counter = new AtomicInteger();
+
         recipes.parallel().forEach(recipe -> {
-            // Get the recipe data
-//            RecipeLayoutBuilder<T> recipeLayoutBuilder = new RecipeLayoutBuilder<T>(recipeCategory, recipe, ingredientManager);
             IIngredientSupplier ingredientSupplier = IngredientSupplierHelper.getIngredientSupplier(
                     recipe,
                     recipeCategory,
@@ -251,31 +243,63 @@ public class ClientExportHelper {
 
             // Add results
             JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("category", recipeCategory.toString());
-            jsonObject.addProperty("categoryTitle", recipeCategory.getTitle().getString());
+            jsonObject.addProperty("category", categoryString);
+            jsonObject.addProperty("categoryTitle", categoryTitle);
             jsonObject.addProperty("recipeTypeId", recipeType.getUid().toString());
             jsonObject.addProperty("recipeClass", recipeType.getRecipeClass().toString());
             jsonObject.addProperty("recipeObject", recipe.toString());
             jsonObject.add("ingredients", ingredientArray);
             recipeResults.add(jsonObject);
 
-            int count = counter.getAndIncrement();
+            int count = counter.incrementAndGet();
+            if (count % 1000 == 0) {
+                // Write chunk to disk
+                writeChunkToFile(gson, recipeResults, recipeCategory, fileIndex.getAndIncrement(), folder, player);
+                recipeResults.clear(); // Clear the list to free up memory
+            }
+
             if (count > 0 && count % 1000 == 0) {
                 // notify the player
                 player.sendSystemMessage(Component.literal(String.format(
-                        "Processed %d recipes so far",
-                        count
+                        "Processed %d recipes so far for category \"%s\"",
+                        count,
+                        categoryTitle
                 )));
             }
         });
-
-        player.sendSystemMessage(
-                Component.literal("Found ")
-                        .append(Component.literal(String.valueOf(recipeResults.size())).withStyle(ChatFormatting.AQUA))
-                        .append(Component.literal(" recipes in total for category ").withStyle(ChatFormatting.RESET))
-                        .append(recipeCategory.getTitle()));
-        recipeResults.forEach(jsonArray::add);
     }
+
+    private static void writeChunkToFile(
+            Gson gson,
+            ConcurrentLinkedDeque<JsonObject> recipeResults,
+            IRecipeCategory<?> recipeCategory,
+            int chunkIndex,
+            java.nio.file.Path folder,
+            Player player
+    ) {
+        String fileName = recipeCategory.getTitle().getString().replaceAll("[<>:\"/\\\\|?*]", "-")
+                          + "-"
+                          + chunkIndex
+                          + ".json";
+        File file = new File(folder.toFile(), fileName);
+
+        JsonArray jsonArray = new JsonArray();
+        recipeResults.forEach(jsonArray::add);
+
+        String content = gson.toJson(jsonArray);
+        try (FileOutputStream str = new FileOutputStream(file)) {
+            str.write(content.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            SFM.LOGGER.error(
+                    "Failed to write JEI category data for category: {}",
+                    recipeCategory.getTitle().getString(),
+                    e
+            );
+            player.sendSystemMessage(Component.literal("Failed to save recipe category chunk: ")
+                                             .append(recipeCategory.getTitle()).withStyle(ChatFormatting.RED));
+        }
+    }
+
 
     private static <STACK, ITEM, CAP> void addIngredientInfo(
             ResourceType<STACK, ITEM, CAP> resourceType,
