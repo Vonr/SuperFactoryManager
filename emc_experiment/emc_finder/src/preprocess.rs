@@ -16,7 +16,17 @@ pub struct DerivedEmc {
     pub path: Vec<String>,
 }
 pub trait HasEmc {
-    fn get_emc(&self) -> Option<f32>;
+    fn get_base_emc(&self) -> Option<f32>;
+    fn get_derived_acquire_emc(&self) -> Option<&DerivedEmc>;
+    fn get_derived_burn_emc(&self) -> Option<&DerivedEmc>;
+    fn get_acquire_emc(&self) -> Option<f32> {
+        self.get_base_emc()
+            .or_else(|| self.get_derived_acquire_emc().map(|de| de.emc))
+    }
+    fn get_burn_emc(&self) -> Option<f32> {
+        self.get_base_emc()
+            .or_else(|| self.get_derived_burn_emc().map(|de| de.emc))
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -27,11 +37,18 @@ pub struct Item {
     pub tags: Vec<String>,
     pub tooltip: String,
     pub emc: Option<f32>,
-    pub derived_emc: Option<DerivedEmc>,
+    pub best_acquire_emc: Option<DerivedEmc>,
+    pub best_burn_emc: Option<DerivedEmc>,
 }
 impl HasEmc for Item {
-    fn get_emc(&self) -> Option<f32> {
-        self.emc.or(self.derived_emc.as_ref().map(|de| de.emc))
+    fn get_derived_acquire_emc(&self) -> Option<&DerivedEmc> {
+        self.best_acquire_emc.as_ref()
+    }
+    fn get_derived_burn_emc(&self) -> Option<&DerivedEmc> {
+        self.best_burn_emc.as_ref()
+    }
+    fn get_base_emc(&self) -> Option<f32> {
+        self.emc
     }
 }
 
@@ -48,11 +65,18 @@ pub struct Ingredient {
     pub tags: Vec<String>,
     pub ingredient: String,
     pub emc: Option<f32>,
-    pub derived_emc: Option<DerivedEmc>,
+    pub best_emc_acquire: Option<DerivedEmc>,
+    pub best_emc_burn: Option<DerivedEmc>,
 }
 impl HasEmc for Ingredient {
-    fn get_emc(&self) -> Option<f32> {
-        self.emc.or(self.derived_emc.as_ref().map(|de| de.emc))
+    fn get_derived_acquire_emc(&self) -> Option<&DerivedEmc> {
+        self.best_emc_acquire.as_ref()
+    }
+    fn get_derived_burn_emc(&self) -> Option<&DerivedEmc> {
+        self.best_emc_burn.as_ref()
+    }
+    fn get_base_emc(&self) -> Option<f32> {
+        self.emc
     }
 }
 
@@ -86,20 +110,22 @@ impl ProcessedRecipe {
     pub fn get_input_emc(&self) -> f32 {
         self.inputs
             .iter()
-            .map(|ing| ing.get_emc().unwrap_or(0.0))
+            .map(|ing| ing.get_acquire_emc().unwrap_or(0.0) * ing.ingredient_amount as f32)
             .sum()
     }
     pub fn get_output_emc(&self) -> f32 {
         self.outputs
             .iter()
-            .map(|ing| ing.get_emc().unwrap_or(0.0))
+            .map(|ing| ing.get_burn_emc().unwrap_or(0.0) * ing.ingredient_amount as f32)
             .sum()
     }
     pub fn has_non_emc_input(&self) -> bool {
-        self.inputs.iter().any(|ing| ing.get_emc().is_none())
+        self.inputs
+            .iter()
+            .any(|ing| ing.get_acquire_emc().is_none())
     }
     pub fn has_non_emc_output(&self) -> bool {
-        self.outputs.iter().any(|ing| ing.get_emc().is_none())
+        self.outputs.iter().any(|ing| ing.get_burn_emc().is_none())
     }
 }
 
@@ -233,6 +259,8 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
 
             if total_output_emc <= total_input_emc && !has_non_emc_ingredient && !has_non_emc_output
             {
+                // this recipe is not useful because 
+                // all the output ingredients can be acquired more cheaply using EMC
                 return None;
             }
 
@@ -288,7 +316,10 @@ pub fn get_data() -> ProcessedData {
             raw_recipes.len(),
             processed_recipes.len()
         );
-        let items = items.into_iter().map(|item| (item.id.clone(), item)).collect();
+        let items = items
+            .into_iter()
+            .map(|item| (item.id.clone(), item))
+            .collect();
         let rtn = ProcessedData {
             items,
             recipes: processed_recipes,

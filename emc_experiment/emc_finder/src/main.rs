@@ -30,8 +30,12 @@ where
             recipes.iter_mut().par_bridge().for_each(|recipe| {
                 for ingredient in recipe.inputs.iter_mut().chain(recipe.outputs.iter_mut()) {
                     if let Some(item) = items.get(&ingredient.ingredient_id) {
-                        if let Some(derived_emc) = item.derived_emc.as_ref() {
-                            ingredient.derived_emc = Some(derived_emc.clone());
+                        // update ingredient with best emc info
+                        if let Some(derived_emc) = item.best_acquire_emc.as_ref() {
+                            ingredient.best_emc_acquire = Some(derived_emc.clone());
+                        }
+                        if let Some(derived_emc) = item.best_burn_emc.as_ref() {
+                            ingredient.best_emc_burn = Some(derived_emc.clone());
                         }
                     }
                 }
@@ -56,7 +60,7 @@ where
             .filter(|item| item_filter(item))
             .map(|item| {
                 let mut changed = false;
-                if item.emc.is_none() && item.derived_emc.is_none() {
+                if item.get_burn_emc().is_none() {
                     for recipe in recipes.iter() {
                         let mut inputs_our_item = false;
                         let mut inputs_lacking_emc = false;
@@ -65,7 +69,7 @@ where
                             if ingredient.ingredient_id == item.id {
                                 input_amount += ingredient.ingredient_amount;
                                 inputs_our_item = true;
-                            } else if ingredient.get_emc().is_none() {
+                            } else if ingredient.get_acquire_emc().is_none() {
                                 inputs_lacking_emc = true;
                             }
                         }
@@ -75,8 +79,10 @@ where
                             let diff = output_emc - input_emc;
                             if diff > 0.0 {
                                 let emc_for_item = diff / input_amount as f32;
-                                if item.derived_emc.as_ref().map(|x| x.emc).unwrap_or(0.) < diff {
-                                    item.derived_emc = Some(DerivedEmc {
+                                if item.best_burn_emc.as_ref().map(|x| x.emc).unwrap_or(0.)
+                                    < emc_for_item
+                                {
+                                    item.best_burn_emc = Some(DerivedEmc {
                                         emc: emc_for_item,
                                         path: vec![recipe.recipe_id.to_owned()],
                                     });
@@ -86,6 +92,41 @@ where
                                     // );
                                     changed = true;
                                 }
+                            }
+                        }
+                    }
+                }
+                if item.get_acquire_emc().is_none() {
+                    for recipe in recipes.iter() {
+                        let mut outputs_our_item = false;
+                        let mut inputs_lacking_emc = false;
+                        let mut output_amount = 0;
+                        for ingredient in recipe.outputs.iter() {
+                            if ingredient.ingredient_id == item.id {
+                                output_amount += ingredient.ingredient_amount;
+                                outputs_our_item = true;
+                            }
+                        }
+                        for ingredient in recipe.inputs.iter() {
+                            if ingredient.get_acquire_emc().is_none() {
+                                inputs_lacking_emc = true;
+                            }
+                        }
+                        if outputs_our_item && !inputs_lacking_emc {
+                            let input_emc = recipe.get_input_emc();
+                            let emc_for_item = input_emc / output_amount as f32;
+                            if item.best_acquire_emc.as_ref().map(|x| x.emc).unwrap_or(0.)
+                                < emc_for_item
+                            {
+                                item.best_acquire_emc = Some(DerivedEmc {
+                                    emc: emc_for_item,
+                                    path: vec![recipe.recipe_id.to_owned()],
+                                });
+                                // println!(
+                                //     "Found derived emc for {:#?} using recipe {:#?}",
+                                //     item, recipe
+                                // );
+                                changed = true;
                             }
                         }
                     }
@@ -124,7 +165,12 @@ fn main() {
         |epoch| epoch < 2,
     );
     for item in data.items.values() {
-        if item.derived_emc.is_some() {
+        // can we burn this item for more than we pay to acquire it
+        if item
+            .get_acquire_emc()
+            .and_then(|acquire| item.get_burn_emc().map(|burn| acquire < burn))
+            .unwrap_or(false)
+        {
             println!("{item:#?}");
         }
     }
