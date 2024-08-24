@@ -8,6 +8,13 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::str::FromStr;
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
+pub struct DerivedEmc {
+    pub emc: f32,
+    pub path: Vec<String>,
+}
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(dead_code)]
@@ -17,6 +24,7 @@ pub struct Item {
     pub tags: Vec<String>,
     pub tooltip: String,
     pub emc: Option<f32>,
+    pub derived_emc: Option<DerivedEmc>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -32,6 +40,7 @@ pub struct Ingredient {
     pub tags: Vec<String>,
     pub ingredient: String,
     pub emc: Option<f32>,
+    pub derived_emc: Option<DerivedEmc>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -55,10 +64,38 @@ pub struct ProcessedRecipe {
     pub category_title: String,
     pub inputs: Vec<Ingredient>,
     pub outputs: Vec<Ingredient>,
-    pub total_input_emc: f32,
-    pub total_output_emc: f32,
+    pub base_input_emc: f32,
+    pub base_output_emc: f32,
     pub has_non_emc_ingredient: bool,
     pub has_non_emc_output: bool,
+}
+impl ProcessedRecipe {
+    pub fn get_input_emc(&self) -> f32 {
+        self.inputs
+            .iter()
+            .map(|ing| {
+                ing.emc
+                    .or(ing.derived_emc.as_ref().map(|de| de.emc))
+                    .unwrap_or(0.0)
+            })
+            .sum()
+    }
+    pub fn get_output_emc(&self) -> f32 {
+        self.outputs
+            .iter()
+            .map(|ing| {
+                ing.emc
+                    .or(ing.derived_emc.as_ref().map(|de| de.emc))
+                    .unwrap_or(0.0)
+            })
+            .sum()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProcessedData {
+    pub items: Vec<Item>,
+    pub recipes: Vec<ProcessedRecipe>,
 }
 
 fn get_emc_from_tooltip(number_words: &HashMap<&str, i64>, tooltip: &str) -> Option<f32> {
@@ -104,8 +141,8 @@ fn calculate_emc(items: &mut Vec<Item>) {
     }
 }
 
-fn load_recipes() -> Vec<Recipe> {
-    let jei_folder = PathBuf::from("../jei");
+fn load_recipes(jei_folder: &str) -> Vec<Recipe> {
+    let jei_folder = PathBuf::from(jei_folder);
 
     jei_folder
         .read_dir()
@@ -113,6 +150,7 @@ fn load_recipes() -> Vec<Recipe> {
         .par_bridge()
         .filter_map(|entry| {
             let path = entry.ok()?.path();
+            println!("Loading recipes from {:?}", path);
             std::fs::read_to_string(&path)
                 .ok()
                 .and_then(|content| serde_json::from_str::<Vec<Recipe>>(&content).ok())
@@ -184,8 +222,8 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
                 category_title: recipe.category_title.clone(),
                 inputs,
                 outputs,
-                total_input_emc,
-                total_output_emc,
+                base_input_emc: total_input_emc,
+                base_output_emc: total_output_emc,
                 has_non_emc_ingredient,
                 has_non_emc_output,
             })
@@ -193,24 +231,27 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
         .collect()
 }
 
-fn save_processed_recipes(recipes: &[ProcessedRecipe], path: &Path) {
-    let encoded: Vec<u8> = bincode::serialize(recipes).unwrap();
+fn save_processed_data(data: &ProcessedData, path: &Path) {
+    let encoded: Vec<u8> = bincode::serialize(data).unwrap();
     let mut file = File::create(path).unwrap();
     file.write_all(&encoded).unwrap();
 }
 
-fn load_processed_recipes(path: &Path) -> Vec<ProcessedRecipe> {
+fn load_processed_data(path: &Path) -> ProcessedData {
     let mut file = File::open(path).unwrap();
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).unwrap();
     bincode::deserialize(&buffer).unwrap()
 }
 
-pub fn get_processed_recipes() -> Vec<ProcessedRecipe> {
+pub fn get_data() -> ProcessedData {
+    let start = std::time::Instant::now();
     let processed_file = PathBuf::from("processed.bin");
-    if processed_file.exists() {
-        load_processed_recipes(&processed_file)
+    let rtn = if processed_file.exists() {
+        println!("Loading processed data from {:?}", processed_file);
+        load_processed_data(&processed_file)
     } else {
+        println!("Performing first time data processing");
         let items_json = include_str!("../../items.json");
 
         let mut items: Vec<Item> = serde_json::from_str(items_json).unwrap();
@@ -221,16 +262,24 @@ pub fn get_processed_recipes() -> Vec<ProcessedRecipe> {
             .filter_map(|item| item.emc.map(|emc| (item.id.clone(), emc)))
             .collect();
 
-        let raw_recipes = load_recipes();
+        let raw_recipes = load_recipes("../jei");
         let processed_recipes = process_recipes(&raw_recipes, &item_map);
         println!(
             "Reduced recipes from {} to {}",
             raw_recipes.len(),
             processed_recipes.len()
         );
-        save_processed_recipes(&processed_recipes, &processed_file);
-        processed_recipes
-    }
+        let rtn = ProcessedData {
+            items,
+            recipes: processed_recipes,
+        };
+        save_processed_data(&rtn, &processed_file);
+        rtn
+    };
+    assert!(rtn.items.len() > 1_000);
+    assert!(rtn.recipes.len() > 10_000);
+    println!("Prepared data in {:?}, got {} items and {} recipes", start.elapsed(), rtn.items.len(), rtn.recipes.len());
+    rtn
 }
 
 #[cfg(test)]
@@ -287,7 +336,8 @@ mod tests {
 
     #[test]
     fn process() {
-        let recipes = get_processed_recipes();
-        assert!(recipes.len() > 10_000);
+        let data = get_data();
+        assert!(data.recipes.len() > 10_000);
+        assert!(data.items.len() > 1_000);
     }
 }
