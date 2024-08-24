@@ -4,6 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.export.ClientExportHelper;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.blocks.BlockInput;
@@ -69,6 +70,7 @@ public class SFMCommand {
                                                    assert Minecraft.getInstance().player != null;
                                                    new Thread(() -> {
                                                        try {
+                                                           var start = System.currentTimeMillis();
                                                            Minecraft.getInstance().player.sendSystemMessage(
                                                                    Component.literal("Beginning item export")
                                                            );
@@ -79,6 +81,14 @@ public class SFMCommand {
                                                            ClientExportHelper.dumpJei(
                                                                    ctx.getSource().getPlayer(),
                                                                    includeHidden
+                                                           );
+                                                           var end = System.currentTimeMillis();
+                                                           Minecraft.getInstance().player.sendSystemMessage(
+                                                                   Component
+                                                                           .literal("Exported data in "
+                                                                                    + (end - start)
+                                                                                    + "ms")
+                                                                           .withStyle(ChatFormatting.GREEN)
                                                            );
                                                        } catch (Exception e) {
                                                            SFM.LOGGER.error("Failed to export item data", e);
