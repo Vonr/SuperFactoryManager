@@ -27,9 +27,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 import org.apache.logging.log4j.Level;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.versions.forge.ForgeVersion;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -96,6 +93,58 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         clipboardPasteButton.visible = diskPresent && !isReadOnly();
         resetButton.visible = diskPresent && !isReadOnly();
         editButton.visible = diskPresent && !isReadOnly();
+    }
+
+    @Override
+    public boolean keyPressed(
+            int pKeyCode,
+            int pScanCode,
+            int pModifiers
+    ) {
+        if (Screen.isPaste(pKeyCode) && clipboardPasteButton.visible) {
+            onClipboardPasteButtonClicked();
+            return true;
+        } else if (Screen.isCopy(pKeyCode) && clipboardCopyButton.visible) {
+            onClipboardCopyButtonClicked();
+            return true;
+        } else if (pKeyCode == GLFW.GLFW_KEY_E
+                   && Screen.hasControlDown()
+                   && Screen.hasShiftDown()
+                   && examplesButton.visible) {
+            onExamplesButtonClicked();
+            return true;
+        } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown() && editButton.visible) {
+            onEditButtonClicked();
+            return true;
+        }
+        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
+    }
+
+    public ChatFormatting getMillisecondColour(float ms) {
+        if (ms <= 5) {
+            return ChatFormatting.GREEN;
+        } else if (ms <= 15) {
+            return ChatFormatting.YELLOW;
+        } else {
+            return ChatFormatting.RED;
+        }
+    }
+
+    @Override
+    public void render(
+            GuiGraphics graphics,
+            int mx,
+            int my,
+            float partialTicks
+    ) {
+        this.renderBackground(graphics);
+        super.render(graphics, mx, my, partialTicks);
+        this.renderTooltip(graphics, mx, my);
+
+        updateVisibilities();
+
+        // update status countdown
+        statusCountdown -= partialTicks;
     }
 
     private Tooltip buildTooltip(LocalizationEntry entry) {
@@ -295,28 +344,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
-    public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
-        if (Screen.isPaste(pKeyCode) && clipboardPasteButton.visible) {
-            onClipboardPasteButtonClicked();
-            return true;
-        } else if (Screen.isCopy(pKeyCode) && clipboardCopyButton.visible) {
-            onClipboardCopyButtonClicked();
-            return true;
-        } else if (pKeyCode == GLFW.GLFW_KEY_E
-                   && Screen.hasControlDown()
-                   && Screen.hasShiftDown()
-                   && examplesButton.visible) {
-            onExamplesButtonClicked();
-            return true;
-        } else if (pKeyCode == GLFW.GLFW_KEY_E && Screen.hasControlDown() && editButton.visible) {
-            onEditButtonClicked();
-            return true;
-        }
-        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
-    }
-
-    @Override
-    protected void renderLabels(GuiGraphics graphics, int mx, int my) {
+    protected void renderLabels(
+            GuiGraphics graphics,
+            int mx,
+            int my
+    ) {
         PoseStack poseStack = graphics.pose();        // draw title
         super.renderLabels(graphics, mx, my);
 
@@ -486,36 +518,23 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         RenderSystem.disableBlend();
     }
 
-    public ChatFormatting getMillisecondColour(float ms) {
-        if (ms <= 5) {
-            return ChatFormatting.GREEN;
-        } else if (ms <= 15) {
-            return ChatFormatting.YELLOW;
-        } else {
-            return ChatFormatting.RED;
-        }
-    }
-
     @Override
-    public void render(GuiGraphics graphics, int mx, int my, float partialTicks) {
-        this.renderBackground(graphics);
-        super.render(graphics, mx, my, partialTicks);
-        this.renderTooltip(graphics, mx, my);
-
-        updateVisibilities();
-
-        // update status countdown
-        statusCountdown -= partialTicks;
-    }
-
-    @Override
-    protected void renderTooltip(GuiGraphics pGuiGraphics, int pX, int pY) {
+    protected void renderTooltip(
+            GuiGraphics pGuiGraphics,
+            int pX,
+            int pY
+    ) {
         if (Minecraft.getInstance().screen != this) return;
         super.renderTooltip(pGuiGraphics, pX, pY);
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTicks, int mx, int my) {
+    protected void renderBg(
+            GuiGraphics graphics,
+            float partialTicks,
+            int mx,
+            int my
+    ) {
         if (!menu.logLevel.equals(Level.OFF.name())) {
             RenderSystem.setShaderColor(0.2f, 0.8f, 1f, 1f);
         } else {
