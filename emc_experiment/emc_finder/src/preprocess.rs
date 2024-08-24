@@ -2,6 +2,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::Read;
@@ -160,9 +161,17 @@ fn load_recipes(jei_folder: &str) -> Vec<Recipe> {
 }
 
 fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<ProcessedRecipe> {
+    let disallowed_recipe_types = ["jei:information", "ftbquests:quest", "minecraft:anvil"]
+        .into_iter()
+        .map(|s| s.to_owned())
+        .collect::<HashSet<String>>();
     recipes
         .par_iter()
         .filter_map(|recipe| {
+            if disallowed_recipe_types.contains(&recipe.recipe_type_id) {
+                return None;
+            }
+
             let mut has_non_emc_ingredient = false;
 
             let inputs: Vec<Ingredient> = recipe
@@ -278,7 +287,12 @@ pub fn get_data() -> ProcessedData {
     };
     assert!(rtn.items.len() > 1_000);
     assert!(rtn.recipes.len() > 10_000);
-    println!("Prepared data in {:?}, got {} items and {} recipes", start.elapsed(), rtn.items.len(), rtn.recipes.len());
+    println!(
+        "Prepared data in {:?}, got {} items and {} recipes",
+        start.elapsed(),
+        rtn.items.len(),
+        rtn.recipes.len()
+    );
     rtn
 }
 

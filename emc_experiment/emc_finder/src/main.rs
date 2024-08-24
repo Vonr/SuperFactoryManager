@@ -3,15 +3,20 @@
 mod preprocess;
 
 use preprocess::get_data;
+use preprocess::DerivedEmc;
 use preprocess::Ingredient;
+use preprocess::Item;
+use preprocess::ProcessedData;
 use preprocess::ProcessedRecipe;
-use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelBridge;
 use rayon::iter::ParallelIterator;
 use std::fs::File;
 use std::fs::{self};
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::Mutex;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -148,6 +153,88 @@ fn traverse_recipes(
     None
 }
 
+fn update_derived<F,E> (data: ProcessedData, item_filter: F, epoch_filter: E) -> ProcessedData
+where
+    F: Fn(&Item) -> bool + Sync,
+    E: Fn(i32) -> bool + Sync,
+{
+    let start = std::time::Instant::now();
+    let mut items = data.items;
+    let mut recipes = data.recipes;
+    let changed = Arc::new(Mutex::new(true));
+    let mut epoch = 0;
+    while *changed.lock().unwrap() {
+        if !epoch_filter(epoch) {
+            println!("Stopping after {} epochs", epoch);
+            break;
+        }
+        println!("Starting epoch {}", epoch);
+        epoch += 1;
+
+        *changed.lock().unwrap() = false;
+        items
+            .iter_mut()
+            .par_bridge()
+            .filter(|item| item_filter(item))
+            .for_each_with(changed.clone(), |changed, item| {
+                if item.emc.is_none() && item.derived_emc.is_none() {
+                    for recipe in recipes.iter() {
+                        let mut inputs_our_item = false;
+                        let mut inputs_lacking_emc = false;
+                        let mut input_amount = 0;
+                        for ingredient in recipe.inputs.iter() {
+                            if ingredient.ingredient_id == item.id {
+                                input_amount += ingredient.ingredient_amount;
+                                inputs_our_item = true;
+                            } else if ingredient.emc.is_none() {
+                                inputs_lacking_emc = true;
+                            }
+                        }
+                        if inputs_our_item && !inputs_lacking_emc {
+                            let output_emc = recipe.base_output_emc;
+                            let input_emc = recipe.base_input_emc;
+                            let diff = output_emc - input_emc;
+                            if diff > 0.0 {
+                                let emc_for_item = diff / input_amount as f32;
+                                if item.derived_emc.as_ref().map(|x| x.emc).unwrap_or(0.) < diff {
+                                    item.derived_emc = Some(DerivedEmc {
+                                        emc: emc_for_item,
+                                        path: vec![recipe.recipe_id.to_owned()],
+                                    });
+                                    // println!(
+                                    //     "Found derived emc for {:#?} using recipe {:#?}",
+                                    //     item, recipe
+                                    // );
+                                    *changed.lock().unwrap() = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+    }
+
+    // we want to update the derived emc on all the recipes now
+    let item_lookup = items
+        .iter()
+        .map(|item| (item.id.clone(), item))
+        .collect::<std::collections::HashMap<_, _>>();
+    recipes.iter_mut().par_bridge().for_each(|recipe| {
+        for ingredient in recipe.inputs.iter_mut().chain(recipe.outputs.iter_mut()) {
+            if let Some(item) = item_lookup.get(&ingredient.ingredient_id) {
+                if let Some(derived_emc) = item.derived_emc.as_ref() {
+                    ingredient.derived_emc = Some(derived_emc.clone());
+                }
+            }
+        }
+    });
+    println!(
+        "Updated derived emc for all recipes in {} seconds",
+        start.elapsed().as_secs()
+    );
+    ProcessedData { items, recipes }
+}
+
 fn main() {
     let output_dir = PathBuf::from("outputs");
 
@@ -163,6 +250,13 @@ fn main() {
         data.recipes.len(),
         data.items.len()
     );
+
+    let data = update_derived(data, |item| item.id.starts_with("minecraft:"), |epoch| epoch < 2);
+    for item in data.items {
+        if item.derived_emc.is_some() {
+            println!("{item:#?}");
+        }
+    }
 }
 
 #[cfg(test)]
@@ -202,8 +296,7 @@ mod tests {
         // 1 blaze rod - mechanical squeezer -> 5 blaze powder (no emc) - crafting -> ender pearl (has emc)
         let data = get_data();
         let mut items = data.items;
-        let mut recipes = data.recipes;
-        let mut changed = false;
+        let recipes = data.recipes;
         for item in items.iter_mut() {
             if item.derived_emc.is_none() && item.id == "minecraft:blaze_powder" {
                 for recipe in recipes.iter() {
@@ -230,7 +323,6 @@ mod tests {
                                     "Found derived emc for {:#?} using recipe {:#?}",
                                     item, recipe
                                 );
-                                changed = true;
                             }
                         }
                     }
@@ -278,7 +370,7 @@ mod tests {
                                 let emc_for_item = diff / input_amount as f32;
                                 if item.derived_emc.as_ref().map(|x| x.emc).unwrap_or(0.) < diff {
                                     item.derived_emc = Some(DerivedEmc {
-                                        emc: diff,
+                                        emc: emc_for_item,
                                         path: vec![recipe.recipe_id.to_owned()],
                                     });
                                     println!(
