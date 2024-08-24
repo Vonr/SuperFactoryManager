@@ -30,6 +30,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -138,11 +139,12 @@ public class ClientStuff {
     }
 
     public static void showItemInspectorScreen(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
-        if (tag != null) {
-            String content = tag.toString();
-            Minecraft.getInstance().keyboardHandler.setClipboard(content);
-            SFM.LOGGER.info("Copied {} characters to clipboard", content.length());
-        }
+        throw new NotImplementedException("Check out DataCommands.java for `/data get` command implementation");
+//        CompoundTag tag = stack.getTag();
+//        if (tag != null) {
+//            String content = tag.toString();
+//            Minecraft.getInstance().keyboardHandler.setClipboard(content);
+//            SFM.LOGGER.info("Copied {} characters to clipboard", content.length());
+//        }
     }
 }

@@ -9,7 +9,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import java.util.stream.Stream;
 
 public class ForgeEnergyResourceType extends ResourceType<Integer, Class<Integer>, IEnergyStorage> {
-    public static final ResourceLocation REGISTRY_KEY = new ResourceLocation("forge", "energy");
+    public static final ResourceLocation REGISTRY_KEY = ResourceLocation.fromNamespaceAndPath("forge", "energy");
 
     public ForgeEnergyResourceType() {
         super(Capabilities.EnergyStorage.BLOCK);

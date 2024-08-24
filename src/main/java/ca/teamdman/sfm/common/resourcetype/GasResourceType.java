@@ -8,9 +8,13 @@ import mekanism.api.chemical.gas.IGasHandler;
 import mekanism.common.capabilities.Capabilities;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.stream.Stream;
 
 public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     public static final BlockCapability<IGasHandler, @Nullable Direction> CAP = Capabilities.GAS.block();
@@ -27,6 +31,11 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     @Override
     public GasStack getStackInSlot(IGasHandler iGasHandler, int slot) {
         return iGasHandler.getChemicalInTank(slot);
+    }
+
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(GasStack gasStack) {
+        return gasStack.getChemical().getTags().map(TagKey::location);
     }
 
     @Override
