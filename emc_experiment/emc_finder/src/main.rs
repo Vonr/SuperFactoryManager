@@ -1,11 +1,11 @@
 #![feature(try_blocks)]
+use rayon::iter::{ParallelBridge, ParallelIterator};
+use rayon::prelude::*;
+use serde::Deserialize;
 use std::{
     collections::{HashMap, VecDeque},
     path::PathBuf,
 };
-
-use rayon::iter::{ParallelBridge, ParallelIterator};
-use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
@@ -108,7 +108,7 @@ fn load_recipes() -> Vec<Recipe> {
 
     recipes
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct HistoryEntry {
     recipe_id: String,
     recipe_category: String,
@@ -116,68 +116,108 @@ struct HistoryEntry {
     resulting_emc: f32,
 }
 fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
+    // Create a HashMap for quick lookup of item EMC values
+    let item_map: HashMap<String, f32> = items
+        .iter()
+        .filter_map(|item| item.emc.map(|emc| (item.id.clone(), emc)))
+        .collect();
+
     // Filter recipes that contain the starting item as an input
-    let relevant_recipes: Vec<&Recipe> = recipes.iter()
-        .filter(|recipe| recipe.ingredients.iter().any(|ingredient| ingredient.ingredient_id == start_item_id && ingredient.role == "INPUT"))
+    let relevant_recipes: Vec<&Recipe> = recipes
+        .iter()
+        .filter(|recipe| {
+            recipe.ingredients.iter().any(|ingredient| {
+                ingredient.ingredient_id == start_item_id && ingredient.role == "INPUT"
+            })
+        })
         .collect();
 
     // Iterate over each relevant recipe as a starting point
     for recipe in relevant_recipes {
         // Calculate the starting EMC as the sum of the EMC of all ingredients in the recipe
-        let start_emc: f32 = recipe.ingredients.iter()
+        let start_emc: f32 = recipe
+            .ingredients
+            .iter()
             .filter_map(|ingredient| {
-                items.iter().find(|item| item.id == ingredient.ingredient_id)
-                    .and_then(|item| item.emc)
-                    .map(|emc| emc * ingredient.ingredient_amount as f32)
+                item_map
+                    .get(&ingredient.ingredient_id)
+                    .map(|&emc| emc * ingredient.ingredient_amount as f32)
             })
             .sum();
 
-        let mut visited_recipes = Vec::new();
-        let mut buffer = recipe.ingredients.iter().map(|ing| ing.ingredient_id.clone()).collect::<Vec<String>>();
-        let mut history = Vec::new();
+        let visited_recipes = Vec::new();
+        let buffer = recipe
+            .ingredients
+            .iter()
+            .map(|ing| ing.ingredient_id.clone())
+            .collect::<Vec<String>>();
+        let history = Vec::new();
 
         // Start the cycle detection from this recipe
         traverse_recipes(
             start_emc,
-            &mut buffer,
-            &mut visited_recipes,
-            &mut history,
+            buffer,
+            visited_recipes,
+            history,
             recipes,
             items,
+            &item_map, // Pass the item_map to the recursive function
         );
     }
 }
-
 fn traverse_recipes(
     current_emc: f32,
-    buffer: &mut Vec<String>,
-    visited_recipes: &mut Vec<String>,
-    history: &mut Vec<HistoryEntry>,
+    buffer: Vec<String>,               // Pass by value
+    visited_recipes: Vec<String>,      // Pass by value
+    history: Vec<HistoryEntry>,        // Pass by value
     recipes: &[Recipe],
     items: &[Item],
-) {
-    for recipe in recipes { // TODO: parallelize
+    item_map: &HashMap<String, f32>,
+) -> Vec<HistoryEntry> {
+    recipes.par_iter().map(|recipe| {
+        let mut local_buffer = buffer.clone();
+        let mut local_visited_recipes = visited_recipes.clone();
+        let mut local_history = history.clone();
+
         // Skip recipes we've already visited
-        if visited_recipes.contains(&recipe.recipe_object) {
-            continue;
+        if local_visited_recipes.contains(&recipe.recipe_object) {
+            return local_history;
         }
 
         // Check if this recipe uses any item in the buffer as an input
         let input_items: Vec<&Ingredient> = recipe
             .ingredients
             .iter()
-            .filter(|ingredient| ingredient.role == "INPUT" && buffer.contains(&ingredient.ingredient_id))
+            .filter(|ingredient| ingredient.role == "INPUT" && local_buffer.contains(&ingredient.ingredient_id))
             .collect();
-        // TODO: ensure that we have enough items in the buffer to satisfy the recipe
 
         if !input_items.is_empty() {
-            visited_recipes.push(recipe.recipe_object.clone());
+            local_visited_recipes.push(recipe.recipe_object.clone());
+
+            // Ensure we have enough items in the buffer to satisfy the recipe
+            let mut buffer_copy = local_buffer.clone();
+            let enough_items = input_items.iter().all(|ingredient| {
+                let count = buffer_copy.iter().filter(|id| *id == &ingredient.ingredient_id).count();
+                if count >= ingredient.ingredient_amount as usize {
+                    for _ in 0..ingredient.ingredient_amount {
+                        if let Some(index) = buffer_copy.iter().position(|id| id == &ingredient.ingredient_id) {
+                            buffer_copy.remove(index);
+                        }
+                    }
+                    true
+                } else {
+                    false
+                }
+            });
+
+            if !enough_items {
+                return local_history;
+            }
 
             // Calculate the total EMC of inputs
             let total_input_emc: f32 = input_items.iter().map(|ingredient| {
-                items.iter().find(|item| item.id == ingredient.ingredient_id) // TODO: create a hashmap for this
-                    .and_then(|item| item.emc)
-                    .map(|emc| emc * ingredient.ingredient_amount as f32)
+                item_map.get(&ingredient.ingredient_id)
+                    .map(|&emc| emc * ingredient.ingredient_amount as f32)
                     .unwrap_or(0.0)
             }).sum();
 
@@ -190,11 +230,9 @@ fn traverse_recipes(
 
             let mut total_output_emc = 0.0;
             for output in &output_items {
-                if let Some(item) = items.iter().find(|item| item.id == output.ingredient_id) {
-                    if let Some(emc) = item.emc {
-                        total_output_emc += emc * output.ingredient_amount as f32;
-                        buffer.push(output.ingredient_id.clone());
-                    }
+                if let Some(&emc) = item_map.get(&output.ingredient_id) {
+                    total_output_emc += emc * output.ingredient_amount as f32;
+                    local_buffer.push(output.ingredient_id.clone());
                 }
             }
 
@@ -205,7 +243,7 @@ fn traverse_recipes(
                 ingredients: input_items.iter().map(|ing| ing.ingredient_id.clone()).collect(),
                 resulting_emc: total_output_emc,
             };
-            history.push(history_entry);
+            local_history.push(history_entry);
 
             // Check if the total output EMC is greater than the total input EMC
             if total_output_emc > total_input_emc {
@@ -213,10 +251,10 @@ fn traverse_recipes(
                     "Found profitable cycle: Initial EMC = {}, Input EMC = {}, Output EMC = {}",
                     current_emc, total_input_emc, total_output_emc
                 );
-                println!("Final Buffer: {:?}", buffer);
+                println!("Final Buffer: {:?}", local_buffer);
                 println!("History of steps taken:");
 
-                for entry in history.iter() {
+                for entry in local_history.iter() {
                     println!(
                         "Recipe: {}, Category: {}, Ingredients: {:?}, Resulting EMC: {}",
                         entry.recipe_id, entry.recipe_category, entry.ingredients, entry.resulting_emc
@@ -227,23 +265,16 @@ fn traverse_recipes(
             }
 
             // Recur to explore further chains
-            traverse_recipes(total_output_emc, buffer, visited_recipes, history, recipes, items);
-
-            // Backtrack by removing the current recipe from visited
-            visited_recipes.pop();
-
-            // Safely clear or truncate the buffer
-            if buffer.len() >= output_items.len() {
-                buffer.truncate(buffer.len() - output_items.len());
-            } else {
-                buffer.clear(); // Ensure buffer is safely managed
-            }
-
-            // Remove the last history entry after backtracking
-            history.pop();
+            local_history = traverse_recipes(total_output_emc, local_buffer, local_visited_recipes, local_history, recipes, items, item_map);
         }
-    }
+
+        local_history
+    }).reduce(Vec::new, |mut acc, history| {
+        acc.extend(history);
+        acc
+    })
 }
+
 
 fn main() {
     let items_json = include_str!("../../items.json");
