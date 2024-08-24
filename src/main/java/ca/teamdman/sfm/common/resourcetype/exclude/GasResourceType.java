@@ -2,15 +2,18 @@ package ca.teamdman.sfm.common.resourcetype.exclude;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import mekanism.api.Action;
-import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasHandler;
 import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.common.capabilities.Capability;
 import net.neoforged.neoforge.common.capabilities.CapabilityManager;
 import net.neoforged.neoforge.common.capabilities.CapabilityToken;
 import org.apache.commons.lang3.NotImplementedException;
+
+import java.util.stream.Stream;
 
 public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     public static final Capability<IGasHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
@@ -31,6 +34,11 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     }
 
     @Override
+    public Stream<ResourceLocation> getTagsForStack(GasStack gasStack) {
+        return gasStack.getType().getTags().map(TagKey::location);
+    }
+
+    @Override
     public GasStack extract(IGasHandler handler, int slot, long amount, boolean simulate) {
         return handler.extractChemical(slot, amount, simulate ? Action.SIMULATE : Action.EXECUTE);
     }
@@ -46,7 +54,7 @@ public class GasResourceType extends ResourceType<GasStack, Gas, IGasHandler> {
     }
 
     @Override
-    public long getMaxStackSize(IGasHandler handler, int slot) {
+    public long getMaxStackSizeForSlot(IGasHandler handler, int slot) {
         return handler.getTankCapacity(slot);
     }
 

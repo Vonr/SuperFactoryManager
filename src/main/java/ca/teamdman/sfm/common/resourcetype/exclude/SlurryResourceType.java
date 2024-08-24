@@ -7,10 +7,13 @@ import mekanism.api.chemical.slurry.ISlurryHandler;
 import mekanism.api.chemical.slurry.Slurry;
 import mekanism.api.chemical.slurry.SlurryStack;
 import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.common.capabilities.Capability;
 import net.neoforged.neoforge.common.capabilities.CapabilityManager;
 import net.neoforged.neoforge.common.capabilities.CapabilityToken;
 import org.apache.commons.lang3.NotImplementedException;
+
+import java.util.stream.Stream;
 
 public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurryHandler> {
     public static final Capability<ISlurryHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
@@ -26,12 +29,20 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    public SlurryStack getStackInSlot(ISlurryHandler handler, int slot) {
+    public SlurryStack getStackInSlot(
+            ISlurryHandler handler,
+            int slot
+    ) {
         return handler.getChemicalInTank(slot);
     }
 
     @Override
-    public SlurryStack extract(ISlurryHandler handler, int slot, long amount, boolean simulate) {
+    public SlurryStack extract(
+            ISlurryHandler handler,
+            int slot,
+            long amount,
+            boolean simulate
+    ) {
         return handler.extractChemical(slot, amount, simulate ? Action.SIMULATE : Action.EXECUTE);
     }
 
@@ -46,7 +57,10 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    public long getMaxStackSize(ISlurryHandler handler, int slot) {
+    public long getMaxStackSizeForSlot(
+            ISlurryHandler handler,
+            int slot
+    ) {
         return handler.getTankCapacity(slot);
     }
 
@@ -80,6 +94,10 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
         return o instanceof ISlurryHandler;
     }
 
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(SlurryStack slurryStack) {
+        return slurryStack.getType().getTags().map(TagKey::location);
+    }
 
     @Override
     public Registry<Slurry> getRegistry() {
@@ -98,7 +116,10 @@ public class SlurryResourceType extends ResourceType<SlurryStack, Slurry, ISlurr
     }
 
     @Override
-    protected SlurryStack setCount(SlurryStack stack, long amount) {
+    protected SlurryStack setCount(
+            SlurryStack stack,
+            long amount
+    ) {
         stack.setAmount(amount);
         return stack;
     }
