@@ -8,9 +8,13 @@ import mekanism.api.chemical.infuse.InfusionStack;
 import mekanism.common.capabilities.Capabilities;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.stream.Stream;
 
 public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, IInfusionHandler> {
     public static final BlockCapability<IInfusionHandler, @Nullable Direction> CAP = Capabilities.INFUSION.block();
@@ -25,12 +29,20 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     }
 
     @Override
-    public InfusionStack getStackInSlot(IInfusionHandler handler, int slot) {
+    public InfusionStack getStackInSlot(
+            IInfusionHandler handler,
+            int slot
+    ) {
         return handler.getChemicalInTank(slot);
     }
 
     @Override
-    public InfusionStack extract(IInfusionHandler handler, int slot, long amount, boolean simulate) {
+    public InfusionStack extract(
+            IInfusionHandler handler,
+            int slot,
+            long amount,
+            boolean simulate
+    ) {
         return handler.extractChemical(slot, amount, simulate ? Action.SIMULATE : Action.EXECUTE);
     }
 
@@ -45,7 +57,10 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     }
 
     @Override
-    public long getMaxStackSize(IInfusionHandler handler, int slot) {
+    public long getMaxStackSizeForSlot(
+            IInfusionHandler handler,
+            int slot
+    ) {
         return handler.getTankCapacity(slot);
     }
 
@@ -79,6 +94,11 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
         return o instanceof IInfusionHandler;
     }
 
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(InfusionStack infusionStack) {
+        return infusionStack.getType().getTags().map(TagKey::location);
+    }
+
 
     @Override
     public Registry<InfuseType> getRegistry() {
@@ -96,7 +116,10 @@ public class InfuseResourceType extends ResourceType<InfusionStack, InfuseType, 
     }
 
     @Override
-    protected InfusionStack setCount(InfusionStack stack, long amount) {
+    protected InfusionStack setCount(
+            InfusionStack stack,
+            long amount
+    ) {
         stack.setAmount(amount);
         return stack;
     }
