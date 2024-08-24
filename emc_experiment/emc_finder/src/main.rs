@@ -1,11 +1,11 @@
 #![feature(try_blocks)]
-use rayon::iter::{ParallelBridge, ParallelIterator};
-use rayon::prelude::*;
-use serde::Deserialize;
 use std::{
     collections::{HashMap, VecDeque},
     path::PathBuf,
 };
+
+use rayon::iter::{ParallelBridge, ParallelIterator};
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
@@ -96,7 +96,7 @@ fn load_recipes() -> Vec<Recipe> {
         .read_dir()
         .unwrap()
         .into_iter()
-        .par_bridge() // Convert to parallel iterator
+        .par_bridge()
         .filter_map(|entry| {
             let path = entry.ok()?.path();
             std::fs::read_to_string(&path)
@@ -121,9 +121,12 @@ fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
         .filter_map(|item| item.emc.map(|emc| (item.id.clone(), emc)))
         .collect();
 
-    // Filter recipes that contain the starting item as an input
+    // Filter recipes that contain the starting item as an input and have no more than 9 ingredients
     let relevant_recipes: Vec<&Recipe> = recipes.iter()
-        .filter(|recipe| recipe.ingredients.iter().any(|ingredient| ingredient.ingredient_id == start_item_id && ingredient.role == "INPUT"))
+        .filter(|recipe| {
+            recipe.ingredients.iter().any(|ingredient| ingredient.ingredient_id == start_item_id && ingredient.role == "INPUT") &&
+            recipe.ingredients.len() <= 9
+        })
         .collect();
 
     // Depth limit
@@ -140,8 +143,8 @@ fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
             .sum();
 
         let initial_buffer = recipe.ingredients.iter().map(|ing| ing.ingredient_id.clone()).collect::<Vec<String>>();
-        let mut visited_recipes = Vec::new();
-        let mut history = Vec::new();
+        let visited_recipes = Vec::new();
+        let history = Vec::new();
 
         println!("Starting with ingredients:");
         for ingredient in &recipe.ingredients {
@@ -166,32 +169,28 @@ fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
         );
     }
 }
-
-
-
 fn traverse_recipes(
-    current_emc: f32,
+    _current_emc: f32,
     buffer: Vec<String>,               // Pass by value
     visited_recipes: Vec<String>,      // Pass by value
-    history: Vec<HistoryEntry>,        // Pass by value
+    _history: Vec<HistoryEntry>,       // History tracking removed
     recipes: &[Recipe],
-    items: &[Item],
+    _items: &[Item],
     item_map: &HashMap<String, f32>, // Use a HashMap for faster item lookup
     depth: usize,                     // Add depth parameter
     max_depth: usize,                  // Add max_depth parameter
 ) -> Vec<HistoryEntry> {
     if depth >= max_depth {
-        return history; // Return if the max depth is reached
+        return Vec::new(); // Return empty if the max depth is reached
     }
 
-    recipes.iter().map(|recipe| {
+    recipes.iter().flat_map(|recipe| { // Use flat_map instead of map
         let mut local_buffer = buffer.clone();
         let mut local_visited_recipes = visited_recipes.clone();
-        let mut local_history = history.clone();
 
         // Skip recipes we've already visited
         if local_visited_recipes.contains(&recipe.recipe_object) {
-            return local_history;
+            return Vec::new(); // Return empty vector if the recipe was already visited
         }
 
         // Check if this recipe uses any item in the buffer as an input
@@ -221,7 +220,7 @@ fn traverse_recipes(
             });
 
             if !enough_items {
-                return local_history;
+                return Vec::new(); // Return empty vector if not enough items
             }
 
             // Calculate the total EMC of inputs
@@ -249,17 +248,8 @@ fn traverse_recipes(
             // Trim recipe name and get the last part after `.`
             let trimmed_recipe_name = recipe.recipe_object.rsplit('.').next().unwrap_or(&recipe.recipe_object);
 
-            // Track the current step in the history
-            let history_entry = HistoryEntry {
-                recipe_id: trimmed_recipe_name.to_string(),
-                recipe_category: recipe.category_title.clone(),
-                ingredients: input_items.iter().map(|ing| ing.ingredient_id.clone()).collect(),
-                resulting_emc: total_output_emc,
-            };
-            local_history.push(history_entry);
-
             // Output the current step in a formatted manner
-            println!("Step {}: Applying recipe: {} [{}]", local_history.len(), trimmed_recipe_name, recipe.category_title);
+            println!("Step {}: Applying [{}] recipe: {}", depth + 1, recipe.category_title, trimmed_recipe_name);
             println!("  Inputs:");
             for ingredient in &input_items {
                 let quantity = ingredient.ingredient_amount;
@@ -280,15 +270,12 @@ fn traverse_recipes(
 
             // Stop recursion if depth is reached
             if depth + 1 < max_depth {
-                local_history = traverse_recipes(total_output_emc, local_buffer, local_visited_recipes, local_history, recipes, items, item_map, depth + 1, max_depth);
+                return traverse_recipes(total_output_emc, local_buffer, local_visited_recipes, Vec::new(), recipes, &[], item_map, depth + 1, max_depth);
             }
         }
 
-        local_history
-    }).fold(Vec::new(), |mut acc, history| {
-        acc.extend(history);
-        acc
-    })
+        Vec::<HistoryEntry>::new() // Return empty vector if no valid operation
+    }).collect()
 }
 
 
@@ -298,8 +285,10 @@ fn main() {
     calculate_emc(&mut items);
 
     println!("Loading recipes...");
+    eprintln!("Loading recipes...");
     let recipes = load_recipes();
     println!("Loaded {} recipes", recipes.len());
+    eprintln!("Loaded {} recipes", recipes.len());
     assert!(recipes.len() > 10_000);
 
     // Find EMC cycles starting from blaze rods
