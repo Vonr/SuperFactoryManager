@@ -115,48 +115,45 @@ struct HistoryEntry {
     ingredients: Vec<String>,
     resulting_emc: f32,
 }
+
 fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
     // Create a HashMap for quick lookup of item EMC values
-    let item_map: HashMap<String, f32> = items
-        .iter()
+    let item_map: HashMap<String, f32> = items.iter()
         .filter_map(|item| item.emc.map(|emc| (item.id.clone(), emc)))
         .collect();
 
     // Filter recipes that contain the starting item as an input
-    let relevant_recipes: Vec<&Recipe> = recipes
-        .iter()
-        .filter(|recipe| {
-            recipe.ingredients.iter().any(|ingredient| {
-                ingredient.ingredient_id == start_item_id && ingredient.role == "INPUT"
-            })
-        })
+    let relevant_recipes: Vec<&Recipe> = recipes.iter()
+        .filter(|recipe| recipe.ingredients.iter().any(|ingredient| ingredient.ingredient_id == start_item_id && ingredient.role == "INPUT"))
         .collect();
 
     // Iterate over each relevant recipe as a starting point
     for recipe in relevant_recipes {
         // Calculate the starting EMC as the sum of the EMC of all ingredients in the recipe
-        let start_emc: f32 = recipe
-            .ingredients
-            .iter()
+        let start_emc: f32 = recipe.ingredients.iter()
             .filter_map(|ingredient| {
-                item_map
-                    .get(&ingredient.ingredient_id)
+                item_map.get(&ingredient.ingredient_id)
                     .map(|&emc| emc * ingredient.ingredient_amount as f32)
             })
             .sum();
 
-        let visited_recipes = Vec::new();
-        let buffer = recipe
-            .ingredients
-            .iter()
-            .map(|ing| ing.ingredient_id.clone())
-            .collect::<Vec<String>>();
-        let history = Vec::new();
+        let initial_buffer = recipe.ingredients.iter().map(|ing| ing.ingredient_id.clone()).collect::<Vec<String>>();
+        let mut visited_recipes = Vec::new();
+        let mut history = Vec::new();
+
+        println!("Starting with ingredients:");
+        for ingredient in &recipe.ingredients {
+            let quantity = ingredient.ingredient_amount;
+            let emc = item_map.get(&ingredient.ingredient_id).copied().unwrap_or(0.0);
+            let total_emc = emc * quantity as f32;
+            println!("  {}x {} ({} EMC, {} total EMC)", quantity, ingredient.ingredient_id, emc, total_emc);
+        }
+        println!("Initial EMC: {}\n", start_emc);
 
         // Start the cycle detection from this recipe
         traverse_recipes(
             start_emc,
-            buffer,
+            initial_buffer,
             visited_recipes,
             history,
             recipes,
@@ -165,6 +162,8 @@ fn find_emc_cycles(start_item_id: &str, recipes: &[Recipe], items: &[Item]) {
         );
     }
 }
+
+
 fn traverse_recipes(
     current_emc: f32,
     buffer: Vec<String>,               // Pass by value
@@ -172,7 +171,7 @@ fn traverse_recipes(
     history: Vec<HistoryEntry>,        // Pass by value
     recipes: &[Recipe],
     items: &[Item],
-    item_map: &HashMap<String, f32>,
+    item_map: &HashMap<String, f32>, // Use a HashMap for faster item lookup
 ) -> Vec<HistoryEntry> {
     recipes.par_iter().map(|recipe| {
         let mut local_buffer = buffer.clone();
@@ -236,33 +235,37 @@ fn traverse_recipes(
                 }
             }
 
+            // Trim recipe name and get the last part after `.`
+            let trimmed_recipe_name = recipe.recipe_object.rsplit('.').next().unwrap_or(&recipe.recipe_object);
+
             // Track the current step in the history
             let history_entry = HistoryEntry {
-                recipe_id: recipe.recipe_object.clone(),
+                recipe_id: trimmed_recipe_name.to_string(),
                 recipe_category: recipe.category_title.clone(),
                 ingredients: input_items.iter().map(|ing| ing.ingredient_id.clone()).collect(),
                 resulting_emc: total_output_emc,
             };
             local_history.push(history_entry);
 
-            // Check if the total output EMC is greater than the total input EMC
-            if total_output_emc > total_input_emc {
-                println!(
-                    "Found profitable cycle: Initial EMC = {}, Input EMC = {}, Output EMC = {}",
-                    current_emc, total_input_emc, total_output_emc
-                );
-                println!("Final Buffer: {:?}", local_buffer);
-                println!("History of steps taken:");
-
-                for entry in local_history.iter() {
-                    println!(
-                        "Recipe: {}, Category: {}, Ingredients: {:?}, Resulting EMC: {}",
-                        entry.recipe_id, entry.recipe_category, entry.ingredients, entry.resulting_emc
-                    );
-                }
-                println!();
-                println!();
+            // Output the current step in a formatted manner
+            println!("Step {}: Applying recipe: {} [{}]", local_history.len(), trimmed_recipe_name, recipe.category_title);
+            println!("  Inputs:");
+            for ingredient in &input_items {
+                let quantity = ingredient.ingredient_amount;
+                let emc = item_map.get(&ingredient.ingredient_id).copied().unwrap_or(0.0);
+                let total_emc = emc * quantity as f32;
+                println!("    {}x {} ({} EMC, {} total EMC)", quantity, ingredient.ingredient_id, emc, total_emc);
             }
+            println!("  Outputs:");
+            for output in &output_items {
+                let quantity = output.ingredient_amount;
+                let emc = item_map.get(&output.ingredient_id).copied().unwrap_or(0.0);
+                let total_emc = emc * quantity as f32;
+                println!("    {}x {} ({} EMC, {} total EMC)", quantity, output.ingredient_id, emc, total_emc);
+            }
+            println!("  Buffer now contains: {:?}", local_buffer);
+            println!("  Total EMC: {}", total_output_emc);
+            println!();
 
             // Recur to explore further chains
             local_history = traverse_recipes(total_output_emc, local_buffer, local_visited_recipes, local_history, recipes, items, item_map);
