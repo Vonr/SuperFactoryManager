@@ -16,8 +16,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
-import java.io.IOException;
-
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SFM.MOD_ID)
@@ -58,29 +56,36 @@ public class SFMCommand {
             command.then(Commands.literal("export_info")
                                  .requires(__ -> true)
                                  .then(Commands.argument("includeHidden", BoolArgumentType.bool())
-                                 .executes(ctx -> {
-                                     boolean includeHidden = BoolArgumentType.getBool(ctx, "includeHidden");
-                                     SFM.LOGGER.info(
-                                             "Exporting info, includeHidden={} - slash command used by {}",
-                                             includeHidden,
-                                             ctx.getSource().getTextName()
-                                     );
-                                     try {
-
-                                         assert Minecraft.getInstance().player != null;
-                                         Minecraft.getInstance().player.sendSystemMessage(
-                                                 Component.literal("Beginning item export")
-                                         );
-                                         ClientExportHelper.dumpItems(ctx.getSource().getPlayer());
-                                         Minecraft.getInstance().player.sendSystemMessage(
-                                                 Component.literal("Beginning JEI export")
-                                         );
-                                         ClientExportHelper.dumpJei(ctx.getSource().getPlayer(), includeHidden);
-                                     } catch (Exception e) {
-                                         SFM.LOGGER.error("Failed to export item data", e);
-                                     }
-                                     return SINGLE_SUCCESS;
-                                 })));
+                                               .executes(ctx -> {
+                                                   boolean includeHidden = BoolArgumentType.getBool(
+                                                           ctx,
+                                                           "includeHidden"
+                                                   );
+                                                   SFM.LOGGER.info(
+                                                           "Exporting info, includeHidden={} - slash command used by {}",
+                                                           includeHidden,
+                                                           ctx.getSource().getTextName()
+                                                   );
+                                                   assert Minecraft.getInstance().player != null;
+                                                   new Thread(() -> {
+                                                       try {
+                                                           Minecraft.getInstance().player.sendSystemMessage(
+                                                                   Component.literal("Beginning item export")
+                                                           );
+                                                           ClientExportHelper.dumpItems(ctx.getSource().getPlayer());
+                                                           Minecraft.getInstance().player.sendSystemMessage(
+                                                                   Component.literal("Beginning JEI export")
+                                                           );
+                                                           ClientExportHelper.dumpJei(
+                                                                   ctx.getSource().getPlayer(),
+                                                                   includeHidden
+                                                           );
+                                                       } catch (Exception e) {
+                                                           SFM.LOGGER.error("Failed to export item data", e);
+                                                       }
+                                                   }).start();
+                                                   return SINGLE_SUCCESS;
+                                               })));
         }
         event.getDispatcher().register(command);
     }

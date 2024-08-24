@@ -9,15 +9,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import mezz.jei.api.helpers.IJeiHelpers;
-import mezz.jei.api.ingredients.IIngredientType;
-import mezz.jei.api.recipe.IRecipeLookup;
-import mezz.jei.api.recipe.IRecipeManager;
-import mezz.jei.api.recipe.RecipeIngredientRole;
-import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.*;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IJeiRuntime;
-import mezz.jei.library.gui.recipes.RecipeLayoutBuilder;
+import mezz.jei.library.ingredients.IIngredientSupplier;
+import mezz.jei.library.util.IngredientSupplierHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -194,39 +191,47 @@ public class ClientExportHelper {
         AtomicInteger counter = new AtomicInteger();
         recipes.parallel().forEach(recipe -> {
             // Get the recipe data
-            // from mezz.jei.library.gui.recipes.RecipeLayout.java
-            int ingredientCycleOffset = (int) ((Math.random() * 10000) % Integer.MAX_VALUE);
-            RecipeLayoutBuilder recipeLayoutBuilder = new RecipeLayoutBuilder(ingredientManager, ingredientCycleOffset);
-            recipeCategory.setRecipe(recipeLayoutBuilder, recipe, jeiHelpers.getFocusFactory().getEmptyFocusGroup());
+//            RecipeLayoutBuilder<T> recipeLayoutBuilder = new RecipeLayoutBuilder<T>(recipeCategory, recipe, ingredientManager);
+            IIngredientSupplier ingredientSupplier = IngredientSupplierHelper.getIngredientSupplier(
+                    recipe,
+                    recipeCategory,
+                    ingredientManager
+            );
+            if (ingredientSupplier == null) {
+                player.sendSystemMessage(
+                        Component.literal("Could not get ingredient supplier for recipe from category ")
+                                .withStyle(ChatFormatting.RED)
+                                .append(recipeCategory.getTitle())
+                                .append(Component.literal(" with recipe object "))
+                                .append(Component.literal(recipe.toString()))
+                );
+                return;
+            }
 
             ConcurrentLinkedDeque<JsonObject> ingredientResults = new ConcurrentLinkedDeque<>();
 
             // Build ingredient info
             JsonArray ingredientArray = new JsonArray();
+
             for (RecipeIngredientRole recipeIngredientRole : RecipeIngredientRole.values()) {
-                recipeLayoutBuilder
-                        .getIngredientTypes(recipeIngredientRole)
-                        .parallel()
-                        .forEachOrdered((IIngredientType<?> ingredientType) -> {
-                            recipeLayoutBuilder
-                                    .getIngredientStream(ingredientType, recipeIngredientRole)
-                                    .forEachOrdered(ingredient -> {
-                                        JsonObject ingredientObject = new JsonObject();
-                                        ingredientObject.addProperty("role", recipeIngredientRole.toString());
-                                        ingredientObject.addProperty(
-                                                "ingredientType",
-                                                ingredientType.getIngredientClass().getName()
-                                        );
-                                        //noinspection rawtypes
-                                        for (ResourceType resourceType : resourceTypes) {
-                                            if (resourceType.matchesStackType(ingredient)) {
-                                                //noinspection unchecked
-                                                addIngredientInfo(resourceType, ingredient, ingredientObject);
-                                            }
-                                        }
-                                        ingredientObject.addProperty("ingredient", ingredient.toString());
-                                        ingredientResults.add(ingredientObject);
-                                    });
+                ingredientSupplier.getIngredients(recipeIngredientRole).stream().parallel()
+                        .forEachOrdered(typedIngredient -> {
+                            JsonObject ingredientObject = new JsonObject();
+                            ingredientObject.addProperty("role", recipeIngredientRole.toString());
+                            ingredientObject.addProperty(
+                                    "ingredientType",
+                                    typedIngredient.getType().getIngredientClass().getName()
+                            );
+                            Object ingredient = typedIngredient.getIngredient();
+                            //noinspection rawtypes
+                            for (ResourceType resourceType : resourceTypes) {
+                                if (resourceType.matchesStackType(ingredient)) {
+                                    //noinspection unchecked
+                                    addIngredientInfo(resourceType, ingredient, ingredientObject);
+                                }
+                            }
+                            ingredientObject.addProperty("ingredient", ingredient.toString());
+                            ingredientResults.add(ingredientObject);
                         });
             }
 
