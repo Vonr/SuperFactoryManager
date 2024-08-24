@@ -130,44 +130,56 @@ public class ClientExportHelper {
                 .includeHidden()
                 .get();
 
-        // manually build JSON array
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    Collection<ResourceType<?, ?, ?>> resourceTypes = SFMResourceTypes.DEFERRED_TYPES.get().getValues();
+
+    // Ensure the folder exists
+    var gameDir = FMLPaths.GAMEDIR.get();
+    var folder = Paths.get(gameDir.toString(), SFM.MOD_ID,"jei");
+    try {
+        Files.createDirectories(folder);
+    } catch (IOException e) {
+        SFM.LOGGER.error("Failed to create directories: {}", folder.toString(), e);
+        player.sendSystemMessage(Component.literal("Failed to create directories for saving recipes.")
+                                         .withStyle(ChatFormatting.RED));
+        return;
+    }
+
+    // Process each recipe category in parallel
+    recipeCategoryStream.parallel().forEach(recipeCategory -> {
         JsonArray jsonArray = new JsonArray();
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        extractCategory(gson, jeiHelpers, recipeCategory, recipeManager, ingredientManager, jsonArray,
+                        resourceTypes,
+                        includeHidden,
+                        player
+        );
 
-        Collection<ResourceType<?, ?, ?>> resourceTypes = SFMResourceTypes.DEFERRED_TYPES.get().getValues();
-        for (IRecipeCategory<?> recipeCategory : ((Iterable<IRecipeCategory<?>>) recipeCategoryStream::iterator)) {
-            player.sendSystemMessage(
-                    Component.literal("Dumping category ").append(recipeCategory.getTitle())
-            );
-            extractCategory(gson, jeiHelpers, recipeCategory, recipeManager, ingredientManager, jsonArray,
-                            resourceTypes,
-                            includeHidden,
-                            player
-            );
-        }
-
-        // serialize to JSON with pretty printing
+        // Serialize the JSON content
         String content = gson.toJson(jsonArray);
 
 
-        // ensure folder exists
-        var gameDir = FMLPaths.GAMEDIR.get();
-        var folder = Paths.get(gameDir.toString(), SFM.MOD_ID);
-        Files.createDirectories(folder);
-
-        // write to file
-        File file = new File(folder.toFile(), "jei.json");
+        // Write to a separate file for each category
+        String fileName = recipeCategory.getTitle().getString().replaceAll("[<>:\"/\\\\|?*]", "-") + ".json";
+        File file = new File(folder.toFile(), fileName);
         try (FileOutputStream str = new FileOutputStream(file)) {
             str.write(content.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            SFM.LOGGER.error("Failed to write JEI category data for category: {}", recipeCategory.getTitle().getString(), e);
+            player.sendSystemMessage(Component.literal("Failed to save recipe category: ")
+                    .append(recipeCategory.getTitle()).withStyle(ChatFormatting.RED));
+            return;
         }
 
-        // notify the player
+        // Notify the player
         player.sendSystemMessage(Component.literal(String.format(
-                "Exported %d JEI entries to \"%s\"",
+                "Exported %d JEI entries for category \"%s\" to \"%s\"",
                 jsonArray.size(),
+                recipeCategory.getTitle().getString(),
                 file.getAbsolutePath()
         )));
-    }
+    });
+}
+
 
     private static <T> void extractCategory(
             Gson gson,
@@ -240,6 +252,7 @@ public class ClientExportHelper {
             // Add results
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("category", recipeCategory.toString());
+            jsonObject.addProperty("categoryTitle", recipeCategory.getTitle().getString());
             jsonObject.addProperty("recipeTypeId", recipeType.getUid().toString());
             jsonObject.addProperty("recipeClass", recipeType.getRecipeClass().toString());
             jsonObject.addProperty("recipeObject", recipe.toString());
