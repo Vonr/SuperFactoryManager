@@ -376,9 +376,10 @@ generateGrammarSource {
 compileJava.dependsOn generateGrammarSource
 
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
-    }
-}
+// However, this causes gradle to throw "Error getting artifact" so keep it commented out to retain your sanity
+//idea {
+//    module {
+//        downloadSources = true
+//        downloadJavadoc = true
+//    }
+//}

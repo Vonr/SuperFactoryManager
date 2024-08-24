@@ -6,7 +6,10 @@ import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
-import ca.teamdman.sfm.common.net.*;
+import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
+import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -60,7 +63,11 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton rebuildButton;
 
-    public ManagerScreen(ManagerContainerMenu menu, Inventory inv, Component title) {
+    public ManagerScreen(
+            ManagerContainerMenu menu,
+            Inventory inv,
+            Component title
+    ) {
         super(menu, inv, title);
     }
 
@@ -269,10 +276,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         try {
             var disk = menu.CONTAINER.getItem(0);
             if (!(disk.getItem() instanceof DiskItem)) return;
-            Minecraft.getInstance().keyboardHandler.setClipboard(ClientDiagnosticInfo.getDiagnosticInfo(
-                    menu.program,
-                    disk
-            ));
+            String diagnosticInfo = ClientDiagnosticInfo.getDiagnosticInfo(menu.program, disk);
+            Minecraft.getInstance().keyboardHandler.setClipboard(diagnosticInfo);
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
@@ -312,8 +317,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mx, int my) {
-        PoseStack poseStack = graphics.pose();
-        // draw title
+        PoseStack poseStack = graphics.pose();        // draw title
         super.renderLabels(graphics, mx, my);
 
         // draw state string
@@ -338,8 +342,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             poseStack.scale(0.5f, 0.5f, 1f);
             graphics.drawString(
                     this.font,
-                    Component
-                            .literal(menu.logLevel),
+                    Component.literal(menu.logLevel),
                     0,
                     0,
                     0,
@@ -430,21 +433,21 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         var format = new DecimalFormat("0.000");
         if (mouseTickTimeIndex != -1) { // We are hovering over the plot
             // Draw the tick time text for the hovered point instead of peak
-            long hoveredTickTimeNanoseconds = menu.tickTimeNanos[mouseTickTimeIndex];
-            var hoveredTickTimeMilliseconds = hoveredTickTimeNanoseconds / 1_000_000f;
-
-            graphics.drawString(
-                    this.font,
-                    MANAGER_GUI_HOVERED_TICK_TIME.getComponent(Component
-                                                                       .literal(format.format(
-                                                                               hoveredTickTimeMilliseconds))
-                                                                       .withStyle(getMillisecondColour(
-                                                                               hoveredTickTimeMilliseconds))),
-                    titleLabelX,
-                    20 + font.lineHeight,
-                    0,
-                    false
-            );
+            {
+                long hoveredTickTimeNanoseconds = menu.tickTimeNanos[mouseTickTimeIndex];
+                var hoveredTickTimeMilliseconds = hoveredTickTimeNanoseconds / 1_000_000f;
+                String formattedMillis = format.format(hoveredTickTimeMilliseconds);
+                ChatFormatting lagColor = getMillisecondColour(hoveredTickTimeMilliseconds);
+                Component milliseconds = Component.literal(formattedMillis).withStyle(lagColor);
+                graphics.drawString(
+                        this.font,
+                        MANAGER_GUI_HOVERED_TICK_TIME_MS.getComponent(milliseconds),
+                        titleLabelX,
+                        20 + font.lineHeight,
+                        0,
+                        false
+                );
+            }
 
             // draw a vertical line
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
@@ -466,12 +469,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         } else {
             // Draw the tick time text for peak value
             var peakTickTimeMilliseconds = peakTickTimeNanoseconds / 1_000_000f;
+            String formattedMillis = format.format(peakTickTimeMilliseconds);
+            ChatFormatting lagColor = getMillisecondColour(peakTickTimeMilliseconds);
+            Component milliseconds = Component.literal(formattedMillis).withStyle(lagColor);
             graphics.drawString(
                     this.font,
-                    MANAGER_GUI_PEAK_TICK_TIME.getComponent(Component
-                                                                    .literal(format.format(peakTickTimeMilliseconds))
-                                                                    .withStyle(getMillisecondColour(
-                                                                            peakTickTimeMilliseconds))),
+                    MANAGER_GUI_PEAK_TICK_TIME_MS.getComponent(milliseconds),
                     titleLabelX,
                     20 + font.lineHeight,
                     0,
