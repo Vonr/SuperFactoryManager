@@ -206,6 +206,13 @@ public class ProgramEditScreen extends Screen {
 
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
+        // TODO: add separate keybindings for
+        // context action - hold to arm
+        // context action - execute
+        // indent - increase
+        // indent - decrease
+        // save and close - hold to arm
+        // save and close - execute
         if ((pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) && Screen.hasShiftDown()) {
             saveAndClose();
             return true;

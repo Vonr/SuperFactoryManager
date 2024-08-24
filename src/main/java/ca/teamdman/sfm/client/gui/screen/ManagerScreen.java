@@ -325,10 +325,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         try {
             var disk = menu.CONTAINER.getItem(0);
             if (!(disk.getItem() instanceof DiskItem)) return;
-            Minecraft.getInstance().keyboardHandler.setClipboard(ClientDiagnosticInfo.getDiagnosticInfo(
-                    menu.program,
-                    disk
-            ));
+            String diagnosticInfo = ClientDiagnosticInfo.getDiagnosticInfo(menu.program, disk);
+            Minecraft.getInstance().keyboardHandler.setClipboard(diagnosticInfo);
             status = MANAGER_GUI_STATUS_SAVED_CLIPBOARD.getComponent();
             statusCountdown = STATUS_DURATION;
         } catch (Throwable t) {
@@ -375,8 +373,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
             poseStack.scale(0.5f, 0.5f, 1f);
             this.font.draw(
                     poseStack,
-                    Component
-                            .literal(menu.logLevel),
+                    Component.literal(menu.logLevel),
                     0f,
                     0f,
                     0
@@ -465,20 +462,20 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         var format = new DecimalFormat("0.000");
         if (mouseTickTimeIndex != -1) { // We are hovering over the plot
             // Draw the tick time text for the hovered point instead of peak
-            long hoveredTickTimeNanoseconds = menu.tickTimeNanos[mouseTickTimeIndex];
-            var hoveredTickTimeMilliseconds = hoveredTickTimeNanoseconds / 1_000_000f;
-
-            this.font.draw(
-                    poseStack,
-                    MANAGER_GUI_HOVERED_TICK_TIME.getComponent(Component
-                                                                       .literal(format.format(
-                                                                               hoveredTickTimeMilliseconds))
-                                                                       .withStyle(getMillisecondColour(
-                                                                               hoveredTickTimeMilliseconds))),
-                    titleLabelX,
-                    20f + font.lineHeight + 0.1f,
-                    0
-            );
+            {
+                long hoveredTickTimeNanoseconds = menu.tickTimeNanos[mouseTickTimeIndex];
+                var hoveredTickTimeMilliseconds = hoveredTickTimeNanoseconds / 1_000_000f;
+                String formattedMillis = format.format(hoveredTickTimeMilliseconds);
+                ChatFormatting lagColor = getMillisecondColour(hoveredTickTimeMilliseconds);
+                Component milliseconds = Component.literal(formattedMillis).withStyle(lagColor);
+                this.font.draw(
+                        poseStack,
+                        MANAGER_GUI_HOVERED_TICK_TIME_MS.getComponent(milliseconds),
+                        titleLabelX,
+                        20f + font.lineHeight + 0.1f,
+                        0
+                );
+            }
 
             // draw a vertical line
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
@@ -500,12 +497,12 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         } else {
             // Draw the tick time text for peak value
             var peakTickTimeMilliseconds = peakTickTimeNanoseconds / 1_000_000f;
+            String formattedMillis = format.format(peakTickTimeMilliseconds);
+            ChatFormatting lagColor = getMillisecondColour(peakTickTimeMilliseconds);
+            Component milliseconds = Component.literal(formattedMillis).withStyle(lagColor);
             this.font.draw(
                     poseStack,
-                    MANAGER_GUI_PEAK_TICK_TIME.getComponent(Component
-                                                                    .literal(format.format(peakTickTimeMilliseconds))
-                                                                    .withStyle(getMillisecondColour(
-                                                                            peakTickTimeMilliseconds))),
+                    MANAGER_GUI_PEAK_TICK_TIME_MS.getComponent(milliseconds),
                     titleLabelX,
                     20f + font.lineHeight + 0.1f,
                     0
