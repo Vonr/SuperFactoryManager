@@ -205,6 +205,7 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
         "jeresources:worldgen",
         "jeresources:dungeon",
         "jeresources:mob",
+        "ae2:certus_growth",
     ]
     .into_iter()
     .map(|s| s.to_owned())

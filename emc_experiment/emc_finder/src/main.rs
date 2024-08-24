@@ -25,24 +25,23 @@ where
     let mut epoch = 0;
     let mut changed = true;
     loop {
-        if epoch > 0 {
-            // we want to update the derived emc on all the recipes
-            // we want to do this update before each epoch after the first
-            // we want to do this update before returning
-            recipes.iter_mut().par_bridge().for_each(|recipe| {
-                for ingredient in recipe.inputs.iter_mut().chain(recipe.outputs.iter_mut()) {
-                    if let Some(item) = items.get(&ingredient.ingredient_id) {
-                        // update ingredient with best emc info
-                        if let Some(derived_emc) = item.best_acquire_emc.as_ref() {
-                            ingredient.best_emc_acquire = Some(derived_emc.clone());
-                        }
-                        if let Some(derived_emc) = item.best_burn_emc.as_ref() {
-                            ingredient.best_emc_burn = Some(derived_emc.clone());
-                        }
+        // we want to update the emc on all the recipes
+        // we also want to do this before returning
+        recipes.iter_mut().par_bridge().for_each(|recipe| {
+            for ingredient in recipe.inputs.iter_mut().chain(recipe.outputs.iter_mut()) {
+                if let Some(item) = items.get(&ingredient.ingredient_id) {
+                    if ingredient.emc.is_none() {
+                        ingredient.emc = item.emc;
+                    }
+                    if let Some(derived_emc) = item.best_acquire_emc.as_ref() {
+                        ingredient.best_emc_acquire = Some(derived_emc.clone());
+                    }
+                    if let Some(derived_emc) = item.best_burn_emc.as_ref() {
+                        ingredient.best_emc_burn = Some(derived_emc.clone());
                     }
                 }
-            });
-        }
+            }
+        });
 
         if !epoch_filter(epoch) {
             println!("Stopping after {} epochs", epoch);
@@ -63,6 +62,7 @@ where
             .map(|item| {
                 let mut changed = false;
                 if item.get_burn_emc().is_none() {
+                    // find a recipe that consumes this item and gives us something we can burn
                     for recipe in recipes.iter() {
                         let mut inputs_our_item = false;
                         let mut inputs_lacking_emc = false;
@@ -81,12 +81,25 @@ where
                             let diff = output_emc - input_emc;
                             if diff > 0.0 {
                                 let emc_for_item = diff / input_amount as f32;
-                                if item.best_burn_emc.as_ref().map(|x| x.emc).unwrap_or(0.)
-                                    < emc_for_item
-                                {
+                                let current_best =
+                                    item.best_burn_emc.as_ref().map(|x| x.emc).unwrap_or(0.);
+
+                                // is this a better burn
+                                if current_best < emc_for_item {
+                                    // do not proceed if the path already contains this recipe
+                                    if item.best_burn_emc.as_ref().map(|x| x.path.contains(&recipe.recipe_id)).unwrap_or(false) {
+                                        continue;
+                                    }
+
+                                    // add this recipe to the path
+                                    let old = item.best_burn_emc.take();
+                                    let mut path = old.map(|x| x.path).unwrap_or_default();
+                                    path.push(recipe.recipe_id.to_owned());
+
+                                    // update the best burn emc
                                     item.best_burn_emc = Some(DerivedEmc {
                                         emc: emc_for_item,
-                                        path: vec![recipe.recipe_id.to_owned()],
+                                        path,
                                     });
                                     // println!(
                                     //     "Found derived burn emc for {:#?} using recipe {:#?}",
@@ -99,6 +112,7 @@ where
                     }
                 }
                 if item.get_acquire_emc().is_none() {
+                    // find a recipe that produces this item using only items that can be acquired
                     for recipe in recipes.iter() {
                         let mut outputs_our_item = false;
                         let mut inputs_lacking_emc = false;
@@ -168,7 +182,9 @@ fn main() {
     let data = update_derived_emc(
         data,
         |item| item.id.starts_with("minecraft:"),
-        |epoch| epoch < 2,
+        // |item| true,
+        |epoch| epoch < 6,
+        // |epoch| epoch < 2,
     );
     // write items as items.json
     let items_path = output_dir.join("items.json");
