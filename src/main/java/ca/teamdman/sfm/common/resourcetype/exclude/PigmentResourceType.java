@@ -7,10 +7,13 @@ import mekanism.api.chemical.pigment.IPigmentHandler;
 import mekanism.api.chemical.pigment.Pigment;
 import mekanism.api.chemical.pigment.PigmentStack;
 import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.common.capabilities.Capability;
 import net.neoforged.neoforge.common.capabilities.CapabilityManager;
 import net.neoforged.neoforge.common.capabilities.CapabilityToken;
 import org.apache.commons.lang3.NotImplementedException;
+
+import java.util.stream.Stream;
 
 public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPigmentHandler> {
     public static final Capability<IPigmentHandler> CAP = CapabilityManager.get(new CapabilityToken<>() {
@@ -26,12 +29,20 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     }
 
     @Override
-    public PigmentStack getStackInSlot(IPigmentHandler handler, int slot) {
+    public PigmentStack getStackInSlot(
+            IPigmentHandler handler,
+            int slot
+    ) {
         return handler.getChemicalInTank(slot);
     }
 
     @Override
-    public PigmentStack extract(IPigmentHandler handler, int slot, long amount, boolean simulate) {
+    public PigmentStack extract(
+            IPigmentHandler handler,
+            int slot,
+            long amount,
+            boolean simulate
+    ) {
         return handler.extractChemical(slot, amount, simulate ? Action.SIMULATE : Action.EXECUTE);
     }
 
@@ -46,7 +57,10 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     }
 
     @Override
-    public long getMaxStackSize(IPigmentHandler handler, int slot) {
+    public long getMaxStackSizeForSlot(
+            IPigmentHandler handler,
+            int slot
+    ) {
         return handler.getTankCapacity(slot);
     }
 
@@ -80,6 +94,11 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
         return o instanceof IPigmentHandler;
     }
 
+    @Override
+    public Stream<ResourceLocation> getTagsForStack(PigmentStack pigmentStack) {
+        return pigmentStack.getType().getTags().map(TagKey::location);
+    }
+
 
     @Override
     public Registry<Pigment> getRegistry() {
@@ -98,7 +117,10 @@ public class PigmentResourceType extends ResourceType<PigmentStack, Pigment, IPi
     }
 
     @Override
-    protected PigmentStack setCount(PigmentStack stack, long amount) {
+    protected PigmentStack setCount(
+            PigmentStack stack,
+            long amount
+    ) {
         stack.setAmount(amount);
         return stack;
     }
