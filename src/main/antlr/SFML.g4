@@ -135,7 +135,7 @@ resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON 
                 | string                                                                            # StringResource
                 ;
 
-identifier : (IDENTIFIER | REDSTONE | DATA) ;
+identifier : (IDENTIFIER | REDSTONE) ;
 
 // GENERAL
 string: STRING ;
