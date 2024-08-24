@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
@@ -197,11 +198,18 @@ fn load_recipes(jei_folder: &str) -> Vec<Recipe> {
 }
 
 fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<ProcessedRecipe> {
-    let disallowed_recipe_types = ["jei:information", "ftbquests:quest", "minecraft:anvil"]
-        .into_iter()
-        .map(|s| s.to_owned())
-        .collect::<HashSet<String>>();
-    recipes
+    let disallowed_recipe_types = [
+        "jei:information",
+        "ftbquests:quest",
+        "minecraft:anvil",
+        "jeresources:worldgen",
+        "jeresources:dungeon",
+        "jeresources:mob",
+    ]
+    .into_iter()
+    .map(|s| s.to_owned())
+    .collect::<HashSet<String>>();
+    let recipes = recipes
         .par_iter()
         .filter_map(|recipe| {
             if disallowed_recipe_types.contains(&recipe.recipe_type_id) {
@@ -248,6 +256,11 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
                 })
                 .collect();
 
+            if outputs.is_empty() {
+                // recipes with no output are of no use to us
+                return None;
+            }
+
             let total_input_emc: f32 = inputs
                 .iter()
                 .filter_map(|ing| ing.emc.map(|emc| emc * ing.ingredient_amount as f32))
@@ -259,7 +272,7 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
 
             if total_output_emc <= total_input_emc && !has_non_emc_ingredient && !has_non_emc_output
             {
-                // this recipe is not useful because 
+                // this recipe is not useful because
                 // all the output ingredients can be acquired more cheaply using EMC
                 return None;
             }
@@ -275,7 +288,13 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
                 has_non_base_emc_output: has_non_emc_output,
             })
         })
-        .collect()
+        .collect_vec_list();
+    let recipes = recipes
+        .into_iter()
+        .flatten()
+        .unique_by(|recipe| recipe.recipe_id.clone())
+        .collect();
+    recipes
 }
 
 fn save_processed_data(data: &ProcessedData, path: &Path) {

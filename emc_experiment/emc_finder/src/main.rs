@@ -2,6 +2,8 @@
 
 mod preprocess;
 
+use core::f32;
+use itertools::Itertools;
 use preprocess::get_data;
 use preprocess::DerivedEmc;
 use preprocess::HasEmc;
@@ -9,7 +11,6 @@ use preprocess::Item;
 use preprocess::ProcessedData;
 use rayon::iter::ParallelBridge;
 use rayon::iter::ParallelIterator;
-use core::f32;
 use std::fs::{self};
 use std::path::PathBuf;
 
@@ -116,7 +117,11 @@ where
                         if outputs_our_item && !inputs_lacking_emc {
                             let input_emc = recipe.get_input_emc();
                             let emc_for_item = input_emc / output_amount as f32;
-                            if item.best_acquire_emc.as_ref().map(|x| x.emc).unwrap_or(f32::MAX)
+                            if item
+                                .best_acquire_emc
+                                .as_ref()
+                                .map(|x| x.emc)
+                                .unwrap_or(f32::MAX)
                                 > emc_for_item
                             {
                                 item.best_acquire_emc = Some(DerivedEmc {
@@ -165,16 +170,36 @@ fn main() {
         |item| item.id.starts_with("minecraft:"),
         |epoch| epoch < 2,
     );
-    for item in data.items.values() {
-        // can we burn this item for more than we pay to acquire it
-        if item
-            .get_acquire_emc()
-            .and_then(|acquire| item.get_burn_emc().map(|burn| acquire < burn))
-            .unwrap_or(false)
-        {
-            println!("{item:#?}");
-        }
-    }
+    // write items as items.json
+    let items_path = output_dir.join("items.json");
+    let items_json = serde_json::to_string_pretty(&data.items).unwrap();
+    fs::write(&items_path, items_json).expect("Unable to write items.json");
+
+    // write recipes as recipes.json
+    let recipes_path = output_dir.join("recipes.json");
+    let recipes_json = serde_json::to_string_pretty(&data.recipes).unwrap();
+    fs::write(&recipes_path, recipes_json).expect("Unable to write recipes.json");
+
+    let gains = data
+        .items
+        .values()
+        .filter(|item| item.get_acquire_emc().is_some() && item.get_burn_emc().is_some())
+        .filter_map(|item| {
+            let acquire = item.get_acquire_emc().unwrap();
+            let burn = item.get_burn_emc().unwrap();
+            if acquire < burn {
+                Some((item, burn - acquire))
+            } else {
+                None
+            }
+        })
+        .sorted_by_key(|x| (x.1 * 1000.0) as i32)
+        .map(|x| x.0)
+        .collect::<Vec<_>>();
+    // write gains as gains.json
+    let gains_path = output_dir.join("gains.json");
+    let gains_json = serde_json::to_string_pretty(&gains).unwrap();
+    fs::write(&gains_path, gains_json).expect("Unable to write gains.json");
 }
 
 #[cfg(test)]
