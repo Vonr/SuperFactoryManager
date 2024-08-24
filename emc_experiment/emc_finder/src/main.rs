@@ -1,14 +1,14 @@
 #![feature(try_blocks)]
+
 use std::{
     collections::{HashMap, VecDeque},
     fs::{self, File},
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
-    sync::Mutex,
 };
 
 use rayon::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
@@ -21,7 +21,15 @@ pub struct Item {
     emc: Option<f32>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone)]
+struct HistoryEntry {
+    recipe_id: String,
+    recipe_category: String,
+    ingredients: Vec<String>,
+    resulting_emc: f32,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(dead_code)]
 pub struct Ingredient {
     role: String,
@@ -50,12 +58,12 @@ pub struct Recipe {
     ingredients: Vec<Ingredient>,
 }
 
-#[derive(Debug, Clone)]
-struct HistoryEntry {
+#[derive(Debug, Serialize, Deserialize)]
+struct ProcessedRecipe {
     recipe_id: String,
-    recipe_category: String,
-    ingredients: Vec<String>,
-    resulting_emc: f32,
+    category_title: String,
+    inputs: Vec<Ingredient>,
+    outputs: Vec<Ingredient>,
 }
 
 fn get_emc_from_tooltip(number_words: &HashMap<&str, i64>, tooltip: &str) -> Option<f32> {
@@ -114,18 +122,57 @@ fn load_recipes() -> Vec<Recipe> {
                 .ok()
                 .and_then(|content| serde_json::from_str::<Vec<Recipe>>(&content).ok())
         })
-        .flatten() // Flatten the Vec<Vec<Recipe>> into Vec<Recipe>
+        .flatten()
         .collect()
 }
 
+fn process_recipes(recipes: &[Recipe]) -> Vec<ProcessedRecipe> {
+    recipes
+        .iter()
+        .map(|recipe| {
+            let inputs = recipe
+                .ingredients
+                .iter()
+                .filter(|ingredient| ingredient.role == "INPUT")
+                .cloned()
+                .collect();
+            let outputs = recipe
+                .ingredients
+                .iter()
+                .filter(|ingredient: &&Ingredient| ingredient.role == "OUTPUT")
+                .cloned()
+                .collect();
+            ProcessedRecipe {
+                recipe_id: recipe.recipe_object.clone(),
+                category_title: recipe.category_title.clone(),
+                inputs,
+                outputs,
+            }
+        })
+        .collect()
+}
+
+fn save_processed_recipes(recipes: &[ProcessedRecipe], path: &Path) {
+    let encoded: Vec<u8> = bincode::serialize(recipes).unwrap();
+    let mut file = File::create(path).unwrap();
+    file.write_all(&encoded).unwrap();
+}
+
+fn load_processed_recipes(path: &Path) -> Vec<ProcessedRecipe> {
+    let mut file = File::open(path).unwrap();
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer).unwrap();
+    bincode::deserialize(&buffer).unwrap()
+}
+
 fn explore_recipe(
-    recipe: &Recipe,
+    recipe: &ProcessedRecipe,
     item_map: &HashMap<String, f32>,
-    recipes: &[Recipe],
+    recipes: &[ProcessedRecipe],
     output_dir: &Path,
 ) {
     let start_emc: f32 = recipe
-        .ingredients
+        .inputs
         .iter()
         .filter_map(|ingredient| {
             item_map
@@ -135,7 +182,7 @@ fn explore_recipe(
         .sum();
 
     let initial_buffer = recipe
-        .ingredients
+        .inputs
         .iter()
         .map(|ing| ing.ingredient_id.clone())
         .collect::<Vec<String>>();
@@ -155,7 +202,6 @@ fn explore_recipe(
     );
 
     if let Some(history) = result {
-        // Write the history to a file
         let output_file = output_dir.join(format!("{}.txt", Uuid::new_v4()));
         let mut file = File::create(output_file).expect("Unable to create file");
         for entry in history {
@@ -174,28 +220,28 @@ fn traverse_recipes(
     buffer: Vec<String>,
     visited_recipes: &mut Vec<String>,
     history: &mut Vec<HistoryEntry>,
-    recipes: &[Recipe],
+    recipes: &[ProcessedRecipe],
     item_map: &HashMap<String, f32>,
     depth: usize,
     max_depth: usize,
 ) -> Option<Vec<HistoryEntry>> {
     if depth >= max_depth {
-        return None; // Return None if max depth is reached
+        return None;
     }
 
     for recipe in recipes.iter() {
-        if visited_recipes.contains(&recipe.recipe_object) {
+        if visited_recipes.contains(&recipe.recipe_id) {
             continue;
         }
 
         let input_items: Vec<&Ingredient> = recipe
-            .ingredients
+            .inputs
             .iter()
-            .filter(|ingredient| ingredient.role == "INPUT" && buffer.contains(&ingredient.ingredient_id))
+            .filter(|ingredient| buffer.contains(&ingredient.ingredient_id))
             .collect();
 
         if !input_items.is_empty() {
-            visited_recipes.push(recipe.recipe_object.clone());
+            visited_recipes.push(recipe.recipe_id.clone());
 
             let mut buffer_copy = buffer.clone();
             let enough_items = input_items.iter().all(|ingredient| {
@@ -222,24 +268,16 @@ fn traverse_recipes(
                     .unwrap_or(0.0)
             }).sum();
 
-            let output_items: Vec<&Ingredient> = recipe
-                .ingredients
-                .iter()
-                .filter(|ingredient| ingredient.role == "OUTPUT")
-                .collect();
-
             let mut total_output_emc = 0.0;
-            for output in &output_items {
+            for output in &recipe.outputs {
                 if let Some(&emc) = item_map.get(&output.ingredient_id) {
                     total_output_emc += emc * output.ingredient_amount as f32;
                     buffer_copy.push(output.ingredient_id.clone());
                 }
             }
 
-            let trimmed_recipe_name = recipe.recipe_object.rsplit('.').next().unwrap_or(&recipe.recipe_object);
-
             history.push(HistoryEntry {
-                recipe_id: trimmed_recipe_name.to_string(),
+                recipe_id: recipe.recipe_id.clone(),
                 recipe_category: recipe.category_title.clone(),
                 ingredients: input_items.iter().map(|ing| ing.ingredient_id.clone()).collect(),
                 resulting_emc: total_output_emc,
@@ -273,16 +311,23 @@ fn traverse_recipes(
 }
 
 fn main() {
+    let processed_file = PathBuf::from("processed.bin");
+    let output_dir = PathBuf::from("outputs");
+
+    fs::create_dir_all(&output_dir).expect("Unable to create output directory");
+
+    let recipes: Vec<ProcessedRecipe> = if processed_file.exists() {
+        load_processed_recipes(&processed_file)
+    } else {
+        let raw_recipes = load_recipes();
+        let processed_recipes = process_recipes(&raw_recipes);
+        save_processed_recipes(&processed_recipes, &processed_file);
+        processed_recipes
+    };
+
     let items_json = include_str!("../../items.json");
     let mut items: Vec<Item> = serde_json::from_str(items_json).unwrap();
     calculate_emc(&mut items);
-
-    println!("Loading recipes...");
-    let recipes = load_recipes();
-    println!("Loaded {} recipes", recipes.len());
-
-    let output_dir = PathBuf::from("outputs");
-    fs::create_dir_all(&output_dir).expect("Unable to create output directory");
 
     let item_map: HashMap<String, f32> = items
         .iter()
@@ -291,7 +336,7 @@ fn main() {
 
     recipes
         .par_iter()
-        .filter(|recipe| recipe.ingredients.len() <= 9)
+        .filter(|recipe| recipe.inputs.len() <= 9)
         .for_each(|recipe| explore_recipe(recipe, &item_map, &recipes, &output_dir));
 }
 
