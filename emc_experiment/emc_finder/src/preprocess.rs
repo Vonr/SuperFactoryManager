@@ -279,12 +279,14 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
 }
 
 fn save_processed_data(data: &ProcessedData, path: &Path) {
+    println!("Saving processed data to {:?}", path);
     let encoded: Vec<u8> = bincode::serialize(data).unwrap();
     let mut file = File::create(path).unwrap();
     file.write_all(&encoded).unwrap();
 }
 
 fn load_processed_data(path: &Path) -> ProcessedData {
+    println!("Loading processed data from {:?}", path);
     let mut file = File::open(path).unwrap();
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).unwrap();
@@ -295,7 +297,6 @@ pub fn get_data() -> ProcessedData {
     let start = std::time::Instant::now();
     let processed_file = PathBuf::from("processed.bin");
     let rtn = if processed_file.exists() {
-        println!("Loading processed data from {:?}", processed_file);
         load_processed_data(&processed_file)
     } else {
         println!("Performing first time data processing");

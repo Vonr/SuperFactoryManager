@@ -9,6 +9,7 @@ use preprocess::Item;
 use preprocess::ProcessedData;
 use rayon::iter::ParallelBridge;
 use rayon::iter::ParallelIterator;
+use core::f32;
 use std::fs::{self};
 use std::path::PathBuf;
 
@@ -87,7 +88,7 @@ where
                                         path: vec![recipe.recipe_id.to_owned()],
                                     });
                                     // println!(
-                                    //     "Found derived emc for {:#?} using recipe {:#?}",
+                                    //     "Found derived burn emc for {:#?} using recipe {:#?}",
                                     //     item, recipe
                                     // );
                                     changed = true;
@@ -115,15 +116,15 @@ where
                         if outputs_our_item && !inputs_lacking_emc {
                             let input_emc = recipe.get_input_emc();
                             let emc_for_item = input_emc / output_amount as f32;
-                            if item.best_acquire_emc.as_ref().map(|x| x.emc).unwrap_or(0.)
-                                < emc_for_item
+                            if item.best_acquire_emc.as_ref().map(|x| x.emc).unwrap_or(f32::MAX)
+                                > emc_for_item
                             {
                                 item.best_acquire_emc = Some(DerivedEmc {
                                     emc: emc_for_item,
                                     path: vec![recipe.recipe_id.to_owned()],
                                 });
                                 // println!(
-                                //     "Found derived emc for {:#?} using recipe {:#?}",
+                                //     "Found derived acquire emc for {:#?} using recipe {:#?}",
                                 //     item, recipe
                                 // );
                                 changed = true;
@@ -179,6 +180,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use crate::preprocess::get_data;
+    use crate::preprocess::HasEmc;
     use crate::update_derived_emc;
     use rayon::iter::IntoParallelRefIterator;
     use rayon::iter::ParallelIterator;
@@ -201,6 +203,7 @@ mod tests {
                         .all(|ing| ing.ingredient_id == "minecraft:blaze_rod")
             })
             .collect::<Vec<_>>();
+        assert!(!found.is_empty());
         for recipe in found {
             println!("{:#?}", recipe);
             println!();
@@ -224,7 +227,7 @@ mod tests {
 
         let blaze_powder = data.items.get("minecraft:blaze_powder").unwrap();
         dbg!(blaze_powder);
-        assert_eq!(blaze_powder.derived_emc.as_ref().unwrap().emc, 768.0);
+        assert_eq!(blaze_powder.get_burn_emc().unwrap(), 768.0);
     }
 
     #[test]
