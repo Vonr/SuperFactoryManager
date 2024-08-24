@@ -3,9 +3,12 @@ package ca.teamdman.sfm.common.command;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.export.ClientExportHelper;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import net.minecraft.client.Minecraft;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.blocks.BlockInput;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -54,19 +57,30 @@ public class SFMCommand {
         if (FMLEnvironment.dist.isClient()) {
             command.then(Commands.literal("export_info")
                                  .requires(__ -> true)
+                                 .then(Commands.argument("includeHidden", BoolArgumentType.bool())
                                  .executes(ctx -> {
+                                     boolean includeHidden = BoolArgumentType.getBool(ctx, "includeHidden");
                                      SFM.LOGGER.info(
-                                             "Exporting info - slash command used by {}",
+                                             "Exporting info, includeHidden={} - slash command used by {}",
+                                             includeHidden,
                                              ctx.getSource().getTextName()
                                      );
                                      try {
+
+                                         assert Minecraft.getInstance().player != null;
+                                         Minecraft.getInstance().player.sendSystemMessage(
+                                                 Component.literal("Beginning item export")
+                                         );
                                          ClientExportHelper.dumpItems(ctx.getSource().getPlayer());
-                                         ClientExportHelper.dumpJei(ctx.getSource().getPlayer());
-                                     } catch (IOException e) {
+                                         Minecraft.getInstance().player.sendSystemMessage(
+                                                 Component.literal("Beginning JEI export")
+                                         );
+                                         ClientExportHelper.dumpJei(ctx.getSource().getPlayer(), includeHidden);
+                                     } catch (Exception e) {
                                          SFM.LOGGER.error("Failed to export item data", e);
                                      }
                                      return SINGLE_SUCCESS;
-                                 }));
+                                 })));
         }
         event.getDispatcher().register(command);
     }
