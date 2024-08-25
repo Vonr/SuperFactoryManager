@@ -68,7 +68,7 @@ withClause  : LPAREN withClause RPAREN          # WithParen
             | (TAG|HASHTAG) tagMatcher          # WithTag
             ;
 
-tagMatcher: identifier (COLON identifier (SLASH identifier)+)?;
+tagMatcher: identifier (COLON identifier (SLASH identifier)+)?; // TODO: add auto-wildcard when namespace: omitted
 
 
 sidequalifier   : EACH SIDE                 #EachSide
