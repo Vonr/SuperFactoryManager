@@ -1,6 +1,6 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import net.minecraft.core.BlockPos;
@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
+import static ca.teamdman.sfm.common.localization.LocalizationKeys.*;
 
 public final class InputStatement implements IOStatement {
     private final LabelAccess labelAccess;
@@ -243,7 +243,7 @@ public final class InputStatement implements IOStatement {
     ) {
         context
                 .getLogger()
-                .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_RANGE.get(
+                .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_RANGE.get(
                         labelAccess.slots())));
         for (int slot = 0; slot < type.getSlots(capability); slot++) {
             int finalSlot = slot;
@@ -254,7 +254,7 @@ public final class InputStatement implements IOStatement {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
                             context
                                     .getLogger()
-                                    .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
+                                    .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_SLOT_CREATED.get(
                                             finalSlot,
                                             stack,
                                             tracker.toString()

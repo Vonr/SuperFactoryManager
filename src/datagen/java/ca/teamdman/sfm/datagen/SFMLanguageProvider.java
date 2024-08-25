@@ -1,7 +1,8 @@
 package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
+import ca.teamdman.sfm.common.localization.TestLocalizationKeys;
 import net.minecraftforge.common.data.LanguageProvider;
 import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -19,7 +20,11 @@ public class SFMLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         Set<String> seen = new HashSet<>();
-        for (var entry : Constants.LocalizationKeys.getEntries()) {
+        for (var entry : LocalizationKeys.getEntries()) {
+            add(entry.key().get(), entry.value().get());
+            seen.add(entry.key().get());
+        }
+        for (var entry : TestLocalizationKeys.getEntries()) {
             add(entry.key().get(), entry.value().get());
             seen.add(entry.key().get());
         }

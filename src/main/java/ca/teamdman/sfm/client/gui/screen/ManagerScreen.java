@@ -3,9 +3,10 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.localization.LocalizationEntry;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
@@ -33,7 +34,7 @@ import org.lwjgl.glfw.GLFW;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
+import static ca.teamdman.sfm.common.localization.LocalizationKeys.*;
 
 public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu> {
     private static final ResourceLocation BACKGROUND_TEXTURE_LOCATION = new ResourceLocation(
@@ -269,10 +270,10 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                         statusCountdown = STATUS_DURATION;
                     }
                 },
-                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_TITLE.getComponent(),
-                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_MESSAGE.getComponent(),
-                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
-                Constants.LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+                LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_TITLE.getComponent(),
+                LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_NO_BUTTON.getComponent()
         );
         assert this.minecraft != null;
         this.minecraft.pushGuiLayer(confirmScreen);

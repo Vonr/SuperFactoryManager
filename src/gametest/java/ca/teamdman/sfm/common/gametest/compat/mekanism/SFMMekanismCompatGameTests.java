@@ -1,7 +1,7 @@
-package ca.teamdman.sfm.compat.mekanism;
+package ca.teamdman.sfm.common.gametest.compat.mekanism;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMGameTestBase;
+import ca.teamdman.sfm.common.gametest.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;

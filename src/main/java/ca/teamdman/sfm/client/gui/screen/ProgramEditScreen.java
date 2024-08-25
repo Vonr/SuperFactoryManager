@@ -4,8 +4,9 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.client.gui.EditorUtils;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.SFMConfig;
+import ca.teamdman.sfm.common.localization.LocalizationEntry;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
@@ -31,8 +32,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP;
+import static ca.teamdman.sfm.common.localization.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
+import static ca.teamdman.sfm.common.localization.LocalizationKeys.PROGRAM_EDIT_SCREEN_TOGGLE_LINE_NUMBERS_BUTTON_TOOLTIP;
 
 public class ProgramEditScreen extends Screen {
     protected final String INITIAL_CONTENT;
@@ -43,7 +44,7 @@ public class ProgramEditScreen extends Screen {
     protected List<MutableComponent> lastProgramWithSyntaxHighlighting = Collections.emptyList();
 
     public ProgramEditScreen(String initialContent, Consumer<String> saveCallback) {
-        super(Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_TITLE.getComponent());
+        super(LocalizationKeys.PROGRAM_EDIT_SCREEN_TITLE.getComponent());
         this.INITIAL_CONTENT = initialContent;
         this.SAVE_CALLBACK = saveCallback;
     }
@@ -107,7 +108,7 @@ public class ProgramEditScreen extends Screen {
         ));
     }
 
-    private Button.OnTooltip buildTooltip(Constants.LocalizationKeys.LocalizationEntry entry) {
+    private Button.OnTooltip buildTooltip(LocalizationEntry entry) {
         return (btn, pose, mx, my) -> renderTooltip(
                 pose,
                 font.split(
@@ -170,10 +171,10 @@ public class ProgramEditScreen extends Screen {
                         // do nothing, continue editing
                     }
                 },
-                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_TITLE.getComponent(),
-                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE.getComponent(),
-                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
-                Constants.LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+                LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_TITLE.getComponent(),
+                LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                LocalizationKeys.SAVE_CHANGES_CONFIRM_SCREEN_NO_BUTTON.getComponent()
         );
     }
 
@@ -190,10 +191,10 @@ public class ProgramEditScreen extends Screen {
                         // do nothing; continue editing
                     }
                 },
-                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE.getComponent(),
-                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_MESSAGE.getComponent(),
-                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
-                Constants.LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+                LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE.getComponent(),
+                LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                LocalizationKeys.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_NO_BUTTON.getComponent()
         );
     }
 

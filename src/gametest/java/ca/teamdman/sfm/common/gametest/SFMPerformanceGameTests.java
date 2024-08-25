@@ -1,10 +1,12 @@
-package ca.teamdman.sfm;
+package ca.teamdman.sfm.common.gametest;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.common.registry.SFMTestBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -33,7 +35,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
 //            for (int z = 0; z < 25; z++) {
             for (int z = 0; z < 24; z++) {
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
-                helper.setBlock(new BlockPos(x, 3, z), SFMBlocks.TEST_BARREL_BLOCK.get());
+                helper.setBlock(new BlockPos(x, 3, z), SFMTestBlocks.TEST_BARREL_BLOCK.get());
                 if (z % 2 == 0) {
                     sourceBlocks.add(new BlockPos(x, 3, z));
                     // fill the source chests with ingots
@@ -105,7 +107,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
 //            for (int z = 0; z < 25; z++) {
             for (int z = 0; z < 24; z++) {
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
-                helper.setBlock(new BlockPos(x, 3, z), SFMBlocks.TEST_BARREL_BLOCK.get());
+                helper.setBlock(new BlockPos(x, 3, z), SFMTestBlocks.TEST_BARREL_BLOCK.get());
                 if (z % 2 == 0) {
                     sourceBlocks.add(new BlockPos(x, 3, z));
                 } else {
@@ -192,7 +194,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 // place a cable below
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
                 // place the barrel on top
-                helper.setBlock(new BlockPos(x, 3, z), SFMBlocks.TEST_BARREL_BLOCK.get());
+                helper.setBlock(new BlockPos(x, 3, z), SFMTestBlocks.TEST_BARREL_BLOCK.get());
                 if (z % 2 == 0) {
                     sourceBlocks.add(new BlockPos(x, 3, z));
                     BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(x, 3, z));
@@ -293,10 +295,10 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
         var dPos = new BlockPos(0, 2, 1);
 
         // place and fill the chests
-        helper.setBlock(aPos, SFMBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(bPos, SFMBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(cPos, SFMBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(dPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(aPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(bPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(cPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
         var a = (BarrelBlockEntity) helper.getBlockEntity(aPos);
         var b = (BarrelBlockEntity) helper.getBlockEntity(bPos);
         var c = (BarrelBlockEntity) helper.getBlockEntity(cPos);
@@ -403,7 +405,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                         }
                     } else {
                         if (i % 3 == 0 || i % 3 == 2) {
-                            helper.setBlock(pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+                            helper.setBlock(pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
                             // fill the barrel with some items
                             BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
                             for (int slot = 0; slot < barrel.getContainerSize(); slot++) {
@@ -420,7 +422,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
 
             // add the crafting station
             helper.setBlock(new BlockPos(0, 2, 1), Blocks.CRAFTING_TABLE);
-            helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.TEST_BARREL_BLOCK.get());
+            helper.setBlock(new BlockPos(0, 2, 0), SFMTestBlocks.TEST_BARREL_BLOCK.get());
             helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.CABLE_BLOCK.get());
             helper.setBlock(new BlockPos(1, 2, 1), SFMBlocks.CABLE_BLOCK.get());
             helper.setBlock(new BlockPos(1, 2, 2), SFMBlocks.CABLE_BLOCK.get());

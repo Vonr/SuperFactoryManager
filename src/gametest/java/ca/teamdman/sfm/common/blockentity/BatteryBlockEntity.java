@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.blockentity;
 
-import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.registry.SFMTestBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -26,7 +26,7 @@ public class BatteryBlockEntity extends BlockEntity {
             BlockPos pPos,
             BlockState pBlockState
     ) {
-        super(SFMBlockEntities.BATTERY_BLOCK_ENTITY.get(), pPos, pBlockState);
+        super(SFMTestBlockEntities.BATTERY_BLOCK_ENTITY.get(), pPos, pBlockState);
     }
 
 

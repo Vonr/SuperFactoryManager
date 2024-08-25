@@ -1,10 +1,10 @@
 package ca.teamdman.sfm.common.net;
 
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.LabelGunItem;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.core.BlockPos;
@@ -75,7 +75,7 @@ public record ServerboundLabelGunUsePacket(
                         // save to gun
                         newLabels.save(stack);
                         // give feedback to player
-                        sender.sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
+                        sender.sendSystemMessage(LocalizationKeys.LABEL_GUN_CHAT_PULLED.getComponent());
                     } else {
                         // save gun labels to disk
                         gunLabels.save(disk);
@@ -84,7 +84,7 @@ public record ServerboundLabelGunUsePacket(
                         // mark manager dirty
                         manager.setChanged();
                         // give feedback to player
-                        sender.sendSystemMessage(Constants.LocalizationKeys.LABEL_GUN_CHAT_PUSHED.getComponent());
+                        sender.sendSystemMessage(LocalizationKeys.LABEL_GUN_CHAT_PUSHED.getComponent());
                     }
                 });
                 return;
