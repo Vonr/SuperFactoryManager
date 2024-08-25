@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.client.export;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -25,6 +26,9 @@ import java.nio.file.Paths;
 import java.util.Collection;
 
 public class ClientExportHelper {
+
+    private static final Object registryReaderLock = new Object();
+
     public static Collection<ItemStack> gatherItems() {
         assert Minecraft.getInstance().player != null;
         assert Minecraft.getInstance().level != null;
@@ -53,6 +57,11 @@ public class ClientExportHelper {
             if (stack.getShareTag() != null) {
                 jsonObject.addProperty("data", stack.getShareTag().toString());
             }
+
+            // Add the tags
+            JsonArray tags = new JsonArray();
+            SFMResourceTypes.ITEM.get().getTagsForStack(stack).map(ResourceLocation::toString).forEach(tags::add);
+            jsonObject.add("tags", tags);
 
             // Add the tooltip field (requires player)
             String tooltip = stack.getTooltipLines(player, TooltipFlag.ADVANCED)
