@@ -1,15 +1,14 @@
-package ca.teamdman.sfm.common.gametest.compat.ae2;
+package ca.teamdman.sfm.gametest.compat.ae2;
 
 import appeng.blockentity.misc.InscriberBlockEntity;
 import appeng.core.definitions.AEBlocks;
 import appeng.core.definitions.AEItems;
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.gametest.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMTestBlocks;
+import ca.teamdman.sfm.gametest.SFMGameTestBase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -113,8 +112,8 @@ public class SFMAppliedEnergisticsCompatGameTests extends SFMGameTestBase {
 
         var materialsPos = new BlockPos(6, 2, 0);
         var resultsPos = new BlockPos(5, 2, 0);
-        helper.setBlock(materialsPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(resultsPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(materialsPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(resultsPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         //noinspection DataFlowIssue,OptionalGetWithoutIsPresent
         var materials = helper
                 .getBlockEntity(materialsPos)

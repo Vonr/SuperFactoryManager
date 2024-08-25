@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.gametest;
+package ca.teamdman.sfm.gametest;
 
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.item.DiskItem;

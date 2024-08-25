@@ -1,7 +1,7 @@
-package ca.teamdman.sfm.common.gametest.compat.industrialforegoing;
+package ca.teamdman.sfm.gametest.compat.industrialforegoing;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.gametest.SFMGameTestBase;
+import ca.teamdman.sfm.gametest.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;

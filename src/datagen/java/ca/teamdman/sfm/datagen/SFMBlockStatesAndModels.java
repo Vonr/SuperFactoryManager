@@ -3,7 +3,6 @@ package ca.teamdman.sfm.datagen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
-import ca.teamdman.sfm.common.registry.SFMTestBlocks;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
@@ -54,7 +53,7 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
             ModelFile barrelModel = models().getExistingFile(mcLoc("block/barrel"));
             ModelFile barrelOpenModel = models().getExistingFile(mcLoc("block/barrel_open"));
 
-            getVariantBuilder(SFMTestBlocks.TEST_BARREL_BLOCK.get())
+            getVariantBuilder(SFMBlocks.TEST_BARREL_BLOCK.get())
                     .forAllStates(state -> {
                         Direction facing = state.getValue(BlockStateProperties.FACING);
                         boolean open = state.getValue(BlockStateProperties.OPEN);

@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.registry;
 
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.blockentity.BatteryBlockEntity;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
 import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
@@ -40,6 +41,13 @@ public final class SFMBlockEntities {
             "water_tank",
             () -> BlockEntityType.Builder
                     .of(WaterTankBlockEntity::new, SFMBlocks.WATER_TANK_BLOCK.get())
+                    .build(null)
+    );
+
+    public static final RegistryObject<BlockEntityType<BatteryBlockEntity>> BATTERY_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+            "battery",
+            () -> BlockEntityType.Builder
+                    .of(BatteryBlockEntity::new, SFMBlocks.BATTERY_BLOCK.get())
                     .build(null)
     );
 }

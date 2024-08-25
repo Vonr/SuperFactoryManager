@@ -34,8 +34,6 @@ sourceSets {
     }
     datagen {
         compileClasspath += main.output
-        compileClasspath += sourceSets.gametest.output
-        runtimeClasspath += sourceSets.gametest.output
     }
     generated
 }

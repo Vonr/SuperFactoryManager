@@ -743,6 +743,18 @@ public final class LocalizationKeys {
             "Super Factory Manager"
     );
 
+    @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+    public static LocalizationEntry TEST_BARREL_BLOCK = new LocalizationEntry(
+            () -> SFMBlocks.TEST_BARREL_BLOCK.get().getDescriptionId(),
+            () -> "Test Barrel"
+    );
+
+    @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+    public static LocalizationEntry BATTERY_BLOCK = new LocalizationEntry(
+            () -> SFMBlocks.BATTERY_BLOCK.get().getDescriptionId(),
+            () -> "Battery (WIP)"
+    );
+
     public static List<LocalizationEntry> getEntries() {
         // use reflection to get all the public static LocalizationEntry fields
         var rtn = new ArrayList<LocalizationEntry>();

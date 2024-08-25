@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.gametest;
+package ca.teamdman.sfm.gametest;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
@@ -8,14 +8,13 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.item.FormItem;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
-import ca.teamdman.sfm.common.localization.TestLocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundOutputInspectionRequestPacket;
 import ca.teamdman.sfm.common.program.GatherWarningsProgramBehaviour;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMTestBlocks;
+import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfml.ast.OutputStatement;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
@@ -86,9 +85,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_1_stack(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -121,9 +120,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_full_chest(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
 
         var leftChest = getItemHandler(helper, leftPos);
@@ -175,9 +174,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos dest2Pos = new BlockPos(0, 2, 1);
 
         // set up inventories
-        helper.setBlock(sourcePos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(dest1Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(dest2Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
 
         var sourceInv = getItemHandler(helper, sourcePos);
@@ -241,9 +240,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void retain_5(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -275,9 +274,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_multiple_item_names(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var leftChest = getItemHandler(helper, leftPos);
         var rightChest = getItemHandler(helper, rightPos);
@@ -419,8 +418,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // fill in the blocks needed for the test
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
-        helper.setBlock(start, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(end, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(start, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(end, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // add some items
         Container startChest = (Container) helper.getBlockEntity(start);
@@ -465,13 +464,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
 
         BlockPos left = new BlockPos(2, 2, 1);
-        helper.setBlock(left, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(left, SFMBlocks.TEST_BARREL_BLOCK.get());
         // add sticks to the chest
         Container chest = (Container) helper.getBlockEntity(left);
         chest.setItem(0, new ItemStack(Items.STICK, 64));
 
         BlockPos right = new BlockPos(0, 2, 1);
-        helper.setBlock(right, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(right, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         BlockPos front = new BlockPos(1, 2, 2);
         helper.setBlock(front, Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
@@ -794,9 +793,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_slots(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -849,7 +848,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(pistonPos, Blocks.PISTON.defaultBlockState().setValue(DirectionalBlock.FACING, Direction.DOWN));
         helper.setBlock(woodPos, Blocks.OAK_PLANKS);
         helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
-        helper.setBlock(chestPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(chestPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
         Player player = helper.makeMockPlayer();
@@ -1109,7 +1108,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.setBlock(pistonPos, Blocks.PISTON.defaultBlockState().setValue(DirectionalBlock.FACING, Direction.DOWN));
         helper.setBlock(woodPos, Blocks.OAK_PLANKS);
         helper.setBlock(buttonPos, Blocks.STONE_BUTTON);
-        helper.setBlock(chestPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(chestPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var printingPress = (PrintingPressBlockEntity) helper.getBlockEntity(printingPos);
         Player player = helper.makeMockPlayer();
@@ -1440,8 +1439,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var left = (Container) helper.getBlockEntity(leftPos);
         var right = (Container) helper.getBlockEntity(rightPos);
@@ -1515,8 +1514,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var left = (Container) helper.getBlockEntity(leftPos);
         var right = (Container) helper.getBlockEntity(rightPos);
@@ -1590,8 +1589,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var left = (Container) helper.getBlockEntity(leftPos);
         var right = (Container) helper.getBlockEntity(rightPos);
@@ -1665,8 +1664,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var left = (Container) helper.getBlockEntity(leftPos);
         var right = (Container) helper.getBlockEntity(rightPos);
@@ -1740,8 +1739,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var leftPos = new BlockPos(2, 2, 0);
         var rightPos = new BlockPos(0, 2, 0);
         var managerPos = new BlockPos(1, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         var left = (Container) helper.getBlockEntity(leftPos);
         var right = (Container) helper.getBlockEntity(rightPos);
@@ -1813,9 +1812,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void pattern_cache_regression_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -1850,9 +1849,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void pattern_cache_regression_2(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -1887,9 +1886,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void pattern_cache_regression_3(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -1924,9 +1923,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_src_quantity(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -1968,9 +1967,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_src_quantity_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2011,9 +2010,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_src_quantity_each_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2054,9 +2053,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_src_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2100,9 +2099,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_dest_quantity(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2144,9 +2143,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_dest_quantity_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2185,9 +2184,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_dest_quantity_each_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2226,9 +2225,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void each_dest_retain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2270,9 +2269,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void sfm_v4_12_0_changelog(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2353,9 +2352,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void forget_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2392,9 +2391,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void forget_2(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2433,9 +2432,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void forget_slot(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2477,9 +2476,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void forget_input_count_state(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2515,9 +2514,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void reorder_1(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2553,9 +2552,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void reorder_2(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2591,9 +2590,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void reorder_3(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2634,9 +2633,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos dest2Pos = new BlockPos(0, 2, 1);
 
         // set up inventories
-        helper.setBlock(sourcePos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(dest1Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(dest2Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(dest2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
 
         var sourceInv = getItemHandler(helper, sourcePos);
@@ -2692,11 +2691,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos b2Pos = new BlockPos(2, 2, 2);
 
         // set up inventories
-        helper.setBlock(sourcePos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(a1Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(a2Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(b1Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(b2Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
 
         var sourceInv = getItemHandler(helper, sourcePos);
@@ -2751,9 +2750,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos managerPos = new BlockPos(1, 2, 0);
         BlockPos rightPos = new BlockPos(0, 2, 0);
 
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var leftChest = getItemHandler(helper, leftPos);
         leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
@@ -2791,11 +2790,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos b2Pos = new BlockPos(2, 2, 2);
 
         // set up inventories
-        helper.setBlock(sourcePos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(a1Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(a2Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(b1Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(b2Pos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(sourcePos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(a2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
 
         var sourceInv = getItemHandler(helper, sourcePos);
@@ -2843,9 +2842,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void wireless_regression(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 1, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2878,9 +2877,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void multi_io_limits(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -2922,8 +2921,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var rightPos = new BlockPos(0, 2, 1);
 
         // place and fill the chests
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         var left = (BarrelBlockEntity) helper.getBlockEntity(leftPos);
         var right = (BarrelBlockEntity) helper.getBlockEntity(rightPos);
         left.setItem(0, new ItemStack(Items.IRON_INGOT, 64));
@@ -2970,9 +2969,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
@@ -3016,9 +3015,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
@@ -3068,9 +3067,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
@@ -3128,9 +3127,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
@@ -3184,9 +3183,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
@@ -3223,9 +3222,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
@@ -3283,9 +3282,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
@@ -3318,9 +3317,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         // place manager
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
@@ -3352,9 +3351,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void conditional_output_inspection(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -3447,9 +3446,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void move_with_tag_mineable(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
-        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
         BlockPos leftPos = new BlockPos(2, 2, 0);
-        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
         var rightChest = getItemHandler(helper, rightPos);
         var leftChest = getItemHandler(helper, leftPos);
@@ -3488,9 +3487,9 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 //    public static void move_with_enchantments(GameTestHelper helper) {
 //        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
 //        BlockPos rightPos = new BlockPos(0, 2, 0);
-//        helper.setBlock(rightPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+//        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 //        BlockPos leftPos = new BlockPos(2, 2, 0);
-//        helper.setBlock(leftPos, SFMTestBlocks.TEST_BARREL_BLOCK.get());
+//        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 //
 //        var rightChest = getItemHandler(helper, rightPos);
 //        var leftChest = getItemHandler(helper, leftPos);
