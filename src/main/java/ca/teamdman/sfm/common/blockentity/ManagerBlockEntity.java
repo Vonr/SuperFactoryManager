@@ -1,16 +1,17 @@
 package ca.teamdman.sfm.common.blockentity;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.handler.OpenContainerTracker;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.localization.LocalizationEntry;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.net.ClientboundManagerGuiUpdatePacket;
 import ca.teamdman.sfm.common.net.ClientboundManagerLogLevelUpdatedPacket;
 import ca.teamdman.sfm.common.net.ClientboundManagerLogsPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
-import ca.teamdman.sfm.common.util.OpenContainerTracker;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
@@ -84,8 +85,8 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                 long nanoTimePassed = Long.min(System.nanoTime() - start, Integer.MAX_VALUE);
                 manager.tickTimeNanos[manager.tickIndex] = (int) nanoTimePassed;
                 manager.tickIndex = (manager.tickIndex + 1) % manager.tickTimeNanos.length;
-                manager.logger.trace(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TIME_MS.get(nanoTimePassed
-                                                                                                       / 1_000_000f)));
+                manager.logger.trace(x -> x.accept(LocalizationKeys.PROGRAM_TICK_TIME_MS.get(nanoTimePassed
+                                                                                             / 1_000_000f)));
                 manager.sendUpdatePacket();
                 manager.logger.pruneSoWeDontEatAllTheRam();
 
@@ -93,7 +94,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                     || manager.logger.getLogLevel() == org.apache.logging.log4j.Level.DEBUG
                     || manager.logger.getLogLevel() == org.apache.logging.log4j.Level.INFO) {
                     org.apache.logging.log4j.Level newLevel = org.apache.logging.log4j.Level.OFF;
-                    manager.logger.info(x -> x.accept(Constants.LocalizationKeys.LOG_LEVEL_UPDATED.get(newLevel)));
+                    manager.logger.info(x -> x.accept(LocalizationKeys.LOG_LEVEL_UPDATED.get(newLevel)));
                     var oldLevel = manager.logger.getLogLevel();
                     manager.setLogLevel(newLevel);
                     SFM.LOGGER.debug(
@@ -345,7 +346,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     protected Component getDefaultName() {
-        return Constants.LocalizationKeys.MANAGER_CONTAINER.getComponent();
+        return LocalizationKeys.MANAGER_CONTAINER.getComponent();
     }
 
 
@@ -358,19 +359,19 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     public enum State {
         NO_PROGRAM(
                 ChatFormatting.RED,
-                Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_PROGRAM
+                LocalizationKeys.MANAGER_GUI_STATE_NO_PROGRAM
         ), NO_DISK(
                 ChatFormatting.RED,
-                Constants.LocalizationKeys.MANAGER_GUI_STATE_NO_DISK
-        ), RUNNING(ChatFormatting.GREEN, Constants.LocalizationKeys.MANAGER_GUI_STATE_RUNNING), INVALID_PROGRAM(
+                LocalizationKeys.MANAGER_GUI_STATE_NO_DISK
+        ), RUNNING(ChatFormatting.GREEN, LocalizationKeys.MANAGER_GUI_STATE_RUNNING), INVALID_PROGRAM(
                 ChatFormatting.DARK_RED,
-                Constants.LocalizationKeys.MANAGER_GUI_STATE_INVALID_PROGRAM
+                LocalizationKeys.MANAGER_GUI_STATE_INVALID_PROGRAM
         );
 
         public final ChatFormatting COLOR;
-        public final Constants.LocalizationKeys.LocalizationEntry LOC;
+        public final LocalizationEntry LOC;
 
-        State(ChatFormatting color, Constants.LocalizationKeys.LocalizationEntry loc) {
+        State(ChatFormatting color, LocalizationEntry loc) {
             COLOR = color;
             LOC = loc;
         }

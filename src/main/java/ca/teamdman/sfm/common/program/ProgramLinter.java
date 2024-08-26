@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
+import static ca.teamdman.sfm.common.localization.LocalizationKeys.*;
 import static ca.teamdman.sfml.ast.RoundRobin.Behaviour.BY_BLOCK;
 import static ca.teamdman.sfml.ast.RoundRobin.Behaviour.BY_LABEL;
 

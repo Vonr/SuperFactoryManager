@@ -5,7 +5,6 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -22,23 +21,19 @@ public class TagMatcher implements Predicate<Object>, ASTNode {
 
     private TagMatcher(
             String namespacePattern,
-            List<String> pathElementPatterns
+            Collection<String> pathElementPatterns
     ) {
         this.namespacePattern = namespacePattern;
-        this.pathElementPatterns = Collections.unmodifiableList(pathElementPatterns);
+        this.pathElementPatterns = List.copyOf(pathElementPatterns);
         this.namespacePredicate = RegexCache.buildPredicate(namespacePattern);
         this.pathElementPredicates = this.pathElementPatterns.stream().map(RegexCache::buildPredicate).toList();
-    }
-
-    public static TagMatcher fromNamespaceAndPath(String namespace, String path) {
-        return new TagMatcher(namespace, List.of(path.split("/")));
     }
 
     public static TagMatcher fromNamespaceAndPath(String namespace, Collection<String> path) {
         return new TagMatcher(namespace, new ArrayList<>(path));
     }
 
-    public static TagMatcher fromPath(List<String> pathElements) {
+    public static TagMatcher fromPath(Collection<String> pathElements) {
         return new TagMatcher(".*", pathElements);
     }
 
@@ -71,6 +66,9 @@ public class TagMatcher implements Predicate<Object>, ASTNode {
             String checkNamespace,
             String[] checkPathElements
     ) {
+        if (checkPathElements.length < this.pathElementPatterns.size()) {
+            return false;
+        }
         if (!namespacePredicate.test(checkNamespace)) {
             return false;
         }

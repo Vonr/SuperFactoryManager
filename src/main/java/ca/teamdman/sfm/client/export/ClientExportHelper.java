@@ -12,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.neoforged.fml.loading.FMLPaths;
@@ -54,9 +55,10 @@ public class ClientExportHelper {
             jsonObject.addProperty("id", id.toString());
 
             // Add the data field if it exists
-            if (stack.getShareTag() != null) {
-                jsonObject.addProperty("data", stack.getShareTag().toString());
-            }
+            // TODO: NBT here
+//            if (stack.getShareTag() != null) {
+//                jsonObject.addProperty("data", stack.getShareTag().toString());
+//            }
 
             // Add the tags
             JsonArray tags = new JsonArray();
@@ -64,7 +66,10 @@ public class ClientExportHelper {
             jsonObject.add("tags", tags);
 
             // Add the tooltip field (requires player)
-            String tooltip = stack.getTooltipLines(player, TooltipFlag.ADVANCED)
+            String tooltip = stack
+                    .getTooltipLines(player != null
+                                     ? Item.TooltipContext.of(player.level())
+                                     : Item.TooltipContext.EMPTY, player, TooltipFlag.ADVANCED)
                     .stream()
                     .map(Component::getString)
                     .reduce((line1, line2) -> line1 + "\n" + line2)

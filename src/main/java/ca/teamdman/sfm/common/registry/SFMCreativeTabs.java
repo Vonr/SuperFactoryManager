@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.registry;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +21,7 @@ public class SFMCreativeTabs {
             "main",
             () -> CreativeModeTab
                     .builder()
-                    .title(Constants.LocalizationKeys.ITEM_GROUP.getComponent())
+                    .title(LocalizationKeys.ITEM_GROUP.getComponent())
                     .icon(() -> new ItemStack(SFMBlocks.MANAGER_BLOCK.get()))
                     .displayItems(SFMItems::populateMainCreativeTab)
                     .build()

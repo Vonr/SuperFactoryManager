@@ -138,6 +138,9 @@ public class ClientStuff {
         return I18n.get(contents.getKey(), contents.getArgs());
     }
 
+    // TODO: chat message for feedback that something happened
+    // TODO: copy item id, not just NBT
+    // TODO: replace with showing a screen with the data
     public static void showItemInspectorScreen(ItemStack stack) {
         throw new NotImplementedException("Check out DataCommands.java for `/data get` command implementation");
 //        CompoundTag tag = stack.getTag();

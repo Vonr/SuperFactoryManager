@@ -1,9 +1,9 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.compat.SFMMekanismCompat;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -210,7 +210,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                     .getNamespace()
                     .equals("mekanism")) {
                 return "-- "
-                       + Constants.LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_NULL_DIRECTION_WARNING.getString()
+                       + LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_NULL_DIRECTION_WARNING.getString()
                        + "\n"
                        + result;
             }

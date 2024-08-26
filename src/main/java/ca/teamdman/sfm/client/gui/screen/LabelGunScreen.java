@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.gui.screen;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunClearPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunPrunePacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
@@ -29,7 +29,7 @@ public class LabelGunScreen extends Screen {
     private boolean shouldRebuildWidgets = false;
 
     public LabelGunScreen(ItemStack labelGunStack, InteractionHand hand) {
-        super(Constants.LocalizationKeys.LABEL_GUN_GUI_TITLE.getComponent());
+        super(LocalizationKeys.LABEL_GUN_GUI_TITLE.getComponent());
         LABEL_HOLDER = LabelPositionHolder.from(labelGunStack);
         HAND = hand;
     }
@@ -44,13 +44,13 @@ public class LabelGunScreen extends Screen {
                 50,
                 300,
                 20,
-                Constants.LocalizationKeys.LABEL_GUN_GUI_LABEL_PLACEHOLDER.getComponent()
+                LocalizationKeys.LABEL_GUN_GUI_LABEL_PLACEHOLDER.getComponent()
         ));
         this.setInitialFocus(labelField);
         this.setFocused(labelField);
 
         this.addRenderableWidget(new Button.Builder(
-                                         Constants.LocalizationKeys.LABEL_GUN_GUI_CLEAR_BUTTON.getComponent(),
+                                         LocalizationKeys.LABEL_GUN_GUI_CLEAR_BUTTON.getComponent(),
                                          __ -> {
                                              PacketDistributor.sendToServer(new ServerboundLabelGunClearPacket(HAND));
                                              LABEL_HOLDER.clear();
@@ -61,7 +61,7 @@ public class LabelGunScreen extends Screen {
                                          .size(50, 20).build()
         );
         this.addRenderableWidget(new Button.Builder(
-                Constants.LocalizationKeys.LABEL_GUN_GUI_PRUNE_BUTTON.getComponent(),
+                LocalizationKeys.LABEL_GUN_GUI_PRUNE_BUTTON.getComponent(),
                 (btn) -> {
                     PacketDistributor.sendToServer(new ServerboundLabelGunPrunePacket(HAND));
                     LABEL_HOLDER.prune();
@@ -80,7 +80,7 @@ public class LabelGunScreen extends Screen {
             int buttonWidth = ((Map<String, ? extends Set<BlockPos>>) LABEL_HOLDER.labels())
                                       .entrySet()
                                       .stream()
-                                      .map(entry -> Constants.LocalizationKeys.LABEL_GUN_GUI_LABEL_BUTTON.getComponent(
+                                      .map(entry -> LocalizationKeys.LABEL_GUN_GUI_LABEL_BUTTON.getComponent(
                                               entry.getKey(),
                                               entry.getValue().size()
                                       ).getString())
@@ -100,7 +100,7 @@ public class LabelGunScreen extends Screen {
                 int y = 80 + (i / buttonsPerRow) * (buttonHeight + paddingY);
                 int count = LABEL_HOLDER.getPositions(label).size();
                 this.addRenderableWidget(new Button.Builder(
-                                                 Constants.LocalizationKeys.LABEL_GUN_GUI_LABEL_BUTTON.getComponent(label, count),
+                                                 LocalizationKeys.LABEL_GUN_GUI_LABEL_BUTTON.getComponent(label, count),
                                                  (btn) -> {
                                                      this.labelField.setValue(label);
                                                      this.onDone();

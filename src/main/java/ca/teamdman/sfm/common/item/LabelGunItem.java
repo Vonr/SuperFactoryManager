@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.ClientStuff;
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUsePacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMDataComponents;
@@ -82,9 +82,9 @@ public class LabelGunItem extends Item {
             List<Component> pTooltipComponents,
             TooltipFlag pTooltipFlag
     ) {
-        pTooltipComponents.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
-        pTooltipComponents.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
-        pTooltipComponents.add(Constants.LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent().withStyle(ChatFormatting.GRAY));
         pTooltipComponents.addAll(LabelPositionHolder.from(pStack).asHoverText());
     }
 
@@ -105,7 +105,7 @@ public class LabelGunItem extends Item {
     public Component getName(ItemStack stack) {
         var name = getActiveLabel(stack);
         if (name.isEmpty()) return super.getName(stack);
-        return Constants.LocalizationKeys.LABEL_GUN_ITEM_NAME_WITH_LABEL
+        return LocalizationKeys.LABEL_GUN_ITEM_NAME_WITH_LABEL
                 .getComponent(name)
                 .withStyle(ChatFormatting.AQUA);
     }

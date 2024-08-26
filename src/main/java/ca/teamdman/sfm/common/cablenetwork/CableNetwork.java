@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -127,7 +127,7 @@ public class CableNetwork {
     ) {
         // TODO: move this check higher up the chain
         if (!isAdjacentToCable(pos)) {
-            logger.warn(x->x.accept(Constants.LocalizationKeys.LOGS_MISSING_ADJACENT_CABLE.get(pos)));
+            logger.warn(x->x.accept(LocalizationKeys.LOGS_MISSING_ADJACENT_CABLE.get(pos)));
             return null;
         }
         return CAPABILITY_CACHE.getOrDiscoverCapability(LEVEL, pos, capKind, direction, logger);
