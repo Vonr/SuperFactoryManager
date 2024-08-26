@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.gui.screen;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.client.Minecraft;
@@ -24,7 +24,7 @@ public class ExamplesScreen extends Screen {
     private final BiConsumer<String, Map<String,String>> CALLBACK;
 
     public ExamplesScreen(BiConsumer<String, Map<String,String>> callback) {
-        super(Constants.LocalizationKeys.EXAMPLES_GUI_TITLE.getComponent());
+        super(LocalizationKeys.EXAMPLES_GUI_TITLE.getComponent());
         CALLBACK = callback;
     }
 
@@ -110,7 +110,7 @@ public class ExamplesScreen extends Screen {
         this.renderBackground(graphics);
         this.renderBackground(graphics);
         super.render(graphics, pMouseX, pMouseY, pPartialTick);
-        MutableComponent warning1 = Constants.LocalizationKeys.EXAMPLES_GUI_WARNING_1.getComponent();
+        MutableComponent warning1 = LocalizationKeys.EXAMPLES_GUI_WARNING_1.getComponent();
         graphics.drawString(
                 this.font,
                 warning1,
@@ -127,7 +127,7 @@ public class ExamplesScreen extends Screen {
                 0xffffff,
                 false
         );
-        MutableComponent warning2 = Constants.LocalizationKeys.EXAMPLES_GUI_WARNING_2.getComponent();
+        MutableComponent warning2 = LocalizationKeys.EXAMPLES_GUI_WARNING_2.getComponent();
         graphics.drawString(
                 this.font,
                 warning2,
