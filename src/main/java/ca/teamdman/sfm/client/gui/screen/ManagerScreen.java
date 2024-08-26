@@ -16,6 +16,7 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -504,10 +505,25 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     @Override
-    protected void renderTooltip(GuiGraphics pGuiGraphics, int pX, int pY) {
-        if (Minecraft.getInstance().screen != this) return;
+    protected void renderTooltip(
+            GuiGraphics pGuiGraphics,
+            int pX,
+            int pY
+    ) {
+        if (Minecraft.getInstance().screen != this) {
+            // this should fix the annoying Ctrl+E popup when editing
+            this.renderables
+                    .stream()
+                    .filter(AbstractWidget.class::isInstance)
+                    .map(AbstractWidget.class::cast)
+                    .forEach(w -> w.setFocused(false));
+            return;
+        }
+
+        // render hovered item
         super.renderTooltip(pGuiGraphics, pX, pY);
     }
+
 
     @Override
     protected void renderBg(
