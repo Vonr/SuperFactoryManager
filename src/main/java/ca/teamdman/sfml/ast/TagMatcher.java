@@ -5,7 +5,6 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -28,10 +27,6 @@ public class TagMatcher implements Predicate<Object>, ASTNode {
         this.pathElementPatterns = List.copyOf(pathElementPatterns);
         this.namespacePredicate = RegexCache.buildPredicate(namespacePattern);
         this.pathElementPredicates = this.pathElementPatterns.stream().map(RegexCache::buildPredicate).toList();
-    }
-
-    public static TagMatcher fromNamespaceAndPath(String namespace, String path) {
-        return new TagMatcher(namespace, List.of(path.split("/")));
     }
 
     public static TagMatcher fromNamespaceAndPath(String namespace, Collection<String> path) {
