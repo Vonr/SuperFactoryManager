@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.LOG_PROGRAM_TICK_FORGET_STATEMENT;
+import static ca.teamdman.sfm.common.localization.LocalizationKeys.LOG_PROGRAM_TICK_FORGET_STATEMENT;
 
 // todo: optimize for forget-all case
 public record ForgetStatement(
