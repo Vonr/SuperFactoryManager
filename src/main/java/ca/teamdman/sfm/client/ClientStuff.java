@@ -127,6 +127,9 @@ public class ClientStuff {
         return I18n.get(contents.getKey(), contents.getArgs());
     }
 
+    // TODO: chat message for feedback that something happened
+    // TODO: copy item id, not just NBT
+    // TODO: replace with showing a screen with the data
     public static void showItemInspectorScreen(ItemStack stack) {
         CompoundTag tag = stack.getTag();
         if (tag != null) {

@@ -557,11 +557,11 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .map(s -> s.replaceAll("\\*", ".*")) // convert * to .*
                 .collect(Collectors.toCollection(ArrayDeque::new));
         TagMatcher rtn;
-        if (identifiers.size() == 1) {
-            // only one element - wildcard namespace, literal path
-            rtn = TagMatcher.fromPath(List.of(identifiers.pop()));
+        if (ctx.COLON() == null) {
+            // wildcard namespace
+            rtn = TagMatcher.fromPath(identifiers);
         } else {
-            // multiple elements - namespace, path
+            // namespace specified
             rtn = TagMatcher.fromNamespaceAndPath(identifiers.pop(), identifiers);
         }
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));

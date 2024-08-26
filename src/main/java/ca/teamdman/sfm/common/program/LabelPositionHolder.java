@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.program;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
@@ -120,11 +120,11 @@ public class LabelPositionHolder {
     public List<Component> asHoverText() {
         var rtn = new ArrayList<Component>();
         if (LABELS.isEmpty()) return rtn;
-        rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL_HEADER
+        rtn.add(LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL_HEADER
                         .getComponent()
                         .withStyle(ChatFormatting.UNDERLINE));
         for (var entry : LABELS.entrySet()) {
-            rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL.getComponent(
+            rtn.add(LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL.getComponent(
                     entry.getKey(),
                     entry.getValue().size()
             ).withStyle(ChatFormatting.GRAY));
