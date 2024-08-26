@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.util;
+package ca.teamdman.sfm.common.handler;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.stream.Stream;
 
+// TODO: consider replacing with ContainerOpenersCounter, see BarrelBlockEntity
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.GAME, modid = SFM.MOD_ID)
 public class OpenContainerTracker {
     private static final Map<BlockPos, Map<ServerPlayer, ManagerContainerMenu>> OPEN_CONTAINERS = new WeakHashMap<>();
