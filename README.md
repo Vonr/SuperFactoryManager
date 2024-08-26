@@ -75,7 +75,10 @@ For each version:
         1.20.1   -> Forge+NeoForge
         1.20.2.. -> NeoForge
     }
-    Java=Java 17
+    Java=match mc version {
+        ..1.20.4 -> Java 17
+        1.21.. -> Java 21
+    }
     Minecraft=$version
     Changelog= <<
         ```
