@@ -54,8 +54,8 @@ public class ClientExportHelper {
             jsonObject.addProperty("id", id.toString());
 
             // Add the data field if it exists
-            if (stack.getShareTag() != null) {
-                jsonObject.addProperty("data", stack.getShareTag().toString());
+            if (stack.getTag() != null) {
+                jsonObject.addProperty("data", stack.getTag().toString());
             }
 
             // Add the tags

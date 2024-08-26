@@ -4,8 +4,9 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientDiagnosticInfo;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.localization.LocalizationEntry;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.logging.TranslatableLogEvent;
 import ca.teamdman.sfm.common.net.ServerboundManagerClearLogsPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerLogDesireUpdatePacket;
@@ -36,7 +37,7 @@ import org.joml.Matrix4f;
 
 import java.util.*;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
+import static ca.teamdman.sfm.common.localization.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
 // todo: checkbox for auto-scrolling
 // todo: clear button
@@ -51,7 +52,7 @@ public class LogsScreen extends Screen {
 
 
     public LogsScreen(ManagerContainerMenu menu) {
-        super(Constants.LocalizationKeys.LOGS_SCREEN_TITLE.getComponent());
+        super(LocalizationKeys.LOGS_SCREEN_TITLE.getComponent());
         this.MENU = menu;
         this.lastKnownLogLevel = MENU.logLevel;
     }
@@ -123,7 +124,7 @@ public class LogsScreen extends Screen {
             toProcess.add(new TranslatableLogEvent(
                     Level.INFO,
                     instant,
-                    Constants.LocalizationKeys.LOGS_GUI_NO_CONTENT.get()
+                    LocalizationKeys.LOGS_GUI_NO_CONTENT.get()
             ));
         }
         for (TranslatableLogEvent log : toProcess) {
@@ -249,7 +250,7 @@ public class LogsScreen extends Screen {
                 this.height / 2 - 100 + 195,
                 80,
                 20,
-                Constants.LocalizationKeys.LOGS_GUI_COPY_LOGS_BUTTON.getComponent(),
+                LocalizationKeys.LOGS_GUI_COPY_LOGS_BUTTON.getComponent(),
                 (button) -> {
                     StringBuilder clip = new StringBuilder();
                     clip.append(ClientDiagnosticInfo.getDiagnosticInfo(MENU.program, MENU.getDisk()));
@@ -271,7 +272,7 @@ public class LogsScreen extends Screen {
                     }
                     Minecraft.getInstance().keyboardHandler.setClipboard(clip.toString());
                 },
-                buildTooltip(Constants.LocalizationKeys.LOGS_GUI_COPY_LOGS_BUTTON_TOOLTIP)
+                buildTooltip(LocalizationKeys.LOGS_GUI_COPY_LOGS_BUTTON_TOOLTIP)
         ));
         this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 this.width / 2 - 2 - 100,
@@ -288,7 +289,7 @@ public class LogsScreen extends Screen {
                     this.height / 2 - 100 + 195,
                     80,
                     20,
-                    Constants.LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON.getComponent(),
+                    LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON.getComponent(),
                     (button) -> {
                         PacketDistributor.SERVER.noArg().send(new ServerboundManagerClearLogsPacket(
                                 MENU.containerId,
@@ -301,7 +302,7 @@ public class LogsScreen extends Screen {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private Tooltip buildTooltip(Constants.LocalizationKeys.LocalizationEntry entry) {
+    private Tooltip buildTooltip(LocalizationEntry entry) {
         return Tooltip.create(entry.getComponent());
     }
 

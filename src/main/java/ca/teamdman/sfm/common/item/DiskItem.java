@@ -3,8 +3,8 @@ package ca.teamdman.sfm.common.item;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundDiskItemSetProgramPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramLinter;
@@ -59,7 +59,7 @@ public class DiskItem extends Item {
 
     public static Optional<Program> compileAndUpdateErrorsAndWarnings(ItemStack stack, @Nullable ManagerBlockEntity manager) {
         if (manager != null) {
-            manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FROM_DISK_BEGIN.get()));
+            manager.logger.info(x -> x.accept(LocalizationKeys.PROGRAM_COMPILE_FROM_DISK_BEGIN.get()));
         }
         AtomicReference<Program> rtn = new AtomicReference<>(null);
         Program.compile(
@@ -69,7 +69,7 @@ public class DiskItem extends Item {
 
                     // Log to disk
                     if (manager != null) {
-                        manager.logger.info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_SUCCEEDED_WITH_WARNINGS.get(
+                        manager.logger.info(x -> x.accept(LocalizationKeys.PROGRAM_COMPILE_SUCCEEDED_WITH_WARNINGS.get(
                                 successProgram.name(),
                                 warnings.size()
                         )));
@@ -89,7 +89,7 @@ public class DiskItem extends Item {
 
                     // Log to disk
                     if (manager != null) {
-                        manager.logger.error(x -> x.accept(Constants.LocalizationKeys.PROGRAM_COMPILE_FAILED_WITH_ERRORS.get(
+                        manager.logger.error(x -> x.accept(LocalizationKeys.PROGRAM_COMPILE_FAILED_WITH_ERRORS.get(
                                 errors.size())));
                         manager.logger.error(errors::forEach);
                     }
@@ -208,7 +208,7 @@ public class DiskItem extends Item {
                         .map(line -> line.withStyle(ChatFormatting.YELLOW))
                         .forEach(list::add);
                 if (isClient) {
-                    list.add(Constants.LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
+                    list.add(LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
                                      .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getTranslatedKeyMessage())
                                      .withStyle(ChatFormatting.AQUA));
                 }

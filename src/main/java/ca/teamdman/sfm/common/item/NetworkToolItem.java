@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundNetworkToolUsePacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -41,9 +41,9 @@ public class NetworkToolItem extends Item {
     public void appendHoverText(
             ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
     ) {
-        lines.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(Constants.LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_3.getComponent(
+        lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
+        lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
+        lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_3.getComponent(
                 SFMKeyMappings.CONTAINER_INSPECTOR_KEY.get().getTranslatedKeyMessage()
         ).withStyle(ChatFormatting.AQUA));
     }

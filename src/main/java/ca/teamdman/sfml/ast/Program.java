@@ -1,12 +1,12 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.item.DiskItem;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.program.*;
@@ -57,7 +57,7 @@ public record Program(
 
         // initial parse
         SFMLParser.ProgramContext context = parser.program();
-        buildErrors.stream().map(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL::get).forEach(errors::add);
+        buildErrors.stream().map(LocalizationKeys.PROGRAM_ERROR_LITERAL::get).forEach(errors::add);
 
 
         // build AST
@@ -71,18 +71,18 @@ public record Program(
                     try {
                         ResourceType<?, ?, ?> resourceType = referencedResource.getResourceType();
                         if (resourceType == null) {
-                            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_UNKNOWN_RESOURCE_TYPE.get(
+                            errors.add(LocalizationKeys.PROGRAM_ERROR_UNKNOWN_RESOURCE_TYPE.get(
                                     referencedResource));
                         }
                     } catch (ResourceLocationException e) {
-                        errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(
+                        errors.add(LocalizationKeys.PROGRAM_ERROR_MALFORMED_RESOURCE_TYPE.get(
                                 referencedResource));
                     }
                 }
             } catch (ResourceLocationException | IllegalArgumentException | AssertionError e) {
-                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
+                errors.add(LocalizationKeys.PROGRAM_ERROR_LITERAL.get(e.getMessage()));
             } catch (Throwable t) {
-                errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
+                errors.add(LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
                 SFM.LOGGER.warn(
                         "Encountered unhandled error while compiling program\n```\n{}\n```",
                         programString,
@@ -100,7 +100,7 @@ public record Program(
         }
 
         if (program == null && errors.isEmpty()) {
-            errors.add(Constants.LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
+            errors.add(LocalizationKeys.PROGRAM_ERROR_COMPILE_FAILED.get());
             SFM.LOGGER.error(
                     "Program was somehow null after a successful compile. I have no idea how this could happen, but it definitely shouldn't.\n```\n{}\n```",
                     programString
@@ -125,7 +125,7 @@ public record Program(
         // log if there are unprocessed redstone pulses
         int unprocessedRedstonePulseCount = manager.getUnprocessedRedstonePulseCount();
         if (unprocessedRedstonePulseCount > 0) {
-            manager.logger.debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_WITH_REDSTONE_COUNT.get(
+            manager.logger.debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_WITH_REDSTONE_COUNT.get(
                     unprocessedRedstonePulseCount)));
         }
 
@@ -158,14 +158,14 @@ public record Program(
             if (!context.didSomething()) {
                 context.setDidSomething(true);
                 context.getLogger().trace(getTraceLogWriter(context));
-                context.getLogger().debug(debug -> debug.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK.get()));
+                context.getLogger().debug(debug -> debug.accept(LocalizationKeys.LOG_PROGRAM_TICK.get()));
             }
 
             // Log pretty triggers
             if (triggers instanceof ShortStatement ss) {
                 context
                         .getLogger()
-                        .debug(x -> x.accept(Constants.LocalizationKeys.LOG_PROGRAM_TICK_TRIGGER_STATEMENT.get(
+                        .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_TRIGGER_STATEMENT.get(
                                 ss.toStringShort())));
             }
 
@@ -194,7 +194,7 @@ public record Program(
             long nanoTimePassed = System.nanoTime() - start;
 
             // Log trigger time
-            context.getLogger().info(x -> x.accept(Constants.LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_MS.get(
+            context.getLogger().info(x -> x.accept(LocalizationKeys.PROGRAM_TICK_TRIGGER_TIME_MS.get(
                     nanoTimePassed / 1_000_000.0,
                     trigger.toString()
             )));
@@ -264,8 +264,8 @@ public record Program(
 
     private static @NotNull Consumer<Consumer<TranslatableContents>> getTraceLogWriter(ProgramContext context) {
         return trace -> {
-            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_1.get());
-            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_2.get());
+            trace.accept(LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_1.get());
+            trace.accept(LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_2.get());
             Level level = context
                     .getManager()
                     .getLevel();
@@ -279,20 +279,20 @@ public record Program(
                                 + level
                                         .getBlockState(
                                                 pos))
-                    .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
+                    .forEach(body -> trace.accept(LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
                             body)));
-            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_3.get());
+            trace.accept(LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_HEADER_3.get());
             //noinspection DataFlowIssue
             context
                     .getNetwork()
                     .getCapabilityProviderPositions()
                     .map(pos -> "- " + pos.toString() + " " + level
                             .getBlockState(pos))
-                    .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
+                    .forEach(body -> trace.accept(LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_BODY.get(
                             body)));
-            trace.accept(Constants.LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_FOOTER.get());
+            trace.accept(LocalizationKeys.LOG_CABLE_NETWORK_DETAILS_FOOTER.get());
 
-            trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER.get());
+            trace.accept(LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_HEADER.get());
             //noinspection DataFlowIssue
             context
                     .getLabelPositionHolder()
@@ -310,10 +310,10 @@ public record Program(
                                                            pos)
 
                             )
-                            .forEach(body -> trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_BODY.get(
+                            .forEach(body -> trace.accept(LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_BODY.get(
                                     body))));
-            trace.accept(Constants.LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER.get());
-            trace.accept(Constants.LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
+            trace.accept(LocalizationKeys.LOG_LABEL_POSITION_HOLDER_DETAILS_FOOTER.get());
+            trace.accept(LocalizationKeys.LOG_PROGRAM_CONTEXT.get(context));
         };
     }
 
