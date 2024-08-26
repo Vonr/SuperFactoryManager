@@ -2,10 +2,7 @@ package ca.teamdman.sfm.common.registry;
 
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.blockentity.BatteryBlockEntity;
-import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
-import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
+import ca.teamdman.sfm.common.blockentity.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -49,6 +46,13 @@ public final class SFMBlockEntities {
             "battery",
             () -> BlockEntityType.Builder
                     .of(BatteryBlockEntity::new, SFMBlocks.BATTERY_BLOCK.get())
+                    .build(null)
+    );
+
+    public static final Supplier<BlockEntityType<TestBarrelBlockEntity>> TEST_BARREL_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+            "test_barrel",
+            () -> BlockEntityType.Builder
+                    .of(TestBarrelBlockEntity::new, SFMBlocks.TEST_BARREL_BLOCK.get())
                     .build(null)
     );
 
