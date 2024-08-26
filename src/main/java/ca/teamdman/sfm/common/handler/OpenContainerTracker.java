@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.util;
+package ca.teamdman.sfm.common.handler;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;

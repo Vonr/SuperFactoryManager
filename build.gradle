@@ -69,10 +69,6 @@ sourceSets {
     test {
         compileClasspath += main.output
     }
-    datagen {
-        compileClasspath += main.output
-    }
-    generated
     gametest {
         java {
             srcDir "src/gametest/java"
@@ -83,6 +79,10 @@ sourceSets {
             srcDirs += "src/gametest/resources"
         }
     }
+    datagen {
+        compileClasspath += main.output
+    }
+    generated
 }
 
 

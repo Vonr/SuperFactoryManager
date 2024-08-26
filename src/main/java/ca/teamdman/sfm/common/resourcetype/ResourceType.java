@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.common.resourcetype;
 
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CapabilityCache;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.CapabilityConsumer;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
@@ -116,7 +116,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         // Log
         programContext
                 .getLogger()
-                .trace(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_BEGIN.get(
+                .trace(x -> x.accept(LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_BEGIN.get(
                         displayAsCode(),
                         displayAsCapabilityClass(),
                         labelAccess
@@ -143,7 +143,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                     if (cap != null) {
                         programContext
                                 .getLogger()
-                                .debug(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT.get(
+                                .debug(x -> x.accept(LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_PRESENT.get(
                                         displayAsCapabilityClass(),
                                         pos,
                                         dir
@@ -155,7 +155,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                 // Log error
                 programContext
                         .getLogger()
-                        .error(x -> x.accept(Constants.LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT.get(
+                        .error(x -> x.accept(LocalizationKeys.LOG_RESOURCE_TYPE_GET_CAPABILITIES_CAP_NOT_PRESENT.get(
                                 displayAsCapabilityClass(),
                                 pos,
                                 dir

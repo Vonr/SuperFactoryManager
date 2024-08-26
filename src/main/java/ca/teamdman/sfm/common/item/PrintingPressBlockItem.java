@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.item;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -20,6 +20,6 @@ public class PrintingPressBlockItem extends BlockItem {
     @Override
     public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltip, TooltipFlag pFlag) {
         super.appendHoverText(pStack, pLevel, pTooltip, pFlag);
-        pTooltip.add(Constants.LocalizationKeys.PRINTING_PRESS_TOOLTIP.getComponent().withStyle(ChatFormatting.GRAY));
+        pTooltip.add(LocalizationKeys.PRINTING_PRESS_TOOLTIP.getComponent().withStyle(ChatFormatting.GRAY));
     }
 }

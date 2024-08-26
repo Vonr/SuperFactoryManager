@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.ai;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMGameTestBase;
+import ca.teamdman.sfm.gametest.SFMGameTestBase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

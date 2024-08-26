@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.cablenetwork;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -106,9 +106,9 @@ public class CapabilityCache {
                     () -> remove(pos, capKind, direction)
             );
             putCapability(pos, capKind, direction, found);
-            logger.trace(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_MISS.get(pos, capKind.name(), direction)));
+            logger.trace(x -> x.accept(LocalizationKeys.LOG_CAPABILITY_CACHE_MISS.get(pos, capKind.name(), direction)));
         } else {
-            logger.trace(x -> x.accept(Constants.LocalizationKeys.LOG_CAPABILITY_CACHE_HIT.get(pos, capKind.name(), direction)));
+            logger.trace(x -> x.accept(LocalizationKeys.LOG_CAPABILITY_CACHE_HIT.get(pos, capKind.name(), direction)));
         }
         return found;
     }
