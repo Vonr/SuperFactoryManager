@@ -28,8 +28,16 @@ d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.2
 d----          2024-04-14  1:39 PM                SuperFactoryManager 1.20.3
     #>
 
+    $chosen = $repo_clones `
+    | ForEach-Object { $_.Name } `
+    | fzf `
+        --multi `
+        --bind "ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all" `
+        --header "Pick versions to build"
+    $chosen_objs = $repo_clones | Where-Object { $chosen -contains $_.Name }
+
     # Perform build
-    foreach ($repo in $repo_clones) {
+    foreach ($repo in $chosen) {
         try {
             Push-Location $repo
             Write-Host "Running build for $repo"
