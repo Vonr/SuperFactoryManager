@@ -61,14 +61,16 @@ retention       : RETAIN number EACH?;
 with        : WITH withClause
             | WITHOUT withClause
             ;
-withClause  : LPAREN withClause RPAREN          # WithParen
-            | NOT withClause                    # WithNegation
-            | withClause AND withClause         # WithConjunction
-            | withClause OR withClause          # WithDisjunction
-            | (TAG|HASHTAG) tagMatcher          # WithTag
+withClause  : LPAREN withClause RPAREN           # WithParen
+            | NOT withClause                     # WithNegation
+            | withClause AND withClause          # WithConjunction
+            | withClause OR withClause           # WithDisjunction
+            | (TAG HASHTAG?|HASHTAG) tagMatcher  # WithTag
             ;
 
-tagMatcher: identifier (COLON identifier (SLASH identifier)+)?; // TODO: add auto-wildcard when namespace: omitted
+tagMatcher  : identifier COLON identifier (SLASH identifier)*
+            | identifier (SLASH identifier)*
+            ;
 
 
 sidequalifier   : EACH SIDE                 #EachSide

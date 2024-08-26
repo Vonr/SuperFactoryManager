@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.client.jei;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.item.FormItem;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.recipe.PrintingPressRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -41,7 +41,7 @@ public class PrintingPressJEICategory implements IRecipeCategory<PrintingPressRe
 
     @Override
     public Component getTitle() {
-        return Constants.LocalizationKeys.PRINTING_PRESS_JEI_CATEGORY_TITLE.getComponent();
+        return LocalizationKeys.PRINTING_PRESS_JEI_CATEGORY_TITLE.getComponent();
     }
 
     @Override

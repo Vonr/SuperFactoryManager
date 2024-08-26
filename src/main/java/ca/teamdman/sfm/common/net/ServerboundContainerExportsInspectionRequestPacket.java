@@ -184,7 +184,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                     .getNamespace()
                     .equals("mekanism")) {
                 return "-- "
-                       + Constants.LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_NULL_DIRECTION_WARNING.getString()
+                       + LocalizationKeys.CONTAINER_INSPECTOR_MEKANISM_NULL_DIRECTION_WARNING.getString()
                        + "\n"
                        + result;
             }

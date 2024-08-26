@@ -1,7 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants.LocalizationKeys;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ca.teamdman.sfm.common.Constants.LocalizationKeys.*;
+import static ca.teamdman.sfm.common.localization.LocalizationKeys.*;
 
 public class OutputStatement implements IOStatement {
     private final LabelAccess labelAccess;

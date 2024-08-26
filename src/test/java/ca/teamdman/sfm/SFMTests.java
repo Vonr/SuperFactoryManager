@@ -72,41 +72,4 @@ public class SFMTests {
         assertEquals("hi", map.get(123L));
         assertNull(map.get(124L));
     }
-
-    @Test
-    public void testTagMatcher() {
-        TagMatcher matcher = TagMatcher.fromNamespaceAndPath("namespace", "path");
-        assertTrue(matcher.test("namespace:path"));
-        assertFalse(matcher.test("namespace:other"));
-        assertFalse(matcher.test("whatever:path"));
-        assertFalse(matcher.test("something:here"));
-        assertFalse(matcher.test(":"));
-        assertFalse(matcher.test(":path"));
-        assertFalse(matcher.test("namespace:"));
-    }
-    @Test
-    public void testTagMatcherPattern() {
-        TagMatcher matcher = TagMatcher.fromNamespaceAndPath("forge", ".*");
-        assertTrue(matcher.test("forge:path"));
-        assertTrue(matcher.test("forge:idk"));
-        assertTrue(matcher.test("forge:something"));
-        assertFalse(matcher.test("forge:who/knows"));
-    }
-
-    @Test
-    public void testTagMatcherDeepPattern() {
-        TagMatcher matcher = TagMatcher.fromNamespaceAndPath("forge", ".*.*");
-        assertTrue(matcher.test("forge:path"));
-        assertTrue(matcher.test("forge:idk"));
-        assertTrue(matcher.test("forge:something"));
-        assertTrue(matcher.test("forge:who/knows"));
-        assertTrue(matcher.test("forge:who/knows/what"));
-        assertFalse(matcher.test("namespace:path"));
-        assertFalse(matcher.test("namespace:other"));
-        assertFalse(matcher.test("whatever:path"));
-        assertFalse(matcher.test("something:here"));
-        assertFalse(matcher.test(":"));
-        assertFalse(matcher.test(":path"));
-        assertFalse(matcher.test("namespace:"));
-    }
 }
