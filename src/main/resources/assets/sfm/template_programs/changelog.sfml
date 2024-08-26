@@ -6,14 +6,15 @@ NAME "Changelog"
 
 ---- 4.19.0 ----
 -- Fix uppercase resource identifiers not being auto-lowercased internally
--- Add WITH TAG support
+-- Add WITH TAG support, check examples for more info
 EVERY 20 TICKS DO
     INPUT minecraft:* WITH TAG minecraft:mineable/shovel FROM chest
-    OUTPUT TO idk
+    OUTPUT TO chest
 END
 -- Add WIP hotkey for copying item NBT to clipboard, doesn't work on JEI hovered items
 -- Fix tooltips for manager screen showing over the program edit screen... again
 -- Add `/sfm export_info` client command to dump item and recipe info
+-- Update SFM 1.21.1 build to fix broken Mekanism compatibility
 
 ---- 4.18.0 ----
 -- Add 1.21.0 build with Mekanism support

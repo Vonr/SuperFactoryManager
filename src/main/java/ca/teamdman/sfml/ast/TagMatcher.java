@@ -22,10 +22,10 @@ public class TagMatcher implements Predicate<Object>, ASTNode {
 
     private TagMatcher(
             String namespacePattern,
-            List<String> pathElementPatterns
+            Collection<String> pathElementPatterns
     ) {
         this.namespacePattern = namespacePattern;
-        this.pathElementPatterns = Collections.unmodifiableList(pathElementPatterns);
+        this.pathElementPatterns = List.copyOf(pathElementPatterns);
         this.namespacePredicate = RegexCache.buildPredicate(namespacePattern);
         this.pathElementPredicates = this.pathElementPatterns.stream().map(RegexCache::buildPredicate).toList();
     }
@@ -38,7 +38,7 @@ public class TagMatcher implements Predicate<Object>, ASTNode {
         return new TagMatcher(namespace, new ArrayList<>(path));
     }
 
-    public static TagMatcher fromPath(List<String> pathElements) {
+    public static TagMatcher fromPath(Collection<String> pathElements) {
         return new TagMatcher(".*", pathElements);
     }
 
@@ -71,6 +71,9 @@ public class TagMatcher implements Predicate<Object>, ASTNode {
             String checkNamespace,
             String[] checkPathElements
     ) {
+        if (checkPathElements.length < this.pathElementPatterns.size()) {
+            return false;
+        }
         if (!namespacePredicate.test(checkNamespace)) {
             return false;
         }
