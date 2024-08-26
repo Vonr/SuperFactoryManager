@@ -11,9 +11,9 @@ EVERY 20 TICKS DO
     INPUT minecraft:* WITH TAG minecraft:mineable/shovel FROM chest
     OUTPUT TO idk
 END
--- Add WIP hotkey for copying item NBT to clipboard, doesn't work with JEI
+-- Add WIP hotkey for copying item NBT to clipboard, doesn't work on JEI hovered items
 -- Fix tooltips for manager screen showing over the program edit screen... again
--- Add `/sfm export_info` client command
+-- Add `/sfm export_info` client command to dump item and recipe info
 
 ---- 4.18.0 ----
 -- Add 1.21.0 build with Mekanism support
