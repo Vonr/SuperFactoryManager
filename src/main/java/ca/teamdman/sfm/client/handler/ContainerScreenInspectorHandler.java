@@ -3,7 +3,7 @@ package ca.teamdman.sfm.client.handler;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundContainerExportsInspectionRequestPacket;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -37,7 +37,7 @@ public class ContainerScreenInspectorHandler {
             50,
             100,
             20,
-            Constants.LocalizationKeys.CONTAINER_INSPECTOR_SHOW_EXPORTS_BUTTON.getComponent(),
+            LocalizationKeys.CONTAINER_INSPECTOR_SHOW_EXPORTS_BUTTON.getComponent(),
             (button) -> {
                 BlockEntity lookBlockEntity = ClientStuff.getLookBlockEntity();
                 if (lastScreen != null && lookBlockEntity != null) {
@@ -100,7 +100,7 @@ public class ContainerScreenInspectorHandler {
             // draw text for slot totals
             graphics.drawString(
                     Minecraft.getInstance().font,
-                    Constants.LocalizationKeys.CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT.getComponent(Component
+                    LocalizationKeys.CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT.getComponent(Component
                                                                                                              .literal(
                                                                                                                      String.valueOf(
                                                                                                                              containerSlotCount))
@@ -113,7 +113,7 @@ public class ContainerScreenInspectorHandler {
             );
             graphics.drawString(
                     Minecraft.getInstance().font,
-                    Constants.LocalizationKeys.CONTAINER_INSPECTOR_INVENTORY_SLOT_COUNT.getComponent(Component
+                    LocalizationKeys.CONTAINER_INSPECTOR_INVENTORY_SLOT_COUNT.getComponent(Component
                                                                                                              .literal(
                                                                                                                      String.valueOf(
                                                                                                                              inventorySlotCount))

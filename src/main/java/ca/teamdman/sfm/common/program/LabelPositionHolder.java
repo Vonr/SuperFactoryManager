@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.program;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMDataComponents;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -155,11 +155,11 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
     public List<Component> asHoverText() {
         var rtn = new ArrayList<Component>();
         if (labels().isEmpty()) return rtn;
-        rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL_HEADER
+        rtn.add(LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL_HEADER
                         .getComponent()
                         .withStyle(ChatFormatting.UNDERLINE));
         for (var entry : labels().entrySet()) {
-            rtn.add(Constants.LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL.getComponent(
+            rtn.add(LocalizationKeys.DISK_ITEM_TOOLTIP_LABEL.getComponent(
                     entry.getKey(),
                     entry.getValue().size()
             ).withStyle(ChatFormatting.GRAY));

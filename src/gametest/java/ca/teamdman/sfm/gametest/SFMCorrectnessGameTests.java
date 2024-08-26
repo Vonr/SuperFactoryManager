@@ -1,18 +1,20 @@
-package ca.teamdman.sfm;
+package ca.teamdman.sfm.gametest;
 
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.item.FormItem;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundOutputInspectionRequestPacket;
 import ca.teamdman.sfm.common.program.GatherWarningsProgramBehaviour;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfml.ast.OutputStatement;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
@@ -3196,7 +3198,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                 .getFirst()
                                 .getContents()
                 ).getKey()
-                        .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
+                        .equals(LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
                                         .key()
                                         .get()), "expected output without matching input warning");
         helper.succeed();
@@ -3301,7 +3303,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    .getFirst()
                                    .getContents()
                    ).getKey()
-                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_OUTPUT_RESOURCE_TYPE_NOT_FOUND_IN_INPUTS
+                           .equals(LocalizationKeys.PROGRAM_WARNING_OUTPUT_RESOURCE_TYPE_NOT_FOUND_IN_INPUTS
                                            .key()
                                            .get()), "expected output without matching input warning");
         helper.succeed();
@@ -3338,7 +3340,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                    .getFirst()
                                    .getContents()
                    ).getKey()
-                           .equals(Constants.LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
+                           .equals(LocalizationKeys.PROGRAM_WARNING_UNUSED_INPUT_LABEL // should be unused input
                                            .key()
                                            .get()), "expected output without matching input warning");
         helper.succeed();

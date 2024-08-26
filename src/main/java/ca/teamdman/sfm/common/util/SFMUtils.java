@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.util;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
@@ -121,7 +121,7 @@ public class SFMUtils {
             return new TranslatableContents(key, null, args);
         } catch (IllegalArgumentException e) {
             SFM.LOGGER.error("Failed to create translatable contents for key \"{}\"", key, e);
-            return Constants.LocalizationKeys.SFM_BAD_TRANSLATION_ARGUMENT.get(key, e.getMessage());
+            return LocalizationKeys.SFM_BAD_TRANSLATION_ARGUMENT.get(key, e.getMessage());
         }
     }
 

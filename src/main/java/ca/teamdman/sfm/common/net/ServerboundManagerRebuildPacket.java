@@ -1,10 +1,10 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -61,7 +61,7 @@ public record ServerboundManagerRebuildPacket(
                 (menu, manager) -> {
                     // perform rebuild by unregistering the cable network
                     CableNetworkManager.purgeCableNetworkForManager(manager);
-                    manager.logger.warn(x -> x.accept(Constants.LocalizationKeys.LOG_MANAGER_CABLE_NETWORK_REBUILD.get()));
+                    manager.logger.warn(x -> x.accept(LocalizationKeys.LOG_MANAGER_CABLE_NETWORK_REBUILD.get()));
 
                     // log it
                     String sender = "UNKNOWN SENDER";
