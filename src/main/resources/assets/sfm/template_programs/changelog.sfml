@@ -15,6 +15,7 @@ END
 -- Fix tooltips for manager screen showing over the program edit screen... again
 -- Add `/sfm export_info` client command to dump item and recipe info
 -- Update SFM 1.21.1 build to fix broken Mekanism compatibility
+---- gas::, infusion::, etc are now aliases for chemical::
 
 ---- 4.18.0 ----
 -- Add 1.21.0 build with Mekanism support
