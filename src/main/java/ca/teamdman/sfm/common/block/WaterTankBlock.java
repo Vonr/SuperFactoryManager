@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.common.block;
 
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.ChatFormatting;
@@ -67,10 +67,10 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
             List<Component> pTooltip,
             TooltipFlag pFlag
     ) {
-        pTooltip.add(Constants.LocalizationKeys.WATER_TANK_ITEM_TOOLTIP_1
+        pTooltip.add(LocalizationKeys.WATER_TANK_ITEM_TOOLTIP_1
                              .getComponent()
                              .withStyle(ChatFormatting.GRAY));
-        pTooltip.add(Constants.LocalizationKeys.WATER_TANK_ITEM_TOOLTIP_2
+        pTooltip.add(LocalizationKeys.WATER_TANK_ITEM_TOOLTIP_2
                              .getComponent()
                              .withStyle(ChatFormatting.GRAY));
     }

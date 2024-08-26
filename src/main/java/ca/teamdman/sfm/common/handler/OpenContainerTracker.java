@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common.util;
+package ca.teamdman.sfm.common.handler;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import static net.minecraftforge.event.entity.player.PlayerContainerEvent.Close;
 import static net.minecraftforge.event.entity.player.PlayerContainerEvent.Open;
 
+// TODO: consider replacing with ContainerOpenersCounter, see BarrelBlockEntity
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SFM.MOD_ID)
 public class OpenContainerTracker {
     private static final Map<BlockPos, Map<ServerPlayer, ManagerContainerMenu>> OPEN_CONTAINERS = new WeakHashMap<>();

@@ -1,8 +1,8 @@
 package ca.teamdman.sfm.client.jei;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
 import ca.teamdman.sfm.common.item.FormItem;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -51,7 +51,7 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
 
     @Override
     public Component getTitle() {
-        return Constants.LocalizationKeys.FALLING_ANVIL_JEI_CATEGORY_TITLE.getComponent();
+        return LocalizationKeys.FALLING_ANVIL_JEI_CATEGORY_TITLE.getComponent();
     }
 
     @Override
@@ -77,7 +77,7 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
             ItemStack ironBlock = new ItemStack(Blocks.IRON_BLOCK);
             var displayTag = ironBlock.getOrCreateTag().getCompound("display");
             var lore = new ListTag();
-            lore.add(StringTag.valueOf(Component.Serializer.toJson(Constants.LocalizationKeys.FALLING_ANVIL_JEI_CONSUMED.getComponent())));
+            lore.add(StringTag.valueOf(Component.Serializer.toJson(LocalizationKeys.FALLING_ANVIL_JEI_CONSUMED.getComponent())));
             displayTag.put("Lore", lore);
             ironBlock.getOrCreateTag().put("display", displayTag);
             builder.addSlot(RecipeIngredientRole.INPUT, 0, 36).addItemStack(ironBlock);
@@ -152,7 +152,7 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
             ItemStack obsidian = new ItemStack(Blocks.OBSIDIAN);
             var displayTag = obsidian.getOrCreateTag().getCompound("display");
             var lore = new ListTag();
-            lore.add(StringTag.valueOf(Component.Serializer.toJson(Constants.LocalizationKeys.FALLING_ANVIL_JEI_NOT_CONSUMED.getComponent())));
+            lore.add(StringTag.valueOf(Component.Serializer.toJson(LocalizationKeys.FALLING_ANVIL_JEI_NOT_CONSUMED.getComponent())));
             displayTag.put("Lore", lore);
             obsidian.getOrCreateTag().put("display", displayTag);
             builder.addSlot(RecipeIngredientRole.INPUT, 8, 36).addItemStack(obsidian);
@@ -163,7 +163,7 @@ public class FallingAnvilJEICategory implements IRecipeCategory<FallingAnvilReci
             ItemStack obsidian = new ItemStack(Blocks.OBSIDIAN);
             var displayTag = obsidian.getOrCreateTag().getCompound("display");
             var lore = new ListTag();
-            lore.add(StringTag.valueOf(Component.Serializer.toJson(Constants.LocalizationKeys.FALLING_ANVIL_JEI_NOT_CONSUMED.getComponent())));
+            lore.add(StringTag.valueOf(Component.Serializer.toJson(LocalizationKeys.FALLING_ANVIL_JEI_NOT_CONSUMED.getComponent())));
             displayTag.put("Lore", lore);
             obsidian.getOrCreateTag().put("display", displayTag);
             builder.addSlot(RecipeIngredientRole.INPUT, 0, 36).addItemStack(obsidian);

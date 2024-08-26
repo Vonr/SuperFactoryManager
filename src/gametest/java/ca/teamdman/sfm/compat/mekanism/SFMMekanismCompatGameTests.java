@@ -1,11 +1,11 @@
 package ca.teamdman.sfm.compat.mekanism;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.gametest.SFMGameTestBase;
 import mekanism.api.chemical.infuse.InfusionStack;
 import mekanism.api.math.FloatingLong;
 import mekanism.common.registries.MekanismBlocks;

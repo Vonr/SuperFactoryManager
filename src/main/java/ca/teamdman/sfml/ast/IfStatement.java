@@ -1,7 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.Constants;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 
@@ -60,13 +60,13 @@ public record IfStatement(
 
     private void tickFalseBlock(ProgramContext context) {
         context.getLogger().debug(x -> x.accept(
-                Constants.LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE.get(this.condition.sourceCode())));
+                LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE.get(this.condition.sourceCode())));
         falseBlock.tick(context);
     }
 
     private void tickTrueBlock(ProgramContext context) {
         context.getLogger().debug(x -> x.accept(
-                Constants.LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE.get(this.condition.sourceCode())));
+                LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE.get(this.condition.sourceCode())));
         trueBlock.tick(context);
     }
 }
