@@ -299,7 +299,7 @@ public class LogsScreen extends Screen {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private Tooltip buildTooltip(Constants.LocalizationKeys.LocalizationEntry entry) {
+    private Tooltip buildTooltip(LocalizationEntry entry) {
         return Tooltip.create(entry.getComponent());
     }
 

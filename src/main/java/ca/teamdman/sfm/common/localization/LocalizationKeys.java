@@ -575,7 +575,10 @@ public final class LocalizationKeys {
             "gui.sfm.container_inspector.show_exports_button",
             "Export Inspector"
     );
-
+    public static final LocalizationEntry CONTAINER_INSPECTOR_MEKANISM_NULL_DIRECTION_WARNING = new LocalizationEntry(
+            "gui.sfm.container_inspector.mekanism_null_direction_warning",
+            "MEKANISM BLOCKS ARE READ-ONLY FROM THE NULL DIRECTION!!!!!!"
+    );
     public static final LocalizationEntry CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT = new LocalizationEntry(
             "gui.sfm.container_inspector.container_slot_count",
             "Container Slots: %d"
