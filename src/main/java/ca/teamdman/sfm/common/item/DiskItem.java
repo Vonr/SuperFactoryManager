@@ -146,6 +146,10 @@ public class DiskItem extends Item {
         stack.set(DataComponents.ITEM_NAME, Component.literal(name));
     }
 
+    public static String getProgramName(ItemStack stack) {
+        return stack.getOrDefault(DataComponents.ITEM_NAME, Component.empty()).getString();
+    }
+
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(
             Level pLevel,
