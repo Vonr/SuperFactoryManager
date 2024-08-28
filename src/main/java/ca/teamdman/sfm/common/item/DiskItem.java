@@ -143,7 +143,13 @@ public class DiskItem extends Item {
             ItemStack stack,
             String name
     ) {
-        stack.set(DataComponents.ITEM_NAME, Component.literal(name));
+        if (!name.isEmpty()) {
+            stack.set(DataComponents.ITEM_NAME, Component.literal(name));
+        }
+    }
+
+    public static String getProgramName(ItemStack stack) {
+        return stack.getOrDefault(DataComponents.ITEM_NAME, Component.empty()).getString();
     }
 
     @Override
