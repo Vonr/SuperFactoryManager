@@ -14,7 +14,6 @@ import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfml.ast.OutputStatement;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
@@ -292,7 +291,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                                RETAIN 5 iron_ingot,
                                                RETAIN 3 stone
                                            FROM a TOP SIDE
-
+                                   
                                            OUTPUT
                                                2 iron_ingot,
                                                RETAIN 10 stone
@@ -338,7 +337,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // load the program
         manager.setProgram("""
                                        NAME "cauldron water test"
-
+                                   
                                        EVERY 20 TICKS DO
                                            INPUT fluid:minecraft:water FROM a
                                            OUTPUT fluid:*:* TO b
@@ -382,7 +381,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // load the program
         manager.setProgram("""
                                        NAME "cauldron lava test"
-
+                                   
                                        EVERY 20 TICKS DO
                                            INPUT fluid:minecraft:lava FROM a
                                            OUTPUT fluid:*:* TO b
@@ -439,7 +438,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // load the program
         manager.setProgram("""
                                        NAME "long cable test"
-
+                                   
                                        EVERY 20 TICKS DO
                                            INPUT FROM a
                                            OUTPUT TO b
@@ -492,7 +491,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // load the program
         manager.setProgram("""
                                        NAME "water crash test"
-
+                                   
                                        every 20 ticks do
                                            INPUT  item:minecraft:stick, fluid:minecraft:water FROM a
                                            OUTPUT stick, fluid:minecraft:water TO b
@@ -765,7 +764,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "cauldron water test"
-
+                
                     EVERY 20 TICKS DO
                         INPUT fluid:minecraft:lava FROM a
                         OUTPUT fluid:*:* TO b
@@ -2504,7 +2503,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 .save(manager.getDisk().get());
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-            assertTrue(leftChest.getStackInSlot(0).getCount() == 64-10, "did not remain");
+            assertTrue(leftChest.getStackInSlot(0).getCount() == 64 - 10, "did not remain");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 10, "did not arrive");
             helper.succeed();
         });
@@ -2529,7 +2528,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        EVERY 20 TICKS DO
                                            FROM a
                                            INPUT iron_ingot
-
+                                   
                                            TO b OUTPUT
                                        END
                                    """.stripTrailing().stripIndent());
@@ -2567,7 +2566,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                        EVERY 20 TICKS DO
                                            FROM a
                                            INPUT iron_ingot
-
+                                   
                                            OUTPUT TO b
                                        END
                                    """.stripTrailing().stripIndent());
@@ -2604,7 +2603,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         manager.setProgram("""
                                        EVERY 20 TICKS DO
                                            INPUT FROM a
-
+                                   
                                            TO b
                                            OUTPUT iron_ingot
                                        END
@@ -2935,7 +2934,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "move on pulse"
-
+                
                     EVERY REDSTONE PULSE DO
                         INPUT FROM left
                         OUTPUT TO right
@@ -2964,7 +2963,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.pressButton(buttonPos);
     }
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_1(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3010,7 +3009,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3062,7 +3061,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_3(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3122,7 +3121,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_conditional_1(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3166,19 +3165,25 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 simulation
         ));
 
-        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1,2));
-        assertTrue(simulation.getSeenPaths().size() == expectedPathSizes.size(), "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size());
+        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1, 2));
+        assertTrue(
+                simulation.getSeenPaths().size() == expectedPathSizes.size(),
+                "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size()
+        );
         int[] actualPathIOSizes = simulation.getSeenIOStatementCountForEachPath();
         // don't assume the order, just that each path size has occurred the specified number of times
         for (int i = 0; i < actualPathIOSizes.length; i++) {
             int pathSize = actualPathIOSizes[i];
             if (!expectedPathSizes.remove((Integer) pathSize)) {
-                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation.getSeenPaths().size() + " paths");
+                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation
+                        .getSeenPaths()
+                        .size() + " paths");
             }
         }
         helper.succeed();
     }
-    @GameTest(template = "3x2x1", batch="linting")
+
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_conditional_1b(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3217,7 +3222,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                                            .get()), "expected output without matching input warning");
         helper.succeed();
     }
-    @GameTest(template = "3x2x1", batch="linting")
+
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void count_execution_paths_conditional_2(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3264,20 +3270,25 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 0,
                 simulation
         ));
-        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1,2,2,3));
-        assertTrue(simulation.getSeenPaths().size() == expectedPathSizes.size(), "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size());
+        List<Integer> expectedPathSizes = new ArrayList<>(List.of(1, 2, 2, 3));
+        assertTrue(
+                simulation.getSeenPaths().size() == expectedPathSizes.size(),
+                "expected " + expectedPathSizes.size() + " execution paths, got " + simulation.getSeenPaths().size()
+        );
         int[] actualPathIOSizes = simulation.getSeenIOStatementCountForEachPath();
         // don't assume the order, just that each path size has occurred the specified number of times
         for (int i = 0; i < actualPathIOSizes.length; i++) {
             int pathSize = actualPathIOSizes[i];
             if (!expectedPathSizes.remove((Integer) pathSize)) {
-                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation.getSeenPaths().size() + " paths");
+                helper.fail("unexpected path size " + pathSize + " at index " + i + " of " + simulation
+                        .getSeenPaths()
+                        .size() + " paths");
             }
         }
         helper.succeed();
     }
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void unused_io_warning_output_label_not_presnet_in_input(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3312,7 +3323,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void unused_io_warning_input_label_not_present_in_output(GameTestHelper helper) {
         // place inventories
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -3347,7 +3358,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-    @GameTest(template = "3x2x1", batch="linting")
+    @GameTest(template = "3x2x1", batch = "linting")
     public static void conditional_output_inspection(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
         BlockPos rightPos = new BlockPos(0, 2, 0);
@@ -3405,14 +3416,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 -- predictions may differ from actual execution results
                 -- POSSIBILITY 0 -- all false
                 OVERALL a HAS = 64 dirt -- false
-                                
+                
                     -- predicted inputs:
                     none
                     -- predicted outputs:
                     none
                 -- POSSIBILITY 1 -- all true
                 OVERALL a HAS = 64 dirt -- true
-                                
+                
                     -- predicted inputs:
                     INPUT 32 minecraft:dirt FROM a SLOTS 0
                     -- predicted outputs:
@@ -3427,7 +3438,12 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             // get the position of the difference and show it
             for (int i = 0; i < inspectionResults.length(); i++) {
                 if (inspectionResults.charAt(i) != expected.charAt(i)) {
-                    System.out.println("Difference at position " + i + ":" + inspectionResults.charAt(i) + " vs " + expected.charAt(i));
+                    System.out.println("Difference at position "
+                                       + i
+                                       + ":"
+                                       + inspectionResults.charAt(i)
+                                       + " vs "
+                                       + expected.charAt(i));
                     break;
                 }
             }
@@ -3483,6 +3499,44 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         });
     }
 
+
+    @GameTest(template = "1x2x1")
+    public static void disk_name(GameTestHelper helper) {
+        BlockPos chestPos = new BlockPos(0, 2, 0);
+        helper.setBlock(chestPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        var chest = getItemHandler(helper, chestPos);
+
+        {
+            ItemStack disk = new ItemStack(SFMItems.DISK_ITEM.get());
+            String programString = """
+                NAME "bruh"
+                EVERY 20 TICKS DO
+                END
+                """;
+            DiskItem.setProgram(disk, programString);
+            DiskItem.compileAndUpdateErrorsAndWarnings(disk, null);
+            chest.insertItem(0, disk, false);
+            assertTrue(DiskItem.getProgramName(disk).equals("bruh"), "program name should be bruh for disk 1");
+            assertTrue(DiskItem.getWarnings(disk).isEmpty(), "there should be no warnings on disk 1");
+            assertTrue(DiskItem.getErrors(disk).isEmpty(), "there should be no errors on disk 1");
+            assertTrue(disk.getHoverName().getString().equals("bruh"), "display name should be \"bruh\" for disk 1");
+        }
+        {
+            ItemStack disk = new ItemStack(SFMItems.DISK_ITEM.get());
+            String programString = """
+                EVERY 20 TICKS DO
+                END
+                """;
+            DiskItem.setProgram(disk, programString);
+            DiskItem.compileAndUpdateErrorsAndWarnings(disk, null);
+            chest.insertItem(1, disk, false);
+            assertTrue(DiskItem.getProgramName(disk).isEmpty(), "program name should be empty for disk 2");
+            assertTrue(DiskItem.getWarnings(disk).isEmpty(), "there should be no warnings on disk 2");
+            assertTrue(DiskItem.getErrors(disk).isEmpty(), "there should be no errors on disk 2");
+            assertTrue(disk.getHoverName().contains(LocalizationKeys.DISK_ITEM.getComponent()), "display name should be default for disk 2");
+        }
+        helper.succeed();
+    }
 //    @GameTest(template = "3x2x1")
 //    public static void move_with_enchantments(GameTestHelper helper) {
 //        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());

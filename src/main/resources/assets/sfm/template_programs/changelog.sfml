@@ -4,6 +4,9 @@ NAME "Changelog"
 -- Official SFM Donation Page:
 -- https://ko-fi.com/teamdman
 
+---- 4.20.0-pre ----
+-- WIP: Fix disks having no name when program has no name
+
 ---- 4.19.0 ----
 -- Fix uppercase resource identifiers not being auto-lowercased internally
 -- Add WITH TAG support, check examples for more info
