@@ -24,5 +24,13 @@
         ["(", ")"],
         ["\"", "\""],
         ["'", "'"]
-    ]
+    ],
+    //Every ... ticks do ....
+    "folding": {
+        "markers": {
+            "start": "^\\s*every\\s+\\d+\\s+(ticks|tick)\\s+do\\b",
+            "end": "^(?=\\s*end\\b)"
+        },
+        "offSide": true
+    }
 }

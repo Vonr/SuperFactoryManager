@@ -1,0 +1,80 @@
+{
+    "Move energy": {
+        "prefix": "energy",
+        "body": [
+            "every 1 ticks do",
+            "   input fe:: from ${1:power_source}",
+            "   output fe:: to ${2:machine}",
+            "end"
+        ],
+        "description": "Create code for energy movement"
+    },
+
+    "Basic Progrma":{
+        "prefix": "basic",
+        "body": [
+            "name \"A program\"",
+            " ",
+            "every 1 ticks do",
+            "   input fe:: from ${1:power_source}",
+            "   output fe:: to ${2:machine}",
+            "end",
+            " ",
+            "every 20 ticks do",
+            "   input from ${3:furnace}",
+            "   output to ${4:furnace}",
+            "end"
+        ],
+        "description": "Basic structure for most uses"
+    },
+
+    "Input": {
+        "prefix": "input",
+        "body": "input \t$1 from $2"
+    },
+
+    "Output": {
+        "prefix": "output",
+        "body": "output \t$1 to $2"
+    },
+
+    "Every": {
+        "prefix": "every",
+        "body": [
+            "every 20 ticks do",
+            "${1:   }",
+            "end"
+        ]
+    },
+
+    "IF statments": {
+        "prefix": "if",
+        "body": [
+            "if ${1:boolean_expression} then",
+            "\t$2",
+            "end"
+        ]
+    },
+
+    "IF-ELSE statments": {
+        "prefix": "ifelse",
+        "body": [
+            "if ${1:boolean_expression} then",
+            "\t$2",
+            "else",
+            "\t$3",
+            "end"
+        ]
+    },
+
+    "IF-ELSE-IF statments": {
+        "prefix": "ifelseif",
+        "body": [
+            "if ${1:boolean_expression} then",
+            "\t${2:code}",
+            "else if ${3:boolean_expression} then",
+            "\t${4:code}",
+            "end"
+        ]
+    }
+}
