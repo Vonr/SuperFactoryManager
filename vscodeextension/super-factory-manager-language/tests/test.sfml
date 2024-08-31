@@ -1,0 +1,29 @@
+name "hola"
+
+every 20 ticks do
+    input 20 from interface
+    output * to furnace top side
+    forget
+    input fe:: from interface2
+    output item:minecraft:cobble* to chest2
+    output * to fluid
+    item::
+    item:minecraft:
+    item:industrialforegoing:laser* this doesnt
+    ::cobble*
+    item
+    if boolean_expression then
+    every redstone pulse round robin by block
+    end 
+end
+
+
+every 20 ticks do
+hollaaaaa
+end
+
+every 1 ticks do
+   input fe:: from power_source
+   output fe:: to machine
+   
+end
