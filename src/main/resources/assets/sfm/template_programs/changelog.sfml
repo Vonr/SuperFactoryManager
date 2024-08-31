@@ -6,6 +6,7 @@ NAME "Changelog"
 
 ---- 4.20.0-pre ----
 -- Fix disks having no name when program has no name for 1.21+
+-- Publish VSCode extension v0.0.5, thanks @Titop54 for the PR
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me
