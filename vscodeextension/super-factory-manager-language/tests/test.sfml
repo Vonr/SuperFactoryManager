@@ -13,8 +13,14 @@ every 20 ticks do
     ::cobble*
     item
     if boolean_expression then
-    every redstone pulse round robin by block
-    end 
+        if boolean_expression 
+        then
+        end
+    end
+end
+
+every redstone pulse do
+
 end
 
 
