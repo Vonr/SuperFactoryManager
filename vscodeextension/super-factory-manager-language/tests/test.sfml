@@ -29,8 +29,8 @@ end
 
 EVery Redstone pulse DO
 
-
-every 20 ticks do
+end
+evEry 20 ticks do
 hollaaaaa
 end
 
