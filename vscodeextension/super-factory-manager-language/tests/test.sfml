@@ -13,12 +13,24 @@ every 20 ticks do
     ::cobble*
     item
     if boolean_expression then
-    every redstone pulse round robin by block
-    end 
+        if boolean_expression 
+        then
+        end
+    test> = > < <= >= --First one shouldnt have color, the rest yes
+    end
+    except Except exCEPT
+    IF boolean_expression tHen
+    end
 end
 
+every redstone pulse do
 
-every 20 ticks do
+end
+
+EVery Redstone pulse DO
+
+end
+evEry 20 ticks do
 hollaaaaa
 end
 

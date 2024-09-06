@@ -28,8 +28,8 @@
     //Every ... ticks do ....
     "folding": {
         "markers": {
-            "start": "^\\s*every\\s+\\d+\\s+(ticks|tick)\\s+do\\b",
-            "end": "^(?=\\s*end\\b)"
+            "start": "^\\s*([iI][fF]\\s+.*\\s*[tT][hH][eE][nN]|[iI][fF]\\s+.*|[eE][vV][eE][rR][yY]\\s+\\d+\\s+[tT][iI][cC][kK][sS]\\s+[dD][oO]|[eE][vV][eE][rR][yY]\\s+[rR][eE][dD][sS][tT][oO][nN][eE]\\s+[pP][uU][lL][sS][eE]\\s+[dD][oO])\\s*$",
+            "end": "^\\s*end\\s*$"
         },
         "offSide": true
     }
