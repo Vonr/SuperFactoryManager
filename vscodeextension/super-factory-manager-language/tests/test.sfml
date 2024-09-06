@@ -16,12 +16,16 @@ every 20 ticks do
         if boolean_expression 
         then
         end
+    test> = > < <= >= --First one shouldnt have color, the rest yes
     end
+    except Except exCEPT
 end
 
 every redstone pulse do
 
 end
+
+EVery Redstone pulse DO
 
 
 every 20 ticks do
