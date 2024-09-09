@@ -4,7 +4,7 @@
   "description": "Adds language support for the Super Factory Manager Language.",
   "repository": "https://github.com/TeamDman/SuperFactoryManager",
   "publisher": "TeamDman",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "icon": "media/icon.png",
   "main": "./out/extension.js",
   "engines": {
@@ -14,8 +14,8 @@
     "Programming Languages"
   ],
   "activationEvents": [
-      "onLanguage:sfm",
-      "onLanguage:sfml"
+    "onLanguage:sfm",
+    "onLanguage:sfml"
   ],
   "contributes": {
     "languages": [
@@ -51,12 +51,17 @@
     ]
   },
   "devDependencies": {
+    "@types/node": "^22.5.4",
     "@types/vscode": "^1.0.0",
     "typescript": "^5.5.4"
   },
   "scripts": {
-  "vscode:prepublish": "npm run compile",
-  "compile": "tsc -p ./",
-  "watch": "tsc -w -p ./"
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./"
+  },
+  "dependencies": {
+    "antlr4ts": "^0.5.0-alpha.4",
+    "antlr4ts-cli": "^0.5.0-alpha.4"
   }
 }
