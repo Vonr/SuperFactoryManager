@@ -84,7 +84,7 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
 
     private context: vscode.ExtensionContext; //Needed for icons
-    private repositoryUrl: string = 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/examples'; // example url
+    private repositoryUrl: string = 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/src/main/resources/assets/sfm/template_programs'; // example url
     private repoFiles: any[] = [];
 
     constructor(context: vscode.ExtensionContext) 
