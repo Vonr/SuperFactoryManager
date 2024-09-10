@@ -48,7 +48,26 @@
         "language": "sfml",
         "path": "./snippets/sfml.code-snippets"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "examplesSFML",
+          "title": "SFM examples",
+          "icon": "media/label.png",
+          "when": "sfml.isActivated"
+        }
+      ]
+    },
+    "views": {
+      "examplesSFML": [
+        {
+          "id": "examples",
+          "name": "",
+          "when": "sfml.isActivated"
+        }
+      ]
+    }
   },
   "devDependencies": {
     "@types/node": "^22.5.4",
@@ -62,6 +81,7 @@
   },
   "dependencies": {
     "antlr4ts": "^0.5.0-alpha.4",
-    "antlr4ts-cli": "^0.5.0-alpha.4"
+    "antlr4ts-cli": "^0.5.0-alpha.4",
+    "axios": "^1.7.7"
   }
 }
