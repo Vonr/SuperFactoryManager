@@ -62,8 +62,13 @@
     "views": {
       "examplesSFML": [
         {
-          "id": "examples",
-          "name": "",
+          "id": "examplesGames",
+          "name": "Examples in-game",
+          "when": "sfml.isActivated"
+        },
+        {
+          "id": "examplegithub",
+          "name": "Examples Github",
           "when": "sfml.isActivated"
         }
       ]

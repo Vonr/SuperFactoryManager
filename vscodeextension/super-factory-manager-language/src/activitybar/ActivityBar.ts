@@ -26,17 +26,22 @@ const tempFiles: Map<string, string> = new Map();
 export async function activityBar(context: vscode.ExtensionContext) 
 {
     const hasSFMLFiles = await checkSFMLFiles();
-    const treeDataProvider = new SFMLTreeDataProvider(context);
+    const treeDataProvider = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/src/main/resources/assets/sfm/template_programs');
+    const treeDataProvider2 = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/examples');
 
     //If we dont have some .sfm or .sfml, we dont want to see the activity bar
     //Only when the extension activates, like some other extensions do (java extension or antlr one)
     if(hasSFMLFiles) 
     {
         vscode.commands.executeCommand("setContext", "sfml.isActivated", true);
-        const view = vscode.window.createTreeView('examples', {
-            treeDataProvider
+        const view = vscode.window.createTreeView('examplesGames', {
+            treeDataProvider: treeDataProvider
+        });
+        const view2 = vscode.window.createTreeView('examplegithub', {
+            treeDataProvider: treeDataProvider2
         });
         context.subscriptions.push(view);
+        context.subscriptions.push(view2);
     }
     else
     {
@@ -84,11 +89,12 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
 
     private context: vscode.ExtensionContext; //Needed for icons
-    private repositoryUrl: string = 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/src/main/resources/assets/sfm/template_programs'; // example url
+    private repositoryUrl: string //= ''; // example url
     private repoFiles: any[] = [];
 
-    constructor(context: vscode.ExtensionContext) 
+    constructor(context: vscode.ExtensionContext, url: string) 
     {
+        this.repositoryUrl = url;
         this.context = context;
         this.loadRepoContents();
     }
