@@ -47,3 +47,20 @@ Colors depends on how the theme using.
 - **Keywords:**
   - `everY` or `eVERy` will be hightlighted. Also done for others keywords.
   - Added some missing boolean operants (`<`, `>`, `=`, `>=`, `<=`)
+
+- Versions 0.0.6 and 0.0.7 are the same changelog
+
+## [0.0.8]
+
+### Changes on code
+
+- **Snippets:** every snippet will trigger instead of some random word if you do `every ` with a space
+
+- **Examples:** Now, there will be a tab on the Activity bar with examples, both from in-game and github.
+‎
+Files will only download when you click on it (will open a new tab) and stored on the temp folder of your OS.
+These files will be deleted when you close all vscode windows or extension is desactivated by changing folder with no `.sfm` or `.sfml`
+
+### Known issues
+
+- Folder on the Activity bar will not close unless you do multiple clicks.
