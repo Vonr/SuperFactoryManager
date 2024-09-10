@@ -127,7 +127,7 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
         {
             // Separeta files from dir
             const folders = this.repoFiles.filter(file => file.type === 'dir');
-            const files = this.repoFiles.filter(file => file.type !== 'dir');
+            const files = this.repoFiles.filter(file => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
     
             //Folder structure for view
             const folderItems = folders.map(folder => this.createTreeItem(folder));
@@ -148,7 +148,7 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
     
                 //Folder structure for view
                 const folders = folderContents.filter((file: { type: string; }) => file.type === 'dir');
-                const files = folderContents.filter((file: { type: string; }) => file.type !== 'dir');
+                const files = folderContents.filter((file: { type: string; name: string; }) => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
     
                 const folderItems = folders.map((folder: any) => this.createTreeItem(folder));
                 const fileItems = files.map((file: any) => this.createTreeItem(file));
