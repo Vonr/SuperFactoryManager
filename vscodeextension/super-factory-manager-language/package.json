@@ -82,7 +82,8 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -w -p ./"
+    "watch": "tsc -w -p ./",
+    "antlr": "antlr4ts -o src/generated -listener -visitor ./syntaxes/SFML.g4"
   },
   "dependencies": {
     "antlr4ts": "^0.5.0-alpha.4",

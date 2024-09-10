@@ -7,6 +7,7 @@ import { activityBar, deleteTempFiles } from './activitybar/ActivityBar';
  * @param context Vscode extension
  */
 export function activate(context: vscode.ExtensionContext) {
+    console.log("bruh activating");
     everySnippet(context);
     activityBar(context);
 }
