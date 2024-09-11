@@ -33,7 +33,6 @@ export async function activityBar(context: vscode.ExtensionContext)
     //Only when the extension activates, like some other extensions do (java extension or antlr one)
     if(hasSFMLFiles) 
     {
-        vscode.commands.executeCommand("setContext", "sfml.isActivated", true);
         const view = vscode.window.createTreeView('examplesGames', {
             treeDataProvider: treeDataProvider
         });
@@ -89,14 +88,44 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
 
     private context: vscode.ExtensionContext; //Needed for icons
-    private repositoryUrl: string //= ''; // example url
+    private repositoryUrl: string // url of the repo to download the structure and then the files if needed
     private repoFiles: any[] = [];
+    private showFilesFirst: boolean; //Configuration, default is false, so folder goes first
+    private disableActivityBar: boolean; //Configuration, default is false, activity bar on
 
     constructor(context: vscode.ExtensionContext, url: string) 
     {
         this.repositoryUrl = url;
         this.context = context;
-        this.loadRepoContents();
+
+        this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
+        vscode.workspace.onDidChangeConfiguration(event => {
+            if (event.affectsConfiguration('sfml.filesOrder')) {
+                this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
+                this._onDidChangeTreeData.fire(undefined);
+            }
+        });
+
+        this.disableActivityBar = vscode.workspace.getConfiguration('sfml').get('disableActivityBar', false);
+        vscode.commands.executeCommand("setContext", "sfml.isActivated", !this.disableActivityBar);
+
+        if (!this.disableActivityBar) {
+            this.loadRepoContents();
+        }
+
+        vscode.workspace.onDidChangeConfiguration(event => {
+            if (event.affectsConfiguration('sfml.disableActivityBar')) {
+                this.disableActivityBar = vscode.workspace.getConfiguration('sfml').get('disableActivityBar', false);
+    
+                vscode.commands.executeCommand("setContext", "sfml.isActivated", !this.disableActivityBar);
+    
+                if (this.disableActivityBar) {
+                    this._onDidChangeTreeData.fire(undefined);
+                } else {
+                    this.loadRepoContents();
+                }
+            }
+        });
     }
 
     /**
@@ -133,10 +162,7 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
             const folderItems = folders.map(folder => this.createTreeItem(folder));
             const fileItems = files.map(file => this.createTreeItem(file));
     
-            return [...folderItems, ...fileItems];
-    
-            // show first the .sfm and then folder, wip for config
-            // return [...fileItems, ...folderItems];
+            return this.showFilesFirst ? [...fileItems, ...folderItems] : [...folderItems, ...fileItems];
         } 
         else 
         {
@@ -153,10 +179,8 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
                 const folderItems = folders.map((folder: any) => this.createTreeItem(folder));
                 const fileItems = files.map((file: any) => this.createTreeItem(file));
     
-                return [...folderItems, ...fileItems];
+                return this.showFilesFirst ? [...fileItems, ...folderItems] : [...folderItems, ...fileItems];
     
-                // show first the .sfm and then folder, wip for config
-                // return [...fileItems, ...folderItems];
             }
         }
         return []; //in case we dont have any items but url is good

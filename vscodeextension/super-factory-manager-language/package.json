@@ -72,7 +72,23 @@
           "when": "sfml.isActivated"
         }
       ]
-    }
+    },
+    "configuration":[
+      {
+        "properties": {
+          "sfml.filesOrder": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show folders first and then files"
+          },
+          "sfml.disableActivityBar": {
+            "type": "boolean",
+            "default": false,
+            "description": "Disable the Activity Bar from showing"
+          }
+        }
+      }
+    ]
   },
   "devDependencies": {
     "@types/node": "^22.5.4",
