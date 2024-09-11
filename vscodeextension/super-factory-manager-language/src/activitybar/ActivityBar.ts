@@ -100,7 +100,8 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
 
         this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('sfml.filesOrder')) {
+            if (event.affectsConfiguration('sfml.filesOrder')) 
+            {
                 this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
                 this._onDidChangeTreeData.fire(undefined);
             }
@@ -109,19 +110,24 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
         this.disableActivityBar = vscode.workspace.getConfiguration('sfml').get('disableActivityBar', false);
         vscode.commands.executeCommand("setContext", "sfml.isActivated", !this.disableActivityBar);
 
-        if (!this.disableActivityBar) {
+        if (!this.disableActivityBar) 
+        {
             this.loadRepoContents();
         }
 
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('sfml.disableActivityBar')) {
+            if (event.affectsConfiguration('sfml.disableActivityBar')) 
+            {
                 this.disableActivityBar = vscode.workspace.getConfiguration('sfml').get('disableActivityBar', false);
     
                 vscode.commands.executeCommand("setContext", "sfml.isActivated", !this.disableActivityBar);
     
-                if (this.disableActivityBar) {
+                if (this.disableActivityBar) 
+                {
                     this._onDidChangeTreeData.fire(undefined);
-                } else {
+                } 
+                else 
+                {
                     this.loadRepoContents();
                 }
             }
