@@ -21,7 +21,7 @@
             "end",
             " ",
             "every 20 ticks do",
-            "   input from ${3:furnace}",
+            "   input from ${3:chest_input}",
             "   output to ${4:furnace}",
             "end"
         ],
@@ -30,19 +30,19 @@
 
     "Input": {
         "prefix": "input",
-        "body": "input \t$1 from $2"
+        "body": "input $1 from ${2:label}"
     },
 
     "Output": {
         "prefix": "output",
-        "body": "output \t$1 to $2"
+        "body": "output $1 to ${2:label}"
     },
 
     "Every": {
         "prefix": "every",
         "body": [
             "every 20 ticks do",
-            "${1:   }",
+            "    ${1:code}",
             "end"
         ]
     },
@@ -51,7 +51,7 @@
         "prefix": "if",
         "body": [
             "if ${1:boolean_expression} then",
-            "\t$2",
+            "    ${2:code}",
             "end"
         ]
     },
@@ -60,9 +60,9 @@
         "prefix": "ifelse",
         "body": [
             "if ${1:boolean_expression} then",
-            "\t$2",
+            "    ${2:code}",
             "else",
-            "\t$3",
+            "    ${3:code}",
             "end"
         ]
     },
@@ -71,9 +71,9 @@
         "prefix": "ifelseif",
         "body": [
             "if ${1:boolean_expression} then",
-            "\t${2:code}",
+            "    ${2:code}",
             "else if ${3:boolean_expression} then",
-            "\t${4:code}",
+            "    ${4:code}",
             "end"
         ]
     }
