@@ -8,7 +8,7 @@ import { SFMLParser } from '../generated/SFMLParser';
 import { ANTLRErrorListener, RecognitionException, Recognizer } from 'antlr4ts';
 
 //Will clear all errors each time a file is saved, so we dont have duped errors or non existent
-export const diagnosticCollection = vscode.languages.createDiagnosticCollection('syntaxErrors');
+export const diagnosticCollectionErrors = vscode.languages.createDiagnosticCollection('syntaxErrors');
 
 /**
  * Each time a file is saved, it will trigger the parser, instead of a real-time one (my implementation was so bad)
@@ -18,7 +18,7 @@ export const diagnosticCollection = vscode.languages.createDiagnosticCollection(
 export function handleDocument(document: vscode.TextDocument) {
     const text = document.getText();
     const diagnostics: vscode.Diagnostic[] = [];
-    diagnosticCollection.clear();
+    diagnosticCollectionErrors.clear();
 
     const parseResult = parseInput(text);
     const { success, errors } = parseResult;
@@ -47,7 +47,7 @@ export function handleDocument(document: vscode.TextDocument) {
             diagnostics.push(diagnostic);
         });
     }
-    diagnosticCollection.set(document.uri, diagnostics);
+    diagnosticCollectionErrors.set(document.uri, diagnostics);
 }
 
 /**
@@ -75,11 +75,11 @@ export function parseInput(input: string): { success: boolean, errors: any[] } {
         success: parser.numberOfSyntaxErrors === 0,
         errors: errors.map(error => {
             return {
-                lineStart: error.lineStart,  // Línea de inicio donde ocurre el error
-                columnStart: error.columnStart,  // Columna de inicio del error
-                lineEnd: error.lineEnd,  // Línea de fin (puede ser igual a lineStart si es en una sola línea)
-                columnEnd: error.columnEnd,  // Columna de fin del error
-                message: error.message  // Mensaje de error
+                lineStart: error.lineStart,
+                columnStart: error.columnStart,
+                lineEnd: error.lineEnd,
+                columnEnd: error.columnEnd,
+                message: error.message
             };
         })
     };
@@ -116,3 +116,6 @@ export class UnderlineErrorListener implements ANTLRErrorListener<any> {
         return this.errors;
     }
 }
+
+//TODO: warning about than an input has no output and similar, better logic because people
+//want to do it all at once, maybe copy Teamy ways
