@@ -21,7 +21,8 @@ export function handleDocument(document: vscode.TextDocument) {
     const enableErrorChecking = vscode.workspace.getConfiguration('sfml').get('enableErrorChecking', true);
 
     // Clear diagnostics if error checking is disabled
-    if (!enableErrorChecking) {
+    if (!enableErrorChecking) 
+    {
         diagnosticCollectionErrors.clear();
         return;
     }
@@ -31,7 +32,8 @@ export function handleDocument(document: vscode.TextDocument) {
     const parseResult = parseInput(text);
     const { success, errors } = parseResult;
 
-    if (!success) {
+    if (!success) 
+    {
         errors.forEach((error: any) => {
             const { lineStart, columnStart, lineEnd, columnEnd, message } = error;
 
@@ -119,7 +121,8 @@ export class UnderlineErrorListener implements ANTLRErrorListener<any> {
         });
     }
 
-    getErrors() {
+    getErrors() 
+    {
         return this.errors;
     }
 }

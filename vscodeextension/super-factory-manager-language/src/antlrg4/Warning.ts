@@ -9,32 +9,37 @@ import * as vscode from 'vscode';
 
 export const diagnosticCollectionWarning = vscode.languages.createDiagnosticCollection('sfml');
 
-class InputOutputChecker implements SFMLListener {
+class InputOutputChecker implements SFMLListener 
+{
     private inputs: Set<string> = new Set();
     private outputs: Set<string> = new Set();
     private processBlock = true;
     private document: TextDocument;
     private enabled: boolean;
 
-    constructor(document: TextDocument) {
+    constructor(document: TextDocument) 
+    {
         this.document = document;
         this.enabled = vscode.workspace.getConfiguration('sfml').get('enableWarningChecking', false);
 
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('sfml.enableWarningChecking')) {
+            if (event.affectsConfiguration('sfml.enableWarningChecking'))
+            {
                 this.enabled = vscode.workspace.getConfiguration('sfml').get('enableWarningChecking', false);
                 if(!this.enabled) diagnosticCollectionWarning.clear();
             }
         });
     }
 
-    private createDiagnosticRange(start: number, end: number): Range {
+    private createDiagnosticRange(start: number, end: number): Range 
+    {
         const startPosition = this.document.positionAt(start);
         const endPosition = this.document.positionAt(end);
         return new Range(startPosition, endPosition);
     }
 
-    private createDiagnostic(start: number, end: number, message: string): Diagnostic {
+    private createDiagnostic(start: number, end: number, message: string): Diagnostic 
+    {
         const diagnosticRange = this.createDiagnosticRange(start, end);
         return {
             severity: DiagnosticSeverity.Warning,
@@ -44,7 +49,8 @@ class InputOutputChecker implements SFMLListener {
         };
     }
 
-    private addDiagnostic(start: number, end: number, message: string) {
+    private addDiagnostic(start: number, end: number, message: string) 
+    {
         if (!this.enabled) return; // Skip adding diagnostics if warnings are disabled
 
         const diagnostic = this.createDiagnostic(start, end, message);
@@ -53,40 +59,45 @@ class InputOutputChecker implements SFMLListener {
         diagnosticCollectionWarning.set(this.document.uri, diagnostics);
     }
 
-    private verifyInputsAndOutputs(ctx: BlockContext) {
+    private verifyInputsAndOutputs(ctx: BlockContext) 
+    {
         this.outputs.forEach(outputType => {
-            if (!this.inputs.has(outputType)) {
+            if (!this.inputs.has(outputType)) 
+            {
                 const start = ctx.start?.startIndex ?? 0;
                 const end = ctx.stop?.stopIndex ?? 0;
-                console.log(`Diagnostic added for output: ${outputType}:: without corresponding input.`);
                 this.addDiagnostic(start, end, `Warning: Output ${outputType}:: without corresponding input.`);
             }
         });
     }
 
-    enterInputStatement(ctx: InputStatementContext) {
+    enterInputStatement(ctx: InputStatementContext) 
+    {
         if (!this.processBlock) return;
 
         let inputType = ctx.text.match(/(fe|fluid|gas)::/i)?.[1]?.toLowerCase();
-        if (!inputType) {
+        if (!inputType) 
+        {
             inputType = 'item';
         }
-        console.log(`Input added: ${inputType}`);
         this.inputs.add(inputType);
     }
 
-    enterOutputStatement(ctx: OutputStatementContext) {
+    enterOutputStatement(ctx: OutputStatementContext) 
+    {
 
         let outputType = ctx.text.match(/(fe|fluid|gas)::/i)?.[1]?.toLowerCase();
-        if (!outputType || ctx.text.includes('*')) {
+        if (!outputType || ctx.text.includes('*')) 
+        {
             outputType = 'item';
         }
-        console.log(`Output added: ${outputType}`);
         this.outputs.add(outputType);
     }
 
-    exitBlock(ctx: BlockContext) {
-        if (!this.processBlock) {
+    exitBlock(ctx: BlockContext) 
+    {
+        if (!this.processBlock) 
+        {
             this.processBlock = true;
             return;
         }
@@ -97,31 +108,34 @@ class InputOutputChecker implements SFMLListener {
         this.outputs.clear();
     }
 
-    enterForgetStatement(ctx: any) {
+    enterForgetStatement(ctx: any) 
+    {
         this.processBlock = false;
     }
 
-    enterIfStatement(ctx: any) {
+    enterIfStatement(ctx: any)
+    {
         this.processBlock = true;
         this.inputs.clear();
         this.outputs.clear();
     }
 
-    enterElseStatement(ctx: any) {
+    enterElseStatement(ctx: any) 
+    {
         this.processBlock = true;
         this.inputs.clear();
         this.outputs.clear();
     }
 
-    exitIfStatement(ctx: any) {
+    exitIfStatement(ctx: any) 
+    {
         this.processBlock = true;
-        // Verifica los inputs y outputs fuera del bloque `if`
         this.verifyInputsAndOutputs(ctx);
     }
 
-    exitElseStatement(ctx: any) {
+    exitElseStatement(ctx: any) 
+    {
         this.processBlock = true;
-        // Verifica los inputs y outputs fuera del bloque `else`
         this.verifyInputsAndOutputs(ctx);
     }
 
@@ -133,7 +147,8 @@ class InputOutputChecker implements SFMLListener {
 
 
 // Función para analizar el código
-export function checkInputOutput(document: TextDocument) {
+export function checkInputOutput(document: TextDocument) 
+{
     const enableWarningChecking = vscode.workspace.getConfiguration('sfml').get('enableWarningChecking', false);
     if (!enableWarningChecking) return; // Skip processing if warnings are disabled
 
