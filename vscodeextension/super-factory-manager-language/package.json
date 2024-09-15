@@ -85,6 +85,16 @@
             "type": "boolean",
             "default": false,
             "description": "Disable the Activity Bar from showing"
+          },
+          "sfml.enableWarningChecking":{
+            "type": "boolean",
+            "default": false,
+            "description": "Enable warning for code. Still on very early"
+          },
+          "sfml.enableErrorChecking":{
+            "type": "boolean",
+            "default": true,
+            "description": "Enable error checking for code. Should be the same as in-game"
           }
         }
       }

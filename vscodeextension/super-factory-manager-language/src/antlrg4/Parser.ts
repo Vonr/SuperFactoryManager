@@ -18,13 +18,20 @@ export const diagnosticCollectionErrors = vscode.languages.createDiagnosticColle
 export function handleDocument(document: vscode.TextDocument) {
     const text = document.getText();
     const diagnostics: vscode.Diagnostic[] = [];
-    diagnosticCollectionErrors.clear();
+    const enableErrorChecking = vscode.workspace.getConfiguration('sfml').get('enableErrorChecking', true);
+
+    // Clear diagnostics if error checking is disabled
+    if (!enableErrorChecking) {
+        diagnosticCollectionErrors.clear();
+        return;
+    }
+
+    diagnosticCollectionErrors.clear(); // Clear previous errors
 
     const parseResult = parseInput(text);
     const { success, errors } = parseResult;
 
-    if (!success) 
-    {
+    if (!success) {
         errors.forEach((error: any) => {
             const { lineStart, columnStart, lineEnd, columnEnd, message } = error;
 
@@ -88,7 +95,7 @@ export function parseInput(input: string): { success: boolean, errors: any[] } {
 //Something on the examples ive seen online doing something similar, dont ask why, because idk
 export class UnderlineErrorListener implements ANTLRErrorListener<any> {
     private errors: any[] = [];
-    //Something ANTLR ask for, idk why
+
     syntaxError<T>(
         recognizer: Recognizer<T, any>,
         offendingSymbol: T,
@@ -116,6 +123,3 @@ export class UnderlineErrorListener implements ANTLRErrorListener<any> {
         return this.errors;
     }
 }
-
-//TODO: warning about than an input has no output and similar, better logic because people
-//want to do it all at once, maybe copy Teamy ways
