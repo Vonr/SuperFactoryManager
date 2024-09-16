@@ -1,26 +1,19 @@
 # Changelog
 
-## [0.0.1 - 0.04]
+## [0.0.8]
 
-- Initial release
+### Changes on code
 
-## [0.0.5]
+- **Snippets:** every snippet will trigger instead of some random word if you do `every ` with a space
 
-### Added
+- **Examples:** Now, there will be a tab on the Activity bar with examples, both from in-game and github.
+‎
+Files will only download when you click on it (will open a new tab) and stored on the temp folder of your OS.
+These files will be deleted when you close all vscode windows or extension is desactivated by changing folder with no `.sfm` or `.sfml`
 
-- **Correct numbers coloring:**. Now, labels with numbers will not have a colored number.
-‎
-- **Test Folder:** Added 2 files: .sfm and .sfml
-Those files have 2 examples, one using a Phytogenic insolator setup and another with random words to check if everything was done correctly
-‎
-- **File Icons:** `.sfm` and `.sfml` file extensions have now icons, using the disk from the mod.
-‎
-- **Extended Color Palette:** Expanded color options beyond the 3-color limit (in some themes).
-Colors depends on how the theme using.
-‎
-- **New Snippets:** Added snippets including `basic`, `energy`, `if`, `ifelse`, `ifelseif`, `input`, and `output`.
-‎
-- **Extension Icon:** Updated the extension icon from the default to a custom design.
+### Known issues
+
+- Folder on the Activity bar will not close unless you do multiple clicks.
 
 ## [0.0.6]
 
@@ -50,17 +43,24 @@ Colors depends on how the theme using.
 
 - Versions 0.0.6 and 0.0.7 are the same changelog
 
-## [0.0.8]
+## [0.0.5]
 
-### Changes on code
+### Added
 
-- **Snippets:** every snippet will trigger instead of some random word if you do `every ` with a space
-
-- **Examples:** Now, there will be a tab on the Activity bar with examples, both from in-game and github.
+- **Correct numbers coloring:**. Now, labels with numbers will not have a colored number.
 ‎
-Files will only download when you click on it (will open a new tab) and stored on the temp folder of your OS.
-These files will be deleted when you close all vscode windows or extension is desactivated by changing folder with no `.sfm` or `.sfml`
+- **Test Folder:** Added 2 files: .sfm and .sfml
+Those files have 2 examples, one using a Phytogenic insolator setup and another with random words to check if everything was done correctly
+‎
+- **File Icons:** `.sfm` and `.sfml` file extensions have now icons, using the disk from the mod.
+‎
+- **Extended Color Palette:** Expanded color options beyond the 3-color limit (in some themes).
+Colors depends on how the theme using.
+‎
+- **New Snippets:** Added snippets including `basic`, `energy`, `if`, `ifelse`, `ifelseif`, `input`, and `output`.
+‎
+- **Extension Icon:** Updated the extension icon from the default to a custom design.
 
-### Known issues
+## [0.0.1 - 0.04]
 
-- Folder on the Activity bar will not close unless you do multiple clicks.
+- Initial release
