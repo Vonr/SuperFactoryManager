@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
     everySnippet(context);
     activityBar(context);
     
-    const disposable = vscode.workspace.onDidSaveTextDocument(async (document) => {
+    const disposable = vscode.workspace.onDidSaveTextDocument((document) => {
         handleDocument(document);
         checkInputOutput(document);
     });
