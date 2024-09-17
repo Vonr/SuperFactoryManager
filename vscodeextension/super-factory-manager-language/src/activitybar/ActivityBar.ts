@@ -31,6 +31,7 @@ export async function activityBar(context: vscode.ExtensionContext)
     const treeDataProvider3 = new MixedTreeDataProvider(context);
     //If we dont have some .sfm or .sfml, we dont want to see the activity bar
     //Only when the extension activates, like some other extensions do (java extension or antlr one)
+    //Dont ask why there 2 openFiles
     if(hasSFMLFiles) 
     {
         const view = vscode.window.createTreeView('examplesGames', {
@@ -52,6 +53,40 @@ export async function activityBar(context: vscode.ExtensionContext)
     }
 
     const openFileCommand = vscode.commands.registerCommand('extension.openFile', async (file) => {
+        if(file.type === 'dir')
+        {
+            //TODO solve expansion of folder
+            return; 
+        }
+        
+        const tempFilePath = path.join(os.tmpdir(), file.name);
+        if(tempFiles.has(tempFilePath)) //If we have it already, why download again?
+        { 
+            const fileUri = vscode.Uri.file(tempFilePath);
+            const document = await vscode.workspace.openTextDocument(fileUri);
+            vscode.window.showTextDocument(document);
+        }
+        else
+        {
+            try 
+            {
+                const response = await axios.get(file.download_url, {responseType: 'arraybuffer'});
+                fs.writeFileSync(tempFilePath, response.data);
+                tempFiles.set(tempFilePath, tempFilePath);
+
+                const fileUri = vscode.Uri.file(tempFilePath);
+                const document = await vscode.workspace.openTextDocument(fileUri);
+                vscode.window.showTextDocument(document);
+            } 
+            catch (error) 
+            {
+                vscode.window.showErrorMessage(`Error while opening file: ${error}`);
+            }
+        }
+    });
+
+
+    const openFileCommand2 = vscode.commands.registerCommand('extension.openFile2', async (file) => {
         if(file.type === 'dir') 
         {
             // TODO: Implement folder expansion
@@ -59,10 +94,10 @@ export async function activityBar(context: vscode.ExtensionContext)
         }
     
         // Check if the file is a local file or online
-        if(file.uri) 
+        if(file.uri && !file.uri.includes('https://')) 
         {
             // Handle local file
-            const fileUri = file.uri + file.name;
+            const fileUri = file.uri;
             try 
             {
                 const document = await vscode.workspace.openTextDocument(fileUri);
@@ -73,10 +108,10 @@ export async function activityBar(context: vscode.ExtensionContext)
                 vscode.window.showErrorMessage(`Error while opening local file: ${error}`);
             }
         } 
-        else if(file.download_url) 
+        else
         {
             // Handle online file
-            const tempFilePath = path.join(os.tmpdir(), path.basename(file.download_url));
+            const tempFilePath = path.join(os.tmpdir(), path.basename(file.name));
             if(fs.existsSync(tempFilePath)) 
             {
                 // If file already exists in temp, open it
@@ -91,11 +126,11 @@ export async function activityBar(context: vscode.ExtensionContext)
                     vscode.window.showErrorMessage(`Error while opening temporary file: ${error}`);
                 }
             } 
-            else 
+            else //Local stuff
             {
                 try 
                 {
-                    const response = await axios.get(file.download_url, { responseType: 'arraybuffer' });
+                    const response = await axios.get(file.uri, { responseType: 'arraybuffer' });
                     fs.writeFileSync(tempFilePath, response.data);
                     tempFiles.set(tempFilePath, tempFilePath);
     
@@ -108,14 +143,11 @@ export async function activityBar(context: vscode.ExtensionContext)
                     vscode.window.showErrorMessage(`Error while downloading and opening file: ${error}`);
                 }
             }
-        } 
-        else 
-        {
-            vscode.window.showErrorMessage('Invalid file path or URL.');
         }
     });
     
     context.subscriptions.push(openFileCommand);
+    context.subscriptions.push(openFileCommand2);
 }
 
 class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
@@ -288,6 +320,9 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     }
 }
 
+//This was harder than i thought
+//We have to filter from url and local stuff and if we dont do it, well, mess
+//Each url has 'url/local' and separated by a ,
 class MixedTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
 {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
@@ -447,6 +482,64 @@ class MixedTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
         this._onDidChangeTreeData.fire(undefined);
     }
 
+    getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
+        return element;
+    }
+
+    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> 
+    {
+        if (!element) 
+        {
+            const rootItems = this.githubUrls.map(url => {
+                // Gets the username from the url, at this point we already have all url to api.github.com
+                const username = this.extractGithubUsername(url);
+                return this.createTreeItem({
+                    name: username,
+                    type: 'dir',
+                    uri: url,
+                    online: true
+                });
+            })
+            .concat(this.localPaths.map(path => this.createTreeItem({
+                name: path.split('/').pop() || '', //If the last folder is named Pepe, it will display Pepe
+                type: 'dir',
+                uri: path,
+                online: false
+            })));
+            return rootItems; // Always this way, to separate different url and folders
+        } 
+        else 
+        {
+            // If its a folder, time to get more stuff to show
+            const source = element.id as string;
+        
+            if (source.startsWith('https://api.github.com')) 
+            {
+                const contents = await this.loadGithubFolderContents(source);
+                return this.processGithubContents(contents, source);
+            } 
+            else 
+            {
+                await this.loadLocalFiles(source);
+                const localFiles = this.filesData.get(source) || [];
+                const files = localFiles.filter(file => file.type === 'file');
+                const folders = localFiles.filter(file => file.type === 'dir');
+
+                //According to this.showFilesFirst
+                const sortedItems = this.showFilesFirst
+                    ? [...files, ...folders]
+                    : [...folders, ...files];
+
+                return sortedItems.map(file => this.createTreeItem({
+                    name: file.name,
+                    type: file.type,
+                    uri: file.uri,
+                    online: false
+                }));
+            }
+        }
+    }
+
     private async loadLocalFiles(path: string) 
     {
         try 
@@ -455,17 +548,25 @@ class MixedTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
             const localFiles = files.map(([name, type]) => ({
                 name,
                 type: type === vscode.FileType.Directory ? 'dir' : 'file',
-                uri: path
-            }));
+                uri: path + '/' + name,
+                online: false
+            }))
+            .filter(file => file.type === 'dir' || /\.(sfm|sfml)$/.test(file.name));
             this.filesData.set(path, localFiles);
-            this._onDidChangeTreeData.fire(undefined);
         } 
-        catch (error) 
+        catch(error) 
         {
             vscode.window.showErrorMessage(`Error reading local files: ${error}`);
         }
     }
 
+    private extractGithubUsername(url: string): string 
+    {
+        const match = url.match(/api\.github\.com\/repos\/([^\/]+)\//);
+        return match ? match[1] : 'unknown'; // Devuelve 'unknown' si no se encuentra el nombre de usuario
+    }
+
+    //The same as SFMLTreeProvider
     private async loadGithubFolderContents(url: string) 
     {
         try 
@@ -479,63 +580,34 @@ class MixedTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
             return [];
         }
     }
-
-    getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
-        return element;
+    
+    private processGithubContents(contents: any[], parentUrl: string): vscode.TreeItem[] 
+    {
+        const files = contents
+            .filter(item => item.type === 'file' && (item.name.includes(".sfm") || item.name.includes(".sfml")))
+            .map(item => this.createTreeItem({
+                name: item.name,
+                type: 'file',
+                uri: item.download_url, // Enlace para descargar el archivo
+                online: true
+            }));
+            
+        const folders = contents
+            .filter(item => item.type === 'dir')
+            .map(item => this.createTreeItem({
+                name: item.name,
+                type: 'dir',
+                uri: item.url, // Enlace a la carpeta
+                online: true
+            }));
+    
+        // Ordenar los elementos según showFilesFirst
+        return this.showFilesFirst ? [...files, ...folders] : [...folders, ...files];
     }
 
-    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
-        if (!element) {
-            // Root level: GitHub URLs and Local Paths
-            const rootItems = this.githubUrls.map(url => this.createTreeItem({ name: url, type: 'dir' }))
-                .concat(this.localPaths.map(path => this.createTreeItem({ name: path, type: 'dir' })));
-            return this.showFilesFirst ? rootItems : rootItems;
-        } else {
-            const source = element.label as string;
-
-            // Verifica si `filesData` ya tiene datos para el `source`
-            if (!this.filesData.has(source) || this.filesData.get(source)?.length === 0) {
-                let files: any[] = [];
-                
-                // Si es una URL de GitHub
-                if (source.startsWith('https://api.github.com') || source.startsWith('https://github.com')) {
-                    const folderContents = await this.loadGithubFolderContents(source);
-                    const folders = folderContents.filter((file: { type: string; }) => file.type === 'dir');
-                    const fileItems = folderContents.filter((file: { type: string; name: string; }) => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
-                    
-                    files = [...folders, ...fileItems];  // Actualiza los archivos
-
-                } else {
-                    // Si es una carpeta local
-                    const absoluteSource = path.isAbsolute(source) ? source : path.resolve(element.command?.arguments?.[0]?.uri, source);
-                    await this.loadLocalFiles(absoluteSource);
-                    files = this.filesData.get(source)!;  // Asegúrate de obtener los archivos cargados
-                }
-
-                // Almacena los archivos actualizados en `filesData`
-                this.filesData.set(source, files);
-                
-                const folders = files.filter(file => file.type === 'dir');
-                const fileItems = files.filter(file => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
-
-                // Devuelve los items según la configuración `showFilesFirst`
-                return this.showFilesFirst
-                    ? [...fileItems.map(this.createTreeItem.bind(this)), ...folders.map(this.createTreeItem.bind(this))]
-                    : [...folders.map(this.createTreeItem.bind(this)), ...fileItems.map(this.createTreeItem.bind(this))];
-            } else {
-                // Si ya hay archivos en `filesData`, simplemente devuélvelos
-                const files = this.filesData.get(source)!;
-                const folders = files.filter(file => file.type === 'dir');
-                const fileItems = files.filter(file => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
-
-                return this.showFilesFirst
-                    ? [...fileItems.map(this.createTreeItem.bind(this)), ...folders.map(this.createTreeItem.bind(this))]
-                    : [...folders.map(this.createTreeItem.bind(this)), ...fileItems.map(this.createTreeItem.bind(this))];
-            }
-        }
-    }
-
-    private createTreeItem(file: any): vscode.TreeItem {
+        
+    private createTreeItem(file: { name: string, type: string, uri: string , online: boolean}): vscode.TreeItem 
+    {
         const treeItem = new vscode.TreeItem(file.name);
         if (file.type === 'dir') {
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -544,9 +616,9 @@ class MixedTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
             treeItem.iconPath = this.iconPaths.file;
         }
-
+        treeItem.id = file.uri;
         treeItem.command = {
-            command: 'extension.openFile',
+            command: 'extension.openFile2',
             title: 'Open File',
             arguments: [file]
         };
