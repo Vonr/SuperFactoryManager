@@ -82,153 +82,142 @@ export async function activityBar(context: vscode.ExtensionContext)
     context.subscriptions.push(openFileCommand);
 }
 
-class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
-{
+class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
 
-    private context: vscode.ExtensionContext; //Needed for icons
-    private repositoryUrl: string // url of the repo to download the structure and then the files if needed
+    private context: vscode.ExtensionContext;
+    private repositoryUrl: string;
     private repoFiles: any[] = [];
-    private showFilesFirst: boolean; //Configuration, default is false, so folder goes first
-    private enableActivityBar: boolean; //Configuration, default is false, activity bar on
+    private showFilesFirst: boolean;
+    private enableActivityBar: boolean;
+    private iconPaths!: { [key: string]: { light: vscode.Uri; dark: vscode.Uri; }; };
 
-    constructor(context: vscode.ExtensionContext, url: string) 
-    {
+    constructor(context: vscode.ExtensionContext, url: string) {
         this.repositoryUrl = url;
         this.context = context;
 
         this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('sfml.filesOrder')) 
-            {
+            if (event.affectsConfiguration('sfml.filesOrder')) {
                 this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
+                this._onDidChangeTreeData.fire(undefined);
+            }
+
+            if (event.affectsConfiguration('sfml.enableActivityBar')) {
+                this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
+                vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
+                if (this.enableActivityBar) {
+                    this.loadRepoContents();
+                } else {
+                    this._onDidChangeTreeData.fire(undefined);
+                }
+            }
+
+            if (event.affectsConfiguration('sfml.changeFileIconsAcBarI') || event.affectsConfiguration('sfml.changeFileIconsAcBarF')) {
+                this.loadIconPaths();
                 this._onDidChangeTreeData.fire(undefined);
             }
         });
 
+        this.loadIconPaths();
         this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
         vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
 
-        if (this.enableActivityBar) 
-        {
+        if (this.enableActivityBar) {
             this.loadRepoContents();
         }
-
-        vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('sfml.enableActivityBar')) 
-            {
-                this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
-    
-                vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
-    
-                if(!this.enableActivityBar) 
-                {
-                    this._onDidChangeTreeData.fire(undefined);
-                } 
-                else 
-                {
-                    this.loadRepoContents();
-                }
-            }
-        });
     }
 
-    /**
-     * Get the structure of the folder and its files
-     */
-    async loadRepoContents() 
-    {
-        try 
-        {
+    //Load the corresponing icon, adding more means adding more to this list and the package.json
+    private loadIconPaths() {
+        const iconConfig = vscode.workspace.getConfiguration('sfml');
+        const fileIcon = iconConfig.get('changeFileIconsAcBarI', 'exp');
+        const folderIcon = iconConfig.get('changeFileIconsAcBarF', 'tool');
+    
+        const iconMap: { [key: string]: string } = {
+            'xp glob': 'exp.png',
+            'disk': 'icon_sfm.png',
+            'controller': 'icon.png',
+            'xp shard': 'exp.png',
+            'label': 'label.png',
+            'tool': 'tool.png'
+        };
+    
+        this.iconPaths = {
+            file: {
+                light: vscode.Uri.file(path.join(this.context.extensionPath, 'media', iconMap[fileIcon] || 'exp.png')),
+                dark: vscode.Uri.file(path.join(this.context.extensionPath, 'media', iconMap[fileIcon] || 'exp.png'))
+            },
+            folder: {
+                light: vscode.Uri.file(path.join(this.context.extensionPath, 'media', iconMap[folderIcon] || 'tool.png')),
+                dark: vscode.Uri.file(path.join(this.context.extensionPath, 'media', iconMap[folderIcon] || 'tool.png'))
+            }
+        };
+    }
+
+    async loadRepoContents() {
+        try {
             const response = await axios.get(this.repositoryUrl);
             this.repoFiles = response.data;
             this._onDidChangeTreeData.fire(undefined); //update view
-        } 
-        catch (error) 
-        {
+        } catch (error) {
             vscode.window.showErrorMessage('Error fetching examples from github');
         }
     }
 
-    getTreeItem(element: vscode.TreeItem): vscode.TreeItem 
-    {
+    getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
         return element;
     }
 
-    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> 
-    {
-        if (!element) 
-        {
-            // Separeta files from dir
+    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
+        if (!element) {
             const folders = this.repoFiles.filter(file => file.type === 'dir');
             const files = this.repoFiles.filter(file => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
-    
-            //Folder structure for view
+
             const folderItems = folders.map(folder => this.createTreeItem(folder));
             const fileItems = files.map(file => this.createTreeItem(file));
-    
+
             return this.showFilesFirst ? [...fileItems, ...folderItems] : [...folderItems, ...fileItems];
-        } 
-        else 
-        {
-            // If we find a folder, we want also the files from inside
+        } else {
             const fileData = this.repoFiles.find(file => file.name === element.label);
-            if (fileData && fileData.type === 'dir') 
-            {
+            if (fileData && fileData.type === 'dir') {
                 const folderContents = await this.loadFolderContents(fileData.url);
-    
-                //Folder structure for view
+
                 const folders = folderContents.filter((file: { type: string; }) => file.type === 'dir');
                 const files = folderContents.filter((file: { type: string; name: string; }) => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
-    
+
                 const folderItems = folders.map((folder: any) => this.createTreeItem(folder));
                 const fileItems = files.map((file: any) => this.createTreeItem(file));
-    
+
                 return this.showFilesFirst ? [...fileItems, ...folderItems] : [...folderItems, ...fileItems];
-    
             }
         }
-        return []; //in case we dont have any items but url is good
+        return [];
     }
 
-    private async loadFolderContents(url: string) 
-    {
-        try 
-        {
+    private async loadFolderContents(url: string) {
+        try {
             const response = await axios.get(url);
             return response.data;
-        } 
-        catch (error) 
-        {
+        } catch (error) {
             vscode.window.showErrorMessage('Error fetching folder contents');
             return [];
         }
     }
 
-    private createTreeItem(file: any): vscode.TreeItem 
-    {
+    private createTreeItem(file: any): vscode.TreeItem {
         const treeItem = new vscode.TreeItem(file.name);
-        if (file.type === 'dir') 
-        {
+        if (file.type === 'dir') {
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-            treeItem.iconPath = {
-                light: vscode.Uri.file(path.join(this.context.extensionPath, 'media', 'tool.png')),
-                dark: vscode.Uri.file(path.join(this.context.extensionPath, 'media', 'tool.png'))
-            };
-        } 
-        else 
-        {
+            treeItem.iconPath = this.iconPaths.folder;
+        } else {
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
-            treeItem.iconPath = {
-                light: vscode.Uri.file(path.join(this.context.extensionPath, 'media', 'exp.png')),
-                dark: vscode.Uri.file(path.join(this.context.extensionPath, 'media', 'exp.png'))
-            };
+            treeItem.iconPath = this.iconPaths.file;
         }
 
-        //vscode.open or vscode.diff should be used on command, but we dont have the files downloaded
         treeItem.command = {
-            command: 'extension.openFile', 
+            command: 'extension.openFile',
             title: 'Open File',
             arguments: [file]
         };
