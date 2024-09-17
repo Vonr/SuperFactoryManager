@@ -91,7 +91,7 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
     private repositoryUrl: string // url of the repo to download the structure and then the files if needed
     private repoFiles: any[] = [];
     private showFilesFirst: boolean; //Configuration, default is false, so folder goes first
-    private disableActivityBar: boolean; //Configuration, default is false, activity bar on
+    private enableActivityBar: boolean; //Configuration, default is false, activity bar on
 
     constructor(context: vscode.ExtensionContext, url: string) 
     {
@@ -107,22 +107,22 @@ class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>
             }
         });
 
-        this.disableActivityBar = vscode.workspace.getConfiguration('sfml').get('disableActivityBar', false);
-        vscode.commands.executeCommand("setContext", "sfml.isActivated", !this.disableActivityBar);
+        this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
+        vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
 
-        if (!this.disableActivityBar) 
+        if (this.enableActivityBar) 
         {
             this.loadRepoContents();
         }
 
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('sfml.disableActivityBar')) 
+            if (event.affectsConfiguration('sfml.enableActivityBar')) 
             {
-                this.disableActivityBar = vscode.workspace.getConfiguration('sfml').get('disableActivityBar', false);
+                this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
     
-                vscode.commands.executeCommand("setContext", "sfml.isActivated", !this.disableActivityBar);
+                vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
     
-                if (this.disableActivityBar) 
+                if(!this.enableActivityBar) 
                 {
                     this._onDidChangeTreeData.fire(undefined);
                 } 

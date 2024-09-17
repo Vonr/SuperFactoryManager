@@ -13,11 +13,11 @@ export function activate(context: vscode.ExtensionContext) {
     everySnippet(context);
     activityBar(context);
     
-    const disposable = vscode.workspace.onDidSaveTextDocument((document) => {
+    const checking = vscode.workspace.onDidSaveTextDocument((document) => {
         handleDocument(document);
         checkInputOutput(document);
     });
-    context.subscriptions.push(disposable);
+    context.subscriptions.push(checking);
 }
 
 export function deactivate() {

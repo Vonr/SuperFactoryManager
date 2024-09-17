@@ -17,6 +17,7 @@
     "onLanguage:sfm",
     "onLanguage:sfml"
   ],
+
   "contributes": {
     "languages": [
       {
@@ -81,10 +82,10 @@
             "default": false,
             "description": "Show folders first and then files"
           },
-          "sfml.disableActivityBar": {
+          "sfml.enableActivityBar": {
             "type": "boolean",
-            "default": false,
-            "description": "Disable the Activity Bar from showing"
+            "default": true,
+            "description": "Enable the Activity Bar"
           },
           "sfml.enableWarningChecking":{
             "type": "boolean",
