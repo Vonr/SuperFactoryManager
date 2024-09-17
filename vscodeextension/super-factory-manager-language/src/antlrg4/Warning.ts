@@ -11,19 +11,17 @@ export const diagnosticCollectionWarning = vscode.languages.createDiagnosticColl
 class InputOutputChecker implements SFMLListener {
     private inputs: Set<string> = new Set();
     private outputs: Set<string> = new Set();
-    private document: TextDocument;
     private enabled: boolean;
     private onIfElseStatment: boolean = false;
 
-    constructor(document: TextDocument) 
+    constructor() 
     {
-        this.document = document;
-        this.enabled = vscode.workspace.getConfiguration('sfml').get('enableWarningChecking', false);
+        this.enabled = vscode.workspace.getConfiguration('sfml').get('enableWarningChecking', true);
 
         vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('sfml.enableWarningChecking')) 
             {
-                this.enabled = vscode.workspace.getConfiguration('sfml').get('enableWarningChecking', false);
+                this.enabled = vscode.workspace.getConfiguration('sfml').get('enableWarningChecking', true);
                 if (!this.enabled) diagnosticCollectionWarning.clear();
             }
         });
@@ -121,7 +119,7 @@ export function checkInputOutput(document: TextDocument)
 
     const tree = parser.program();
 
-    const checker = new InputOutputChecker(document);
+    const checker = new InputOutputChecker();
     const walker = new ParseTreeWalker();
     walker.walk(checker, tree);
 }

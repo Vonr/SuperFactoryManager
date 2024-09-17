@@ -71,6 +71,11 @@
           "id": "examplegithub",
           "name": "Examples Github",
           "when": "sfml.isActivated"
+        },
+        {
+          "id": "examplesOthers",
+          "name": "Examples from other repos",
+          "when": "sfml.isActivated && sfml.thereAreFiles"
         }
       ]
     },
@@ -89,7 +94,7 @@
           },
           "sfml.enableWarningChecking": {
             "type": "boolean",
-            "default": false,
+            "default": true,
             "description": "Enable warning for code. Still on very early"
           },
           "sfml.enableErrorChecking": {
@@ -124,6 +129,11 @@
               "xp shard",
               "tool"
             ]
+          },
+          "sfml.externalURL": {
+            "type": "string",
+            "description": "Useful repo for SFM files (Only GitHub url or local)",
+            "default": ""
           }
         }
       }
