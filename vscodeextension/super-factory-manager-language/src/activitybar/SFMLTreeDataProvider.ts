@@ -178,18 +178,19 @@ export function loadIconPaths(context: vscode.ExtensionContext)
     const folderIcon = iconConfig.get('changeFolderIconsOnActivityBar', 'tool');
     
     const iconMap: { [key: string]: string } = {
-        'xp glob': 'exp.png',
-        'disk': 'icon_sfm.png',
-        'controller': 'icon.png',
-        'xp shard': 'exp.png',
-        'label': 'label.png',
-        'tool': 'tool.png'
+        'Disk': 'disk.png',
+        'Controller': 'controller.png',
+        'Label Gun': 'label gun.png',
+        'Experience Goop': 'experience goop.png',
+        'Experience Shard': 'experience shard.png',
+        'Tool Network': 'tool.png',
+        'Printing Form': 'printing press.png'
     };
     
     return{
         file: {
-            light: vscode.Uri.file(path.join(context.extensionPath, 'media', iconMap[fileIcon] || 'exp.png')),
-            dark: vscode.Uri.file(path.join(context.extensionPath, 'media', iconMap[fileIcon] || 'exp.png'))
+            light: vscode.Uri.file(path.join(context.extensionPath, 'media', iconMap[fileIcon] || 'experience goop.png')),
+            dark: vscode.Uri.file(path.join(context.extensionPath, 'media', iconMap[fileIcon] || 'experience goop.png'))
         },
         folder: {
             light: vscode.Uri.file(path.join(context.extensionPath, 'media', iconMap[folderIcon] || 'tool.png')),

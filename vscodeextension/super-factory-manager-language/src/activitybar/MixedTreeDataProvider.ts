@@ -45,7 +45,7 @@ export class MixedTreeDataProvider implements vscode.TreeDataProvider<vscode.Tre
                 }
             }
 
-            if(event.affectsConfiguration('sfml.changeFileIconsAcBarI') || event.affectsConfiguration('sfml.changeFileIconsOnActivityBar')) 
+            if(event.affectsConfiguration('sfml.changeFolderIconsOnActivityBar') || event.affectsConfiguration('sfml.changeFileIconsOnActivityBar'))
             {
                 this._onDidChangeTreeData.fire(undefined);
             }
