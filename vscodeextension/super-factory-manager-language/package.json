@@ -81,6 +81,7 @@
     },
     "configuration":[
       {
+        "title": "Super Factory Manager Language",
         "properties": {
           "sfml.filesOrder": {
             "type": "boolean",
@@ -102,9 +103,8 @@
             "default": true,
             "description": "Enable error checking for code. Should be the same as in-game"
           },
-          "sfml.changeFileIconsAcBarI": {
+          "sfml.changeFileIconsOnActivityBar": {
             "type": "string",
-            "title": "Icon file changer",
             "description": "Select the icon theme for SFML files on the activity bar",
             "default": "exp",
             "enum": [
@@ -116,9 +116,8 @@
               "tool"
             ]
           },
-          "sfml.changeFileIconsAcBarF": {
+          "sfml.changeFolderIconsOnActivityBar": {
             "type": "string",
-            "title": "Icon file changer",
             "description": "Select the icon theme for folders on the activity bar",
             "default": "tool",
             "enum": [

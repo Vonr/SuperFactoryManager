@@ -21,5 +21,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+    console.log("bruh deactivating"); //Copying teamy, sorry :P
     deleteTempFiles();
 }
