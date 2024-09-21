@@ -13,6 +13,7 @@ class InputOutputChecker implements SFMLListener {
     private outputs: Set<any> = new Set();
     private enabled: boolean;
     private onIfElseStatment: boolean = false;
+    private diagnostics: vscode.Diagnostic[] = [];
 
     constructor() 
     {
@@ -31,7 +32,6 @@ class InputOutputChecker implements SFMLListener {
      * Checks if a corresponding input or output has its corresponding counterpart
      */
     private verifyInputsAndOutputs() {
-        const diagnostics: vscode.Diagnostic[] = [];
         const activeEditor = vscode.window.activeTextEditor;
 
         if(!activeEditor) {
@@ -45,7 +45,7 @@ class InputOutputChecker implements SFMLListener {
                 const range = this.calculateRange(input, document);
                 const message = `Warning: Input ${input.type}:: without corresponding output.`;
                 const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Warning);
-                diagnostics.push(diagnostic);
+                this.diagnostics.push(diagnostic);
             }
         });
 
@@ -54,14 +54,12 @@ class InputOutputChecker implements SFMLListener {
                 const range = this.calculateRange(output, document);
                 const message = `Warning: Output ${output.type}:: without corresponding input.`;
                 const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Warning);
-                diagnostics.push(diagnostic);
+                this.diagnostics.push(diagnostic);
             }
         });
 
-        // Limpiar y actualizar los diagnósticos
-        this.clearDiagnostics()
         const uri = document.uri;
-        diagnosticCollectionWarning.set(uri, diagnostics);
+        diagnosticCollectionWarning.set(uri, this.diagnostics);
     }
 
     //Get the range, from the first no space to the last letter
@@ -79,19 +77,23 @@ class InputOutputChecker implements SFMLListener {
     }
 
     public clearDiagnostics() {
+        this.diagnostics = [];
         diagnosticCollectionWarning.clear();
     }
 
     //Inputs statments
     enterInputStatement(ctx: InputStatementContext) 
     {
-        let inputType = ctx.text.match(/(fe|fluid|gas|item)::/i)?.[1]?.toLowerCase();
+        //Blame ctx.text because it deletes all spaces
+        let inputType = ctx.text.match(/(fe|fluid|gas|item)(?:::[^:]*|:[^:*]*:\*|:[^:*]*)/i)?.[1]?.toLowerCase();
         
         // If we dont find anything above, we consider it item::
-        if (!inputType) 
-        {
-            inputType = 'item'; 
-        }
+        if(!inputType || ctx.text.includes('*')) inputType = 'item';
+
+        if(inputType.startsWith("fluid:")) inputType = "fluid"
+        if(inputType.startsWith("fe:")) inputType = "fe"
+        if(inputType.startsWith("gas:")) inputType = "gas"
+        if(inputType.startsWith("item:")) inputType = "item"
         const line = {
             type: inputType,
             start: ctx.start,
@@ -103,13 +105,16 @@ class InputOutputChecker implements SFMLListener {
     //Output statments
     enterOutputStatement(ctx: OutputStatementContext) 
     {
-        let outputType = ctx.text.match(/(fe|fluid|gas|item)::/i)?.[1]?.toLowerCase();
+        //Blame ctx.text because it deletes all spaces
+        let outputType = ctx.text.match(/(fe|fluid|gas|item)(?:::[^:]*|:[^:*]*:\*|:[^:*]*)/i)?.[1]?.toLowerCase();
     
         // If we dont find anything above, we consider it item::
-        if (!outputType || ctx.text.includes('*')) 
-        {
-            outputType = 'item'; 
-        }
+        if(!outputType || ctx.text.includes('*')) outputType = 'item';
+        
+        if(outputType.startsWith("fluid:")) outputType = "fluid"
+        if(outputType.startsWith("fe:")) outputType = "fe"
+        if(outputType.startsWith("gas:")) outputType = "gas"
+        if(outputType.startsWith("item:")) outputType = "item"
         const line = {
             type: outputType,
             start: ctx.start,
