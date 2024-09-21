@@ -9,8 +9,8 @@ import * as vscode from 'vscode';
 export const diagnosticCollectionWarning = vscode.languages.createDiagnosticCollection('sfml');
 
 class InputOutputChecker implements SFMLListener {
-    private inputs: Set<string> = new Set();
-    private outputs: Set<string> = new Set();
+    private inputs: Set<any> = new Set();
+    private outputs: Set<any> = new Set();
     private enabled: boolean;
     private onIfElseStatment: boolean = false;
 
@@ -27,23 +27,62 @@ class InputOutputChecker implements SFMLListener {
         });
     }
 
-    // Checks if an input has an output and viceversa 
+    /**
+     * Checks if a corresponding input or output has its corresponding counterpart
+     */
     private verifyInputsAndOutputs() {
-        this.inputs.forEach(inputType => {
-            if (!this.outputs.has(inputType)) 
-            {
-                console.log(`Warning: Input ${inputType}:: without corresponding output.`);
+        const diagnostics: vscode.Diagnostic[] = [];
+        const activeEditor = vscode.window.activeTextEditor;
+
+        if(!activeEditor) {
+            return;
+        }
+
+        const document = activeEditor.document;
+
+        this.inputs.forEach(input => {
+            if (!Array.from(this.outputs).some(output => output.type === input.type)) {
+                const range = this.calculateRange(input, document);
+                const message = `Warning: Input ${input.type}:: without corresponding output.`;
+                const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Warning);
+                diagnostics.push(diagnostic);
             }
         });
-        this.outputs.forEach(outputType => {
-            if (!this.inputs.has(outputType)) 
-            {
-                console.log(`Warning: Output ${outputType}:: without corresponding input.`);
+
+        this.outputs.forEach(output => {
+            if (!Array.from(this.inputs).some(input => input.type === output.type)) {
+                const range = this.calculateRange(output, document);
+                const message = `Warning: Output ${output.type}:: without corresponding input.`;
+                const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Warning);
+                diagnostics.push(diagnostic);
             }
         });
+
+        // Limpiar y actualizar los diagnósticos
+        this.clearDiagnostics()
+        const uri = document.uri;
+        diagnosticCollectionWarning.set(uri, diagnostics);
     }
 
-    // Inputs statments
+    //Get the range, from the first no space to the last letter
+    private calculateRange(lineData: { start: any, stop: any }, document: vscode.TextDocument): vscode.Range {
+        const startLine = lineData.start.line - 1;
+        const endLine = lineData.stop.line - 1;
+        const lineText = document.lineAt(startLine).text;
+        const firstNonWhitespaceIndex = lineText.search(/\S/);
+        const lastNonWhitespaceIndex = lineText.trimEnd().length;
+
+        return new vscode.Range(
+            new vscode.Position(startLine, firstNonWhitespaceIndex),
+            new vscode.Position(endLine, lastNonWhitespaceIndex)
+        );
+    }
+
+    public clearDiagnostics() {
+        diagnosticCollectionWarning.clear();
+    }
+
+    //Inputs statments
     enterInputStatement(ctx: InputStatementContext) 
     {
         let inputType = ctx.text.match(/(fe|fluid|gas|item)::/i)?.[1]?.toLowerCase();
@@ -53,10 +92,15 @@ class InputOutputChecker implements SFMLListener {
         {
             inputType = 'item'; 
         }
-        this.inputs.add(inputType);
+        const line = {
+            type: inputType,
+            start: ctx.start,
+            stop: ctx.stop
+        }
+        this.inputs.add(line);
     }
 
-    // Output statments
+    //Output statments
     enterOutputStatement(ctx: OutputStatementContext) 
     {
         let outputType = ctx.text.match(/(fe|fluid|gas|item)::/i)?.[1]?.toLowerCase();
@@ -66,10 +110,15 @@ class InputOutputChecker implements SFMLListener {
         {
             outputType = 'item'; 
         }
-        this.outputs.add(outputType);
+        const line = {
+            type: outputType,
+            start: ctx.start,
+            stop: ctx.stop
+        }
+        this.outputs.add(line);
     }
 
-    // Forget everything before, and start the handling of warnings
+    //Forget everything before, and start the handling of warnings
     //After that, we dont care about what comes before and we clear everything
     enterForgetStatement(ctx: ForgetStatementContext) 
     {
