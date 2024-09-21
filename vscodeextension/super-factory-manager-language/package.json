@@ -44,12 +44,6 @@
         "path": "./syntaxes/sfml.tmLanguage.json"
       }
     ],
-    "snippets": [
-      {
-        "language": "sfml",
-        "path": "./snippets/sfml.code-snippets"
-      }
-    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -135,6 +129,16 @@
             "type": "string",
             "description": "Useful repositories for SFM files (Only GitHub or local). Each repo / folder must be in between '' and separated via a comma",
             "default": ""
+          },
+          "sfml.SnippetActivation": {
+            "type": "string",
+            "description": "Prefix for activating snippets completion. For example: @energy or /energy.",
+            "default": ""
+          },
+          "sfml.enableSnippets": {
+            "type": "boolean",
+            "description": "Enable snippets",
+            "default": true
           }
         }
       }
