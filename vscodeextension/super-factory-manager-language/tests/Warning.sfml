@@ -1,9 +1,15 @@
 --This example comes from the github itself, currently it does 5/7 cases (blame the last forget)
 
+
 EVERY 20 TICKS DO
     INPUT fluid:mek: FROM tank1
     OUTPUT TO tank2
     -- missing fluid output
+
+    FORGET
+
+    INPUT FROM thing1
+    OUTPUT fluid::* TO thing2
 
     FORGET
 
