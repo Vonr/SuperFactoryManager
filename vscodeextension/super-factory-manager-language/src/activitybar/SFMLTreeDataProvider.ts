@@ -4,63 +4,192 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 
-/**
- * Class representing only GitHub files and folder, its much simpler than MixedTreeDataProvider
- */
-export class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+//This was harder than i thought
+//We have to filter from url and local stuff and if we dont do it, well, mess
+//Each url has 'url/local' and separated by a ,
+export class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
+{
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
 
     private context: vscode.ExtensionContext;
-    private repositoryUrl: string;
+    private githubUrls: string[] = [];
+    private localPaths: string[] = [];
     private repoFiles: any[] = [];
+    private filesData: Map<string, any[]> = new Map();
     private showFilesFirst: boolean;
     private enableActivityBar: boolean;
+    private mode: number
+    private repositoryUrl: string = "";
 
-    constructor(context: vscode.ExtensionContext, url: string) 
+    //Mode equals 0, github and local
+    //Mode equals 1, github only
+    constructor(context: vscode.ExtensionContext, apiUrl: string, mode: number) 
     {
-        this.repositoryUrl = url;
         this.context = context;
+        this.mode = mode;
+        if(mode === 0){
+            this.loadSettings();
 
-        this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
-        vscode.workspace.onDidChangeConfiguration(event => {
-            if(event.affectsConfiguration('sfml.filesOrder')) 
-            {
-                this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
-                this._onDidChangeTreeData.fire(undefined);
-            }
-
-            if(event.affectsConfiguration('sfml.enableActivityBar')) 
-            {
-                this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
-                vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
-                if (this.enableActivityBar) 
+            vscode.workspace.onDidChangeConfiguration(event => {
+                if(event.affectsConfiguration('sfml.filesOrder')) 
                 {
-                    this.loadRepoContents();
-                } 
-                else 
+                    this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
+                    this._onDidChangeTreeData.fire(undefined);
+                }
+    
+                if(event.affectsConfiguration('sfml.enableActivityBar')) 
+                {
+                    this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
+                    vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
+                    if (this.enableActivityBar) 
+                    {
+                        this.loadSources();
+                    } 
+                    else 
+                    {
+                        this._onDidChangeTreeData.fire(undefined);
+                    }
+                }
+    
+                if(event.affectsConfiguration('sfml.changeFolderIconsOnActivityBar') || event.affectsConfiguration('sfml.changeFileIconsOnActivityBar'))
                 {
                     this._onDidChangeTreeData.fire(undefined);
                 }
-            }
+    
+                if(event.affectsConfiguration('sfml.externalURL'))
+                {
+                    this.loadSettings();
+                    this.loadSources()
+                }
+            });
+        }
+        else if(mode === 1)
+        {
+            this.repositoryUrl = apiUrl;
+            this.context = context;
 
-            if(event.affectsConfiguration('sfml.changeFolderIconsOnActivityBar') || event.affectsConfiguration('sfml.changeFileIconsOnActivityBar')) 
+            this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
+            vscode.workspace.onDidChangeConfiguration(event => {
+                if(event.affectsConfiguration('sfml.filesOrder')) 
+                {
+                    this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
+                    this._onDidChangeTreeData.fire(undefined);
+                }
+
+                if(event.affectsConfiguration('sfml.enableActivityBar')) 
+                {
+                    this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
+                    vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
+                    if (this.enableActivityBar) 
+                    {
+                        this.loadRepoContents();
+                    } 
+                    else 
+                    {
+                        this._onDidChangeTreeData.fire(undefined);
+                    }
+                }
+
+                if(event.affectsConfiguration('sfml.changeFolderIconsOnActivityBar') || event.affectsConfiguration('sfml.changeFileIconsOnActivityBar')) 
+                {
+                    this._onDidChangeTreeData.fire(undefined);
+                }
+            });
+
+            this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
+            this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
+            vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
+
+            if(this.enableActivityBar) 
             {
-                this._onDidChangeTreeData.fire(undefined);
+                this.loadRepoContents();
             }
-        });
+        }
+
 
         this.showFilesFirst = vscode.workspace.getConfiguration('sfml').get('filesOrder', false);
         this.enableActivityBar = vscode.workspace.getConfiguration('sfml').get('enableActivityBar', true);
         vscode.commands.executeCommand("setContext", "sfml.isActivated", this.enableActivityBar);
-
-        if(this.enableActivityBar) 
+        
+        if (this.enableActivityBar) 
         {
-            this.loadRepoContents();
+            this.loadSources();
         }
     }
 
-    //Download the structure from github
+
+    private loadSettings() 
+    {
+        const config = vscode.workspace.getConfiguration('sfml');
+        this.githubUrls = [];
+        this.localPaths = [];
+    
+        // Get the externalURL setting value
+        const settingValue = config.get<string>('externalURL', '');
+    
+        // Parse URLs and local paths from the setting value
+        const sources = settingValue.split(',').map(source => source.trim().replace(/^'|'$/g, ''));
+
+        const transformedUrls = sources.map(source => {
+            if(source.startsWith('https://github.com')) 
+            {
+                try 
+                {
+                    return getApiUrlFromGithubUrl(source);
+                }
+                catch(e)
+                {
+                    console.error(`Error converting GitHub URL: ${source}`, e);
+                    return null;
+                }
+            }
+            return source;
+        }).filter(source => source !== null);
+    
+        // Filter GitHub URLs and local paths
+        this.githubUrls = transformedUrls.filter(source =>
+            source.startsWith('https://api.github.com')
+        );
+
+        this.localPaths = sources.filter(source => 
+            source !== '' && 
+            !source.startsWith('https://api.github.com') && 
+            !source.startsWith('https://github.com')
+        );
+
+        if(this.localPaths.length !== 0 || this.githubUrls.length !== 0)
+        {
+            vscode.commands.executeCommand("setContext", "sfml.thereAreFiles", true);
+        }
+        else
+        {
+            vscode.commands.executeCommand("setContext", "sfml.thereAreFiles", false);
+        }
+    }
+
+    private async loadSources() 
+    {
+        for(const url of this.githubUrls) 
+        {
+            try 
+            {
+                const response = await axios.get(url);
+                this.filesData.set(url, response.data);
+            } 
+            catch(error) 
+            {
+                vscode.window.showErrorMessage(`Error fetching from GitHub: ${error}`);
+            }
+        }
+        for(const path of this.localPaths) 
+        {
+            this.filesData.set(path, []); // Initialize empty array for local paths
+        }
+        this._onDidChangeTreeData.fire(undefined);
+    }
+
+        //Download the structure from github
     //Maybe extracting this part to be used on Mixed and this?
     async loadRepoContents() 
     {
@@ -80,51 +209,142 @@ export class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.Tree
         return element;
     }
 
-    /**
-     * This is similar to the local one on MixedTreeData provider
-     * Gets the structure from GitHub or the file system
-     * Then it create the new tree items for the view
-     * For the Mixed one, its similar but needs a few checks not to mix local files and downloaded ones
-     * @param element 
-     * @returns 
-     */
+    //Basically the same as SFMLTreeDataProvider but for files and separete different repos and local folders
     async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> 
     {
-        if(!element) 
+        if(this.mode === 0)
         {
-            const folders = this.repoFiles.filter(file => file.type === 'dir');
-            const files = this.repoFiles.filter(file => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
-
-            const folderItems = folders.map(folder => this.createTreeItem(folder));
-            const fileItems = files.map(file => this.createTreeItem(file));
-
-            return this.showFilesFirst ? [...fileItems, ...folderItems] : [...folderItems, ...fileItems];
-        } 
-        else 
-        {
-            const fileData = this.repoFiles.find(file => file.name === element.label);
-            if (fileData && fileData.type === 'dir') 
+            if(!element) 
             {
-                const folderContents = await loadGithubFolderContents(fileData.url);
-
-                const folders = folderContents.filter((file: { type: string; }) => file.type === 'dir');
-                const files = folderContents.filter((file: { type: string; name: string; }) => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
-
-                const folderItems = folders.map((folder: any) => this.createTreeItem(folder));
-                const fileItems = files.map((file: any) => this.createTreeItem(file));
-
-                return this.showFilesFirst ? [...fileItems, ...folderItems] : [...folderItems, ...fileItems];
+                const rootItems = this.githubUrls.map(url => {
+                    // Gets the username from the url, at this point we already have all url to api.github.com
+                    return this.createTreeItem({
+                        name: extractGithubUsername(url),
+                        type: 'dir',
+                        download_url: url,
+                    });
+                })
+                .concat(this.localPaths.map(path => this.createTreeItem({
+                    name: path.split('/').pop() || '', //If the last folder is named Pepe, it will display Pepe
+                    type: 'dir',
+                    download_url: path,
+                })));
+                return rootItems; // Always this way, to separate different url and folders from each other
+            } 
+            else 
+            {
+                // If its a folder, time to get more stuff to show
+                //Else time to download more stuff
+                const source = element.id as string;
+                
+                if(source.startsWith('https://api.github.com')) 
+                {
+                    const contents = await loadGithubFolderContents(source);
+                    return this.processGithubContents(contents);
+                } 
+                else 
+                {
+                    await this.loadLocalFiles(source);
+                    const localFiles = this.filesData.get(source) || [];
+                    const files = localFiles.filter(file => file.type === 'file');
+                    const folders = localFiles.filter(file => file.type === 'dir');
+        
+                    //According to this.showFilesFirst
+                    const sortedItems = this.showFilesFirst
+                        ? [...files, ...folders]
+                        : [...folders, ...files];
+        
+                    return sortedItems.map(file => this.createTreeItem({
+                        name: file.name,
+                        type: file.type,
+                        download_url: file.download_url,
+                    }));
+                }
             }
         }
+        else if(this.mode === 1)
+        {
+            if(!element) 
+            {
+                const folders = this.repoFiles.filter(file => file.type === 'dir');
+                const files = this.repoFiles.filter(file => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
+        
+                const folderItems = folders.map(folder => this.createTreeItem(folder));
+                const fileItems = files.map(file => this.createTreeItem(file));
+        
+                return this.showFilesFirst ? [...fileItems, ...folderItems] : [...folderItems, ...fileItems];
+            } 
+            else 
+            {
+                const fileData = this.repoFiles.find(file => file.name === element.label);
+                if(fileData && fileData.type === 'dir') 
+                {
+                    const folderContents = await loadGithubFolderContents(fileData.url);
+        
+                    const folders = folderContents.filter((file: { type: string; }) => file.type === 'dir');
+                    const files = folderContents.filter((file: { type: string; name: string; }) => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
+        
+                    const folderItems = folders.map((folder: any) => this.createTreeItem(folder));
+                    const fileItems = files.map((file: any) => this.createTreeItem(file));
+        
+                    return this.showFilesFirst ? [...fileItems, ...folderItems] : [...folderItems, ...fileItems];
+                }
+            }
+            return [];
+        }
         return [];
+        
     }
 
     /**
-     * Generate a treeItem with the corresponding icon
-     * @param file 
-     * @returns A treeItem for the tree
+     * Get the structure of a folder
+     * @param path Local path to a folder
      */
-    private createTreeItem(file: any): vscode.TreeItem 
+    private async loadLocalFiles(path: string) 
+    {
+        try 
+        {
+            const files = await vscode.workspace.fs.readDirectory(vscode.Uri.file(path));
+            const localFiles = files.map(([name, type]) => ({
+                name,
+                type: type === vscode.FileType.Directory ? 'dir' : 'file',
+                download_url: path + '/' + name,
+                online: false
+            }))
+            .filter(file => file.type === 'dir' || /\.(sfm|sfml)$/.test(file.name));
+            this.filesData.set(path, localFiles);
+        } 
+        catch(error) 
+        {
+            vscode.window.showErrorMessage(`Error reading local files: ${error}`);
+        }
+    }
+    
+    //Maybe worth extracting?
+    private processGithubContents(contents: any[]): vscode.TreeItem[] 
+    {
+        const files = contents
+            .filter(item => item.type === 'file' && (item.name.includes(".sfm") || item.name.includes(".sfml")))
+            .map(item => this.createTreeItem({
+                name: item.name,
+                type: 'file',
+                download_url: item.download_url, // Download url for structure
+            }));
+            
+        const folders = contents
+            .filter(item => item.type === 'dir')
+            .map(item => this.createTreeItem({
+                name: item.name,
+                type: 'dir',
+                download_url: item.url, // Where the folder is located
+            }));
+    
+        // Return the contents according the user settings
+        return this.showFilesFirst ? [...files, ...folders] : [...folders, ...files];
+    }
+
+    //The same as the sfml tree data provider but this time adding where the files are located
+    private createTreeItem(file: {name: string, type: string, download_url: string}): vscode.TreeItem 
     {
         const iconPath = loadIconPaths(this.context)
         const treeItem = new vscode.TreeItem(file.name);
@@ -138,11 +358,13 @@ export class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.Tree
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
             treeItem.iconPath = iconPath.file;
         }
+        treeItem.id = file.download_url; //Needed for the local files
         treeItem.command = {
             command: 'sfml.openFile',
             title: 'Open File',
             arguments: [file]
         };
+
         return treeItem;
     }
 }

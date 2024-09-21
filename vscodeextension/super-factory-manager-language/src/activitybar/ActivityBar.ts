@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 
 import { getOpenCommand, SFMLTreeDataProvider } from './SFMLTreeDataProvider';
-import { MixedTreeDataProvider } from './MixedTreeDataProvider';
 
 //Note: it would be faster if we have already on the folder media or similar, but things can change
 // and wanted to make it so its always up-to-date - Titop54
@@ -26,9 +25,9 @@ const tempFiles: Map<string, string> = new Map();
 export async function activityBar(context: vscode.ExtensionContext) 
 {
     const hasSFMLFiles = await checkSFMLFiles();
-    const treeDataProvider = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/src/main/resources/assets/sfm/template_programs');
-    const treeDataProvider2 = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/examples');
-    const treeDataProvider3 = new MixedTreeDataProvider(context);
+    const treeDataProvider = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/src/main/resources/assets/sfm/template_programs', 1);
+    const treeDataProvider2 = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/examples', 1);
+    const treeDataProvider3 = new SFMLTreeDataProvider(context, '', 0);
     //If we dont have some .sfm or .sfml, we dont want to see the activity bar
     //Only when the extension activates, like some other extensions do (java extension or antlr one)
     //Dont ask why there 2 openFiles
