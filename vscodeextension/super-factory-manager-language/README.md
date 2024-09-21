@@ -1,17 +1,26 @@
 # Super Factory Manager Language
 
-This extension provides syntax highlighting for the Super Factory Manager Language (SFM)
+This extension provides syntax highlighting for the Super Factory Manager Language (SFM) and a few extras
 
 ## Features
 
 - **Syntax highlighting:** For SFM code, similar to in-game text editor.
 Colors depends on the theme you are using
 
-- **Snippets:** Basic functionalities that improves code generation, like every snippet or energy snippet
+- **Snippets:** Basic functionalities that improves code writing, like every snippet or energy snippet.
+For now, the following snippets are available: basic, energy, input, output, if, ifelse, ifelseif, every.
 
-- **Folding:** You will not see part of your code that you do not need
+- **Folding:** You can hide collapse some structures on your files, like if or every
 
 - **Activity bar:** To activate it, you need to open a workspace folder and then open a .sfm or .sfml. It includes examples, both in-game and from github. Requires Internet connection.
+
+- **Error checking:** It will check the file when saved to check on any erros
+
+- **Warnings:** It will show any input that has no output and viceversa. It might not work as well in some cases (check the changelog)
+
+- **Share your work with others:** Activity bar has now a third tab for external urls (only GitHub and only .sfml and .sfm and folders) and local folders
+
+- **Settings:** Customizations! You can add more content or change some behaviors from the default ones
 
 ## Installation
 

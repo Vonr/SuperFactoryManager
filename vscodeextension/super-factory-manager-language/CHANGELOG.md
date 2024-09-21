@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.0.9]
+
+### Added
+
+- **Settings:** Added settings for activity bar, snippets, error chechink and warning
+
+- **Activity bar:**
+  - Now you can share with others your repo from GitHub with examples!
+  Just go to settings and add a new URL on external URL. Example: `'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/', 'https://github.com/TeamDman/SuperFactoryManager/tree/1.19.2/examples', 'C:\Some cool games\minecraft'`.
+  ‎
+  All of these works
+  ‎
+  - Added the option to change files and folder icons on the activity bar (not on vscode, blame them)
+  ‎
+  - Added the option to disable the activity bar
+  ‎
+- **Error Checking:** Now you do not have to copy and paste the code on your controller to check if you write it correctly, vscode will tell you if everything is right (i hope)
+‎
+It has an setting to disable it, just in case
+‎
+- **Warnings:** Now, it will check if your output has its corresponding input and viceversa.
+It might have some errors when it enconters an IF, for example, if the input is inside the if and the output is outside.
+It can be disable, just in case
+‎
+- **Snippets:** Now, with more customization! You can leave them as normal or go to settings to add a prefix to activate snippets.
+For example, if you want the snippets to activate only when the word starts with /
+With a setting to disable them, just in case
+
 ## [0.0.8]
 
 ### Changes on code
