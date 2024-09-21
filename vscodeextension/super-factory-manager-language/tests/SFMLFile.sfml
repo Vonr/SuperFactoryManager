@@ -1,3 +1,5 @@
+--This file is just to make sure the icon on .sfml file is place correctly
+
 name "hola"
 
 every 20 ticks do

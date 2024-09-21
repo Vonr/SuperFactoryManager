@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
-import axios from 'axios';
-import * as path from 'path';
 import * as fs from 'fs';
-import * as os from 'os';
+
+import { getOpenCommand, SFMLTreeDataProvider } from './SFMLTreeDataProvider';
 
 //Note: it would be faster if we have already on the folder media or similar, but things can change
 // and wanted to make it so its always up-to-date - Titop54
@@ -26,185 +25,33 @@ const tempFiles: Map<string, string> = new Map();
 export async function activityBar(context: vscode.ExtensionContext) 
 {
     const hasSFMLFiles = await checkSFMLFiles();
-    const treeDataProvider = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/src/main/resources/assets/sfm/template_programs');
-    const treeDataProvider2 = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/examples');
-
+    const treeDataProvider = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/src/main/resources/assets/sfm/template_programs', 1);
+    const treeDataProvider2 = new SFMLTreeDataProvider(context, 'https://api.github.com/repos/TeamDman/SuperFactoryManager/contents/examples', 1);
+    const treeDataProvider3 = new SFMLTreeDataProvider(context, '', 0);
     //If we dont have some .sfm or .sfml, we dont want to see the activity bar
     //Only when the extension activates, like some other extensions do (java extension or antlr one)
+    //Dont ask why there 2 openFiles
     if(hasSFMLFiles) 
     {
-        vscode.commands.executeCommand("setContext", "sfml.isActivated", true);
         const view = vscode.window.createTreeView('examplesGames', {
             treeDataProvider: treeDataProvider
         });
         const view2 = vscode.window.createTreeView('examplegithub', {
             treeDataProvider: treeDataProvider2
         });
+        const viewExternal = vscode.window.createTreeView('examplesOthers',{
+            treeDataProvider: treeDataProvider3
+        });
         context.subscriptions.push(view);
         context.subscriptions.push(view2);
+        context.subscriptions.push(viewExternal);
     }
     else
     {
         vscode.commands.executeCommand("setContext", "sfml.isActivated", false);
     }
-
-    const openFileCommand = vscode.commands.registerCommand('extension.openFile', async (file) => {
-        if(file.type === 'dir')
-        {
-            //TODO solve expansion of folder
-            return; 
-        }
-        
-        const tempFilePath = path.join(os.tmpdir(), file.name);
-        if(tempFiles.has(tempFilePath)) //If we have it already, why download again?
-        { 
-            const fileUri = vscode.Uri.file(tempFilePath);
-            const document = await vscode.workspace.openTextDocument(fileUri);
-            vscode.window.showTextDocument(document);
-        }
-        else
-        {
-            try 
-            {
-                const response = await axios.get(file.download_url, {responseType: 'arraybuffer'});
-                fs.writeFileSync(tempFilePath, response.data);
-                tempFiles.set(tempFilePath, tempFilePath);
-
-                const fileUri = vscode.Uri.file(tempFilePath);
-                const document = await vscode.workspace.openTextDocument(fileUri);
-                vscode.window.showTextDocument(document);
-            } 
-            catch (error) 
-            {
-                vscode.window.showErrorMessage(`Error while opening file: ${error}`);
-            }
-        }
-    });
-    context.subscriptions.push(openFileCommand);
-}
-
-class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
-{
-    private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
-    readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
-
-    private context: vscode.ExtensionContext; //Needed for icons
-    private repositoryUrl: string //= ''; // example url
-    private repoFiles: any[] = [];
-
-    constructor(context: vscode.ExtensionContext, url: string) 
-    {
-        this.repositoryUrl = url;
-        this.context = context;
-        this.loadRepoContents();
-    }
-
-    /**
-     * Get the structure of the folder and its files
-     */
-    async loadRepoContents() 
-    {
-        try 
-        {
-            const response = await axios.get(this.repositoryUrl);
-            this.repoFiles = response.data;
-            this._onDidChangeTreeData.fire(undefined); //update view
-        } 
-        catch (error) 
-        {
-            vscode.window.showErrorMessage('Error fetching examples from github');
-        }
-    }
-
-    getTreeItem(element: vscode.TreeItem): vscode.TreeItem 
-    {
-        return element;
-    }
-
-    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> 
-    {
-        if (!element) 
-        {
-            // Separeta files from dir
-            const folders = this.repoFiles.filter(file => file.type === 'dir');
-            const files = this.repoFiles.filter(file => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
     
-            //Folder structure for view
-            const folderItems = folders.map(folder => this.createTreeItem(folder));
-            const fileItems = files.map(file => this.createTreeItem(file));
-    
-            return [...folderItems, ...fileItems];
-    
-            // show first the .sfm and then folder, wip for config
-            // return [...fileItems, ...folderItems];
-        } 
-        else 
-        {
-            // If we find a folder, we want also the files from inside
-            const fileData = this.repoFiles.find(file => file.name === element.label);
-            if (fileData && fileData.type === 'dir') 
-            {
-                const folderContents = await this.loadFolderContents(fileData.url);
-    
-                //Folder structure for view
-                const folders = folderContents.filter((file: { type: string; }) => file.type === 'dir');
-                const files = folderContents.filter((file: { type: string; name: string; }) => file.type !== 'dir' && (file.name.endsWith('.sfm') || file.name.endsWith('.sfml')));
-    
-                const folderItems = folders.map((folder: any) => this.createTreeItem(folder));
-                const fileItems = files.map((file: any) => this.createTreeItem(file));
-    
-                return [...folderItems, ...fileItems];
-    
-                // show first the .sfm and then folder, wip for config
-                // return [...fileItems, ...folderItems];
-            }
-        }
-        return []; //in case we dont have any items but url is good
-    }
-
-    private async loadFolderContents(url: string) 
-    {
-        try 
-        {
-            const response = await axios.get(url);
-            return response.data;
-        } 
-        catch (error) 
-        {
-            vscode.window.showErrorMessage('Error fetching folder contents');
-            return [];
-        }
-    }
-
-    private createTreeItem(file: any): vscode.TreeItem 
-    {
-        const treeItem = new vscode.TreeItem(file.name);
-        if (file.type === 'dir') 
-        {
-            treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-            treeItem.iconPath = {
-                light: vscode.Uri.file(path.join(this.context.extensionPath, 'media', 'tool.png')),
-                dark: vscode.Uri.file(path.join(this.context.extensionPath, 'media', 'tool.png'))
-            };
-        } 
-        else 
-        {
-            treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
-            treeItem.iconPath = {
-                light: vscode.Uri.file(path.join(this.context.extensionPath, 'media', 'exp.png')),
-                dark: vscode.Uri.file(path.join(this.context.extensionPath, 'media', 'exp.png'))
-            };
-        }
-
-        //vscode.open or vscode.diff should be used on command, but we dont have the files downloaded
-        treeItem.command = {
-            command: 'extension.openFile', 
-            title: 'Open File',
-            arguments: [file]
-        };
-
-        return treeItem;
-    }
+    context.subscriptions.push(getOpenCommand(tempFiles));
 }
 
 /**
