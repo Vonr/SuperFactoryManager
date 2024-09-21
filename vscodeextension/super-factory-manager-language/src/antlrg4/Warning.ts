@@ -40,6 +40,9 @@ class InputOutputChecker implements SFMLListener {
 
         const document = activeEditor.document;
 
+        // console.log("Inputs: ", this.inputs);
+        // console.log("Outputs: ", this.outputs);
+
         this.inputs.forEach(input => {
             if (!Array.from(this.outputs).some(output => output.type === input.type)) {
                 const range = this.calculateRange(input, document);
@@ -88,7 +91,7 @@ class InputOutputChecker implements SFMLListener {
         let inputType = ctx.text.match(/(fe|fluid|gas|item)(?:::[^:]*|:[^:*]*:\*|:[^:*]*)/i)?.[1]?.toLowerCase();
         
         // If we dont find anything above, we consider it item::
-        if(!inputType || ctx.text.includes('*')) inputType = 'item';
+        if(!inputType || !ctx.text.includes(":")) inputType = 'item';
 
         if(inputType.startsWith("fluid:")) inputType = "fluid"
         if(inputType.startsWith("fe:")) inputType = "fe"
@@ -109,7 +112,7 @@ class InputOutputChecker implements SFMLListener {
         let outputType = ctx.text.match(/(fe|fluid|gas|item)(?:::[^:]*|:[^:*]*:\*|:[^:*]*)/i)?.[1]?.toLowerCase();
     
         // If we dont find anything above, we consider it item::
-        if(!outputType || ctx.text.includes('*')) outputType = 'item';
+        if(!outputType || !ctx.text.includes(":")) outputType = 'item';
         
         if(outputType.startsWith("fluid:")) outputType = "fluid"
         if(outputType.startsWith("fe:")) outputType = "fe"
