@@ -57,10 +57,11 @@ export class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.Tree
                     this._onDidChangeTreeData.fire(undefined);
                 }
     
-                if(event.affectsConfiguration('sfml.externalURL'))
+                if(event.affectsConfiguration('sfml.externalURLs'))
                 {
                     this.loadSettings();
-                    this.loadSources()
+                    this.loadSources();
+                    this._onDidChangeTreeData.fire(undefined);
                 }
             });
         }
@@ -126,7 +127,7 @@ export class SFMLTreeDataProvider implements vscode.TreeDataProvider<vscode.Tree
         this.localPaths = [];
     
         // Get the externalURL setting value
-        const settingValue = config.get<string>('externalURL', '');
+        const settingValue = config.get<string>('externalURLs', '');
     
         // Parse URLs and local paths from the setting value
         const sources = settingValue.split(',').map(source => source.trim().replace(/^'|'$/g, ''));
