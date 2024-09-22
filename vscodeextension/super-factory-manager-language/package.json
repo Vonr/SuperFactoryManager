@@ -4,7 +4,7 @@
   "description": "Adds language support for the Super Factory Manager Language.",
   "repository": "https://github.com/TeamDman/SuperFactoryManager",
   "publisher": "TeamDman",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "icon": "media/controller.png",
   "main": "./out/extension.js",
   "engines": {
