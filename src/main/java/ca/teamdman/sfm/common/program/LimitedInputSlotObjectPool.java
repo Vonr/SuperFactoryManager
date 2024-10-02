@@ -36,7 +36,7 @@ public class LimitedInputSlotObjectPool {
             var rtn = new LimitedInputSlot<>(label, pos, direction, slot, handler, tracker, stack, type);
             if (LEASED.put(rtn, true) != null) {
                 SFM.LOGGER.warn("new input slot was somehow already leased, this should literally never happen: {}", rtn);
-            };
+            }
             return rtn;
         } else {
             @SuppressWarnings("unchecked") LimitedInputSlot<STACK, ITEM, CAP> obj = pool[index];
@@ -44,7 +44,7 @@ public class LimitedInputSlotObjectPool {
             obj.init(handler, label, pos, direction, slot, tracker, stack, type);
             if (LEASED.put(obj, true) != null) {
                 SFM.LOGGER.warn("tried to lease input slot a second time: {}", obj);
-            };
+            }
             return obj;
         }
     }

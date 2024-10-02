@@ -63,7 +63,7 @@ public class OutputResourceTracker implements Predicate<Object> {
 
     @Override
     public boolean test(Object stack) {
-        return RESOURCE_LIMIT.test(stack) && !EXCLUSIONS.anyMatchStack(stack);
+        return RESOURCE_LIMIT.test(stack) && EXCLUSIONS.noneMatchStack(stack);
     }
 
     public ResourceLimit getLimit() {

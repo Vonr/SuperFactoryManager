@@ -58,8 +58,8 @@ public final class ResourceIdSet implements ASTNode {
         return null;
     }
 
-    public boolean anyMatchStack(Object stack) {
-        return getMatchingFromStack(stack) != null;
+    public boolean noneMatchStack(Object stack) {
+        return getMatchingFromStack(stack) == null;
     }
 
     public boolean anyMatchResourceLocation(ResourceLocation location) {
