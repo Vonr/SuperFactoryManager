@@ -1,11 +1,12 @@
 package ca.teamdman.sfm.gametest.compat.thermal;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.gametest.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.gametest.SFMGameTestBase;
+import cofh.thermal.expansion.block.entity.machine.MachineFurnaceTile;
 import mekanism.common.registries.MekanismBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -13,7 +14,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -26,11 +27,12 @@ import java.util.ArrayList;
 @PrefixGameTestTemplate(false)
 public class SFMThermalCompatGameTests extends SFMGameTestBase {
 
-    @GameTest(template = "25x3x25")
+    @GameTest(template = "25x3x25", timeoutTicks = 20 * 20)
     public static void thermal_furnace_array(GameTestHelper helper) {
         // designate positions
-        var sourceBlocks = new ArrayList<BlockPos>();
-        var destBlocks = new ArrayList<BlockPos>();
+        var furnacePositions = new ArrayList<BlockPos>();
+        var resultChestPositions = new ArrayList<BlockPos>();
+        var ingredientChestPositions = new ArrayList<BlockPos>();
         var managerPos = new BlockPos(0, 2, 0);
         var powerPos = new BlockPos(1, 2, 0);
 
@@ -47,17 +49,28 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
             for (int z = 1; z < 25; z++) {
                 helper.setBlock(new BlockPos(x, 2, z), SFMBlocks.CABLE_BLOCK.get());
                 helper.setBlock(new BlockPos(x, 3, z), furnaceBlock);
-//                MachineFurnaceTile furnace = (MachineFurnaceTile) helper.getBlockEntity(new BlockPos(x, 3, z));
-//                furnace.openGui()
-                sourceBlocks.add(new BlockPos(x, 3, z));
+                furnacePositions.add(new BlockPos(x, 3, z));
+                var furnace = (MachineFurnaceTile) helper.getBlockEntity(new BlockPos(x, 3, z));
+                furnace.setSideConfig(Direction.UP, MachineFurnaceTile.SideConfig.SIDE_INPUT);
+                furnace.setSideConfig(Direction.DOWN, MachineFurnaceTile.SideConfig.SIDE_OUTPUT);
             }
         }
 
         // set up destinations
-        for (int i = 2; i < 3; i++) {
+        for (int i = 2; i <= 3; i++) {
             BlockPos pos = new BlockPos(i, 2, 0);
-            helper.setBlock(pos, Blocks.CHEST);
-            destBlocks.add(pos);
+            helper.setBlock(pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+            resultChestPositions.add(pos);
+        }
+
+        // set up ingredients
+        for (int i = 5; i <= 6; i++) {
+            BlockPos pos = new BlockPos(i, 2, 0);
+            helper.setBlock(pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+            ingredientChestPositions.add(pos);
+            for (int slot = 0; slot < 27; slot++) {
+                getItemHandler(helper, pos).insertItem(slot, new ItemStack(Items.CHICKEN, 64), false);
+            }
         }
 
         // set up the manager
@@ -68,26 +81,38 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "thermal furnace array test"
-                    EVERY 20 TICKS DO
+                    EVERY 5 TICKS DO
                         INPUT forge_energy:forge:energy FROM power NORTH SIDE
-                        OUTPUT forge_energy:forge:energy TO source
+                        OUTPUT forge_energy:forge:energy TO furnaces
                     END
                     EVERY 20 TICKS DO
-                        INPUT FROM source
-                        OUTPUT TO dest TOP SIDE
+                        INPUT FROM ingredients
+                        OUTPUT RETAIN 2 TO EACH furnaces TOP SIDE
+                    FORGET
+                        INPUT FROM furnaces BOTTOM SIDE
+                        OUTPUT TO results TOP SIDE
                     END
                 """;
 
         // set the labels
         LabelPositionHolder.empty()
-                .addAll("source", sourceBlocks.stream().map(helper::absolutePos).toList())
-                .addAll("dest", destBlocks.stream().map(helper::absolutePos).toList())
-                .add("power", powerPos)
+                .addAll("furnaces", furnacePositions.stream().map(helper::absolutePos).toList())
+                .addAll("ingredients", ingredientChestPositions.stream().map(helper::absolutePos).toList())
+                .addAll("results", resultChestPositions.stream().map(helper::absolutePos).toList())
+                .add("power", helper.absolutePos(powerPos))
                 .save(manager.getDisk().get());
 
         // load the program
         manager.setProgram(program.stripIndent());
-        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+        helper.succeedWhen(() -> {
+            // the result chests must be full of cooked chicken
+            for (BlockPos resultChestPosition : resultChestPositions) {
+                boolean hasEnoughChicken = count(getItemHandler(helper, resultChestPosition), Items.COOKED_CHICKEN) >= 64 * 27;
+                if (!hasEnoughChicken) {
+                    helper.fail("Not enough cooked chicken in chest at " + resultChestPosition);
+                }
+            }
+            helper.succeed();
         });
     }
 }
