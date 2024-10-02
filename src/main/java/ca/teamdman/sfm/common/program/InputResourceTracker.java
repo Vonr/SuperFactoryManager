@@ -1,6 +1,5 @@
 package ca.teamdman.sfm.common.program;
 
-import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
@@ -8,21 +7,21 @@ import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
-public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object> {
+public class InputResourceTracker implements Predicate<Object> {
 
-    private final ResourceLimit<STACK, ITEM, CAP> RESOURCE_LIMIT;
+    private final ResourceLimit RESOURCE_LIMIT;
     private final ResourceIdSet EXCLUSIONS;
     private final Int2LongArrayMap RETENTION_OBLIGATIONS = new Int2LongArrayMap();
     private final AtomicLong TRANSFERRED;
     private final AtomicLong RETENTION_OBLIGATION_PROGRESS;
 
     public InputResourceTracker(
-            ResourceLimit<STACK, ITEM, CAP> limit,
+            ResourceLimit resourceLimit,
             ResourceIdSet exclusions,
             AtomicLong transferred,
             AtomicLong retentionObligationProgress
     ) {
-        this.RESOURCE_LIMIT = limit;
+        this.RESOURCE_LIMIT = resourceLimit;
         this.EXCLUSIONS = exclusions;
         this.TRANSFERRED = transferred;
         this.RETENTION_OBLIGATION_PROGRESS = retentionObligationProgress;
@@ -48,7 +47,7 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
         this.RETENTION_OBLIGATIONS.merge(slot, promise, Long::sum);
     }
 
-    public ResourceLimit<STACK, ITEM, CAP> getResourceLimit() {
+    public ResourceLimit getResourceLimit() {
         return RESOURCE_LIMIT;
     }
 
@@ -62,12 +61,11 @@ public class InputResourceTracker<STACK, ITEM, CAP> implements Predicate<Object>
 
     @Override
     public boolean test(Object stack) {
-        return RESOURCE_LIMIT.test(stack) && !EXCLUSIONS.test(stack);
+        return RESOURCE_LIMIT.test(stack) && !EXCLUSIONS.anyMatchStack(stack);
     }
 
     public boolean matchesCapabilityType(Object capability) {
-        ResourceType<STACK, ITEM, CAP> resourceType = RESOURCE_LIMIT.resourceId().getResourceType();
-        return resourceType != null && resourceType.matchesCapabilityType(capability);
+        return RESOURCE_LIMIT.resourceIds().getReferencedResourceTypes().anyMatch(rt -> rt.matchesCapabilityType(capability));
     }
 
     @Override

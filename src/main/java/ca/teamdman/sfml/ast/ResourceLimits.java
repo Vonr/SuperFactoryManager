@@ -10,45 +10,44 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public record ResourceLimits(
-        List<? extends ResourceLimit<?, ?, ?>> resourceLimits,
+        List<ResourceLimit> resourceLimitList,
         ResourceIdSet exclusions
 ) implements ASTNode {
-    public List<InputResourceTracker<?, ?, ?>> createInputTrackers() {
-        List<InputResourceTracker<?, ?, ?>> rtn = new ArrayList<>();
-        resourceLimits.forEach(rl -> rl.gatherInputTrackers(rtn::add, exclusions));
+    public List<InputResourceTracker> createInputTrackers() {
+        List<InputResourceTracker> rtn = new ArrayList<>();
+        resourceLimitList.forEach(rl -> rl.gatherInputTrackers(rtn::add, exclusions));
         return rtn;
     }
 
-    public List<OutputResourceTracker<?, ?, ?>> createOutputTrackers() {
-        List<OutputResourceTracker<?, ?, ?>> rtn = new ArrayList<>();
-        resourceLimits.forEach(rl -> rl.gatherOutputTrackers(rtn::add, exclusions));
+    public List<OutputResourceTracker> createOutputTrackers() {
+        List<OutputResourceTracker> rtn = new ArrayList<>();
+        resourceLimitList.forEach(rl -> rl.gatherOutputTrackers(rtn::add, exclusions));
         return rtn;
     }
 
     public ResourceLimits withDefaultLimit(Limit limit) {
-        return new ResourceLimits(resourceLimits.stream().map(il -> il.withDefaultLimit(limit)).toList(), exclusions);
+        return new ResourceLimits(resourceLimitList.stream().map(il -> il.withDefaultLimit(limit)).toList(), exclusions);
     }
 
     public ResourceLimits withExclusions(ResourceIdSet exclusions) {
-        return new ResourceLimits(resourceLimits, exclusions);
+        return new ResourceLimits(resourceLimitList, exclusions);
     }
 
     @SuppressWarnings("rawtypes")
     public Stream<ResourceType> getReferencedResourceTypes() {
-        return resourceLimits()
+        return resourceLimitList()
                 .stream()
-                .map(ResourceLimit::resourceId)
-                .map((ResourceIdentifier x) -> x.getResourceType())
+                .flatMap(resourceLimits -> resourceLimits.resourceIds().getReferencedResourceTypes())
                 .distinct();
     }
 
     @Override
     public String toString() {
-        String rtn = this.resourceLimits.stream()
+        String rtn = this.resourceLimitList.stream()
                 .map(ResourceLimit::toString)
                 .collect(Collectors.joining(",\n"));
-        if (!exclusions.resourceIds().isEmpty()) {
-            rtn += "\nEXCEPT\n" + exclusions.resourceIds().stream()
+        if (!exclusions.isEmpty()) {
+            rtn += "\nEXCEPT\n" + exclusions.stream()
                     .map(ResourceIdentifier::toString)
                     .collect(Collectors.joining(",\n"));
         }
@@ -56,12 +55,12 @@ public record ResourceLimits(
     }
 
     public String toStringPretty(Limit defaults) {
-        String rtn = resourceLimits.stream()
+        String rtn = resourceLimitList.stream()
                 .map(rl -> rl.toStringCondensed(defaults))
-                .map(x -> resourceLimits.size() == 1 ? x : x + ",")
+                .map(x -> resourceLimitList.size() == 1 ? x : x + ",")
                 .collect(Collectors.joining("\n"));
-        if (!exclusions.resourceIds().isEmpty()) {
-            rtn += "\nEXCEPT\n" + exclusions.resourceIds().stream()
+        if (!exclusions.isEmpty()) {
+            rtn += "\nEXCEPT\n" + exclusions.stream()
                     .map(ResourceIdentifier::toStringCondensed)
                     .collect(Collectors.joining(",\n"));
         }

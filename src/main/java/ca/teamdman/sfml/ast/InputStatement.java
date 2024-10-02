@@ -85,7 +85,7 @@ public final class InputStatement implements IOStatement {
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
 
             // create a single matcher to be shared by all capabilities
-            List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
+            List<InputResourceTracker> inputTrackers = resourceLimits.createInputTrackers();
             for (var type : referencedResourceTypes) {
                 // log gather for resource type
                 context
@@ -121,7 +121,7 @@ public final class InputStatement implements IOStatement {
                 // gather slots for each capability found for positions tagged by a provided label
                 Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
                 type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
-                    List<InputResourceTracker<?, ?, ?>> inputTrackers = resourceLimits.createInputTrackers();
+                    List<InputResourceTracker> inputTrackers = resourceLimits.createInputTrackers();
                     gatherSlotsForCap(
                             context,
                             (ResourceType<Object, Object, Object>) type,
@@ -205,7 +205,7 @@ public final class InputStatement implements IOStatement {
         }
     }
 
-    public void freeSlotsIf(Predicate<LimitedInputSlot<?,?,?>> condition) {
+    public void freeSlotsIf(Predicate<LimitedInputSlot<?, ?, ?>> condition) {
         if (limitedInputSlotsCache != null) {
             Iterator<LimitedInputSlot<?, ?, ?>> iterator = limitedInputSlotsCache.iterator();
             while (iterator.hasNext()) {
@@ -238,7 +238,7 @@ public final class InputStatement implements IOStatement {
             BlockPos pos,
             Direction direction,
             CAP capability,
-            List<InputResourceTracker<?, ?, ?>> trackers,
+            List<InputResourceTracker> trackers,
             Consumer<LimitedInputSlot<?, ?, ?>> acceptor
     ) {
         context
@@ -250,7 +250,7 @@ public final class InputStatement implements IOStatement {
             if (labelAccess.slots().contains(slot)) {
                 STACK stack = type.getStackInSlot(capability, slot);
                 if (shouldCreateSlot(type, stack)) {
-                    for (InputResourceTracker<?, ?, ?> tracker : trackers) {
+                    for (InputResourceTracker tracker : trackers) {
                         if (tracker.matchesCapabilityType(capability) && tracker.test(stack)) {
                             context
                                     .getLogger()
@@ -259,11 +259,11 @@ public final class InputStatement implements IOStatement {
                                             stack,
                                             tracker.toString()
                                     )));
-                            //noinspection unchecked
                             acceptor.accept(LimitedInputSlotObjectPool.acquire(
                                     label, pos, direction, slot, capability,
-                                    (InputResourceTracker<STACK, ITEM, CAP>) tracker,
-                                    stack
+                                    tracker,
+                                    stack,
+                                    type
                             ));
                         }
                     }

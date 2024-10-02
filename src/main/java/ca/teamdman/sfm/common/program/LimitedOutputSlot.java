@@ -19,7 +19,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
     public int slot;
     public boolean freed;
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
-    public OutputResourceTracker<STACK, ITEM, CAP> tracker;
+    public OutputResourceTracker tracker;
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     private Direction direction;
     private @Nullable STACK stackInSlotCache = null;
@@ -30,10 +30,11 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
             Direction direction,
             int slot,
             CAP handler,
-            OutputResourceTracker<STACK, ITEM, CAP> tracker,
-            STACK stack
+            OutputResourceTracker tracker,
+            STACK stack,
+            ResourceType<STACK, ITEM, CAP> type
     ) {
-        this.init(handler, label, pos, direction, slot, tracker, stack);
+        this.init(handler, label, pos, direction, slot, tracker, stack, type);
     }
 
     public boolean isDone() {
@@ -67,17 +68,18 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         return type.insert(handler, slot, stack, simulate);
     }
 
+    @SuppressWarnings("DuplicatedCode")
     public void init(
             CAP handler,
             Label label,
             BlockPos pos,
             Direction direction,
             int slot,
-            OutputResourceTracker<STACK, ITEM, CAP> tracker,
-            STACK stack
+            OutputResourceTracker tracker,
+            STACK stack,
+            ResourceType<STACK, ITEM, CAP> type
     ) {
         this.stackInSlotCache = stack;
-
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
@@ -85,12 +87,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         this.label = label;
         this.direction = direction;
         this.freed = false;
-
-        //noinspection DataFlowIssue
-        this.type = tracker.getLimit().resourceId().getResourceType();
-        if (type == null) {
-            throw new NullPointerException("type");
-        }
+        this.type = type;
     }
 
     @Override

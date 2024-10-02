@@ -203,21 +203,21 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
                     NAME "thermal phyto array test"
                     EVERY 20 TICKS DO
                         INPUT *seed* FROM seeds
-                        OUTPUT RETAIN 2 EACH *seed* TO phytos TOP SIDE
+                        OUTPUT RETAIN 2 EACH *seed* TO phytos TOP SIDE SLOTS 0
                     FORGET
                         INPUT FROM seeds
-                        OUTPUT RETAIN 2 phytogro TO EACH phytos TOP SIDE
+                        OUTPUT RETAIN 2 phytogro TO EACH phytos TOP SIDE SLOTS 1
                     FORGET
                         INPUT fluid:: FROM water TOP SIDE
                         OUTPUT fluid:: TO phytos TOP SIDE
                     FORGET
-                        INPUT FROM phytos BOTTOM SIDE
+                        INPUT FROM phytos BOTTOM SIDE SLOTS 2-5
                         OUTPUT TO results TOP SIDE
                     FORGET
                         INPUT forge_energy:forge:energy FROM power NORTH SIDE
                         OUTPUT forge_energy:forge:energy TO phytos
                     END
-                """;
+                """.stripTrailing().stripIndent();
 
         // set the labels
         LabelPositionHolder.empty()

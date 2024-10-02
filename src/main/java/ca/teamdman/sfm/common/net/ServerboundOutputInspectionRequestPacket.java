@@ -195,18 +195,18 @@ public record ServerboundOutputInspectionRequestPacket(
                                         .toList(),
                                 ResourceIdSet.EMPTY
                         );
-                        List<ResourceLimit<?, ?, ?>> condensedResourceLimitList = new ArrayList<>();
-                        for (ResourceLimit<?, ?, ?> resourceLimit : resourceLimits.resourceLimits()) {
+                        List<ResourceLimit> condensedResourceLimitList = new ArrayList<>();
+                        for (ResourceLimit resourceLimit : resourceLimits.resourceLimitList()) {
                             // check if an existing resource limit has the same resource identifier
                             condensedResourceLimitList
                                     .stream()
                                     .filter(x -> x
-                                            .resourceId()
-                                            .equals(resourceLimit.resourceId()))
+                                            .resourceIds()
+                                            .equals(resourceLimit.resourceIds()))
                                     .findFirst()
                                     .ifPresentOrElse(found -> {
                                         int i = condensedResourceLimitList.indexOf(found);
-                                        ResourceLimit<?, ?, ?> newLimit = found.withLimit(new Limit(
+                                        ResourceLimit newLimit = found.withLimit(new Limit(
                                                 found
                                                         .limit()
                                                         .quantity()
@@ -218,30 +218,33 @@ public record ServerboundOutputInspectionRequestPacket(
                         }
                         {
                             // prune items not covered by the output resource limits
-                            ListIterator<ResourceLimit<?, ?, ?>> iter = condensedResourceLimitList.listIterator();
+                            ListIterator<ResourceLimit> iter = condensedResourceLimitList.listIterator();
                             while (iter.hasNext()) {
-                                ResourceLimit<?, ?, ?> resourceLimit = iter.next();
+                                ResourceLimit resourceLimit = iter.next();
+                                if (resourceLimit.resourceIds().size() != 1) {
+                                    throw new IllegalStateException("Expected resource limit to have exactly one resource id");
+                                }
+                                ResourceIdentifier<?,?,?> resourceId = resourceLimit.resourceIds().stream().iterator().next();
+
                                 // because these resource limits were generated from resource stacks
                                 // they should always be valid resource locations (not patterns)
                                 ResourceLocation resourceLimitLocation = new ResourceLocation(
-                                        resourceLimit.resourceId().resourceNamespace,
-                                        resourceLimit.resourceId().resourceName
+                                        resourceId.resourceNamespace,
+                                        resourceId.resourceName
                                 );
                                 long accept = outputStatement
                                         .resourceLimits()
-                                        .resourceLimits()
+                                        .resourceLimitList()
                                         .stream()
                                         .filter(outputResourceLimit -> outputResourceLimit
-                                                                               .resourceId()
-                                                                               .matchesStack(
-                                                                                       resourceLimitLocation)
+                                                                               .resourceIds()
+                                                                               .anyMatchResourceLocation(resourceLimitLocation)
                                                                        && outputStatement
                                                                                .resourceLimits()
                                                                                .exclusions()
-                                                                               .resourceIds()
                                                                                .stream()
                                                                                .noneMatch(
-                                                                                       exclusion -> exclusion.matchesStack(
+                                                                                       exclusion -> exclusion.matchesResourceLocation(
                                                                                                resourceLimitLocation)))
                                         .mapToLong(rl -> rl.limit().quantity().number().value())
                                         .max()
@@ -269,7 +272,7 @@ public record ServerboundOutputInspectionRequestPacket(
                                 ResourceIdSet.EMPTY
                         );
                     }
-                    if (condensedResourceLimits.resourceLimits().isEmpty()) {
+                    if (condensedResourceLimits.resourceLimitList().isEmpty()) {
                         branchPayload.append("none\n");
                     } else {
                         branchPayload
@@ -295,7 +298,7 @@ public record ServerboundOutputInspectionRequestPacket(
         return payload.toString().strip();
     }
 
-    private static <STACK, ITEM, CAP> ResourceLimit<STACK, ITEM, CAP> getSlotResource(
+    private static <STACK, ITEM, CAP> ResourceLimit getSlotResource(
             LimitedInputSlot<STACK, ITEM, CAP> limitedInputSlot
     ) {
         ResourceType<STACK, ITEM, CAP> resourceType = limitedInputSlot.type;
@@ -324,10 +327,10 @@ public record ServerboundOutputInspectionRequestPacket(
                 stackId.getNamespace(),
                 stackId.getPath()
         );
-        return new ResourceLimit<>(
-                resourceIdentifier,
+        return new ResourceLimit(
+                new ResourceIdSet(List.of(resourceIdentifier)),
                 amountLimit,
-                resourceIdentifier.getDefaultWith()
+                With.ALWAYS_TRUE
         );
     }
 }

@@ -2,9 +2,9 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-public record WithTag<STACK>(TagMatcher tagMatcher) implements ASTNode, WithClause<STACK> {
+public record WithTag(TagMatcher tagMatcher) implements ASTNode, WithClause {
     @Override
-    public boolean test(
+    public <STACK> boolean test(
             ResourceType<STACK, ?, ?> resourceType,
             STACK stack
     ) {

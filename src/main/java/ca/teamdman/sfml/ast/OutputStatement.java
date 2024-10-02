@@ -337,7 +337,7 @@ public class OutputStatement implements IOStatement {
         if (!each) {
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
             // create a single matcher to be shared by all capabilities
-            List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
+            List<OutputResourceTracker> outputTracker = resourceLimits.createOutputTrackers();
             for (var type : (Iterable<ResourceType>) types::iterator) {
                 context
                         .getLogger()
@@ -368,7 +368,7 @@ public class OutputStatement implements IOStatement {
                                 type.displayAsCapabilityClass()
                         )));
                 type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
-                    List<OutputResourceTracker<?, ?, ?>> outputTracker = resourceLimits.createOutputTrackers();
+                    List<OutputResourceTracker> outputTracker = resourceLimits.createOutputTrackers();
                     gatherSlotsForCap(
                             context,
                             (ResourceType<Object, Object, Object>) type,
@@ -449,7 +449,7 @@ public class OutputStatement implements IOStatement {
             BlockPos pos,
             Direction direction,
             CAP capability,
-            List<OutputResourceTracker<?, ?, ?>> trackers,
+            List<OutputResourceTracker> trackers,
             Consumer<LimitedOutputSlot<?, ?, ?>> acceptor
     ) {
         context
@@ -460,12 +460,9 @@ public class OutputStatement implements IOStatement {
             if (labelAccess.slots().contains(slot)) {
                 STACK stack = type.getStackInSlot(capability, slot);
                 boolean shouldCreateSlot = shouldCreateSlot(type, capability, stack, slot);
-                //noinspection rawtypes
                 for (OutputResourceTracker tracker : trackers) {
-                    // we don't also test the tracker because we can deposit into empty slots
                     if (tracker.matchesCapabilityType(capability)) {
                         //always update retention observations even if !shouldCreateSlot
-                        //noinspection unchecked
                         tracker.updateRetentionObservation(type, stack);
 
                         if (shouldCreateSlot) {
@@ -476,15 +473,15 @@ public class OutputStatement implements IOStatement {
                                             stack,
                                             tracker.toString()
                                     )));
-                            //noinspection unchecked
                             acceptor.accept(LimitedOutputSlotObjectPool.acquire(
                                     label,
                                     pos,
                                     direction,
                                     slot,
                                     capability,
-                                    (OutputResourceTracker<STACK, ITEM, CAP>) tracker,
-                                    stack
+                                    tracker,
+                                    stack,
+                                    type
                             ));
                         } else {
                             context
@@ -518,6 +515,7 @@ public class OutputStatement implements IOStatement {
         // we check the stack limit on the capability
         // this is to accommodate drawers/bins/barrels/black hole units/whatever
         // those blocks hold many more items than normal in a single stack
+        // we don't also test the tracker because we can deposit into empty slots
         return type.getAmount(stack) < type.getMaxStackSizeForSlot(cap, slot);
     }
 }

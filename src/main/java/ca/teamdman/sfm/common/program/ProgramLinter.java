@@ -93,12 +93,12 @@ public class ProgramLinter {
     ) {
         boolean smells = statement
                 .resourceLimits()
-                .resourceLimits()
+                .resourceLimitList()
                 .stream()
                 .anyMatch(rl -> rl.limit().quantity().idExpansionBehaviour()
                                 == ResourceQuantity.IdExpansionBehaviour.EXPAND && !rl
-                        .resourceId()
-                        .usesRegex());
+                        .resourceIds()
+                        .couldMatchMoreThanOne());
         if (smells) {
             warnings.add(PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN.get(statement.toStringPretty()));
         }

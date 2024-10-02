@@ -198,10 +198,10 @@ public class SFMUtils {
                 stackId.getNamespace(),
                 stackId.getPath()
         );
-        ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
-                resourceIdentifier,
+        ResourceLimit resourceLimit = new ResourceLimit(
+                new ResourceIdSet(List.of(resourceIdentifier)),
                 limit,
-                resourceIdentifier.getDefaultWith()
+                With.ALWAYS_TRUE
         );
         ResourceLimits resourceLimits = new ResourceLimits(
                 List.of(resourceLimit),

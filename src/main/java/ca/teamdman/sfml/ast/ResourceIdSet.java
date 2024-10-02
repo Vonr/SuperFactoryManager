@@ -1,32 +1,97 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.function.Predicate;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public record ResourceIdSet(
-        LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds
-) implements ASTNode, Predicate<Object> {
-    public ResourceIdSet(Collection<ResourceIdentifier<?,?,?>> contents) {
+/**
+ * A read-only set of {@link ResourceIdentifier} objects.
+ * Do NOT modify this after creation since the cache of resource types will become inaccurate.
+ */
+public final class ResourceIdSet implements ASTNode {
+    public static final ResourceIdSet EMPTY = new ResourceIdSet(new LinkedHashSet<>());
+    public static final ResourceIdSet MATCH_ALL = new ResourceIdSet(new LinkedHashSet<>(List.of(ResourceIdentifier.MATCH_ALL)));
+    private final LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds;
+
+    public ResourceIdSet(Collection<ResourceIdentifier<?, ?, ?>> contents) {
         this(new LinkedHashSet<>(contents));
     }
-    public static final ResourceIdSet EMPTY = new ResourceIdSet(new LinkedHashSet<>());
 
-    @Override
-    public boolean test(Object stack) {
+    @SuppressWarnings("rawtypes")
+    public Stream<ResourceType> getReferencedResourceTypes() {
+        return this.stream()
+                .map((ResourceIdentifier x) -> x.getResourceType())
+                .distinct();
+    }
+
+    public boolean couldMatchMoreThanOne() {
+        return resourceIds.size() > 1 || stream().anyMatch(ResourceIdentifier::usesRegex);
+    }
+
+    public int size() {
+        return resourceIds.size();
+    }
+
+    public boolean isEmpty() {
+        return resourceIds.isEmpty();
+    }
+
+    public ResourceIdSet(
+            LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds
+    ) {
+        this.resourceIds = resourceIds;
+    }
+
+    public @Nullable ResourceIdentifier<?, ?, ?> getMatchingFromStack(Object stack) {
         for (ResourceIdentifier<?, ?, ?> entry : resourceIds) {
             if (entry.test(stack)) {
-                return true;
+                return entry;
             }
         }
-        return false;
+        return null;
+    }
+
+    public boolean anyMatchStack(Object stack) {
+        return getMatchingFromStack(stack) != null;
+    }
+
+    public boolean anyMatchResourceLocation(ResourceLocation location) {
+        return resourceIds.stream().anyMatch(x -> x.matchesResourceLocation(location));
     }
 
     @Override
     public String toString() {
         return "ResourceIdSet{" +
-               resourceIds.stream().map(ResourceIdentifier::toStringCondensed).collect(Collectors.joining(", ")) +
+               resourceIds.stream().map(ResourceIdentifier::toString).collect(Collectors.joining(", ")) +
                '}';
     }
+
+    public String toStringCondensed() {
+        return resourceIds.stream().map(ResourceIdentifier::toStringCondensed).collect(Collectors.joining(" OR "));
+    }
+
+    public Stream<ResourceIdentifier<?,?,?>> stream() {
+        return resourceIds.stream();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (ResourceIdSet) obj;
+        return Objects.equals(this.resourceIds, that.resourceIds);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(resourceIds);
+    }
+
 }
