@@ -198,6 +198,14 @@ fn load_recipes(jei_folder: &str) -> Vec<Recipe> {
 }
 
 fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<ProcessedRecipe> {
+    let allowed_recipe_types: HashSet<String> = [
+        // 
+        // "minecraft:crafting"
+        // 
+        ]
+        .into_iter()
+        .map(|s: &str| s.to_owned())
+        .collect::<HashSet<String>>();
     let disallowed_recipe_types = [
         "jei:information",
         "ftbquests:quest",
@@ -210,9 +218,16 @@ fn process_recipes(recipes: &[Recipe], item_map: &HashMap<String, f32>) -> Vec<P
     .into_iter()
     .map(|s| s.to_owned())
     .collect::<HashSet<String>>();
+
     let recipes = recipes
         .par_iter()
         .filter_map(|recipe| {
+            // if allowed_recipe_types.is_empty()
+            //     && disallowed_recipe_types.contains(&recipe.recipe_type_id)
+            //     || !allowed_recipe_types.contains(&recipe.recipe_type_id)
+            // {
+            //     return None;
+            // }
             if disallowed_recipe_types.contains(&recipe.recipe_type_id) {
                 return None;
             }
@@ -320,7 +335,10 @@ pub fn get_data() -> ProcessedData {
         load_processed_data(&processed_file)
     } else {
         println!("Performing first time data processing");
-        let items_json = include_str!("../../items.json");
+        // let items_json = include_str!("../../items.json");
+        let items_json = include_str!(
+            r#"C:\Users\TeamD\AppData\Roaming\PrismLauncher\instances\Project Architect 2\minecraft\sfm\items.json"#
+        );
 
         let mut items: Vec<Item> = serde_json::from_str(items_json).unwrap();
         calculate_emc(&mut items);
@@ -330,7 +348,9 @@ pub fn get_data() -> ProcessedData {
             .filter_map(|item| item.emc.map(|emc| (item.id.clone(), emc)))
             .collect();
 
-        let raw_recipes = load_recipes("../jei");
+        let raw_recipes = load_recipes(
+            r#"C:\Users\TeamD\AppData\Roaming\PrismLauncher\instances\Project Architect 2\minecraft\sfm\jei"#,
+        );
         let processed_recipes = process_recipes(&raw_recipes, &item_map);
         println!(
             "Reduced recipes from {} to {}",
@@ -349,7 +369,7 @@ pub fn get_data() -> ProcessedData {
         rtn
     };
     assert!(rtn.items.len() > 1_000);
-    assert!(rtn.recipes.len() > 10_000);
+    assert!(rtn.recipes.len() > 1_000);
     println!(
         "Prepared data in {:?}, got {} items and {} recipes",
         start.elapsed(),
