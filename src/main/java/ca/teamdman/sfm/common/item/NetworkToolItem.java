@@ -11,6 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
@@ -32,7 +33,7 @@ public class NetworkToolItem extends Item {
 
     @Override
     public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext pContext) {
-        if (pContext.getLevel().isClientSide) return InteractionResult.SUCCESS;
+        if (pContext.getLevel().isClientSide || pContext.getHand() == InteractionHand.OFF_HAND) return InteractionResult.SUCCESS;
 
         PacketDistributor.sendToServer(new ServerboundNetworkToolUsePacket(
                 pContext.getClickedPos(),

@@ -2,20 +2,24 @@ package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.screen.*;
+import ca.teamdman.sfm.client.model.CableBlockModelWrapper;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
+import ca.teamdman.sfm.client.render.CableFacadeBlockColor;
 import ca.teamdman.sfm.client.render.FormItemExtensions;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
+import ca.teamdman.sfm.common.block.CableBlock;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.net.ServerboundManagerLogDesireUpdatePacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMPackets;
+import ca.teamdman.sfm.common.util.FacadeType;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -25,9 +29,10 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.apache.commons.lang3.NotImplementedException;
@@ -149,5 +154,28 @@ public class ClientStuff {
 //            Minecraft.getInstance().keyboardHandler.setClipboard(content);
 //            SFM.LOGGER.info("Copied {} characters to clipboard", content.length());
 //        }
+    }
+
+    @SubscribeEvent
+    public static void onModelBakeEvent(ModelEvent.ModifyBakingResult event) {
+        event.getModels().computeIfPresent(
+                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_BLOCK.get().defaultBlockState()),
+                (location, model) -> new CableBlockModelWrapper(model)
+        );
+        event.getModels().computeIfPresent(
+                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_BLOCK.get().defaultBlockState()
+                        .setValue(CableBlock.FACADE_TYPE_PROP, FacadeType.OPAQUE_FACADE)),
+                (location, model) -> new CableBlockModelWrapper(model)
+        );
+        event.getModels().computeIfPresent(
+                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_BLOCK.get().defaultBlockState()
+                        .setValue(CableBlock.FACADE_TYPE_PROP, FacadeType.TRANSLUCENT_FACADE)),
+                (location, model) -> new CableBlockModelWrapper(model)
+        );
+    }
+
+    @SubscribeEvent
+    public static void registerBlockColor(RegisterColorHandlersEvent.Block event) {
+        event.register(new CableFacadeBlockColor(), SFMBlocks.CABLE_BLOCK.get());
     }
 }
