@@ -58,7 +58,6 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(left.getStackInSlot(0).isEmpty(), "Contents did not depart properly");
             assertTrue(right.getStackInSlot(0).getCount() == 64, "Contents did not arrive");
-            helper.succeed();
         });
     }
 
@@ -102,7 +101,7 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(left.getStackInSlot(0).getCount() == 5_000 - 64, "Contents did not depart properly");
             assertTrue(right.getStackInSlot(0).getCount() == 5_000 + 64, "Contents did not arrive");
-            helper.succeed();
+            
         });
     }
 
@@ -153,7 +152,6 @@ public class SFMIndustrialForegoingCompatGameTests extends SFMGameTestBase {
             // this test should cause a stack of 64 to be used to insert even though only 1 is needed to finish filling
             assertTrue(left.getStackInSlot(0).getCount() == 1, "Contents did not depart properly");
             assertTrue(right.getStackInSlot(0).getCount() == fullCount, "Contents did not arrive");
-            helper.succeed();
         });
     }
 

@@ -111,7 +111,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt did not move");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt did not move");
-            helper.succeed();
         });
     }
 
@@ -160,7 +159,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 }
             }
             assertTrue(total == count, "Dirt did not arrive");
-            helper.succeed();
         });
     }
 
@@ -231,7 +229,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 }
             }
             assertTrue(total == 64, "Dirt did not arrive properly 2");
-            helper.succeed();
         });
     }
 
@@ -265,7 +262,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 5, "Dirt did not move");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64 - 5, "Dirt did not move");
-            helper.succeed();
         });
     }
 
@@ -309,7 +305,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(1).getCount() == 64 - 10, "Stone did not retain");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 2, "Iron ingots did not move");
             assertTrue(rightChest.getStackInSlot(1).getCount() == 10, "Stone did not move");
-            helper.succeed();
         });
     }
 
@@ -353,7 +348,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                          && s.getValue(LayeredCauldronBlock.LEVEL) == 3,
                     () -> "cauldron didn't fill"
             );
-            helper.succeed();
+
         });
     }
 
@@ -392,7 +387,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(right, s -> s.getBlock() == Blocks.LAVA_CAULDRON, () -> "cauldron didn't fill");
-            helper.succeed();
+
         });
     }
 
@@ -451,7 +446,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(endChest.getItem(0).getCount() == 64, "Items did not move");
             // ensure item left
             assertTrue(startChest.getItem(0).isEmpty(), "Items did not leave");
-            helper.succeed();
+
         });
     }
 
@@ -513,7 +508,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             Container rightChest = (Container) helper.getBlockEntity(right);
             assertTrue(rightChest.getItem(0).getCount() == 64, "Items did not move");
 
-            helper.succeed();
+
         });
     }
 
@@ -784,7 +779,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(right, s -> s.getBlock() == Blocks.LAVA_CAULDRON, () -> "cauldron didn't fill");
-            helper.succeed();
+
         });
     }
 
@@ -830,7 +825,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(IntStream
                                .range(0, rightChest.getSlots())
                                .allMatch(slot -> rightChest.getStackInSlot(slot).isEmpty()), "Chest b is not empty");
-            helper.succeed();
+
         });
     }
 
@@ -1840,7 +1835,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -1877,7 +1872,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -1914,7 +1909,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -1957,7 +1952,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron did not arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold did not arrive");
             assertTrue(count(rightChest, Items.NETHERITE_INGOT) == 2, "Netherite did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2000,7 +1995,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.GOLD_INGOT) == 0, "Gold did not move");
             assertTrue(count(rightChest, Items.IRON_INGOT) == 0, "Iron arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2043,7 +2038,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.GOLD_INGOT) == 2, "Gold did not move");
             assertTrue(count(rightChest, Items.IRON_INGOT) == 0, "Iron arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 0, "Gold arrived");
-            helper.succeed();
+
         });
     }
 
@@ -2089,7 +2084,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.IRON_INGOT) == 62, "Iron did not arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 62, "Gold did not arrive");
             assertTrue(count(rightChest, Items.NETHERITE_INGOT) == 62, "Netherite did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2133,7 +2128,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron did not arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold did not arrive");
             assertTrue(count(rightChest, Items.NETHERITE_INGOT) == 2, "Netherite did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2174,7 +2169,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.GOLD_INGOT) == 1, "Gold did not move");
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 1, "Gold did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2215,7 +2210,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.GOLD_INGOT) == 6, "Gold depart fail");
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron arrive fail");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold arrive fail");
-            helper.succeed();
+
         });
     }
 
@@ -2259,7 +2254,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron did not arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold did not arrive");
             assertTrue(count(rightChest, Items.NETHERITE_INGOT) == 2, "Netherite did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2342,7 +2337,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             for (int i = 0; i < found.length; i++) {
                 assertTrue(found[i] == 1, "Expected " + expected[i] + " to be 1, but was " + found[i]);
             }
-            helper.succeed();
+
         });
     }
 
@@ -2381,7 +2376,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "Dirt should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "Dirt should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2422,7 +2417,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "Dirt should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "Dirt should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2466,7 +2461,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(1).getCount() == 64, "Iron ingots should not depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.DIRT, "Dirt should arrive in type");
-            helper.succeed();
+
         });
     }
 
@@ -2505,7 +2500,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64 - 10, "did not remain");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 10, "did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2543,7 +2538,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
-            helper.succeed();
+
         });
     }
 
@@ -2581,7 +2576,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
-            helper.succeed();
+
         });
     }
 
@@ -2619,7 +2614,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
-            helper.succeed();
+
         });
     }
 
@@ -2670,7 +2665,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             int count2 = count(dest2Inv, Items.DIRT);
             assertTrue(count1 == 128 && count2 == 0 || count1 == 0 && count2 == 128, "first tick arrival count bad");
 
-            helper.succeed();
+
         });
     }
 
@@ -2739,7 +2734,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                            (a1Count == 0 && a2Count == 0 && b1Count == 128 && b2Count == 0) ||
                            (a1Count == 0 && a2Count == 0 && b1Count == 0 && b2Count == 128);
             assertTrue(good, "first tick arrival count bad");
-            helper.succeed();
+
         });
     }
 
@@ -2832,7 +2827,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(a2, Items.DIRT) == 128, "a2 arrival count bad");
             assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
             assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
-            helper.succeed();
+
         });
     }
 
@@ -2868,7 +2863,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(!leftChest.getStackInSlot(0).isEmpty(), "Dirt should not move");
             assertTrue(rightChest.getStackInSlot(0).getCount() != 64, "Dirt should not move");
-            helper.succeed();
+
         });
     }
 
@@ -2908,7 +2903,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(rightChest.getStackInSlot(0).getCount() == 63, "Dirt slot 0 must arrive");
             assertTrue(rightChest.getStackInSlot(1).getCount() == 1, "Dirt slot 1 must arrive");
             assertTrue(rightChest.getStackInSlot(2).isEmpty(), "Dirt slot 2 must not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -3495,7 +3490,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.STONE) == 64, "stone should remain");
             assertTrue(count(rightChest, Items.DIRT) == 64 * 2, "dirt should arrive");
             assertTrue(count(rightChest, Items.STONE) == 0, "stone should not arrive");
-            helper.succeed();
         });
     }
 
@@ -3574,7 +3568,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 //            assertTrue(count(leftChest, Items.STONE) == 64, "stone should remain");
 //            assertTrue(count(rightChest, Items.DIRT) == 64, "dirt should arrive");
 //            assertTrue(count(rightChest, Items.STONE) == 0, "stone should not arrive");
-//            helper.succeed();
 //        });
 //    }
 

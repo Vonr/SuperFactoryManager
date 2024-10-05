@@ -166,7 +166,6 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     rightTank.getInfusionTank().getStack().getAmount() == ChemicalTankTier.ULTIMATE.getStorage(),
                     "Contents did not arrive"
             );
-            helper.succeed();
         });
     }
 
@@ -207,7 +206,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             assertTrue(left.getBinSlot().getCount() == BinTier.ULTIMATE.getStorage() - 64, "Contents did not depart");
             assertTrue(right.getBinSlot().getCount() == 64, "Contents did not arrive");
             assertTrue(right.getBinSlot().getStack().getItem() == Items.COAL, "Contents wrong type");
-            helper.succeed();
+            
         });
     }
 
@@ -248,7 +247,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             assertTrue(left.getBinSlot().getCount() == 100 - 64, "Contents did not depart");
             assertTrue(right.getBinSlot().getCount() == 100 + 64, "Contents did not arrive");
             assertTrue(right.getBinSlot().getStack().getItem() == Items.DIAMOND, "Contents wrong type");
-            helper.succeed();
+            
         });
     }
 
@@ -289,7 +288,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             assertTrue(left.getBinSlot().getCount() == BinTier.ULTIMATE.getStorage() - 32, "Contents did not depart");
             assertTrue(right.getBinSlot().getCount() == BinTier.ULTIMATE.getStorage(), "Contents did not arrive");
             assertTrue(right.getBinSlot().getStack().getItem() == Items.STICK, "Contents wrong type");
-            helper.succeed();
+            
         });
     }
 
@@ -329,7 +328,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(left.getEnergy(0).equals(FloatingLong.ZERO), "Contents did not depart");
             assertTrue(right.getEnergy(0).equals(EnergyCubeTier.ULTIMATE.getMaxEnergy()), "Contents did not arrive");
-            helper.succeed();
+            
         });
     }
 
@@ -369,7 +368,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(left.getEnergy(0).equals(FloatingLong.ZERO), "Contents did not depart");
             assertTrue(right.getEnergy(0).equals(FloatingLong.create(2_000)), "Contents did not arrive");
-            helper.succeed();
+            
         });
     }
 
@@ -412,7 +411,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     "Contents did not depart"
             );
             assertTrue(right.getEnergy(0).equals(EnergyCubeTier.ULTIMATE.getMaxEnergy()), "Contents did not arrive");
-            helper.succeed();
+            
         });
     }
 
@@ -462,7 +461,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     right.getEnergy(0).equals(UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(1)),
                     "Contents did not arrive"
             );
-            helper.succeed();
+            
         });
     }
 
@@ -529,7 +528,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     .mapToInt(FluidStack::getAmount)
                     .sum();
             assertTrue(found == 1000 * 25 * 24, "Not all fluids were moved (found " + found + ")");
-            helper.succeed();
+            
 
         });
     }
@@ -583,12 +582,11 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                 .add("b", helper.absolutePos(b2Pos))
                 .save(manager.getDisk().get());
 
-        assertManagerDidThingWithoutLagging(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(a1.getFluidInTank(0).isEmpty(), "a1 did not empty");
             assertTrue(a2.getFluidInTank(0).isEmpty(), "a2 did not empty");
             assertTrue(b1.getFluidInTank(0).getFluid() == Fluids.WATER, "b1 did not fill with water");
             assertTrue(b2.getFluidInTank(0).getFluid() == Fluids.LAVA, "b2 did not fill with lava");
-            helper.succeed();
         });
     }
 
@@ -672,7 +670,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     success,
                     "Expected energy did not match"
             );
-            helper.succeed();
+            
         });
     }
 }

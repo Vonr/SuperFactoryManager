@@ -119,7 +119,6 @@ public class SFMThermalCompatGameTests extends SFMGameTestBase {
                     helper.fail("Not enough cooked chicken in chest at " + resultChestPosition);
                 }
             }
-            helper.succeed();
         });
     }
 
