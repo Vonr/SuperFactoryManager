@@ -3577,4 +3577,70 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 //            helper.succeed();
 //        });
 //    }
+
+    @GameTest(template = "7x3x3")
+    public static void regression_input_retain_b(GameTestHelper helper) {
+        // manager then 5 cables
+        // 3 chests on the front of the cables
+        // one chest on top of the cable second from the end
+        // chest closest to manager is labelled "a"
+        // other chests are labelled "b"
+        /*
+EVERY 20 TICKS DO
+    input retain 5 from b
+    output to a
+END
+         */
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        BlockPos aPos = new BlockPos(2, 2, 1);
+        BlockPos b1Pos = new BlockPos(3, 2, 1);
+        BlockPos b2Pos = new BlockPos(4, 2, 1);
+        BlockPos b3Pos = new BlockPos(5, 2, 1);
+
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        helper.setBlock(aPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b3Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        for (int i = 0; i < 5; i++) {
+            helper.setBlock(new BlockPos(2 + i, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        }
+
+        var a = getItemHandler(helper, aPos);
+        var b1 = getItemHandler(helper, b1Pos);
+        var b2 = getItemHandler(helper, b2Pos);
+        var b3 = getItemHandler(helper, b3Pos);
+
+        for (int i = 0; i < 5; i++) {
+            b1.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b2.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b3.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+        }
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                               EVERY 20 TICKS DO
+                                   INPUT RETAIN 5 FROM b
+                                   OUTPUT TO a
+                               END
+                           """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(aPos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .add("b", helper.absolutePos(b3Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // There should be exactly 5 dirt across all b
+            // The rest should be in a
+            assertTrue(count(a, Items.DIRT) == 64 * 3 - 5, "dirt should arrive in a");
+            int bDirt = count(b1, Items.DIRT) + count(b2, Items.DIRT) + count(b3, Items.DIRT);
+            assertTrue(bDirt == 5, "dirt should depart from b");
+        });
+    }
 }
