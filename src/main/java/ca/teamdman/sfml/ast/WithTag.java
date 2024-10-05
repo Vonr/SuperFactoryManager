@@ -4,7 +4,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 public record WithTag(TagMatcher tagMatcher) implements ASTNode, WithClause {
     @Override
-    public <STACK> boolean test(
+    public <STACK> boolean matchesStack(
             ResourceType<STACK, ?, ?> resourceType,
             STACK stack
     ) {

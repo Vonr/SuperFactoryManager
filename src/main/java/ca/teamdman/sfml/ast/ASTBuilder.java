@@ -1,11 +1,9 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
 import com.mojang.datafixers.util.Pair;
-import cpw.mods.modlauncher.Launcher;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.jetbrains.annotations.Nullable;
@@ -494,7 +492,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             return new ResourceLimits(List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE), ResourceIdSet.EMPTY);
         }
         ResourceLimits resourceLimits = visitResourceLimitList(ctx.resourceLimitList()).withDefaultLimit(Limit.MAX_QUANTITY_NO_RETENTION);
-        assertResourceLimitDoesntExpandHuge(resourceLimits);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
@@ -505,7 +502,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             return new ResourceLimits(List.of(ResourceLimit.ACCEPT_ALL_WITHOUT_RESTRAINT), ResourceIdSet.EMPTY);
         }
         ResourceLimits resourceLimits = visitResourceLimitList(ctx.resourceLimitList()).withDefaultLimit(Limit.MAX_QUANTITY_MAX_RETENTION);
-        assertResourceLimitDoesntExpandHuge(resourceLimits);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
@@ -723,17 +719,5 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         Block block = new Block(statements);
         AST_NODE_CONTEXTS.add(new Pair<>(block, ctx));
         return block;
-    }
-
-    private void assertResourceLimitDoesntExpandHuge(ResourceLimits limits) {
-        if (Launcher.INSTANCE == null) {
-            SFM.LOGGER.warn("The game isn't loaded, Are we in a unit test? Skipping resource limit expansion check.");
-            return;
-        }
-        if (limits.createInputTrackers().size() > 512) {
-            throw new IllegalArgumentException(
-                    "Resource limit expands to more than 512 trackers, this is likely a mistake where the \"EACH\" keyword is being used. The code: "
-                    + limits);
-        }
     }
 }

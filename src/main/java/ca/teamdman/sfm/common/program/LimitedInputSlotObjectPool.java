@@ -28,7 +28,7 @@ public class LimitedInputSlotObjectPool {
             Direction direction,
             int slot,
             CAP handler,
-            InputResourceTracker tracker,
+            IInputResourceTracker tracker,
             STACK stack,
             ResourceType<STACK, ITEM, CAP> type
     ) {

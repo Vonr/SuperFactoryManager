@@ -314,7 +314,7 @@ public record ServerboundOutputInspectionRequestPacket(
         STACK stack = limitedInputSlot.peekExtractPotential();
         long amount = limitedInputSlot.type.getAmount(stack);
         amount = Long.min(amount, limitedInputSlot.tracker.getResourceLimit().limit().quantity().number().value());
-        long remainingObligation = limitedInputSlot.tracker.getRemainingRetentionObligation();
+        long remainingObligation = limitedInputSlot.tracker.getRemainingRetentionObligation(resourceType, stack);
         amount -= Long.min(amount, remainingObligation);
         Limit amountLimit = new Limit(
                 new ResourceQuantity(new Number(amount), ResourceQuantity.IdExpansionBehaviour.NO_EXPAND),

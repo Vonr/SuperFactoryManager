@@ -25,7 +25,7 @@ public final class ResourceIdSet implements ASTNode {
     }
 
     @SuppressWarnings("rawtypes")
-    public Stream<ResourceType> getReferencedResourceTypes() {
+    public Stream<ResourceType> getReferencedResourceTypes() { // todo: cache maybe? check perf
         return this.stream()
                 .map((ResourceIdentifier x) -> x.getResourceType())
                 .distinct();

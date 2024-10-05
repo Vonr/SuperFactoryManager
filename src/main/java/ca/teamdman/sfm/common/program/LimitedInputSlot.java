@@ -21,7 +21,7 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
     public int slot;
     public boolean freed;
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
-    public InputResourceTracker tracker;
+    public IInputResourceTracker tracker;
     private @Nullable STACK extractSimulateCache = null;
     private boolean done = false;
 
@@ -31,19 +31,18 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
             Direction direction,
             int slot,
             CAP handler,
-            InputResourceTracker tracker,
-            STACK stack,
+            IInputResourceTracker tracker,
+            STACK stackCache,
             ResourceType<STACK, ITEM, CAP> type
     ) {
-        this.init(handler, label, pos, direction, slot, tracker, stack, type);
+        this.init(handler, label, pos, direction, slot, tracker, stackCache, type);
     }
 
+    @SuppressWarnings("RedundantIfStatement")
     public boolean isDone() {
         if (done) return true;
         // we don't bother setting this.done because if this returns true it should be the last time this is called
-        if (tracker.isDone()) {
-            return true;
-        }
+
         if (slot > type.getSlots(handler) - 1) {
             // composter block changes how many slots it has between insertions
             return true;
@@ -52,7 +51,13 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
         if (type.isEmpty(stack)) {
             return true;
         }
-        return !tracker.test(stack);
+        if (!tracker.matchesStack(stack)) {
+            return true;
+        }
+        if (tracker.isDone(type, stack)) {
+            return true;
+        }
+        return false;
     }
 
     public void setDone() {
@@ -84,12 +89,12 @@ public class LimitedInputSlot<STACK, ITEM, CAP> {
             BlockPos pos,
             Direction direction,
             int slot,
-            InputResourceTracker tracker,
-            STACK stack,
+            IInputResourceTracker tracker,
+            STACK stackCache,
             ResourceType<STACK, ITEM, CAP> type
     ) {
         this.done = false;
-        this.extractSimulateCache = stack;
+        this.extractSimulateCache = stackCache;
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
