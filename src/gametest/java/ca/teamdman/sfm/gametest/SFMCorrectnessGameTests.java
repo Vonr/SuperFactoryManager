@@ -3586,9 +3586,9 @@ END
          */
         BlockPos managerPos = new BlockPos(1, 2, 1);
         BlockPos aPos = new BlockPos(2, 2, 1);
-        BlockPos b1Pos = new BlockPos(3, 2, 1);
-        BlockPos b2Pos = new BlockPos(4, 2, 1);
-        BlockPos b3Pos = new BlockPos(5, 2, 1);
+        BlockPos b1Pos = new BlockPos(4, 2, 1);
+        BlockPos b2Pos = new BlockPos(5, 2, 1);
+        BlockPos b3Pos = new BlockPos(6, 2, 1);
 
         helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
         helper.setBlock(aPos, SFMBlocks.TEST_BARREL_BLOCK.get());
@@ -3596,8 +3596,8 @@ END
         helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
         helper.setBlock(b3Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
 
-        for (int i = 0; i < 5; i++) {
-            helper.setBlock(new BlockPos(2 + i, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        for (int i = 0; i < 6; i++) {
+            helper.setBlock(new BlockPos(1 + i, 2, 2), SFMBlocks.CABLE_BLOCK.get());
         }
 
         var a = getItemHandler(helper, aPos);
@@ -3631,7 +3631,7 @@ END
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             // There should be exactly 5 dirt across all b
             // The rest should be in a
-            assertTrue(count(a, Items.DIRT) == 64 * 3 - 5, "dirt should arrive in a");
+            assertTrue(count(a, Items.DIRT) == 64 * 3 * 5 - 5, "dirt should arrive in a");
             int bDirt = count(b1, Items.DIRT) + count(b2, Items.DIRT) + count(b3, Items.DIRT);
             assertTrue(bDirt == 5, "dirt should depart from b");
         });
