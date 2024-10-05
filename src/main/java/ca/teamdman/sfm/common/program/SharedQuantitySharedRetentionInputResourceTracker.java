@@ -4,7 +4,6 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
-import net.minecraft.resources.ResourceLocation;
 
 public class SharedQuantitySharedRetentionInputResourceTracker implements IInputResourceTracker {
     private final ResourceLimit resource_limit;

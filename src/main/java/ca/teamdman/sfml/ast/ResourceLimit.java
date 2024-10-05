@@ -3,13 +3,6 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
-
-import static ca.teamdman.sfml.ast.ResourceQuantity.IdExpansionBehaviour.EXPAND;
-import static ca.teamdman.sfml.ast.ResourceQuantity.IdExpansionBehaviour.NO_EXPAND;
-
 public record ResourceLimit(
         ResourceIdSet resourceIds,
         Limit limit,
