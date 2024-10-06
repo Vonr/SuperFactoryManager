@@ -9,6 +9,8 @@ NAME "Changelog"
 -- VSCode extension updates, thanks @Titop54 for the help <3
 -- Fix max program length ungraceful crash, thanks @Crazy
 ---- Set MAX_PROGRAM_LENGTH to ~32,300 because of vanilla constraints
+-- Renamed resource types example to include "fluid" in the title
+-- Add edit-in-hand reminder text to disk when no program present
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me

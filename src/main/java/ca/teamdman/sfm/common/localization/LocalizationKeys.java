@@ -262,6 +262,11 @@ public final class LocalizationKeys {
             "Clear"
     );
 
+    public static final LocalizationEntry DISK_EDIT_IN_HAND_TOOLTIP = new LocalizationEntry(
+            "gui.sfm.disk.tooltip.edit_in_hand",
+            "You can right-click a disk in your hand to edit outside of a manager."
+    );
+
 
     public static final LocalizationEntry MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP = new LocalizationEntry(
             "gui.sfm.manager.tooltip.paste",
