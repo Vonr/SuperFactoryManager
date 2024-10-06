@@ -6,6 +6,7 @@ import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 
 @SuppressWarnings("DuplicatedCode")
@@ -56,6 +57,7 @@ public class ExpandedQuantityExpandedRetentionInputResourceTracker implements II
     public <STACK, ITEM, CAP> long getRetentionObligationForSlot(
             ResourceType<STACK, ITEM, CAP> resourceType,
             STACK stack,
+            BlockPos pos,
             int slot
     ) {
         var resourceTypeEntry = slot_retention_obligations_by_item.get(slot);
@@ -93,6 +95,7 @@ public class ExpandedQuantityExpandedRetentionInputResourceTracker implements II
             ResourceType<STACK, ITEM, CAP> resourceType,
             STACK stack,
             int slot,
+            BlockPos pos,
             long promise
     ) {
         ResourceLocation item_id = resourceType.getRegistryKey(stack);

@@ -87,7 +87,12 @@ public class OutputStatement implements IOStatement {
         }
 
         // how many have we promised to RETAIN in this slot
-        long promised_to_leave_in_this_slot = source.tracker.getRetentionObligationForSlot(resourceType, potential, source.slot);
+        long promised_to_leave_in_this_slot = source.tracker.getRetentionObligationForSlot(
+                resourceType,
+                potential,
+                source.pos,
+                source.slot
+        );
         toMove -= promised_to_leave_in_this_slot;
         // how many more need we are obligated to leave to satisfy the remainder of the RETAIN limit
         long remainingObligation = source.tracker.getRemainingRetentionObligation(resourceType, potential);
@@ -96,7 +101,13 @@ public class OutputStatement implements IOStatement {
 
         // update the obligation tracker
         if (remainingObligation > 0) {
-            source.tracker.trackRetentionObligation(resourceType, potential, source.slot, remainingObligation);
+            source.tracker.trackRetentionObligation(
+                    resourceType,
+                    potential,
+                    source.slot,
+                    source.pos,
+                    remainingObligation
+            );
         }
 
         long logRemainingObligation = remainingObligation;

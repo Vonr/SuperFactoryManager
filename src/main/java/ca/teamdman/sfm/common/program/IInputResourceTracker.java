@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.program;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
+import net.minecraft.core.BlockPos;
 
 public interface IInputResourceTracker {
     ResourceLimit getResourceLimit();
@@ -17,6 +18,7 @@ public interface IInputResourceTracker {
     <STACK, ITEM, CAP> long getRetentionObligationForSlot(
             ResourceType<STACK, ITEM, CAP> resourceType,
             STACK stack,
+            BlockPos pos,
             int slot
     );
 
@@ -29,6 +31,7 @@ public interface IInputResourceTracker {
             ResourceType<STACK, ITEM, CAP> resourceType,
             STACK stack,
             int slot,
+            BlockPos pos,
             long promise
     );
 
