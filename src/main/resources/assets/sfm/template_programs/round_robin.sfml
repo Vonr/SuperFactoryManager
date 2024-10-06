@@ -3,9 +3,18 @@ NAME "Round Robin"
 EVERY 20 TICKS DO
     INPUT FROM source
     OUTPUT 128 dirt TO dest ROUND ROBIN BY BLOCK
+    -- instead of outputting to all blocks labelled "dest"
+    -- when this statement executes it will pick only one block
+    -- the chosen block rotates each time this statement is executed
 
     FORGET
 
     INPUT FROM "storage a", "storage b" ROUND ROBIN BY LABEL
     OUTPUT 8 bone_meal TO EACH dispenser
+    -- instead of outputting to all the labels
+    -- one label will be chosen each time the statement executes
+    -- basically alternating between
+    -- INPUT FROM "storage a"
+    -- and
+    -- INPUT FROM "storage b"
 END
