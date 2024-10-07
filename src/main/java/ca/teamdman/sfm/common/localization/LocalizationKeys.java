@@ -308,6 +308,10 @@ public final class LocalizationKeys {
             "program.sfm.warnings.undefined_label",
             "Label \"%s\" is assigned in the world but not defined in code."
     );
+    public static final LocalizationEntry PROGRAM_REMINDER_PUSH_LABELS = new LocalizationEntry(
+            "program.sfm.reminders.push_labels",
+            "Did you remember to push your labels using the label gun?"
+    );
     public static final LocalizationEntry PROGRAM_WARNING_DISCONNECTED_LABEL = new LocalizationEntry(
             "program.sfm.warnings.disconnected_label",
             "Label \"%s\" is assigned in the world at %s but not connected by cables."
@@ -593,6 +597,10 @@ public final class LocalizationKeys {
             "The following are based on the MACHINE'S output config"
     );
 
+    public static final LocalizationEntry CONTAINER_INSPECTOR_NOTICE = new LocalizationEntry(
+            "gui.sfm.container_inspector.notice",
+            "GUI slots don't always correlate to automation slots!!!"
+    );
     public static final LocalizationEntry CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT = new LocalizationEntry(
             "gui.sfm.container_inspector.container_slot_count",
             "Container Slots: %d"

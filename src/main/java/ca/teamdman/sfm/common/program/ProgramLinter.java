@@ -24,6 +24,7 @@ import static ca.teamdman.sfml.ast.RoundRobin.Behaviour.BY_BLOCK;
 import static ca.teamdman.sfml.ast.RoundRobin.Behaviour.BY_LABEL;
 
 public class ProgramLinter {
+    @SuppressWarnings("ConstantValue")
     public static ArrayList<TranslatableContents> gatherWarnings(
             Program program, LabelPositionHolder labelPositionHolder , @Nullable ManagerBlockEntity manager
     ) {
@@ -31,11 +32,18 @@ public class ProgramLinter {
         var level = manager != null ? manager.getLevel() : null;
 
         // label smells
+        int before = warnings.size();
         addWarningsForLabelsInProgramButNotInHolder(program, labelPositionHolder, warnings);
         addWarningsForLabelsInHolderButNotInProgram(program, labelPositionHolder, warnings);
         if (level != null) {
             addWarningsForLabelsUsedInWorldButNotConnectedByCables(manager, labelPositionHolder, warnings, level);
         }
+        int after = warnings.size();
+        if (before != after) {
+            // add reminder to push labels
+            warnings.add(PROGRAM_REMINDER_PUSH_LABELS.get());
+        }
+
         addWarningsForUsingIOWithoutCorrespondingOppositeIO(program, labelPositionHolder, warnings);
 
         // resource smells
