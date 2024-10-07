@@ -96,6 +96,13 @@ public class ContainerScreenInspectorHandler {
             // draw text for slot totals
             Minecraft.getInstance().font.drawShadow(
                     poseStack,
+                    LocalizationKeys.CONTAINER_INSPECTOR_NOTICE.getComponent(),
+                    5,
+                    5,
+                    0xFFFFFF
+            );
+            Minecraft.getInstance().font.drawShadow(
+                    poseStack,
                     LocalizationKeys.CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT.getComponent(Component
                                                                                                              .literal(
                                                                                                                      String.valueOf(
@@ -103,7 +110,7 @@ public class ContainerScreenInspectorHandler {
                                                                                                              .withStyle(
                                                                                                                      ChatFormatting.BLUE)),
                     5,
-                    5,
+                    25,
                     0xFFFFFF
             );
             Minecraft.getInstance().font.drawShadow(
@@ -115,7 +122,7 @@ public class ContainerScreenInspectorHandler {
                                                                                                              .withStyle(
                                                                                                                      ChatFormatting.YELLOW)),
                     5,
-                    25,
+                    45,
                     0xFFFFFF
             );
             poseStack.popPose();
