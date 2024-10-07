@@ -599,7 +599,7 @@ public final class LocalizationKeys {
 
     public static final LocalizationEntry CONTAINER_INSPECTOR_NOTICE = new LocalizationEntry(
             "gui.sfm.container_inspector.notice",
-            "GUI slots don't always correlate to automation slots!!!"
+            "GUI slots don't always correspond to automation slots!!!"
     );
     public static final LocalizationEntry CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT = new LocalizationEntry(
             "gui.sfm.container_inspector.container_slot_count",

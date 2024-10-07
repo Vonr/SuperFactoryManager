@@ -19,7 +19,7 @@
   "gui.sfm.container_inspector.mekanism_machine_inputs": "The following are based on the MACHINE'S input config",
   "gui.sfm.container_inspector.mekanism_machine_outputs": "The following are based on the MACHINE'S output config",
   "gui.sfm.container_inspector.mekanism_null_direction_warning": "MEKANISM BLOCKS ARE READ-ONLY FROM THE NULL DIRECTION!!!!!!",
-  "gui.sfm.container_inspector.notice": "GUI slots don't always correlate to automation slots!!!",
+  "gui.sfm.container_inspector.notice": "GUI slots don't always correspond to automation slots!!!",
   "gui.sfm.container_inspector.show_exports_button": "Export Inspector",
   "gui.sfm.disk.tooltip.edit_in_hand": "You can right-click a disk in your hand to edit outside of a manager.",
   "gui.sfm.exit_without_saving_confirm.message": "Are you sure you want to abandon your work?",
