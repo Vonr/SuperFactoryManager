@@ -245,7 +245,7 @@ public class DiskItem extends Item {
                 }
             }
         } else {
-            list.add(LocalizationKeys.DISK_EDIT_IN_HAND_TOOLTIP.getComponent());
+            list.add(LocalizationKeys.DISK_EDIT_IN_HAND_TOOLTIP.getComponent().withStyle(ChatFormatting.GRAY));
         }
     }
 }
