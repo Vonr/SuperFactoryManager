@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static ca.teamdman.sfm.common.localization.LocalizationKeys.*;
 
@@ -346,23 +345,21 @@ public class OutputStatement implements IOStatement {
     ) {
         context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS.get(toStringPretty())));
 
-        Stream<ResourceType> types = resourceLimits.getReferencedResourceTypes();
-
         if (!each) {
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
             // create a single list of trackers to be shared between all limited slots
             List<IOutputResourceTracker> outputTracker = resourceLimits.createOutputTrackers();
-            for (var type : (Iterable<ResourceType>) types::iterator) {
+            for (var resourceType : resourceLimits.getReferencedResourceTypes()) {
                 context
                         .getLogger()
                         .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(),
-                                type.displayAsCapabilityClass()
+                                resourceType.displayAsCapabilityClass(),
+                                resourceType.displayAsCapabilityClass()
                         )));
-                type.forEachCapability(context, labelAccess, (
+                resourceType.forEachCapability(context, labelAccess, (
                         (label, pos, direction, cap) -> gatherSlotsForCap(
                                 context,
-                                (ResourceType<Object, Object, Object>) type,
+                                (ResourceType<Object, Object, Object>) resourceType,
                                 label,
                                 pos,
                                 direction,
@@ -374,19 +371,19 @@ public class OutputStatement implements IOStatement {
             }
         } else {
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
-            for (var type : (Iterable<ResourceType>) types::iterator) {
+            for (var resourceType : resourceLimits.getReferencedResourceTypes()) {
                 context
                         .getLogger()
                         .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(),
-                                type.displayAsCapabilityClass()
+                                resourceType.displayAsCapabilityClass(),
+                                resourceType.displayAsCapabilityClass()
                         )));
-                type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
+                resourceType.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
                     // create a new list of trackers for each limited slot
                     List<IOutputResourceTracker> outputTracker = resourceLimits.createOutputTrackers();
                     gatherSlotsForCap(
                             context,
-                            (ResourceType<Object, Object, Object>) type,
+                            (ResourceType<Object, Object, Object>) resourceType,
                             label,
                             pos,
                             direction,

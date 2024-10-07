@@ -7,7 +7,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -75,31 +78,26 @@ public final class InputStatement implements IOStatement {
             };
         }
 
-        // identify distinct resource types for capability gathering
-        Set<ResourceType> referencedResourceTypes = resourceLimits
-                .getReferencedResourceTypes()
-                .collect(Collectors.toSet());
-
         if (!each) {
             // log not each
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_NOT_EACH.get()));
 
             // create a single matcher to be shared by all capabilities
             List<IInputResourceTracker> inputTrackers = resourceLimits.createInputTrackers();
-            for (var type : referencedResourceTypes) {
+            for (var resourceType : resourceLimits.getReferencedResourceTypes()) {
                 // log gather for resource type
                 context
                         .getLogger()
                         .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(),
-                                type.displayAsCapabilityClass()
+                                resourceType.displayAsCapabilityClass(),
+                                resourceType.displayAsCapabilityClass()
                         )));
 
                 // gather slots for each capability found for positions tagged by a provided label
                 Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
-                type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> gatherSlotsForCap(
+                resourceType.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> gatherSlotsForCap(
                         context,
-                        (ResourceType<Object, Object, Object>) type,
+                        (ResourceType<Object, Object, Object>) resourceType,
                         label, pos, direction, cap,
                         inputTrackers,
                         finalSlotConsumer
@@ -109,22 +107,22 @@ public final class InputStatement implements IOStatement {
             // log yes each
             context.getLogger().debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_EACH.get()));
 
-            for (ResourceType type : referencedResourceTypes) {
+            for (var resourceType : resourceLimits.getReferencedResourceTypes()) {
                 // log gather for resource type
                 context
                         .getLogger()
                         .debug(x -> x.accept(LOG_PROGRAM_TICK_IO_STATEMENT_GATHER_SLOTS_FOR_RESOURCE_TYPE.get(
-                                type.displayAsCapabilityClass(),
-                                type.displayAsCapabilityClass()
+                                resourceType.displayAsCapabilityClass(),
+                                resourceType.displayAsCapabilityClass()
                         )));
 
                 // gather slots for each capability found for positions tagged by a provided label
                 Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
-                type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
+                resourceType.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
                     List<IInputResourceTracker> inputTrackers = resourceLimits.createInputTrackers();
                     gatherSlotsForCap(
                             context,
-                            (ResourceType<Object, Object, Object>) type,
+                            (ResourceType<Object, Object, Object>) resourceType,
                             label, pos, direction, cap,
                             inputTrackers,
                             finalSlotConsumer

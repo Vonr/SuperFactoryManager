@@ -5,9 +5,10 @@ import ca.teamdman.sfm.common.program.IOutputResourceTracker;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public record ResourceLimits(
         List<ResourceLimit> resourceLimitList,
@@ -36,12 +37,12 @@ public record ResourceLimits(
         return new ResourceLimits(resourceLimitList, exclusions);
     }
 
-    @SuppressWarnings("rawtypes")
-    public Stream<ResourceType> getReferencedResourceTypes() {
-        return resourceLimitList()
-                .stream()
-                .flatMap(resourceLimits -> resourceLimits.resourceIds().getReferencedResourceTypes())
-                .distinct();
+    public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
+        Set<ResourceType<?,?,?>> rtn = new HashSet<>(8);
+        for (ResourceLimit resourceLimit : resourceLimitList) {
+            rtn.addAll(resourceLimit.resourceIds().getReferencedResourceTypes());
+        }
+        return rtn;
     }
 
     @Override

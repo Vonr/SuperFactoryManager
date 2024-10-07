@@ -17,7 +17,7 @@ import java.util.regex.PatternSyntaxException;
 
 // resourceTypeName resourceNamespace, resourceTypeName name, resource resourceNamespace, resource name
 // sfm:item:minecraft:stone
-public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<Object> {
+public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode {
 
     public static final ResourceIdentifier<?, ?, ?> MATCH_ALL = new ResourceIdentifier<>(
             ".*",
@@ -111,8 +111,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         }
     }
 
-    @Override
-    public boolean test(Object other) {
+    public boolean matchesStack(Object other) {
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
         return resourceType != null && resourceType.matchesStack(this, other);
     }

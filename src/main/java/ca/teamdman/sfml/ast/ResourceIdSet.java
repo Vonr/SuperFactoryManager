@@ -4,10 +4,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,11 +21,12 @@ public final class ResourceIdSet implements ASTNode {
         this(new LinkedHashSet<>(contents));
     }
 
-    @SuppressWarnings("rawtypes")
-    public Stream<ResourceType> getReferencedResourceTypes() { // todo: cache maybe? check perf
-        return this.stream()
-                .map((ResourceIdentifier x) -> x.getResourceType())
-                .distinct();
+    public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
+        HashSet<ResourceType<?,?,?>> rtn = new HashSet<>(8);
+        for (ResourceIdentifier<?, ?, ?> resourceId : this.resourceIds) {
+            rtn.add(resourceId.getResourceType());
+        }
+        return rtn;
     }
 
     public boolean couldMatchMoreThanOne() {
@@ -51,7 +49,7 @@ public final class ResourceIdSet implements ASTNode {
 
     public @Nullable ResourceIdentifier<?, ?, ?> getMatchingFromStack(Object stack) {
         for (ResourceIdentifier<?, ?, ?> entry : resourceIds) {
-            if (entry.test(stack)) {
+            if (entry.matchesStack(stack)) {
                 return entry;
             }
         }

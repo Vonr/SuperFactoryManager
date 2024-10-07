@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour {
@@ -182,11 +181,10 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
     ) implements ExecutionPathElement {
     }
 
-    @SuppressWarnings("rawtypes")
     public record IO(
             IOStatement statement,
             IOKind kind,
-            Set<ResourceType> usedResourceTypes,
+            Set<ResourceType<?,?,?>> usedResourceTypes,
             Set<Label> usedLabels
     ) implements ExecutionPathElement {
         public IO(IOStatement statement) {
@@ -196,7 +194,7 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
                     statement instanceof InputStatement
                     ? IOKind.INPUT
                     : (statement instanceof OutputStatement ? IOKind.OUTPUT : null),
-                    statement.resourceLimits().getReferencedResourceTypes().collect(Collectors.toSet()),
+                    statement.resourceLimits().getReferencedResourceTypes(),
                     new HashSet<>(statement.labelAccess().labels())
             );
             if (kind == null) {

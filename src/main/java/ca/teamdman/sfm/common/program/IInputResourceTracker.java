@@ -55,9 +55,11 @@ public interface IInputResourceTracker {
     }
 
     default boolean matchesCapabilityType(Object capability) {
-        return getResourceLimit()
-                .resourceIds()
-                .getReferencedResourceTypes()
-                .anyMatch(rt -> rt.matchesCapabilityType(capability));
+        for (ResourceType<?, ?, ?> resourceType : getResourceLimit().resourceIds().getReferencedResourceTypes()) {
+            if (resourceType.matchesCapabilityType(capability)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
