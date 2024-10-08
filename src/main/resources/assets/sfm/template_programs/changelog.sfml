@@ -12,6 +12,13 @@ NAME "Changelog"
 -- Renamed resource types example to include "fluid" in the title
 -- Add edit-in-hand reminder text to disk when no program present
 -- Add reminder to push labels when warnings present
+-- Optimize EACH limits
+EVERY 20 TICKS DO
+    INPUT FROM chest
+
+    OUTPUT RETAIN 1 EACH *seed* TO phyto
+    -- this no longer lags the more items match lol
+END
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me

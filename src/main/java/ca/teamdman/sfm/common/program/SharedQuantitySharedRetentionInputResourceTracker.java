@@ -38,11 +38,11 @@ public class SharedQuantitySharedRetentionInputResourceTracker implements IInput
             BlockPos pos,
             int slot
     ) {
-        var slot_obligations = retention_obligations_by_pos_by_slot.get(pos.asLong());
-        if (slot_obligations == null) {
+        var posEntry = retention_obligations_by_pos_by_slot.get(pos.asLong());
+        if (posEntry == null) {
             return 0;
         }
-        return slot_obligations.getOrDefault(slot, 0);
+        return posEntry.getOrDefault(slot, 0);
     }
 
     @Override

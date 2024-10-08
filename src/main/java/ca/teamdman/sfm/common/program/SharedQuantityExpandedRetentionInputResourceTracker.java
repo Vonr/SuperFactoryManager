@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -13,8 +14,8 @@ import net.minecraft.resources.ResourceLocation;
 public class SharedQuantityExpandedRetentionInputResourceTracker implements IInputResourceTracker {
     private final ResourceLimit resource_limit;
     private final ResourceIdSet exclusions;
-    private final Int2ObjectArrayMap<Object2ObjectOpenHashMap<ResourceType<?, ?, ?>, Object2LongOpenHashMap<ResourceLocation>>>
-            slot_retention_obligations_by_item = new Int2ObjectArrayMap<>();
+    private final Long2ObjectOpenHashMap<Int2ObjectArrayMap<Object2ObjectOpenHashMap<ResourceType<?, ?, ?>, Object2LongOpenHashMap<ResourceLocation>>>>
+            retention_obligations_by_pos_by_slot_by_item = new Long2ObjectOpenHashMap<>();
     private final Object2ObjectOpenHashMap<ResourceType<?, ?, ?>, Object2LongOpenHashMap<ResourceLocation>>
             retention_obligations_by_item = new Object2ObjectOpenHashMap<>();
     private long transferred = 0;
@@ -53,12 +54,15 @@ public class SharedQuantityExpandedRetentionInputResourceTracker implements IInp
             BlockPos pos,
             int slot
     ) {
-        var resourceTypeEntry = slot_retention_obligations_by_item.get(slot);
-        if (resourceTypeEntry != null) {
-            ResourceLocation item_id = resourceType.getRegistryKey(stack);
-            var itemEntry = resourceTypeEntry.get(resourceType);
-            if (itemEntry != null) {
-                return itemEntry.getLong(item_id);
+        var posEntry = retention_obligations_by_pos_by_slot_by_item.get(pos.asLong());
+        if (posEntry != null) {
+            var resourceTypeEntry = posEntry.get(slot);
+            if (resourceTypeEntry != null) {
+                ResourceLocation item_id = resourceType.getRegistryKey(stack);
+                var itemEntry = resourceTypeEntry.get(resourceType);
+                if (itemEntry != null) {
+                    return itemEntry.getLong(item_id);
+                }
             }
         }
         return 0;
@@ -93,7 +97,9 @@ public class SharedQuantityExpandedRetentionInputResourceTracker implements IInp
         ResourceLocation item_id = resourceType.getRegistryKey(stack);
         retention_obligations_by_item.computeIfAbsent(resourceType, k -> new Object2LongOpenHashMap<>())
                 .addTo(item_id, promise);
-        slot_retention_obligations_by_item.computeIfAbsent(slot, k -> new Object2ObjectOpenHashMap<>())
+        retention_obligations_by_pos_by_slot_by_item
+                .computeIfAbsent(pos.asLong(), k -> new Int2ObjectArrayMap<>())
+                .computeIfAbsent(slot, k -> new Object2ObjectOpenHashMap<>())
                 .computeIfAbsent(resourceType, k -> new Object2LongOpenHashMap<>())
                 .addTo(item_id, promise);
     }

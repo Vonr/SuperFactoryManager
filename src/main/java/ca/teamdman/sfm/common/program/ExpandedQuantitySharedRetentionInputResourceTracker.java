@@ -4,6 +4,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.ResourceIdSet;
 import ca.teamdman.sfml.ast.ResourceLimit;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -15,7 +16,7 @@ public class ExpandedQuantitySharedRetentionInputResourceTracker implements IInp
     private final ResourceIdSet exclusions;
     private final Object2ObjectOpenHashMap<ResourceType<?, ?, ?>, Object2LongOpenHashMap<ResourceLocation>>
             transferred_by_item = new Object2ObjectOpenHashMap<>();
-    private final Int2LongArrayMap slot_retention_obligations = new Int2LongArrayMap();
+    private final Long2ObjectOpenHashMap<Int2LongArrayMap> retention_obligations_by_pos_by_slot = new Long2ObjectOpenHashMap<>();
     private long retention_obligation_progress = 0;
 
     public ExpandedQuantitySharedRetentionInputResourceTracker(
@@ -58,7 +59,11 @@ public class ExpandedQuantitySharedRetentionInputResourceTracker implements IInp
             BlockPos pos,
             int slot
     ) {
-        return slot_retention_obligations.getOrDefault(slot, 0);
+        var posEntry = retention_obligations_by_pos_by_slot.get(pos.asLong());
+        if (posEntry == null) {
+            return 0;
+        }
+        return posEntry.getOrDefault(slot, 0);
     }
 
     @Override
@@ -78,7 +83,9 @@ public class ExpandedQuantitySharedRetentionInputResourceTracker implements IInp
             long promise
     ) {
         this.retention_obligation_progress += promise;
-        this.slot_retention_obligations.merge(slot, promise, Long::sum);
+        this.retention_obligations_by_pos_by_slot
+                .computeIfAbsent(pos.asLong(), k -> new Int2LongArrayMap())
+                .merge(slot, promise, Long::sum);
     }
 
     @Override
