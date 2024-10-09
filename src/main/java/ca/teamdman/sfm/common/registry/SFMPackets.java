@@ -165,6 +165,11 @@ public class SFMPackets {
                 ClientboundBoolExprStatementInspectionResultsPacket.STREAM_CODEC,
                 ClientboundBoolExprStatementInspectionResultsPacket::handle
         );
+        registrar.playToServer(
+                ServerboundFacadePacket.TYPE,
+                ServerboundFacadePacket.STREAM_CODEC,
+                ServerboundFacadePacket::handle
+        );
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(

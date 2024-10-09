@@ -18,7 +18,7 @@ public class CableFacadeBlockColor implements BlockColor {
         CableBlockEntity cableBlockEntity = (CableBlockEntity) blockAndTintGetter.getBlockEntity(blockPos);
         if (cableBlockEntity == null) return -1;
         BlockState facadeState = cableBlockEntity.getFacadeState();
-        if (facadeState == null || facadeState.getBlock() == SFMBlocks.CABLE_BLOCK.get()) return -1;
+        if (facadeState.getBlock() == SFMBlocks.CABLE_BLOCK.get()) return -1;
 
         return Minecraft.getInstance().getBlockColors().getColor(facadeState, blockAndTintGetter, blockPos, tintIndex);
     }

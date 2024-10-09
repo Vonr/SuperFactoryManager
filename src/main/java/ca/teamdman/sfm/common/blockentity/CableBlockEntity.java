@@ -19,23 +19,24 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.Nullable;
 
 public class CableBlockEntity extends BlockEntity {
-    private @Nullable BlockState facadeState;
+    private BlockState facadeState = SFMBlocks.CABLE_BLOCK.get().defaultBlockState();
 
     public CableBlockEntity(BlockPos pos, BlockState state) {
         super(SFMBlockEntities.CABLE_BLOCK_ENTITY.get(), pos, state);
     }
 
-    public @Nullable BlockState getFacadeState() {
+    public BlockState getFacadeState() {
         return facadeState;
     }
 
-    public void setFacadeState(BlockState newState) {
-        BlockState oldState = getBlockState();
+    public void setFacadeState(BlockState newFacadeState) {
+        if (newFacadeState == facadeState) return;
 
-        this.facadeState = newState;
+        this.facadeState = newFacadeState;
         setChanged();
         if (level != null) {
-            level.sendBlockUpdated(worldPosition, oldState, getBlockState(), Block.UPDATE_ALL);
+            BlockState state = getBlockState();
+            level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_IMMEDIATE);
         }
         requestModelDataUpdate();
     }
@@ -59,7 +60,7 @@ public class CableBlockEntity extends BlockEntity {
     @Override
     protected void saveAdditional(CompoundTag pTag, HolderLookup.Provider pRegistries) {
         super.saveAdditional(pTag, pRegistries);
-        if (facadeState != null)
+        if (facadeState.getBlock() != SFMBlocks.CABLE_BLOCK.get())
             pTag.put("facade", NbtUtils.writeBlockState(facadeState));
     }
 
@@ -68,7 +69,6 @@ public class CableBlockEntity extends BlockEntity {
         super.onDataPacket(net, pkt, lookupProvider);
 
         loadAdditional(pkt.getTag(), lookupProvider);
-        requestModelDataUpdate();
     }
 
     @Override
