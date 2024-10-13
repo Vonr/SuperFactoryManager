@@ -40,12 +40,10 @@ sourceSets {
 }
 
 configurations {
-    extendConfigurations(implementation, gametestImplementation, testImplementation, datagenImplementation)
-    extendConfigurations(compileOnly, gametestCompileOnly, testCompileOnly, datagenCompileOnly)
-    extendConfigurations(runtimeOnly, gametestRuntimeOnly, testRuntimeOnly, datagenRuntimeOnly)
-//    testImplementation.extendsFrom(minecraft)
-//    gametestImplementation.extendsFrom(minecraft)
-//    datagenImplementation.extendsFrom(minecraft)
+    extendConfigurations(implementation, gametestImplementation, testImplementation)
+    extendConfigurations(compileOnly, gametestCompileOnly, testCompileOnly)
+    extendConfigurations(runtimeOnly, gametestRuntimeOnly, testRuntimeOnly)
+    datagenImplementation.extendsFrom(minecraft) // don't load mods when doing datagen lol
 }
 
 static void extendConfigurations(Configuration base, Configuration... configurations) {

@@ -19,13 +19,13 @@ public interface ASTNode {
 
     default Stream<ResourceIdentifier<?, ?, ?>> getReferencedIOResourceIds() {
         if (this instanceof IOStatement ioStatement) {
-            return ioStatement.resourceLimits().resourceLimits().stream()
-                    .map(ResourceLimit::resourceId);
+            return ioStatement.resourceLimits().resourceLimitList().stream()
+                    .flatMap(resourceLimit -> resourceLimit.resourceIds().stream());
         }
         return getDescendantStatements()
                 .filter(IOStatement.class::isInstance)
                 .map(IOStatement.class::cast)
-                .flatMap(statement -> statement.resourceLimits().resourceLimits().stream())
-                .map(ResourceLimit::resourceId);
+                .flatMap(statement -> statement.resourceLimits().resourceLimitList().stream())
+                .flatMap(resourceLimit -> resourceLimit.resourceIds().stream());
     }
 }
