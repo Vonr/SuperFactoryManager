@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.Label;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -27,22 +28,23 @@ public class LimitedInputSlotObjectPool {
             Direction direction,
             int slot,
             CAP handler,
-            InputResourceTracker<STACK, ITEM, CAP> tracker,
-            STACK stack
+            IInputResourceTracker tracker,
+            STACK stack,
+            ResourceType<STACK, ITEM, CAP> type
     ) {
         if (index == -1) {
-            var rtn = new LimitedInputSlot<>(label, pos, direction, slot, handler, tracker, stack);
+            var rtn = new LimitedInputSlot<>(label, pos, direction, slot, handler, tracker, stack, type);
             if (LEASED.put(rtn, true) != null) {
                 SFM.LOGGER.warn("new input slot was somehow already leased, this should literally never happen: {}", rtn);
-            };
+            }
             return rtn;
         } else {
             @SuppressWarnings("unchecked") LimitedInputSlot<STACK, ITEM, CAP> obj = pool[index];
             index--;
-            obj.init(handler, label, pos, direction, slot, tracker, stack);
+            obj.init(handler, label, pos, direction, slot, tracker, stack, type);
             if (LEASED.put(obj, true) != null) {
                 SFM.LOGGER.warn("tried to lease input slot a second time: {}", obj);
-            };
+            }
             return obj;
         }
     }

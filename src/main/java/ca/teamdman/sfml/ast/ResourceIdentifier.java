@@ -17,7 +17,7 @@ import java.util.regex.PatternSyntaxException;
 
 // resourceTypeName resourceNamespace, resourceTypeName name, resource resourceNamespace, resource name
 // sfm:item:minecraft:stone
-public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<Object> {
+public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode {
 
     public static final ResourceIdentifier<?, ?, ?> MATCH_ALL = new ResourceIdentifier<>(
             ".*",
@@ -68,7 +68,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         this(SFM.MOD_ID, typeName, resourceNamespace, resourceName);
     }
 
-    public boolean matchesStack(ResourceLocation stackId) {
+    public boolean matchesResourceLocation(ResourceLocation stackId) {
         return resourceNamePredicate.test(stackId.getPath()) && resourceNamespacePredicate.test(stackId.getNamespace());
     }
 
@@ -111,8 +111,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
         }
     }
 
-    @Override
-    public boolean test(Object other) {
+    public boolean matchesStack(Object other) {
         ResourceType<STACK, ITEM, CAP> resourceType = getResourceType();
         return resourceType != null && resourceType.matchesStack(this, other);
     }
@@ -137,7 +136,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             }
             List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().keySet()
                 .stream()
-                .filter(this::matchesStack)
+                    .filter(this::matchesResourceLocation)
                     .map(key -> new ResourceIdentifier<STACK, ITEM, CAP>(
                             resourceTypeNamespace,
                             resourceTypeName,
@@ -174,10 +173,6 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, Predicate<
             ));
         }
         return resourceTypeCache;
-    }
-
-    public With<STACK> getDefaultWith() {
-        return With.alwaysTrue();
     }
 
     @Override

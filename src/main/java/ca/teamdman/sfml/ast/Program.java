@@ -11,14 +11,21 @@ import ca.teamdman.sfml.SFMLLexer;
 import ca.teamdman.sfml.SFMLParser;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.level.Level;
 import net.neoforged.fml.loading.FMLEnvironment;
 import org.antlr.v4.runtime.*;
+import org.checkerframework.common.returnsreceiver.qual.This;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.DataOutput;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static ca.teamdman.sfm.common.blockentity.ManagerBlockEntity.TICK_TIME_HISTORY_SIZE;
+import static ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH;
 
 public record Program(
         ASTBuilder builder,
@@ -27,7 +34,15 @@ public record Program(
         Set<String> referencedLabels,
         Set<ResourceIdentifier<?, ?, ?>> referencedResources
 ) implements Statement {
-    public static final int MAX_PROGRAM_LENGTH = 80960;
+    /**
+     * This comes from {@link java.io.DataOutputStream#writeUTF(String, DataOutput)}
+     * and {@link NetworkHooks#openScreen(ServerPlayer, MenuProvider, Consumer)}
+     */
+    public static final int MAX_PROGRAM_LENGTH = 32600 // from openScreen
+                                                 - 8 * TICK_TIME_HISTORY_SIZE
+                                                 - MAX_LOG_LEVEL_NAME_LENGTH
+                                                 - 1 // manager state enum
+                                                 - 8; // block pos
     public static final int MAX_LABEL_LENGTH = 256;
 
     public static void compile(
