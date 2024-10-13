@@ -19,6 +19,21 @@ EVERY 20 TICKS DO
     OUTPUT RETAIN 1 EACH *seed* TO phyto
     -- this no longer lags the more items match lol
 END
+-- Add support for OR
+EVERY 20 TICKS DO
+    INPUT
+        5 stone OR dirt, -- move 5 total (stone|dirt)
+        cobblestone -- move all cobble
+    FROM chest
+END
+-- Fix correctness bug
+---- With multiple 'b' inventories, each one would keep 5 instead of 5 across them total
+EVERY 20 TICKS DO
+    input retain 5 from b
+    output to a
+END
+-- Update round robin example to advocate for using "retain" instead
+-- Add notice to inspector that slot numbers may not correspond with automation slots
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me

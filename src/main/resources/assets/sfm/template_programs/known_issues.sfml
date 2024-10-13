@@ -31,11 +31,3 @@ NAME "Known issues"
 -- scroll bar in the logs gui becomes inaccurate as logs grow
 
 -- Sorry for any inconveniences :(
-
-
--- Correctness bug:
--- With multiple 'b' inventories, each one will keep 5 instead of 5 across them total
-EVERY 20 TICKS DO
-    input retain 5 from b
-    output to a
-END
