@@ -134,13 +134,14 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode {
                 // user may be using inspection on a resource type that doesn't exist
                 return List.of(this);
             }
-            List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().getEntries().stream()
-                    .filter(e -> matchesResourceLocation(e.getKey().location()))
+            List<ResourceIdentifier<STACK, ITEM, CAP>> rtn = resourceType.getRegistry().getKeys()
+                    .stream()
+                    .filter(this::matchesResourceLocation)
                     .map(e -> new ResourceIdentifier<STACK, ITEM, CAP>(
                             resourceTypeNamespace,
                             resourceTypeName,
-                            e.getKey().location().getNamespace(),
-                            e.getKey().location().getPath()
+                            e.getNamespace(),
+                            e.getPath()
                     )).toList();
             //noinspection unchecked,rawtypes
             expansionCache.put(this, (List) rtn);
