@@ -2,7 +2,19 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-import java.util.function.BiPredicate;
+public interface WithClause extends ASTNode {
+    <STACK> boolean matchesStack(
+            ResourceType<STACK, ?, ?> resourceType,
+            STACK stack
+    );
 
-public interface WithClause<ENTRY> extends ASTNode, BiPredicate<ResourceType<ENTRY, ?, ?>, ENTRY> {
+    final class WithClauseThatAlwaysReturnsTrue implements WithClause {
+        @Override
+        public <STACK> boolean matchesStack(
+                ResourceType<STACK, ?, ?> resourceType,
+                STACK stack
+        ) {
+            return true;
+        }
+    }
 }

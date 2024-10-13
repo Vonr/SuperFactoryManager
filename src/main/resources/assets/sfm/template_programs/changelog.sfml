@@ -5,7 +5,35 @@ NAME "Changelog"
 -- https://ko-fi.com/teamdman
 
 ---- 4.20.0-pre ----
--- WIP: Fix disks having no name when program has no name
+-- Fix disks having no name when program has no name for 1.21+
+-- VSCode extension updates, thanks @Titop54 for the help <3
+-- Fix max program length ungraceful crash, thanks @Crazy
+---- Set MAX_PROGRAM_LENGTH to ~32,300 because of vanilla constraints
+-- Renamed resource types example to include "fluid" in the title
+-- Add edit-in-hand reminder text to disk when no program present
+-- Add reminder to push labels when warnings present
+-- Optimize EACH limits
+EVERY 20 TICKS DO
+    INPUT FROM chest
+
+    OUTPUT RETAIN 1 EACH *seed* TO phyto
+    -- this no longer lags the more items match lol
+END
+-- Add support for OR
+EVERY 20 TICKS DO
+    INPUT
+        5 stone OR dirt, -- move 5 total (stone|dirt)
+        cobblestone -- move all cobble
+    FROM chest
+END
+-- Fix correctness bug
+---- With multiple 'b' inventories, each one would keep 5 instead of 5 across them total
+EVERY 20 TICKS DO
+    input retain 5 from b
+    output to a
+END
+-- Update round robin example to advocate for using "retain" instead
+-- Add notice to inspector that slot numbers may not correspond with automation slots
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me
