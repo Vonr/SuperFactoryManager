@@ -142,7 +142,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                             sb.append(inputStatement.toStringPretty()).append("\n");
                         });
 
-                        List<ResourceLimit<STACK, ITEM, CAP>> resourceLimitList = new ArrayList<>();
+                        List<ResourceLimit> resourceLimitList = new ArrayList<>();
                         slotContents.forEach((slot, stack) -> {
                             ResourceLocation stackId = resourceType.getRegistryKey(stack);
                             ResourceIdentifier<STACK, ITEM, CAP> resourceIdentifier = new ResourceIdentifier<>(
@@ -151,9 +151,9 @@ public record ServerboundContainerExportsInspectionRequestPacket(
                                     stackId.getNamespace(),
                                     stackId.getPath()
                             );
-                            ResourceLimit<STACK, ITEM, CAP> resourceLimit = new ResourceLimit<>(
-                                    resourceIdentifier,
-                                    Limit.MAX_QUANTITY_NO_RETENTION, resourceIdentifier.getDefaultWith()
+                            ResourceLimit resourceLimit = new ResourceLimit(
+                                    new ResourceIdSet(List.of(resourceIdentifier)),
+                                    Limit.MAX_QUANTITY_NO_RETENTION, With.ALWAYS_TRUE
                             );
                             resourceLimitList.add(resourceLimit);
                         });
