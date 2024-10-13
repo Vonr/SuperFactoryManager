@@ -10,6 +10,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -60,9 +61,9 @@ public class ContainerScreenInspectorHandler {
     @SubscribeEvent
     public static void onGuiRender(ScreenEvent.Render.Post event) {
         if (!visible) return;
-        if (event.getScreen() instanceof AbstractContainerScreen<?> acs) {
-            lastScreen = acs;
-            AbstractContainerMenu menu = acs.getMenu();
+        if (event.getScreen() instanceof AbstractContainerScreen<?> screen) {
+            lastScreen = screen;
+            AbstractContainerMenu menu = screen.getMenu();
             int containerSlotCount = 0;
             int inventorySlotCount = 0;
             PoseStack poseStack = event.getPoseStack();
@@ -74,6 +75,7 @@ public class ContainerScreenInspectorHandler {
 
 
             // draw index on each slot
+            Font font = Minecraft.getInstance().font;
             for (var slot : menu.slots) {
                 int colour;
                 if (slot.container instanceof Inventory) {
@@ -84,17 +86,26 @@ public class ContainerScreenInspectorHandler {
                     colour = 0xFFF;
                     containerSlotCount++;
                 }
-                Minecraft.getInstance().font.draw(
+                font.draw(
                         poseStack,
                         Component.literal(Integer.toString(slot.getSlotIndex())),
-                        acs.getGuiLeft() + slot.x,
-                        acs.getGuiTop() + slot.y,
+                        screen.getGuiLeft() + slot.x,
+                        screen.getGuiTop() + slot.y,
                         colour
                 );
             }
 
             // draw text for slot totals
-            Minecraft.getInstance().font.drawShadow(
+            var notice = LocalizationKeys.CONTAINER_INSPECTOR_NOTICE.getComponent().withStyle(ChatFormatting.GOLD);
+            int offset = font.width(notice) / 2;
+            font.drawShadow(
+                    poseStack,
+                    notice,
+                    screen.width / 2f - offset,
+                    5,
+                    0xFFFFFF
+            );
+            font.drawShadow(
                     poseStack,
                     LocalizationKeys.CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT.getComponent(Component
                                                                                                              .literal(
@@ -103,10 +114,10 @@ public class ContainerScreenInspectorHandler {
                                                                                                              .withStyle(
                                                                                                                      ChatFormatting.BLUE)),
                     5,
-                    5,
+                    25,
                     0xFFFFFF
             );
-            Minecraft.getInstance().font.drawShadow(
+            font.drawShadow(
                     poseStack,
                     LocalizationKeys.CONTAINER_INSPECTOR_INVENTORY_SLOT_COUNT.getComponent(Component
                                                                                                              .literal(
@@ -115,7 +126,7 @@ public class ContainerScreenInspectorHandler {
                                                                                                              .withStyle(
                                                                                                                      ChatFormatting.YELLOW)),
                     5,
-                    25,
+                    40,
                     0xFFFFFF
             );
             poseStack.popPose();

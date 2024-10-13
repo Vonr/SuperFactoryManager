@@ -12,6 +12,8 @@ import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
 import ca.teamdman.sfm.common.registry.SFMPackets;
+import ca.teamdman.sfm.common.util.SFMUtils;
+import ca.teamdman.sfml.ast.Program;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
@@ -294,6 +296,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void sendProgram(String program) {
+        program = SFMUtils.truncate(program, Program.MAX_PROGRAM_LENGTH);
         SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerProgramPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION,

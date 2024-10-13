@@ -243,6 +243,8 @@ public class DiskItem extends Item {
                     list.addAll(ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(program, false));
                 }
             }
+        } else {
+            list.add(LocalizationKeys.DISK_EDIT_IN_HAND_TOOLTIP.getComponent().withStyle(ChatFormatting.GRAY));
         }
     }
 }

@@ -57,7 +57,7 @@ public class ExamplesScreen extends Screen {
                                 successProgram.name().isBlank() ? entry.getKey().toString() : successProgram.name(),
                                 finalProgram
                         ),
-                        failure -> templatePrograms.put(entry.getKey().toString(), finalProgram)
+                        failure -> templatePrograms.put(String.format("(compile failed) %s", entry.getKey().toString()), finalProgram)
                 );
             } catch (IOException ignored) {
             }
