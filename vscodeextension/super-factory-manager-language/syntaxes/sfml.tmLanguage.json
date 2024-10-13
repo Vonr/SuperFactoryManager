@@ -18,19 +18,65 @@
 	"repository": {
 		"keywords": {
 			"patterns": [
-				{
-					"name": "keyword.control.sfml",
-					"match": "\\b(IF|THEN|MOVE|FROM|TO|INPUT|OUTPUT|WHERE|SLOTS|RETAIN|EACH|TOP|BOTTOM|NORTH|EAST|SOUTH|WEST|SIDE|SELF|TICKS|SECONDS|EVERY|REDSTONE|PULSE|WORLD|PROGRAM|ELSE|if|then|move|from|to|input|output|where|slots|retain|each|top|bottom|north|east|south|west|side|self|ticks|seconds|every|redstone|pulse|world|program|else)\\b"
-				},
-				{
-					"name": "storage.type.name.sfml",
-					"match": "\\b(name|NAME)\\b"
-				},
-				{
-					"name": "keyword.control.flow.sfml",
-					"match": "\\b(DO|do|END|end)\\b"
-				}
-			]
+			{
+				"name": "variable.parameter.sfml",
+				"match": "(?i)\\b(TICKS|TICK)\\b"
+			},
+			{
+				"name": "variable.parameter.sfml",
+				"match": "(?i)\\b(FLUID|GAS|ITEM|FE)\\b\\s*:\\s*(\\S+)"
+			},
+			{
+				"name": "variable.parameter.sfml",
+				"match": "(?i)(?<=INPUT\\s)(.*?)\\s+(?=FROM|EXCEPT|RETAIN)"
+			},
+			{
+				"name": "variable.parameter.sfml",
+				"match": "(?i)(?<=OUTPUT\\s)(.*?)\\s+(?=TO|EXCEPT|RETAIN)"
+			},
+
+			{
+				"name": "storage.type.primitive.sfml",
+				"match": "(?i)\\b(FORGET)\\b"
+			},
+			{
+				"name": "storage.type.primitive.sfml",
+				"match": "(?i)\\bROUND(\\s+ROBIN(\\s+BY(\\s+(LABEL|BLOCK))?)?)?\\b"
+			},
+			{
+				"name": "storage.type.primitive.sfml",
+				"match": "(?i)(?<=\\s)(EQ|GT|LT|LE|GE)(?=\\s)"
+			},
+			{
+				"name": "storage.type.primitive.sfml",
+				"match": "(?<=\\s)(=|>|<|<=|>=)(?=\\s)"
+			},
+
+			{
+				"name": "keyword.control.sfml",
+				"match": "(?i)\\b(EXCEPT|MOVE|FROM|TO|INPUT|OUTPUT|WHERE|SLOTS|RETAIN|EACH|TOP|BOTTOM|NORTH|EAST|SOUTH|WEST|SIDE|SELF|SECONDS|EVERY|PULSE|WORLD|PROGRAM)\\b"
+			},
+
+			{
+				"name": "storage.type.name.sfml",
+				"match": "(?i)\\b(NAME)\\b"
+			},
+
+			{
+				"name": "keyword.control.flow.sfml",
+				"match": "(?i)\\b(DO|END|IF|ELSE|THEN)\\b"
+			},
+
+			{
+				"name": "invalid",
+				"match": "(?i)(?<=\\bEVERY\\s+)REDSTONE(?=\\s+PULSE\\b)"
+			},
+			{
+				"name": "invalid",
+				"match": "(?i)(?<=\\bIF\\s+)REDSTONE(?=\\s+(EQ|GT|LT|LE|GE)\\b)"
+			}
+		]
+
 		},
 		"comments": {
 			"patterns": [
@@ -50,7 +96,7 @@
 			"patterns": [
 				{
 					"name": "constant.numeric.sfml",
-					"match": "\\d+"
+					"match": "\\b\\d+\\b"
 				}
 			]
 		},

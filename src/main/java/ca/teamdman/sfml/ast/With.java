@@ -2,28 +2,23 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-public record With<ENTRY>(
-        WithClause<ENTRY> condition,
+public record With(
+        WithClause condition,
         WithMode mode,
         String sourceCode
-) implements WithClause<ENTRY> {
-    public static final With<?> ALWAYS_TRUE = new With<>(
-            (resourceType, entry) -> true,
+) implements WithClause {
+    public static final With ALWAYS_TRUE = new With(
+            new WithClauseThatAlwaysReturnsTrue(),
             WithMode.WITHOUT,
-            ""
+            "(ANYTHING => TRUE)"
     );
 
-    @SuppressWarnings("unchecked")
-    public static <A> With<A> alwaysTrue() {
-        return (With<A>) ALWAYS_TRUE;
-    }
-
     @Override
-    public boolean test(
-            ResourceType<ENTRY, ?, ?> entryResourceType,
-            ENTRY entry
+    public <STACK> boolean matchesStack(
+            ResourceType<STACK, ?, ?> resourceType,
+            STACK stack
     ) {
-        return condition.test(entryResourceType, entry);
+        return condition.matchesStack(resourceType, stack);
     }
 
     public enum WithMode {

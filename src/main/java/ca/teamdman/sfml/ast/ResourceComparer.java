@@ -24,7 +24,7 @@ public record ResourceComparer<STACK, ITEM, CAP>(
                     type.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> {
                         long inThisInv = 0;
                         for (var stack : (Iterable<STACK>) type.getStacksInSlots(cap, labelAccess.slots())::iterator) {
-                            if (this.res.test(stack)) {
+                            if (this.res.matchesStack(stack)) {
                                 inThisInv += type.getAmount(stack);
                                 overallCount.addAndGet(type.getAmount(stack));
                             }

@@ -40,14 +40,11 @@ outputStatement : OUTPUT outputResourceLimits? resourceExclusion? TO EACH? label
                 | TO EACH? labelAccess OUTPUT outputResourceLimits? resourceExclusion?
                 ;
 
-resourceExclusion       : EXCEPT resourceId (COMMA resourceId)* COMMA?;
-        // TODO: support `EXCEPT TAG minecraft:mineable/shovel` syntax
+inputResourceLimits   : resourceLimitList; // separate for different defaults
+outputResourceLimits  : resourceLimitList; // separate for different defaults
 
-
-inputResourceLimits   : resourceLimits; // separate for different defaults
-outputResourceLimits  : resourceLimits; // separate for different defaults
-resourceLimits  : resourceLimit (COMMA resourceLimit)* COMMA?;
-resourceLimit   : limit? resourceId with? // TODO: rename resourceId to resourceMatcher, add support for AND, OR; 5 RETAIN 4 EACH *ingot* or #c:ingot
+resourceLimitList  : resourceLimit (COMMA resourceLimit)* COMMA?;
+resourceLimit   : limit? resourceIdDisjunction with? // TODO: rename resourceIds to resourceMatcher, add support for AND, OR; 5 RETAIN 4 EACH *ingot* or #c:ingot
                 | limit with?
                 | with
                 ;
@@ -55,8 +52,20 @@ limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
                 | quantity              #QuantityLimit
                 ;
+
 quantity        : number EACH?;
 retention       : RETAIN number EACH?;
+
+resourceExclusion       : EXCEPT resourceIdList;
+        // TODO: support `EXCEPT TAG minecraft:mineable/shovel` syntax
+
+resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON (identifier)?)?)?)? # Resource
+                | string                                                                            # StringResource
+                ;
+
+resourceIdList          : resourceId (COMMA resourceId)* COMMA?;
+resourceIdDisjunction   : resourceId (OR resourceId)* OR?;
+
 
 with        : WITH withClause
             | WITHOUT withClause
@@ -131,10 +140,6 @@ labelAccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?
 roundrobin      : ROUND ROBIN BY (LABEL | BLOCK);
 label           : (identifier)   #RawLabel
                 | string                  #StringLabel
-                ;
-
-resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON (identifier)?)?)?)? # Resource
-                | string                                                                            # StringResource
                 ;
 
 identifier : (IDENTIFIER | REDSTONE) ;

@@ -99,7 +99,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
         @SuppressWarnings("unchecked") STACK stack_ = (STACK) stack;
         if (isEmpty(stack_)) return false;
         var stackId = getRegistryKey(stack_);
-        return resourceId.matchesStack(stackId);
+        return resourceId.matchesResourceLocation(stackId);
     }
 
     public abstract boolean matchesCapabilityType(Object o);
