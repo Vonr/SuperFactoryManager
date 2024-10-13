@@ -3792,4 +3792,100 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(bDirt == 5, "dirt should depart from b");
         });
     }
+
+
+    @GameTest(template = "3x2x1")
+    public static void move_using_or(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = getItemHandler(helper, rightPos);
+        var leftChest = getItemHandler(helper, leftPos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+        leftChest.insertItem(1, new ItemStack(Blocks.STONE, 64), false);
+        leftChest.insertItem(2, new ItemStack(Blocks.COBBLESTONE, 64), false);
+        leftChest.insertItem(3, new ItemStack(Blocks.COBBLESTONE, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT
+                                               5 stone or dirt,
+                                               cobblestone FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // count of stone + dirt in left must be 64*2-5
+            int leftStoneDirt = count(leftChest, Items.STONE) + count(leftChest, Items.DIRT);
+            assertTrue(leftStoneDirt == 64 * 2 - 5, "stone and dirt should depart");
+            // count of stone + dirt in right must be 5
+            int rightStoneDirt = count(rightChest, Items.STONE) + count(rightChest, Items.DIRT);
+            assertTrue(rightStoneDirt == 5, "stone and dirt should arrive");
+            // left cobblestone count = 0
+            assertTrue(count(leftChest, Items.COBBLESTONE) == 0, "no cobblestone should remain");
+            // right cobblestone count = 64*2
+            assertTrue(count(rightChest, Items.COBBLESTONE) == 64 * 2, "cobblestone should arrive");
+        });
+    }
+    @GameTest(template = "3x2x1")
+    public static void move_using_each_or(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = getItemHandler(helper, rightPos);
+        var leftChest = getItemHandler(helper, leftPos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+        leftChest.insertItem(1, new ItemStack(Blocks.STONE, 64), false);
+        leftChest.insertItem(2, new ItemStack(Blocks.COBBLESTONE, 64), false);
+        leftChest.insertItem(3, new ItemStack(Blocks.COBBLESTONE, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT
+                                               5 each stone or dirt,
+                                               cobblestone FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // left dirt count = 64-5
+            assertTrue(count(leftChest, Items.DIRT) == 64 - 5, "dirt should depart");
+            // left stone count = 64-5
+            assertTrue(count(leftChest, Items.STONE) == 64 - 5, "stone should depart");
+            // right dirt count = 5
+            assertTrue(count(rightChest, Items.DIRT) == 5, "dirt should arrive");
+            // right stone count = 5
+            assertTrue(count(rightChest, Items.STONE) == 5, "stone should arrive");
+            // left cobblestone count = 0
+            assertTrue(count(leftChest, Items.COBBLESTONE) == 0, "no cobblestone should remain");
+            // right cobblestone count = 64*2
+            assertTrue(count(rightChest, Items.COBBLESTONE) == 64 * 2, "cobblestone should arrive");
+        });
+    }
 }
