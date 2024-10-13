@@ -13,12 +13,16 @@ import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.ColorRGBA;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -28,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @EventBusSubscriber(modid = SFM.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 /*
@@ -36,9 +41,8 @@ import java.util.Set;
  */
 public class ItemWorldRenderer {
     private static final int BUFFER_SIZE = 256;
-    @SuppressWarnings("deprecation")
     private static final RenderType RENDER_TYPE = RenderType.create(
-            "sfmlabels",
+            "sfm_overlay",
             DefaultVertexFormat.POSITION_COLOR,
             VertexFormat.Mode.QUADS,
             BUFFER_SIZE,
@@ -64,241 +68,260 @@ public class ItemWorldRenderer {
                                     }
                             )
                     )
-                    .createCompositeState(true)
+                    .createCompositeState(false)
     );
+
+    private static final ColorRGBA capabilityColor = rgbaToColorRGBA(100, 0, 255, 100);
+    private static final ColorRGBA cableColor = rgbaToColorRGBA(100, 255, 0, 100);
     @Nullable
-    private static VertexBuffer capabilityProviderVBO;
+    private static VertexBuffer[] capabilityVBO = null;
     @Nullable
-    private static VertexBuffer cableVBO;
+    private static VertexBuffer[] cableVBO = null;
 
     @SubscribeEvent
-    public static void renderLabelHighlights(RenderLevelStageEvent event) {
-        var stages = new RenderLevelStageEvent.Stage[]{
-//                RenderLevelStageEvent.Stage.AFTER_SKY,
-//                RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS,
-//                RenderLevelStageEvent.Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS,
-//                RenderLevelStageEvent.Stage.AFTER_CUTOUT_BLOCKS,
-//                RenderLevelStageEvent.Stage.AFTER_ENTITIES,
-//                RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES,
-//                RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS,
-//                RenderLevelStageEvent.Stage.AFTER_TRIPWIRE_BLOCKS,
-RenderLevelStageEvent.Stage.AFTER_PARTICLES,
-//                RenderLevelStageEvent.Stage.AFTER_WEATHER,
-//RenderLevelStageEvent.Stage.AFTER_LEVEL
-        };
+    public static void renderOverlays(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
 
-        int index = (event.getRenderTick() / 30) % stages.length;
-        int oldIndex = ((event.getRenderTick() - 1) / 30) % stages.length;
-        var targetStage = stages[index];
-        if (index != oldIndex) {
-            System.out.println("New stage: " + targetStage);
-        }
-//        targetStage = RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS;
-        if (event.getStage() != targetStage) return;
-        var player = Minecraft.getInstance().player;
+        Minecraft minecraft = Minecraft.getInstance();
+        LocalPlayer player = minecraft.player;
         if (player == null) return;
 
-        var labelGun = player.getMainHandItem();
-        if (!(labelGun.getItem() instanceof LabelGunItem)) labelGun = player.getOffhandItem();
-        if (labelGun.getItem() instanceof LabelGunItem) {
-            var labelPositionHolder = LabelPositionHolder.from(labelGun);
-            var labelsByPosition = HashMultimap.<BlockPos, String>create();
-            labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
+        PoseStack poseStack = event.getPoseStack();
+        Camera camera = minecraft.gameRenderer.getMainCamera();
+        MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
 
-            var poseStack = event.getPoseStack();
-            var camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-            var bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
 
-            RenderSystem.disableDepthTest();
-
-            poseStack.pushPose();
-            { // draw labels
-                poseStack.pushPose();
-                poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-                for (var entry : labelsByPosition.asMap().entrySet()) {
-                    BlockPos pos = entry.getKey();
-                    Collection<String> labels = entry.getValue();
-                    drawLabelsForPos(event, poseStack, camera, pos, bufferSource, labels);
-                }
-                poseStack.popPose();
-            }
-            { // draw highlights
-                poseStack.pushPose();
-                poseStack.mulPose(camera.rotation().invert());
-                poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-
-                RENDER_TYPE.setupRenderState();
-
-                if (capabilityProviderVBO == null) {
-                    capabilityProviderVBO = new VertexBuffer(VertexBuffer.Usage.STATIC);
-                    capabilityProviderVBO.bind();
-                    capabilityProviderVBO.upload(createCapabilityProviderVBO());
-                } else {
-                    capabilityProviderVBO.bind();
-                }
-
-                for (var pos : labelsByPosition.keySet()) {
-                    poseStack.pushPose();
-                    poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
-
-                    //noinspection DataFlowIssue
-                    capabilityProviderVBO.drawWithShader(
-                            poseStack.last().pose(),
-                            event.getProjectionMatrix(),
-                            GameRenderer.getPositionColorShader()
-                    );
-                    poseStack.popPose();
-                }
-
-                VertexBuffer.unbind();
-                RENDER_TYPE.clearRenderState();
-                poseStack.popPose();
-            }
-            bufferSource.endBatch();
-            poseStack.popPose();
-            RenderSystem.enableDepthTest();
+        // Check for Label Gun
+        ItemStack labelGun = getHeldItemOfType(player, LabelGunItem.class);
+        if (labelGun != null) {
+            handleLabelGun(event, poseStack, camera, bufferSource, labelGun);
         }
 
-        var networkTool = player.getMainHandItem();
-        if (!(networkTool.getItem() instanceof NetworkToolItem)) networkTool = player.getOffhandItem();
-        if (networkTool.getItem() instanceof NetworkToolItem) {
-            Set<BlockPos> cablePositions = networkTool.getOrDefault(SFMDataComponents.CABLE_POSITIONS, new HashSet<>());
-            Set<BlockPos> capabilityProviderPositions = networkTool.getOrDefault(
-                    SFMDataComponents.CAPABILITY_POSITIONS,
-                    new HashSet<>()
-            );
-
-            var poseStack = event.getPoseStack();
-            var camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-            var bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-
-            RenderSystem.disableDepthTest();
-
-            poseStack.pushPose();
-//            poseStack.translate(
-//                    -camera.getPosition().x,
-//                    -camera.getPosition().y,
-//                    -camera.getPosition().z
-//            );
-//            poseStack.mulPose(camera.rotation());
-////            poseStack.mulPose(camera.rotation().invert());
-
-            { // draw highlights
-                poseStack.pushPose();
-                poseStack.mulPose(camera.rotation().invert());
-                poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-
-                RENDER_TYPE.setupRenderState();
-
-                if (capabilityProviderVBO == null) {
-                    capabilityProviderVBO = new VertexBuffer(VertexBuffer.Usage.STATIC);
-                    capabilityProviderVBO.bind();
-                    capabilityProviderVBO.upload(createCapabilityProviderVBO());
-                } else {
-                    capabilityProviderVBO.bind();
-                }
-
-                for (var blockPos : capabilityProviderPositions) {
-                    poseStack.pushPose();
-                    poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-
-                    //noinspection DataFlowIssue
-                    capabilityProviderVBO.drawWithShader(
-                            poseStack.last().pose(),
-                            event.getProjectionMatrix(),
-                            GameRenderer.getPositionColorShader()
-                    );
-                    poseStack.popPose();
-                }
-
-
-                if (cableVBO == null) {
-                    cableVBO = new VertexBuffer(VertexBuffer.Usage.STATIC);
-                    cableVBO.bind();
-                    cableVBO.upload(createCableVBO());
-                } else {
-                    cableVBO.bind();
-                }
-
-                for (var blockPos : cablePositions) {
-                    poseStack.pushPose();
-                    poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-
-                    //noinspection DataFlowIssue
-                    cableVBO.drawWithShader(
-                            poseStack.last().pose(),
-                            event.getProjectionMatrix(),
-                            GameRenderer.getPositionColorShader()
-                    );
-                    poseStack.popPose();
-                }
-
-                VertexBuffer.unbind();
-                RENDER_TYPE.clearRenderState();
-                poseStack.popPose();
-            }
-            bufferSource.endBatch();
-            poseStack.popPose();
-            RenderSystem.enableDepthTest();
+        // Check for Network Tool
+        ItemStack networkTool = getHeldItemOfType(player, NetworkToolItem.class);
+        if (networkTool != null) {
+            handleNetworkTool(event, poseStack, camera, bufferSource, networkTool);
         }
+
+        bufferSource.endBatch();
+        RenderSystem.enableDepthTest();
+        RenderSystem.enableCull();
     }
 
-    public static MeshData createCapabilityProviderVBO() {
-        return createShape(100, 0, 255, 100);
-    }
-
-    public static MeshData createCableVBO() {
-        return createShape(100, 255, 0, 100);
-    }
-
-    public static MeshData createShape(
-            int r,
-            int g,
-            int b,
-            int a
+    private static void handleLabelGun(
+            RenderLevelStageEvent event,
+            PoseStack poseStack,
+            Camera camera,
+            MultiBufferSource.BufferSource bufferSource,
+            ItemStack labelGun
     ) {
-        ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(4 * 6 * 8);
+        LabelPositionHolder labelPositionHolder = LabelPositionHolder.from(labelGun);
+        HashMultimap<BlockPos, String> labelsByPosition = HashMultimap.create();
+        labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
+
+        // Draw labels
+        poseStack.pushPose();
+        poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+
+        for (var entry : labelsByPosition.asMap().entrySet()) {
+            BlockPos pos = entry.getKey();
+            Collection<String> labels = entry.getValue();
+            drawLabelsForPos(poseStack, camera, pos, bufferSource, labels);
+        }
+        poseStack.popPose();
+
+        // Draw boxes
+
+        poseStack.pushPose();
+        poseStack.mulPose(camera.rotation().invert());
+        poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+
+        RENDER_TYPE.setupRenderState();
+
+        Set<BlockPos> labelKeySet = labelsByPosition.keySet();
+        for (Direction direction : Direction.values()) {
+            int ordinal = direction.ordinal();
+
+            VertexBuffer VBO;
+            if (capabilityVBO == null) {
+                capabilityVBO = new VertexBuffer[6];
+            }
+            if (capabilityVBO[ordinal] == null) {
+                capabilityVBO[ordinal] = new VertexBuffer(VertexBuffer.Usage.STATIC);
+                VBO = capabilityVBO[ordinal];
+                VBO.bind();
+                VBO.upload(createShape(direction, capabilityColor));
+            } else {
+                VBO = capabilityVBO[ordinal];
+                VBO.bind();
+            }
+
+            Set<BlockPos> faceNotTouchingLabel = labelKeySet.stream()
+                    .filter(pos -> !labelKeySet.contains(pos.relative(direction)))
+                    .collect(Collectors.toSet());
+
+            for (BlockPos blockPos : faceNotTouchingLabel) {
+                poseStack.pushPose();
+                poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+
+                //noinspection DataFlowIssue
+                VBO.drawWithShader(
+                        poseStack.last().pose(),
+                        event.getProjectionMatrix(),
+                        GameRenderer.getPositionColorShader()
+                );
+                poseStack.popPose();
+            }
+            VertexBuffer.unbind();
+        }
+        poseStack.popPose();
+        RENDER_TYPE.clearRenderState();
+    }
+
+    private static void handleNetworkTool(
+            RenderLevelStageEvent event,
+            PoseStack poseStack,
+            Camera camera,
+            MultiBufferSource.BufferSource bufferSource,
+            ItemStack networkTool
+    ) {
+        Set<BlockPos> cablePositions = networkTool.getOrDefault(SFMDataComponents.CABLE_POSITIONS, new HashSet<>());
+
+        poseStack.pushPose();
+
+        poseStack.mulPose(camera.rotation().invert());
+        poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+
+        RENDER_TYPE.setupRenderState();
+
+        for (Direction direction : Direction.values()) {
+            int ordinal = direction.ordinal();
+
+            VertexBuffer VBO;
+            if (cableVBO == null) {
+                cableVBO = new VertexBuffer[6];
+            }
+            if (cableVBO[ordinal] == null) {
+                cableVBO[ordinal] = new VertexBuffer(VertexBuffer.Usage.STATIC);
+                VBO = cableVBO[ordinal];
+                VBO.bind();
+                VBO.upload(createShape(direction, cableColor));
+            } else {
+                VBO = cableVBO[ordinal];
+                VBO.bind();
+            }
+
+            Set<BlockPos> faceNotTouchingCableBlock = cablePositions.stream()
+                    .filter(pos -> !cablePositions.contains(pos.relative(direction)))
+                    .collect(Collectors.toSet());
+            for (BlockPos blockPos : faceNotTouchingCableBlock) {
+                poseStack.pushPose();
+                poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+
+                //noinspection DataFlowIssue
+                VBO.drawWithShader(
+                        poseStack.last().pose(),
+                        event.getProjectionMatrix(),
+                        GameRenderer.getPositionColorShader()
+                );
+                poseStack.popPose();
+            }
+            VertexBuffer.unbind();
+        }
+        poseStack.popPose();
+        RENDER_TYPE.clearRenderState();
+    }
+
+    private static MeshData createShape(Direction direction, ColorRGBA color) {
+        ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(2 * 4 * 4);
         BufferBuilder builder = new BufferBuilder(
                 byteBufferBuilder,
                 VertexFormat.Mode.QUADS,
                 DefaultVertexFormat.POSITION_COLOR
         );
+        color = scaleColor(color, 1 - ((double) direction.ordinal() / 10));
 
-        builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
-        builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
-        builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
-        builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
-
-        builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
-        builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
-        builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
-        builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
-
-        builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
-        builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
-        builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
-        builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
-
-        builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
-        builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
-        builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
-        builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
-
-        builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
-        builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
-        builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
-        builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
-
-        builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
-        builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
-        builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
-        builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
+        switch (direction) {
+            case DOWN:
+                builder.addVertex(0F, 0F, 0F).setColor(color.rgba());
+                builder.addVertex(1F, 0F, 0F).setColor(color.rgba());
+                builder.addVertex(1F, 0F, 1F).setColor(color.rgba());
+                builder.addVertex(0F, 0F, 1F).setColor(color.rgba());
+                break;
+            case UP:
+                builder.addVertex(0F, 1F, 1F).setColor(color.rgba());
+                builder.addVertex(1F, 1F, 1F).setColor(color.rgba());
+                builder.addVertex(1F, 1F, 0F).setColor(color.rgba());
+                builder.addVertex(0F, 1F, 0F).setColor(color.rgba());
+                break;
+            case NORTH:
+                builder.addVertex(0F, 0F, 0F).setColor(color.rgba());
+                builder.addVertex(0F, 1F, 0F).setColor(color.rgba());
+                builder.addVertex(1F, 1F, 0F).setColor(color.rgba());
+                builder.addVertex(1F, 0F, 0F).setColor(color.rgba());
+                break;
+            case SOUTH:
+                builder.addVertex(1F, 0F, 1F).setColor(color.rgba());
+                builder.addVertex(1F, 1F, 1F).setColor(color.rgba());
+                builder.addVertex(0F, 1F, 1F).setColor(color.rgba());
+                builder.addVertex(0F, 0F, 1F).setColor(color.rgba());
+                break;
+            case WEST:
+                builder.addVertex(0F, 0F, 1F).setColor(color.rgba());
+                builder.addVertex(0F, 1F, 1F).setColor(color.rgba());
+                builder.addVertex(0F, 1F, 0F).setColor(color.rgba());
+                builder.addVertex(0F, 0F, 0F).setColor(color.rgba());
+                break;
+            case EAST:
+                builder.addVertex(1F, 0F, 0F).setColor(color.rgba());
+                builder.addVertex(1F, 1F, 0F).setColor(color.rgba());
+                builder.addVertex(1F, 1F, 1F).setColor(color.rgba());
+                builder.addVertex(1F, 0F, 1F).setColor(color.rgba());
+                break;
+        }
 
         return builder.buildOrThrow();
     }
 
+    private static ColorRGBA rgbaToColorRGBA(int red, int green, int blue, int alpha) {
+        return new ColorRGBA((red << 24) | (green << 16) | (blue << 8) | alpha);
+    }
+
+    private static ColorRGBA scaleColor(ColorRGBA originalColor, double scale) {
+        int color = originalColor.rgba();
+
+        int red = (color >> 24) & 0xFF;
+        int green = (color >> 16) & 0xFF;
+        int blue = (color >> 8) & 0xFF;
+        int alpha = color & 0xFF;
+
+        // Apply the scale to RGB components
+        red = Math.min(255, Math.max(0, (int) (red * scale)));
+        green = Math.min(255, Math.max(0, (int) (green * scale)));
+        blue = Math.min(255, Math.max(0, (int) (blue * scale)));
+
+        // Return the adjusted color as a packed int (RGBA)
+        return new ColorRGBA((red << 24) | (green << 16) | (blue << 8) | alpha);
+    }
+
+    @Nullable
+    private static ItemStack getHeldItemOfType(LocalPlayer player, Class<?> itemClass) {
+        ItemStack mainHandItem = player.getMainHandItem();
+        if (itemClass.isInstance(mainHandItem.getItem())) {
+            return mainHandItem;
+        }
+
+        ItemStack offhandItem = player.getOffhandItem();
+        if (itemClass.isInstance(offhandItem.getItem())) {
+            return offhandItem;
+        }
+
+        return null; // Neither hand holds the item
+    }
+
     private static void drawLabelsForPos(
-            RenderLevelStageEvent event,
             PoseStack poseStack,
             Camera camera,
             BlockPos pos,
@@ -331,5 +354,4 @@ RenderLevelStageEvent.Stage.AFTER_PARTICLES,
         }
         poseStack.popPose();
     }
-
 }
