@@ -90,24 +90,21 @@ public class ItemWorldRenderer {
         Camera camera = minecraft.gameRenderer.getMainCamera();
         MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
 
-        RenderSystem.disableDepthTest();
-        RenderSystem.disableCull();
+
+        // Check for Network Tool
+        // Handle before Label Gun as it also handles highlighting capabilities
+        ItemStack networkTool = getHeldItemOfType(player, NetworkToolItem.class);
+        if (networkTool != null) {
+            handleNetworkTool(event, poseStack, camera, bufferSource, networkTool);
+            return;
+        }
 
         // Check for Label Gun
         ItemStack labelGun = getHeldItemOfType(player, LabelGunItem.class);
         if (labelGun != null) {
             handleLabelGun(event, poseStack, camera, bufferSource, labelGun);
+            return;
         }
-
-        // Check for Network Tool
-        ItemStack networkTool = getHeldItemOfType(player, NetworkToolItem.class);
-        if (networkTool != null) {
-            handleNetworkTool(event, poseStack, camera, bufferSource, networkTool);
-        }
-
-        bufferSource.endBatch();
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
     }
 
     private static void handleLabelGun(
@@ -120,6 +117,9 @@ public class ItemWorldRenderer {
         LabelPositionHolder labelPositionHolder = LabelPositionHolder.from(labelGun);
         HashMultimap<BlockPos, String> labelsByPosition = HashMultimap.create();
         labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
+
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
 
         // Draw labels
         poseStack.pushPose();
@@ -178,6 +178,10 @@ public class ItemWorldRenderer {
         }
         poseStack.popPose();
         RENDER_TYPE.clearRenderState();
+
+        bufferSource.endBatch();
+        RenderSystem.enableDepthTest();
+        RenderSystem.enableCull();
     }
 
     private static void handleNetworkTool(
@@ -188,6 +192,11 @@ public class ItemWorldRenderer {
             ItemStack networkTool
     ) {
         Set<BlockPos> cablePositions = networkTool.getOrDefault(SFMDataComponents.CABLE_POSITIONS, new HashSet<>());
+        Set<BlockPos> capabilityPositions = networkTool.getOrDefault(SFMDataComponents.CAPABILITY_POSITIONS, new HashSet<>());
+
+
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
 
         poseStack.pushPose();
 
@@ -199,18 +208,19 @@ public class ItemWorldRenderer {
         for (Direction direction : Direction.values()) {
             int ordinal = direction.ordinal();
 
-            VertexBuffer VBO;
+            // Draw Cables
+            VertexBuffer C_VBO;
             if (cableVBO == null) {
                 cableVBO = new VertexBuffer[6];
             }
             if (cableVBO[ordinal] == null) {
                 cableVBO[ordinal] = new VertexBuffer(VertexBuffer.Usage.STATIC);
-                VBO = cableVBO[ordinal];
-                VBO.bind();
-                VBO.upload(createShape(direction, cableColor));
+                C_VBO = cableVBO[ordinal];
+                C_VBO.bind();
+                C_VBO.upload(createShape(direction, cableColor));
             } else {
-                VBO = cableVBO[ordinal];
-                VBO.bind();
+                C_VBO = cableVBO[ordinal];
+                C_VBO.bind();
             }
 
             Set<BlockPos> faceNotTouchingCableBlock = cablePositions.stream()
@@ -221,7 +231,39 @@ public class ItemWorldRenderer {
                 poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
 
                 //noinspection DataFlowIssue
-                VBO.drawWithShader(
+                C_VBO.drawWithShader(
+                        poseStack.last().pose(),
+                        event.getProjectionMatrix(),
+                        GameRenderer.getPositionColorShader()
+                );
+                poseStack.popPose();
+            }
+            VertexBuffer.unbind();
+
+            // Draw Capabilities
+            VertexBuffer L_VBO;
+            if (capabilityVBO == null) {
+                capabilityVBO = new VertexBuffer[6];
+            }
+            if (capabilityVBO[ordinal] == null) {
+                capabilityVBO[ordinal] = new VertexBuffer(VertexBuffer.Usage.STATIC);
+                L_VBO = capabilityVBO[ordinal];
+                L_VBO.bind();
+                L_VBO.upload(createShape(direction, capabilityColor));
+            } else {
+                L_VBO = capabilityVBO[ordinal];
+                L_VBO.bind();
+            }
+
+            Set<BlockPos> faceNotTouchingCapability = capabilityPositions.stream()
+                    .filter(pos -> !capabilityPositions.contains(pos.relative(direction)))
+                    .collect(Collectors.toSet());
+            for (BlockPos blockPos : faceNotTouchingCapability) {
+                poseStack.pushPose();
+                poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+
+                //noinspection DataFlowIssue
+                L_VBO.drawWithShader(
                         poseStack.last().pose(),
                         event.getProjectionMatrix(),
                         GameRenderer.getPositionColorShader()
@@ -232,6 +274,10 @@ public class ItemWorldRenderer {
         }
         poseStack.popPose();
         RENDER_TYPE.clearRenderState();
+
+        bufferSource.endBatch();
+        RenderSystem.enableDepthTest();
+        RenderSystem.enableCull();
     }
 
     private static MeshData createShape(Direction direction, ColorRGBA color) {
