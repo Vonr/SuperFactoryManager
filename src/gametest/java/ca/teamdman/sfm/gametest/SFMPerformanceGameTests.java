@@ -6,7 +6,6 @@ import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -83,7 +82,10 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(pos);
                 for (int i = 0; i < barrel.getContainerSize(); i++) {
                     ItemStack found = barrel.getItem(i);
-                    assertTrue(found.isEmpty(), "Items did not leave, pos=" + helper.absolutePos(pos) + " i=" + i + " found=" + found);
+                    assertTrue(
+                            found.isEmpty(),
+                            "Items did not leave, pos=" + helper.absolutePos(pos) + " i=" + i + " found=" + found
+                    );
                 }
             });
             // ensure all the dest chests are full
@@ -94,7 +96,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 }
             });
 
-            helper.succeed();
+
         });
     }
 
@@ -166,7 +168,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                 }
             });
 
-            helper.succeed();
+
         });
     }
 
@@ -419,137 +421,134 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
                     }
                 }
             }
-
-            // add the crafting station
-            helper.setBlock(new BlockPos(0, 2, 1), Blocks.CRAFTING_TABLE);
-            helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.TEST_BARREL_BLOCK.get());
-            helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.CABLE_BLOCK.get());
-            helper.setBlock(new BlockPos(1, 2, 1), SFMBlocks.CABLE_BLOCK.get());
-            helper.setBlock(new BlockPos(1, 2, 2), SFMBlocks.CABLE_BLOCK.get());
-
-            // add the manager
-            helper.setBlock(new BlockPos(2, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
-            var manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(2, 2, 0));
-            manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
-
-            // create the program
-            var program = """
-NAME "gather supplies"
-
-EVERY 20 TICKS DO
-   INPUT
-       retain 64 gold_ingot,
-       retain 64 gold_block,
-       retain 64 iron_ingot,
-       retain 64 iron_block,
-       retain 64 diamond,
-       retain 64 diamond_block,
-       retain 64 emerald,
-       retain 64 emerald_block,
-       retain 64 lapis_lazuli,
-       retain 64 lapis_block,
-       retain 64 "redstone",
-       retain 64 redstone_block,
-       retain 64 coal,
-       retain 64 coal_block,
-       retain 64 netherite_ingot,
-       retain 64 netherite_block,
-       retain 64 torch,
-       retain 16 bucket,
-       retain 64 chest,
-       retain 64 crafting_table,
-       retain 64 furnace,
-       retain 64 cobblestone,
-       retain 64 *:*_log,
-       retain 64 *:*_planks
-    FROM chest
-    INPUT EXCEPT
-       gold_ingot,
-       gold_block,
-       iron_ingot,
-       iron_block,
-       diamond,
-       diamond_block,
-       emerald,
-       emerald_block,
-       lapis_lazuli,
-       lapis_block,
-       "redstone",
-       redstone_block,
-       coal,
-       coal_block,
-       netherite_ingot,
-       netherite_block,
-       torch,
-       bucket,
-       chest,
-       crafting_table,
-       furnace,
-       cobblestone,
-       *:*_log,
-       *:*_planks
-   FROM chest
-   OUTPUT TO storage
-END
-
-EVERY 20 TICKS DO
-   INPUT FROM storage
-   OUTPUT
-       retain 64 gold_ingot,
-       retain 64 gold_block,
-       retain 64 iron_ingot,
-       retain 64 iron_block,
-       retain 64 diamond,
-       retain 64 diamond_block,
-       retain 64 emerald,
-       retain 64 emerald_block,
-       retain 64 lapis_lazuli,
-       retain 64 lapis_block,
-       retain 64 "redstone",
-       retain 64 redstone_block,
-       retain 64 coal,
-       retain 64 coal_block,
-       retain 64 netherite_ingot,
-       retain 64 netherite_block,
-       retain 64 torch,
-       retain 16 bucket,
-       retain 64 chest,
-       retain 64 crafting_table,
-       retain 64 furnace,
-       retain 64 cobblestone,
-       retain 64 *:*_log,
-       retain 64 *:*_planks
-   TO chest
-END
-                    """.stripTrailing().stripIndent();
-
-            // set the labels
-            LabelPositionHolder.empty()
-                    .addAll("storage", storage.stream().map(helper::absolutePos).toList())
-                    .add("chest", helper.absolutePos(new BlockPos(0, 2, 0)))
-                    .save(manager.getDisk().get());
-
-            // load the program
-            manager.setProgram(program);
-
-            succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
-                // the inventory should be stocked with a stack of each item
-                BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
-                for (Item item : items) {
-                    for (int slot = 0; slot < barrel.getContainerSize(); slot++) {
-                        ItemStack stack = barrel.getItem(slot);
-                        if (stack.getItem() == item) {
-                            assertTrue(
-                                    stack.getCount() == stack.getMaxStackSize(),
-                                    "Item " + item + " is not fully stocked"
-                            );
-                        }
-                    }
-                }
-            });
         }
 
+        // add the crafting station
+        helper.setBlock(new BlockPos(0, 2, 1), Blocks.CRAFTING_TABLE);
+        helper.setBlock(new BlockPos(0, 2, 0), SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.CABLE_BLOCK.get());
+        helper.setBlock(new BlockPos(1, 2, 1), SFMBlocks.CABLE_BLOCK.get());
+        helper.setBlock(new BlockPos(1, 2, 2), SFMBlocks.CABLE_BLOCK.get());
 
-        helper.succeed();
+        // add the manager
+        helper.setBlock(new BlockPos(2, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        var manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(2, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // create the program
+        var program = """
+                NAME "gather supplies"
+                
+                EVERY 20 TICKS DO
+                   INPUT
+                       retain 64 gold_ingot,
+                       retain 64 gold_block,
+                       retain 64 iron_ingot,
+                       retain 64 iron_block,
+                       retain 64 diamond,
+                       retain 64 diamond_block,
+                       retain 64 emerald,
+                       retain 64 emerald_block,
+                       retain 64 lapis_lazuli,
+                       retain 64 lapis_block,
+                       retain 64 "redstone",
+                       retain 64 redstone_block,
+                       retain 64 coal,
+                       retain 64 coal_block,
+                       retain 64 netherite_ingot,
+                       retain 64 netherite_block,
+                       retain 64 torch,
+                       retain 16 bucket,
+                       retain 64 chest,
+                       retain 64 crafting_table,
+                       retain 64 furnace,
+                       retain 64 cobblestone,
+                       retain 64 *:*_log,
+                       retain 64 *:*_planks
+                    FROM chest
+                    INPUT EXCEPT
+                       gold_ingot,
+                       gold_block,
+                       iron_ingot,
+                       iron_block,
+                       diamond,
+                       diamond_block,
+                       emerald,
+                       emerald_block,
+                       lapis_lazuli,
+                       lapis_block,
+                       "redstone",
+                       redstone_block,
+                       coal,
+                       coal_block,
+                       netherite_ingot,
+                       netherite_block,
+                       torch,
+                       bucket,
+                       chest,
+                       crafting_table,
+                       furnace,
+                       cobblestone,
+                       *:*_log,
+                       *:*_planks
+                   FROM chest
+                   OUTPUT TO storage
+                END
+                
+                EVERY 20 TICKS DO
+                   INPUT FROM storage
+                   OUTPUT
+                       retain 64 gold_ingot,
+                       retain 64 gold_block,
+                       retain 64 iron_ingot,
+                       retain 64 iron_block,
+                       retain 64 diamond,
+                       retain 64 diamond_block,
+                       retain 64 emerald,
+                       retain 64 emerald_block,
+                       retain 64 lapis_lazuli,
+                       retain 64 lapis_block,
+                       retain 64 "redstone",
+                       retain 64 redstone_block,
+                       retain 64 coal,
+                       retain 64 coal_block,
+                       retain 64 netherite_ingot,
+                       retain 64 netherite_block,
+                       retain 64 torch,
+                       retain 16 bucket,
+                       retain 64 chest,
+                       retain 64 crafting_table,
+                       retain 64 furnace,
+                       retain 64 cobblestone,
+                       retain 64 *:*_log,
+                       retain 64 *:*_planks
+                   TO chest
+                END
+                """.stripTrailing().stripIndent();
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .addAll("storage", storage.stream().map(helper::absolutePos).toList())
+                .add("chest", helper.absolutePos(new BlockPos(0, 2, 0)))
+                .save(manager.getDisk().get());
+
+        // load the program
+        manager.setProgram(program);
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // the inventory should be stocked with a stack of each item
+            BarrelBlockEntity barrel = (BarrelBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0));
+            for (Item item : items) {
+                for (int slot = 0; slot < barrel.getContainerSize(); slot++) {
+                    ItemStack stack = barrel.getItem(slot);
+                    if (stack.getItem() == item) {
+                        assertTrue(
+                                stack.getCount() == stack.getMaxStackSize(),
+                                "Item " + item + " is not fully stocked"
+                        );
+                    }
+                }
+            }
+        });
     }
 }

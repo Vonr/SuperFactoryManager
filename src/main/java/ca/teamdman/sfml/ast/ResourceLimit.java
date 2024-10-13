@@ -1,170 +1,83 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.program.InputResourceTracker;
-import ca.teamdman.sfm.common.program.OutputResourceTracker;
+import ca.teamdman.sfm.common.program.*;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import static ca.teamdman.sfml.ast.ResourceQuantity.IdExpansionBehaviour.EXPAND;
-import static ca.teamdman.sfml.ast.ResourceQuantity.IdExpansionBehaviour.NO_EXPAND;
-
-public record ResourceLimit<STACK, ITEM, CAP>(
-        ResourceIdentifier<STACK, ITEM, CAP> resourceId,
+public record ResourceLimit(
+        ResourceIdSet resourceIds,
         Limit limit,
-        With<STACK> with
-) implements ASTNode, Predicate<Object> {
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static final ResourceLimit<?, ?, ?> TAKE_ALL_LEAVE_NONE = new ResourceLimit<>(
-            (ResourceIdentifier) ResourceIdentifier.MATCH_ALL,
+        With with
+) implements ASTNode {
+    public static final ResourceLimit TAKE_ALL_LEAVE_NONE = new ResourceLimit(
+            ResourceIdSet.MATCH_ALL,
             Limit.MAX_QUANTITY_NO_RETENTION,
             With.ALWAYS_TRUE
     );
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static final ResourceLimit<?, ?, ?> ACCEPT_ALL_WITHOUT_RESTRAINT = new ResourceLimit<>(
-            (ResourceIdentifier) ResourceIdentifier.MATCH_ALL,
+    public static final ResourceLimit ACCEPT_ALL_WITHOUT_RESTRAINT = new ResourceLimit(
+            ResourceIdSet.MATCH_ALL,
             Limit.MAX_QUANTITY_MAX_RETENTION,
             With.ALWAYS_TRUE
     );
 
-    public ResourceLimit<STACK, ITEM, CAP> withDefaultLimit(Limit defaults) {
-        return new ResourceLimit<>(resourceId, limit.withDefaults(defaults), with);
+    public ResourceLimit withDefaultLimit(Limit defaults) {
+        return new ResourceLimit(resourceIds, limit.withDefaults(defaults), with);
     }
 
-    public ResourceLimit<STACK, ITEM, CAP> withLimit(Limit limit) {
-        return new ResourceLimit<>(resourceId, limit, with);
+    public ResourceLimit withLimit(Limit limit) {
+        return new ResourceLimit(resourceIds, limit, with);
     }
 
-    public void gatherInputTrackers(
-            Consumer<InputResourceTracker<?, ?, ?>> gatherer,
+    public IInputResourceTracker createInputTracker(
             ResourceIdSet exclusions
     ) {
-        if (limit.quantity().idExpansionBehaviour() == NO_EXPAND) {
-            if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
-                // no sharing, single tracker
-                gatherer.accept(new InputResourceTracker<>(
-                        this,
-                        exclusions,
-                        new AtomicLong(0),
-                        new AtomicLong(0)
-                ));
-            } else if (limit.retention().idExpansionBehaviour() == EXPAND) {
-                // expand retention
-                // share quantity
-                AtomicLong quantity = new AtomicLong(0);
-                resourceId
-                        .expand()
-                        .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit, with),
-                                exclusions,
-                                quantity,
-                                new AtomicLong(0)
-                        )));
-            }
-        } else if (limit.quantity().idExpansionBehaviour() == EXPAND) {
-            if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
-                // expand quantity
-                // share retention
-                AtomicLong retention = new AtomicLong(0);
-                resourceId
-                        .expand()
-                        .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit, with),
-                                exclusions,
-                                new AtomicLong(0),
-                                retention
-                        )));
-            } else if (limit.retention().idExpansionBehaviour() == EXPAND) {
-                // no sharing, multiple trackers
-                resourceId
-                        .expand()
-                        .forEach(rid -> gatherer.accept(new InputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit, with),
-                                exclusions,
-                                new AtomicLong(0),
-                                new AtomicLong(0)
-                        )));
-            }
-        }
+        return switch (limit.quantity().idExpansionBehaviour()) {
+            case EXPAND -> switch (limit.retention().idExpansionBehaviour()) {
+                case EXPAND -> new ExpandedQuantityExpandedRetentionInputResourceTracker(this, exclusions);
+                case NO_EXPAND -> new ExpandedQuantitySharedRetentionInputResourceTracker(this, exclusions);
+            };
+            case NO_EXPAND -> switch (limit.retention().idExpansionBehaviour()) {
+                case EXPAND -> new SharedQuantityExpandedRetentionInputResourceTracker(this, exclusions);
+                case NO_EXPAND -> new SharedQuantitySharedRetentionInputResourceTracker(this, exclusions);
+            };
+        };
     }
 
-    public void gatherOutputTrackers(
-            Consumer<OutputResourceTracker<?, ?, ?>> gatherer,
+    public IOutputResourceTracker createOutputTracker(
             ResourceIdSet exclusions
     ) {
-        if (limit.quantity().idExpansionBehaviour() == NO_EXPAND) {
-            if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
-                // single tracker
-                gatherer.accept(new OutputResourceTracker<>(this, exclusions, new AtomicLong(0), new AtomicLong(0)));
-            } else if (limit.retention().idExpansionBehaviour() == EXPAND) {
-                // tracker for each retention, sharing quantity
-                AtomicLong quantity = new AtomicLong(0);
-                resourceId
-                        .expand()
-                        .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit, with),
-                                exclusions,
-                                quantity,
-                                new AtomicLong(0)
-                        )));
-            }
-        } else if (limit.quantity().idExpansionBehaviour() == EXPAND) {
-            if (limit.retention().idExpansionBehaviour() == NO_EXPAND) {
-                // tracker for each quantity, sharing retention
-                AtomicLong retained = new AtomicLong(0);
-                resourceId
-                        .expand()
-                        .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit, with),
-                                exclusions,
-                                new AtomicLong(0),
-                                retained
-                        )));
-            } else if (limit.retention().idExpansionBehaviour() == EXPAND) {
-                // expand both quantity and retention, no sharing
-                resourceId
-                        .expand()
-                        .forEach(rid -> gatherer.accept(new OutputResourceTracker<>(
-                                new ResourceLimit<>(rid, limit, with),
-                                exclusions,
-                                new AtomicLong(0),
-                                new AtomicLong(0)
-                        )));
-            }
-        }
+        return switch (limit.quantity().idExpansionBehaviour()) {
+            case EXPAND -> switch (limit.retention().idExpansionBehaviour()) {
+                case EXPAND -> new ExpandedQuantityExpandedRetentionOutputResourceTracker(this, exclusions);
+                case NO_EXPAND -> new ExpandedQuantitySharedRetentionOutputResourceTracker(this, exclusions);
+            };
+            case NO_EXPAND -> switch (limit.retention().idExpansionBehaviour()) {
+                case EXPAND -> new SharedQuantityExpandedRetentionOutputResourceTracker(this, exclusions);
+                case NO_EXPAND -> new SharedQuantitySharedRetentionOutputResourceTracker(this, exclusions);
+            };
+        };
     }
 
-    @SuppressWarnings("RedundantIfStatement")
-    @Override
-    public boolean test(Object obj) {
-        // ensure the object is a stack matching the id pattern
-        if (!resourceId.test(obj)) {
+    public boolean matchesStack(Object stack) {
+        var matchingIdPattern = resourceIds.getMatchingFromStack(stack);
+        if (matchingIdPattern == null) {
             return false;
         }
-
-        // the resource id validation performs the necessary checks
         @SuppressWarnings("unchecked")
-        STACK stack = (STACK) obj;
-        ResourceType<STACK, ITEM, CAP> resourceType = resourceId().getResourceType();
-        assert resourceType != null;
-
-        // ensure the stack meets the with condition
-        if (!with.test(resourceType, stack)) {
+        ResourceType<Object, ?, ?> resourceType = (ResourceType<Object, ?, ?>) matchingIdPattern.getResourceType();
+        if (resourceType == null) {
             return false;
         }
-        return true;
+        return with.matchesStack(resourceType, stack);
     }
 
     @Override
     public String toString() {
-        return limit + " " + resourceId + (with == With.ALWAYS_TRUE ? "" : " WITH " + with);
+        return limit + " " + resourceIds + (with == With.ALWAYS_TRUE ? "" : " WITH " + with);
     }
 
     public String toStringCondensed(Limit defaults) {
         return (
-                limit.toStringCondensed(defaults) + " " + resourceId.toStringCondensed() + (
+                limit.toStringCondensed(defaults) + " " + resourceIds.toStringCondensed() + (
                         with == With.ALWAYS_TRUE
                         ? ""
                         : " WITH " + with

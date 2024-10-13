@@ -1,11 +1,11 @@
-package ca.teamdman.sfm.compat.mekanism;
+package ca.teamdman.sfm.gametest.compat.mekanism;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.gametest.SFMGameTestBase;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.gametest.SFMGameTestBase;
 import mekanism.api.RelativeSide;
 import mekanism.api.chemical.infuse.InfusionStack;
 import mekanism.common.lib.transmitter.TransmissionType;
@@ -22,13 +22,16 @@ import mekanism.common.tile.component.TileComponentConfig;
 import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
+import mekanism.common.tile.multiblock.TileEntityInductionPort;
 import mekanism.common.util.UnitDisplayUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -38,6 +41,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings({"OptionalGetWithoutIsPresent", "DuplicatedCode", "DataFlowIssue"})
@@ -131,7 +135,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                                       INPUT infusion:*:* FROM a NORTH SIDE -- mek can extract from front by default
                                       OUTPUT infusion:*:* TO b TOP SIDE -- mek can insert to top by default
                                    END
-                                                           """.stripIndent());
+                                   """.stripIndent());
 
         // set the labels
         LabelPositionHolder.empty()
@@ -193,7 +197,6 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     rightTank.getInfusionTank().getStack().getAmount() == ChemicalTankTier.ULTIMATE.getStorage(),
                     "Contents did not arrive"
             );
-            helper.succeed();
         });
     }
 
@@ -235,7 +238,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             assertTrue(left.getBinSlot().getCount() == BinTier.ULTIMATE.getStorage() - 64, "Contents did not depart");
             assertTrue(right.getBinSlot().getCount() == 64, "Contents did not arrive");
             assertTrue(right.getBinSlot().getStack().getItem() == Items.COAL, "Contents wrong type");
-            helper.succeed();
+
         });
     }
 
@@ -276,7 +279,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             assertTrue(left.getBinSlot().getCount() == 100 - 64, "Contents did not depart");
             assertTrue(right.getBinSlot().getCount() == 100 + 64, "Contents did not arrive");
             assertTrue(right.getBinSlot().getStack().getItem() == Items.DIAMOND, "Contents wrong type");
-            helper.succeed();
+
         });
     }
 
@@ -317,7 +320,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
             assertTrue(left.getBinSlot().getCount() == BinTier.ULTIMATE.getStorage() - 32, "Contents did not depart");
             assertTrue(right.getBinSlot().getCount() == BinTier.ULTIMATE.getStorage(), "Contents did not arrive");
             assertTrue(right.getBinSlot().getStack().getItem() == Items.STICK, "Contents wrong type");
-            helper.succeed();
+
         });
     }
 
@@ -359,7 +362,6 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(left.getEnergy(0) == 0, "Contents did not depart");
             assertTrue(right.getEnergy(0) == EnergyCubeTier.ULTIMATE.getMaxEnergy(), "Contents did not arrive");
-            helper.succeed();
         });
     }
 
@@ -399,7 +401,6 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(left.getEnergy(0) == 0, "Contents did not depart");
             assertTrue(right.getEnergy(0) == 2_000, "Contents did not arrive");
-            helper.succeed();
         });
     }
 
@@ -442,7 +443,6 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     "Contents did not depart"
             );
             assertTrue(right.getEnergy(0) == EnergyCubeTier.ULTIMATE.getMaxEnergy(), "Contents did not arrive");
-            helper.succeed();
         });
     }
 
@@ -491,13 +491,13 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     right.getEnergy(0) == UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(10),
                     "Contents did not arrive"
             );
-            helper.succeed();
+
         });
     }
 
 
     @GameTest(template = "25x3x25", skyAccess = true)
-    public static void mana_lava_cauldrons(GameTestHelper helper) {
+    public static void many_lava_cauldrons(GameTestHelper helper) {
         // designate positions
         var sourceBlocks = new ArrayList<BlockPos>();
         var destBlocks = new ArrayList<BlockPos>();
@@ -527,7 +527,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
         // create the program
         var program = """
                     NAME "many inventory lag test"
-                                    
+
                     EVERY 20 TICKS DO
                         INPUT fluid:*:* FROM source
                         OUTPUT fluid:*:* TO dest TOP SIDE
@@ -557,7 +557,7 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                     .mapToInt(FluidStack::getAmount)
                     .sum();
             assertTrue(found == 1000 * 25 * 24, "Not all fluids were moved (found " + found + ")");
-            helper.succeed();
+
 
         });
     }
@@ -603,12 +603,97 @@ public class SFMMekanismCompatGameTests extends SFMGameTestBase {
                 .add("b", helper.absolutePos(b2Pos))
                 .save(manager.getDisk().get());
 
-        assertManagerDidThingWithoutLagging(helper, manager, () -> {
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(a1.getFluidInTank(0).isEmpty(), "a1 did not empty");
             assertTrue(a2.getFluidInTank(0).isEmpty(), "a2 did not empty");
             assertTrue(b1.getFluidInTank(0).getFluid() == Fluids.WATER, "b1 did not fill with water");
             assertTrue(b2.getFluidInTank(0).getFluid() == Fluids.LAVA, "b2 did not fill with lava");
-            helper.succeed();
+        });
+    }
+
+
+    @GameTest(template = "25x3x25")
+    public static void mek_induction(GameTestHelper helper) {
+        // designate positions
+        var managerPos = new BlockPos(1, 3, 0);
+        var powerCubePos = new BlockPos(1, 2, 0);
+        var inductionBeginPos = new BlockPos(0, 2, 1);
+        var inductionInput = new BlockPos(1, 3, 1);
+
+        // set up induction matrix
+        for (int x = 0; x < 18; x++) {
+            for (int z = 0; z < 18; z++) {
+                for (int y = 0; y < 18; y++) {
+                    //noinspection ExtractMethodRecommender
+                    boolean isOutside = x == 0 || x == 17 || z == 0 || z == 17 || y == 0 || y == 17;
+                    Block block;
+                    if (isOutside) {
+                        block = MekanismBlocks.INDUCTION_CASING.getBlock();
+                    } else {
+                        if (y == 1) {
+                            block = MekanismBlocks.ULTIMATE_INDUCTION_CELL.getBlock();
+                        } else {
+                            block = MekanismBlocks.ULTIMATE_INDUCTION_PROVIDER.getBlock();
+                        }
+                    }
+                    helper.setBlock(inductionBeginPos.offset(x, y, z), block);
+                }
+            }
+        }
+        helper.setBlock(inductionInput, MekanismBlocks.INDUCTION_PORT.getBlock());
+        var inductionPort = (TileEntityInductionPort) helper.getBlockEntity(inductionInput);
+
+        // set up the energy source
+        helper.setBlock(powerCubePos, MekanismBlocks.CREATIVE_ENERGY_CUBE.getBlock());
+
+        TileEntityEnergyCube powerCube = getAndPrepMekTile(helper, powerCubePos);
+        powerCube.setEnergy(0, EnergyCubeTier.CREATIVE.getMaxEnergy());
+//        powerCube.getConfig().setupIOConfig(TransmissionType.ENERGY,powerCube.getEnergyContainer(), RelativeSide.TOP, true);
+//        powerCube.getConfig().
+
+        // set up the manager
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+
+        // create the program
+        long incr = 1_000_000_000L;
+        long startingAmount = 0L;
+        var program = """
+                    NAME "induction matrix test"
+                    EVERY 20 TICKS DO
+                        INPUT %d fe:: FROM source TOP SIDE
+                        OUTPUT fe:: TO dest NORTH SIDE
+                    END
+                """.formatted(incr);
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .addAll("source", List.of(helper.absolutePos(powerCubePos)))
+                .addAll("dest", List.of(helper.absolutePos(inductionInput)))
+                .save(manager.getDisk().get());
+
+        // we can't prefill since we can't wait a delay AND use succeedIfManagerDidThing
+        // pre-fill the matrix by a little bit
+        // we want to make sure SFM doesn't have problems inserting beyond MAX_INT
+//        var startingAmount = FloatingLong.create(Integer.MAX_VALUE + incr);
+//            inductionPort.insertEnergy(startingAmount, Action.EXECUTE);
+
+        // launch the program
+        manager.setProgram(program);
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            if (!inductionPort.getMultiblock().isFormed()) {
+                throw new GameTestAssertException("Induction matrix did not form");
+            }
+
+            var expected = startingAmount + incr;
+            long joules = inductionPort.getEnergy(0);
+            long energy = UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertTo(joules);
+            boolean success = energy == expected;
+            assertTrue(
+                    success,
+                    "Expected energy did not match, got " + energy + " expected " + expected
+            );
         });
     }
 }
