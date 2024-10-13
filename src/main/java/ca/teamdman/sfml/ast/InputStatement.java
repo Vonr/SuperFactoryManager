@@ -44,7 +44,7 @@ public final class InputStatement implements IOStatement {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
+    @SuppressWarnings({"unchecked"}) // basically impossible to make this method generic safe
     public void gatherSlots(
             ProgramContext context,
             Consumer<LimitedInputSlot<?, ?, ?>> slotConsumer
@@ -84,7 +84,7 @@ public final class InputStatement implements IOStatement {
 
             // create a single matcher to be shared by all capabilities
             List<IInputResourceTracker> inputTrackers = resourceLimits.createInputTrackers();
-            for (var resourceType : resourceLimits.getReferencedResourceTypes()) {
+            for (var resourceType : resourceLimits.getReferencedResourceTypes()) { // TODO: Fix #166
                 // log gather for resource type
                 context
                         .getLogger()
@@ -95,6 +95,7 @@ public final class InputStatement implements IOStatement {
 
                 // gather slots for each capability found for positions tagged by a provided label
                 Consumer<LimitedInputSlot<?, ?, ?>> finalSlotConsumer = slotConsumer;
+                // TODO: fix #166 forEachCapability advances the round robin when it should be shared between resource types
                 resourceType.forEachCapability(context, labelAccess, (label, pos, direction, cap) -> gatherSlotsForCap(
                         context,
                         (ResourceType<Object, Object, Object>) resourceType,
