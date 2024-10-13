@@ -1,54 +1,57 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.common.program.InputResourceTracker;
-import ca.teamdman.sfm.common.program.OutputResourceTracker;
+import ca.teamdman.sfm.common.program.IInputResourceTracker;
+import ca.teamdman.sfm.common.program.IOutputResourceTracker;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public record ResourceLimits(
-        List<? extends ResourceLimit<?, ?, ?>> resourceLimits,
+        List<ResourceLimit> resourceLimitList,
         ResourceIdSet exclusions
 ) implements ASTNode {
-    public List<InputResourceTracker<?, ?, ?>> createInputTrackers() {
-        List<InputResourceTracker<?, ?, ?>> rtn = new ArrayList<>();
-        resourceLimits.forEach(rl -> rl.gatherInputTrackers(rtn::add, exclusions));
+    public List<IInputResourceTracker> createInputTrackers() {
+        List<IInputResourceTracker> rtn = new ArrayList<>();
+        resourceLimitList.stream().map(rl -> rl.createInputTracker(exclusions)).forEach(rtn::add);
         return rtn;
     }
 
-    public List<OutputResourceTracker<?, ?, ?>> createOutputTrackers() {
-        List<OutputResourceTracker<?, ?, ?>> rtn = new ArrayList<>();
-        resourceLimits.forEach(rl -> rl.gatherOutputTrackers(rtn::add, exclusions));
+    public List<IOutputResourceTracker> createOutputTrackers() {
+        List<IOutputResourceTracker> rtn = new ArrayList<>();
+        resourceLimitList.stream().map(rl -> rl.createOutputTracker(exclusions)).forEach(rtn::add);
         return rtn;
     }
 
     public ResourceLimits withDefaultLimit(Limit limit) {
-        return new ResourceLimits(resourceLimits.stream().map(il -> il.withDefaultLimit(limit)).toList(), exclusions);
+        return new ResourceLimits(
+                resourceLimitList.stream().map(il -> il.withDefaultLimit(limit)).toList(),
+                exclusions
+        );
     }
 
     public ResourceLimits withExclusions(ResourceIdSet exclusions) {
-        return new ResourceLimits(resourceLimits, exclusions);
+        return new ResourceLimits(resourceLimitList, exclusions);
     }
 
-    @SuppressWarnings("rawtypes")
-    public Stream<ResourceType> getReferencedResourceTypes() {
-        return resourceLimits()
-                .stream()
-                .map(ResourceLimit::resourceId)
-                .map((ResourceIdentifier x) -> x.getResourceType())
-                .distinct();
+    public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
+        Set<ResourceType<?,?,?>> rtn = new HashSet<>(8);
+        for (ResourceLimit resourceLimit : resourceLimitList) {
+            rtn.addAll(resourceLimit.resourceIds().getReferencedResourceTypes());
+        }
+        return rtn;
     }
 
     @Override
     public String toString() {
-        String rtn = this.resourceLimits.stream()
+        String rtn = this.resourceLimitList.stream()
                 .map(ResourceLimit::toString)
                 .collect(Collectors.joining(",\n"));
-        if (!exclusions.resourceIds().isEmpty()) {
-            rtn += "\nEXCEPT\n" + exclusions.resourceIds().stream()
+        if (!exclusions.isEmpty()) {
+            rtn += "\nEXCEPT\n" + exclusions.stream()
                     .map(ResourceIdentifier::toString)
                     .collect(Collectors.joining(",\n"));
         }
@@ -56,12 +59,12 @@ public record ResourceLimits(
     }
 
     public String toStringPretty(Limit defaults) {
-        String rtn = resourceLimits.stream()
+        String rtn = resourceLimitList.stream()
                 .map(rl -> rl.toStringCondensed(defaults))
-                .map(x -> resourceLimits.size() == 1 ? x : x + ",")
+                .map(x -> resourceLimitList.size() == 1 ? x : x + ",")
                 .collect(Collectors.joining("\n"));
-        if (!exclusions.resourceIds().isEmpty()) {
-            rtn += "\nEXCEPT\n" + exclusions.resourceIds().stream()
+        if (!exclusions.isEmpty()) {
+            rtn += "\nEXCEPT\n" + exclusions.stream()
                     .map(ResourceIdentifier::toStringCondensed)
                     .collect(Collectors.joining(",\n"));
         }

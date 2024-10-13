@@ -1,4 +1,4 @@
-NAME "Resource types"
+NAME "Fluids and other resource types"
 
 EVERY 20 TICKS DO
     -- the default resource type is sfm:item

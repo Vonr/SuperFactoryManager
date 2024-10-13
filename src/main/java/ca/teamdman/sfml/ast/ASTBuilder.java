@@ -1,11 +1,9 @@
 package ca.teamdman.sfml.ast;
 
-import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfml.SFMLBaseVisitor;
 import ca.teamdman.sfml.SFMLParser;
 import com.mojang.datafixers.util.Pair;
-import cpw.mods.modlauncher.Launcher;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.jetbrains.annotations.Nullable;
@@ -451,6 +449,32 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public ResourceIdSet visitResourceExclusion(@Nullable SFMLParser.ResourceExclusionContext ctx) {
         if (ctx == null) return ResourceIdSet.EMPTY;
+        var resourceIdSet = visitResourceIdList(ctx.resourceIdList());
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceIdSet, ctx));
+        return resourceIdSet;
+    }
+
+    /// This one uses COMMA instead of OR to separate items
+    @SuppressWarnings("DuplicatedCode")
+    @Override
+    public ResourceIdSet visitResourceIdList(@Nullable SFMLParser.ResourceIdListContext ctx) {
+        if (ctx == null) return ResourceIdSet.EMPTY;
+        HashSet<ResourceIdentifier<?, ?, ?>> ids = ctx
+                .resourceId()
+                .stream()
+                .map(this::visit)
+                .map(ResourceIdentifier.class::cast)
+                .collect(HashSet::new, HashSet::add, HashSet::addAll);
+        ResourceIdSet resourceIdSet = new ResourceIdSet(ids);
+        AST_NODE_CONTEXTS.add(new Pair<>(resourceIdSet, ctx));
+        return resourceIdSet;
+    }
+
+    /// This one uses OR instead of COMMA to separate items
+    @SuppressWarnings("DuplicatedCode")
+    @Override
+    public ResourceIdSet visitResourceIdDisjunction(@Nullable SFMLParser.ResourceIdDisjunctionContext ctx) {
+        if (ctx == null) return ResourceIdSet.EMPTY;
         HashSet<ResourceIdentifier<?, ?, ?>> ids = ctx
                 .resourceId()
                 .stream()
@@ -467,8 +491,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (ctx == null) {
             return new ResourceLimits(List.of(ResourceLimit.TAKE_ALL_LEAVE_NONE), ResourceIdSet.EMPTY);
         }
-        ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.resourceLimits())).withDefaultLimit(Limit.MAX_QUANTITY_NO_RETENTION);
-        assertResourceLimitDoesntExpandHuge(resourceLimits);
+        ResourceLimits resourceLimits = visitResourceLimitList(ctx.resourceLimitList()).withDefaultLimit(Limit.MAX_QUANTITY_NO_RETENTION);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
@@ -478,14 +501,13 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         if (ctx == null) {
             return new ResourceLimits(List.of(ResourceLimit.ACCEPT_ALL_WITHOUT_RESTRAINT), ResourceIdSet.EMPTY);
         }
-        ResourceLimits resourceLimits = ((ResourceLimits) visit(ctx.resourceLimits())).withDefaultLimit(Limit.MAX_QUANTITY_MAX_RETENTION);
-        assertResourceLimitDoesntExpandHuge(resourceLimits);
+        ResourceLimits resourceLimits = visitResourceLimitList(ctx.resourceLimitList()).withDefaultLimit(Limit.MAX_QUANTITY_MAX_RETENTION);
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimits, ctx));
         return resourceLimits;
     }
 
     @Override
-    public ASTNode visitResourceLimits(SFMLParser.ResourceLimitsContext ctx) {
+    public ResourceLimits visitResourceLimitList(SFMLParser.ResourceLimitListContext ctx) {
         ResourceLimits resourceLimits = new ResourceLimits(
                 ctx.resourceLimit().stream()
                         .map(this::visitResourceLimit)
@@ -497,12 +519,12 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ResourceLimit<?, ?, ?> visitResourceLimit(SFMLParser.ResourceLimitContext ctx) {
-        ResourceIdentifier<?, ?, ?> resourceIdentifier;
-        if (ctx.resourceId() == null) {
-            resourceIdentifier = ResourceIdentifier.MATCH_ALL;
+    public ResourceLimit visitResourceLimit(SFMLParser.ResourceLimitContext ctx) {
+        ResourceIdSet resourceIds;
+        if (ctx.resourceIdDisjunction() == null) {
+            resourceIds = ResourceIdSet.MATCH_ALL;
         } else {
-            resourceIdentifier = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceId());
+            resourceIds = visitResourceIdDisjunction(ctx.resourceIdDisjunction());
         }
 
         Limit limit;
@@ -512,16 +534,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             limit = (Limit) visit(ctx.limit());
         }
 
-        With<?> with;
+        With with;
         if (ctx.with() == null) {
             with = With.ALWAYS_TRUE;
         } else {
-            with = (With<?>) visit(ctx.with());
+            with = (With) visit(ctx.with());
         }
 
-        // we have to assume that the WITH<?,?,?> is the same <STACK, ITEM, CAP> as the ResourceLimit<?,?,?>
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        ResourceLimit<?, ?, ?> resourceLimit = new ResourceLimit<>(resourceIdentifier, limit, (With) with);
+        ResourceLimit resourceLimit = new ResourceLimit(resourceIds, limit, with);
 
         AST_NODE_CONTEXTS.add(new Pair<>(resourceLimit, ctx));
         return resourceLimit;
@@ -529,24 +549,19 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitWith(SFMLParser.WithContext ctx) {
-        WithClause<?> clause = (WithClause<?>) visit(ctx.withClause());
+        WithClause clause = (WithClause) visit(ctx.withClause());
         With.WithMode mode = ctx.WITHOUT() != null ? With.WithMode.WITHOUT : With.WithMode.WITH;
-        With<?> rtn = new With<>(clause, mode, ctx.getText());
+        With rtn = new With(clause, mode, ctx.getText());
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
 
     @Override
-    public WithTag<?> visitWithTag(SFMLParser.WithTagContext ctx) {
-        WithTag<?> rtn = new WithTag<>((TagMatcher) visit(ctx.tagMatcher()));
+    public WithTag visitWithTag(SFMLParser.WithTagContext ctx) {
+        WithTag rtn = new WithTag((TagMatcher) visit(ctx.tagMatcher()));
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
-
-//    @Override
-//    public ASTNode visitWithData(SFMLParser.WithDataContext ctx) {
-//        return super.visitWithData(ctx);
-//    }
 
     @Override
     public TagMatcher visitTagMatcher(SFMLParser.TagMatcherContext ctx) {
@@ -704,17 +719,5 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
         Block block = new Block(statements);
         AST_NODE_CONTEXTS.add(new Pair<>(block, ctx));
         return block;
-    }
-
-    private void assertResourceLimitDoesntExpandHuge(ResourceLimits limits) {
-        if (Launcher.INSTANCE == null) {
-            SFM.LOGGER.warn("The game isn't loaded, Are we in a unit test? Skipping resource limit expansion check.");
-            return;
-        }
-        if (limits.createInputTrackers().size() > 512) {
-            throw new IllegalArgumentException(
-                    "Resource limit expands to more than 512 trackers, this is likely a mistake where the \"EACH\" keyword is being used. The code: "
-                    + limits);
-        }
     }
 }

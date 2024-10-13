@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -61,9 +62,9 @@ public class ContainerScreenInspectorHandler {
     @SubscribeEvent
     public static void onGuiRender(ScreenEvent.Render.Post event) {
         if (!visible) return;
-        if (event.getScreen() instanceof AbstractContainerScreen<?> acs) {
-            lastScreen = acs;
-            AbstractContainerMenu menu = acs.getMenu();
+        if (event.getScreen() instanceof AbstractContainerScreen<?> screen) {
+            lastScreen = screen;
+            AbstractContainerMenu menu = screen.getMenu();
             int containerSlotCount = 0;
             int inventorySlotCount = 0;
             GuiGraphics graphics = event.getGuiGraphics();
@@ -76,6 +77,7 @@ public class ContainerScreenInspectorHandler {
 
 
             // draw index on each slot
+            Font font = Minecraft.getInstance().font;
             for (var slot : menu.slots) {
                 int colour;
                 if (slot.container instanceof Inventory) {
@@ -89,14 +91,24 @@ public class ContainerScreenInspectorHandler {
                 graphics.drawString(
                         Minecraft.getInstance().font,
                         Component.literal(Integer.toString(slot.getSlotIndex())),
-                        acs.getGuiLeft() + slot.x,
-                        acs.getGuiTop() + slot.y,
+                        screen.getGuiLeft() + slot.x,
+                        screen.getGuiTop() + slot.y,
                         colour,
                         false
                 );
             }
 
             // draw text for slot totals
+            var notice = LocalizationKeys.CONTAINER_INSPECTOR_NOTICE.getComponent().withStyle(ChatFormatting.GOLD);
+            int offset = font.width(notice) / 2;
+            graphics.drawString(
+                    Minecraft.getInstance().font,
+                    notice,
+                    screen.width / 2 - offset,
+                    5,
+                    0xFFFFFF,
+                    true
+            );
             graphics.drawString(
                     Minecraft.getInstance().font,
                     LocalizationKeys.CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT.getComponent(Component
@@ -106,7 +118,7 @@ public class ContainerScreenInspectorHandler {
                                                                                                              .withStyle(
                                                                                                                      ChatFormatting.BLUE)),
                     5,
-                    5,
+                    25,
                     0xFFFFFF,
                     true
             );
@@ -119,7 +131,7 @@ public class ContainerScreenInspectorHandler {
                                                                                                              .withStyle(
                                                                                                                      ChatFormatting.YELLOW)),
                     5,
-                    25,
+                    40,
                     0xFFFFFF,
                     true
             );

@@ -114,7 +114,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "Dirt did not move");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt did not move");
-            helper.succeed();
         });
     }
 
@@ -163,7 +162,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 }
             }
             assertTrue(total == count, "Dirt did not arrive");
-            helper.succeed();
         });
     }
 
@@ -234,7 +232,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 }
             }
             assertTrue(total == 64, "Dirt did not arrive properly 2");
-            helper.succeed();
         });
     }
 
@@ -268,7 +265,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 5, "Dirt did not move");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64 - 5, "Dirt did not move");
-            helper.succeed();
         });
     }
 
@@ -312,7 +308,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(1).getCount() == 64 - 10, "Stone did not retain");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 2, "Iron ingots did not move");
             assertTrue(rightChest.getStackInSlot(1).getCount() == 10, "Stone did not move");
-            helper.succeed();
         });
     }
 
@@ -356,7 +351,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                          && s.getValue(LayeredCauldronBlock.LEVEL) == 3,
                     () -> "cauldron didn't fill"
             );
-            helper.succeed();
+
         });
     }
 
@@ -395,7 +390,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(right, s -> s.getBlock() == Blocks.LAVA_CAULDRON, () -> "cauldron didn't fill");
-            helper.succeed();
+
         });
     }
 
@@ -454,7 +449,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(endChest.getItem(0).getCount() == 64, "Items did not move");
             // ensure item left
             assertTrue(startChest.getItem(0).isEmpty(), "Items did not leave");
-            helper.succeed();
+
         });
     }
 
@@ -516,7 +511,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             Container rightChest = (Container) helper.getBlockEntity(right);
             assertTrue(rightChest.getItem(0).getCount() == 64, "Items did not move");
 
-            helper.succeed();
+
         });
     }
 
@@ -787,7 +782,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             helper.assertBlock(left, b -> b == Blocks.CAULDRON, "cauldron didn't empty");
             helper.assertBlockState(right, s -> s.getBlock() == Blocks.LAVA_CAULDRON, () -> "cauldron didn't fill");
-            helper.succeed();
+
         });
     }
 
@@ -833,7 +828,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(IntStream
                                .range(0, rightChest.getSlots())
                                .allMatch(slot -> rightChest.getStackInSlot(slot).isEmpty()), "Chest b is not empty");
-            helper.succeed();
+
         });
     }
 
@@ -1843,7 +1838,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -1880,7 +1875,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -1917,7 +1912,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -1960,7 +1955,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron did not arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold did not arrive");
             assertTrue(count(rightChest, Items.NETHERITE_INGOT) == 2, "Netherite did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2003,7 +1998,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.GOLD_INGOT) == 0, "Gold did not move");
             assertTrue(count(rightChest, Items.IRON_INGOT) == 0, "Iron arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2046,7 +2041,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.GOLD_INGOT) == 2, "Gold did not move");
             assertTrue(count(rightChest, Items.IRON_INGOT) == 0, "Iron arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 0, "Gold arrived");
-            helper.succeed();
+
         });
     }
 
@@ -2092,7 +2087,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.IRON_INGOT) == 62, "Iron did not arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 62, "Gold did not arrive");
             assertTrue(count(rightChest, Items.NETHERITE_INGOT) == 62, "Netherite did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2136,7 +2131,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron did not arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold did not arrive");
             assertTrue(count(rightChest, Items.NETHERITE_INGOT) == 2, "Netherite did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2177,7 +2172,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.GOLD_INGOT) == 1, "Gold did not move");
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 1, "Gold did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2218,7 +2213,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.GOLD_INGOT) == 6, "Gold depart fail");
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron arrive fail");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold arrive fail");
-            helper.succeed();
+
         });
     }
 
@@ -2262,7 +2257,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.IRON_INGOT) == 2, "Iron did not arrive");
             assertTrue(count(rightChest, Items.GOLD_INGOT) == 2, "Gold did not arrive");
             assertTrue(count(rightChest, Items.NETHERITE_INGOT) == 2, "Netherite did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2345,7 +2340,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             for (int i = 0; i < found.length; i++) {
                 assertTrue(found[i] == 1, "Expected " + expected[i] + " to be 1, but was " + found[i]);
             }
-            helper.succeed();
+
         });
     }
 
@@ -2384,7 +2379,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "Dirt should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "Dirt should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2425,7 +2420,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64, "Dirt should not depart");
             assertTrue(rightChest.getStackInSlot(0).isEmpty(), "Dirt should not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2469,7 +2464,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(1).getCount() == 64, "Iron ingots should not depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "Dirt should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.DIRT, "Dirt should arrive in type");
-            helper.succeed();
+
         });
     }
 
@@ -2508,7 +2503,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(leftChest.getStackInSlot(0).getCount() == 64 - 10, "did not remain");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 10, "did not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -2546,7 +2541,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
-            helper.succeed();
+
         });
     }
 
@@ -2584,7 +2579,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
-            helper.succeed();
+
         });
     }
 
@@ -2622,7 +2617,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(leftChest.getStackInSlot(0).isEmpty(), "should depart");
             assertTrue(rightChest.getStackInSlot(0).getCount() == 64, "should arrive in size");
             assertTrue(rightChest.getStackInSlot(0).getItem() == Items.IRON_INGOT, "should arrive in type");
-            helper.succeed();
+
         });
     }
 
@@ -2673,7 +2668,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             int count2 = count(dest2Inv, Items.DIRT);
             assertTrue(count1 == 128 && count2 == 0 || count1 == 0 && count2 == 128, "first tick arrival count bad");
 
-            helper.succeed();
+
         });
     }
 
@@ -2742,7 +2737,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                            (a1Count == 0 && a2Count == 0 && b1Count == 128 && b2Count == 0) ||
                            (a1Count == 0 && a2Count == 0 && b1Count == 0 && b2Count == 128);
             assertTrue(good, "first tick arrival count bad");
-            helper.succeed();
+
         });
     }
 
@@ -2835,7 +2830,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(a2, Items.DIRT) == 128, "a2 arrival count bad");
             assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
             assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
-            helper.succeed();
+
         });
     }
 
@@ -2871,7 +2866,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(!leftChest.getStackInSlot(0).isEmpty(), "Dirt should not move");
             assertTrue(rightChest.getStackInSlot(0).getCount() != 64, "Dirt should not move");
-            helper.succeed();
+
         });
     }
 
@@ -2979,7 +2974,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(rightChest.getStackInSlot(0).getCount() == 63, "Dirt slot 0 must arrive");
             assertTrue(rightChest.getStackInSlot(1).getCount() == 1, "Dirt slot 1 must arrive");
             assertTrue(rightChest.getStackInSlot(2).isEmpty(), "Dirt slot 2 must not arrive");
-            helper.succeed();
+
         });
     }
 
@@ -3566,7 +3561,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(leftChest, Items.STONE) == 64, "stone should remain");
             assertTrue(count(rightChest, Items.DIRT) == 64 * 2, "dirt should arrive");
             assertTrue(count(rightChest, Items.STONE) == 0, "stone should not arrive");
-            helper.succeed();
         });
     }
 
@@ -3645,7 +3639,324 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 //            assertTrue(count(leftChest, Items.STONE) == 64, "stone should remain");
 //            assertTrue(count(rightChest, Items.DIRT) == 64, "dirt should arrive");
 //            assertTrue(count(rightChest, Items.STONE) == 0, "stone should not arrive");
-//            helper.succeed();
 //        });
 //    }
+
+    @GameTest(template = "7x3x3")
+    public static void regression_input_retain_b_shared_shared(GameTestHelper helper) {
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        BlockPos aPos = new BlockPos(2, 2, 1);
+        BlockPos b1Pos = new BlockPos(4, 2, 1);
+        BlockPos b2Pos = new BlockPos(5, 2, 1);
+        BlockPos b3Pos = new BlockPos(6, 2, 1);
+
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        helper.setBlock(aPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b3Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        for (int i = 0; i < 6; i++) {
+            helper.setBlock(new BlockPos(1 + i, 2, 2), SFMBlocks.CABLE_BLOCK.get());
+        }
+
+        var a = getItemHandler(helper, aPos);
+        var b1 = getItemHandler(helper, b1Pos);
+        var b2 = getItemHandler(helper, b2Pos);
+        var b3 = getItemHandler(helper, b3Pos);
+
+        for (int i = 0; i < 5; i++) {
+            b1.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b2.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b3.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+        }
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                               EVERY 20 TICKS DO
+                                   INPUT RETAIN 5 FROM b
+                                   OUTPUT TO a
+                               END
+                           """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(aPos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .add("b", helper.absolutePos(b3Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // There should be exactly 5 dirt across all b
+            // The rest should be in a
+            assertTrue(count(a, Items.DIRT) == 64 * 3 * 5 - 5, "dirt should arrive in a");
+            int bDirt = count(b1, Items.DIRT) + count(b2, Items.DIRT) + count(b3, Items.DIRT);
+            assertTrue(bDirt == 5, "dirt should depart from b");
+        });
+    }
+
+    @GameTest(template = "7x3x3")
+    public static void regression_input_retain_b_shared_expanded(GameTestHelper helper) {
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        BlockPos aPos = new BlockPos(2, 2, 1);
+        BlockPos b1Pos = new BlockPos(4, 2, 1);
+        BlockPos b2Pos = new BlockPos(5, 2, 1);
+        BlockPos b3Pos = new BlockPos(6, 2, 1);
+
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        helper.setBlock(aPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b3Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        for (int i = 0; i < 6; i++) {
+            helper.setBlock(new BlockPos(1 + i, 2, 2), SFMBlocks.CABLE_BLOCK.get());
+        }
+
+        var a = getItemHandler(helper, aPos);
+        var b1 = getItemHandler(helper, b1Pos);
+        var b2 = getItemHandler(helper, b2Pos);
+        var b3 = getItemHandler(helper, b3Pos);
+
+        for (int i = 0; i < 5; i++) {
+            b1.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b2.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b3.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+        }
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                               EVERY 20 TICKS DO
+                                   INPUT RETAIN 5 EACH FROM b
+                                   OUTPUT TO a
+                               END
+                           """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(aPos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .add("b", helper.absolutePos(b3Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // There should be exactly 5 dirt across all b
+            // The rest should be in a
+            assertTrue(count(a, Items.DIRT) == 64 * 3 * 5 - 5, "dirt should arrive in a");
+            int bDirt = count(b1, Items.DIRT) + count(b2, Items.DIRT) + count(b3, Items.DIRT);
+            assertTrue(bDirt == 5, "dirt should depart from b");
+        });
+    }
+
+
+    @GameTest(template = "7x3x3")
+    public static void regression_input_retain_b_expanded_shared(GameTestHelper helper) {
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        BlockPos aPos = new BlockPos(2, 2, 1);
+        BlockPos b1Pos = new BlockPos(4, 2, 1);
+        BlockPos b2Pos = new BlockPos(5, 2, 1);
+        BlockPos b3Pos = new BlockPos(6, 2, 1);
+
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        helper.setBlock(aPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b3Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        for (int i = 0; i < 6; i++) {
+            helper.setBlock(new BlockPos(1 + i, 2, 2), SFMBlocks.CABLE_BLOCK.get());
+        }
+
+        var a = getItemHandler(helper, aPos);
+        var b1 = getItemHandler(helper, b1Pos);
+        var b2 = getItemHandler(helper, b2Pos);
+        var b3 = getItemHandler(helper, b3Pos);
+
+        for (int i = 0; i < 5; i++) {
+            b1.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b2.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b3.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+        }
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                               EVERY 20 TICKS DO
+                                   INPUT 9999 EACH RETAIN 5 FROM b
+                                   OUTPUT TO a
+                               END
+                           """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(aPos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .add("b", helper.absolutePos(b3Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // There should be exactly 5 dirt across all b
+            // The rest should be in a
+            assertTrue(count(a, Items.DIRT) == 64 * 3 * 5 - 5, "dirt should arrive in a");
+            int bDirt = count(b1, Items.DIRT) + count(b2, Items.DIRT) + count(b3, Items.DIRT);
+            assertTrue(bDirt == 5, "dirt should depart from b");
+        });
+    }
+
+
+    @GameTest(template = "7x3x3")
+    public static void regression_input_retain_b_expanded_expanded(GameTestHelper helper) {
+        BlockPos managerPos = new BlockPos(1, 2, 1);
+        BlockPos aPos = new BlockPos(2, 2, 1);
+        BlockPos b1Pos = new BlockPos(4, 2, 1);
+        BlockPos b2Pos = new BlockPos(5, 2, 1);
+        BlockPos b3Pos = new BlockPos(6, 2, 1);
+
+        helper.setBlock(managerPos, SFMBlocks.MANAGER_BLOCK.get());
+        helper.setBlock(aPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b1Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b2Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        helper.setBlock(b3Pos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        for (int i = 0; i < 6; i++) {
+            helper.setBlock(new BlockPos(1 + i, 2, 2), SFMBlocks.CABLE_BLOCK.get());
+        }
+
+        var a = getItemHandler(helper, aPos);
+        var b1 = getItemHandler(helper, b1Pos);
+        var b2 = getItemHandler(helper, b2Pos);
+        var b3 = getItemHandler(helper, b3Pos);
+
+        for (int i = 0; i < 5; i++) {
+            b1.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b2.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+            b3.insertItem(i, new ItemStack(Items.DIRT, 64), false);
+        }
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                               EVERY 20 TICKS DO
+                                   INPUT 9999 EACH RETAIN 5 EACH FROM b
+                                   OUTPUT TO a
+                               END
+                           """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(aPos))
+                .add("b", helper.absolutePos(b1Pos))
+                .add("b", helper.absolutePos(b2Pos))
+                .add("b", helper.absolutePos(b3Pos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // There should be exactly 5 dirt across all b
+            // The rest should be in a
+            assertTrue(count(a, Items.DIRT) == 64 * 3 * 5 - 5, "dirt should arrive in a");
+            int bDirt = count(b1, Items.DIRT) + count(b2, Items.DIRT) + count(b3, Items.DIRT);
+            assertTrue(bDirt == 5, "dirt should depart from b");
+        });
+    }
+
+
+    @GameTest(template = "3x2x1")
+    public static void move_using_or(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = getItemHandler(helper, rightPos);
+        var leftChest = getItemHandler(helper, leftPos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+        leftChest.insertItem(1, new ItemStack(Blocks.STONE, 64), false);
+        leftChest.insertItem(2, new ItemStack(Blocks.COBBLESTONE, 64), false);
+        leftChest.insertItem(3, new ItemStack(Blocks.COBBLESTONE, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT
+                                               5 stone or dirt,
+                                               cobblestone FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // count of stone + dirt in left must be 64*2-5
+            int leftStoneDirt = count(leftChest, Items.STONE) + count(leftChest, Items.DIRT);
+            assertTrue(leftStoneDirt == 64 * 2 - 5, "stone and dirt should depart");
+            // count of stone + dirt in right must be 5
+            int rightStoneDirt = count(rightChest, Items.STONE) + count(rightChest, Items.DIRT);
+            assertTrue(rightStoneDirt == 5, "stone and dirt should arrive");
+            // left cobblestone count = 0
+            assertTrue(count(leftChest, Items.COBBLESTONE) == 0, "no cobblestone should remain");
+            // right cobblestone count = 64*2
+            assertTrue(count(rightChest, Items.COBBLESTONE) == 64 * 2, "cobblestone should arrive");
+        });
+    }
+    @GameTest(template = "3x2x1")
+    public static void move_using_each_or(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
+        BlockPos rightPos = new BlockPos(0, 2, 0);
+        helper.setBlock(rightPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+        BlockPos leftPos = new BlockPos(2, 2, 0);
+        helper.setBlock(leftPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var rightChest = getItemHandler(helper, rightPos);
+        var leftChest = getItemHandler(helper, leftPos);
+
+        leftChest.insertItem(0, new ItemStack(Blocks.DIRT, 64), false);
+        leftChest.insertItem(1, new ItemStack(Blocks.STONE, 64), false);
+        leftChest.insertItem(2, new ItemStack(Blocks.COBBLESTONE, 64), false);
+        leftChest.insertItem(3, new ItemStack(Blocks.COBBLESTONE, 64), false);
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0));
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT
+                                               5 each stone or dirt,
+                                               cobblestone FROM a
+                                           OUTPUT TO b
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("a", helper.absolutePos(leftPos))
+                .add("b", helper.absolutePos(rightPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            // left dirt count = 64-5
+            assertTrue(count(leftChest, Items.DIRT) == 64 - 5, "dirt should depart");
+            // left stone count = 64-5
+            assertTrue(count(leftChest, Items.STONE) == 64 - 5, "stone should depart");
+            // right dirt count = 5
+            assertTrue(count(rightChest, Items.DIRT) == 5, "dirt should arrive");
+            // right stone count = 5
+            assertTrue(count(rightChest, Items.STONE) == 5, "stone should arrive");
+            // left cobblestone count = 0
+            assertTrue(count(leftChest, Items.COBBLESTONE) == 0, "no cobblestone should remain");
+            // right cobblestone count = 64*2
+            assertTrue(count(rightChest, Items.COBBLESTONE) == 64 * 2, "cobblestone should arrive");
+        });
+    }
 }
