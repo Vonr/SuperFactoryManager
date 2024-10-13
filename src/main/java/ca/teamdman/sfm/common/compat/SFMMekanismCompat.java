@@ -116,5 +116,9 @@ public class SFMMekanismCompat {
                 "slurry",
                 SlurryResourceType::new
         );
+        types.register(
+                "mekanism_energy",
+                MekanismEnergyResourceType::new
+        );
     }
 }
