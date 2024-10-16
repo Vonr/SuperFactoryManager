@@ -15,6 +15,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     private final Set<Label> USED_LABELS = new HashSet<>();
     private final Set<ResourceIdentifier<?, ?, ?>> USED_RESOURCES = new HashSet<>();
     private final List<Pair<ASTNode, ParserRuleContext>> AST_NODE_CONTEXTS = new LinkedList<>();
+    private final List<? extends String> BLACKLISTED_RESOURCES = SFMConfig.getOrDefault(SFMConfig.COMMON.blacklistedResourceTypesForTransfer);
 
     public List<Pair<ASTNode, ParserRuleContext>> getNodesUnderCursor(int cursorPos) {
         return AST_NODE_CONTEXTS
@@ -79,6 +80,9 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .replaceAll(":$", ":*")
                 .replaceAll("\\*", ".*");
         var rtn = ResourceIdentifier.fromString(str);
+        if (BLACKLISTED_RESOURCES.contains(rtn.resourceTypeName)) {
+            throw new IllegalArgumentException("Resource type \"" + rtn.resourceTypeName + "\" is blacklisted");
+        }
         USED_RESOURCES.add(rtn);
         rtn.assertValid();
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
