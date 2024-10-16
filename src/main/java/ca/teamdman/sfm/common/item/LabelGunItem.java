@@ -24,7 +24,9 @@ import java.util.List;
 
 public class LabelGunItem extends Item {
     public LabelGunItem() {
-        super(new Properties().stacksTo(1));
+        super(new Properties()
+                .stacksTo(1)
+        );
     }
 
     public static void setActiveLabel(ItemStack gun, String label) {
@@ -56,6 +58,10 @@ public class LabelGunItem extends Item {
         nextLabelIndex = ((nextLabelIndex % labels.size()) + labels.size()) % labels.size();
 
         return labels.get(nextLabelIndex);
+    }
+
+    public static boolean getOnlyShowActiveLabel(ItemStack gun) {
+        return gun.getOrDefault(SFMDataComponents.ONLY_SHOW_ACTIVE_LABEL, false);
     }
 
     @Override

@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -114,10 +115,19 @@ public class ItemWorldRenderer {
             MultiBufferSource.BufferSource bufferSource,
             ItemStack labelGun
     ) {
+        boolean onlyShowSelectedLabel = labelGun.getOrDefault(SFMDataComponents.ONLY_SHOW_ACTIVE_LABEL, false);
         LabelPositionHolder labelPositionHolder = LabelPositionHolder.from(labelGun);
         HashMultimap<BlockPos, String> labelsByPosition = HashMultimap.create();
-        labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
-
+        if (onlyShowSelectedLabel) {
+            String activeLabel = labelGun.getOrDefault(SFMDataComponents.ACTIVE_LABEL, "");
+            labelPositionHolder.forEach((label, pos1) -> {
+               if (Objects.equals(label, activeLabel)) {
+                   labelsByPosition.put(pos1, label);
+               }
+            });
+        } else {
+            labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
+        }
         RenderSystem.disableDepthTest();
 //        RenderSystem.disableCull();
 

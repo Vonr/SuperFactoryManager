@@ -10,7 +10,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -40,6 +39,15 @@ public class SFMDataComponents {
                     .<String>builder()
                     .persistent(Codec.STRING)
                     .networkSynchronized(ByteBufCodecs.STRING_UTF8)
+                    .cacheEncoding()
+                    .build()
+    );
+    public static final Supplier<DataComponentType<Boolean>> ONLY_SHOW_ACTIVE_LABEL = DATA_COMPONENT_TYPES.register(
+            "only_show_active_label",
+            () -> DataComponentType
+                    .<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .networkSynchronized(ByteBufCodecs.BOOL)
                     .cacheEncoding()
                     .build()
     );

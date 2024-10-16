@@ -261,7 +261,10 @@ public final class LocalizationKeys {
             "gui.sfm.label_gun.clear_button",
             "Clear"
     );
-
+    public static final LocalizationEntry LABEL_GUN_GUI_TOGGLE_SHOW_ACTIVE_LABEL_BUTTON = new LocalizationEntry(
+            "gui.sfm.label_gun.toggle_show_active_label_button",
+            "Toggle label view"
+    );
 
     public static final LocalizationEntry MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP = new LocalizationEntry(
             "gui.sfm.manager.tooltip.paste",
