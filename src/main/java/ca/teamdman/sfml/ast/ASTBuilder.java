@@ -80,9 +80,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .replaceAll(":$", ":*")
                 .replaceAll("\\*", ".*");
         var rtn = ResourceIdentifier.fromString(str);
-        if (BLACKLISTED_RESOURCES.contains(rtn.resourceTypeName)) {
-            throw new IllegalArgumentException("Resource type \"" + rtn.resourceTypeName + "\" is blacklisted");
-        }
         USED_RESOURCES.add(rtn);
         rtn.assertValid();
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
@@ -257,6 +254,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public InputStatement visitInputStatement(SFMLParser.InputStatementContext ctx) {
         var labelAccess = visitLabelAccess(ctx.labelAccess());
         var matchers = visitInputResourceLimits(ctx.inputResourceLimits());
+
+        matchers.resourceLimitList().forEach(resourceLimit -> {
+            resourceLimit.resourceIds().stream().forEach(resourceId -> {
+                if (BLACKLISTED_RESOURCES.contains(resourceId.resourceTypeName))
+                    throw new IllegalArgumentException("Resource type \"" + resourceId.resourceTypeName + "\" is blacklisted");
+            });
+        });
+
         var exclusions = visitResourceExclusion(ctx.resourceExclusion());
         var each = ctx.EACH() != null;
         InputStatement inputStatement = new InputStatement(labelAccess, matchers.withExclusions(exclusions), each);
@@ -268,6 +273,14 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public OutputStatement visitOutputStatement(SFMLParser.OutputStatementContext ctx) {
         var labelAccess = visitLabelAccess(ctx.labelAccess());
         var matchers = visitOutputResourceLimits(ctx.outputResourceLimits());
+
+        matchers.resourceLimitList().forEach(resourceLimit -> {
+            resourceLimit.resourceIds().stream().forEach(resourceId -> {
+                if (BLACKLISTED_RESOURCES.contains(resourceId.resourceTypeName))
+                    throw new IllegalArgumentException("Resource type \"" + resourceId.resourceTypeName + "\" is blacklisted");
+            });
+        });
+
         var exclusions = visitResourceExclusion(ctx.resourceExclusion());
         var each = ctx.EACH() != null;
         OutputStatement outputStatement = new OutputStatement(labelAccess, matchers.withExclusions(exclusions), each);
