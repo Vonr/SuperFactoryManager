@@ -19,7 +19,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
     public int slot;
     public boolean freed;
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
-    public OutputResourceTracker<STACK, ITEM, CAP> tracker;
+    public IOutputResourceTracker tracker;
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor
     private Direction direction;
     private @Nullable STACK stackInSlotCache = null;
@@ -30,16 +30,15 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
             Direction direction,
             int slot,
             CAP handler,
-            OutputResourceTracker<STACK, ITEM, CAP> tracker,
-            STACK stack
+            IOutputResourceTracker tracker,
+            STACK stackCache,
+            ResourceType<STACK, ITEM, CAP> type
     ) {
-        this.init(handler, label, pos, direction, slot, tracker, stack);
+        this.init(handler, label, pos, direction, slot, tracker, stackCache, type);
     }
 
+    @SuppressWarnings("RedundantIfStatement")
     public boolean isDone() {
-        if (tracker.isDone()) {
-            return true;
-        }
         if (slot > type.getSlots(handler) - 1) {
             // composter block changes how many slots it has between insertions
             return true;
@@ -60,7 +59,13 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
                 return true;
             }
         }
-        return amount != 0 && !tracker.test(stack);
+        if (amount != 0 && !tracker.matchesStack(stack)) {
+            return true;
+        }
+        if (tracker.isDone(type, stack)) {
+            return true;
+        }
+        return false;
     }
 
     public STACK getStackInSlot() {
@@ -78,17 +83,18 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         return type.insert(handler, slot, stack, simulate);
     }
 
+    @SuppressWarnings("DuplicatedCode")
     public void init(
             CAP handler,
             Label label,
             BlockPos pos,
             Direction direction,
             int slot,
-            OutputResourceTracker<STACK, ITEM, CAP> tracker,
-            STACK stack
+            IOutputResourceTracker tracker,
+            STACK stackCache,
+            ResourceType<STACK, ITEM, CAP> type
     ) {
-        this.stackInSlotCache = stack;
-
+        this.stackInSlotCache = stackCache;
         this.handler = handler;
         this.tracker = tracker;
         this.slot = slot;
@@ -96,12 +102,7 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> {
         this.label = label;
         this.direction = direction;
         this.freed = false;
-
-        //noinspection DataFlowIssue
-        this.type = tracker.getLimit().resourceId().getResourceType();
-        if (type == null) {
-            throw new NullPointerException("type");
-        }
+        this.type = type;
     }
 
     @Override

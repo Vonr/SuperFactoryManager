@@ -266,6 +266,12 @@ public final class LocalizationKeys {
             "Toggle label view"
     );
 
+    public static final LocalizationEntry DISK_EDIT_IN_HAND_TOOLTIP = new LocalizationEntry(
+            "gui.sfm.disk.tooltip.edit_in_hand",
+            "You can right-click a disk in your hand to edit outside of a manager."
+    );
+
+
     public static final LocalizationEntry MANAGER_GUI_PASTE_FROM_CLIPBOARD_BUTTON_TOOLTIP = new LocalizationEntry(
             "gui.sfm.manager.tooltip.paste",
             "Press Ctrl+V to paste."
@@ -305,6 +311,10 @@ public final class LocalizationKeys {
     public static final LocalizationEntry PROGRAM_WARNING_UNDEFINED_LABEL = new LocalizationEntry(
             "program.sfm.warnings.undefined_label",
             "Label \"%s\" is assigned in the world but not defined in code."
+    );
+    public static final LocalizationEntry PROGRAM_REMINDER_PUSH_LABELS = new LocalizationEntry(
+            "program.sfm.reminders.push_labels",
+            "Did you remember to push your labels using the label gun?"
     );
     public static final LocalizationEntry PROGRAM_WARNING_DISCONNECTED_LABEL = new LocalizationEntry(
             "program.sfm.warnings.disconnected_label",
@@ -590,7 +600,10 @@ public final class LocalizationKeys {
             "gui.sfm.container_inspector.mekanism_machine_outputs",
             "The following are based on the MACHINE'S output config"
     );
-
+    public static final LocalizationEntry CONTAINER_INSPECTOR_NOTICE = new LocalizationEntry(
+            "gui.sfm.container_inspector.notice",
+            "GUI slots don't always correspond to automation slots!!!"
+    );
     public static final LocalizationEntry CONTAINER_INSPECTOR_CONTAINER_SLOT_COUNT = new LocalizationEntry(
             "gui.sfm.container_inspector.container_slot_count",
             "Container Slots: %d"
@@ -599,6 +612,7 @@ public final class LocalizationKeys {
             "gui.sfm.container_inspector.inventory_slot_count",
             "Inventory Slots: %d"
     );
+
 
     public static final LocalizationEntry MANAGER_GUI_PEAK_TICK_TIME_MS = new LocalizationEntry(
             "gui.sfm.manager.peak_tick_time",
