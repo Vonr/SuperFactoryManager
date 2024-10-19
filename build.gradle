@@ -6,8 +6,8 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.1.+'
     id 'antlr'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id 'application'
 }
-
 
 
 
@@ -283,8 +283,10 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
     antlr 'org.antlr:antlr4:4.9.1'
+    testImplementation 'com.github.javaparser:javaparser-symbol-solver-core:3.26.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
 
     runtimeOnly fg.deobf("curse.maven:the-one-probe-245211:3927520") //TheOneProbe - 1.19-6.2.1
 
@@ -465,3 +467,32 @@ compileJava.dependsOn generateGrammarSource
 //        downloadJavadoc = true
 //    }
 //}
+
+// List of fully qualified entry point classes
+def entryPoints = [
+        'ca.teamdman.ai.ProjectTestMethodLister',
+        'ca.teamdman.ai.ProjectEverythingLister'
+        // Add more classes here as needed
+]
+entryPoints.each { className ->
+    // Extract simple class name for the task name (e.g., ProjectTestMethodLister)
+    def simpleClassName = className.substring(className.lastIndexOf('.') + 1)
+
+    // Define a task name, e.g., runProjectTestMethodLister
+    def taskName = "run${simpleClassName}"
+
+    // Create the JavaExec task
+    task(taskName, type: JavaExec) {
+        group = 'Execution'
+        description = "Runs the ${className} class"
+
+        // Set the main class to run
+        mainClass.set(className)
+
+        // Set the classpath to include compiled test classes and dependencies
+        classpath = sourceSets.test.runtimeClasspath
+
+        // Optional: Set JVM arguments if needed
+        // e.g., jvmArgs = ['-Xmx1G']
+    }
+}

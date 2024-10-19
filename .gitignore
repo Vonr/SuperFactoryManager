@@ -6,6 +6,7 @@ logs/
 .metadata
 .classpath
 .project
+.conda
 
 logs/debug.log
 logs/latest.log
