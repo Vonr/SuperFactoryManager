@@ -89,6 +89,11 @@ public class SFMPackets {
                 ServerboundLabelGunClearPacket::handle
         );
         registrar.playToServer(
+                ServerboundLabelGunShowActiveLabelPacket.TYPE,
+                ServerboundLabelGunShowActiveLabelPacket.STREAM_CODEC,
+                ServerboundLabelGunShowActiveLabelPacket::handle
+        );
+        registrar.playToServer(
                 ServerboundLabelGunUsePacket.TYPE,
                 ServerboundLabelGunUsePacket.STREAM_CODEC,
                 ServerboundLabelGunUsePacket::handle

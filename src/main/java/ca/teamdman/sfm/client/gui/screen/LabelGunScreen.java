@@ -3,6 +3,7 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunClearPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunPrunePacket;
+import ca.teamdman.sfm.common.net.ServerboundLabelGunShowActiveLabelPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import net.minecraft.client.Minecraft;
@@ -71,6 +72,17 @@ public class LabelGunScreen extends Screen {
                         .size(50, 20)
                         .build()
         );
+
+        this.addRenderableWidget(
+                new Button.Builder(LocalizationKeys.LABEL_GUN_GUI_TOGGLE_SHOW_ACTIVE_LABEL_BUTTON.getComponent(), (btn) -> {
+                    PacketDistributor.sendToServer(new ServerboundLabelGunShowActiveLabelPacket(HAND));
+                    onClose();
+                })
+                        .pos(this.width / 2 + 160 + 55, 50)
+                        .size(50, 20)
+                        .build()
+        );
+
         this.addRenderableWidget(
                 new Button.Builder(CommonComponents.GUI_DONE, __ -> this.onDone())
                         .pos(this.width / 2 - 2 - 150, this.height - 50)

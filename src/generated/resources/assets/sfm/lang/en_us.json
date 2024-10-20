@@ -27,6 +27,7 @@
   "gui.sfm.exit_without_saving_confirm.title": "Exit without saving?",
   "gui.sfm.exit_without_saving_confirm.yes_button": "Exit without saving",
   "gui.sfm.label_gun.clear_button": "Clear",
+  "gui.sfm.label_gun.toggle_show_active_label_button": "Toggle label view",
   "gui.sfm.label_gun.label_button": "%s (%d)",
   "gui.sfm.label_gun.placeholder": "Label",
   "gui.sfm.label_gun.prune_button": "Prune",
