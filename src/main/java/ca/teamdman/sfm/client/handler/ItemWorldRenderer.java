@@ -82,29 +82,17 @@ public class ItemWorldRenderer {
     @SubscribeEvent
     public static void renderOverlays(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
-
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player == null) return;
-
         PoseStack poseStack = event.getPoseStack();
         Camera camera = minecraft.gameRenderer.getMainCamera();
         MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
-
-
-        // Check for Network Tool
-        // Handle before Label Gun as it also handles highlighting capabilities
-        ItemStack networkTool = getHeldItemOfType(player, NetworkToolItem.class);
-        if (networkTool != null) {
-            handleNetworkTool(event, poseStack, camera, bufferSource, networkTool);
-            return;
-        }
-
-        // Check for Label Gun
-        ItemStack labelGun = getHeldItemOfType(player, LabelGunItem.class);
-        if (labelGun != null) {
-            handleLabelGun(event, poseStack, camera, bufferSource, labelGun);
-            return;
+        ItemStack held;
+        if ((held = getHeldItemOfType(player, NetworkToolItem.class)) != null) {
+            handleNetworkTool(event, poseStack, camera, bufferSource, held);
+        } else if ((held = getHeldItemOfType(player, LabelGunItem.class)) != null) {
+            handleLabelGun(event, poseStack, camera, bufferSource, held);
         }
     }
 
@@ -269,8 +257,7 @@ public class ItemWorldRenderer {
         return new ColorRGBA((red << 24) | (green << 16) | (blue << 8) | alpha);
     }
 
-    @Nullable
-    private static ItemStack getHeldItemOfType(LocalPlayer player, Class<?> itemClass) {
+    private static @Nullable ItemStack getHeldItemOfType(LocalPlayer player, Class<?> itemClass) {
         ItemStack mainHandItem = player.getMainHandItem();
         if (itemClass.isInstance(mainHandItem.getItem())) {
             return mainHandItem;
