@@ -97,6 +97,12 @@ public final class LocalizationKeys {
     );
 
     @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+    public static LocalizationEntry CABLE_BLOCK_BLOCK = new LocalizationEntry(
+            () -> SFMBlocks.CABLE_BLOCK_BLOCK.get().getDescriptionId(),
+            () -> "Inventory Cable (Block)"
+    );
+
+    @SuppressWarnings("unused") // used by minecraft without us having to directly reference
     public static LocalizationEntry MANAGER_BLOCK = new LocalizationEntry(
             () -> SFMBlocks.MANAGER_BLOCK.get().getDescriptionId(),
             () -> "Factory Manager"
