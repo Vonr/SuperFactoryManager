@@ -45,14 +45,14 @@ public class ExamplesScreen extends Screen {
             try (BufferedReader reader = entry.getValue().openAsReader()) {
                 String program = reader.lines().collect(Collectors.joining("\n"));
                 if (program.contains("$REPLACE_RESOURCE_TYPES_HERE$")) {
-                    List<? extends String> blacklistedResources = SFMConfig.getOrDefault(SFMConfig.COMMON.blacklistedResourceTypesForTransfer);
+                    List<? extends String> disallowedResourceTypesForTransfer = SFMConfig.getOrDefault(SFMConfig.COMMON.disallowedResourceTypesForTransfer);
                     var replacement = SFMResourceTypes.DEFERRED_TYPES.keySet()
                             .stream()
                             .map(ResourceLocation::getPath)
                             .map(e -> {
                                 String text = "";
-                                if (blacklistedResources.contains(e))
-                                    text += "-- BLACKLISTED: ";
+                                if (disallowedResourceTypesForTransfer.contains(e))
+                                    text += "-- (disallowed in config) ";
                                 text += "INPUT " + e + ":: FROM a";
                                 return text;
                             })
