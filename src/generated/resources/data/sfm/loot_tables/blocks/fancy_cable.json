@@ -11,7 +11,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "sfm:cable_block"
+          "name": "sfm:fancy_cable"
         }
       ],
       "rolls": 1.0

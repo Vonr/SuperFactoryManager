@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.datagen;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.block.CableBlock;
+import ca.teamdman.sfm.common.block.FancyCableBlock;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import net.minecraft.core.Direction;
@@ -32,8 +32,8 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
                 modLoc("block/test_barrel_tank")
         ).texture("particle", "#all"));
 
-        registerCableBlock();
-        simpleBlock(SFMBlocks.CABLE_BLOCK_BLOCK.get());
+        simpleBlock(SFMBlocks.CABLE_BLOCK.get());
+        registerFancyCableBlock();
         simpleBlock(SFMBlocks.PRINTING_PRESS_BLOCK.get(), models().getExistingFile(modLoc("block/printing_press")));
 
         ModelFile waterIntakeModelActive = models()
@@ -103,17 +103,17 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
         }
     }
 
-    private void registerCableBlock() {
-        var coreModel = models().withExistingParent(modLoc("block/cable_core").getPath(), "block/block")
+    private void registerFancyCableBlock() {
+        var coreModel = models().withExistingParent(modLoc("block/fancy_cable_core").getPath(), "block/block")
                 .element()
                 .from(4, 4, 4)
                 .to(12, 12, 12)
                 .shade(false)
                 .allFaces((direction, faceBuilder) -> faceBuilder.uvs(8, 0, 16, 8).texture("#cable"))
                 .end()
-                .texture("cable", modLoc("block/cable"))
-                .texture("particle", modLoc("block/cable"));
-        var connectionModel = models().withExistingParent(modLoc("block/cable_connection").getPath(), "block/block")
+                .texture("cable", modLoc("block/fancy_cable"))
+                .texture("particle", modLoc("block/fancy_cable"));
+        var connectionModel = models().withExistingParent(modLoc("block/fancy_cable_connection").getPath(), "block/block")
                 .element()
                 .from(5, 5, 0)
                 .to(11, 11, 5)
@@ -141,9 +141,9 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
                     faceBuilder.texture("#cable");
                 })
                 .end()
-                .texture("cable", modLoc("block/cable"));
+                .texture("cable", modLoc("block/fancy_cable"));
 
-        var multipartBuilder = getMultipartBuilder(SFMBlocks.CABLE_BLOCK.get());
+        var multipartBuilder = getMultipartBuilder(SFMBlocks.FANCY_CABLE_BLOCK.get());
 
         // Core
         multipartBuilder.part()
@@ -170,7 +170,7 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
                     .rotationY(rotY)
                     .uvLock(false)
                     .addModel()
-                    .condition(CableBlock.DIRECTION_PROPERTIES.get(direction), true)
+                    .condition(FancyCableBlock.DIRECTION_PROPERTIES.get(direction), true)
                     .end();
         }
     }

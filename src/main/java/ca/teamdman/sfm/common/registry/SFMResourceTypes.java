@@ -12,6 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidStack;
@@ -23,8 +24,8 @@ import net.minecraftforge.registries.RegistryBuilder;
 import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class SFMResourceTypes {
     public static final ResourceLocation REGISTRY_ID = new ResourceLocation(SFM.MOD_ID, "resource_type");
@@ -36,6 +37,7 @@ public class SFMResourceTypes {
     public static final Supplier<IForgeRegistry<ResourceType<?, ?, ?>>> DEFERRED_TYPES = TYPES.makeRegistry(
             () -> new RegistryBuilder<ResourceType<?, ?, ?>>().setName(
                     REGISTRY_ID));
+
     public static final RegistryObject<ResourceType<ItemStack, Item, IItemHandler>> ITEM = TYPES.register(
             "item",
             ItemResourceType::new
@@ -56,6 +58,10 @@ public class SFMResourceTypes {
                 resourceTypeNamespace.hashCode() ^ resourceTypeName.hashCode(),
                 i -> DEFERRED_TYPES.get().getValue(new ResourceLocation(resourceTypeNamespace, resourceTypeName))
         );
+    }
+
+    public static Stream<Capability<?>> getCapabilities() {
+        return TYPES.getEntries().stream().map(RegistryObject::get).map(resourceType -> resourceType.CAPABILITY_KIND);
     }
 
     static {

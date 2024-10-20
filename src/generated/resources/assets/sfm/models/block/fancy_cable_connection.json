@@ -74,6 +74,6 @@
     }
   ],
   "textures": {
-    "cable": "sfm:block/cable"
+    "cable": "sfm:block/fancy_cable"
   }
 }

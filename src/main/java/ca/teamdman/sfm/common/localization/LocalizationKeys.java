@@ -97,9 +97,9 @@ public final class LocalizationKeys {
     );
 
     @SuppressWarnings("unused") // used by minecraft without us having to directly reference
-    public static LocalizationEntry CABLE_BLOCK_BLOCK = new LocalizationEntry(
-            () -> SFMBlocks.CABLE_BLOCK_BLOCK.get().getDescriptionId(),
-            () -> "Inventory Cable (Block)"
+    public static LocalizationEntry FANCY_CABLE_BLOCK = new LocalizationEntry(
+            () -> SFMBlocks.FANCY_CABLE_BLOCK.get().getDescriptionId(),
+            () -> "Fancy Inventory Cable"
     );
 
     @SuppressWarnings("unused") // used by minecraft without us having to directly reference

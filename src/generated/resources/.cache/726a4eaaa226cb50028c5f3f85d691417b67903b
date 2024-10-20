@@ -1,7 +1,7 @@
-// 1.19.2	2024-07-25T09:55:45.3422564	Item Models: sfm
-f40651792e00050f7fcb669df2f51e1b989cb528 assets/sfm/models/item/cable.json
-55fe45fecf984b09f1df6e2916bda29772b0a02a assets/sfm/models/item/cable_block.json
+// 1.19.2	2024-10-20T13:56:46.9410105	Item Models: sfm
+8518af52bb22ef1d984719f3534ff29e08cca857 assets/sfm/models/item/cable.json
 bee75adb2bb431a6b671015aa9bac0d68a98f5fb assets/sfm/models/item/disk.json
+3b5be3966b540f1e99a3d6fd8836ad39bf937e96 assets/sfm/models/item/fancy_cable.json
 2c8c32d785bfc59bf23083eff8838054ee580570 assets/sfm/models/item/form.json
 a74b029bcf88d674c6a4c4eaece9426cfd9c4533 assets/sfm/models/item/form_base.json
 a70b1032681b30f1066fdfb8b28870e87e51c261 assets/sfm/models/item/labelgun.json
