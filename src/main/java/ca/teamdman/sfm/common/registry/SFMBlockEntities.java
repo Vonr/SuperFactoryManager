@@ -57,5 +57,12 @@ public final class SFMBlockEntities {
                     .build(null)
     );
 
+    public static final Supplier<BlockEntityType<TestBarrelTankBlockEntity>> TEST_BARREL_TANK_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+            "test_barrel_tank",
+            () -> BlockEntityType.Builder
+                    .of(TestBarrelTankBlockEntity::new, SFMBlocks.TEST_BARREL_BLOCK.get())
+                    .build(null)
+    );
+
 
 }

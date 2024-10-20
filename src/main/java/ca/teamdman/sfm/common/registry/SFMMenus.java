@@ -4,7 +4,9 @@ package ca.teamdman.sfm.common.registry;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.blockentity.TestBarrelTankBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.containermenu.TestBarrelTankContainerMenu;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
@@ -55,6 +57,44 @@ public class SFMMenus {
                                         if (!(be instanceof ManagerBlockEntity mbe))
                                             return IContainerFactory.super.create(windowId, inv);
                                         return new ManagerContainerMenu(windowId, inv, mbe);
+                                    },
+                                    () -> () -> IContainerFactory.super.create(
+                                            windowId,
+                                            inv
+                                    )
+                            );
+                        }
+                    })
+    );
+
+    public static final RegistryObject<MenuType<TestBarrelTankContainerMenu>> TEST_BARREL_TANK_MENU = MENU_TYPES.register(
+            "test_barrel_tank",
+            () -> IForgeMenuType.create(
+                    new IContainerFactory<>() {
+                        @Override
+                        public TestBarrelTankContainerMenu create(
+                                int windowId,
+                                Inventory inv,
+                                FriendlyByteBuf data
+                        ) {
+                            return new TestBarrelTankContainerMenu(
+                                    windowId,
+                                    inv,
+                                    data
+                            );
+                        }
+
+                        @Override
+                        public TestBarrelTankContainerMenu create(
+                                int windowId,
+                                Inventory inv
+                        ) {
+                            return DistExecutor.unsafeRunForDist(
+                                    () -> () -> {
+                                        BlockEntity unchecked = ClientStuff.getLookBlockEntity();
+                                        if (!(unchecked instanceof TestBarrelTankBlockEntity blockEntity))
+                                            return IContainerFactory.super.create(windowId, inv);
+                                        return new TestBarrelTankContainerMenu(windowId, inv, blockEntity);
                                     },
                                     () -> () -> IContainerFactory.super.create(
                                             windowId,

@@ -22,6 +22,7 @@ public class SFMBlocks {
 
     public static final RegistryObject<Block> BATTERY_BLOCK = BLOCKS.register("battery", BatteryBlock::new);
     public static final RegistryObject<Block> TEST_BARREL_BLOCK = BLOCKS.register("test_barrel", TestBarrelBlock::new);
+    public static final RegistryObject<Block> TEST_BARREL_TANK_BLOCK = BLOCKS.register("test_barrel_tank", TestBarrelTankBlock::new);
 
 
     public static void register(IEventBus bus) {

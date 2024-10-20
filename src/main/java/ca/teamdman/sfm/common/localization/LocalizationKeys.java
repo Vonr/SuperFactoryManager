@@ -101,6 +101,13 @@ public final class LocalizationKeys {
             () -> SFMBlocks.MANAGER_BLOCK.get().getDescriptionId(),
             () -> "Factory Manager"
     );
+
+    @SuppressWarnings("unused") // used by minecraft without us having to directly reference
+    public static LocalizationEntry TEST_BARREL_TANK_BLOCK = new LocalizationEntry(
+            () -> SFMBlocks.TEST_BARREL_TANK_BLOCK.get().getDescriptionId(),
+            () -> "Test Barrel Tank"
+    );
+
     @SuppressWarnings("unused") // used by minecraft without us having to directly reference
     public static LocalizationEntry PRINTING_PRESS_BLOCK = new LocalizationEntry(
             () -> SFMBlocks.PRINTING_PRESS_BLOCK.get().getDescriptionId(),
@@ -287,6 +294,10 @@ public final class LocalizationKeys {
     public static final LocalizationEntry MANAGER_CONTAINER = new LocalizationEntry(
             "container.sfm.manager",
             "Factory Manager"
+    );
+    public static final LocalizationEntry TEST_BARREL_TANK_CONTAINER = new LocalizationEntry(
+            "container.sfm.test_barrel_tank",
+            "Test Barrel Tank"
     );
     public static final LocalizationEntry PROGRAM_WARNING_UNUSED_LABEL = new LocalizationEntry(
             "program.sfm.warnings.unused_label",

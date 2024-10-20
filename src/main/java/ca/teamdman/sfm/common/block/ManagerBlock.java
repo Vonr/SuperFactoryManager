@@ -48,6 +48,7 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
         builder.add(TRIGGERED);
     }
 
+    @Override
     @SuppressWarnings("deprecation")
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
