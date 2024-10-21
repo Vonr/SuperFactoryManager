@@ -21,18 +21,16 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.ColorRGBA;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @EventBusSubscriber(modid = SFM.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
@@ -42,6 +40,7 @@ import java.util.stream.Collectors;
  */
 public class ItemWorldRenderer {
     private static final int BUFFER_SIZE = 256;
+    @SuppressWarnings("deprecation")
     private static final RenderType RENDER_TYPE = RenderType.create(
             "sfm_overlay",
             DefaultVertexFormat.POSITION_COLOR,
@@ -72,12 +71,10 @@ public class ItemWorldRenderer {
                     .createCompositeState(true)
     );
 
-    private static final ColorRGBA capabilityColor = rgbaToColorRGBA(100, 0, 255, 100);
-    private static final ColorRGBA cableColor = rgbaToColorRGBA(100, 255, 0, 100);
-    @Nullable
-    private static VertexBuffer[] capabilityVBO = new VertexBuffer[6];
-    @Nullable
-    private static VertexBuffer[] cableVBO = new VertexBuffer[6];
+    private static final int capabilityColor = FastColor.ARGB32.color(100, 0, 255, 100);
+    private static final int cableColor = FastColor.ARGB32.color(100, 255, 0, 100);
+    private static final VertexBuffer[] capabilityVBO = new VertexBuffer[6];
+    private static final VertexBuffer[] cableVBO = new VertexBuffer[6];
 
     @SubscribeEvent
     public static void renderOverlays(RenderLevelStageEvent event) {
@@ -103,27 +100,26 @@ public class ItemWorldRenderer {
             MultiBufferSource.BufferSource bufferSource,
             ItemStack labelGun
     ) {
+        // Get labels
         boolean onlyShowSelectedLabel = labelGun.getOrDefault(SFMDataComponents.ONLY_SHOW_ACTIVE_LABEL, false);
         LabelPositionHolder labelPositionHolder = LabelPositionHolder.from(labelGun);
         HashMultimap<BlockPos, String> labelsByPosition = HashMultimap.create();
         if (onlyShowSelectedLabel) {
             String activeLabel = labelGun.getOrDefault(SFMDataComponents.ACTIVE_LABEL, "");
             labelPositionHolder.forEach((label, pos1) -> {
-               if (Objects.equals(label, activeLabel)) {
-                   labelsByPosition.put(pos1, label);
-               }
+                if (Objects.equals(label, activeLabel)) {
+                    labelsByPosition.put(pos1, label);
+                }
             });
         } else {
             labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
         }
         RenderSystem.disableDepthTest();
-//        RenderSystem.disableCull();
 
         // Draw labels
         poseStack.pushPose();
         poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-
-        for (var entry : labelsByPosition.asMap().entrySet()) {
+        for (Map.Entry<BlockPos, Collection<String>> entry : labelsByPosition.asMap().entrySet()) {
             BlockPos pos = entry.getKey();
             Collection<String> labels = entry.getValue();
             drawLabelsForPos(poseStack, camera, pos, bufferSource, labels);
@@ -131,23 +127,24 @@ public class ItemWorldRenderer {
         poseStack.popPose();
 
         // Draw boxes
-
-        poseStack.pushPose();
-        poseStack.mulPose(camera.rotation().invert());
-        poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-
         RENDER_TYPE.setupRenderState();
+        Set<BlockPos> labelledPositions = labelsByPosition.keySet();
+        drawBoxes(
+                event,
+                poseStack,
+                labelledPositions,
+                capabilityVBO,
+                FastColor.ARGB32.red(capabilityColor),
+                FastColor.ARGB32.green(capabilityColor),
+                FastColor.ARGB32.blue(capabilityColor),
+                FastColor.ARGB32.alpha(capabilityColor),
+                bufferSource
+        );
 
-        Set<BlockPos> labelKeySet = labelsByPosition.keySet();
-
-        drawBoxes(event, poseStack, labelKeySet, capabilityVBO, capabilityColor);
-
-        poseStack.popPose();
         RENDER_TYPE.clearRenderState();
 
         bufferSource.endBatch();
         RenderSystem.enableDepthTest();
-//        RenderSystem.enableCull();
     }
 
     private static void handleNetworkTool(
@@ -158,7 +155,10 @@ public class ItemWorldRenderer {
             ItemStack networkTool
     ) {
         Set<BlockPos> cablePositions = networkTool.getOrDefault(SFMDataComponents.CABLE_POSITIONS, new HashSet<>());
-        Set<BlockPos> capabilityPositions = networkTool.getOrDefault(SFMDataComponents.CAPABILITY_POSITIONS, new HashSet<>());
+        Set<BlockPos> capabilityPositions = networkTool.getOrDefault(
+                SFMDataComponents.CAPABILITY_POSITIONS,
+                new HashSet<>()
+        );
 
 
         RenderSystem.disableDepthTest();
@@ -172,10 +172,30 @@ public class ItemWorldRenderer {
         RENDER_TYPE.setupRenderState();
 
         // Draw Cables
-        drawBoxes(event, poseStack, cablePositions, cableVBO, cableColor);
+        drawBoxesOld(
+                event,
+                poseStack,
+                cablePositions,
+                cableVBO,
+                FastColor.ARGB32.red(cableColor),
+                FastColor.ARGB32.green(cableColor),
+                FastColor.ARGB32.blue(cableColor),
+                FastColor.ARGB32.alpha(cableColor),
+                bufferSource
+        );
 
         // Draw Capabilities
-        drawBoxes(event, poseStack, capabilityPositions, capabilityVBO, capabilityColor);
+        drawBoxesOld(
+                event,
+                poseStack,
+                capabilityPositions,
+                capabilityVBO,
+                FastColor.ARGB32.red(capabilityColor),
+                FastColor.ARGB32.green(capabilityColor),
+                FastColor.ARGB32.blue(capabilityColor),
+                FastColor.ARGB32.alpha(capabilityColor),
+                bufferSource
+        );
 
         poseStack.popPose();
         RENDER_TYPE.clearRenderState();
@@ -185,79 +205,70 @@ public class ItemWorldRenderer {
 //        RenderSystem.enableCull();
     }
 
-    private static MeshData createShape(Direction direction, ColorRGBA color) {
+    private static MeshData createFaceMeshData(
+            Direction direction,
+            int r,
+            int g,
+            int b,
+            int a
+    ) {
+        double scale = 1 - ((double) direction.ordinal() / 25d);
+        r = (int) (r * scale);
+        g = (int) (g * scale);
+        b = (int) (b * scale);
+        a = (int) (a * scale);
         ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(2 * 4 * 4);
         BufferBuilder builder = new BufferBuilder(
                 byteBufferBuilder,
                 VertexFormat.Mode.QUADS,
                 DefaultVertexFormat.POSITION_COLOR
         );
-        color = scaleColor(color, 1 - ((double) direction.ordinal() / 10));
-
         switch (direction) {
             case DOWN:
-                builder.addVertex(0F, 0F, 0F).setColor(color.rgba());
-                builder.addVertex(1F, 0F, 0F).setColor(color.rgba());
-                builder.addVertex(1F, 0F, 1F).setColor(color.rgba());
-                builder.addVertex(0F, 0F, 1F).setColor(color.rgba());
+                builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
+                builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
+                builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
+                builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
                 break;
             case UP:
-                builder.addVertex(0F, 1F, 1F).setColor(color.rgba());
-                builder.addVertex(1F, 1F, 1F).setColor(color.rgba());
-                builder.addVertex(1F, 1F, 0F).setColor(color.rgba());
-                builder.addVertex(0F, 1F, 0F).setColor(color.rgba());
+                builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
                 break;
             case NORTH:
-                builder.addVertex(0F, 0F, 0F).setColor(color.rgba());
-                builder.addVertex(0F, 1F, 0F).setColor(color.rgba());
-                builder.addVertex(1F, 1F, 0F).setColor(color.rgba());
-                builder.addVertex(1F, 0F, 0F).setColor(color.rgba());
+                builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
+                builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
                 break;
             case SOUTH:
-                builder.addVertex(1F, 0F, 1F).setColor(color.rgba());
-                builder.addVertex(1F, 1F, 1F).setColor(color.rgba());
-                builder.addVertex(0F, 1F, 1F).setColor(color.rgba());
-                builder.addVertex(0F, 0F, 1F).setColor(color.rgba());
+                builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
+                builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
                 break;
             case WEST:
-                builder.addVertex(0F, 0F, 1F).setColor(color.rgba());
-                builder.addVertex(0F, 1F, 1F).setColor(color.rgba());
-                builder.addVertex(0F, 1F, 0F).setColor(color.rgba());
-                builder.addVertex(0F, 0F, 0F).setColor(color.rgba());
+                builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
+                builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
                 break;
             case EAST:
-                builder.addVertex(1F, 0F, 0F).setColor(color.rgba());
-                builder.addVertex(1F, 1F, 0F).setColor(color.rgba());
-                builder.addVertex(1F, 1F, 1F).setColor(color.rgba());
-                builder.addVertex(1F, 0F, 1F).setColor(color.rgba());
+                builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
+                builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
                 break;
         }
 
         return builder.buildOrThrow();
     }
 
-    private static ColorRGBA rgbaToColorRGBA(int red, int green, int blue, int alpha) {
-        return new ColorRGBA((red << 24) | (green << 16) | (blue << 8) | alpha);
-    }
-
-    private static ColorRGBA scaleColor(ColorRGBA originalColor, double scale) {
-        int color = originalColor.rgba();
-
-        int red = (color >> 24) & 0xFF;
-        int green = (color >> 16) & 0xFF;
-        int blue = (color >> 8) & 0xFF;
-        int alpha = color & 0xFF;
-
-        // Apply the scale to RGB components
-        red = Math.min(255, Math.max(0, (int) (red * scale)));
-        green = Math.min(255, Math.max(0, (int) (green * scale)));
-        blue = Math.min(255, Math.max(0, (int) (blue * scale)));
-
-        // Return the adjusted color as a packed int (RGBA)
-        return new ColorRGBA((red << 24) | (green << 16) | (blue << 8) | alpha);
-    }
-
-    private static @Nullable ItemStack getHeldItemOfType(LocalPlayer player, Class<?> itemClass) {
+    private static @Nullable ItemStack getHeldItemOfType(
+            LocalPlayer player,
+            Class<?> itemClass
+    ) {
         ItemStack mainHandItem = player.getMainHandItem();
         if (itemClass.isInstance(mainHandItem.getItem())) {
             return mainHandItem;
@@ -286,7 +297,7 @@ public class ItemWorldRenderer {
 
         Font font = Minecraft.getInstance().font;
         poseStack.translate(0, labels.size() * (font.lineHeight + 0.1) / -2f, 0);
-        for (var label : labels) {
+        for (String label : labels) {
             font.drawInBatch(
                     label,
                     -font.width(label) / 2f,
@@ -305,12 +316,16 @@ public class ItemWorldRenderer {
         poseStack.popPose();
     }
 
-    private static void drawBoxes(
+    private static void drawBoxesOld(
             RenderLevelStageEvent event,
             PoseStack poseStack,
-            Set<BlockPos> pPos,
+            Set<BlockPos> blockPositions,
             VertexBuffer[] faces,
-            ColorRGBA color
+            int r,
+            int g,
+            int b,
+            int a,
+            MultiBufferSource.BufferSource bufferSource
     ) {
         for (Direction direction : Direction.values()) {
             int ordinal = direction.ordinal();
@@ -320,14 +335,14 @@ public class ItemWorldRenderer {
                 faces[ordinal] = new VertexBuffer(VertexBuffer.Usage.STATIC);
                 VBO = faces[ordinal];
                 VBO.bind();
-                VBO.upload(createShape(direction, color));
+                VBO.upload(createFaceMeshData(direction, r, g, b, a));
             } else {
                 VBO = faces[ordinal];
                 VBO.bind();
             }
 
-            Set<BlockPos> faceNotTouchingOtherOverlay = pPos.stream()
-                    .filter(pos -> !pPos.contains(pos.relative(direction)))
+            Set<BlockPos> faceNotTouchingOtherOverlay = blockPositions.stream()
+                    .filter(pos -> !blockPositions.contains(pos.relative(direction)))
                     .collect(Collectors.toSet());
 
             for (BlockPos blockPos : faceNotTouchingOtherOverlay) {
@@ -345,4 +360,106 @@ public class ItemWorldRenderer {
             VertexBuffer.unbind();
         }
     }
+
+    private static void drawBoxes(
+            RenderLevelStageEvent event,
+            PoseStack poseStack,
+            Set<BlockPos> blockPositions,
+            VertexBuffer[] faces,
+            int r,
+            int g,
+            int b,
+            int a,
+            MultiBufferSource.BufferSource bufferSource
+    ) {
+        if (blockPositions.isEmpty()) return;
+        // build the mesh data
+        MeshData meshData;
+        {
+            // undo camera transform
+            // we want to create the mesh data in world-space, not camera-space
+            poseStack.pushPose();
+            poseStack.mulPose(event.getCamera().rotation().invert());
+            poseStack.translate(
+                    -event.getCamera().getPosition().x,
+                    -event.getCamera().getPosition().y,
+                    -event.getCamera().getPosition().z
+            );
+
+            // BufferBuilder implements VertexConsumer
+            BufferBuilder bufferBuilder = new BufferBuilder(
+                    new ByteBufferBuilder(RENDER_TYPE.bufferSize() * blockPositions.size()),
+                    RENDER_TYPE.mode(),
+                    RENDER_TYPE.format()
+            );
+            // push vertices
+            for (BlockPos blockPos : blockPositions) {
+                poseStack.pushPose();
+                poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+                Matrix4f matrix4f = poseStack.last().pose();
+                { // write the cube
+                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
+
+                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
+
+                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
+
+                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
+
+                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
+
+                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
+                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
+                }
+                poseStack.popPose();
+            }
+            // restore camera transform
+            poseStack.popPose();
+            meshData = bufferBuilder.buildOrThrow();
+        }
+
+        // build the VBO
+        VertexBuffer vbo;
+        {
+            vbo = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
+            vbo.bind();
+            vbo.upload(meshData);
+            VertexBuffer.unbind();
+        }
+
+        // draw the VBO
+        {
+            vbo.bind();
+            assert GameRenderer.getPositionColorShader() != null;
+            vbo.drawWithShader(
+                    poseStack.last().pose(),
+                    event.getProjectionMatrix(),
+                    GameRenderer.getPositionColorShader()
+            );
+            VertexBuffer.unbind();
+        }
+
+        // discard the VBO (no caching while experimenting)
+        {
+            vbo.close();
+        }
+    }
+
 }
