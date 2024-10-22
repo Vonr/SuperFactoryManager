@@ -31,7 +31,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @EventBusSubscriber(modid = SFM.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 /*
@@ -73,8 +72,7 @@ public class ItemWorldRenderer {
 
     private static final int capabilityColor = FastColor.ARGB32.color(100, 0, 255, 100);
     private static final int cableColor = FastColor.ARGB32.color(100, 255, 0, 100);
-    private static final VertexBuffer[] capabilityVBO = new VertexBuffer[6];
-    private static final VertexBuffer[] cableVBO = new VertexBuffer[6];
+    private static final VBOCache vboCache = new VBOCache();
 
     @SubscribeEvent
     public static void renderOverlays(RenderLevelStageEvent event) {
@@ -85,12 +83,32 @@ public class ItemWorldRenderer {
         PoseStack poseStack = event.getPoseStack();
         Camera camera = minecraft.gameRenderer.getMainCamera();
         MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
+
         ItemStack held;
         if ((held = getHeldItemOfType(player, NetworkToolItem.class)) != null) {
             handleNetworkTool(event, poseStack, camera, bufferSource, held);
         } else if ((held = getHeldItemOfType(player, LabelGunItem.class)) != null) {
             handleLabelGun(event, poseStack, camera, bufferSource, held);
+        } else {
+            vboCache.clear();
         }
+    }
+
+    private static @Nullable ItemStack getHeldItemOfType(
+            LocalPlayer player,
+            Class<?> itemClass
+    ) {
+        ItemStack mainHandItem = player.getMainHandItem();
+        if (itemClass.isInstance(mainHandItem.getItem())) {
+            return mainHandItem;
+        }
+
+        ItemStack offhandItem = player.getOffhandItem();
+        if (itemClass.isInstance(offhandItem.getItem())) {
+            return offhandItem;
+        }
+
+        return null; // Neither hand holds the item
     }
 
     private static void handleLabelGun(
@@ -129,23 +147,13 @@ public class ItemWorldRenderer {
         // Draw boxes
         RENDER_TYPE.setupRenderState();
         Set<BlockPos> labelledPositions = labelsByPosition.keySet();
-        drawBoxes(
-                event,
-                poseStack,
-                labelledPositions,
-                capabilityVBO,
-                FastColor.ARGB32.red(capabilityColor),
-                FastColor.ARGB32.green(capabilityColor),
-                FastColor.ARGB32.blue(capabilityColor),
-                FastColor.ARGB32.alpha(capabilityColor),
-                bufferSource
-        );
-
+        drawVbo(VBOKind.LABEL_GUN_CAPABILITIES, poseStack, labelledPositions, capabilityColor, event);
         RENDER_TYPE.clearRenderState();
 
         bufferSource.endBatch();
         RenderSystem.enableDepthTest();
     }
+
 
     private static void handleNetworkTool(
             RenderLevelStageEvent event,
@@ -160,126 +168,57 @@ public class ItemWorldRenderer {
                 new HashSet<>()
         );
 
-
         RenderSystem.disableDepthTest();
-//        RenderSystem.disableCull();
-
-        poseStack.pushPose();
-
-        poseStack.mulPose(camera.rotation().invert());
-        poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 
         RENDER_TYPE.setupRenderState();
 
-        // Draw Cables
-        drawBoxesOld(
-                event,
-                poseStack,
-                cablePositions,
-                cableVBO,
-                FastColor.ARGB32.red(cableColor),
-                FastColor.ARGB32.green(cableColor),
-                FastColor.ARGB32.blue(cableColor),
-                FastColor.ARGB32.alpha(cableColor),
-                bufferSource
-        );
+        drawVbo(VBOKind.NETWORK_TOOL_CABLES, poseStack, cablePositions, cableColor, event);
+        drawVbo(VBOKind.NETWORK_TOOL_CAPABILITIES, poseStack, capabilityPositions, capabilityColor, event);
 
-        // Draw Capabilities
-        drawBoxesOld(
-                event,
-                poseStack,
-                capabilityPositions,
-                capabilityVBO,
-                FastColor.ARGB32.red(capabilityColor),
-                FastColor.ARGB32.green(capabilityColor),
-                FastColor.ARGB32.blue(capabilityColor),
-                FastColor.ARGB32.alpha(capabilityColor),
-                bufferSource
-        );
-
-        poseStack.popPose();
         RENDER_TYPE.clearRenderState();
+
 
         bufferSource.endBatch();
         RenderSystem.enableDepthTest();
-//        RenderSystem.enableCull();
     }
 
-    private static MeshData createFaceMeshData(
-            Direction direction,
-            int r,
-            int g,
-            int b,
-            int a
+    private static void drawVbo(
+            VBOKind vboKind,
+            PoseStack poseStack,
+            Set<BlockPos> positions,
+            int color,
+            RenderLevelStageEvent event
     ) {
-        double scale = 1 - ((double) direction.ordinal() / 25d);
-        r = (int) (r * scale);
-        g = (int) (g * scale);
-        b = (int) (b * scale);
-        a = (int) (a * scale);
-        ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(2 * 4 * 4);
-        BufferBuilder builder = new BufferBuilder(
-                byteBufferBuilder,
-                VertexFormat.Mode.QUADS,
-                DefaultVertexFormat.POSITION_COLOR
+        VertexBuffer vbo = vboCache.getVBO(
+                vboKind,
+                positions,
+                event,
+                FastColor.ARGB32.red(color),
+                FastColor.ARGB32.green(color),
+                FastColor.ARGB32.blue(color),
+                FastColor.ARGB32.alpha(color)
         );
-        switch (direction) {
-            case DOWN:
-                builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
-                builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
-                builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
-                builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
-                break;
-            case UP:
-                builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
-                builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
-                builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
-                builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
-                break;
-            case NORTH:
-                builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
-                builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
-                builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
-                builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
-                break;
-            case SOUTH:
-                builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
-                builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
-                builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
-                builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
-                break;
-            case WEST:
-                builder.addVertex(0F, 0F, 1F).setColor(r, g, b, a);
-                builder.addVertex(0F, 1F, 1F).setColor(r, g, b, a);
-                builder.addVertex(0F, 1F, 0F).setColor(r, g, b, a);
-                builder.addVertex(0F, 0F, 0F).setColor(r, g, b, a);
-                break;
-            case EAST:
-                builder.addVertex(1F, 0F, 0F).setColor(r, g, b, a);
-                builder.addVertex(1F, 1F, 0F).setColor(r, g, b, a);
-                builder.addVertex(1F, 1F, 1F).setColor(r, g, b, a);
-                builder.addVertex(1F, 0F, 1F).setColor(r, g, b, a);
-                break;
+        if (vbo != null) {
+            poseStack.pushPose();
+            poseStack.mulPose(event.getCamera().rotation().invert());
+            poseStack.translate(
+                    -event.getCamera().getPosition().x,
+                    -event.getCamera().getPosition().y,
+                    -event.getCamera().getPosition().z
+            );
+
+            // Draw the VBO
+            vbo.bind();
+            assert GameRenderer.getPositionColorShader() != null;
+            vbo.drawWithShader(
+                    poseStack.last().pose(),
+                    event.getProjectionMatrix(),
+                    GameRenderer.getPositionColorShader()
+            );
+            VertexBuffer.unbind();
+
+            poseStack.popPose();
         }
-
-        return builder.buildOrThrow();
-    }
-
-    private static @Nullable ItemStack getHeldItemOfType(
-            LocalPlayer player,
-            Class<?> itemClass
-    ) {
-        ItemStack mainHandItem = player.getMainHandItem();
-        if (itemClass.isInstance(mainHandItem.getItem())) {
-            return mainHandItem;
-        }
-
-        ItemStack offhandItem = player.getOffhandItem();
-        if (itemClass.isInstance(offhandItem.getItem())) {
-            return offhandItem;
-        }
-
-        return null; // Neither hand holds the item
     }
 
     private static void drawLabelsForPos(
@@ -316,150 +255,165 @@ public class ItemWorldRenderer {
         poseStack.popPose();
     }
 
-    private static void drawBoxesOld(
-            RenderLevelStageEvent event,
-            PoseStack poseStack,
-            Set<BlockPos> blockPositions,
-            VertexBuffer[] faces,
+    private static void writeFaceVertices(
+            VertexConsumer builder,
+            Matrix4f matrix4f,
+            Direction direction,
             int r,
             int g,
             int b,
-            int a,
-            MultiBufferSource.BufferSource bufferSource
+            int a
     ) {
-        for (Direction direction : Direction.values()) {
-            int ordinal = direction.ordinal();
-
-            VertexBuffer VBO;
-            if (faces[ordinal] == null) {
-                faces[ordinal] = new VertexBuffer(VertexBuffer.Usage.STATIC);
-                VBO = faces[ordinal];
-                VBO.bind();
-                VBO.upload(createFaceMeshData(direction, r, g, b, a));
-            } else {
-                VBO = faces[ordinal];
-                VBO.bind();
-            }
-
-            Set<BlockPos> faceNotTouchingOtherOverlay = blockPositions.stream()
-                    .filter(pos -> !blockPositions.contains(pos.relative(direction)))
-                    .collect(Collectors.toSet());
-
-            for (BlockPos blockPos : faceNotTouchingOtherOverlay) {
-                poseStack.pushPose();
-                poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-
-                //noinspection DataFlowIssue
-                VBO.drawWithShader(
-                        poseStack.last().pose(),
-                        event.getProjectionMatrix(),
-                        GameRenderer.getPositionColorShader()
-                );
-                poseStack.popPose();
-            }
-            VertexBuffer.unbind();
+        double scale = 1 - ((double) direction.ordinal() / 25d);
+        r = (int) (r * scale);
+        g = (int) (g * scale);
+        b = (int) (b * scale);
+        a = (int) (a * scale);
+        switch (direction) {
+            case DOWN:
+                builder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
+                break;
+            case UP:
+                builder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
+                break;
+            case NORTH:
+                builder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
+                break;
+            case SOUTH:
+                builder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
+                break;
+            case WEST:
+                builder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
+                break;
+            case EAST:
+                builder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
+                break;
         }
     }
 
-    private static void drawBoxes(
-            RenderLevelStageEvent event,
-            PoseStack poseStack,
-            Set<BlockPos> blockPositions,
-            VertexBuffer[] faces,
-            int r,
-            int g,
-            int b,
-            int a,
-            MultiBufferSource.BufferSource bufferSource
-    ) {
-        if (blockPositions.isEmpty()) return;
-        // build the mesh data
-        MeshData meshData;
-        {
-            // undo camera transform
-            // we want to create the mesh data in world-space, not camera-space
-            poseStack.pushPose();
-            poseStack.mulPose(event.getCamera().rotation().invert());
-            poseStack.translate(
-                    -event.getCamera().getPosition().x,
-                    -event.getCamera().getPosition().y,
-                    -event.getCamera().getPosition().z
-            );
+    // Enum to represent different kinds of VBOs
+    private enum VBOKind {
+        LABEL_GUN_CAPABILITIES,
+        NETWORK_TOOL_CAPABILITIES,
+        NETWORK_TOOL_CABLES
+    }
 
-            // BufferBuilder implements VertexConsumer
+    // VBOCache class to handle caching of VBOs
+    private static class VBOCache {
+        private final EnumMap<VBOKind, VBOEntry> cache = new EnumMap<>(VBOKind.class);
+        private int lastClear = 0;
+        public @Nullable VertexBuffer getVBO(
+                VBOKind kind,
+                Set<BlockPos> positions,
+                RenderLevelStageEvent event,
+                int r,
+                int g,
+                int b,
+                int a
+        ) {
+            if (positions.isEmpty()) {
+                return null;
+            }
+            if (event.getRenderTick() % 20 == 0 && event.getRenderTick() != lastClear) {
+                lastClear = event.getRenderTick();
+                cache.clear();
+            }
+            VBOEntry entry = cache.get(kind);
+
+            // Check if positions have changed
+            if (entry == null || !entry.positions.equals(positions)) {
+                // Dispose of the old VBO if it exists
+                if (entry != null) {
+                    entry.vbo.close();
+                }
+
+                // Create a new VBO
+                VertexBuffer vbo = createVBO(positions, r, g, b, a);
+
+                // Cache the new VBO
+                entry = new VBOEntry(new HashSet<>(positions), vbo);
+                cache.put(kind, entry);
+            }
+
+            return entry.vbo;
+        }
+
+        public void clear() {
+            // Dispose of all cached VBOs
+            for (VBOEntry entry : cache.values()) {
+                entry.vbo.close();
+            }
+            cache.clear();
+        }
+
+        private VertexBuffer createVBO(
+                Set<BlockPos> positions,
+                int r,
+                int g,
+                int b,
+                int a
+        ) {
+            // Build the mesh data
+            PoseStack poseStack = new PoseStack();
+            // Do not undo camera transform; create vertices in world space
+
             BufferBuilder bufferBuilder = new BufferBuilder(
-                    new ByteBufferBuilder(RENDER_TYPE.bufferSize() * blockPositions.size()),
+                    new ByteBufferBuilder(RENDER_TYPE.bufferSize() * positions.size()),
                     RENDER_TYPE.mode(),
                     RENDER_TYPE.format()
             );
-            // push vertices
-            for (BlockPos blockPos : blockPositions) {
+
+            // Push vertices
+            for (BlockPos blockPos : positions) {
                 poseStack.pushPose();
                 poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
                 Matrix4f matrix4f = poseStack.last().pose();
-                { // write the cube
-                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
-
-                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
-
-                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
-
-                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 1F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
-
-                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 1F, 1F).setColor(r, g, b, a);
-
-                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 0F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 1F, 0F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 1F).setColor(r, g, b, a);
-                    bufferBuilder.addVertex(matrix4f, 0F, 0F, 0F).setColor(r, g, b, a);
+                for (Direction face : Direction.values()) {
+                    if (!positions.contains(blockPos.relative(face))) {
+                        writeFaceVertices(bufferBuilder, matrix4f, face, r, g, b, a);
+                    }
                 }
                 poseStack.popPose();
             }
-            // restore camera transform
-            poseStack.popPose();
-            meshData = bufferBuilder.buildOrThrow();
-        }
 
-        // build the VBO
-        VertexBuffer vbo;
-        {
-            vbo = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
+            MeshData meshData = bufferBuilder.buildOrThrow();
+            VertexBuffer vbo = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
             vbo.bind();
             vbo.upload(meshData);
             VertexBuffer.unbind();
+
+            return vbo;
         }
 
-        // draw the VBO
-        {
-            vbo.bind();
-            assert GameRenderer.getPositionColorShader() != null;
-            vbo.drawWithShader(
-                    poseStack.last().pose(),
-                    event.getProjectionMatrix(),
-                    GameRenderer.getPositionColorShader()
-            );
-            VertexBuffer.unbind();
-        }
+        private static class VBOEntry {
+            Set<BlockPos> positions;
+            VertexBuffer vbo;
 
-        // discard the VBO (no caching while experimenting)
-        {
-            vbo.close();
+            VBOEntry(
+                    Set<BlockPos> positions,
+                    VertexBuffer vbo
+            ) {
+                this.positions = positions;
+                this.vbo = vbo;
+            }
         }
     }
-
 }
