@@ -5,7 +5,7 @@ import ca.teamdman.sfm.common.program.SimulateExploreAllPathsProgramBehaviour;
 
 public record RedstoneTrigger(
         Block block
-) implements Trigger, ShortStatement {
+) implements Trigger, ToStringCondensed {
     @Override
     public Block getBlock() {
         return block;
@@ -33,7 +33,7 @@ public record RedstoneTrigger(
     }
 
     @Override
-    public String toStringShort() {
+    public String toStringCondensed() {
         return "EVERY REDSTONE PULSE DO";
     }
 }

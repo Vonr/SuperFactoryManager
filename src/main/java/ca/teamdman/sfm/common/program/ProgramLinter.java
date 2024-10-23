@@ -189,8 +189,7 @@ public class ProgramLinter {
     private static void addWarningsForLabelsInHolderButNotInProgram(
             Program program, LabelPositionHolder labels, ArrayList<TranslatableContents> warnings
     ) {
-        labels
-                .get()
+        labels.labels()
                 .keySet()
                 .stream()
                 .filter(x -> !program.referencedLabels().contains(x))

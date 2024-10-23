@@ -68,7 +68,7 @@ public record ServerboundBoolExprStatementInspectionRequestPacket(
                             .ifPresent(expr -> {
                                 StringBuilder payload = new StringBuilder();
                                 payload
-                                        .append(expr.sourceCode())
+                                        .append(expr.toStringPretty())
                                         .append("\n-- peek results --\n");
                                 ProgramContext programContext = new ProgramContext(
                                         successProgram,

@@ -44,7 +44,7 @@ inputResourceLimits   : resourceLimitList; // separate for different defaults
 outputResourceLimits  : resourceLimitList; // separate for different defaults
 
 resourceLimitList  : resourceLimit (COMMA resourceLimit)* COMMA?;
-resourceLimit   : limit? resourceIdDisjunction with? // TODO: rename resourceIds to resourceMatcher, add support for AND, OR; 5 RETAIN 4 EACH *ingot* or #c:ingot
+resourceLimit   : limit? resourceIdDisjunction with?
                 | limit with?
                 | with
                 ;
@@ -99,16 +99,16 @@ range           : number (DASH number)? ;
 
 
 ifStatement     : IF boolexpr THEN block (ELSE IF boolexpr THEN block)* (ELSE block)? END;
-boolexpr        : TRUE                                  #BooleanTrue
-                | FALSE                                 #BooleanFalse
-                | LPAREN boolexpr RPAREN                #BooleanParen
-                | NOT boolexpr                          #BooleanNegation
-                | boolexpr AND boolexpr                 #BooleanConjunction
-                | boolexpr OR boolexpr                  #BooleanDisjunction
-                | setOp? labelAccess HAS resourcecomparison #BooleanHas
-                | REDSTONE (comparisonOp number)?       #BooleanRedstone
+boolexpr        : TRUE                              #BooleanTrue
+                | FALSE                             #BooleanFalse
+                | LPAREN boolexpr RPAREN            #BooleanParen
+                | NOT boolexpr                      #BooleanNegation
+                | boolexpr AND boolexpr             #BooleanConjunction
+                | boolexpr OR boolexpr              #BooleanDisjunction
+                | setOp? labelAccess HAS comparisonOp number resourceIdDisjunction? with? (EXCEPT resourceIdList)?  #BooleanHas
+                | REDSTONE (comparisonOp number)?   #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp number resourceId? ; // TODO: add EXCEPT support here
+
 comparisonOp    : GT
                 | LT
                 | EQ

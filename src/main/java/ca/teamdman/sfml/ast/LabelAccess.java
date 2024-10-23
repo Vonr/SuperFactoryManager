@@ -1,5 +1,10 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.core.BlockPos;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -35,5 +40,9 @@ public record LabelAccess(
             }
         }
         return builder.toString();
+    }
+
+    public ArrayList<Pair<Label, BlockPos>> getLabelledPositions(LabelPositionHolder labelPositionHolder) {
+        return roundRobin().getPositionsForLabels(labels(), labelPositionHolder);
     }
 }

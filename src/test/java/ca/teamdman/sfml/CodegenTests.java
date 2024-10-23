@@ -1,6 +1,5 @@
 package ca.teamdman.sfml;
 
-import ca.teamdman.sfml.ast.Number;
 import ca.teamdman.sfml.ast.*;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -68,7 +67,6 @@ public class CodegenTests {
         assertTrue(errors.isEmpty());
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     public void codegen() {
         var aLabel = new LabelAccess(
@@ -83,17 +81,14 @@ public class CodegenTests {
                 List.of(new TimerTrigger(
                         Interval.fromTicks(20),
                         new Block(List.of(new IfStatement(
-                                new ResourceComparer(
-                                        ComparisonOperator.GREATER_OR_EQUAL,
-                                        new ResourceQuantity(
-                                                new Number(10L),
-                                                ResourceQuantity.IdExpansionBehaviour.NO_EXPAND
-                                        ),
-                                        ResourceIdentifier.fromString("sfm:item:.*:.*")
-                                ).toBooleanExpression(
+                                new BoolHas(
                                         SetOperator.OVERALL,
                                         aLabel,
-                                        "gt 10 sfm:item:.*:.*"
+                                        ComparisonOperator.GREATER_OR_EQUAL,
+                                        10L,
+                                        new ResourceIdSet(List.of(ResourceIdentifier.fromString("sfm:item:.*:.*"))),
+                                        With.ALWAYS_TRUE,
+                                        ResourceIdSet.EMPTY
                                 ),
                                 new Block(List.of(
                                         // if true

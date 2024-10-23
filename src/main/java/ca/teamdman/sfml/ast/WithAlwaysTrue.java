@@ -2,17 +2,17 @@ package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
-public record WithTag(TagMatcher tagMatcher) implements ASTNode, WithClause, ToStringPretty {
+public final class WithAlwaysTrue implements WithClause {
     @Override
     public <STACK> boolean matchesStack(
             ResourceType<STACK, ?, ?> resourceType,
             STACK stack
     ) {
-        return resourceType.getTagsForStack(stack).anyMatch(tagMatcher::testResourceLocation);
+        return true;
     }
 
     @Override
     public String toString() {
-        return "TAG " + tagMatcher;
+        return "(ALWAYS => TRUE)";
     }
 }

@@ -64,7 +64,7 @@ public record ServerboundIfStatementInspectionRequestPacket(
                             .ifPresent(ifStatement -> {
                                 StringBuilder payload = new StringBuilder();
                                 payload
-                                        .append(ifStatement.toStringShort())
+                                        .append(ifStatement.toStringCondensed())
                                         .append("\n-- peek results --\n");
                                 ProgramContext programContext = new ProgramContext(
                                         successProgram,

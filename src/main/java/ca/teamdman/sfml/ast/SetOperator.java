@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiPredicate;
 
-public enum SetOperator implements ASTNode, BiPredicate<Boolean, List<Boolean>> {
+public enum SetOperator implements ASTNode, BiPredicate<Boolean, List<Boolean>>, ToStringPretty {
     OVERALL((overall, __) -> overall),
     SOME((__, set) -> set.stream().anyMatch(Boolean::booleanValue)),
     EVERY((__, set) -> set.stream().allMatch(Boolean::booleanValue)),
@@ -28,5 +28,11 @@ public enum SetOperator implements ASTNode, BiPredicate<Boolean, List<Boolean>> 
     @Override
     public boolean test(Boolean overall, List<Boolean> counts) {
         return PRED.test(overall, counts);
+    }
+
+
+    @Override
+    public String toString() {
+        return this.name().toUpperCase(Locale.ROOT);
     }
 }

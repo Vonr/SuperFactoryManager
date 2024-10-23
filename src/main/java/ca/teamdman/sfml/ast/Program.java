@@ -17,7 +17,6 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.NetworkHooks;
 import org.antlr.v4.runtime.*;
-import org.checkerframework.common.returnsreceiver.qual.This;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.DataOutput;
@@ -172,11 +171,11 @@ public record Program(
             }
 
             // Log pretty triggers
-            if (triggers instanceof ShortStatement ss) {
+            if (triggers instanceof ToStringCondensed ss) {
                 context
                         .getLogger()
                         .debug(x -> x.accept(LocalizationKeys.LOG_PROGRAM_TICK_TRIGGER_STATEMENT.get(
-                                ss.toStringShort())));
+                                ss.toStringCondensed())));
             }
 
             // Start stopwatch
@@ -306,7 +305,7 @@ public record Program(
             //noinspection DataFlowIssue
             context
                     .getLabelPositionHolder()
-                    .get()
+                    .labels()
                     .forEach((label, positions) -> positions
                             .stream()
                             .map(

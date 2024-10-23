@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SFMTests {
     @Test
@@ -52,16 +53,14 @@ public class SFMTests {
         labelPositions.add("b", new BlockPos(0, 0, 0));
         labelPositions.add("c", new BlockPos(0, 0, 0));
         labelPositions.add("c", new BlockPos(0, 1, 0));
-        RoundRobin roundRobin1 = labelAccess.roundRobin();
         assertEquals(
                 List.of(Pair.of(new Label("a"), new BlockPos(0, 0, 0))),
-                roundRobin1.getPositionsForLabels(labelAccess, labelPositions)
+                labelAccess.getLabelledPositions(labelPositions)
         );
         // should not repeat the same block
-        RoundRobin roundRobin = labelAccess.roundRobin();
         assertEquals(
                 List.of(Pair.of(new Label("c"), new BlockPos(0, 1, 0))),
-                roundRobin.getPositionsForLabels(labelAccess, labelPositions)
+                labelAccess.getLabelledPositions(labelPositions)
         );
     }
 

@@ -8,7 +8,7 @@ import java.util.List;
 public record TimerTrigger(
         Interval interval,
         Block block
-) implements Trigger, ShortStatement {
+) implements Trigger, ToStringCondensed {
     @Override
     public Block getBlock() {
         return block;
@@ -47,7 +47,7 @@ public record TimerTrigger(
     }
 
     @Override
-    public String toStringShort() {
+    public String toStringCondensed() {
         return "EVERY " + interval + " DO";
     }
 }

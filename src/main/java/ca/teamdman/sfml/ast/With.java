@@ -4,13 +4,11 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 
 public record With(
         WithClause condition,
-        WithMode mode,
-        String sourceCode
-) implements WithClause {
+        WithMode mode
+) implements WithClause, ToStringPretty {
     public static final With ALWAYS_TRUE = new With(
-            new WithClauseThatAlwaysReturnsTrue(),
-            WithMode.WITHOUT,
-            "(ANYTHING => TRUE)"
+            new WithAlwaysTrue(),
+            WithMode.WITH
     );
 
     @Override
@@ -18,7 +16,19 @@ public record With(
             ResourceType<STACK, ?, ?> resourceType,
             STACK stack
     ) {
-        return condition.matchesStack(resourceType, stack);
+        boolean matches = condition.matchesStack(resourceType, stack);
+        return switch (mode) {
+            case WITH -> matches;
+            case WITHOUT -> !matches;
+        };
+    }
+
+    @Override
+    public String toString() {
+        return switch (mode) {
+            case WITH -> "WITH " + condition.toStringPretty();
+            case WITHOUT -> "WITHOUT " + condition.toStringPretty();
+        };
     }
 
     public enum WithMode {

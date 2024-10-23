@@ -17,7 +17,7 @@ import java.util.regex.PatternSyntaxException;
 
 // resourceTypeName resourceNamespace, resourceTypeName name, resource resourceNamespace, resource name
 // sfm:item:minecraft:stone
-public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode {
+public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode, ToStringCondensed {
 
     public static final ResourceIdentifier<?, ?, ?> MATCH_ALL = new ResourceIdentifier<>(
             ".*",
@@ -180,7 +180,7 @@ public class ResourceIdentifier<STACK, ITEM, CAP> implements ASTNode {
         return resourceTypeNamespace + ":" + resourceTypeName + ":" + resourceNamespace + ":" + resourceName;
     }
 
-    // todo: make this a ShortStatement impl
+    @Override
     public String toStringCondensed() {
         boolean isRegexNamespace = RegexCache.isRegexPattern(resourceNamespace);
         boolean isRegexNamespaceMatchAll = resourceNamespace.equals(".*");

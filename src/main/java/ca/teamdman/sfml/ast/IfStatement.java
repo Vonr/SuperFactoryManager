@@ -12,7 +12,7 @@ public record IfStatement(
         BoolExpr condition,
         Block trueBlock,
         Block falseBlock
-) implements ASTNode, Statement, ShortStatement {
+) implements ASTNode, Statement, ToStringCondensed {
     @Override
     public void tick(ProgramContext context) {
         Predicate<ProgramContext> condition = this.condition;
@@ -54,19 +54,19 @@ public record IfStatement(
     }
 
     @Override
-    public String toStringShort() {
+    public String toStringCondensed() {
         return condition.toString();
     }
 
     private void tickFalseBlock(ProgramContext context) {
         context.getLogger().debug(x -> x.accept(
-                LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE.get(this.condition.sourceCode())));
+                LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_FALSE.get(this.condition.toStringPretty())));
         falseBlock.tick(context);
     }
 
     private void tickTrueBlock(ProgramContext context) {
         context.getLogger().debug(x -> x.accept(
-                LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE.get(this.condition.sourceCode())));
+                LocalizationKeys.LOG_PROGRAM_TICK_IF_STATEMENT_WAS_TRUE.get(this.condition.toStringPretty())));
         trueBlock.tick(context);
     }
 }

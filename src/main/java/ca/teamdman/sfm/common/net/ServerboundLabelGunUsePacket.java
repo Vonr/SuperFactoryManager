@@ -61,7 +61,7 @@ public record ServerboundLabelGunUsePacket(
                 return;
             }
 
-            var gunLabels = LabelPositionHolder.from(stack);
+            var gunLabels = LabelPositionHolder.from(stack).toOwned();
             var pos = msg.pos;
 
             // target is a manager, perform push or pull action
@@ -69,7 +69,7 @@ public record ServerboundLabelGunUsePacket(
                 manager.getDisk().ifPresent(disk -> {
                     if (msg.isShiftKeyDown) {
                         // start with labels from disk
-                        var newLabels = LabelPositionHolder.from(disk);
+                        var newLabels = LabelPositionHolder.from(disk).toOwned();
                         // ensure script-referenced labels are included
                         manager.getReferencedLabels().forEach(newLabels::addReferencedLabel);
                         // save to gun

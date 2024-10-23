@@ -179,28 +179,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
             comp = visitComparisonOp(ctx.comparisonOp());
             num = visitNumber(ctx.number());
         }
-
-        ComparisonOperator finalComp = comp;
         if (num.value() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Redstone signal strength cannot be greater than " + Integer.MAX_VALUE);
         }
-        //noinspection ExtractMethodRecommender
-        int finalNum = (int) num.value();
-        //noinspection DataFlowIssue // if the program is ticking, level shouldn't be null
-        BoolExpr boolExpr = new BoolExpr(
-                programContext -> finalComp.test(
-                        (long) programContext
-                                .getManager()
-                                .getLevel()
-                                .getBestNeighborSignal(
-                                        programContext
-                                                .getManager()
-                                                .getBlockPos()
-                                ),
-                        (long) finalNum
-                ),
-                ctx.getText()
-        );
+        BoolExpr boolExpr = new BoolRedstone(comp, (int) num.value());
         AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
         return boolExpr;
     }
@@ -344,24 +326,32 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public BoolExpr visitBooleanTrue(SFMLParser.BooleanTrueContext ctx) {
-        BoolExpr boolExpr = BoolExpr.TRUE;
-        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
-        return boolExpr;
-    }
-
-    @Override
     public BoolExpr visitBooleanHas(SFMLParser.BooleanHasContext ctx) {
-        var setOp = visitSetOp(ctx.setOp());
+        var setOperator = visitSetOp(ctx.setOp());
         var labelAccess = visitLabelAccess(ctx.labelAccess());
-        var comparison = visitResourcecomparison(ctx.resourcecomparison());
-        BoolExpr booleanExpression = comparison.toBooleanExpression(
-                setOp,
-                labelAccess,
-                setOp.name().toUpperCase() + " " + labelAccess + " HAS " + comparison
-        );
-        AST_NODE_CONTEXTS.add(new Pair<>(booleanExpression, ctx));
-        return booleanExpression;
+        ComparisonOperator comparisonOperator = visitComparisonOp(ctx.comparisonOp());
+        Number num = visitNumber(ctx.number());
+        ResourceIdSet resourceIdSet;
+        if (ctx.resourceIdDisjunction() == null) {
+            resourceIdSet = ResourceIdSet.MATCH_ALL;
+        } else {
+            resourceIdSet = visitResourceIdDisjunction(ctx.resourceIdDisjunction());
+        }
+        With with;
+        if (ctx.with() == null) {
+            with = With.ALWAYS_TRUE;
+        } else {
+            with = (With) visit(ctx.with());
+        }
+        ResourceIdSet except;
+        if (ctx.resourceIdList() == null) {
+            except = ResourceIdSet.EMPTY;
+        } else {
+            except = visitResourceIdList(ctx.resourceIdList());
+        }
+        BoolHas rtn = new BoolHas(setOperator, labelAccess, comparisonOperator, num.value(), resourceIdSet, with, except);
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
     }
 
     @Override
@@ -373,24 +363,6 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ResourceComparer<?, ?, ?> visitResourcecomparison(SFMLParser.ResourcecomparisonContext ctx) {
-        ComparisonOperator op = visitComparisonOp(ctx.comparisonOp());
-        Number num = visitNumber(ctx.number());
-        ResourceQuantity quantity = new ResourceQuantity(num, ResourceQuantity.IdExpansionBehaviour.NO_EXPAND);
-
-        ResourceIdentifier<?, ?, ?> item;
-        if (ctx.resourceId() == null) {
-            item = ResourceIdentifier.MATCH_ALL;
-        } else {
-            item = (ResourceIdentifier<?, ?, ?>) visit(ctx.resourceId());
-        }
-
-        ResourceComparer<?, ?, ?> resourceComparer = new ResourceComparer<>(op, quantity, item);
-        AST_NODE_CONTEXTS.add(new Pair<>(resourceComparer, ctx));
-        return resourceComparer;
-    }
-
-    @Override
     public ComparisonOperator visitComparisonOp(SFMLParser.ComparisonOpContext ctx) {
         ComparisonOperator from = ComparisonOperator.from(ctx.getText());
         AST_NODE_CONTEXTS.add(new Pair<>(from, ctx));
@@ -398,43 +370,49 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
+    public BoolExpr visitBooleanTrue(SFMLParser.BooleanTrueContext ctx) {
+        BoolExpr rtn = new BoolTrue();
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
+    public BoolExpr visitBooleanFalse(SFMLParser.BooleanFalseContext ctx) {
+        BoolExpr rtn = new BoolFalse();
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
+    public BoolExpr visitBooleanParen(SFMLParser.BooleanParenContext ctx) {
+        BoolExpr rtn = new BoolParen((BoolExpr) visit(ctx.boolexpr()));
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
+    public BoolExpr visitBooleanNegation(SFMLParser.BooleanNegationContext ctx) {
+        BoolExpr rtn = new BoolNegation((BoolExpr) visit(ctx.boolexpr()));
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
     public BoolExpr visitBooleanConjunction(SFMLParser.BooleanConjunctionContext ctx) {
         var left = (BoolExpr) visit(ctx.boolexpr(0));
         var right = (BoolExpr) visit(ctx.boolexpr(1));
-        BoolExpr boolExpr = new BoolExpr(left.and(right), left.sourceCode() + " AND " + right.sourceCode());
-        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
-        return boolExpr;
+        BoolExpr rtn = new BoolConjunction(left, right);
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
     }
 
     @Override
     public BoolExpr visitBooleanDisjunction(SFMLParser.BooleanDisjunctionContext ctx) {
         var left = (BoolExpr) visit(ctx.boolexpr(0));
         var right = (BoolExpr) visit(ctx.boolexpr(1));
-        BoolExpr boolExpr = new BoolExpr(left.or(right), left.sourceCode() + " OR " + right.sourceCode());
-        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
-        return boolExpr;
-    }
-
-    @Override
-    public BoolExpr visitBooleanFalse(SFMLParser.BooleanFalseContext ctx) {
-        BoolExpr boolExpr = BoolExpr.FALSE;
-        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
-        return boolExpr;
-    }
-
-    @Override
-    public BoolExpr visitBooleanParen(SFMLParser.BooleanParenContext ctx) {
-        BoolExpr expr = (BoolExpr) visit(ctx.boolexpr());
-        AST_NODE_CONTEXTS.add(new Pair<>(expr, ctx));
-        return expr;
-    }
-
-    @Override
-    public BoolExpr visitBooleanNegation(SFMLParser.BooleanNegationContext ctx) {
-        var x = (BoolExpr) visit(ctx.boolexpr());
-        BoolExpr boolExpr = new BoolExpr(x.negate(), "NOT " + x.sourceCode());
-        AST_NODE_CONTEXTS.add(new Pair<>(boolExpr, ctx));
-        return boolExpr;
+        BoolExpr rtn = new BoolDisjunction(left, right);
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
     }
 
     @Override
@@ -551,7 +529,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     public ASTNode visitWith(SFMLParser.WithContext ctx) {
         WithClause clause = (WithClause) visit(ctx.withClause());
         With.WithMode mode = ctx.WITHOUT() != null ? With.WithMode.WITHOUT : With.WithMode.WITH;
-        With rtn = new With(clause, mode, ctx.getText());
+        With rtn = new With(clause, mode);
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }
@@ -559,6 +537,40 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     @Override
     public WithTag visitWithTag(SFMLParser.WithTagContext ctx) {
         WithTag rtn = new WithTag((TagMatcher) visit(ctx.tagMatcher()));
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
+    public WithConjunction visitWithConjunction(SFMLParser.WithConjunctionContext ctx) {
+        var left = (WithClause) visit(ctx.withClause(0));
+        var right = (WithClause) visit(ctx.withClause(1));
+        WithConjunction rtn = new WithConjunction(left, right);
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
+    public WithParen visitWithParen(SFMLParser.WithParenContext ctx) {
+        var inner = (WithClause) visit(ctx.withClause());
+        WithParen rtn = new WithParen(inner);
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
+    public WithNegation visitWithNegation(SFMLParser.WithNegationContext ctx) {
+        var inner = (WithClause) visit(ctx.withClause());
+        WithNegation rtn = new WithNegation(inner);
+        AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
+        return rtn;
+    }
+
+    @Override
+    public WithDisjunction visitWithDisjunction(SFMLParser.WithDisjunctionContext ctx) {
+        var left = (WithClause) visit(ctx.withClause(0));
+        var right = (WithClause) visit(ctx.withClause(1));
+        WithDisjunction rtn = new WithDisjunction(left, right);
         AST_NODE_CONTEXTS.add(new Pair<>(rtn, ctx));
         return rtn;
     }

@@ -147,11 +147,11 @@ public record ServerboundOutputInspectionRequestPacket(
                         .forEach(branch -> {
                             if (branch.wasTrue()) {
                                 payload
-                                        .append(branch.ifStatement().condition().sourceCode())
+                                        .append(branch.ifStatement().condition().toStringPretty())
                                         .append(" -- true");
                             } else {
                                 payload
-                                        .append(branch.ifStatement().condition().sourceCode())
+                                        .append(branch.ifStatement().condition().toStringPretty())
                                         .append(" -- false");
                             }
                             payload.append("\n");

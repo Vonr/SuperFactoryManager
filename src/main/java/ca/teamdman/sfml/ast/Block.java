@@ -12,7 +12,7 @@ public record Block(List<Statement> statements) implements Statement {
             long start = System.nanoTime();
             statement.tick(context);
             float elapsed = (System.nanoTime() - start) / 1_000_000f;
-            if (statement instanceof PrettyStatement ps) {
+            if (statement instanceof ToStringPretty ps) {
                 context.getLogger().info(x -> x.accept(LocalizationKeys.PROGRAM_TICK_STATEMENT_TIME_MS.get(
                         elapsed,
                         ps.toStringPretty()
