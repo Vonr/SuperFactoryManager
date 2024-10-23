@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 public class SFMPackets {
     public static final String MANAGER_CHANNEL_VERSION = "1";
     public static final String LABEL_GUN_ITEM_CHANNEL_VERSION = "1";
+    public static final String CABLE_CHANNEL_VERSION = "1";
     public static final String DISK_ITEM_CHANNEL_VERSION = "1";
     public static final String INSPECTION_CHANNEL_VERSION = "1";
     public static final SimpleChannel MANAGER_CHANNEL = NetworkRegistry.newSimpleChannel(
@@ -30,6 +31,12 @@ public class SFMPackets {
             LABEL_GUN_ITEM_CHANNEL_VERSION::toString,
             LABEL_GUN_ITEM_CHANNEL_VERSION::equals,
             LABEL_GUN_ITEM_CHANNEL_VERSION::equals
+    );
+    public static final SimpleChannel CABLE_CHANNEL = NetworkRegistry.newSimpleChannel(
+            new ResourceLocation(SFM.MOD_ID, "cable"),
+            CABLE_CHANNEL_VERSION::toString,
+            CABLE_CHANNEL_VERSION::equals,
+            CABLE_CHANNEL_VERSION::equals
     );
     public static final SimpleChannel DISK_ITEM_CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(SFM.MOD_ID, "disk"),
@@ -146,6 +153,13 @@ public class SFMPackets {
                 ServerboundLabelGunUsePacket::decode,
                 ServerboundLabelGunUsePacket::handle
         );
+        LABEL_GUN_ITEM_CHANNEL.registerMessage(
+                4,
+                ServerboundLabelGunShowActiveLabelPacket.class,
+                ServerboundLabelGunShowActiveLabelPacket::encode,
+                ServerboundLabelGunShowActiveLabelPacket::decode,
+                ServerboundLabelGunShowActiveLabelPacket::handle
+        );
 
         DISK_ITEM_CHANNEL.registerMessage(
                 0,
@@ -245,6 +259,13 @@ public class SFMPackets {
                 ClientboundBoolExprStatementInspectionResultsPacket::encode,
                 ClientboundBoolExprStatementInspectionResultsPacket::decode,
                 ClientboundBoolExprStatementInspectionResultsPacket::handle
+        );
+        CABLE_CHANNEL.registerMessage(
+                0,
+                ServerboundFacadePacket.class,
+                ServerboundFacadePacket::encode,
+                ServerboundFacadePacket::decode,
+                ServerboundFacadePacket::handle
         );
     }
 

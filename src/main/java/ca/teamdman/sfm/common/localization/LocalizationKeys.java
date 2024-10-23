@@ -274,6 +274,10 @@ public final class LocalizationKeys {
             "gui.sfm.label_gun.clear_button",
             "Clear"
     );
+    public static final LocalizationEntry LABEL_GUN_GUI_TOGGLE_SHOW_ACTIVE_LABEL_BUTTON = new LocalizationEntry(
+            "gui.sfm.label_gun.toggle_show_active_label_button",
+            "Toggle label view"
+    );
 
     public static final LocalizationEntry DISK_EDIT_IN_HAND_TOOLTIP = new LocalizationEntry(
             "gui.sfm.disk.tooltip.edit_in_hand",

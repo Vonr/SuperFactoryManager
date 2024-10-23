@@ -29,6 +29,12 @@ public final class SFMBlockEntities {
                     .of(ManagerBlockEntity::new, SFMBlocks.MANAGER_BLOCK.get())
                     .build(null)
     );
+    public static final Supplier<BlockEntityType<CableBlockEntity>> CABLE_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+            "cable",
+            () -> BlockEntityType.Builder
+                    .of(CableBlockEntity::new, SFMBlocks.CABLE_BLOCK.get())
+                    .build(null)
+    );
     public static final RegistryObject<BlockEntityType<PrintingPressBlockEntity>> PRINTING_PRESS_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
             "printing_press",
             () -> BlockEntityType.Builder

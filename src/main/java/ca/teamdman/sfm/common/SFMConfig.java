@@ -5,6 +5,8 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
+
 public class SFMConfig {
     public static final ForgeConfigSpec COMMON_SPEC;
     public static final ForgeConfigSpec CLIENT_SPEC;
@@ -40,6 +42,7 @@ public class SFMConfig {
         public final ForgeConfigSpec.IntValue timerTriggerMinimumIntervalInTicks;
         public final ForgeConfigSpec.IntValue timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO;
         public final ForgeConfigSpec.IntValue maxIfStatementsInTriggerBeforeSimulationIsntAllowed;
+        public final ForgeConfigSpec.ConfigValue<List<?  extends String>> disallowedResourceTypesForTransfer;
 
         Common(ForgeConfigSpec.Builder builder) {
             timerTriggerMinimumIntervalInTicks = builder
@@ -55,6 +58,13 @@ public class SFMConfig {
                     .comment(
                             "The number of scenarios to check is 2^n where n is the number of if statements in a trigger")
                     .defineInRange("maxIfStatementsInTriggerBeforeSimulationIsntAllowed", 10, 0, Integer.MAX_VALUE);
+            disallowedResourceTypesForTransfer = builder
+                    .comment("What resource types should SFM not be allowed to move")
+                    .defineListAllowEmpty(
+                            List.of("disallowedResourceTypesForTransfer"),
+                            List::of,
+                            String.class::isInstance
+                    );
         }
     }
 

@@ -33,6 +33,7 @@
   "gui.sfm.label_gun.label_button": "%s (%d)",
   "gui.sfm.label_gun.placeholder": "Label",
   "gui.sfm.label_gun.prune_button": "Prune",
+  "gui.sfm.label_gun.toggle_show_active_label_button": "Toggle label view",
   "gui.sfm.logs.button.clear_logs": "Clear logs",
   "gui.sfm.logs.button.clear_logs.packet_received": "Cleared logs",
   "gui.sfm.logs.button.copy_logs": "Copy logs",

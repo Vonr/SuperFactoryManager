@@ -40,7 +40,7 @@ public class LabelGunItem extends Item {
     }
 
     public static String getNextLabel(ItemStack gun, int change) {
-        var labels = LabelPositionHolder.from(gun).get().keySet().stream().sorted(Comparator.naturalOrder()).toList();
+        var labels = LabelPositionHolder.from(gun).labels().keySet().stream().sorted(Comparator.naturalOrder()).toList();
         if (labels.isEmpty()) return "";
         var currentLabel = getActiveLabel(gun);
 
@@ -57,6 +57,13 @@ public class LabelGunItem extends Item {
         nextLabelIndex = ((nextLabelIndex % labels.size()) + labels.size()) % labels.size();
 
         return labels.get(nextLabelIndex);
+    }
+
+    public static boolean getOnlyShowActiveLabel(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean("sfm:only_show_active_label");
+    }
+    public static void setOnlyShowActiveLabel(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean("sfm:only_show_active_label", value);
     }
 
     @Override

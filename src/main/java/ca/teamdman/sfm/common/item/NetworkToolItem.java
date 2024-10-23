@@ -1,12 +1,14 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundNetworkToolUsePacket;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -21,6 +23,8 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class NetworkToolItem extends Item {
     public NetworkToolItem() {
@@ -53,32 +57,48 @@ public class NetworkToolItem extends Item {
     public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
         if (pIsSelected && !pLevel.isClientSide && pEntity.tickCount % 20 == 0) {
             final long maxDistance = 128;
-            CompoundTag tag = new CompoundTag();
-            ListTag networks = new ListTag();
-            CableNetworkManager
+            Set<BlockPos> cablePositions = CableNetworkManager
                     .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
-                    .forEach(net -> {
-                        CompoundTag networkTag = new CompoundTag();
-                        networkTag.put(
-                                "cable_positions",
-                                net
-                                        .getCablePositions()
-                                        .map(NbtUtils::writeBlockPos)
-                                        .collect(ListTag::new, ListTag::add, ListTag::addAll)
-                        );
-                        networkTag.put(
-                                "capability_provider_positions",
-                                net
-                                        .getCapabilityProviderPositions()
-                                        .map(NbtUtils::writeBlockPos)
-                                        .collect(ListTag::new, ListTag::add, ListTag::addAll)
-                        );
-                        networks.add(networkTag);
-                    });
-            tag.put("networks", networks);
-            pStack.setTag(tag);
+                    .flatMap(CableNetwork::getCablePositions)
+                    .collect(Collectors.toSet());
+            setCablePositions(pStack, cablePositions);
+
+            Set<BlockPos> capabilityProviderPositions = CableNetworkManager
+                    .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
+                    .flatMap(CableNetwork::getCapabilityProviderPositions)
+                    .collect(Collectors.toSet());
+            setCapabilityProviderPositions(pStack, capabilityProviderPositions);
+
+            // remove the data stored by older versions of the mod
+            pStack.getOrCreateTag().remove("networks");
         }
     }
 
+    public static void setCablePositions(ItemStack stack, Set<BlockPos> positions) {
+        stack.getOrCreateTag().put(
+                "sfm:cable_positions",
+                positions.stream().map(NbtUtils::writeBlockPos).collect(ListTag::new, ListTag::add, ListTag::addAll)
+        );
+    }
 
+    public static Set<BlockPos> getCablePositions(ItemStack stack) {
+        return stack.getOrCreateTag().getList("sfm:cable_positions", 10).stream()
+                .map(CompoundTag.class::cast)
+                .map(NbtUtils::readBlockPos)
+                .collect(Collectors.toSet());
+    }
+
+    public static void setCapabilityProviderPositions(ItemStack stack, Set<BlockPos> positions) {
+        stack.getOrCreateTag().put(
+                "sfm:capability_provider_positions",
+                positions.stream().map(NbtUtils::writeBlockPos).collect(ListTag::new, ListTag::add, ListTag::addAll)
+        );
+    }
+
+    public static Set<BlockPos> getCapabilityProviderPositions(ItemStack stack) {
+        return stack.getOrCreateTag().getList("sfm:capability_provider_positions", 10).stream()
+                .map(CompoundTag.class::cast)
+                .map(NbtUtils::readBlockPos)
+                .collect(Collectors.toSet());
+    }
 }
