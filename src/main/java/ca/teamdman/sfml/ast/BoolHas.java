@@ -27,14 +27,11 @@ public record BoolHas(
         LabelPositionHolder labelPositionHolder = programContext.getLabelPositionHolder();
         ArrayList<Pair<Label, BlockPos>> labelledPositions = labelAccess.getLabelledPositions(labelPositionHolder);
         for (Pair<Label, BlockPos> entry : labelledPositions) {
-            Label label = entry.getFirst();
             BlockPos pos = entry.getSecond();
             AtomicLong inThisInv = new AtomicLong(0);
             for (ResourceType<?, ?, ?> resourceType : resourceIdSet.getReferencedResourceTypes()) {
                 accumulate(
                         programContext,
-                        labelAccess.directions(),
-                        label,
                         pos,
                         overallCount,
                         inThisInv,
@@ -65,8 +62,6 @@ public record BoolHas(
 
     private <STACK, ITEM, CAP> void accumulate(
             ProgramContext programContext,
-            DirectionQualifier directions,
-            Label label,
             BlockPos pos,
             AtomicLong overallAccumulator,
             AtomicLong invAccumulator,
@@ -76,20 +71,15 @@ public record BoolHas(
                 programContext,
                 labelAccess.directions(),
                 pos,
-                (direction, cap) -> {
-                    for (var stack : (Iterable<STACK>) resourceType.getStacksInSlots(
-                            cap,
-                            labelAccess.slots()
-                    )::iterator) {
-                        if (this.resourceIdSet.getMatchingFromStack(stack) != null) {
-                            if (with.matchesStack(resourceType, stack)) {
-                                long amount = resourceType.getAmount(stack);
-                                invAccumulator.addAndGet(amount);
-                                overallAccumulator.addAndGet(amount);
-                            }
+                (direction, cap) -> resourceType.getStacksInSlots(cap, labelAccess.slots()).forEach(stack -> {
+                    if (this.resourceIdSet.getMatchingFromStack(stack) != null) {
+                        if (with.matchesStack(resourceType, stack)) {
+                            long amount = resourceType.getAmount(stack);
+                            invAccumulator.addAndGet(amount);
+                            overallAccumulator.addAndGet(amount);
                         }
                     }
-                }
+                })
         );
     }
 }

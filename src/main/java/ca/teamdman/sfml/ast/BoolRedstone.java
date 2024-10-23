@@ -11,7 +11,7 @@ public record BoolRedstone(ComparisonOperator operator, long number) implements 
         ManagerBlockEntity manager = programContext.getManager();
         Level level = manager.getLevel();
         assert level != null;
-        long lhs = level.getBestNeighborSignal(manager.getBlockPos());;
+        long lhs = level.getBestNeighborSignal(manager.getBlockPos());
         long rhs = number;
         return operator.test(lhs, rhs);
     }
