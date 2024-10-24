@@ -40,14 +40,11 @@ outputStatement : OUTPUT outputResourceLimits? resourceExclusion? TO EACH? label
                 | TO EACH? labelAccess OUTPUT outputResourceLimits? resourceExclusion?
                 ;
 
-resourceExclusion       : EXCEPT resourceId (COMMA resourceId)* COMMA?;
-        // TODO: support `EXCEPT TAG minecraft:mineable/shovel` syntax
+inputResourceLimits   : resourceLimitList; // separate for different defaults
+outputResourceLimits  : resourceLimitList; // separate for different defaults
 
-
-inputResourceLimits   : resourceLimits; // separate for different defaults
-outputResourceLimits  : resourceLimits; // separate for different defaults
-resourceLimits  : resourceLimit (COMMA resourceLimit)* COMMA?;
-resourceLimit   : limit? resourceId with? // TODO: rename resourceId to resourceMatcher, add support for AND, OR; 5 RETAIN 4 EACH *ingot* or #c:ingot
+resourceLimitList  : resourceLimit (COMMA resourceLimit)* COMMA?;
+resourceLimit   : limit? resourceIdDisjunction with?
                 | limit with?
                 | with
                 ;
@@ -55,8 +52,19 @@ limit           : quantity retention    #QuantityRetentionLimit
                 | retention             #RetentionLimit
                 | quantity              #QuantityLimit
                 ;
+
 quantity        : number EACH?;
 retention       : RETAIN number EACH?;
+
+resourceExclusion       : EXCEPT resourceIdList;
+
+resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON (identifier)?)?)?)? # Resource
+                | string                                                                            # StringResource
+                ;
+
+resourceIdList          : resourceId (COMMA resourceId)* COMMA?;
+resourceIdDisjunction   : resourceId (OR resourceId)* OR?;
+
 
 with        : WITH withClause
             | WITHOUT withClause
@@ -90,16 +98,16 @@ range           : number (DASH number)? ;
 
 
 ifStatement     : IF boolexpr THEN block (ELSE IF boolexpr THEN block)* (ELSE block)? END;
-boolexpr        : TRUE                                  #BooleanTrue
-                | FALSE                                 #BooleanFalse
-                | LPAREN boolexpr RPAREN                #BooleanParen
-                | NOT boolexpr                          #BooleanNegation
-                | boolexpr AND boolexpr                 #BooleanConjunction
-                | boolexpr OR boolexpr                  #BooleanDisjunction
-                | setOp? labelAccess HAS resourcecomparison #BooleanHas
-                | REDSTONE (comparisonOp number)?       #BooleanRedstone
+boolexpr        : TRUE                              #BooleanTrue
+                | FALSE                             #BooleanFalse
+                | LPAREN boolexpr RPAREN            #BooleanParen
+                | NOT boolexpr                      #BooleanNegation
+                | boolexpr AND boolexpr             #BooleanConjunction
+                | boolexpr OR boolexpr              #BooleanDisjunction
+                | setOp? labelAccess HAS comparisonOp number resourceIdDisjunction? with? (EXCEPT resourceIdList)?  #BooleanHas
+                | REDSTONE (comparisonOp number)?   #BooleanRedstone
                 ;
-resourcecomparison : comparisonOp number resourceId? ; // TODO: add EXCEPT support here
+
 comparisonOp    : GT
                 | LT
                 | EQ
@@ -131,10 +139,6 @@ labelAccess     : label (COMMA label)* roundrobin? sidequalifier? slotqualifier?
 roundrobin      : ROUND ROBIN BY (LABEL | BLOCK);
 label           : (identifier)   #RawLabel
                 | string                  #StringLabel
-                ;
-
-resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON (identifier)?)?)?)? # Resource
-                | string                                                                            # StringResource
                 ;
 
 identifier : (IDENTIFIER | REDSTONE) ;
