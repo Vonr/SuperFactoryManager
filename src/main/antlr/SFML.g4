@@ -57,7 +57,6 @@ quantity        : number EACH?;
 retention       : RETAIN number EACH?;
 
 resourceExclusion       : EXCEPT resourceIdList;
-        // TODO: support `EXCEPT TAG minecraft:mineable/shovel` syntax
 
 resourceId      : (identifier) (COLON (identifier)? (COLON (identifier)? (COLON (identifier)?)?)?)? # Resource
                 | string                                                                            # StringResource
