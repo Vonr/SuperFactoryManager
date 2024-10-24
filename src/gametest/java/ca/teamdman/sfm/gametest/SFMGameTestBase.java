@@ -15,6 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.NumberFormat;
 import java.util.Collections;
@@ -149,18 +150,18 @@ public abstract class SFMGameTestBase {
         );
     }
 
-    protected static int count(Container chest, Item item) {
+    protected static int count(Container chest, @Nullable Item item) {
         return IntStream.range(0, chest.getContainerSize())
                 .mapToObj(chest::getItem)
-                .filter(stack -> stack.getItem() == item)
+                .filter(stack -> item == null || stack.getItem() == item)
                 .mapToInt(ItemStack::getCount)
                 .sum();
     }
 
-    protected static int count(IItemHandler chest, Item item) {
+    protected static int count(IItemHandler chest, @Nullable Item item) {
         return IntStream.range(0, chest.getSlots())
                 .mapToObj(chest::getStackInSlot)
-                .filter(stack -> stack.getItem() == item)
+                .filter(stack -> item == null || stack.getItem() == item)
                 .mapToInt(ItemStack::getCount)
                 .sum();
     }

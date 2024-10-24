@@ -34,6 +34,19 @@ EVERY 20 TICKS DO
 END
 -- Update round robin example to advocate for using "retain" instead
 -- Add notice to inspector that slot numbers may not correspond with automation slots
+-- Fix syntax highlighting for "without", thanks @AkaiPandaTV
+-- Fix WITHOUT and WITH logic implementation
+EVERY 20 TICKS DO
+    INPUT minecraft: FROM left
+    OUTPUT WITH TAG ingots OR tag chests EXCEPT iron_ingot TO right
+    OUTPUT WITHOUT TAG ingots OR TAG nuggets TO "top"
+END
+-- Add fancy inventory cable, cable with non-full-block model, thanks @kevinrpb
+-- Optimized label gun and network tool rendering, thanks @Burkino <3
+-- Add label gun render-only-selected gui button added, thanks @Burkino
+-- Add label gun gui searching, thanks @Burkino
+-- Add cable facades, thanks @Burkino
+-- Add resource type disallowing via config for pack makers, thanks @Burkino
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me
