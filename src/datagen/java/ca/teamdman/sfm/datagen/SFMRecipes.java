@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.datagen;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.recipe.PrintingPressFinishedRecipe;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
@@ -41,6 +42,13 @@ public class SFMRecipes extends RecipeProvider {
                 .unlockedBy("has_iron_ingot", RecipeProvider.has(Items.IRON_INGOT))
                 .unlockedBy("has_chest", RecipeProvider.has(Tags.Items.CHESTS))
                 .save(consumer);
+
+        ShapelessRecipeBuilder
+                .shapeless(SFMBlocks.CABLE_BLOCK.get())
+                .requires(SFMBlocks.FANCY_CABLE_BLOCK.get(), 1)
+                .unlockedBy("has_iron_ingot", RecipeProvider.has(Items.IRON_INGOT))
+                .unlockedBy("has_chest", RecipeProvider.has(Tags.Items.CHESTS))
+                .save(consumer, new ResourceLocation(SFM.MOD_ID, "fancy_to_cable"));
 
         ShapedRecipeBuilder
                 .shaped(SFMBlocks.MANAGER_BLOCK.get())
