@@ -79,9 +79,9 @@ public class LabelGunScreen extends Screen {
                 }
         ));
         this.addRenderableWidget(new Button(
-                this.width / 2 + 160 + 55,
-                50,
-                50,
+                this.width / 2 - 2 - 100,
+                this.height - 25,
+                200,
                 20,
                 LocalizationKeys.LABEL_GUN_GUI_TOGGLE_SHOW_ACTIVE_LABEL_BUTTON.getComponent(),
                 (btn) -> {
