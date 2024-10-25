@@ -93,6 +93,7 @@
   "item.sfm.labelgun.tooltip.1": "Right click a Factory Manager to push labels.",
   "item.sfm.labelgun.tooltip.2": "Right click a Factory Manager while sneaking to pull labels.",
   "item.sfm.labelgun.tooltip.3": "Hold control to apply labels to blocks of the same type adjacent to cables.",
+  "item.sfm.labelgun.tooltip.4": "Alt-click a block to set one of its labels as active.",
   "item.sfm.labelgun.with_label": "Label Gun: \"%s\"",
   "item.sfm.network_tool": "Network Tool",
   "item.sfm.network_tool.tooltip.1": "Shows cables through walls when held.",
@@ -176,5 +177,6 @@
   "program.sfm.warnings.undefined_label": "Label \"%s\" is assigned in the world but not defined in code.",
   "program.sfm.warnings.unknown_resource_id": "Resource \"%s\" was not found.",
   "program.sfm.warnings.unused_input_label": "Statement \"%s\" at %s inputs \"%s\" from \"%s\" but no future output statement consume \"%s\".",
-  "program.sfm.warnings.unused_label": "Label \"%s\" is used in code but not assigned in the world."
+  "program.sfm.warnings.unused_label": "Label \"%s\" is used in code but not assigned in the world.",
+  "sfm.label_gun.restricted_view_reminder": "Limited view only shows the selected label. Open the label gun gui to toggle this."
 }

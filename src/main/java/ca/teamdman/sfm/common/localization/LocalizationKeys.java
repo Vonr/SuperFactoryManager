@@ -229,6 +229,14 @@ public final class LocalizationKeys {
             () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.3",
             () -> "Hold control to apply labels to blocks of the same type adjacent to cables."
     );
+    public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_4 = new LocalizationEntry(
+            () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.4",
+            () -> "Alt-click a block to set one of its labels as active."
+    );
+    public static final LocalizationEntry LABEL_GUN_LIMITED_VIEW_REMINDER  = new LocalizationEntry(
+            () -> "sfm.label_gun.restricted_view_reminder",
+            () -> "Limited view only shows the selected label. Open the label gun gui to toggle this."
+    );
     public static final LocalizationEntry LABEL_GUN_ITEM_NAME_WITH_LABEL = new LocalizationEntry(
             () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".with_label",
             () -> "Label Gun: \"%s\""

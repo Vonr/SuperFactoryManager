@@ -3,6 +3,7 @@ package ca.teamdman.sfm.client.handler;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.LabelGunItem;
 import ca.teamdman.sfm.common.item.NetworkToolItem;
+import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.util.HelpsWithMinecraftVersionIndependence;
 import com.google.common.collect.HashMultimap;
@@ -14,15 +15,13 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -70,6 +69,7 @@ public class ItemWorldRenderer {
     );
 
     private static final int capabilityColor = FastColor.ARGB32.color(100, 100, 0, 255);
+    private static final int capabilityColorLimitedView = FastColor.ARGB32.color(100, 0, 100, 255);
     private static final int cableColor = FastColor.ARGB32.color(100, 100, 255, 0);
     private static final VBOCache vboCache = new VBOCache();
 
@@ -91,6 +91,27 @@ public class ItemWorldRenderer {
         } else {
             vboCache.clear();
         }
+    }
+
+    // Thanks @tigres810
+    // https://discord.com/channels/313125603924639766/983834532904042537/1009267533527928864
+    public static @Nullable BlockPos lookingAt() {
+        HitResult rt = Minecraft.getInstance().hitResult;
+        if (rt == null) return null;
+
+        double x = (rt.getLocation().x);
+        double y = (rt.getLocation().y);
+        double z = (rt.getLocation().z);
+
+        double xla = Minecraft.getInstance().player.getLookAngle().x;
+        double yla = Minecraft.getInstance().player.getLookAngle().y;
+        double zla = Minecraft.getInstance().player.getLookAngle().z;
+
+        if ((x % 1 == 0) && (xla < 0)) x -= 0.01;
+        if ((y % 1 == 0) && (yla < 0)) y -= 0.01;
+        if ((z % 1 == 0) && (zla < 0)) z -= 0.01;
+
+        return new BlockPos(x, y, z);
     }
 
     private static @Nullable ItemStack getHeldItemOfType(
@@ -128,10 +149,45 @@ public class ItemWorldRenderer {
                     labelsByPosition.put(pos1, label);
                 }
             });
+            BlockPos hitPos = lookingAt();
+            if (hitPos != null) {
+                labelPositionHolder.getLabels(hitPos).forEach(label -> labelsByPosition.put(hitPos, label));
+            }
         } else {
             labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
         }
+
+
+        if (onlyShowSelectedLabel) {
+            Font font = Minecraft.getInstance().font;
+            var reminder =LocalizationKeys.LABEL_GUN_LIMITED_VIEW_REMINDER.getComponent();
+            int reminderWidth = font.width(reminder);
+
+            // Not sure why this is being so annoying
+            // Most gui font rendering uses the identity matrix but this only works if we manually construct it
+            // Gui::renderSelectedItemName
+            Matrix4f matrix4f = new Matrix4f(new float[]{
+                    0.025f, 0f, 0f, -reminderWidth/2f * 0.025f,
+                    0f, -0.025f, 0f, 2.7f,
+                    0f, 0f, -0.025f, -4f,
+                    0.0f, 0.0f, 0.0f, 1.0f
+            });
+            font.drawInBatch(
+                    LocalizationKeys.LABEL_GUN_LIMITED_VIEW_REMINDER.getComponent(),
+                    0,
+                    0,
+                    -0x1,
+                    false, // shadow perspective gets wonky with our manual matrix stuff so we disable it
+                    matrix4f,
+                    bufferSource,
+                    true,
+                    0,
+                    LightTexture.FULL_BRIGHT
+            );
+        }
+
         RenderSystem.disableDepthTest();
+
 
         // Draw labels
         poseStack.pushPose();
@@ -146,7 +202,13 @@ public class ItemWorldRenderer {
         // Draw boxes
         RENDER_TYPE.setupRenderState();
         Set<BlockPos> labelledPositions = labelsByPosition.keySet();
-        drawVbo(VBOKind.LABEL_GUN_CAPABILITIES, poseStack, labelledPositions, capabilityColor, event);
+        drawVbo(
+                VBOKind.LABEL_GUN_CAPABILITIES,
+                poseStack,
+                labelledPositions,
+                onlyShowSelectedLabel ? capabilityColorLimitedView : capabilityColor,
+                event
+        );
         RENDER_TYPE.clearRenderState();
 
         bufferSource.endBatch();
@@ -332,6 +394,7 @@ public class ItemWorldRenderer {
     private static class VBOCache {
         private final EnumMap<VBOKind, VBOEntry> cache = new EnumMap<>(VBOKind.class);
         private int lastClear = 0;
+
         public @Nullable VertexBuffer getVBO(
                 VBOKind kind,
                 Set<BlockPos> positions,
