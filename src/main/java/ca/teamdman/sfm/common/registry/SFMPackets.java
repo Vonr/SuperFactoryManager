@@ -155,10 +155,10 @@ public class SFMPackets {
         );
         LABEL_GUN_ITEM_CHANNEL.registerMessage(
                 4,
-                ServerboundLabelGunShowActiveLabelPacket.class,
-                ServerboundLabelGunShowActiveLabelPacket::encode,
-                ServerboundLabelGunShowActiveLabelPacket::decode,
-                ServerboundLabelGunShowActiveLabelPacket::handle
+                ServerboundLabelGunToggleLabelViewPacket.class,
+                ServerboundLabelGunToggleLabelViewPacket::encode,
+                ServerboundLabelGunToggleLabelViewPacket::decode,
+                ServerboundLabelGunToggleLabelViewPacket::handle
         );
 
         DISK_ITEM_CHANNEL.registerMessage(

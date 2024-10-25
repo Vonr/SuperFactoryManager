@@ -3,7 +3,7 @@ package ca.teamdman.sfm.client.gui.screen;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunClearPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunPrunePacket;
-import ca.teamdman.sfm.common.net.ServerboundLabelGunShowActiveLabelPacket;
+import ca.teamdman.sfm.common.net.ServerboundLabelGunToggleLabelViewPacket;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUpdatePacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
@@ -83,9 +83,9 @@ public class LabelGunScreen extends Screen {
                 this.height - 25,
                 200,
                 20,
-                LocalizationKeys.LABEL_GUN_GUI_TOGGLE_SHOW_ACTIVE_LABEL_BUTTON.getComponent(),
+                LocalizationKeys.LABEL_GUN_GUI_TOGGLE_LABEL_VIEW_BUTTON.getComponent(),
                 (btn) -> {
-                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunShowActiveLabelPacket(HAND));
+                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunToggleLabelViewPacket(HAND));
                     onClose();
                 }
         ));

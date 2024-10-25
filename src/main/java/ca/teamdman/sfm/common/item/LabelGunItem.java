@@ -1,12 +1,15 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUsePacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -18,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -28,7 +32,10 @@ public class LabelGunItem extends Item {
         super(new Properties().stacksTo(1).tab(SFMItems.TAB));
     }
 
-    public static void setActiveLabel(ItemStack gun, String label) {
+    public static void setActiveLabel(
+            ItemStack gun,
+            String label
+    ) {
         if (label.isEmpty()) return;
         LabelPositionHolder.from(gun).addReferencedLabel(label).save(gun);
         gun.getOrCreateTag().putString("sfm:active_label", label);
@@ -39,8 +46,17 @@ public class LabelGunItem extends Item {
         return !stack.hasTag() ? "" : stack.getTag().getString("sfm:active_label");
     }
 
-    public static String getNextLabel(ItemStack gun, int change) {
-        var labels = LabelPositionHolder.from(gun).labels().keySet().stream().sorted(Comparator.naturalOrder()).toList();
+    public static String getNextLabel(
+            ItemStack gun,
+            int change
+    ) {
+        var labels = LabelPositionHolder
+                .from(gun)
+                .labels()
+                .keySet()
+                .stream()
+                .sorted(Comparator.naturalOrder())
+                .toList();
         if (labels.isEmpty()) return "";
         var currentLabel = getActiveLabel(gun);
 
@@ -62,13 +78,18 @@ public class LabelGunItem extends Item {
     public static boolean getOnlyShowActiveLabel(ItemStack stack) {
         return stack.getOrCreateTag().getBoolean("sfm:only_show_active_label");
     }
-    public static void setOnlyShowActiveLabel(ItemStack stack, boolean value) {
+
+    public static void setOnlyShowActiveLabel(
+            ItemStack stack,
+            boolean value
+    ) {
         stack.getOrCreateTag().putBoolean("sfm:only_show_active_label", value);
     }
 
     @Override
     public InteractionResult onItemUseFirst(
-            ItemStack gun, UseOnContext ctx
+            ItemStack gun,
+            UseOnContext ctx
     ) {
         var level = ctx.getLevel();
         if (level.isClientSide && ctx.getPlayer() != null) {
@@ -86,12 +107,31 @@ public class LabelGunItem extends Item {
 
     @Override
     public void appendHoverText(
-            ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
+            ItemStack stack,
+            @Nullable Level level,
+            List<Component> lines,
+            TooltipFlag detail
     ) {
-        lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_4.getComponent().withStyle(ChatFormatting.GRAY));
+        boolean isClient = FMLEnvironment.dist.isClient();
+        if (isClient) {
+            Options options = Minecraft.getInstance().options;
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent(options.keyAttack));
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent(options.keyAttack));
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent("Control"));
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_4.getComponent(
+                    options.keyPickItem.getTranslatedKeyMessage()
+            ));
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_5.getComponent(
+                    SFMKeyMappings.TOGGLE_LABEL_VIEW_KEY.get().getTranslatedKeyMessage()
+            ));
+        } else {
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent("Right Click"));
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent("Right Click"));
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent("Control"));
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_4.getComponent("Middle Mouse"));
+            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_5.getComponent("Middle Mouse"));
+        }
+
         lines.addAll(LabelPositionHolder.from(stack).asHoverText());
     }
 

@@ -178,7 +178,7 @@ public class DiskItem extends Item {
     @Override
     public Component getName(ItemStack stack) {
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            if (ClientStuff.isMoreInfoKeyDown()) return super.getName(stack);
+            if (ClientStuff.isKeyDown(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY)) return super.getName(stack);
         }
         var name = getProgramName(stack);
         if (name.isEmpty()) return super.getName(stack);
@@ -193,7 +193,7 @@ public class DiskItem extends Item {
 
         if (stack.hasTag()) {
             boolean isClient = FMLEnvironment.dist.isClient();
-            boolean isMoreInfoKeyDown = isClient && ClientStuff.isMoreInfoKeyDown();
+            boolean isMoreInfoKeyDown = isClient && ClientStuff.isKeyDown(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY);
             boolean showProgram = isMoreInfoKeyDown;
             if (!showProgram) {
                 list.addAll(LabelPositionHolder.from(stack).asHoverText());

@@ -9,25 +9,25 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record ServerboundLabelGunShowActiveLabelPacket(
+public record ServerboundLabelGunToggleLabelViewPacket(
         InteractionHand hand
 ) {
 
     public static void encode(
-            ServerboundLabelGunShowActiveLabelPacket msg,
+            ServerboundLabelGunToggleLabelViewPacket msg,
             FriendlyByteBuf buf
     ) {
         buf.writeEnum(msg.hand);
     }
 
-    public static ServerboundLabelGunShowActiveLabelPacket decode(
+    public static ServerboundLabelGunToggleLabelViewPacket decode(
             FriendlyByteBuf buf
     ) {
-        return new ServerboundLabelGunShowActiveLabelPacket(buf.readEnum(InteractionHand.class));
+        return new ServerboundLabelGunToggleLabelViewPacket(buf.readEnum(InteractionHand.class));
     }
 
     public static void handle(
-            ServerboundLabelGunShowActiveLabelPacket msg,
+            ServerboundLabelGunToggleLabelViewPacket msg,
             Supplier<NetworkEvent.Context> contextSupplier
     ) {
         contextSupplier.get().enqueueWork(() -> {

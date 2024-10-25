@@ -2,13 +2,13 @@ package ca.teamdman.sfm.client;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.gui.screen.*;
-import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.net.ServerboundManagerLogDesireUpdatePacket;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -22,6 +22,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -97,16 +98,13 @@ public class ClientStuff {
         );
     }
 
-    public static boolean isMoreInfoKeyDown() {
+    public static boolean isKeyDown(Lazy<KeyMapping> key) {
         // special effort is needed to ensure this works properly when the manager screen is open
         // https://github.com/mekanism/Mekanism/blob/f92b48a49e0766cd3aa78e95c9c4a47ba90402f5/src/main/java/mekanism/client/key/MekKeyHandler.java
         long handle = Minecraft.getInstance().getWindow().getWindow();
         return InputConstants.isKeyDown(
                 handle,
-                SFMKeyMappings.MORE_INFO_TOOLTIP_KEY
-                        .get()
-                        .getKey()
-                        .getValue()
+                key.get().getKey().getValue()
         );
     }
 

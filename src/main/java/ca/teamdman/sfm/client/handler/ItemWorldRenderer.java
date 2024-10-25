@@ -3,7 +3,6 @@ package ca.teamdman.sfm.client.handler;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.item.LabelGunItem;
 import ca.teamdman.sfm.common.item.NetworkToolItem;
-import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.util.HelpsWithMinecraftVersionIndependence;
 import com.google.common.collect.HashMultimap;
@@ -15,7 +14,10 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -155,35 +157,6 @@ public class ItemWorldRenderer {
             }
         } else {
             labelPositionHolder.forEach((label, pos1) -> labelsByPosition.put(pos1, label));
-        }
-
-
-        if (onlyShowSelectedLabel) {
-            Font font = Minecraft.getInstance().font;
-            var reminder =LocalizationKeys.LABEL_GUN_LIMITED_VIEW_REMINDER.getComponent();
-            int reminderWidth = font.width(reminder);
-
-            // Not sure why this is being so annoying
-            // Most gui font rendering uses the identity matrix but this only works if we manually construct it
-            // Gui::renderSelectedItemName
-            Matrix4f matrix4f = new Matrix4f(new float[]{
-                    0.025f, 0f, 0f, -reminderWidth/2f * 0.025f,
-                    0f, -0.025f, 0f, 2.7f,
-                    0f, 0f, -0.025f, -4f,
-                    0.0f, 0.0f, 0.0f, 1.0f
-            });
-            font.drawInBatch(
-                    LocalizationKeys.LABEL_GUN_LIMITED_VIEW_REMINDER.getComponent(),
-                    0,
-                    0,
-                    -0x1,
-                    false, // shadow perspective gets wonky with our manual matrix stuff so we disable it
-                    matrix4f,
-                    bufferSource,
-                    true,
-                    0,
-                    LightTexture.FULL_BRIGHT
-            );
         }
 
         RenderSystem.disableDepthTest();

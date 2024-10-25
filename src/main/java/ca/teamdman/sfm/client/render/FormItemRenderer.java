@@ -2,6 +2,7 @@ package ca.teamdman.sfm.client.render;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.item.FormItem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -57,7 +58,7 @@ public class FormItemRenderer extends BlockEntityWithoutLevelRenderer {
 //            poseStack.mulPose(Vector3f.YP.rotationDegrees(-65));
         }
 
-        if (ClientStuff.isMoreInfoKeyDown()) {
+        if (ClientStuff.isKeyDown(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY)) {
             poseStack.pushPose();
             poseStack.translate(0, 0.5f, 0.3f);
             poseStack.scale(0.5f, 0.5f, 0.5f);
