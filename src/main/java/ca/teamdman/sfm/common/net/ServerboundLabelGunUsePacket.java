@@ -14,10 +14,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -26,6 +23,7 @@ public record ServerboundLabelGunUsePacket(
         InteractionHand hand,
         BlockPos pos,
         boolean isCtrlKeyDown,
+        boolean isAltKeyDown,
         boolean isShiftKeyDown
 ) {
 
@@ -33,6 +31,7 @@ public record ServerboundLabelGunUsePacket(
         buf.writeEnum(msg.hand);
         buf.writeBlockPos(msg.pos);
         buf.writeBoolean(msg.isCtrlKeyDown);
+        buf.writeBoolean(msg.isAltKeyDown);
         buf.writeBoolean(msg.isShiftKeyDown);
     }
 
@@ -42,6 +41,7 @@ public record ServerboundLabelGunUsePacket(
         return new ServerboundLabelGunUsePacket(
                 buf.readEnum(InteractionHand.class),
                 buf.readBlockPos(),
+                buf.readBoolean(),
                 buf.readBoolean(),
                 buf.readBoolean()
         );
@@ -131,6 +131,14 @@ public record ServerboundLabelGunUsePacket(
                 } else {
                     positions.forEach(p -> gunLabels.remove(activeLabel, p));
                 }
+            } else if (msg.isAltKeyDown) {
+                // set one of the labels from the block as active
+                var labels = new ArrayList<>(gunLabels.getLabels(pos));
+                labels.sort(Comparator.naturalOrder());
+                if (labels.isEmpty()) return;
+                var index = (labels.indexOf(activeLabel) + 1) % labels.size();
+                var nextLabel = labels.get(index);
+                LabelGunItem.setActiveLabel(stack, nextLabel);
             } else {
                 // normal behaviour - operate on a single position
                 if (msg.isShiftKeyDown) {

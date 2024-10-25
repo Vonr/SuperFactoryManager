@@ -76,6 +76,7 @@ public class LabelGunItem extends Item {
                     ctx.getHand(),
                     ctx.getClickedPos(),
                     Screen.hasControlDown(),
+                    Screen.hasAltDown(),
                     ctx.getPlayer().isShiftKeyDown()
             ));
             return InteractionResult.SUCCESS;
@@ -90,6 +91,7 @@ public class LabelGunItem extends Item {
         lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
         lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
         lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent().withStyle(ChatFormatting.GRAY));
+        lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_4.getComponent().withStyle(ChatFormatting.GRAY));
         lines.addAll(LabelPositionHolder.from(stack).asHoverText());
     }
 

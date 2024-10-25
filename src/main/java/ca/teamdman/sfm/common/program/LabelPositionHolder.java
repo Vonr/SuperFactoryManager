@@ -207,4 +207,11 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
     public LabelPositionHolder toOwned() {
         return new LabelPositionHolder(this);
     }
+
+    public Set<String> getLabels(BlockPos pos) {
+        return labels().entrySet().stream()
+                .filter(entry -> entry.getValue().contains(pos))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+    }
 }
