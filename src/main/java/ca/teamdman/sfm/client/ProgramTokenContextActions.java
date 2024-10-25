@@ -103,6 +103,7 @@ public class ProgramTokenContextActions {
                     nodeIndex
             )));
         }
+        // todo: add ctrl+space inspection for WITH TAG to show items matching tag
         return Optional.empty();
     }
 

@@ -100,7 +100,7 @@ public class SFMPerformanceGameTests extends SFMGameTestBase {
         });
     }
 
-    @GameTest(template = "25x3x25", batch = "laggy") //todo : fix whatever the heck is going on here
+    @GameTest(template = "25x3x25", batch = "laggy")
     public static void move_many_full(GameTestHelper helper) {
         // fill the platform with cables and barrels
         var sourceBlocks = new ArrayList<BlockPos>();

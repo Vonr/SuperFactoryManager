@@ -127,7 +127,8 @@ public class CableNetwork {
             @Nullable Direction direction,
             TranslatableLogger logger
     ) {
-        // TODO: move this check higher up the chain
+        // any BlockPos can have labels assigned
+        // we must only proceed here if there is an adjacent cable from this network
         if (!isAdjacentToCable(pos)) {
             logger.warn(x->x.accept(LocalizationKeys.LOGS_MISSING_ADJACENT_CABLE.get(pos)));
             return LazyOptional.empty();
