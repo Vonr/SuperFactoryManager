@@ -11,6 +11,7 @@ import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
+import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Program;
@@ -245,31 +246,42 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         }
     }
 
+    private String getProgram() {
+        return menu.program;
+    }
+
     private void onEditButtonClicked() {
-        ClientStuff.showProgramEditScreen(DiskItem.getProgram(menu.getDisk()), this::sendProgram);
+        ClientStuff.showProgramEditScreen(getProgram(), this::sendProgram);
     }
 
     private void onExamplesButtonClicked() {
-        ClientStuff.showExampleListScreen(DiskItem.getProgram(menu.getDisk()), this::sendProgram);
+        ClientStuff.showExampleListScreen(getProgram(), this::sendProgram);
     }
 
     private void onLogsButtonClicked() {
         ClientStuff.showLogsScreen(menu);
     }
 
+    private void performReset() {
+        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerResetPacket(
+                menu.containerId,
+                menu.MANAGER_POSITION
+        ));
+        status = MANAGER_GUI_STATUS_RESET.getComponent();
+        statusCountdown = STATUS_DURATION;
+    }
+
     private void onResetButtonClicked() {
+        if (getProgram().isBlank() && LabelPositionHolder.from(menu.getDisk()).isEmpty()) {
+            performReset();
+            return;
+        }
         ConfirmScreen confirmScreen = new ConfirmScreen(
                 proceed -> {
                     assert this.minecraft != null;
                     this.minecraft.popGuiLayer(); // Close confirm screen
-
                     if (proceed) {
-                        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerResetPacket(
-                                menu.containerId,
-                                menu.MANAGER_POSITION
-                        ));
-                        status = MANAGER_GUI_STATUS_RESET.getComponent();
-                        statusCountdown = STATUS_DURATION;
+                        performReset();
                     }
                 },
                 LocalizationKeys.MANAGER_RESET_CONFIRM_SCREEN_TITLE.getComponent(),

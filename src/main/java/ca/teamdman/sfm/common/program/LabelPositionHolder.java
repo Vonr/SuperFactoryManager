@@ -214,4 +214,8 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
+
+    public boolean isEmpty() {
+        return labels().isEmpty();
+    }
 }
