@@ -28,11 +28,9 @@ import javax.annotation.Nullable;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class LabelGunReminderOverlay implements IGuiOverlay {
-    private static boolean debounce = false;
-    private static boolean externalDebounce = false;
-
+    private static AltState altState = AltState.Idle;
     public static void setExternalDebounce() {
-        externalDebounce = true;
+        altState = AltState.PressCancelledExternally;
     }
 
 
@@ -82,6 +80,12 @@ public class LabelGunReminderOverlay implements IGuiOverlay {
         return null;
     }
 
+    private enum AltState {
+        Idle,
+        Pressed,
+        PressCancelledExternally,
+    }
+
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
@@ -91,22 +95,29 @@ public class LabelGunReminderOverlay implements IGuiOverlay {
         if (minecraft.screen != null) return;
 
         // only do something if the key was pressed
-        if (!ClientStuff.isKeyDown(SFMKeyMappings.TOGGLE_LABEL_VIEW_KEY)) {
-            debounce = false;
-            externalDebounce = false;
-            return;
+        boolean alt_down = ClientStuff.isKeyDown(SFMKeyMappings.TOGGLE_LABEL_VIEW_KEY);
+        switch(altState) {
+            case Idle -> {
+                if (alt_down) {
+                    altState = AltState.Pressed;
+                }
+            }
+            case Pressed -> {
+                if (!alt_down) {
+                    altState = AltState.Idle;
+                    assert minecraft.player != null;
+                    InteractionHand hand = getHandHoldingLabelGun(minecraft.player);
+                    if (hand == null) return;
+                    // send packet to server to toggle mode
+                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunToggleLabelViewPacket(hand));
+                }
+            }
+            case PressCancelledExternally -> {
+                if (!alt_down) {
+                    altState = AltState.Idle;
+                }
+            }
         }
-        if (debounce) return;
-        if (externalDebounce) return;
-
-        // only do something if holding a label gun
-        assert minecraft.player != null;
-        InteractionHand hand = getHandHoldingLabelGun(minecraft.player);
-        if (hand == null) return;
-
-        // send packet to server to toggle mode
-        SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunToggleLabelViewPacket(hand));
-        debounce = true;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

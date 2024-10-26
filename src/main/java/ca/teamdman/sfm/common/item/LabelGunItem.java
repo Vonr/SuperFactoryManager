@@ -119,23 +119,29 @@ public class LabelGunItem extends Item {
             TooltipFlag detail
     ) {
         boolean isClient = FMLEnvironment.dist.isClient();
+        boolean isMoreInfoKeyDown = isClient && ClientStuff.isKeyDown(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY);
         if (isClient) {
-            Options options = Minecraft.getInstance().options;
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent(options.keyAttack));
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent(options.keyAttack));
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent("Control"));
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_4.getComponent(
-                    options.keyPickItem.getTranslatedKeyMessage()
-            ));
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_5.getComponent(
-                    SFMKeyMappings.TOGGLE_LABEL_VIEW_KEY.get().getTranslatedKeyMessage()
-            ));
-        } else {
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent("Right Click"));
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent("Right Click"));
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent("Control"));
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_4.getComponent("Middle Mouse"));
-            lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_5.getComponent("Middle Mouse"));
+            if (isMoreInfoKeyDown) {
+                Options options = Minecraft.getInstance().options;
+                lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_1.getComponent(
+                        options.keyAttack.getTranslatedKeyMessage().plainCopy().withStyle(ChatFormatting.AQUA)));
+                lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_2.getComponent(
+                        options.keyAttack.getTranslatedKeyMessage().plainCopy().withStyle(ChatFormatting.AQUA)));
+                lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_3.getComponent(
+                        Component.literal("Control").withStyle(ChatFormatting.AQUA)));
+                lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_4.getComponent(
+                        options.keyPickItem.getTranslatedKeyMessage().plainCopy().withStyle(ChatFormatting.AQUA)));
+                lines.add(LocalizationKeys.LABEL_GUN_ITEM_TOOLTIP_5.getComponent(
+                        SFMKeyMappings.TOGGLE_LABEL_VIEW_KEY
+                                .get()
+                                .getTranslatedKeyMessage()
+                                .plainCopy()
+                                .withStyle(ChatFormatting.AQUA)));
+            } else {
+                lines.add(LocalizationKeys.GUI_ADVANCED_TOOLTIP_HINT
+                                  .getComponent(SFMKeyMappings.MORE_INFO_TOOLTIP_KEY.get().getTranslatedKeyMessage())
+                                  .withStyle(ChatFormatting.AQUA));
+            }
         }
 
         lines.addAll(LabelPositionHolder.from(stack).asHoverText());

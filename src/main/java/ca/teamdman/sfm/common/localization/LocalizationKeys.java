@@ -670,7 +670,7 @@ public final class LocalizationKeys {
             + ChatFormatting.AQUA
             + "%s"
             + ChatFormatting.GRAY
-            + " to preview held program."
+            + " to know more."
     );
     public static final LocalizationEntry MORE_HOVER_INFO_KEY = new LocalizationEntry(
             "key.sfm.more_info",
