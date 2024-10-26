@@ -47,6 +47,7 @@ END
 -- Add label gun gui searching, thanks @Burkino
 -- Add cable facades, thanks @Burkino
 -- Add resource type disallowing via config for pack makers, thanks @Burkino
+-- Add warning when using Mekanism blocks in IO statements with no side specified
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me
