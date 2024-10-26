@@ -36,6 +36,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Objects;
 
 import static ca.teamdman.sfm.common.localization.LocalizationKeys.*;
 
@@ -356,12 +357,32 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onClipboardPasteButtonClicked() {
+        String contents;
         try {
-            String contents = Minecraft.getInstance().keyboardHandler.getClipboard();
-            sendProgram(contents);
+            contents = Minecraft.getInstance().keyboardHandler.getClipboard();
         } catch (Throwable t) {
             SFM.LOGGER.error("failed loading clipboard", t);
+            return;
         }
+        if (Objects.equals(contents, getProgram())) {
+            return;
+        }
+        ConfirmScreen confirmScreen = new ConfirmScreen(
+                proceed -> {
+                    assert this.minecraft != null;
+                    this.minecraft.popGuiLayer(); // Close confirm screen
+                    if (proceed) {
+                        sendProgram(contents);
+                    }
+                },
+                LocalizationKeys.MANAGER_PASTE_CONFIRM_SCREEN_TITLE.getComponent(),
+                LocalizationKeys.MANAGER_PASTE_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                LocalizationKeys.MANAGER_PASTE_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                LocalizationKeys.MANAGER_PASTE_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+        );
+        assert this.minecraft != null;
+        this.minecraft.pushGuiLayer(confirmScreen);
+        confirmScreen.setDelay(20);
     }
 
     @Override

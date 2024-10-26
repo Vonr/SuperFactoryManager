@@ -51,6 +51,7 @@ END
 -- Add label gun pick-block modifier key for right clicking
 -- Fix label gun with no active label failing to shift-right-click to clear labels on blocks
 -- Remove confirmation dialog when reset is pressed with blank program and no labels
+-- Add confirmation screen when pasting
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me

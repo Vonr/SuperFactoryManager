@@ -57,6 +57,22 @@ public final class LocalizationKeys {
             "gui.sfm.manager.reset_confirm_screen.no_button",
             "Never mind, make no changes"
     );
+    public static final LocalizationEntry MANAGER_PASTE_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+            "gui.sfm.manager.paste_confirm_screen.title",
+            "Paste from clipboard?"
+    );
+    public static final LocalizationEntry MANAGER_PASTE_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+            "gui.sfm.manager.paste_confirm_screen.message",
+            "Are you sure you want to overwrite this disk?"
+    );
+    public static final LocalizationEntry MANAGER_PASTE_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+            "gui.sfm.manager.paste_confirm_screen.yes_button",
+            "Paste clipboard"
+    );
+    public static final LocalizationEntry MANAGER_PASTE_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+            "gui.sfm.manager.paste_confirm_screen.no_button",
+            "Never mind, make no changes"
+    );
     public static final LocalizationEntry EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
             "gui.sfm.exit_without_saving_confirm.title",
             "Exit without saving?"
