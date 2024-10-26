@@ -191,6 +191,10 @@ public final class LocalizationKeys {
             "gui.sfm.label_gun.label_button",
             "%s (%d)"
     );
+    public static final LocalizationEntry LABEL_GUN_GUI_LABEL_EDIT_PLACEHOLDER = new LocalizationEntry(
+            "gui.sfm.label_gun.label_edit_placeholder",
+            "Search or enter new label"
+    );
     public static final LocalizationEntry LABEL_GUN_GUI_PRUNE_BUTTON = new LocalizationEntry(
             "gui.sfm.label_gun.prune_button",
             "Prune"
@@ -254,6 +258,10 @@ public final class LocalizationKeys {
     public static final LocalizationEntry PROGRAM_REMINDER_PUSH_LABELS = new LocalizationEntry(
             "program.sfm.reminders.push_labels",
             "Did you remember to push your labels using the label gun?"
+    );
+    public static final LocalizationEntry PROGRAM_WARNING_MEKANISM_USED_WITHOUT_DIRECTION = new LocalizationEntry(
+            "program.sfm.warnings.mekanism_used_without_direction",
+            "Mekanism blocks are read-only when no side is specified, check label \"%s\" used in \"%s\""
     );
     public static final LocalizationEntry PROGRAM_WARNING_DISCONNECTED_LABEL = new LocalizationEntry(
             "program.sfm.warnings.disconnected_label",
@@ -679,6 +687,10 @@ public final class LocalizationKeys {
     public static final LocalizationEntry ITEM_INSPECTOR_TOGGLE_KEY = new LocalizationEntry(
             "key.sfm.item_inspector.activation_key",
             "(WIP) Copy Hovered Item To Clipboard"
+    );
+    public static final LocalizationEntry LABEL_GUN_PICK_BLOCK_MODIFIER_KEY = new LocalizationEntry(
+            "key.sfm.label_gun.pick_block_modifier",
+            "Label Gun Pick Block Modifier"
     );
     public static final LocalizationEntry SFM_KEY_CATEGORY = new LocalizationEntry(
             "key.categories.sfm",

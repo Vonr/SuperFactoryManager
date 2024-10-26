@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNode, Iterable<Direction> {
@@ -46,5 +47,17 @@ public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNo
     @Override
     public @NotNull Iterator<Direction> iterator() {
         return stream().iterator();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DirectionQualifier that)) return false;
+        return Objects.equals(directions, that.directions);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(directions);
     }
 }

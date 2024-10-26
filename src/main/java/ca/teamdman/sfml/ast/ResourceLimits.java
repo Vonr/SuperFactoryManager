@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public record ResourceLimits(
         List<ResourceLimit> resourceLimitList,
         ResourceIdSet exclusions
-) implements ASTNode {
+) implements ASTNode, ToStringPretty {
     public List<IInputResourceTracker> createInputTrackers() {
         List<IInputResourceTracker> rtn = new ArrayList<>();
         resourceLimitList.stream().map(rl -> rl.createInputTracker(exclusions)).forEach(rtn::add);
@@ -58,7 +58,7 @@ public record ResourceLimits(
         return rtn;
     }
 
-    public String toStringPretty(Limit defaults) {
+    public String toStringCondensed(Limit defaults) {
         String rtn = resourceLimitList.stream()
                 .map(rl -> rl.toStringCondensed(defaults))
                 .map(x -> resourceLimitList.size() == 1 ? x : x + ",")

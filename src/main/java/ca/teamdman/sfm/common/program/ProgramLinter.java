@@ -5,10 +5,7 @@ import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.util.SFMUtils;
-import ca.teamdman.sfml.ast.IOStatement;
-import ca.teamdman.sfml.ast.Program;
-import ca.teamdman.sfml.ast.ResourceQuantity;
-import ca.teamdman.sfml.ast.RoundRobin;
+import ca.teamdman.sfml.ast.*;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -26,7 +23,9 @@ import static ca.teamdman.sfml.ast.RoundRobin.Behaviour.BY_LABEL;
 public class ProgramLinter {
     @SuppressWarnings("ConstantValue")
     public static ArrayList<TranslatableContents> gatherWarnings(
-            Program program, LabelPositionHolder labelPositionHolder , @Nullable ManagerBlockEntity manager
+            Program program,
+            LabelPositionHolder labelPositionHolder,
+            @Nullable ManagerBlockEntity manager
     ) {
         var warnings = new ArrayList<TranslatableContents>();
         var level = manager != null ? manager.getLevel() : null;
@@ -57,6 +56,22 @@ public class ProgramLinter {
                 .forEach(statement -> {
                     addWarningsForSmellyRoundRobinUsage(warnings, statement);
                     addWarningsForUsingEachWithoutAPattern(warnings, statement);
+                    {
+                        DirectionQualifier directions = statement.labelAccess().directions();
+                        if (directions.equals(DirectionQualifier.NULL_DIRECTION)) {
+                            // add warning if interacting with mekanism without specifying a side
+                            // are any of the blocks mekanism?
+                            statement
+                                    .labelAccess()
+                                    .getLabelledPositions(labelPositionHolder)
+                                    .stream()
+                                    .filter(pair -> SFMUtils.isMekanismBlock(level, pair.getSecond()))
+                                    .forEach(pair -> {
+                                        warnings.add(PROGRAM_WARNING_MEKANISM_USED_WITHOUT_DIRECTION.get(pair.getFirst(), statement.toStringPretty()));
+                                    });
+                        }
+                    }
+
                 });
 
         return warnings;
@@ -126,7 +141,8 @@ public class ProgramLinter {
     }
 
     private static void addWarningsForResourcesReferencedButNotFoundInRegistry(
-            Program program, ArrayList<TranslatableContents> warnings
+            Program program,
+            ArrayList<TranslatableContents> warnings
     ) {
         for (var resource : program.referencedResources()) {
             // skip regex resources
@@ -187,7 +203,9 @@ public class ProgramLinter {
     }
 
     private static void addWarningsForLabelsInHolderButNotInProgram(
-            Program program, LabelPositionHolder labels, ArrayList<TranslatableContents> warnings
+            Program program,
+            LabelPositionHolder labels,
+            ArrayList<TranslatableContents> warnings
     ) {
         labels.labels()
                 .keySet()
@@ -197,7 +215,9 @@ public class ProgramLinter {
     }
 
     private static void addWarningsForLabelsInProgramButNotInHolder(
-            Program program, LabelPositionHolder labels, ArrayList<TranslatableContents> warnings
+            Program program,
+            LabelPositionHolder labels,
+            ArrayList<TranslatableContents> warnings
     ) {
         for (String label : program.referencedLabels()) {
             var isUsed = !labels.getPositions(label).isEmpty();

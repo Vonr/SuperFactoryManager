@@ -135,7 +135,7 @@ public final class InputStatement implements IOStatement {
 
     @Override
     public String toString() {
-        return "INPUT " + resourceLimits.toStringPretty(Limit.MAX_QUANTITY_NO_RETENTION) + " FROM " + (
+        return "INPUT " + resourceLimits.toStringCondensed(Limit.MAX_QUANTITY_NO_RETENTION) + " FROM " + (
                 each ? "EACH " : ""
         ) + labelAccess;
     }
@@ -144,14 +144,16 @@ public final class InputStatement implements IOStatement {
     public String toStringPretty() {
         StringBuilder sb = new StringBuilder();
         sb.append("INPUT");
-        String rls = resourceLimits.toStringPretty(Limit.MAX_QUANTITY_NO_RETENTION);
+        String rls = resourceLimits.toStringCondensed(Limit.MAX_QUANTITY_NO_RETENTION);
         if (rls.lines().count() > 1) {
             sb.append("\n");
             sb.append(rls.lines().map(s -> "  " + s).collect(Collectors.joining("\n")));
             sb.append("\n");
-        } else {
+        } else if (!rls.isEmpty()) {
             sb.append(" ");
             sb.append(rls);
+            sb.append(" ");
+        } else {
             sb.append(" ");
         }
         sb.append("FROM ");

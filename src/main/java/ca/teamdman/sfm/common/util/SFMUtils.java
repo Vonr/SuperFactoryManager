@@ -19,8 +19,10 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -265,6 +267,16 @@ public class SFMUtils {
             }
         }
         return builder.build();
+    }
+
+    public static boolean isMekanismBlock(
+            Level level,
+            BlockPos pos
+    ) {
+        Block block = level.getBlockState(pos).getBlock();
+        ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(block);
+        assert blockId != null;
+        return blockId.getNamespace().equals("mekanism");
     }
 
     public interface RecursiveBuilder<T> {
