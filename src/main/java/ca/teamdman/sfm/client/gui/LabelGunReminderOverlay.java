@@ -23,11 +23,18 @@ import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nullable;
 
 @Mod.EventBusSubscriber(modid = SFM.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class LabelGunReminderOverlay implements IGuiOverlay {
     private static boolean debounce = false;
+    private static boolean externalDebounce = false;
+
+    public static void setExternalDebounce() {
+        externalDebounce = true;
+    }
+
 
     @Override
     public void render(
@@ -66,7 +73,7 @@ public class LabelGunReminderOverlay implements IGuiOverlay {
         );
     }
 
-    public static @Nullable InteractionHand getValidHand(Player player) {
+    public static @Nullable InteractionHand getHandHoldingLabelGun(Player player) {
         if (player.getMainHandItem().getItem() == SFMItems.LABEL_GUN_ITEM.get()) {
             return InteractionHand.MAIN_HAND;
         } else if (player.getOffhandItem().getItem() == SFMItems.LABEL_GUN_ITEM.get()) {
@@ -86,13 +93,15 @@ public class LabelGunReminderOverlay implements IGuiOverlay {
         // only do something if the key was pressed
         if (!ClientStuff.isKeyDown(SFMKeyMappings.TOGGLE_LABEL_VIEW_KEY)) {
             debounce = false;
+            externalDebounce = false;
             return;
         }
         if (debounce) return;
+        if (externalDebounce) return;
 
         // only do something if holding a label gun
         assert minecraft.player != null;
-        InteractionHand hand = getValidHand(minecraft.player);
+        InteractionHand hand = getHandHoldingLabelGun(minecraft.player);
         if (hand == null) return;
 
         // send packet to server to toggle mode
@@ -104,7 +113,7 @@ public class LabelGunReminderOverlay implements IGuiOverlay {
     private static boolean shouldRender(Minecraft minecraft) {
         LocalPlayer player = minecraft.player;
         if (player == null) return false;
-        InteractionHand validHand = getValidHand(player);
+        InteractionHand validHand = getHandHoldingLabelGun(player);
         if (validHand == null) return false;
         ItemStack stack = player.getItemInHand(validHand);
         return LabelGunItem.getOnlyShowActiveLabel(stack);

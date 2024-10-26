@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.item;
 
 import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.client.gui.LabelGunReminderOverlay;
 import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundLabelGunUsePacket;
@@ -93,13 +94,18 @@ public class LabelGunItem extends Item {
     ) {
         var level = ctx.getLevel();
         if (level.isClientSide && ctx.getPlayer() != null) {
+            boolean pickBlock = ClientStuff.isKeyDown(SFMKeyMappings.LABEL_GUN_PICK_BLOCK_MODIFIER_KEY);
             SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUsePacket(
                     ctx.getHand(),
                     ctx.getClickedPos(),
                     Screen.hasControlDown(),
-                    Screen.hasAltDown(),
+                    pickBlock,
                     ctx.getPlayer().isShiftKeyDown()
             ));
+            if (pickBlock) {
+                // we don't want to toggle the overlay if we're using pick-block
+                LabelGunReminderOverlay.setExternalDebounce();
+            }
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.CONSUME;

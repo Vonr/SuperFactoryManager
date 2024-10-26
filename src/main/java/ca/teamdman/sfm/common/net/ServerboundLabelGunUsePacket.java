@@ -23,7 +23,7 @@ public record ServerboundLabelGunUsePacket(
         InteractionHand hand,
         BlockPos pos,
         boolean isCtrlKeyDown,
-        boolean isAltKeyDown,
+        boolean isPickBlockModifierKeyDown,
         boolean isShiftKeyDown
 ) {
 
@@ -31,7 +31,7 @@ public record ServerboundLabelGunUsePacket(
         buf.writeEnum(msg.hand);
         buf.writeBlockPos(msg.pos);
         buf.writeBoolean(msg.isCtrlKeyDown);
-        buf.writeBoolean(msg.isAltKeyDown);
+        buf.writeBoolean(msg.isPickBlockModifierKeyDown);
         buf.writeBoolean(msg.isShiftKeyDown);
     }
 
@@ -131,7 +131,7 @@ public record ServerboundLabelGunUsePacket(
                 } else {
                     positions.forEach(p -> gunLabels.remove(activeLabel, p));
                 }
-            } else if (msg.isAltKeyDown) {
+            } else if (msg.isPickBlockModifierKeyDown) {
                 // set one of the labels from the block as active
                 var labels = new ArrayList<>(gunLabels.getLabels(pos));
                 labels.sort(Comparator.naturalOrder());
