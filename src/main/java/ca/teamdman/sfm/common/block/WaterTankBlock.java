@@ -110,11 +110,11 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return defaultBlockState().setValue(
                 IN_WATER,
-                isActive(context.getLevel(), context.getClickedPos())
+                hasWaterNeighbours(context.getLevel(), context.getClickedPos())
         );
     }
 
-    public boolean isActive(LevelAccessor level, BlockPos pos) {
+    public boolean hasWaterNeighbours(LevelAccessor level, BlockPos pos) {
         int neighbourWaterCount = 0;
         for (Direction direction : Direction.values()) {
             FluidState state = level.getFluidState(pos.relative(direction));
@@ -138,7 +138,7 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
             boolean isMoving
     ) {
         if (level.isClientSide) return;
-        boolean isActive = isActive(level, pos);
+        boolean isActive = hasWaterNeighbours(level, pos);
         if (state.getValue(IN_WATER) != isActive) {
             BlockState newState = defaultBlockState().setValue(IN_WATER, isActive);
             level.setBlock(
