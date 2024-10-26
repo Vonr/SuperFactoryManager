@@ -49,6 +49,7 @@ public class LabelGunScreen extends Screen {
                 LocalizationKeys.LABEL_GUN_GUI_LABEL_PLACEHOLDER.getComponent()
         ));
         this.labelField.setResponder(this::onTextUpdated);
+        this.labelField.setSuggestion(LocalizationKeys.LABEL_GUN_GUI_LABEL_EDIT_PLACEHOLDER.getString());
 
         this.setInitialFocus(labelField);
         this.setFocused(labelField);
@@ -138,6 +139,7 @@ public class LabelGunScreen extends Screen {
 
 
     private void onTextUpdated(String newText) {
+        labelField.setSuggestion(newText.isEmpty() ? LocalizationKeys.LABEL_GUN_GUI_LABEL_EDIT_PLACEHOLDER.getString() : "");
         labelButtons.forEach(this::removeWidget);
         labelButtons.clear();
 
@@ -179,5 +181,6 @@ public class LabelGunScreen extends Screen {
         );
 
         labelButtons.add(button);
+        this.addRenderableWidget(button);
     }
 }
