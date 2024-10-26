@@ -92,60 +92,56 @@ public record ServerboundLabelGunUsePacket(
 
             // target is not a manager, we will perform label toggle
             var activeLabel = LabelGunItem.getActiveLabel(stack);
-            if (activeLabel.isEmpty()) return;
+            if (msg.isShiftKeyDown) {
+                // clear all labels from pos
+                gunLabels.removeAll(pos);
+            } else if (!activeLabel.isEmpty()){
+                if (msg.isCtrlKeyDown) {
+                    // find all connected inventories of the same block type and toggle the label on all of them
+                    // if any of them don't have it, apply it, otherwise strip from all
 
-            if (msg.isCtrlKeyDown) {
-                // find all connected inventories of the same block type and toggle the label on all of them
-                // if any of them don't have it, apply it, otherwise strip from all
+                    // find all cable positions so that we only include inventories adjacent to a cable
+                    Set<BlockPos> cablePositions = CableNetworkManager
+                            .getNetworksForLevel(level)
+                            .flatMap(CableNetwork::getCablePositions)
+                            .collect(Collectors.toSet());
 
-                // find all cable positions so that we only include inventories adjacent to a cable
-                Set<BlockPos> cablePositions = CableNetworkManager
-                        .getNetworksForLevel(level)
-                        .flatMap(CableNetwork::getCablePositions)
-                        .collect(Collectors.toSet());
+                    // get the block type of the target position
+                    Block targetBlock = level.getBlockState(pos).getBlock();
 
-                // get the block type of the target position
-                Block targetBlock = level.getBlockState(pos).getBlock();
+                    // predicate to check if a position is adjacent to a cable
+                    Predicate<BlockPos> isAdjacentToCable = p -> Arrays
+                            .stream(Direction.values())
+                            .anyMatch(d -> cablePositions.contains(p.offset(d.getNormal())));
 
-                // predicate to check if a position is adjacent to a cable
-                Predicate<BlockPos> isAdjacentToCable = p -> Arrays
-                        .stream(Direction.values())
-                        .anyMatch(d -> cablePositions.contains(p.offset(d.getNormal())));
+                    // get positions of all connected blocks of the same type
+                    List<BlockPos> positions = SFMUtils.getRecursiveStream((current, nextQueue, results) -> {
+                        results.accept(current);
+                        SFMUtils.get3DNeighboursIncludingKittyCorner(current)
+                                .filter(p -> level.getBlockState(p).getBlock() == targetBlock)
+                                .filter(isAdjacentToCable)
+                                .forEach(nextQueue);
+                    }, pos).toList();
 
-                // get positions of all connected blocks of the same type
-                List<BlockPos> positions = SFMUtils.getRecursiveStream((current, nextQueue, results) -> {
-                    results.accept(current);
-                    SFMUtils.get3DNeighboursIncludingKittyCorner(current)
-                            .filter(p -> level.getBlockState(p).getBlock() == targetBlock)
-                            .filter(isAdjacentToCable)
-                            .forEach(nextQueue);
-                }, pos).toList();
+                    // check if any of the positions are missing the label
+                    var existing = new HashSet<>(gunLabels.getPositions(activeLabel));
+                    boolean anyMissing = positions.stream().anyMatch(p -> !existing.contains(p));
 
-                // check if any of the positions are missing the label
-                var existing = new HashSet<>(gunLabels.getPositions(activeLabel));
-                boolean anyMissing = positions.stream().anyMatch(p -> !existing.contains(p));
-
-                // apply or strip label from all positions
-                if (anyMissing) {
-                    gunLabels.addAll(activeLabel, positions);
+                    // apply or strip label from all positions
+                    if (anyMissing) {
+                        gunLabels.addAll(activeLabel, positions);
+                    } else {
+                        positions.forEach(p -> gunLabels.remove(activeLabel, p));
+                    }
+                } else if (msg.isPickBlockModifierKeyDown) {
+                    // set one of the labels from the block as active
+                    var labels = new ArrayList<>(gunLabels.getLabels(pos));
+                    labels.sort(Comparator.naturalOrder());
+                    if (labels.isEmpty()) return;
+                    var index = (labels.indexOf(activeLabel) + 1) % labels.size();
+                    var nextLabel = labels.get(index);
+                    LabelGunItem.setActiveLabel(stack, nextLabel);
                 } else {
-                    positions.forEach(p -> gunLabels.remove(activeLabel, p));
-                }
-            } else if (msg.isPickBlockModifierKeyDown) {
-                // set one of the labels from the block as active
-                var labels = new ArrayList<>(gunLabels.getLabels(pos));
-                labels.sort(Comparator.naturalOrder());
-                if (labels.isEmpty()) return;
-                var index = (labels.indexOf(activeLabel) + 1) % labels.size();
-                var nextLabel = labels.get(index);
-                LabelGunItem.setActiveLabel(stack, nextLabel);
-            } else {
-                // normal behaviour - operate on a single position
-                if (msg.isShiftKeyDown) {
-                    // clear all labels from this position
-                    gunLabels.remove(pos);
-                } else {
-                    // toggle the active label for this position
                     gunLabels.toggle(activeLabel, pos);
                 }
             }

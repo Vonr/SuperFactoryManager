@@ -147,7 +147,7 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
         return rtn;
     }
 
-    public LabelPositionHolder remove(BlockPos value) {
+    public LabelPositionHolder removeAll(BlockPos value) {
         labels().values().forEach(list -> list.remove(value));
         return this;
     }

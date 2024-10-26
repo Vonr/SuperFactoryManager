@@ -49,6 +49,7 @@ END
 -- Add resource type disallowing via config for pack makers, thanks @Burkino
 -- Add warning when using Mekanism blocks in IO statements with no side specified
 -- Add label gun pick-block modifier key for right clicking
+-- Fix label gun with no active label failing to shift-right-click to clear labels on blocks
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me
