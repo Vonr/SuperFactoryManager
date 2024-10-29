@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.command;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.watertanknetwork.WaterNetworkManager;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.blocks.BlockInput;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
@@ -23,6 +24,13 @@ public class SFMCommand {
                              .executes(ctx -> {
                                  SFM.LOGGER.info("Busting cable networks - slash command used by {}", ctx.getSource().getTextName());
                                  CableNetworkManager.clear();
+                                 return SINGLE_SUCCESS;
+                             }));
+        command.then(Commands.literal("bust_water_network_cache")
+                             .requires(source -> source.hasPermission(0))
+                             .executes(ctx -> {
+                                 SFM.LOGGER.info("Busting water networks - slash command used by {}", ctx.getSource().getTextName());
+                                 WaterNetworkManager.clear();
                                  return SINGLE_SUCCESS;
                              }));
         command.then(Commands.literal("show_bad_cable_cache_entries")
