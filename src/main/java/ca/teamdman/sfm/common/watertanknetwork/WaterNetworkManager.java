@@ -14,6 +14,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -21,6 +22,10 @@ import java.util.*;
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SFM.MOD_ID)
 public class WaterNetworkManager {
     private static final Map<Level, Long2ObjectMap<WaterNetwork>> NETWORKS = new WeakHashMap<>();
+
+    public static Long2ObjectMap<WaterNetwork> getNetworksForLevel(Level level) {
+        return NETWORKS.computeIfAbsent(level, k -> new Long2ObjectOpenHashMap<>());
+    }
 
     public static void unregisterNetworkForTestingPurposes(WaterNetwork network) {
         removeNetwork(network);
@@ -71,17 +76,22 @@ public class WaterNetworkManager {
         } else {
             removeMember(level, pos);
         }
-        List<WaterNetwork> logNetworks = NETWORKS.get(level).values().stream().distinct().toList();
-        SFM.LOGGER.debug(
-                "There are now {} networks ({})",
-                logNetworks.size(),
-                logNetworks
-                        .stream()
-                        .mapToInt(net -> net.members().size())
-                        .mapToObj(Integer::toString)
-                        .reduce((a, b) -> a + ", " + b)
-                        .orElse("")
-        );
+        if (!FMLEnvironment.production) {
+            // TODO: comment this out before release
+            Long2ObjectMap<WaterNetwork> levelNetworks = NETWORKS.get(level);
+            if (levelNetworks == null) return;
+            List<WaterNetwork> logNetworks = levelNetworks.values().stream().distinct().toList();
+            SFM.LOGGER.debug(
+                    "There are now {} networks ({})",
+                    logNetworks.size(),
+                    logNetworks
+                            .stream()
+                            .mapToInt(net -> net.members().size())
+                            .mapToObj(Integer::toString)
+                            .reduce((a, b) -> a + ", " + b)
+                            .orElse("")
+            );
+        }
     }
 
     /**
@@ -122,7 +132,7 @@ public class WaterNetworkManager {
             // Only one network matches this cable, add cable as member
             WaterNetwork network = candidates.iterator().next();
             network.addMember(pos);
-            NETWORKS.get(level).put(pos.asLong(), network);
+            getNetworksForLevel(level).put(pos.asLong(), network);
             return Optional.of(network);
         }
 
@@ -140,38 +150,31 @@ public class WaterNetworkManager {
         if (event.getLevel().isClientSide()) return;
         if (!(event.getLevel() instanceof ServerLevel level)) return;
         var chunk = event.getChunk();
-        purgeChunkFromWaterTankNetworks(level, chunk);
+        purgeChunk(level, chunk);
     }
 
-    public static void purgeChunkFromWaterTankNetworks(
+    public static void purgeChunk(
             ServerLevel level,
             ChunkAccess chunkAccess
     ) {
-        NETWORKS.get(level).values().forEach(network -> network.bustCacheForChunk(chunkAccess));
+        getNetworksForLevel(level).values().forEach(network -> network.purgeChunk(chunkAccess));
     }
 
     private static Optional<WaterNetwork> getNetwork(
             Level level,
             BlockPos pos
     ) {
-        return Optional.ofNullable(NETWORKS
-                                           .computeIfAbsent(level, k -> new Long2ObjectOpenHashMap<>())
-                                           .get(pos.asLong()));
+        var network = getNetworksForLevel(level).get(pos.asLong());
+        return Optional.ofNullable(network);
     }
 
     private static void removeNetwork(WaterNetwork network) {
-        Long2ObjectMap<WaterNetwork> cache = NETWORKS.get(network.level());
-        if (cache != null) {
-            cache.keySet().removeAll(network.members().keySet());
-        }
+        getNetworksForLevel(network.level()).keySet().removeAll(network.members().keySet());
     }
 
     private static void addNetwork(WaterNetwork network) {
-        Long2ObjectMap<WaterNetwork> cache = NETWORKS.computeIfAbsent(
-                network.level(),
-                k -> new Long2ObjectOpenHashMap<>()
-        );
-        network.members().keySet().forEach(pos -> cache.put(pos, network));
+        Long2ObjectMap<WaterNetwork> networksForLevel = getNetworksForLevel(network.level());
+        network.members().keySet().forEach(pos -> networksForLevel.put(pos, network));
     }
 
     /**

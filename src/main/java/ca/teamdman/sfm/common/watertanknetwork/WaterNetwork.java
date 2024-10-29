@@ -81,7 +81,7 @@ public record WaterNetwork(
         }, start);
     }
 
-    public void bustCacheForChunk(ChunkAccess chunkAccess) {
+    public void purgeChunk(ChunkAccess chunkAccess) {
         long chunkKey = chunkAccess.getPos().toLong();
         LongArraySet memberPositions = chunkMemberLookup.get(chunkKey);
         if (memberPositions == null) return;
