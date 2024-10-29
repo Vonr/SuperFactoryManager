@@ -55,6 +55,7 @@ END
 -- Optimized water tank logic, thanks @WanderinWolf for the bug report
 ---- Capacity scaling has been buffed from n to 2^n
 ---- Added `/sfm bust_water_network_cache` in case I screwed up the cache logic lol
+-- Update network tool output; hide capabilities that aren't present, added newline
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me

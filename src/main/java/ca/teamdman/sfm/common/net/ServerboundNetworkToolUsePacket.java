@@ -28,7 +28,10 @@ public record ServerboundNetworkToolUsePacket(
         BlockPos blockPosition,
         Direction blockFace
 ) {
-    public static void encode(ServerboundNetworkToolUsePacket msg, FriendlyByteBuf friendlyByteBuf) {
+    public static void encode(
+            ServerboundNetworkToolUsePacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeBlockPos(msg.blockPosition);
         friendlyByteBuf.writeEnum(msg.blockFace);
     }
@@ -41,7 +44,8 @@ public record ServerboundNetworkToolUsePacket(
     }
 
     public static void handle(
-            ServerboundNetworkToolUsePacket msg, Supplier<NetworkEvent.Context> contextSupplier
+            ServerboundNetworkToolUsePacket msg,
+            Supplier<NetworkEvent.Context> contextSupplier
     ) {
         contextSupplier.get().enqueueWork(() -> {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
@@ -60,7 +64,9 @@ public record ServerboundNetworkToolUsePacket(
             List<CableNetwork> foundNetworks = new ArrayList<>();
             for (Direction direction : Direction.values()) {
                 BlockPos cablePosition = pos.relative(direction);
-                CableNetworkManager.getOrRegisterNetworkFromCablePosition(level, cablePosition).ifPresent(foundNetworks::add);
+                CableNetworkManager
+                        .getOrRegisterNetworkFromCablePosition(level, cablePosition)
+                        .ifPresent(foundNetworks::add);
             }
             payload.append("---- cable networks ----\n");
             if (foundNetworks.isEmpty()) {
@@ -79,15 +85,18 @@ public record ServerboundNetworkToolUsePacket(
                 }
                 payload.append("---- capability directions ----\n");
                 for (var cap : SFMCompat.getCapabilities()) {
-                    payload
-                            .append(cap.getName())
-                            .append(": ");
                     String directions = DirectionQualifier.EVERY_DIRECTION
                             .stream()
                             .filter(dir -> entity.getCapability(cap, dir).isPresent())
                             .map(dir -> dir == null ? "NULL DIRECTION" : DirectionQualifier.directionToString(dir))
                             .collect(Collectors.joining(", ", "[", "]"));
-                    payload.append(directions).append("\n");
+                    if (!directions.equals("[]")) {
+                        payload
+                                .append(cap.getName())
+                                .append("\n")
+                                .append(directions)
+                                .append("\n");
+                    }
                 }
             }
 
