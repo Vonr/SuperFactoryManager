@@ -1963,7 +1963,6 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     }
 
 
-
     @GameTest(template = "3x2x1")
     public static void forget_input_count_state(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
@@ -2321,11 +2320,13 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
             assertTrue(count(sourceInv, Items.DIRT) == 64 * (27 - 4), "source count bad");
-            assertTrue(count(a1, Items.DIRT) == 128, "a1 arrival count bad");
-            assertTrue(count(a2, Items.DIRT) == 128, "a2 arrival count bad");
-            assertTrue(count(b1, Items.DIRT) == 0, "b1 arrival count bad");
-            assertTrue(count(b2, Items.DIRT) == 0, "b2 arrival count bad");
-
+            // we make no guarantees about which one ticks first
+            // we guarantee only one of a or b receives on the first tick
+            boolean condition1 = count(a1, Items.DIRT) == 128 && count(a2, Items.DIRT) == 128
+                                 && count(b1, Items.DIRT) == 0 && count(b2, Items.DIRT) == 0;
+            boolean condition2 = count(b1, Items.DIRT) == 128 && count(b2, Items.DIRT) == 128
+                                 && count(a1, Items.DIRT) == 0 && count(a2, Items.DIRT) == 0;
+            assertTrue(condition1 || condition2, "Arrival counts bad");
         });
     }
 
@@ -2693,10 +2694,10 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         {
             ItemStack disk = new ItemStack(SFMItems.DISK_ITEM.get());
             String programString = """
-                NAME "bruh"
-                EVERY 20 TICKS DO
-                END
-                """;
+                    NAME "bruh"
+                    EVERY 20 TICKS DO
+                    END
+                    """;
             DiskItem.setProgram(disk, programString);
             DiskItem.compileAndUpdateErrorsAndWarnings(disk, null);
             chest.insertItem(0, disk, false);
@@ -2708,16 +2709,19 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         {
             ItemStack disk = new ItemStack(SFMItems.DISK_ITEM.get());
             String programString = """
-                EVERY 20 TICKS DO
-                END
-                """;
+                    EVERY 20 TICKS DO
+                    END
+                    """;
             DiskItem.setProgram(disk, programString);
             DiskItem.compileAndUpdateErrorsAndWarnings(disk, null);
             chest.insertItem(1, disk, false);
             assertTrue(DiskItem.getProgramName(disk).isEmpty(), "program name should be empty for disk 2");
             assertTrue(DiskItem.getWarnings(disk).isEmpty(), "there should be no warnings on disk 2");
             assertTrue(DiskItem.getErrors(disk).isEmpty(), "there should be no errors on disk 2");
-            assertTrue(disk.getHoverName().contains(LocalizationKeys.DISK_ITEM.getComponent()), "display name should be default for disk 2");
+            assertTrue(
+                    disk.getHoverName().contains(LocalizationKeys.DISK_ITEM.getComponent()),
+                    "display name should be default for disk 2"
+            );
         }
         helper.succeed();
     }
@@ -2754,11 +2758,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
-                               EVERY 20 TICKS DO
-                                   INPUT RETAIN 5 FROM b
-                                   OUTPUT TO a
-                               END
-                           """.stripTrailing().stripIndent());
+                                       EVERY 20 TICKS DO
+                                           INPUT RETAIN 5 FROM b
+                                           OUTPUT TO a
+                                       END
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelPositionHolder.empty()
@@ -2809,11 +2813,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
-                               EVERY 20 TICKS DO
-                                   INPUT RETAIN 5 EACH FROM b
-                                   OUTPUT TO a
-                               END
-                           """.stripTrailing().stripIndent());
+                                       EVERY 20 TICKS DO
+                                           INPUT RETAIN 5 EACH FROM b
+                                           OUTPUT TO a
+                                       END
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelPositionHolder.empty()
@@ -2865,11 +2869,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
-                               EVERY 20 TICKS DO
-                                   INPUT 9999 EACH RETAIN 5 FROM b
-                                   OUTPUT TO a
-                               END
-                           """.stripTrailing().stripIndent());
+                                       EVERY 20 TICKS DO
+                                           INPUT 9999 EACH RETAIN 5 FROM b
+                                           OUTPUT TO a
+                                       END
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelPositionHolder.empty()
@@ -2921,11 +2925,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
         manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
         manager.setProgram("""
-                               EVERY 20 TICKS DO
-                                   INPUT 9999 EACH RETAIN 5 EACH FROM b
-                                   OUTPUT TO a
-                               END
-                           """.stripTrailing().stripIndent());
+                                       EVERY 20 TICKS DO
+                                           INPUT 9999 EACH RETAIN 5 EACH FROM b
+                                           OUTPUT TO a
+                                       END
+                                   """.stripTrailing().stripIndent());
 
         // set the labels
         LabelPositionHolder.empty()
@@ -2991,6 +2995,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.COBBLESTONE) == 64 * 2, "cobblestone should arrive");
         });
     }
+
     @GameTest(template = "3x2x1")
     public static void move_using_each_or(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 0), SFMBlocks.MANAGER_BLOCK.get());
