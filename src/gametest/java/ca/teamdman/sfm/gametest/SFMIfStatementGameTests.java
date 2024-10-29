@@ -754,7 +754,7 @@ public class SFMIfStatementGameTests extends SFMGameTestBase {
 
         //noinspection TrailingWhitespacesInTextBlock
         String expected = """
-                OUTPUT  TO b
+                OUTPUT TO b
                 -- predictions may differ from actual execution results
                 -- POSSIBILITY 0 -- all false
                 OVERALL a HAS = 64 dirt -- false
