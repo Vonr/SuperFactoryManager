@@ -50,7 +50,7 @@ public class CableNetwork {
         CAPABILITY_CACHE.clear();
 
         // discover connected cables
-        var cables = SFMUtils.getRecursiveStream((current, next, results) -> {
+        var cables = SFMUtils.<BlockPos, BlockPos>getRecursiveStream((current, next, results) -> {
             results.accept(current);
             for (Direction d : Direction.values()) {
                 BlockPos offset = current.offset(d.getNormal());

@@ -171,7 +171,7 @@ public record ServerboundFacadePacket(
      * @return Stream of BlockPos for network
      */
     private static Stream<BlockPos> filterCableNetwork(Level pLevel, BlockPos pPos, Predicate<BlockPos> filterSurroundings) {
-        return SFMUtils.getRecursiveStream((current, nextQueue, results) -> {
+        return SFMUtils.<BlockPos, BlockPos>getRecursiveStream((current, nextQueue, results) -> {
                     results.accept(current);
 
                     SFMUtils.get3DNeighboursIncludingKittyCorner(current)

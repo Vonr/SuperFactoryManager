@@ -1,9 +1,8 @@
 package ca.teamdman.sfm.common.block;
 
-import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
-import ca.teamdman.sfm.common.util.SFMUtils;
+import ca.teamdman.sfm.common.watertanknetwork.WaterNetworkManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -34,7 +33,7 @@ import java.util.Optional;
 @SuppressWarnings("deprecation")
 
 public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, BucketPickup, LiquidBlockContainer {
-    public static final BooleanProperty      IN_WATER = BooleanProperty.create("in_water");
+    public static final BooleanProperty IN_WATER = BooleanProperty.create("in_water");
 
 
     public WaterTankBlock() {
@@ -42,23 +41,28 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
         registerDefaultState(getStateDefinition().any().setValue(IN_WATER, false));
     }
 
-
     @Override
     @SuppressWarnings("deprecation")
-    public void onPlace(BlockState pState, Level pLevel, BlockPos pPos, BlockState pOldState, boolean pIsMoving) {
-        super.onPlace(pState, pLevel, pPos, pOldState, pIsMoving);
-        for (Direction direction : Direction.values()) {
-            recount(pLevel, pPos.offset(direction.getNormal()));
-        }
+    public void onPlace(
+            BlockState pState,
+            Level pLevel,
+            BlockPos pPos,
+            BlockState pOldState,
+            boolean pIsMoving
+    ) {
+        WaterNetworkManager.onActiveStateChanged(pLevel, pPos, pState);
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
-        super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
-        for (Direction direction : Direction.values()) {
-            recount(pLevel, pPos.offset(direction.getNormal()));
-        }
+    public void onRemove(
+            BlockState pState,
+            Level pLevel,
+            BlockPos pPos,
+            BlockState pNewState,
+            boolean pIsMoving
+    ) {
+        WaterNetworkManager.onActiveStateChanged(pLevel, pPos, pNewState);
     }
 
     @Override
@@ -76,32 +80,17 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
                              .withStyle(ChatFormatting.GRAY));
     }
 
-    public void recount(Level level, BlockPos pos) {
-        if (!(level.getBlockEntity(pos) instanceof WaterTankBlockEntity be)) return;
-        var tanks = SFMUtils.getRecursiveStream((current, next, results) -> {
-            results.accept(current);
-            for (var d : Direction.values()) {
-                var offset = current.getBlockPos().offset(d.getNormal());
-                if (!(level.getBlockEntity(offset) instanceof WaterTankBlockEntity blockEntity)) continue;
-                next.accept(blockEntity);
-            }
-        }, be).toList();
-        tanks.forEach(t -> t.setConnectedCount(tanks.size()));
-    }
-
     @Override
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
 
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(IN_WATER);
-    }
-
     @Nullable
     @Override
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(
+            BlockPos pos,
+            BlockState state
+    ) {
         return SFMBlockEntities.WATER_TANK_BLOCK_ENTITY.get().create(pos, state);
     }
 
@@ -114,7 +103,10 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
         );
     }
 
-    public boolean hasWaterNeighbours(LevelAccessor level, BlockPos pos) {
+    public boolean hasWaterNeighbours(
+            LevelAccessor level,
+            BlockPos pos
+    ) {
         int neighbourWaterCount = 0;
         for (Direction direction : Direction.values()) {
             FluidState state = level.getFluidState(pos.relative(direction));
@@ -144,13 +136,17 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
             level.setBlock(
                     pos,
                     newState,
-                    1 | 2
+                    Block.UPDATE_ALL
             );
         }
     }
 
     @Override
-    public ItemStack pickupBlock(LevelAccessor level, BlockPos pos, BlockState state) {
+    public ItemStack pickupBlock(
+            LevelAccessor level,
+            BlockPos pos,
+            BlockState state
+    ) {
         return state.getValue(IN_WATER) ? new ItemStack(Fluids.WATER.getBucket()) : ItemStack.EMPTY;
     }
 
@@ -160,12 +156,27 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
     }
 
     @Override
-    public boolean canPlaceLiquid(BlockGetter level, BlockPos pos, BlockState state, Fluid fluid) {
+    public boolean canPlaceLiquid(
+            BlockGetter level,
+            BlockPos pos,
+            BlockState state,
+            Fluid fluid
+    ) {
         return fluid.isSame(Fluids.WATER);
     }
 
     @Override
-    public boolean placeLiquid(LevelAccessor level, BlockPos pos, BlockState state, FluidState fluid) {
+    public boolean placeLiquid(
+            LevelAccessor level,
+            BlockPos pos,
+            BlockState state,
+            FluidState fluid
+    ) {
         return fluid.getType().isSame(Fluids.WATER);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(IN_WATER);
     }
 }

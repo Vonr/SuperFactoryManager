@@ -43,26 +43,36 @@ public class SFMUtils {
      * @param <T>      Type that the mapper consumes and produces
      * @return Stream result after termination of the recursive mapping process
      */
-    public static <T> Stream<T> getRecursiveStream(
-            RecursiveBuilder<T> operator,
+    public static <T, R> Stream<R> getRecursiveStream(
+            RecursiveBuilder<T, R> operator,
             T first
     ) {
-        Stream.Builder<T> builder = Stream.builder();
-        Set<T> debounce = new HashSet<>();
+        Set<T> visited = new HashSet<>();
         Deque<T> toVisit = new ArrayDeque<>();
         toVisit.add(first);
-        debounce.add(first);
+        visited.add(first);
+        return getRecursiveStream(operator, visited, toVisit);
+    }
+
+    public static <T, R> Stream<R> getRecursiveStream(
+            RecursiveBuilder<T, R> operator,
+            Set<T> visited,
+            Deque<T> toVisit
+    ) {
+        Stream.Builder<R> builder = Stream.builder();
         while (!toVisit.isEmpty()) {
             T current = toVisit.pop();
             operator.accept(current, next -> {
-                if (!debounce.contains(next)) {
-                    debounce.add(next);
+                if (!visited.contains(next)) {
+                    visited.add(next);
                     toVisit.add(next);
                 }
             }, builder::add);
         }
         return builder.build();
     }
+
+
 
     public static TranslatableContents deserializeTranslation(CompoundTag tag) {
         var key = tag.getString("key");
@@ -279,12 +289,11 @@ public class SFMUtils {
         return blockId.getNamespace().equals("mekanism");
     }
 
-    public interface RecursiveBuilder<T> {
-
+    public interface RecursiveBuilder<T,R> {
         void accept(
                 T current,
                 Consumer<T> next,
-                Consumer<T> results
+                Consumer<R> results
         );
     }
 }

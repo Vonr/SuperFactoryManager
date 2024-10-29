@@ -42,8 +42,9 @@ public class CableNetworkManager {
     private static final Map<Level, List<CableNetwork>> NETWORKS_BY_LEVEL = new WeakHashMap<>();
 
     public static Optional<CableNetwork> getOrRegisterNetworkFromManagerPosition(ManagerBlockEntity tile) {
-        //noinspection DataFlowIssue
-        return getOrRegisterNetworkFromCablePosition(tile.getLevel(), tile.getBlockPos());
+        Level level = tile.getLevel();
+        assert level != null;
+        return getOrRegisterNetworkFromCablePosition(level, tile.getBlockPos());
     }
 
     public static Stream<CableNetwork> getNetworksForLevel(Level level) {

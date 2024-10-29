@@ -115,7 +115,7 @@ public record ServerboundLabelGunUsePacket(
                             .anyMatch(d -> cablePositions.contains(p.offset(d.getNormal())));
 
                     // get positions of all connected blocks of the same type
-                    List<BlockPos> positions = SFMUtils.getRecursiveStream((current, nextQueue, results) -> {
+                    List<BlockPos> positions = SFMUtils.<BlockPos, BlockPos>getRecursiveStream((current, nextQueue, results) -> {
                         results.accept(current);
                         SFMUtils.get3DNeighboursIncludingKittyCorner(current)
                                 .filter(p -> level.getBlockState(p).getBlock() == targetBlock)

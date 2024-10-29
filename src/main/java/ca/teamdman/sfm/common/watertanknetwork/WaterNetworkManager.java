@@ -1,0 +1,210 @@
+package ca.teamdman.sfm.common.watertanknetwork;
+
+import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.block.WaterTankBlock;
+import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SFM.MOD_ID)
+public class WaterNetworkManager {
+    private static final Map<Level, Long2ObjectMap<WaterNetwork>> NETWORKS = new WeakHashMap<>();
+
+    public static void unregisterNetworkForTestingPurposes(WaterNetwork network) {
+        removeNetwork(network);
+    }
+
+    public static void onLoad(WaterTankBlockEntity blockEntity) {
+        Level level = blockEntity.getLevel();
+        if (level == null || level.isClientSide()) return;
+        onActiveStateChanged(level, blockEntity.getBlockPos(), blockEntity.getBlockState());
+    }
+
+    private static void addMember(
+            Level level,
+            BlockPos pos
+    ) {
+        if (level.isClientSide()) return;
+        getOrRegisterNetwork(level, pos).ifPresent(WaterNetwork::updateMembers);
+    }
+
+    private static void removeMember(
+            Level level,
+            BlockPos memberPos
+    ) {
+        if (level.isClientSide()) return;
+        getNetwork(level, memberPos).ifPresent(network -> {
+            // Disable the network member
+            WaterTankBlockEntity member = network.getMember(memberPos);
+            if (member != null) {
+                member.setActive(false);
+            }
+            // Unregister the original network
+            removeNetwork(network);
+            // Register networks that result from the removal of the cable, if any
+            for (WaterNetwork remainingNetwork : network.withoutMember(memberPos)) {
+                addNetwork(remainingNetwork);
+                remainingNetwork.updateMembers();
+            }
+        });
+    }
+
+    public static void onActiveStateChanged(
+            Level level,
+            BlockPos pos,
+            BlockState state
+    ) {
+        if (state.getOptionalValue(WaterTankBlock.IN_WATER).orElse(false)) {
+            addMember(level, pos);
+        } else {
+            removeMember(level, pos);
+        }
+        List<WaterNetwork> logNetworks = NETWORKS.get(level).values().stream().distinct().toList();
+        SFM.LOGGER.debug(
+                "There are now {} networks ({})",
+                logNetworks.size(),
+                logNetworks
+                        .stream()
+                        .mapToInt(net -> net.members().size())
+                        .mapToObj(Integer::toString)
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("")
+        );
+    }
+
+    /**
+     * Gets the cable network object. If none exists and one should, it will create and populate
+     * one.
+     * <p>
+     * Networks should only exist on the server side.
+     */
+    public static Optional<WaterNetwork> getOrRegisterNetwork(
+            Level level,
+            BlockPos pos
+    ) {
+        if (level.isClientSide()) return Optional.empty();
+
+        // discover existing network for this position
+        Optional<WaterNetwork> existing = getNetwork(level, pos);
+        if (existing.isPresent()) return existing;
+
+        // only cables define the main spine of a network
+        if (!(level.getBlockEntity(pos) instanceof WaterTankBlockEntity blockEntity)) return Optional.empty();
+        if (!level.getBlockState(pos).getValue(WaterTankBlock.IN_WATER)) return Optional.empty();
+
+        // find potential networks
+        Set<WaterNetwork> candidates = getAdjacentNetworks(level, pos);
+
+        // no candidates, create new network
+        if (candidates.isEmpty()) {
+            WaterNetwork network = new WaterNetwork(level);
+            // rebuild network from world
+            // might be first time used after loading from disk
+            network.rebuildNetwork(pos);
+            addNetwork(network);
+            return Optional.of(network);
+        }
+
+        // one candidate exists, add the cable to it
+        if (candidates.size() == 1) {
+            // Only one network matches this cable, add cable as member
+            WaterNetwork network = candidates.iterator().next();
+            network.addMember(pos);
+            NETWORKS.get(level).put(pos.asLong(), network);
+            return Optional.of(network);
+        }
+
+        // more than one candidate network exists, merge them
+        WaterNetwork result = mergeNetworks(candidates, blockEntity);
+        return Optional.ofNullable(result);
+    }
+
+    public static void clear() {
+        NETWORKS.clear();
+    }
+
+    @SubscribeEvent
+    public static void onChunkUnload(ChunkEvent.Unload event) {
+        if (event.getLevel().isClientSide()) return;
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        var chunk = event.getChunk();
+        purgeChunkFromWaterTankNetworks(level, chunk);
+    }
+
+    public static void purgeChunkFromWaterTankNetworks(
+            ServerLevel level,
+            ChunkAccess chunkAccess
+    ) {
+        NETWORKS.get(level).values().forEach(network -> network.bustCacheForChunk(chunkAccess));
+    }
+
+    private static Optional<WaterNetwork> getNetwork(
+            Level level,
+            BlockPos pos
+    ) {
+        return Optional.ofNullable(NETWORKS
+                                           .computeIfAbsent(level, k -> new Long2ObjectOpenHashMap<>())
+                                           .get(pos.asLong()));
+    }
+
+    private static void removeNetwork(WaterNetwork network) {
+        Long2ObjectMap<WaterNetwork> cache = NETWORKS.get(network.level());
+        if (cache != null) {
+            cache.keySet().removeAll(network.members().keySet());
+        }
+    }
+
+    private static void addNetwork(WaterNetwork network) {
+        Long2ObjectMap<WaterNetwork> cache = NETWORKS.computeIfAbsent(
+                network.level(),
+                k -> new Long2ObjectOpenHashMap<>()
+        );
+        network.members().keySet().forEach(pos -> cache.put(pos, network));
+    }
+
+    /**
+     * Finds the set of networks that contain the given position
+     */
+    private static Set<WaterNetwork> getAdjacentNetworks(
+            Level level,
+            BlockPos pos
+    ) {
+        Set<WaterNetwork> rtn = new HashSet<>();
+        for (Direction direction : Direction.values()) {
+            BlockPos offset = pos.relative(direction);
+            Optional<WaterNetwork> network = getNetwork(level, offset);
+            network.ifPresent(rtn::add);
+        }
+        return rtn;
+    }
+
+    private static @Nullable WaterNetwork mergeNetworks(Set<WaterNetwork> networks,
+                                                        WaterTankBlockEntity blockEntity
+    ) {
+        if (networks.isEmpty()) return null;
+
+        Iterator<WaterNetwork> iterator = networks.iterator();
+        // The first network will absorb the others
+        WaterNetwork main = iterator.next();
+        // Merge the rest into the first
+        iterator.forEachRemaining(main::mergeNetwork);
+        // Add the merging block
+        main.addMember(blockEntity);
+        // the main network now contains all the cable positions of the others
+        // when we addNetwork here, it _should_ clobber all the old entries to point to this network instead
+        addNetwork(main);
+        return main;
+    }
+}
