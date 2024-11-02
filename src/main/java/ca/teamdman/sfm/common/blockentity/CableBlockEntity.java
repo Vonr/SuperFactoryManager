@@ -33,7 +33,7 @@ public class CableBlockEntity extends BlockEntity {
         setChanged();
         if (level != null) {
             BlockState state = getBlockState();
-            level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_IMMEDIATE);
+            level.sendBlockUpdated(worldPosition, state, facadeState, Block.UPDATE_IMMEDIATE);
         }
         requestModelDataUpdate();
     }

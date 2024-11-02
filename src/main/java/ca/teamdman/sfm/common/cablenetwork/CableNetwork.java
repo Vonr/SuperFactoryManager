@@ -72,11 +72,18 @@ public class CableNetwork {
     }
 
     public Stream<BlockPos> discoverCables(BlockPos startPos) {
+        return discoverCables(getLevel(), startPos);
+    }
+
+    public static Stream<BlockPos> discoverCables(
+            Level level,
+            BlockPos startPos
+    ) {
         return SFMUtils.getRecursiveStream((current, next, results) -> {
             results.accept(current);
             for (Direction d : Direction.values()) {
                 BlockPos offset = current.offset(d.getNormal());
-                if (isCable(getLevel(), offset)) {
+                if (isCable(level, offset)) {
                     next.accept(offset);
                 }
             }

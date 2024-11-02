@@ -146,6 +146,22 @@ public final class LocalizationKeys {
                   + ChatFormatting.GRAY
                   + " in an inventory to toggle the inspector."
     );
+    public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_4 = new LocalizationEntry(
+            () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.4",
+            () -> "Place in off-hand with block in main hand and right-click cable to set facade."
+    );
+    public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_5 = new LocalizationEntry(
+            () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.5",
+            () -> "Ctrl-click to facade contiguously."
+    );
+    public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_6 = new LocalizationEntry(
+            () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.6",
+            () -> "Alt-click to facade matching block across the network."
+    );
+    public static final LocalizationEntry NETWORK_TOOL_ITEM_TOOLTIP_7 = new LocalizationEntry(
+            () -> SFMItems.NETWORK_TOOL_ITEM.get().getDescriptionId() + ".tooltip.7",
+            () -> "Ctrl-alt-click to facade entire network."
+    );
     public static final LocalizationEntry LABEL_GUN_ITEM_TOOLTIP_1 = new LocalizationEntry(
             () -> SFMItems.LABEL_GUN_ITEM.get().getDescriptionId() + ".tooltip.1",
             () -> ChatFormatting.AQUA + "%s" + ChatFormatting.GRAY  + " a Factory Manager to push labels."

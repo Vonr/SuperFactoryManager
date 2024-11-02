@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.block;
 
+import ca.teamdman.sfm.client.ClientStuff;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import ca.teamdman.sfm.common.net.ServerboundFacadePacket;
@@ -45,25 +46,25 @@ public class CableBlock extends Block implements ICableBlock, EntityBlock {
 
     @SuppressWarnings("deprecation")
     @Override
-    public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean isMoving) {
+    public void onPlace(
+            BlockState state,
+            Level world,
+            BlockPos pos,
+            BlockState oldState,
+            boolean isMoving
+    ) {
         CableNetworkManager.onCablePlaced(world, pos);
     }
 
-/*
-    @Override
-    public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer, ItemStack pStack) {
-        if (pLevel.isClientSide() || pPlacer == null) return;
-        if (pPlacer instanceof Player pPlayer) {
-            ItemStack offHandItemStack = pPlacer.getItemInHand(InteractionHand.OFF_HAND);
-
-            setFacade(offHandItemStack, pLevel, pState, pPos, pPlayer, InteractionHand.OFF_HAND, null);
-        }
-    }
-*/
-
     @SuppressWarnings("deprecation")
     @Override
-    public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
+    public void onRemove(
+            BlockState pState,
+            Level pLevel,
+            BlockPos pPos,
+            BlockState pNewState,
+            boolean pIsMoving
+    ) {
         super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
 
         if (!(pNewState.getBlock() instanceof ICableBlock))
@@ -79,36 +80,29 @@ public class CableBlock extends Block implements ICableBlock, EntityBlock {
             InteractionHand pHand,
             BlockHitResult pHit
     ) {
-        if (pHand == InteractionHand.MAIN_HAND) {
-            if (pPlayer.getItemInHand(pHand).getItem() == SFMItems.NETWORK_TOOL_ITEM.get()) {
-                return setFacade(pLevel, pHand, pHit);
+        if (pPlayer.getOffhandItem().getItem() == SFMItems.NETWORK_TOOL_ITEM.get()) {
+            if (pLevel.isClientSide() && pHand == InteractionHand.MAIN_HAND) {
+                ServerboundFacadePacket msg = new ServerboundFacadePacket(
+                        pHit,
+                        ServerboundFacadePacket.SpreadLogic.fromParts(Screen.hasControlDown(), Screen.hasAltDown())
+                );
+                SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+
+                // eagerly handle the update on the client for immediate feedback
+                ClientStuff.eagerExecute(msg);
+
+                return InteractionResult.CONSUME;
             }
+            return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;
     }
 
-    private InteractionResult setFacade(
-            Level pLevel,
-            InteractionHand pHand,
-            @Nullable BlockHitResult pHitResult
+    @Override
+    public @Nullable BlockEntity newBlockEntity(
+            BlockPos blockPos,
+            BlockState blockState
     ) {
-        if (pLevel.isClientSide) {
-            SFMPackets.CABLE_CHANNEL.sendToServer(new ServerboundFacadePacket(
-                    pHitResult, pHand, Screen.hasControlDown(), Screen.hasAltDown()
-            ));
-            return InteractionResult.SUCCESS;
-
-        }
-        return InteractionResult.CONSUME;
-    }
-
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
-        pBuilder.add(FACADE_TYPE_PROP);
-    }
-
-    @Override
-    public @Nullable BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
         // Create block entity if FACADE_TYPE is not NONE
         return blockState.getValue(FACADE_TYPE_PROP) != FacadeType.NONE ?
                SFMBlockEntities.CABLE_BLOCK_ENTITY.get().create(blockPos, blockState) :
@@ -134,5 +128,10 @@ public class CableBlock extends Block implements ICableBlock, EntityBlock {
             BlockPos pPos
     ) {
         return pState.getValue(FACADE_TYPE_PROP) == FacadeType.TRANSLUCENT_FACADE;
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
+        pBuilder.add(FACADE_TYPE_PROP);
     }
 }

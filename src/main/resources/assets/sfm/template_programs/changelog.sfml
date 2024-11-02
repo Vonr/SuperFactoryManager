@@ -46,6 +46,7 @@ END
 -- Add label gun render-only-selected gui button added, thanks @Burkino
 -- Add label gun gui searching, thanks @Burkino
 -- Add cable facades, thanks @Burkino
+---- Network tool in off-hand will replace cable texture with block in main hand on right click
 -- Add resource type disallowing via config for pack makers, thanks @Burkino
 -- Add warning when using Mekanism blocks in IO statements with no side specified
 -- Add label gun pick-block modifier key for right clicking

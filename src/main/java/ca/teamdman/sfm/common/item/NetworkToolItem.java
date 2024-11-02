@@ -15,6 +15,7 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -32,7 +33,10 @@ public class NetworkToolItem extends Item {
     }
 
     @Override
-    public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext pContext) {
+    public InteractionResult onItemUseFirst(
+            ItemStack stack,
+            UseOnContext pContext
+    ) {
         if (pContext.getLevel().isClientSide) return InteractionResult.SUCCESS;
 
         SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundNetworkToolUsePacket(
@@ -44,37 +48,56 @@ public class NetworkToolItem extends Item {
 
     @Override
     public void appendHoverText(
-            ItemStack stack, @Nullable Level level, List<Component> lines, TooltipFlag detail
+            ItemStack stack,
+            @Nullable Level level,
+            List<Component> lines,
+            TooltipFlag detail
     ) {
         lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_1.getComponent().withStyle(ChatFormatting.GRAY));
         lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_2.getComponent().withStyle(ChatFormatting.GRAY));
-        lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_3.getComponent(
-                SFMKeyMappings.CONTAINER_INSPECTOR_KEY.get().getTranslatedKeyMessage()
-        ).withStyle(ChatFormatting.AQUA));
+        lines.add(
+                LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_3
+                        .getComponent(SFMKeyMappings.CONTAINER_INSPECTOR_KEY.get().getTranslatedKeyMessage())
+                        .withStyle(ChatFormatting.AQUA)
+        );
+        lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_4.getComponent().withStyle(ChatFormatting.LIGHT_PURPLE));
+        lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_5.getComponent().withStyle(ChatFormatting.LIGHT_PURPLE));
+        lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_6.getComponent().withStyle(ChatFormatting.LIGHT_PURPLE));
+        lines.add(LocalizationKeys.NETWORK_TOOL_ITEM_TOOLTIP_7.getComponent().withStyle(ChatFormatting.LIGHT_PURPLE));
     }
 
     @Override
-    public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
-        if (pIsSelected && !pLevel.isClientSide && pEntity.tickCount % 20 == 0) {
-            final long maxDistance = 128;
-            Set<BlockPos> cablePositions = CableNetworkManager
-                    .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
-                    .flatMap(CableNetwork::getCablePositions)
-                    .collect(Collectors.toSet());
-            setCablePositions(pStack, cablePositions);
+    public void inventoryTick(
+            ItemStack pStack,
+            Level pLevel,
+            Entity pEntity,
+            int pSlotId,
+            boolean pIsSelected
+    ) {
+        boolean isInHand = pSlotId == EquipmentSlot.MAINHAND.getIndex() || pSlotId == EquipmentSlot.OFFHAND.getIndex();
+        boolean shouldTick = isInHand && !pLevel.isClientSide && pEntity.tickCount % 20 == 0;
+        if (!shouldTick) return;
+        final long maxDistance = 128;
+        Set<BlockPos> cablePositions = CableNetworkManager
+                .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
+                .flatMap(CableNetwork::getCablePositions)
+                .collect(Collectors.toSet());
+        setCablePositions(pStack, cablePositions);
 
-            Set<BlockPos> capabilityProviderPositions = CableNetworkManager
-                    .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
-                    .flatMap(CableNetwork::getCapabilityProviderPositions)
-                    .collect(Collectors.toSet());
-            setCapabilityProviderPositions(pStack, capabilityProviderPositions);
+        Set<BlockPos> capabilityProviderPositions = CableNetworkManager
+                .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
+                .flatMap(CableNetwork::getCapabilityProviderPositions)
+                .collect(Collectors.toSet());
+        setCapabilityProviderPositions(pStack, capabilityProviderPositions);
 
-            // remove the data stored by older versions of the mod
-            pStack.getOrCreateTag().remove("networks");
-        }
+        // remove the data stored by older versions of the mod
+        pStack.getOrCreateTag().remove("networks");
     }
 
-    public static void setCablePositions(ItemStack stack, Set<BlockPos> positions) {
+    public static void setCablePositions(
+            ItemStack stack,
+            Set<BlockPos> positions
+    ) {
         stack.getOrCreateTag().put(
                 "sfm:cable_positions",
                 positions.stream().map(NbtUtils::writeBlockPos).collect(ListTag::new, ListTag::add, ListTag::addAll)
@@ -88,7 +111,10 @@ public class NetworkToolItem extends Item {
                 .collect(Collectors.toSet());
     }
 
-    public static void setCapabilityProviderPositions(ItemStack stack, Set<BlockPos> positions) {
+    public static void setCapabilityProviderPositions(
+            ItemStack stack,
+            Set<BlockPos> positions
+    ) {
         stack.getOrCreateTag().put(
                 "sfm:capability_provider_positions",
                 positions.stream().map(NbtUtils::writeBlockPos).collect(ListTag::new, ListTag::add, ListTag::addAll)

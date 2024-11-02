@@ -47,31 +47,34 @@ public class SFMUtils {
             RecursiveBuilder<T, R> operator,
             T first
     ) {
-        Set<T> visited = new HashSet<>();
+        Set<T> visitDebounce = new HashSet<>();
         Deque<T> toVisit = new ArrayDeque<>();
         toVisit.add(first);
-        visited.add(first);
-        return getRecursiveStream(operator, visited, toVisit);
+        visitDebounce.add(first);
+        return getRecursiveStream(operator, visitDebounce, toVisit);
     }
 
     public static <T, R> Stream<R> getRecursiveStream(
             RecursiveBuilder<T, R> operator,
-            Set<T> visited,
+            Set<T> visitDebounce,
             Deque<T> toVisit
     ) {
         Stream.Builder<R> builder = Stream.builder();
         while (!toVisit.isEmpty()) {
             T current = toVisit.pop();
-            operator.accept(current, next -> {
-                if (!visited.contains(next)) {
-                    visited.add(next);
-                    toVisit.add(next);
-                }
-            }, builder::add);
+            operator.accept(
+                    current,
+                    next -> {
+                        if (!visitDebounce.contains(next)) {
+                            visitDebounce.add(next);
+                            toVisit.add(next);
+                        }
+                    },
+                    builder::add
+            );
         }
         return builder.build();
     }
-
 
 
     public static TranslatableContents deserializeTranslation(CompoundTag tag) {
@@ -289,7 +292,7 @@ public class SFMUtils {
         return blockId.getNamespace().equals("mekanism");
     }
 
-    public interface RecursiveBuilder<T,R> {
+    public interface RecursiveBuilder<T, R> {
         void accept(
                 T current,
                 Consumer<T> next,
