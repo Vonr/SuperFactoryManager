@@ -56,6 +56,7 @@ END
 ---- Capacity scaling has been buffed from n to 2^n
 ---- Added `/sfm bust_water_network_cache` in case I screwed up the cache logic lol
 -- Update network tool output; hide capabilities that aren't present, added newline
+-- Update water tank reminder text to mention that other tanks must be active for bonus
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me
