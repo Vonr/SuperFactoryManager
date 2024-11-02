@@ -459,6 +459,7 @@ public class ProgramEditScreen extends Screen {
                             LightTexture.FULL_BRIGHT
                     );
                 }
+                buffer.endBatch();
 
                 // Check if the selection is within the current line
                 if (selectionStart <= charCount + lineLength && selectionEnd > charCount) {

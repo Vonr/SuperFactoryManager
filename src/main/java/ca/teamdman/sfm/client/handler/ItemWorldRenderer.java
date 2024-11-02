@@ -184,6 +184,7 @@ public class ItemWorldRenderer {
         );
         RENDER_TYPE.clearRenderState();
 
+        bufferSource.endBatch();
         RenderSystem.enableDepthTest();
     }
 
@@ -207,6 +208,8 @@ public class ItemWorldRenderer {
 
         RENDER_TYPE.clearRenderState();
 
+
+        bufferSource.endBatch();
         RenderSystem.enableDepthTest();
     }
 
