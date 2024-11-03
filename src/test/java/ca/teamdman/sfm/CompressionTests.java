@@ -1,11 +1,9 @@
 package ca.teamdman.sfm;
 
+import ca.teamdman.sfm.common.util.CompressedBlockPosSet;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.LongTag;
-import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;
 import org.junit.jupiter.api.Test;
 
@@ -20,81 +18,100 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CompressionTests {
     private static final int DEFAULT_NBT_QUOTA = 2097152; // 2 MB
 
-    @Test
-    public void assert_naive_throws() {
-        Set<BlockPos> positions = new HashSet<>();
-        BlockPos first = new BlockPos(14, -58, 22);
-        BlockPos second = new BlockPos(32, -25, 3);
-        BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
-        assertEquals(12920, positions.size());
-
-        CompoundTag tag = new CompoundTag();
-        tag.put(
+    public static void assertTagSizeOkay(Tag tag) {
+        CompoundTag compoundTag = new CompoundTag();
+        compoundTag.put(
                 "sfm:cable_positions",
-                positions.stream().map(NbtUtils::writeBlockPos).collect(ListTag::new, ListTag::add, ListTag::addAll)
+                tag
         );
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        buf.writeNbt(tag);
-        System.out.printf("Compressed %d positions to %d bytes\n", positions.size(), buf.readableBytes());
-        assertTrue(buf.readableBytes() < DEFAULT_NBT_QUOTA);
-        RuntimeException exception = assertThrows(RuntimeException.class, buf::readNbt);
-        exception.printStackTrace();
-    }
-
-    @Test
-    public void assert_dense_works() {
-        Set<BlockPos> positions = new HashSet<>();
-        BlockPos first = new BlockPos(14, -58, 22);
-        BlockPos second = new BlockPos(32, -25, 3);
-        BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
-        assertEquals(12920, positions.size());
-
-        CompoundTag tag = new CompoundTag();
-        tag.put(
-                "sfm:cable_positions",
-                positions
-                        .stream()
-                        .map(BlockPos::asLong)
-                        .map(LongTag::valueOf)
-                        .collect(ListTag::new, ListTag::add, ListTag::addAll)
-        );
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        buf.writeNbt(tag);
-        System.out.printf("Compressed %d positions to %d bytes\n", positions.size(), buf.readableBytes());
+        buf.writeNbt(compoundTag);
+        System.out.printf("Wrote %d bytes to buf\n", buf.readableBytes());
         assertTrue(buf.readableBytes() < DEFAULT_NBT_QUOTA);
         buf.readNbt();
     }
 
     @Test
-    public void assert_big_dense_throws() {
+    public void compound_list() {
+        Set<BlockPos> positions = new HashSet<>();
+        BlockPos first = new BlockPos(14, -58, 22);
+        BlockPos second = new BlockPos(32, -25, 3);
+        BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+
+        ListTag tag = positions
+                .stream()
+                .map(NbtUtils::writeBlockPos)
+                .collect(ListTag::new, ListTag::add, ListTag::addAll);
+        assertTagSizeOkay(tag);
+    }
+
+    @Test
+    public void long_list() {
+        Set<BlockPos> positions = new HashSet<>();
+        BlockPos first = new BlockPos(14, -58, 22);
+        BlockPos second = new BlockPos(32, -25, 3);
+        BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+
+        ListTag tag = positions
+                .stream()
+                .map(BlockPos::asLong)
+                .map(LongTag::valueOf)
+                .collect(ListTag::new, ListTag::add, ListTag::addAll);
+        assertTagSizeOkay(tag);
+    }
+
+    @Test
+    public void long_list_big() {
         Set<BlockPos> positions = new HashSet<>();
         BlockPos first = new BlockPos(0, 0, 0);
         BlockPos second = new BlockPos(255, 1, 255);
         BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
-        // Total positions: 256 * 2 * 256 = 131072
 
-        CompoundTag tag = new CompoundTag();
-        tag.put(
-                "sfm:cable_positions",
+        ListTag tag = positions
+                .stream()
+                .map(BlockPos::asLong)
+                .map(LongTag::valueOf)
+                .collect(ListTag::new, ListTag::add, ListTag::addAll);
+        assertTagSizeOkay(tag);
+    }
+
+    @Test
+    public void long_array() {
+        Set<BlockPos> positions = new HashSet<>();
+        BlockPos first = new BlockPos(14, -58, 22);
+        BlockPos second = new BlockPos(32, -25, 3);
+        BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+
+        LongArrayTag tag = new LongArrayTag(
                 positions
                         .stream()
-                        .map(BlockPos::asLong)
-                        .map(LongTag::valueOf)
-                        .collect(ListTag::new, ListTag::add, ListTag::addAll)
+                        .mapToLong(BlockPos::asLong)
+                        .toArray()
         );
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        buf.writeNbt(tag);
-        System.out.printf("Compressed %d positions to %d bytes\n", positions.size(), buf.readableBytes());
-        assertTrue(buf.readableBytes() < DEFAULT_NBT_QUOTA);
-        RuntimeException exception = assertThrows(RuntimeException.class, buf::readNbt);
-        exception.printStackTrace();
+        assertTagSizeOkay(tag);
+    }
+
+    @Test
+    public void long_array_big() {
+        Set<BlockPos> positions = new HashSet<>();
+        BlockPos first = new BlockPos(0, 0, 0);
+        BlockPos second = new BlockPos(255, 1, 255);
+        BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+
+        LongArrayTag tag = new LongArrayTag(
+                positions
+                        .stream()
+                        .mapToLong(BlockPos::asLong)
+                        .toArray()
+        );
+        assertTagSizeOkay(tag);
     }
 
     /**
      * Test method to compress large BlockPos set using GZIP and verify integrity.
      */
     @Test
-    public void assert_big_gzip_works() {
+    public void gzip_big() {
         try {
             Set<BlockPos> positions = new HashSet<>();
             BlockPos first = new BlockPos(0, 0, 0);
@@ -111,21 +128,10 @@ public class CompressionTests {
             assertTrue(compressedData.length < DEFAULT_NBT_QUOTA, "GZIP compressed data exceeds quota");
 
             // Store compressed data in NBT
-            CompoundTag tag = new CompoundTag();
-            tag.putByteArray("sfm:cable_positions_compressed_gzip", compressedData);
+            ByteArrayTag tag = new ByteArrayTag(compressedData);
+            assertTagSizeOkay(tag);
 
-            // Write NBT to buffer
-            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-            buf.writeNbt(tag);
-
-            // Ensure buffer size is within quota
-            System.out.printf("NBT Buffer Size after GZIP: %d bytes\n", buf.readableBytes());
-            assertTrue(buf.readableBytes() < DEFAULT_NBT_QUOTA, "NBT buffer exceeds quota after GZIP compression");
-
-            // Read NBT from buffer
-            CompoundTag readTag = buf.readNbt();
-            assertNotNull(readTag, "Read NBT tag is null");
-            byte[] readCompressedData = readTag.getByteArray("sfm:cable_positions_compressed_gzip");
+            byte[] readCompressedData = tag.getAsByteArray();
             assertNotNull(readCompressedData, "Read compressed data is null");
 
             // Decompress
@@ -141,10 +147,94 @@ public class CompressionTests {
         }
     }
 
+    @Test
+    public void custom_big() {
+        HashSet<BlockPos> positions = new HashSet<>();
+        BlockPos first = new BlockPos(0, 0, 0);
+        BlockPos second = new BlockPos(255, 1, 255);
+        BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+        System.out.println("There are " + positions.size() + " positions");
+
+        CompressedBlockPosSet compressedBlockPosSet = CompressedBlockPosSet.from(positions);
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        compressedBlockPosSet.write(buf);
+
+        ByteArrayTag tag = new ByteArrayTag(buf.array());
+        assertTagSizeOkay(tag);
+
+        CompressedBlockPosSet read = CompressedBlockPosSet.read(new FriendlyByteBuf(Unpooled.wrappedBuffer(tag.getAsByteArray())));
+        Set<BlockPos> check = read.into();
+        assertEquals(positions.size(), check.size());
+        assertTrue(check.containsAll(positions));
+    }
+
+    @Test
+    public void custom_massive() {
+        HashSet<BlockPos> positions = new HashSet<>();
+        {
+            BlockPos first = new BlockPos(0, 0, 0);
+            BlockPos second = new BlockPos(255, 2, 255);
+            BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+        }
+        {
+            BlockPos first = new BlockPos(1000, 0, 200);
+            BlockPos second = new BlockPos(1000, 64, 255);
+            BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+        }
+        {
+            BlockPos first = new BlockPos(-1000, 0, 200);
+            BlockPos second = new BlockPos(-1100, 64, 255);
+            BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+        }
+        for (int i = 0; i < 100; i++) {
+
+            BlockPos first = new BlockPos(12345 + i * 500, 0, 10);
+            BlockPos second = new BlockPos(12345 + i * 500, 10, 10);
+            BlockPos.betweenClosedStream(first, second).map(BlockPos::immutable).forEach(positions::add);
+        }
+        System.out.println("There are " + positions.size() + " positions");
+
+        CompressedBlockPosSet compressedBlockPosSet = CompressedBlockPosSet.from(positions);
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        compressedBlockPosSet.write(buf);
+
+        ByteArrayTag tag = new ByteArrayTag(buf.array());
+        assertTagSizeOkay(tag);
+
+        CompressedBlockPosSet read = CompressedBlockPosSet.read(new FriendlyByteBuf(Unpooled.wrappedBuffer(tag.getAsByteArray())));
+        Set<BlockPos> check = read.into();
+        assertEquals(positions.size(), check.size());
+        assertTrue(check.containsAll(positions));
+    }
+
+    @Test
+    public void custom_works() {
+        HashSet<BlockPos> positions = new HashSet<>();
+        positions.add(new BlockPos(0, 0, 0));
+        positions.add(new BlockPos(0, 0, 1));
+        positions.add(new BlockPos(0, 0, 2));
+        positions.add(new BlockPos(0, 0, 10));
+
+        CompressedBlockPosSet compressedBlockPosSet = CompressedBlockPosSet.from(positions);
+        Set<BlockPos> check = compressedBlockPosSet.into();
+        assertEquals(positions.size(), check.size());
+        System.out.println("Positions:");
+        for (BlockPos position : positions) {
+            System.out.println(position);
+        }
+        System.out.println("Check:");
+        for (BlockPos position : check) {
+            System.out.println(position);
+        }
+        for (BlockPos position : positions) {
+            assertTrue(check.contains(position), "Check does not contain " + position);
+        }
+    }
+
     /**
      * Helper method to serialize Set<BlockPos> to a byte array as longs.
      */
-    private byte[] serializeBlockPosSet(Set<BlockPos> blockPositions) throws IOException {
+    private static byte[] serializeBlockPosSet(Set<BlockPos> blockPositions) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         for (BlockPos pos : blockPositions) {
