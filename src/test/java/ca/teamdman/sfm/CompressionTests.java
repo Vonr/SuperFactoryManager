@@ -156,13 +156,10 @@ public class CompressionTests {
         System.out.println("There are " + positions.size() + " positions");
 
         CompressedBlockPosSet compressedBlockPosSet = CompressedBlockPosSet.from(positions);
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        compressedBlockPosSet.write(buf);
-
-        ByteArrayTag tag = new ByteArrayTag(buf.array());
+        ByteArrayTag tag = compressedBlockPosSet.asTag();
         assertTagSizeOkay(tag);
 
-        CompressedBlockPosSet read = CompressedBlockPosSet.read(new FriendlyByteBuf(Unpooled.wrappedBuffer(tag.getAsByteArray())));
+        CompressedBlockPosSet read = CompressedBlockPosSet.from(tag);
         Set<BlockPos> check = read.into();
         assertEquals(positions.size(), check.size());
         assertTrue(check.containsAll(positions));
@@ -195,13 +192,10 @@ public class CompressionTests {
         System.out.println("There are " + positions.size() + " positions");
 
         CompressedBlockPosSet compressedBlockPosSet = CompressedBlockPosSet.from(positions);
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        compressedBlockPosSet.write(buf);
-
-        ByteArrayTag tag = new ByteArrayTag(buf.array());
+        ByteArrayTag tag = compressedBlockPosSet.asTag();
         assertTagSizeOkay(tag);
 
-        CompressedBlockPosSet read = CompressedBlockPosSet.read(new FriendlyByteBuf(Unpooled.wrappedBuffer(tag.getAsByteArray())));
+        CompressedBlockPosSet read = CompressedBlockPosSet.from(tag);
         Set<BlockPos> check = read.into();
         assertEquals(positions.size(), check.size());
         assertTrue(check.containsAll(positions));

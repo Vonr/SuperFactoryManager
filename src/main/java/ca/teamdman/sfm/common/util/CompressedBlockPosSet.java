@@ -1,9 +1,11 @@
 package ca.teamdman.sfm.common.util;
 
+import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.ArrayList;
@@ -80,6 +82,22 @@ public class CompressedBlockPosSet {
         }
         return rtn;
     }
+
+    public ByteArrayTag asTag() {
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        this.write(buf);
+        return new ByteArrayTag(buf.array());
+    }
+
+    public static CompressedBlockPosSet from(ByteArrayTag tag) {
+        return from(tag.getAsByteArray());
+    }
+
+    public static CompressedBlockPosSet from(byte[] data) {
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.wrappedBuffer(data));
+        return CompressedBlockPosSet.read(buf);
+    }
+
 
     private record Volume(
             BlockPos start,

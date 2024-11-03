@@ -7,10 +7,11 @@ import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.net.ServerboundNetworkToolUsePacket;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
+import ca.teamdman.sfm.common.util.CompressedBlockPosSet;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
@@ -100,11 +101,16 @@ public class NetworkToolItem extends Item {
     ) {
         stack.getOrCreateTag().put(
                 "sfm:cable_positions",
-                positions.stream().map(NbtUtils::writeBlockPos).collect(ListTag::new, ListTag::add, ListTag::addAll)
+                CompressedBlockPosSet.from(positions).asTag()
         );
     }
 
     public static Set<BlockPos> getCablePositions(ItemStack stack) {
+        if (stack.getOrCreateTag().get("sfm:cable_positions") instanceof ByteArrayTag byteArrayTag) {
+            // new format
+            return CompressedBlockPosSet.from(byteArrayTag).into();
+        }
+        // fallback to old format
         return stack.getOrCreateTag().getList("sfm:cable_positions", 10).stream()
                 .map(CompoundTag.class::cast)
                 .map(NbtUtils::readBlockPos)
@@ -117,11 +123,16 @@ public class NetworkToolItem extends Item {
     ) {
         stack.getOrCreateTag().put(
                 "sfm:capability_provider_positions",
-                positions.stream().map(NbtUtils::writeBlockPos).collect(ListTag::new, ListTag::add, ListTag::addAll)
+                CompressedBlockPosSet.from(positions).asTag()
         );
     }
 
     public static Set<BlockPos> getCapabilityProviderPositions(ItemStack stack) {
+        if (stack.getOrCreateTag().get("sfm:capability_provider_positions") instanceof ByteArrayTag byteArrayTag) {
+            // new format
+            return CompressedBlockPosSet.from(byteArrayTag).into();
+        }
+        // fallback to old format
         return stack.getOrCreateTag().getList("sfm:capability_provider_positions", 10).stream()
                 .map(CompoundTag.class::cast)
                 .map(NbtUtils::readBlockPos)
