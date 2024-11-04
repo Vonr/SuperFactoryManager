@@ -386,7 +386,6 @@ public class ItemWorldRenderer {
 
             // only compare the entries every second since it's mildly expensive
             if (entry != null
-                && event.getRenderTick() % 20 == 0
                 && event.getRenderTick() != lastChangeCheck
                 && !entry.positions.equals(positions)) {
                 lastChangeCheck = event.getRenderTick();
