@@ -66,9 +66,9 @@ public class CableBlock extends Block implements ICableBlock, EntityBlock {
             boolean pIsMoving
     ) {
         super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
-
-        if (!(pNewState.getBlock() instanceof ICableBlock))
+        if (!(pNewState.getBlock() instanceof ICableBlock)) {
             CableNetworkManager.onCableRemoved(pLevel, pPos);
+        }
     }
 
     @Override
