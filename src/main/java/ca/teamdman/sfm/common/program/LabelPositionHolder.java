@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.program;
 
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
+import ca.teamdman.sfm.common.util.CompressedBlockPosSet;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
@@ -48,17 +49,38 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
     public static LabelPositionHolder deserialize(CompoundTag tag) {
         var labels = LabelPositionHolder.empty();
         for (var label : tag.getAllKeys()) {
-            // old: storing BlockPos as long
-            labels.addAll(label, tag.getList(label, Tag.TAG_LONG).stream()
-                    .map(LongTag.class::cast)
-                    .mapToLong(LongTag::getAsLong)
-                    .mapToObj(BlockPos::of).collect(Collectors.toList()));
-
-            // new: storing BlockPos as compound
-            labels.addAll(label, tag.getList(label, Tag.TAG_COMPOUND).stream()
-                    .map(CompoundTag.class::cast)
-                    .map(NbtUtils::readBlockPos)
-                    .collect(Collectors.toList()));
+            Tag positionsTag = tag.get(label);
+            assert positionsTag != null;
+            int positionsTagType = tag.getTagType(label);
+            if (positionsTagType == Tag.TAG_LIST) {
+                ListTag positionsList = (ListTag) positionsTag;
+                int elementType = positionsList.getElementType();
+                if (elementType == Tag.TAG_LONG) {
+                    // old: storing BlockPos as long
+                    labels.addAll(
+                            label,
+                            positionsList.stream()
+                                    .map(LongTag.class::cast)
+                                    .mapToLong(LongTag::getAsLong)
+                                    .mapToObj(BlockPos::of).collect(Collectors.toList())
+                    );
+                } else if (elementType == Tag.TAG_COMPOUND) {
+                    // old: storing BlockPos as compound
+                    // this was used in FTB Academy packs I think
+                    labels.addAll(
+                            label,
+                            positionsList.stream()
+                                    .map(CompoundTag.class::cast)
+                                    .map(NbtUtils::readBlockPos)
+                                    .collect(Collectors.toList())
+                    );
+                }
+            } else if (positionsTagType == Tag.TAG_BYTE_ARRAY) {
+                labels.addAll(
+                        label,
+                        CompressedBlockPosSet.from((ByteArrayTag) positionsTag).into()
+                );
+            }
         }
         return labels;
     }
@@ -77,12 +99,9 @@ public record LabelPositionHolder(Map<String, HashSet<BlockPos>> labels) {
     public CompoundTag serialize() {
         var tag = new CompoundTag();
         for (var entry : labels().entrySet()) {
-            var list = new ListTag();
-            list.addAll(entry.getValue()
-                                .stream()
-                                .map(NbtUtils::writeBlockPos)
-                                .toList());
-            tag.put(entry.getKey(), list);
+            String label = entry.getKey();
+            ByteArrayTag positionsTag = CompressedBlockPosSet.from(entry.getValue()).asTag();
+            tag.put(label, positionsTag);
         }
         return tag;
     }
