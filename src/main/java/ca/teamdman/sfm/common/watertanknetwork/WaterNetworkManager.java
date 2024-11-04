@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -21,14 +22,10 @@ import java.util.*;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SFM.MOD_ID)
 public class WaterNetworkManager {
-    private static final Map<Level, Long2ObjectMap<WaterNetwork>> NETWORKS = new WeakHashMap<>();
+    private static final Map<Level, Long2ObjectMap<WaterNetwork>> NETWORKS = new Object2ObjectOpenHashMap<>();
 
     public static Long2ObjectMap<WaterNetwork> getNetworksForLevel(Level level) {
         return NETWORKS.computeIfAbsent(level, k -> new Long2ObjectOpenHashMap<>());
-    }
-
-    public static void unregisterNetworkForTestingPurposes(WaterNetwork network) {
-        removeNetwork(network);
     }
 
     public static void onLoad(WaterTankBlockEntity blockEntity) {
