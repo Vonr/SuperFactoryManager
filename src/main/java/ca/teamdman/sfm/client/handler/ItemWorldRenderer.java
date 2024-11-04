@@ -366,7 +366,7 @@ public class ItemWorldRenderer {
     // VBOCache class to handle caching of VBOs
     private static class VBOCache {
         private final EnumMap<VBOKind, VBOEntry> cache = new EnumMap<>(VBOKind.class);
-        private int lastClear = 0;
+        private int lastChangeCheck = -1;
 
         public @Nullable VertexBuffer getVBO(
                 VBOKind kind,
@@ -380,14 +380,20 @@ public class ItemWorldRenderer {
             if (positions.isEmpty()) {
                 return null;
             }
-            if (event.getRenderTick() % 20 == 0 && event.getRenderTick() != lastClear) {
-                lastClear = event.getRenderTick();
-                cache.clear();
-            }
-            VBOEntry entry = cache.get(kind);
+            @Nullable VBOEntry entry = cache.get(kind);
 
-            // Check if positions have changed
-            if (entry == null || !entry.positions.equals(positions)) {
+            boolean shouldRebuild = entry == null;
+
+            // only compare the entries every second since it's mildly expensive
+            if (entry != null
+                && event.getRenderTick() % 20 == 0
+                && event.getRenderTick() != lastChangeCheck
+                && !entry.positions.equals(positions)) {
+                lastChangeCheck = event.getRenderTick();
+                shouldRebuild = true;
+            }
+
+            if (shouldRebuild) {
                 // Dispose of the old VBO if it exists
                 if (entry != null) {
                     entry.vbo.close();
@@ -454,17 +460,10 @@ public class ItemWorldRenderer {
             return vbo;
         }
 
-        private static class VBOEntry {
-            Set<BlockPos> positions;
-            VertexBuffer vbo;
-
-            VBOEntry(
-                    Set<BlockPos> positions,
-                    VertexBuffer vbo
-            ) {
-                this.positions = positions;
-                this.vbo = vbo;
-            }
+        private record VBOEntry(
+                Set<BlockPos> positions,
+                VertexBuffer vbo
+        ) {
         }
     }
 }
