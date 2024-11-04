@@ -73,11 +73,14 @@ public class CableNetworkManager {
 
     public static void onCableRemoved(Level level, BlockPos cablePos) {
         getNetworkFromCablePosition(level, cablePos).ifPresent(network -> {
-            // Unregister the original network
+            // Invalidate the original network
             removeNetwork(network);
-            // Register networks that result from the removal of the cable, if any
-            var remainingNetworks = network.withoutCable(cablePos);
-            remainingNetworks.forEach(CableNetworkManager::addNetwork);
+            // Only rebuild cache if fairly small network
+            if (network.getCableCount() <= 256) {
+                // Register networks that result from the removal of the cable, if any
+                var remainingNetworks = network.withoutCable(cablePos);
+                remainingNetworks.forEach(CableNetworkManager::addNetwork);
+            }
         });
     }
 
