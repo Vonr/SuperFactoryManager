@@ -4,6 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -37,9 +38,33 @@ import java.util.stream.Stream;
  */
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SFM.MOD_ID)
 public class CableNetworkManager {
+    private static final Map<Level, Long2ObjectMap<CableNetwork>> NETWORKS_BY_CABLE_POSITION = new Object2ObjectOpenHashMap<>();
+    private static final Map<Level, List<CableNetwork>> NETWORKS_BY_LEVEL = new Object2ObjectOpenHashMap<>();
 
-    private static final Map<Level, Long2ObjectMap<CableNetwork>> NETWORKS_BY_CABLE_POSITION = new WeakHashMap<>();
-    private static final Map<Level, List<CableNetwork>> NETWORKS_BY_LEVEL = new WeakHashMap<>();
+    /**
+     * For diagnostics, called when a lookup map has changed
+     */
+    private static void onNetworkLookupChanged() {
+//        if (FMLEnvironment.production) return;
+//        SFM.LOGGER.info("Network lookup changed");
+//        SFM.LOGGER.info("NETWORKS_BY_LEVEL:");
+//        for (Map.Entry<Level, List<CableNetwork>> entry : NETWORKS_BY_LEVEL.entrySet()) {
+//            Level level = entry.getKey();
+//            List<CableNetwork> networks = entry.getValue();
+//            SFM.LOGGER.debug("Level {} has {} networks", level, networks.size());
+//            StringBuilder builder = new StringBuilder();
+//            for (CableNetwork network : networks) {
+//                builder.append(network.getCableCount()).append(" cables; ");
+//            }
+//            SFM.LOGGER.debug(builder.toString());
+//        }
+//        SFM.LOGGER.info("NETWORKS_BY_CABLE_POSITION:");
+//        for (Map.Entry<Level, Long2ObjectMap<CableNetwork>> entry : NETWORKS_BY_CABLE_POSITION.entrySet()) {
+//            Level level = entry.getKey();
+//            Long2ObjectMap<CableNetwork> networksByCablePosition = entry.getValue();
+//            SFM.LOGGER.debug("Level {} has {} cables", level, networksByCablePosition.size());
+//        }
+    }
 
     public static Optional<CableNetwork> getOrRegisterNetworkFromManagerPosition(ManagerBlockEntity tile) {
         Level level = tile.getLevel();
@@ -105,14 +130,26 @@ public class CableNetworkManager {
         Optional<CableNetwork> existing = getNetworkFromCablePosition(level, pos);
         if (existing.isPresent()) return existing;
 
+        // no existing network at this location, will either create one or merge into an existing one
+
         // only cables define the main spine of a network
         if (!CableNetwork.isCable(level, pos)) return Optional.empty();
 
-        // find potential networks
-        Set<CableNetwork> candidates = getNetworksFromCableAdjacentPosition(level, pos);
+        // find potential networks by getting networks adjacent to this cable
+        ArrayDeque<BlockPos> danglingCables = new ArrayDeque<>(6);
+        Set<CableNetwork> neighbouringNetworks = new HashSet<>();
+        for (Direction direction : Direction.values()) {
+            BlockPos offset = pos.relative(direction);
+            Optional<CableNetwork> found = getNetworkFromCablePosition(level, offset);
+            if (found.isPresent()) {
+                neighbouringNetworks.add(found.get());
+            } else if (CableNetwork.isCable(level, offset)) {
+                danglingCables.add(offset);
+            }
+        }
 
         // no candidates, create new network
-        if (candidates.isEmpty()) {
+        if (neighbouringNetworks.isEmpty()) {
             CableNetwork network = new CableNetwork(level);
             // rebuild network from world
             // might be first time used after loading from disk
@@ -121,19 +158,30 @@ public class CableNetworkManager {
             return Optional.of(network);
         }
 
-        // one candidate exists, add the cable to it
-        if (candidates.size() == 1) {
-            // Only one network matches this cable, add cable as member
-            CableNetwork network = candidates.iterator().next();
-            network.addCable(pos);
-            NETWORKS_BY_CABLE_POSITION.get(level).put(pos.asLong(), network);
-            return Optional.of(network);
-        }
 
-        // more than one candidate network exists, merge them
-        Optional<CableNetwork> result = mergeNetworks(candidates);
-        result.ifPresent(net -> net.addCable(pos));
-        return result;
+        List<CableNetwork> networksByLevel = NETWORKS_BY_LEVEL.get(level);
+        Long2ObjectMap<CableNetwork> networksByPosition = NETWORKS_BY_CABLE_POSITION.get(level);
+        CableNetwork rtn;
+        if (neighbouringNetworks.size() == 1) {
+            // exactly one candidate exists, add the cable to it
+            rtn = neighbouringNetworks.iterator().next();
+        } else {
+            // More than one candidate network exists, merge them all into the first
+            Iterator<CableNetwork> iterator = neighbouringNetworks.iterator();
+            rtn = iterator.next();
+            while (iterator.hasNext()) {
+                CableNetwork other = iterator.next();
+                rtn.mergeNetwork(other);
+                networksByLevel.remove(other);
+                other.getCablePositionsRaw().forEach(cablePos -> networksByPosition.put(cablePos, rtn));
+            }
+        }
+        rtn.addCable(pos);
+        networksByPosition.put(pos.asLong(), rtn);
+        rtn.encompassDanglingCables(danglingCables);
+        onNetworkLookupChanged();
+
+        return Optional.of(rtn);
     }
 
     public static Stream<BlockPos> getContiguousCables(Level level, BlockPos pos) {
@@ -155,6 +203,8 @@ public class CableNetworkManager {
 
     public static void clear() {
         NETWORKS_BY_LEVEL.clear();
+        NETWORKS_BY_CABLE_POSITION.clear();
+        onNetworkLookupChanged();
     }
 
     private static Optional<CableNetwork> getNetworkFromCablePosition(Level level, BlockPos pos) {
@@ -171,6 +221,7 @@ public class CableNetworkManager {
         Long2ObjectMap<CableNetwork> posMap = NETWORKS_BY_CABLE_POSITION
                 .computeIfAbsent(network.getLevel(), k -> new Long2ObjectOpenHashMap<>());
         network.getCablePositionsRaw().forEach(posMap::remove);
+        onNetworkLookupChanged();
     }
 
     private static void addNetwork(CableNetwork network) {
@@ -181,40 +232,7 @@ public class CableNetworkManager {
         Long2ObjectMap<CableNetwork> posMap = NETWORKS_BY_CABLE_POSITION
                 .computeIfAbsent(network.getLevel(), k -> new Long2ObjectOpenHashMap<>());
         network.getCablePositionsRaw().forEach(cablePos -> posMap.put(cablePos, network));
-    }
-
-    /**
-     * Finds the set of networks that contain the given position
-     */
-    private static Set<CableNetwork> getNetworksFromCableAdjacentPosition(Level level, BlockPos pos) {
-        Set<CableNetwork> rtn = new HashSet<>();
-        for (Direction direction : Direction.values()) {
-            BlockPos offset = pos.relative(direction);
-            Optional<CableNetwork> network = getNetworkFromCablePosition(level, offset);
-            network.ifPresent(rtn::add);
-        }
-        return rtn;
-    }
-
-    private static Optional<CableNetwork> mergeNetworks(Set<CableNetwork> networks) {
-        if (networks.isEmpty()) return Optional.empty();
-
-        Iterator<CableNetwork> iterator = networks.iterator();
-        // The first network will absorb the others
-        CableNetwork main = iterator.next();
-
-        Level level = main.getLevel();
-        var levelMap = NETWORKS_BY_LEVEL.get(level);
-
-        // Merge the rest into the first
-        iterator.forEachRemaining(other -> {
-            main.mergeNetwork(other);
-            levelMap.remove(other); // unregister the network
-        });
-        // the main network now contains all the cable positions of the others
-        // when we addNetwork here, it _should_ clobber all the old entries to point to this network instead
-        addNetwork(main);
-        return Optional.of(main);
+        onNetworkLookupChanged();
     }
 
 

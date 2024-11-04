@@ -14,9 +14,7 @@ import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class CableNetwork {
@@ -32,7 +30,10 @@ public class CableNetwork {
     /**
      * Only cable blocks are valid network members
      */
-    public static boolean isCable(@Nullable Level world, BlockPos cablePos) {
+    public static boolean isCable(
+            @Nullable Level world,
+            BlockPos cablePos
+    ) {
         if (world == null) return false;
         return world
                 .getBlockState(cablePos)
@@ -42,10 +43,13 @@ public class CableNetwork {
     public void rebuildNetwork(BlockPos start) {
         CABLE_POSITIONS.clear();
         CAPABILITY_CACHE.clear();
-        discoverCables(start).forEach(this::addCable);
+        discoverCables(getLevel(), start).forEach(this::addCable);
     }
 
-    public void rebuildNetworkFromCache(BlockPos start, CableNetwork other) {
+    public void rebuildNetworkFromCache(
+            BlockPos start,
+            CableNetwork other
+    ) {
         CABLE_POSITIONS.clear();
         CAPABILITY_CACHE.clear();
 
@@ -71,10 +75,6 @@ public class CableNetwork {
                 .forEach(pos -> CAPABILITY_CACHE.overwriteFromOther(pos, other.CAPABILITY_CACHE));
     }
 
-    public Stream<BlockPos> discoverCables(BlockPos startPos) {
-        return discoverCables(getLevel(), startPos);
-    }
-
     public static Stream<BlockPos> discoverCables(
             Level level,
             BlockPos startPos
@@ -88,6 +88,23 @@ public class CableNetwork {
                 }
             }
         }, startPos);
+    }
+
+    public void encompassDanglingCables(ArrayDeque<BlockPos> cablesNotAssociatedWithAnyNetwork) {
+        Set<BlockPos> visitDebounce = new HashSet<>();
+        SFMUtils.<BlockPos, BlockPos>getRecursiveStream(
+                (current, next, results) -> {
+                    results.accept(current);
+                    for (Direction d : Direction.values()) {
+                        BlockPos offset = current.offset(d.getNormal());
+                        if (isCable(getLevel(), offset) && !containsCablePosition(offset)) {
+                            next.accept(offset);
+                        }
+                    }
+                },
+                visitDebounce,
+                cablesNotAssociatedWithAnyNetwork
+        ).forEach(this::addCable);
     }
 
     public void addCable(BlockPos pos) {
@@ -137,7 +154,7 @@ public class CableNetwork {
         // any BlockPos can have labels assigned
         // we must only proceed here if there is an adjacent cable from this network
         if (!isAdjacentToCable(pos)) {
-            logger.warn(x->x.accept(LocalizationKeys.LOGS_MISSING_ADJACENT_CABLE.get(pos)));
+            logger.warn(x -> x.accept(LocalizationKeys.LOGS_MISSING_ADJACENT_CABLE.get(pos)));
             return LazyOptional.empty();
         }
         return CAPABILITY_CACHE.getOrDiscoverCapability(LEVEL, pos, cap, direction, logger);
@@ -174,6 +191,10 @@ public class CableNetwork {
         return CAPABILITY_CACHE.getPositions();
     }
 
+    public void bustCacheForChunk(ChunkAccess chunkAccess) {
+        CAPABILITY_CACHE.bustCacheForChunk(chunkAccess);
+    }
+
     /**
      * Discover what networks would exist if this network did not have a cable at {@code cablePos}.
      *
@@ -193,9 +214,5 @@ public class CableNetwork {
             branches.add(branchNetwork);
         }
         return branches;
-    }
-
-    public void bustCacheForChunk(ChunkAccess chunkAccess) {
-        CAPABILITY_CACHE.bustCacheForChunk(chunkAccess);
     }
 }
