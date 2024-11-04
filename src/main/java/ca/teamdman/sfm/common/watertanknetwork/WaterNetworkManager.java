@@ -96,6 +96,10 @@ public class WaterNetworkManager {
      * one.
      * <p>
      * Networks should only exist on the server side.
+     * <p>
+     *
+     * The {@link ca.teamdman.sfm.common.cablenetwork.CableNetworkManager#getOrRegisterNetworkFromCablePosition(Level, BlockPos)} method has received some adjustments that this method has not adopted yet.
+     * The water network feels like it's working, so I haven't bothered to update it yet ¯\_(ツ)_/¯
      */
     public static Optional<WaterNetwork> getOrRegisterNetwork(
             Level level,
@@ -107,7 +111,7 @@ public class WaterNetworkManager {
         Optional<WaterNetwork> existing = getNetwork(level, pos);
         if (existing.isPresent()) return existing;
 
-        // only cables define the main spine of a network
+        // only active water tanks can be in a network
         if (!(level.getBlockEntity(pos) instanceof WaterTankBlockEntity blockEntity)) return Optional.empty();
         if (!level.getBlockState(pos).getValue(WaterTankBlock.IN_WATER)) return Optional.empty();
 
@@ -124,9 +128,9 @@ public class WaterNetworkManager {
             return Optional.of(network);
         }
 
-        // one candidate exists, add the cable to it
+        // one candidate exists, add the member to it
         if (candidates.size() == 1) {
-            // Only one network matches this cable, add cable as member
+            // Only one network matches this member, add cable as member
             WaterNetwork network = candidates.iterator().next();
             network.addMember(pos);
             getNetworksForLevel(level).put(pos.asLong(), network);
