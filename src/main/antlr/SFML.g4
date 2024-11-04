@@ -184,7 +184,6 @@ GE        : G E ;
 GE_SYMBOL : '>=' ;
 
 // IO LOGIC
-MOVE    : M O V E ;
 FROM    : F R O M ;
 TO      : T O ;
 INPUT   : I N P U T ;
