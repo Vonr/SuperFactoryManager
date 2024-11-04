@@ -59,6 +59,8 @@ END
 -- Update network tool output; hide capabilities that aren't present, added newline
 -- Update water tank reminder text to mention that other tanks must be active for bonus
 -- Add issue tracker url to mods.toml, shown when SFM is suspected of causing a crash
+-- Add CompressedBlockPosSet data structure to fix packet length issues with network tool and label gun
+-- Invalidate network cache instead of recomputing when removing cables from large networks
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me
