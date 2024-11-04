@@ -18,12 +18,21 @@ import java.util.List;
 
 public class CableBlockModelWrapper extends BakedModelWrapper<BakedModel> {
 
+    private static final ChunkRenderTypeSet SOLID = ChunkRenderTypeSet.of(RenderType.solid());
+    private static final ChunkRenderTypeSet ALL = ChunkRenderTypeSet.all();
+
     public CableBlockModelWrapper(BakedModel originalModel) {
         super(originalModel);
     }
 
     @Override
-    public @NotNull List<BakedQuad> getQuads(BlockState state, Direction side, @NotNull RandomSource rand, @NotNull ModelData extraData, RenderType renderType) {
+    public @NotNull List<BakedQuad> getQuads(
+            BlockState state,
+            Direction side,
+            @NotNull RandomSource rand,
+            @NotNull ModelData extraData,
+            RenderType renderType
+    ) {
         BlockState mimicState = extraData.get(CableBlock.FACADE_BLOCK_STATE);
         if (mimicState == null || state.getValue(CableBlock.FACADE_TYPE_PROP) == FacadeType.NONE)
             return originalModel.getQuads(state, side, rand, ModelData.EMPTY, renderType);
@@ -39,9 +48,11 @@ public class CableBlockModelWrapper extends BakedModelWrapper<BakedModel> {
     }
 
     @Override
-    public @NotNull ChunkRenderTypeSet getRenderTypes(@NotNull BlockState state, @NotNull RandomSource rand, @NotNull ModelData data) {
-        return state.getValue(CableBlock.FACADE_TYPE_PROP) == FacadeType.TRANSLUCENT_FACADE ?
-                ChunkRenderTypeSet.all() :
-                ChunkRenderTypeSet.of(RenderType.solid());
+    public @NotNull ChunkRenderTypeSet getRenderTypes(
+            @NotNull BlockState state,
+            @NotNull RandomSource rand,
+            @NotNull ModelData data
+    ) {
+        return state.getValue(CableBlock.FACADE_TYPE_PROP) == FacadeType.TRANSLUCENT_FACADE ? ALL : SOLID;
     }
 }
