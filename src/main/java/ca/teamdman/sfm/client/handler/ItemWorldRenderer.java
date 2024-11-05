@@ -86,11 +86,17 @@ public class ItemWorldRenderer {
         MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
 
         ItemStack held;
+        boolean rendered = false;
+        // Can render both if in main hand and off-hand
         if ((held = getHeldItemOfType(player, NetworkToolItem.class)) != null) {
             handleNetworkTool(event, poseStack, camera, bufferSource, held);
-        } else if ((held = getHeldItemOfType(player, LabelGunItem.class)) != null) {
+            rendered = true;
+        }
+        if ((held = getHeldItemOfType(player, LabelGunItem.class)) != null) {
             handleLabelGun(event, poseStack, camera, bufferSource, held);
-        } else {
+            rendered = true;
+        }
+        if (!rendered) {
             vboCache.clear();
         }
     }

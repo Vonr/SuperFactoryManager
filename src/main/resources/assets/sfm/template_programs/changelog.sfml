@@ -62,6 +62,7 @@ END
 -- Add CompressedBlockPosSet data structure to fix packet length issues with network tool and label gun
 -- Invalidate network cache instead of recomputing when removing cables from large networks
 -- Fix network tool not working on dedicated servers, thanks @RacerDelux
+-- Fix only rendering one of label gun and network tool when both held at once
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me
