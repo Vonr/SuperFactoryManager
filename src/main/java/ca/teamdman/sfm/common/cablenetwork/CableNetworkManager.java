@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.cablenetwork;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -148,7 +149,7 @@ public class CableNetworkManager {
             }
         }
 
-        // no candidates, create new network
+        // no candidates, create new network and end early
         if (neighbouringNetworks.isEmpty()) {
             CableNetwork network = new CableNetwork(level);
             // rebuild network from world
@@ -158,12 +159,13 @@ public class CableNetworkManager {
             return Optional.of(network);
         }
 
+        // candidates exist, the new cable will result in a single merged network
 
         List<CableNetwork> networksByLevel = NETWORKS_BY_LEVEL.get(level);
         Long2ObjectMap<CableNetwork> networksByPosition = NETWORKS_BY_CABLE_POSITION.get(level);
         CableNetwork rtn;
         if (neighbouringNetworks.size() == 1) {
-            // exactly one candidate exists, add the cable to it
+            // exactly one candidate exists
             rtn = neighbouringNetworks.iterator().next();
         } else {
             // More than one candidate network exists, merge them all into the first
@@ -176,11 +178,32 @@ public class CableNetworkManager {
                 other.getCablePositionsRaw().forEach(cablePos -> networksByPosition.put(cablePos, rtn));
             }
         }
+
+        // add the new cable to the result network
         rtn.addCable(pos);
         networksByPosition.put(pos.asLong(), rtn);
-        rtn.encompassDanglingCables(danglingCables);
-        onNetworkLookupChanged();
 
+        // add any dangling cables to the result network
+        Set<BlockPos> visitDebounce = new HashSet<>();
+        Set<BlockPos> allDanglingCables = SFMUtils.<BlockPos, BlockPos>getRecursiveStream(
+                (current, next, results) -> {
+                    results.accept(current);
+                    for (Direction d : Direction.values()) {
+                        BlockPos offset = current.offset(d.getNormal());
+                        if (CableNetwork.isCable(rtn.getLevel(), offset) && !rtn.containsCablePosition(offset)) {
+                            next.accept(offset);
+                        }
+                    }
+                },
+                visitDebounce,
+                danglingCables
+        ).collect(Collectors.toSet());
+        for (BlockPos danglingCable : allDanglingCables) {
+            rtn.addCable(danglingCable);
+            networksByPosition.put(danglingCable.asLong(), rtn);
+        }
+
+        onNetworkLookupChanged();
         return Optional.of(rtn);
     }
 

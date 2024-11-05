@@ -14,7 +14,9 @@ import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class CableNetwork {
@@ -88,23 +90,6 @@ public class CableNetwork {
                 }
             }
         }, startPos);
-    }
-
-    public void encompassDanglingCables(ArrayDeque<BlockPos> cablesNotAssociatedWithAnyNetwork) {
-        Set<BlockPos> visitDebounce = new HashSet<>();
-        SFMUtils.<BlockPos, BlockPos>getRecursiveStream(
-                (current, next, results) -> {
-                    results.accept(current);
-                    for (Direction d : Direction.values()) {
-                        BlockPos offset = current.offset(d.getNormal());
-                        if (isCable(getLevel(), offset) && !containsCablePosition(offset)) {
-                            next.accept(offset);
-                        }
-                    }
-                },
-                visitDebounce,
-                cablesNotAssociatedWithAnyNetwork
-        ).forEach(this::addCable);
     }
 
     public void addCable(BlockPos pos) {
