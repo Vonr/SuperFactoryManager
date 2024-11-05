@@ -16,7 +16,7 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -74,9 +74,12 @@ public class NetworkToolItem extends Item {
             int pSlotId,
             boolean pIsSelected
     ) {
-        boolean isInHand = pSlotId == EquipmentSlot.MAINHAND.getIndex() || pSlotId == EquipmentSlot.OFFHAND.getIndex();
-        boolean shouldTick = isInHand && !pLevel.isClientSide && pEntity.tickCount % 20 == 0;
-        if (!shouldTick) return;
+        if (pLevel.isClientSide) return;
+        if (!(pEntity instanceof Player pPlayer)) return;
+        boolean isInHand = pStack == pPlayer.getMainHandItem() || pStack == pPlayer.getOffhandItem();
+        if (!isInHand) return;
+        boolean shouldRefresh = pEntity.tickCount % 20 == 0;
+        if (!shouldRefresh) return;
         final long maxDistance = 128;
         Set<BlockPos> cablePositions = CableNetworkManager
                 .getNetworksInRange(pLevel, pEntity.blockPosition(), maxDistance)
