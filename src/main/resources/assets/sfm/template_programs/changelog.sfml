@@ -64,6 +64,7 @@ END
 -- Fix network tool not working on dedicated servers, thanks @RacerDelux
 -- Fix only rendering one of label gun and network tool when both held at once
 -- Fix network tool not refreshing render data properly when in off-hand
+-- Fix cables being moved by pistons not updating the cable network
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me

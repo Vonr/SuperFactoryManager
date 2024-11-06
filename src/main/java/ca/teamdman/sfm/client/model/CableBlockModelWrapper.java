@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.client.model;
 
-import ca.teamdman.sfm.common.block.CableBlock;
+import ca.teamdman.sfm.common.block.CableFacadeBlock;
 import ca.teamdman.sfm.common.util.FacadeType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
@@ -33,9 +33,10 @@ public class CableBlockModelWrapper extends BakedModelWrapper<BakedModel> {
             @NotNull ModelData extraData,
             RenderType renderType
     ) {
-        BlockState mimicState = extraData.get(CableBlock.FACADE_BLOCK_STATE);
-        if (mimicState == null || state.getValue(CableBlock.FACADE_TYPE_PROP) == FacadeType.NONE)
+        BlockState mimicState = extraData.get(CableFacadeBlock.FACADE_BLOCK_STATE);
+        if (mimicState == null) {
             return originalModel.getQuads(state, side, rand, ModelData.EMPTY, renderType);
+        }
 
         BakedModel mimicModel = Minecraft.getInstance().getBlockRenderer().getBlockModel(mimicState);
         ChunkRenderTypeSet renderTypes = mimicModel.getRenderTypes(mimicState, rand, extraData);
@@ -53,6 +54,6 @@ public class CableBlockModelWrapper extends BakedModelWrapper<BakedModel> {
             @NotNull RandomSource rand,
             @NotNull ModelData data
     ) {
-        return state.getValue(CableBlock.FACADE_TYPE_PROP) == FacadeType.TRANSLUCENT_FACADE ? ALL : SOLID;
+        return state.getValue(CableFacadeBlock.FACADE_TYPE_PROP) == FacadeType.TRANSLUCENT ? ALL : SOLID;
     }
 }

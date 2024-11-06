@@ -5,7 +5,7 @@ import ca.teamdman.sfm.client.gui.screen.*;
 import ca.teamdman.sfm.client.model.CableBlockModelWrapper;
 import ca.teamdman.sfm.client.render.CableFacadeBlockColor;
 import ca.teamdman.sfm.client.render.PrintingPressBlockEntityRenderer;
-import ca.teamdman.sfm.common.block.CableBlock;
+import ca.teamdman.sfm.common.block.CableFacadeBlock;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.net.ServerboundFacadePacket;
 import ca.teamdman.sfm.common.net.ServerboundManagerLogDesireUpdatePacket;
@@ -150,24 +150,24 @@ public class ClientStuff {
     @SubscribeEvent
     public static void onModelBakeEvent(ModelEvent.BakingCompleted event) {
         event.getModels().computeIfPresent(
-                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_BLOCK.get().defaultBlockState()),
+                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_FACADE_BLOCK.get().defaultBlockState()),
                 (location, model) -> new CableBlockModelWrapper(model)
         );
         event.getModels().computeIfPresent(
-                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_BLOCK.get().defaultBlockState()
-                                                              .setValue(CableBlock.FACADE_TYPE_PROP, FacadeType.OPAQUE_FACADE)),
+                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_FACADE_BLOCK.get().defaultBlockState()
+                                                              .setValue(CableFacadeBlock.FACADE_TYPE_PROP, FacadeType.OPAQUE)),
                 (location, model) -> new CableBlockModelWrapper(model)
         );
         event.getModels().computeIfPresent(
-                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_BLOCK.get().defaultBlockState()
-                                                              .setValue(CableBlock.FACADE_TYPE_PROP, FacadeType.TRANSLUCENT_FACADE)),
+                BlockModelShaper.stateToModelLocation(SFMBlocks.CABLE_FACADE_BLOCK.get().defaultBlockState()
+                                                              .setValue(CableFacadeBlock.FACADE_TYPE_PROP, FacadeType.TRANSLUCENT)),
                 (location, model) -> new CableBlockModelWrapper(model)
         );
     }
 
     @SubscribeEvent
     public static void registerBlockColor(RegisterColorHandlersEvent.Block event) {
-        event.register(new CableFacadeBlockColor(), SFMBlocks.CABLE_BLOCK.get());
+        event.register(new CableFacadeBlockColor(), SFMBlocks.CABLE_FACADE_BLOCK.get());
     }
 
     public static void eagerExecute(ServerboundFacadePacket msg) {

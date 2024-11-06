@@ -1,6 +1,7 @@
 {
   "block.sfm.battery": "Battery (WIP)",
   "block.sfm.cable": "Inventory Cable",
+  "block.sfm.cable_facade": "Facade Inventory Cable",
   "block.sfm.fancy_cable": "Fancy Inventory Cable",
   "block.sfm.manager": "Factory Manager",
   "block.sfm.printing_press": "Printing Press",

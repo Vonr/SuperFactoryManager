@@ -29,10 +29,10 @@ public final class SFMBlockEntities {
                     .of(ManagerBlockEntity::new, SFMBlocks.MANAGER_BLOCK.get())
                     .build(null)
     );
-    public static final Supplier<BlockEntityType<CableBlockEntity>> CABLE_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
-            "cable",
+    public static final Supplier<BlockEntityType<CableFacadeBlockEntity>> CABLE_FACADE_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+            "cable_facade",
             () -> BlockEntityType.Builder
-                    .of(CableBlockEntity::new, SFMBlocks.CABLE_BLOCK.get())
+                    .of(CableFacadeBlockEntity::new, SFMBlocks.CABLE_FACADE_BLOCK.get())
                     .build(null)
     );
     public static final RegistryObject<BlockEntityType<PrintingPressBlockEntity>> PRINTING_PRESS_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(

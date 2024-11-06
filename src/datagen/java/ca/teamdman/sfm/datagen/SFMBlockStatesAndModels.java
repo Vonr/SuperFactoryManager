@@ -33,6 +33,7 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
         ).texture("particle", "#all"));
 
         simpleBlock(SFMBlocks.CABLE_BLOCK.get());
+        simpleBlock(SFMBlocks.CABLE_FACADE_BLOCK.get(), cubeAll(SFMBlocks.CABLE_BLOCK.get()));
         registerFancyCableBlock();
         simpleBlock(SFMBlocks.PRINTING_PRESS_BLOCK.get(), models().getExistingFile(modLoc("block/printing_press")));
 

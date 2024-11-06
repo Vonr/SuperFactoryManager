@@ -1,9 +1,9 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.common.block.CableBlock;
-import ca.teamdman.sfm.common.blockentity.CableBlockEntity;
+import ca.teamdman.sfm.common.block.CableFacadeBlock;
+import ca.teamdman.sfm.common.blockentity.CableFacadeBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
-import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.util.FacadeType;
 import ca.teamdman.sfm.common.util.SFMUtils;
@@ -33,8 +33,6 @@ public record ServerboundFacadePacket(
         BlockHitResult pHitResult,
         SpreadLogic spreadLogic
 ) {
-    private static final BlockState defaultCableState = SFMBlocks.CABLE_BLOCK.get().defaultBlockState();
-
     public static void encode(
             ServerboundFacadePacket msg,
             FriendlyByteBuf buf
@@ -55,9 +53,6 @@ public record ServerboundFacadePacket(
             Supplier<NetworkEvent.Context> contextSupplier
     ) {
         contextSupplier.get().enqueueWork(() -> {
-            // CTRL         :   Connected and Matching
-            // ALT          :   Matching
-            // CTRL + ALT   :   All
             Player sender = contextSupplier.get().getSender();
             if (sender == null) return;
 
@@ -70,58 +65,71 @@ public record ServerboundFacadePacket(
             ServerboundFacadePacket msg,
             Player sender
     ) {
+        // Get cable
         Level level = sender.level;
-        BlockPos hitBlockPos = msg.pHitResult.getBlockPos();
-        if (!level.isLoaded(hitBlockPos)) return;
-        ItemStack itemInHand = sender.getMainHandItem();
+        BlockPos cablePos = msg.pHitResult.getBlockPos();
+        if (!level.isLoaded(cablePos)) return;
+        BlockState cableBlockState = level.getBlockState(cablePos);
+        if (!(cableBlockState.getBlock() instanceof CableBlock)) return;
 
-        Block newFacadeBlock = getBlockFromStack(
-                itemInHand,
+        // Get paint
+        ItemStack paintStack = sender.getMainHandItem();
+        Block paintBlock = getBlockFromStack(
+                paintStack,
                 level,
-                hitBlockPos
+                cablePos
         );
-        if (newFacadeBlock == null) return;
+        if (paintBlock == null) return;
 
-        BlockState placedFacadeState = Objects.requireNonNullElse(
-                newFacadeBlock.getStateForPlacement(new BlockPlaceContext(
-                        sender,
-                        InteractionHand.MAIN_HAND,
-                        itemInHand,
-                        msg.pHitResult
-                )),
-                newFacadeBlock.defaultBlockState()
-        );
+        // Perform update
+        boolean clearPaint = paintBlock == SFMBlocks.CABLE_BLOCK.get();
+        if (clearPaint) {
+            // Set to normal cable
+            BlockState newBlockState = SFMBlocks.CABLE_BLOCK.get().defaultBlockState();
+            gatherCableBlocksToFacade(msg.spreadLogic, level, cablePos)
+                    .filter(pos -> level.getBlockState(pos).getBlock() instanceof CableFacadeBlock)
+                    .forEach(blockPos -> level.setBlock(
+                            blockPos,
+                            newBlockState,
+                            Block.UPDATE_IMMEDIATE | Block.UPDATE_CLIENTS
+                    ));
+        } else {
+            // Set or update facade
+            BlockPlaceContext blockPlaceContext = new BlockPlaceContext(
+                    sender,
+                    InteractionHand.MAIN_HAND,
+                    paintStack,
+                    msg.pHitResult
+            );
+            BlockState paintBlockState = Objects.requireNonNullElse(
+                    paintBlock.getStateForPlacement(blockPlaceContext),
+                    paintBlock.defaultBlockState()
+            );
+            FacadeType facadeType = paintBlockState.isSolidRender(level, cablePos)
+                                    ? FacadeType.OPAQUE
+                                    : FacadeType.TRANSLUCENT;
+            BlockState newBlockState = SFMBlocks.CABLE_FACADE_BLOCK.get()
+                    .defaultBlockState()
+                    .setValue(CableFacadeBlock.FACADE_TYPE_PROP, facadeType);
 
-        BlockState hitBlockState = level.getBlockState(hitBlockPos);
-        if (msg.spreadLogic != SpreadLogic.NETWORK) {
-            // Early return for trying to set the same facade to the same block state
-            BlockState hitFacadeState = level.getBlockEntity(hitBlockPos) instanceof CableBlockEntity cableBlockEntity
-                                        ? cableBlockEntity.getFacadeState()
-                                        : null;
-            boolean sameState = hitFacadeState == placedFacadeState;
-            boolean willBeCable = hitBlockState == defaultCableState && newFacadeBlock == SFMBlocks.CABLE_BLOCK.get();
-            if (sameState || willBeCable) return;
+            gatherCableBlocksToFacade(msg.spreadLogic, level, cablePos)
+                    .filter(pos -> level.getBlockState(pos).getBlock() instanceof CableBlock)
+                    .forEach(blockPos -> {
+                        BlockEntity blockEntity = level.getBlockEntity(blockPos);
+                        if (blockEntity != null) {
+                            if (blockEntity instanceof CableFacadeBlockEntity found) {
+                                found.setFacadeState(paintBlockState);
+                            }
+                        } else {
+                            level.setBlock(blockPos, newBlockState, Block.UPDATE_IMMEDIATE | Block.UPDATE_CLIENTS);
+                            if (level.getBlockEntity(blockPos) instanceof CableFacadeBlockEntity cableFacadeBlockEntity) {
+                                cableFacadeBlockEntity.setFacadeState(paintBlockState);
+                            }
+                        }
+                    });
         }
 
-        FacadeType facadeType = newFacadeBlock == SFMBlocks.CABLE_BLOCK.get()
-                                ? FacadeType.NONE
-                                : placedFacadeState.isSolidRender(level, hitBlockPos)
-                                  ? FacadeType.OPAQUE_FACADE
-                                  : FacadeType.TRANSLUCENT_FACADE;
-        BlockState newBlockState = hitBlockState.setValue(CableBlock.FACADE_TYPE_PROP, facadeType);
-        gatherCableBlocksToFacade(msg.spreadLogic, level, hitBlockPos)
-                .forEach(blockPos -> {
-                    CableBlockEntity cableBlockEntity = getCableBlockEntity(level, blockPos);
-                    if (cableBlockEntity == null) return;
 
-                    if (newFacadeBlock == SFMBlocks.CABLE_BLOCK.get()) {
-                        cableBlockEntity.setFacadeState(defaultCableState);
-                        level.removeBlockEntity(blockPos);
-                    } else {
-                        cableBlockEntity.setFacadeState(placedFacadeState);
-                    }
-                    level.setBlock(blockPos, newBlockState, Block.UPDATE_IMMEDIATE | Block.UPDATE_CLIENTS);
-                });
     }
 
     private static Stream<BlockPos> gatherCableBlocksToFacade(
@@ -133,14 +141,14 @@ public record ServerboundFacadePacket(
             case SINGLE -> Stream.of(startCablePos);
             case NETWORK -> CableNetworkManager.getContiguousCables(level, startCablePos);
             case NETWORK_GLOBAL_SAME_BLOCK -> {
-                Block check = (level.getBlockEntity(startCablePos) instanceof CableBlockEntity cableBlockEntity)
+                Block check = (level.getBlockEntity(startCablePos) instanceof CableFacadeBlockEntity cableBlockEntity)
                               ? cableBlockEntity.getFacadeState().getBlock()
                               : null;
                 yield CableNetworkManager
                         .getContiguousCables(level, startCablePos)
                         .filter(
-                                cablePos -> level.getBlockEntity(cablePos) instanceof CableBlockEntity otherCableBlockEntity
-                                            ? otherCableBlockEntity.getFacadeState().getBlock() == check
+                                cablePos -> level.getBlockEntity(cablePos) instanceof CableFacadeBlockEntity otherCableFacadeBlockEntity
+                                            ? otherCableFacadeBlockEntity.getFacadeState().getBlock() == check
                                             : check == null
                         );
             }
@@ -148,7 +156,7 @@ public record ServerboundFacadePacket(
                 Set<BlockPos> cablePositions = CableNetworkManager
                         .getContiguousCables(level, startCablePos)
                         .collect(Collectors.toSet());
-                Block check = (level.getBlockEntity(startCablePos) instanceof CableBlockEntity cableBlockEntity)
+                Block check = (level.getBlockEntity(startCablePos) instanceof CableFacadeBlockEntity cableBlockEntity)
                               ? cableBlockEntity.getFacadeState().getBlock()
                               : null;
                 yield SFMUtils.getRecursiveStream((current, next, results) -> {
@@ -157,8 +165,8 @@ public record ServerboundFacadePacket(
                         if (
                                 cablePositions.contains(neighbour)
                                 && (
-                                        level.getBlockEntity(neighbour) instanceof CableBlockEntity otherCableBlockEntity
-                                        ? otherCableBlockEntity.getFacadeState().getBlock() == check
+                                        level.getBlockEntity(neighbour) instanceof CableFacadeBlockEntity otherCableFacadeBlockEntity
+                                        ? otherCableFacadeBlockEntity.getFacadeState().getBlock() == check
                                         : check == null
                                 )
                         ) {
@@ -189,21 +197,6 @@ public record ServerboundFacadePacket(
         }
         // Non-full block or item should return null, do nothing
         return null;
-    }
-
-    private static @Nullable CableBlockEntity getCableBlockEntity(
-            Level pLevel,
-            BlockPos pPos
-    ) {
-        BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-        // Return existing block entity
-        if (blockEntity != null) return (CableBlockEntity) blockEntity;
-
-        // Create new block entity
-        CableBlockEntity cableBlockEntity = SFMBlockEntities.CABLE_BLOCK_ENTITY.get().create(pPos, defaultCableState);
-        if (cableBlockEntity == null) return null;
-        pLevel.setBlockEntity(cableBlockEntity);
-        return cableBlockEntity;
     }
 
     public enum SpreadLogic {
