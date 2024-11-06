@@ -48,6 +48,7 @@ public class CableFacadeBlock extends CableBlock implements EntityBlock {
                Shapes.block();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public ItemStack getCloneItemStack(
             BlockGetter pLevel,
