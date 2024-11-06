@@ -1,8 +1,10 @@
 package ca.teamdman.sfm.common.block;
 
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.util.FacadeType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -44,6 +46,15 @@ public class CableFacadeBlock extends CableBlock implements EntityBlock {
         return pState.getValue(FACADE_TYPE_PROP) == FacadeType.TRANSLUCENT ?
                Shapes.empty() :
                Shapes.block();
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(
+            BlockGetter pLevel,
+            BlockPos pPos,
+            BlockState pState
+    ) {
+        return new ItemStack(SFMBlocks.CABLE_BLOCK.get());
     }
 
     @Override
