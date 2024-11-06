@@ -89,6 +89,38 @@ public final class LocalizationKeys {
             "gui.sfm.exit_without_saving_confirm.no_button",
             "Continue editing"
     );
+    public static final LocalizationEntry FACADE_APPLY_NETWORK_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+            "gui.sfm.facade_apply_network_confirm.title",
+            "Are you sure?"
+    );
+    public static final LocalizationEntry FACADE_APPLY_NETWORK_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+            "gui.sfm.facade_apply_network_confirm.message",
+            "%d different facade states across %d cables that will be overwritten."
+    );
+    public static final LocalizationEntry FACADE_APPLY_NETWORK_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+            "gui.sfm.facade_apply_network_confirm.yes_button",
+            "Apply the change"
+    );
+    public static final LocalizationEntry FACADE_APPLY_NETWORK_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+            "gui.sfm.facade_apply_network_confirm.no_button",
+            "Never mind"
+    );
+     public static final LocalizationEntry FACADE_APPLY_SUS_NEIGHBOURS_CONFIRM_SCREEN_TITLE = new LocalizationEntry(
+            "gui.sfm.facade_apply_sus_neighbours_confirm.title",
+            "Are you sure?"
+    );
+    public static final LocalizationEntry FACADE_APPLY_SUS_NEIGHBOURS_CONFIRM_SCREEN_MESSAGE = new LocalizationEntry(
+            "gui.sfm.facade_apply_sus_neighbours_confirm.message",
+            "%d cables are touching existing facades of the same type, this will merge stuff that may not be easy to undo."
+    );
+    public static final LocalizationEntry FACADE_APPLY_SUS_NEIGHBOURS_CONFIRM_SCREEN_YES_BUTTON = new LocalizationEntry(
+            "gui.sfm.facade_apply_sus_neighbours_confirm.yes_button",
+            "Apply the change"
+    );
+    public static final LocalizationEntry FACADE_APPLY_SUS_NEIGHBOURS_CONFIRM_SCREEN_NO_BUTTON = new LocalizationEntry(
+            "gui.sfm.facade_apply_sus_neighbours_confirm.no_button",
+            "Never mind"
+    );
     public static final LocalizationEntry PROGRAM_WARNING_RESOURCE_EACH_WITHOUT_PATTERN = new LocalizationEntry(
             "program.sfm.warnings.each_without_pattern",
             "EACH used without a pattern, statement %s"

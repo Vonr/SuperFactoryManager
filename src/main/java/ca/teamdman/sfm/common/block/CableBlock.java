@@ -5,7 +5,6 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.cablenetwork.ICableBlock;
 import ca.teamdman.sfm.common.net.ServerboundFacadePacket;
 import ca.teamdman.sfm.common.registry.SFMItems;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -77,11 +76,7 @@ public class CableBlock extends Block implements ICableBlock {
                         pHit,
                         ServerboundFacadePacket.SpreadLogic.fromParts(Screen.hasControlDown(), Screen.hasAltDown())
                 );
-                SFMPackets.CABLE_CHANNEL.sendToServer(msg);
-
-                // eagerly handle the update on the client for immediate feedback
-                ClientStuff.eagerExecute(msg);
-
+                ClientStuff.sendFacadePacketFromClientWithConfirmationIfNecessary(msg);
                 return InteractionResult.CONSUME;
             }
             return InteractionResult.SUCCESS;

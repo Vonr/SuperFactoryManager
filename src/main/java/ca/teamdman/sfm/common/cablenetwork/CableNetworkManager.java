@@ -207,16 +207,6 @@ public class CableNetworkManager {
         return Optional.of(rtn);
     }
 
-    public static Stream<BlockPos> getContiguousCables(Level level, BlockPos pos) {
-        if (level.isClientSide()) {
-            return CableNetwork.discoverCables(level, pos);
-        } else {
-            return getNetworkFromCablePosition(level, pos)
-                    .stream()
-                    .flatMap(CableNetwork::getCablePositions);
-        }
-    }
-
     public static List<BlockPos> getBadCableCachePositions(Level level) {
         return getNetworksForLevel(level)
                 .flatMap(CableNetwork::getCablePositions)

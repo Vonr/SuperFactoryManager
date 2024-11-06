@@ -3,7 +3,7 @@ package ca.teamdman.sfm.common.net;
 import ca.teamdman.sfm.common.block.CableBlock;
 import ca.teamdman.sfm.common.block.CableFacadeBlock;
 import ca.teamdman.sfm.common.blockentity.CableFacadeBlockEntity;
-import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
+import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.util.FacadeType;
 import ca.teamdman.sfm.common.util.SFMUtils;
@@ -132,20 +132,19 @@ public record ServerboundFacadePacket(
 
     }
 
-    private static Stream<BlockPos> gatherCableBlocksToFacade(
+    public static Stream<BlockPos> gatherCableBlocksToFacade(
             SpreadLogic spreadLogic,
             Level level,
             BlockPos startCablePos
     ) {
         return switch (spreadLogic) {
             case SINGLE -> Stream.of(startCablePos);
-            case NETWORK -> CableNetworkManager.getContiguousCables(level, startCablePos);
+            case NETWORK -> CableNetwork.discoverCables(level, startCablePos);
             case NETWORK_GLOBAL_SAME_BLOCK -> {
                 Block check = (level.getBlockEntity(startCablePos) instanceof CableFacadeBlockEntity cableBlockEntity)
                               ? cableBlockEntity.getFacadeState().getBlock()
                               : null;
-                yield CableNetworkManager
-                        .getContiguousCables(level, startCablePos)
+                yield CableNetwork.discoverCables(level, startCablePos)
                         .filter(
                                 cablePos -> level.getBlockEntity(cablePos) instanceof CableFacadeBlockEntity otherCableFacadeBlockEntity
                                             ? otherCableFacadeBlockEntity.getFacadeState().getBlock() == check
@@ -153,8 +152,7 @@ public record ServerboundFacadePacket(
                         );
             }
             case NETWORK_CONTIGUOUS_SAME_BLOCK -> {
-                Set<BlockPos> cablePositions = CableNetworkManager
-                        .getContiguousCables(level, startCablePos)
+                Set<BlockPos> cablePositions = CableNetwork.discoverCables(level, startCablePos)
                         .collect(Collectors.toSet());
                 Block check = (level.getBlockEntity(startCablePos) instanceof CableFacadeBlockEntity cableBlockEntity)
                               ? cableBlockEntity.getFacadeState().getBlock()
@@ -178,7 +176,7 @@ public record ServerboundFacadePacket(
         };
     }
 
-    private static @Nullable Block getBlockFromStack(
+    public static @Nullable Block getBlockFromStack(
             ItemStack itemStack,
             Level level,
             BlockPos pos
