@@ -139,7 +139,7 @@ label           : (identifier)   #RawLabel
                 | string                  #StringLabel
                 ;
 
-identifier : (IDENTIFIER | REDSTONE | LOCAL | GLOBAL | SECOND | SECONDS) ;
+identifier : (IDENTIFIER | REDSTONE | GLOBAL | SECOND | SECONDS) ;
 
 // GENERAL
 string: STRING ;

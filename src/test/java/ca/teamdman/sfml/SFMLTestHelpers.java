@@ -4,7 +4,6 @@ import ca.teamdman.sfml.ast.ASTBuilder;
 import ca.teamdman.sfml.ast.Program;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.openjdk.nashorn.internal.runtime.options.Option;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -101,10 +100,6 @@ public class SFMLTestHelpers {
             this(List.of(), List.of(), List.of(visitProblems));
         }
 
-        public boolean ok() {
-            return lexerErrors.isEmpty() && parserErrors.isEmpty() && visitProblems.isEmpty();
-        }
-
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof CompileErrors other)) return false;
@@ -139,11 +134,5 @@ public class SFMLTestHelpers {
                 System.out.println(sw + "\n");
             }
         }
-    }
-
-    public record CompileResult(
-            Option<Program> program,
-            CompileErrors errors
-    ) {
     }
 }

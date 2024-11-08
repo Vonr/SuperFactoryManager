@@ -16,6 +16,7 @@ import org.apache.commons.compress.utils.FileNameUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -662,7 +663,7 @@ public class SFMLTests {
     public void demos() throws IOException {
         var rootDir = System.getProperty("user.dir");
         rootDir = rootDir.replaceAll("runs"
-                                     + System.getProperty("file.separator").replaceAll("\\\\", "\\\\\\\\")
+                                     + FileSystems.getDefault().getSeparator().replaceAll("\\\\", "\\\\\\\\")
                                      + "junit$", "");
         var examplesDir = Paths.get(rootDir, "examples").toFile();
         var found = 0;
@@ -681,7 +682,7 @@ public class SFMLTests {
     public void templates() throws IOException {
         var rootDir = System.getProperty("user.dir");
         rootDir = rootDir.replaceAll("runs"
-                                     + System.getProperty("file.separator").replaceAll("\\\\", "\\\\\\\\")
+                                     + FileSystems.getDefault().getSeparator().replaceAll("\\\\", "\\\\\\\\")
                                      + "junit$", "");
         var examplesDir = Paths.get(rootDir, "src/main/resources/assets/sfm/template_programs").toFile();
         var found = 0;
