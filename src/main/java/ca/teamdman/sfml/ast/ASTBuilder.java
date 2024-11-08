@@ -11,6 +11,7 @@ import cpw.mods.modlauncher.Launcher;
 import net.minecraft.resources.ResourceLocation;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -169,7 +170,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                           : SFMConfig.getOrDefault(SFMConfig.COMMON.timerTriggerMinimumIntervalInTicks);
 
         // validate interval
-        if (time.getTicks() < minInterval) {
+        if (time.ticks() < minInterval) {
             throw new IllegalArgumentException("Minimum trigger interval is " + minInterval + " ticks.");
         }
 
@@ -209,30 +210,52 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
     }
 
     @Override
-    public Interval visitTick(SFMLParser.TickContext ctx) {
-        Interval interval = Interval.fromTicks(1);
+    public ASTNode visitIntervalSpace(SFMLParser.IntervalSpaceContext ctx) {
+        TerminalNode firstNumber = ctx.NUMBER(0);
+        int ticks;
+        if (firstNumber == null) {
+            ticks = 1;
+        } else {
+            ticks = Integer.parseInt(firstNumber.getText());
+        }
+        if (ctx.SECONDS() != null) {
+            ticks *= 20;
+        }
+
+        Interval.IntervalAlignment alignment = Interval.IntervalAlignment.LOCAL;
+        if (ctx.GLOBAL() != null) {
+            alignment = Interval.IntervalAlignment.GLOBAL;
+        }
+
+        int offset = 0;
+        TerminalNode secondNumber = ctx.NUMBER(1);
+        if (secondNumber != null) {
+            offset = Integer.parseInt(secondNumber.getText());
+        }
+
+        Interval interval = new Interval(ticks, alignment, offset);
         AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
         return interval;
     }
 
     @Override
-    public Interval visitTicks(SFMLParser.TicksContext ctx) {
-        var num = visitNumber(ctx.number());
-        if (num.value() > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("interval cannot be greater than " + Integer.MAX_VALUE + " ticks.");
+    public ASTNode visitIntervalNoSpace(SFMLParser.IntervalNoSpaceContext ctx) {
+        String firstNumber = ctx.NUMBER_WITH_G_SUFFIX().getText();
+        String front = firstNumber.substring(0, firstNumber.length() - 1);
+        int ticks = Integer.parseInt(front);
+        if (ctx.SECONDS() != null) {
+            ticks *= 20;
         }
-        Interval interval = Interval.fromTicks((int) num.value());
-        AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
-        return interval;
-    }
 
-    @Override
-    public Interval visitSeconds(SFMLParser.SecondsContext ctx) {
-        var num = visitNumber(ctx.number());
-        if (num.value() > Integer.MAX_VALUE / 20) {
-            throw new IllegalArgumentException("interval cannot be greater than " + Integer.MAX_VALUE + " ticks.");
+        Interval.IntervalAlignment alignment = Interval.IntervalAlignment.GLOBAL;
+
+        int offset = 0;
+        TerminalNode secondNumber = ctx.NUMBER();
+        if (secondNumber != null) {
+            offset = Integer.parseInt(secondNumber.getText());
         }
-        Interval interval = Interval.fromSeconds((int) num.value());
+
+        Interval interval = new Interval(ticks, alignment, offset);
         AST_NODE_CONTEXTS.add(new Pair<>(interval, ctx));
         return interval;
     }

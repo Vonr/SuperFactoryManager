@@ -65,6 +65,16 @@ END
 -- Fix only rendering one of label gun and network tool when both held at once
 -- Fix network tool not refreshing render data properly when in off-hand
 -- Fix cables being moved by pistons not updating the cable network
+-- Remove unused keyword tokens: WORLD, PROGRAM, MOVE
+-- Add random initialization of manager internal clock on load from world
+-- Add support for specifying global alignment and offset for timer intervals
+EVERY 20 GLOBAL TICKS DO END
+EVERY 20 GLOBAL PLUS 5 TICKS DO END
+EVERY 20G PLUS 5 TICKS DO END
+EVERY 20G + 5 TICKS DO END
+EVERY 20G+5 TICKS DO END
+-- Add timer_triggers.sfml example
+-- Fix manager asking for confirmation when pasting over empty disks
 
 ---- 4.19.1 ----
 -- Fix 1.19.4 build failures due to Gradle hating me

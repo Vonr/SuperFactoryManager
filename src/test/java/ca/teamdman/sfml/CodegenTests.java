@@ -79,7 +79,7 @@ public class CodegenTests {
                 new ASTBuilder(),
                 "hello world",
                 List.of(new TimerTrigger(
-                        Interval.fromTicks(20),
+                        new Interval(20, Interval.IntervalAlignment.LOCAL, 0),
                         new Block(List.of(new IfStatement(
                                 new BoolHas(
                                         SetOperator.OVERALL,

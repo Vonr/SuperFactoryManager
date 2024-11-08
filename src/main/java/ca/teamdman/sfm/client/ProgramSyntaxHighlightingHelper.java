@@ -106,6 +106,8 @@ public class ProgramSyntaxHighlightingHelper {
                 return ChatFormatting.GREEN;
             case SFMLLexer.TICKS:
             case SFMLLexer.TICK:
+            case SFMLLexer.GLOBAL:
+            case SFMLLexer.NUMBER_WITH_G_SUFFIX:
             case SFMLLexer.SECONDS:
             case SFMLLexer.SLOTS:
             case SFMLLexer.EXCEPT:
@@ -119,6 +121,7 @@ public class ProgramSyntaxHighlightingHelper {
             case SFMLLexer.OR:
                 return ChatFormatting.GOLD;
             case SFMLLexer.NUMBER:
+            case SFMLLexer.PLUS:
             case SFMLLexer.GT:
             case SFMLLexer.LT:
             case SFMLLexer.EQ:

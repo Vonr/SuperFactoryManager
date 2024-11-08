@@ -3,8 +3,6 @@ package ca.teamdman.sfml;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.common.SFMConfig;
-import ca.teamdman.sfml.ast.ASTBuilder;
-import ca.teamdman.sfml.ast.Program;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
 import com.google.common.collect.Sets;
 import net.minecraft.network.chat.Component;
@@ -14,87 +12,46 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import static ca.teamdman.sfml.SFMLTestHelpers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("unchecked")
 public class SFMLTests {
-    public ArrayList<String> getCompileErrors(String input) {
-        var lexer = new SFMLLexer(CharStreams.fromString(input));
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new SFMLParser(tokens);
-        var builder = new ASTBuilder();
-        var errors = new ArrayList<String>();
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(new Program.ListErrorListener(errors));
-        parser.removeErrorListeners();
-        parser.addErrorListener(new Program.ListErrorListener(errors));
-        var context = parser.program();
-        if (errors.isEmpty()) { // don't build if syntax errors present
-            try {
-                //noinspection unused
-                var program = builder.visitProgram(context);
-            } catch (Exception e) {
-                var sw = new StringWriter();
-                var pw = new PrintWriter(sw);
-                e.printStackTrace(pw);
-                errors.add("exception during visitProgram: " + sw);
-            }
-        }
-
-        for (var error : errors) {
-            System.out.println(error);
-        }
-
-        return errors;
-    }
 
     @Test
     public void resourceIdentifierClassLoadingRegression() {
         new ResourceIdentifier<ItemStack, Item, IItemHandler>("stone");
     }
 
-    public Program compile(String input) {
-        var lexer = new SFMLLexer(CharStreams.fromString(input));
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new SFMLParser(tokens);
-        var builder = new ASTBuilder();
-        var context = parser.program();
-        return builder.visitProgram(context);
-    }
-
     @Test
     public void simpleComparisons() {
-        var input = """
-                    name "hello world"
-
-                    every 20 ticks do
-                        input from a
-                        if a has gt 100 iron then
-                            output to b
-                        else if a has gt 50 iron then
-                            output to c
-                        else if a has gt 10 iron then
-                            output to d
-                        else if a has gt 2 iron then
-                            output to e
-                        end
-                    end
-                """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(
+                """
+                            name "hello world"
+                        
+                            every 20 ticks do
+                                input from a
+                                if a has gt 100 iron then
+                                    output to b
+                                else if a has gt 50 iron then
+                                    output to c
+                                else if a has gt 10 iron then
+                                    output to d
+                                else if a has gt 2 iron then
+                                    output to e
+                                end
+                            end
+                        """
+        );
     }
 
 
@@ -102,13 +59,12 @@ public class SFMLTests {
     public void resource1() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input item:minecraft:stick from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", "minecraft", "stick")),
@@ -120,13 +76,12 @@ public class SFMLTests {
     public void resource2() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input item::stick from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
@@ -138,13 +93,12 @@ public class SFMLTests {
     public void resource3() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input item::stick from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
@@ -156,13 +110,12 @@ public class SFMLTests {
     public void resource4() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input stick from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("item", ".*", "stick")),
@@ -174,13 +127,12 @@ public class SFMLTests {
     public void resource5() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input fluid::water from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("fluid", ".*", "water")),
@@ -192,13 +144,12 @@ public class SFMLTests {
     public void resource6() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input fluid:minecraft:water from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
@@ -214,13 +165,12 @@ public class SFMLTests {
     public void resource7() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input fluid:: from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("fluid", ".*", ".*")),
@@ -232,41 +182,33 @@ public class SFMLTests {
     public void badResource() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input :fluid:: from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+        assertCompileErrorsPresent(input);
     }
 
-    @Test
-    public void badTimerInterval() {
-        var input = """
-                    name "hello world"
-
-                    every 0 ticks do
-                        input from a
-                    end
-                """;
-        var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
-    }
 
     @Test
     public void badTimerIntervalCheckingConfig() {
         var min = SFMConfig.COMMON.timerTriggerMinimumIntervalInTicks.getDefault();
-        for (int i = min-1; i > 0; i--) {
-            var input = """
-                    name "hello world"
-
-                    every X ticks do
-                        input from a
-                    end
-                """;
-            var errors = getCompileErrors(input.replace("X", String.valueOf(min - 1)));
-            assertFalse(errors.isEmpty());
+        var template = """
+                        name "hello world"
+                    
+                        every X ticks do
+                            input from a
+                        end
+                    """;
+        for (int i = min - 1; i > 0; i--) {
+            String program = template.replace("X", String.valueOf(min - 1));
+            assertCompileErrorsPresent(
+                    program,
+                    new CompileErrors(
+                            new IllegalArgumentException("Minimum trigger interval is " + min + " ticks.")
+                    )
+            );
         }
     }
 
@@ -275,14 +217,13 @@ public class SFMLTests {
         var min = SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO.getDefault();
         assertEquals(min, 1);
         var input = """
-            name "hello world"
-
-            every 1 ticks do
-                input forge_energy:: from a
-            end
-        """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+                    name "hello world"
+                
+                    every 1 ticks do
+                        input forge_energy:: from a
+                    end
+                """;
+        assertNoCompileErrors(input);
     }
 
     @Test
@@ -290,14 +231,13 @@ public class SFMLTests {
         var min = SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO.getDefault();
         assertEquals(min, 1);
         var input = """
-            name "hello world"
-
-            every 0 ticks do
-                input forge_energy:: from a
-            end
-        """;
-        var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+                    name "hello world"
+                
+                    every 0 ticks do
+                        input forge_energy:: from a
+                    end
+                """;
+        assertCompileErrorsPresent(input);
     }
 
     @Test
@@ -305,28 +245,26 @@ public class SFMLTests {
         var min = SFMConfig.COMMON.timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO.getDefault();
         assertEquals(min, 1);
         var input = """
-            name "hello world"
-
-            every 1 ticks do
-                input forge_energy:: from a
-                output to b -- this is an item io statement
-            end
-        """;
-        var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+                    name "hello world"
+                
+                    every 1 ticks do
+                        input forge_energy:: from a
+                        output to b -- this is an item io statement
+                    end
+                """;
+        assertCompileErrorsPresent(input);
     }
 
     @Test
     public void resource8() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input forge_energy:forge:energy from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
@@ -342,13 +280,12 @@ public class SFMLTests {
     public void resource9() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input forge_energy:forge:energy from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>(
@@ -364,13 +301,12 @@ public class SFMLTests {
     public void resource10() {
         var input = """
                     name "hello world"
-
+                
                     every 20 ticks do
                         input gas::ethylene from a
                     end
                 """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(input);
         var program = compile(input);
         assertEquals(
                 Sets.newHashSet(new ResourceIdentifier<FluidStack, Fluid, IFluidHandler>("gas", ".*", "ethylene")),
@@ -380,38 +316,38 @@ public class SFMLTests {
 
     @Test
     public void wildcardResourceIdentifiers() {
-        var input = """
-                name "hello world"
-
-                every 20 ticks do
-                    INPUT fluid:minecraft:water from a TOP SIDE
-                    OUTPUT fluid:*:* to b
-                    OUTPUT minecraft:* to b
-                    OUTPUT *:iron_ingot to b
-                    OUTPUT *:*:* to b
-                    OUTPUT *:* to b
-                    OUTPUT * to b
-                    OUTPUT ".*:.*:.*" to b
-                    OUTPUT ".*:.*" to b
-                    OUTPUT ".*" to b
-                end
-                """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(
+                """
+                        name "hello world"
+                        
+                        every 20 ticks do
+                            INPUT fluid:minecraft:water from a TOP SIDE
+                            OUTPUT fluid:*:* to b
+                            OUTPUT minecraft:* to b
+                            OUTPUT *:iron_ingot to b
+                            OUTPUT *:*:* to b
+                            OUTPUT *:* to b
+                            OUTPUT * to b
+                            OUTPUT ".*:.*:.*" to b
+                            OUTPUT ".*:.*" to b
+                            OUTPUT ".*" to b
+                        end
+                        """
+        );
     }
 
     @Test
     public void quotedResourceIdentifiers() {
-        var input = """
-                EVERY 20 TICKS DO
-                    INPUT FROM a
-                    OUTPUT "redstone" to b
-                    OUTPUT "minecraft:iron_ingot" to b
-                    OUTPUT "item:minecraft:gold_ingot" to b
-                END
-                """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(
+                """
+                        EVERY 20 TICKS DO
+                            INPUT FROM a
+                            OUTPUT "redstone" to b
+                            OUTPUT "minecraft:iron_ingot" to b
+                            OUTPUT "item:minecraft:gold_ingot" to b
+                        END
+                        """
+        );
     }
 
     @Test
@@ -422,8 +358,7 @@ public class SFMLTests {
                     OUTPUT minecraft:"redstone" to b
                 END
                 """;
-        var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+        assertCompileErrorsPresent(input);
     }
 
     @Test
@@ -434,8 +369,7 @@ public class SFMLTests {
                     OUTPUT "minecraft":"redstone" to b
                 END
                 """;
-        var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+        assertCompileErrorsPresent(input);
     }
 
     @Test
@@ -446,44 +380,43 @@ public class SFMLTests {
                     OUTPUT "item":minecraft:redstone to b
                 END
                 """;
-        var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+        assertCompileErrorsPresent(input);
     }
 
     @Test
     public void malformedResourceIdentifier4() {
-        var input = """
-                EVERY 20 TICKS DO
-                    INPUT FROM a
-                    OUTPUT item:minecraft:redstone to b
-                END
-                """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty()); // redstone is now a valid resource id
+        assertNoCompileErrors(
+                """
+                        EVERY 20 TICKS DO
+                            INPUT FROM a
+                            OUTPUT item:minecraft:redstone to b
+                        END
+                        """
+        );
     }
 
     @Test
     public void malformedResourceIdentifier5() {
-        var input = """
-                EVERY 20 TICKS DO
-                    INPUT FROM a
-                    OUTPUT minecraft:redstone to b
-                END
-                """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty()); // redstone is now a valid resource id
+        assertNoCompileErrors(
+                """
+                        EVERY 20 TICKS DO
+                            INPUT FROM a
+                            OUTPUT minecraft:redstone to b
+                        END
+                        """
+        );
     }
 
     @Test
     public void malformedResourceIdentifier6() {
-        var input = """
-                EVERY 20 TICKS DO
-                    INPUT FROM a
-                    OUTPUT redstone to b
-                END
-                """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty()); // redstone is now a valid resource id
+        assertNoCompileErrors(
+                """
+                        EVERY 20 TICKS DO
+                            INPUT FROM a
+                            OUTPUT redstone to b
+                        END
+                        """
+        );
     }
 
 
@@ -495,31 +428,29 @@ public class SFMLTests {
                     OUTPUT "minecraft":"redstone" to b
                 END
                 """;
-        var errors = getCompileErrors(input);
-        assertFalse(errors.isEmpty());
+        assertCompileErrorsPresent(input);
     }
 
     @Test
     public void syntaxHighlighting1() {
         var rawInput = """
                 EVERY 20 TICKS DO
-
+                
                     INPUT FROM a''" -- hehehehaw
                     -- we want there to be no issues highlighting even if errors are present
                     "'''''
-
+                
                     -- we want to test to make sure whitespace is preserved
                     -- in the
-
+                
                     -- syntax highlighting
-
+                
                     INPUT FROM hehehehehehehehehhe
-
+                
                     OUTPUT stone to b
                 END
                 """.stripIndent();
-        var errors = getCompileErrors(rawInput);
-        assertFalse(errors.isEmpty());
+        assertCompileErrorsPresent(rawInput);
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
@@ -542,15 +473,14 @@ public class SFMLTests {
     public void syntaxHighlighting2() {
         var rawInput = """
                 EVERY 20 TICKS DO
-
+                
                     INPUT FROM a
                     INPUT FROM hehehehehehehehehhe
-
+                
                     OUTPUT stone to b
                 END
                 """.stripIndent();
-        var errors = getCompileErrors(rawInput);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(rawInput);
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
@@ -577,8 +507,8 @@ public class SFMLTests {
                         INPUT FROM a
                         OUTPUT TO b
                     END""";
-        var errors = getCompileErrors(rawInput);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(rawInput);
+
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
@@ -600,13 +530,13 @@ public class SFMLTests {
     public void syntaxHighlightingWhitespaceRegression2() {
         // the empty newline is important
         var rawInput = """
-
+                
                 EVERY 20 TICKS DO
                     INPUT FROM a
                     OUTPUT TO b
                 END""";
-        var errors = getCompileErrors(rawInput);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(rawInput);
+
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
@@ -629,16 +559,16 @@ public class SFMLTests {
     public void syntaxHighlighting3() {
         var rawRawInput = """
                 EVERY 20 TICKS DO
-
+                
                     INPUT FROM a
                     INPUT FROM hehehehehehehehehhe
-
+                
                     OUTPUT stone to b
                 END
                 """.stripIndent();
         String[] rawRawLines = rawRawInput.split("\n");
         for (int i = 0; i < rawRawLines.length; i++) {
-            var rawInput = java.util.Arrays.stream(rawRawLines, 0, i)
+            var rawInput = Arrays.stream(rawRawLines, 0, i)
                     .collect(Collectors.joining("\n"));
             var lines = rawInput.split("\n", -1);
 
@@ -663,15 +593,15 @@ public class SFMLTests {
     public void syntaxHighlightingUnusedToken() {
         var rawInput = """
                 EVERY 20 TICKS DO
-
+                
                     INPUT FROM a
                     INPUT FROM hehehehehehehehehhe=
-
+                
                     OUTPUT stone to b
                 END
                 """.stripIndent();
-        var errors = getCompileErrors(rawInput);
-        assertFalse(errors.isEmpty());
+        assertCompileErrorsPresent(rawInput);
+
         var lines = rawInput.split("\n", -1);
 
         var colouredLines = ProgramSyntaxHighlightingHelper.withSyntaxHighlighting(rawInput, false);
@@ -692,33 +622,33 @@ public class SFMLTests {
 
     @Test
     public void booleanHasOperator() {
-        var input = """
-                name "hello world"
-
-                every 20 ticks do
-                    input from a
-                    if a has gt 100 energy:minecraft:iron then
-                        output to b
-                    end
-                end
-                """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(
+                """
+                        name "hello world"
+                        
+                        every 20 ticks do
+                            input from a
+                            if a has gt 100 energy:minecraft:iron then
+                                output to b
+                            end
+                        end
+                        """
+        );
     }
 
 
     @Test
     public void quotedLabels() {
-        var input = """
-                name "hello world"
-
-                every 20 ticks do
-                    input from "hehe beans 😀"
-                    output to "haha benis"
-                end
-                """;
-        var errors = getCompileErrors(input);
-        assertTrue(errors.isEmpty());
+        assertNoCompileErrors(
+                """
+                        name "hello world"
+                        
+                        every 20 ticks do
+                            input from "hehe beans 😀"
+                            output to "haha benis"
+                        end
+                        """
+        );
     }
 
     @Test
@@ -731,7 +661,9 @@ public class SFMLTests {
     @Test
     public void demos() throws IOException {
         var rootDir = System.getProperty("user.dir");
-        rootDir = rootDir.replaceAll("runs" + System.getProperty("file.separator").replaceAll("\\\\","\\\\\\\\") + "junit$", "");
+        rootDir = rootDir.replaceAll("runs"
+                                     + System.getProperty("file.separator").replaceAll("\\\\", "\\\\\\\\")
+                                     + "junit$", "");
         var examplesDir = Paths.get(rootDir, "examples").toFile();
         var found = 0;
         //noinspection DataFlowIssue
@@ -739,8 +671,7 @@ public class SFMLTests {
             if (!FileNameUtils.getExtension(entry.getPath()).equals("sfm")) continue;
             System.out.println("Reading " + entry);
             var content = Files.readString(entry.toPath());
-            var errors = getCompileErrors(content);
-            assertTrue(errors.isEmpty());
+            assertNoCompileErrors(content);
             found++;
         }
         assertNotEquals(0, found);
@@ -749,7 +680,9 @@ public class SFMLTests {
     @Test
     public void templates() throws IOException {
         var rootDir = System.getProperty("user.dir");
-        rootDir = rootDir.replaceAll("runs" + System.getProperty("file.separator").replaceAll("\\\\","\\\\\\\\") + "junit$", "");
+        rootDir = rootDir.replaceAll("runs"
+                                     + System.getProperty("file.separator").replaceAll("\\\\", "\\\\\\\\")
+                                     + "junit$", "");
         var examplesDir = Paths.get(rootDir, "src/main/resources/assets/sfm/template_programs").toFile();
         var found = 0;
         //noinspection DataFlowIssue
@@ -758,8 +691,7 @@ public class SFMLTests {
             System.out.println("Reading " + entry);
             var content = Files.readString(entry.toPath());
             content = content.replace("$REPLACE_RESOURCE_TYPES_HERE$", "");
-            var errors = getCompileErrors(content);
-            assertTrue(errors.isEmpty());
+            assertNoCompileErrors(content);
             found++;
         }
         assertNotEquals(0, found);
@@ -781,44 +713,49 @@ public class SFMLTests {
 
     @Test
     public void condensedIdentifier1() {
-        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","fluid","minecraft", "water");
+        ResourceIdentifier<?, ?, ?> ident = new ResourceIdentifier<>("sfm", "fluid", "minecraft", "water");
         assertEquals("sfm:fluid:minecraft:water", ident.toString());
         assertEquals("fluid:minecraft:water", ident.toStringCondensed());
     }
 
     @Test
     public void condensedIdentifier2() {
-        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","item","minecraft", "stick");
+        ResourceIdentifier<?, ?, ?> ident = new ResourceIdentifier<>("sfm", "item", "minecraft", "stick");
         assertEquals("sfm:item:minecraft:stick", ident.toString());
         assertEquals("minecraft:stick", ident.toStringCondensed());
     }
+
     @Test
     public void condensedIdentifier3() {
-        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","item",".*", "stick");
+        ResourceIdentifier<?, ?, ?> ident = new ResourceIdentifier<>("sfm", "item", ".*", "stick");
         assertEquals("sfm:item:.*:stick", ident.toString());
         assertEquals("stick", ident.toStringCondensed());
     }
+
     @Test
     public void condensedIdentifier4() {
-        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","item",".*", ".*");
+        ResourceIdentifier<?, ?, ?> ident = new ResourceIdentifier<>("sfm", "item", ".*", ".*");
         assertEquals("sfm:item:.*:.*", ident.toString());
         assertEquals("", ident.toStringCondensed());
     }
+
     @Test
     public void condensedIdentifier5() {
-        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","fluid",".*", ".*");
+        ResourceIdentifier<?, ?, ?> ident = new ResourceIdentifier<>("sfm", "fluid", ".*", ".*");
         assertEquals("sfm:fluid:.*:.*", ident.toString());
         assertEquals("fluid::", ident.toStringCondensed());
     }
+
     @Test
     public void condensedIdentifier6() {
-        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","fluid",".*", "lava");
+        ResourceIdentifier<?, ?, ?> ident = new ResourceIdentifier<>("sfm", "fluid", ".*", "lava");
         assertEquals("sfm:fluid:.*:lava", ident.toString());
         assertEquals("fluid::lava", ident.toStringCondensed());
     }
+
     @Test
     public void condensedIdentifier7() {
-        ResourceIdentifier<?,?,?> ident = new ResourceIdentifier<>("sfm","fluid","minecraft", ".*");
+        ResourceIdentifier<?, ?, ?> ident = new ResourceIdentifier<>("sfm", "fluid", "minecraft", ".*");
         assertEquals("sfm:fluid:minecraft:.*", ident.toString());
         assertEquals("fluid:minecraft:", ident.toStringCondensed());
     }

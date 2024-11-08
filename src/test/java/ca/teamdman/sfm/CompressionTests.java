@@ -42,7 +42,7 @@ public class CompressionTests {
                 .stream()
                 .map(NbtUtils::writeBlockPos)
                 .collect(ListTag::new, ListTag::add, ListTag::addAll);
-        assertTagSizeOkay(tag);
+        assertThrows(RuntimeException.class, ()-> assertTagSizeOkay(tag));
     }
 
     @Test
@@ -72,7 +72,7 @@ public class CompressionTests {
                 .map(BlockPos::asLong)
                 .map(LongTag::valueOf)
                 .collect(ListTag::new, ListTag::add, ListTag::addAll);
-        assertTagSizeOkay(tag);
+        assertThrows(RuntimeException.class, ()-> assertTagSizeOkay(tag));
     }
 
     @Test

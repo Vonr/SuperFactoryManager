@@ -1,12 +1,19 @@
 package ca.teamdman.sfml.ast;
 
-public record Interval(int ticks) implements ASTNode {
-    public static Interval fromTicks(int ticks) {
-        return new Interval(ticks);
-    }
+import ca.teamdman.sfm.common.program.ProgramContext;
 
-    public static Interval fromSeconds(int seconds) {
-        return new Interval(seconds * 20);
+import java.util.Objects;
+
+public record Interval(
+        int ticks,
+        IntervalAlignment alignment,
+        int offset
+) implements ASTNode {
+    public boolean shouldTick(ProgramContext context) {
+        return switch (alignment) {
+            case LOCAL -> context.getManager().getTick() % ticks == offset;
+            case GLOBAL -> Objects.requireNonNull(context.getManager().getLevel()).getGameTime() % ticks == offset;
+        };
     }
 
     @Override
@@ -14,7 +21,8 @@ public record Interval(int ticks) implements ASTNode {
         return ticks + " TICKS";
     }
 
-    public int getTicks() {
-        return ticks;
+    public enum IntervalAlignment {
+        LOCAL,
+        GLOBAL
     }
 }
