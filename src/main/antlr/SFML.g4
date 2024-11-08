@@ -15,7 +15,7 @@ trigger : EVERY interval DO block END           #TimerTrigger
         | EVERY REDSTONE PULSE DO block END     #PulseTrigger
         ;
 
-interval: NUMBER? (GLOBAL (PLUS NUMBER)?)? (TICKS | TICK | SECONDS | SECOND)    # IntervalSpace
+interval: NUMBER? GLOBAL? (PLUS NUMBER)? (TICKS | TICK | SECONDS | SECOND)      # IntervalSpace
         | NUMBER_WITH_G_SUFFIX (PLUS NUMBER)? (TICKS | TICK | SECONDS | SECOND) # IntervalNoSpace;
 
 //

@@ -133,6 +133,10 @@ public class SFMLTimerTriggerTests {
                 EVERY 20G+1 TICK DO END
                 EVERY 20G+1 SECONDS DO END
                 EVERY 20G+1 SECOND DO END
+                EVERY 20+1 TICKS DO END
+                EVERY 20+1 TICK DO END
+                EVERY 20+1 SECONDS DO END
+                EVERY 20+1 SECOND DO END
                 EVERY 20G + 1 TICKS DO END
                 EVERY 20G + 1 TICK DO END
                 EVERY 20G + 1 SECONDS DO END
@@ -141,6 +145,10 @@ public class SFMLTimerTriggerTests {
                 EVERY 20G PLUS 1 TICK DO END
                 EVERY 20G PLUS 1 SECONDS DO END
                 EVERY 20G PLUS 1 SECOND DO END
+                EVERY 20 PLUS 1 TICKS DO END
+                EVERY 20 PLUS 1 TICK DO END
+                EVERY 20 PLUS 1 SECONDS DO END
+                EVERY 20 PLUS 1 SECOND DO END
                 """;
         assertNoCompileErrors(input);
     }
