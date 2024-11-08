@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.blockentity;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
+import ca.teamdman.sfm.common.handler.OpenContainerTracker;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.localization.LocalizationEntry;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
@@ -12,7 +13,6 @@ import ca.teamdman.sfm.common.net.ClientboundManagerLogsPacket;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMPackets;
-import ca.teamdman.sfm.common.handler.OpenContainerTracker;
 import ca.teamdman.sfm.common.util.SFMContainerUtil;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.ChatFormatting;
@@ -231,6 +231,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         super.load(tag);
         ContainerHelper.loadAllItems(tag, ITEMS);
         this.shouldRebuildProgram = true;
+        if (level != null) {
+            this.tick = level.random.nextInt();
+        }
     }
 
     @Override
