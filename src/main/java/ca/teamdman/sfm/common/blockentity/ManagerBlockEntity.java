@@ -27,6 +27,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
 import org.apache.logging.log4j.core.time.MutableInstant;
@@ -48,7 +49,11 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     private int tickIndex = 0;
 
     public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
-        super(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
+        this(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
+    }
+
+    public ManagerBlockEntity(BlockEntityType<?> pType, BlockPos blockPos, BlockState blockState) {
+        super(pType, blockPos, blockState);
         // Logger name should be unique to (isClient,managerpos)
         // We can't check isClient here, so instead to guarantee uniqueness we can just use hash
         // This is necessary because setLogLevel in game tests will get clobbered when the client constructs the block entity

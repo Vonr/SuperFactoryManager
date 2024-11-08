@@ -27,6 +27,13 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
                 modLoc("block/manager_top")
         ).texture("particle", "#top"));
 
+        simpleBlock(SFMBlocks.TUNNELED_MANAGER_BLOCK.get(), models().cubeBottomTop(
+                SFMBlocks.TUNNELED_MANAGER_BLOCK.getId().getPath(),
+                modLoc("block/tunneled_manager_side"),
+                modLoc("block/tunneled_manager_bot"),
+                modLoc("block/tunneled_manager_top")
+        ).texture("particle", "#top"));
+
         simpleBlock(SFMBlocks.TEST_BARREL_TANK_BLOCK.get(), models().cubeAll(
                 SFMBlocks.TEST_BARREL_TANK_BLOCK.getId().getPath(),
                 modLoc("block/test_barrel_tank")

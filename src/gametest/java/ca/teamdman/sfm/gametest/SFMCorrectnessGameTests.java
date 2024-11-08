@@ -3044,4 +3044,45 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             assertTrue(count(rightChest, Items.COBBLESTONE) == 64 * 2, "cobblestone should arrive");
         });
     }
+
+    @GameTest(template = "7x3x3")
+    public static void tunnel_furnace(GameTestHelper helper) {
+        BlockPos hopperPos = new BlockPos(0, 4, 0);
+        helper.setBlock(hopperPos, Blocks.HOPPER);
+        BlockPos managerPos = new BlockPos(0, 3, 0);
+        helper.setBlock(managerPos, SFMBlocks.TUNNELED_MANAGER_BLOCK.get());
+        BlockPos barrelPos = new BlockPos(0, 2, 0);
+        helper.setBlock(barrelPos, SFMBlocks.TEST_BARREL_BLOCK.get());
+
+        var hopper = getItemHandler(helper, hopperPos);
+        var barrel = getItemHandler(helper, barrelPos);
+
+        hopper.insertItem(0, new ItemStack(Blocks.DIRT, 1), false);
+
+        helper.runAfterDelay(8, () -> {
+            assertTrue(hopper.getStackInSlot(0).isEmpty(), "Dirt did not move");
+            assertTrue(barrel.getStackInSlot(0).getCount() == 1, "Dirt did not move");
+        });
+
+
+        ManagerBlockEntity manager = (ManagerBlockEntity) helper.getBlockEntity(managerPos);
+        manager.setItem(0, new ItemStack(SFMItems.DISK_ITEM.get()));
+        manager.setProgram("""
+                                       EVERY 20 TICKS DO
+                                           INPUT FROM barrel
+                                           OUTPUT TO hopper
+                                       END
+                                   """.stripTrailing().stripIndent());
+
+        // set the labels
+        LabelPositionHolder.empty()
+                .add("barrel", helper.absolutePos(barrelPos))
+                .add("hopper", helper.absolutePos(hopperPos))
+                .save(manager.getDisk().get());
+
+        succeedIfManagerDidThingWithoutLagging(helper, manager, () -> {
+            assertTrue(hopper.getStackInSlot(0).getCount() == 1, "Dirt did not move");
+            assertTrue(barrel.getStackInSlot(0).isEmpty(), "Dirt did not move");
+        });
+    }
 }
