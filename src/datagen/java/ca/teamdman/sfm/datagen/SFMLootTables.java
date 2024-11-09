@@ -42,7 +42,7 @@ public class SFMLootTables extends LootTableProvider {
         @Override
         protected void addTables() {
             dropSelf(SFMBlocks.MANAGER_BLOCK.get());
-            dropSelf(SFMBlocks.TUNNELED_MANAGER_BLOCK.get());
+            dropSelf(SFMBlocks.TUNNELLED_MANAGER_BLOCK.get());
             dropSelf(SFMBlocks.CABLE_BLOCK.get());
             dropOther(SFMBlocks.CABLE_FACADE_BLOCK.get(), SFMBlocks.CABLE_BLOCK.get());
             dropSelf(SFMBlocks.FANCY_CABLE_BLOCK.get());
@@ -54,7 +54,7 @@ public class SFMLootTables extends LootTableProvider {
         protected Iterable<Block> getKnownBlocks() {
             return Arrays.asList(
                     SFMBlocks.MANAGER_BLOCK.get(),
-                    SFMBlocks.TUNNELED_MANAGER_BLOCK.get(),
+                    SFMBlocks.TUNNELLED_MANAGER_BLOCK.get(),
                     SFMBlocks.CABLE_BLOCK.get(),
                     SFMBlocks.CABLE_FACADE_BLOCK.get(),
                     SFMBlocks.FANCY_CABLE_BLOCK.get(),

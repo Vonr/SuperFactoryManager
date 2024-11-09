@@ -10,9 +10,9 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.Nullable;
 
-public class TunneledManagerBlockEntity extends ManagerBlockEntity {
-    public TunneledManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
-        super(SFMBlockEntities.TUNNELED_MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
+public class TunnelledManagerBlockEntity extends ManagerBlockEntity {
+    public TunnelledManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
+        super(SFMBlockEntities.TUNNELLED_MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
     }
 
     @Override

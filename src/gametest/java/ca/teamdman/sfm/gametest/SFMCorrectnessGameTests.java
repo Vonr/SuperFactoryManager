@@ -3051,7 +3051,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         BlockPos hopperPos = new BlockPos(0, 4, 0);
         helper.setBlock(hopperPos, Blocks.HOPPER);
         BlockPos managerPos = new BlockPos(0, 3, 0);
-        helper.setBlock(managerPos, SFMBlocks.TUNNELED_MANAGER_BLOCK.get());
+        helper.setBlock(managerPos, SFMBlocks.TUNNELLED_MANAGER_BLOCK.get());
         BlockPos barrelPos = new BlockPos(0, 2, 0);
         helper.setBlock(barrelPos, SFMBlocks.TEST_BARREL_BLOCK.get());
 

@@ -791,9 +791,9 @@ public final class LocalizationKeys {
             () -> "Factory Manager"
     );
     @SuppressWarnings("unused") // used by minecraft without us having to directly reference
-    public static LocalizationEntry TUNNELED_MANAGER_BLOCK = new LocalizationEntry(
-            () -> SFMBlocks.TUNNELED_MANAGER_BLOCK.get().getDescriptionId(),
-            () -> "Tunneled Factory Manager"
+    public static LocalizationEntry TUNNELLED_MANAGER_BLOCK = new LocalizationEntry(
+            () -> SFMBlocks.TUNNELLED_MANAGER_BLOCK.get().getDescriptionId(),
+            () -> "Tunnelled Factory Manager"
     );
     @SuppressWarnings("unused") // used by minecraft without us having to directly reference
     public static LocalizationEntry TEST_BARREL_TANK_BLOCK = new LocalizationEntry(

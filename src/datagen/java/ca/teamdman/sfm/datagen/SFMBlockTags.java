@@ -18,7 +18,7 @@ public class SFMBlockTags extends BlockTagsProvider {
                 .add(SFMBlocks.CABLE_FACADE_BLOCK.get())
                 .add(SFMBlocks.FANCY_CABLE_BLOCK.get())
                 .add(SFMBlocks.MANAGER_BLOCK.get())
-                .add(SFMBlocks.TUNNELED_MANAGER_BLOCK.get())
+                .add(SFMBlocks.TUNNELLED_MANAGER_BLOCK.get())
                 .add(SFMBlocks.PRINTING_PRESS_BLOCK.get());
         tag(BlockTags.MINEABLE_WITH_AXE)
                 .add(SFMBlocks.PRINTING_PRESS_BLOCK.get());

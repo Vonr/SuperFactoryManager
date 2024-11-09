@@ -21,7 +21,7 @@ public class SFMItems {
     };
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, SFM.MOD_ID);
     public static final RegistryObject<Item> MANAGER_ITEM = register("manager", SFMBlocks.MANAGER_BLOCK);
-    public static final RegistryObject<Item> TUNNELED_MANAGER_ITEM = register("tunneled_manager", SFMBlocks.TUNNELED_MANAGER_BLOCK);
+    public static final RegistryObject<Item> TUNNELLED_MANAGER_ITEM = register("tunnelled_manager", SFMBlocks.TUNNELLED_MANAGER_BLOCK);
     public static final RegistryObject<Item> CABLE_ITEM = register("cable", SFMBlocks.CABLE_BLOCK);
     public static final RegistryObject<Item> FANCY_CABLE_ITEM = register("fancy_cable", SFMBlocks.FANCY_CABLE_BLOCK);
     public static final RegistryObject<Item> PRINTING_PRESS_ITEM = ITEMS.register(

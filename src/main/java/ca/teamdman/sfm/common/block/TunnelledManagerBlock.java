@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.block;
 
-import ca.teamdman.sfm.common.blockentity.TunneledManagerBlockEntity;
+import ca.teamdman.sfm.common.blockentity.TunnelledManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
@@ -13,7 +13,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -23,7 +23,7 @@ import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
-public class TunneledManagerBlock extends ManagerBlock {
+public class TunnelledManagerBlock extends ManagerBlock {
     @Override
     @SuppressWarnings("deprecation")
     public void neighborChanged(
@@ -34,7 +34,7 @@ public class TunneledManagerBlock extends ManagerBlock {
             BlockPos neighbourPos,
             boolean movedByPiston
     ) {
-        if (!(level.getBlockEntity(pos) instanceof TunneledManagerBlockEntity mgr)) return;
+        if (!(level.getBlockEntity(pos) instanceof TunnelledManagerBlockEntity mgr)) return;
         if (!(level instanceof ServerLevel)) return;
         { // check redstone for triggers
             var isPowered = level.hasNeighborSignal(pos) || level.hasNeighborSignal(pos.above());
@@ -50,7 +50,7 @@ public class TunneledManagerBlock extends ManagerBlock {
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return SFMBlockEntities.TUNNELED_MANAGER_BLOCK_ENTITY
+        return SFMBlockEntities.TUNNELLED_MANAGER_BLOCK_ENTITY
                 .get()
                 .create(pos, state);
     }
@@ -65,7 +65,7 @@ public class TunneledManagerBlock extends ManagerBlock {
             InteractionHand hand,
             BlockHitResult hit
     ) {
-        if (level.getBlockEntity(pos) instanceof TunneledManagerBlockEntity manager && player instanceof ServerPlayer sp) {
+        if (level.getBlockEntity(pos) instanceof TunnelledManagerBlockEntity manager && player instanceof ServerPlayer sp) {
             // update warnings on disk as we open the gui
             manager
                     .getDisk()
@@ -87,6 +87,6 @@ public class TunneledManagerBlock extends ManagerBlock {
             BlockEntityType<T> type
     ) {
         if (level.isClientSide()) return null;
-        return createTickerHelper(type, SFMBlockEntities.TUNNELED_MANAGER_BLOCK_ENTITY.get(), TunneledManagerBlockEntity::serverTick);
+        return createTickerHelper(type, SFMBlockEntities.TUNNELLED_MANAGER_BLOCK_ENTITY.get(), TunnelledManagerBlockEntity::serverTick);
     }
 }
