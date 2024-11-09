@@ -40,7 +40,9 @@ public record ResourceLimits(
     public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
         Set<ResourceType<?,?,?>> rtn = new HashSet<>(8);
         for (ResourceLimit resourceLimit : resourceLimitList) {
-            rtn.addAll(resourceLimit.resourceIds().getReferencedResourceTypes());
+            for (var resourceId : resourceLimit.resourceIds().unsafeGetIdentifiers()) {
+                rtn.add(resourceId.getResourceType());
+            }
         }
         return rtn;
     }
