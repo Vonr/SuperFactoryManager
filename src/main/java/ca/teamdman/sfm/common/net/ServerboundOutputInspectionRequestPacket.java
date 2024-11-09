@@ -33,6 +33,8 @@ public record ServerboundOutputInspectionRequestPacket(
         String programString,
         int outputNodeIndex
 ) {
+    private static final int MAX_RESULTS_LENGTH = 20480;
+
     public static void encode(
             ServerboundOutputInspectionRequestPacket msg,
             FriendlyByteBuf friendlyByteBuf
@@ -84,6 +86,10 @@ public record ServerboundOutputInspectionRequestPacket(
                                         manager,
                                         successProgram,
                                         outputStatement
+                                );
+                                payload = SFMUtils.truncate(
+                                        payload,
+                                        ServerboundOutputInspectionRequestPacket.MAX_RESULTS_LENGTH
                                 );
                                 SFM.LOGGER.debug(
                                         "Sending output inspection results packet with length {}",
@@ -222,9 +228,14 @@ public record ServerboundOutputInspectionRequestPacket(
                             while (iter.hasNext()) {
                                 ResourceLimit resourceLimit = iter.next();
                                 if (resourceLimit.resourceIds().size() != 1) {
-                                    throw new IllegalStateException("Expected resource limit to have exactly one resource id");
+                                    throw new IllegalStateException(
+                                            "Expected resource limit to have exactly one resource id");
                                 }
-                                ResourceIdentifier<?,?,?> resourceId = resourceLimit.resourceIds().stream().iterator().next();
+                                ResourceIdentifier<?, ?, ?> resourceId = resourceLimit
+                                        .resourceIds()
+                                        .stream()
+                                        .iterator()
+                                        .next();
 
                                 // because these resource limits were generated from resource stacks
                                 // they should always be valid resource locations (not patterns)
@@ -238,7 +249,8 @@ public record ServerboundOutputInspectionRequestPacket(
                                         .stream()
                                         .filter(outputResourceLimit -> outputResourceLimit
                                                                                .resourceIds()
-                                                                               .anyMatchResourceLocation(resourceLimitLocation)
+                                                                               .anyMatchResourceLocation(
+                                                                                       resourceLimitLocation)
                                                                        && outputStatement
                                                                                .resourceLimits()
                                                                                .exclusions()
