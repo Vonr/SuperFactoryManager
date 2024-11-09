@@ -29,6 +29,12 @@ public final class SFMBlockEntities {
                     .of(ManagerBlockEntity::new, SFMBlocks.MANAGER_BLOCK.get())
                     .build(null)
     );
+    public static final RegistryObject<BlockEntityType<TunneledManagerBlockEntity>> TUNNELED_MANAGER_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+            "tunneled_manager",
+            () -> BlockEntityType.Builder
+                    .of(TunneledManagerBlockEntity::new, SFMBlocks.TUNNELED_MANAGER_BLOCK.get())
+                    .build(null)
+    );
     public static final Supplier<BlockEntityType<CableFacadeBlockEntity>> CABLE_FACADE_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
             "cable_facade",
             () -> BlockEntityType.Builder

@@ -12,6 +12,7 @@ import net.minecraftforge.registries.RegistryObject;
 public class SFMBlocks {
     private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, SFM.MOD_ID);
     public static final RegistryObject<Block> MANAGER_BLOCK = BLOCKS.register("manager", ManagerBlock::new);
+    public static final RegistryObject<Block> TUNNELED_MANAGER_BLOCK = BLOCKS.register("tunneled_manager", TunneledManagerBlock::new);
     public static final RegistryObject<Block> PRINTING_PRESS_BLOCK = BLOCKS.register(
             "printing_press",
             PrintingPressBlock::new

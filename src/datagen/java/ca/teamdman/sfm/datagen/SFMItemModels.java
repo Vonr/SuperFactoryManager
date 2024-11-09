@@ -22,6 +22,7 @@ public class SFMItemModels extends ItemModelProvider {
     @Override
     protected void registerModels() {
         justParent(SFMItems.MANAGER_ITEM, SFMBlocks.MANAGER_BLOCK);
+        justParent(SFMItems.TUNNELED_MANAGER_ITEM, SFMBlocks.TUNNELED_MANAGER_BLOCK);
         justParent(SFMItems.CABLE_ITEM, SFMBlocks.CABLE_BLOCK);
         justParent(SFMItems.FANCY_CABLE_ITEM, SFMBlocks.FANCY_CABLE_BLOCK, "_core");
         justParent(SFMItems.PRINTING_PRESS_ITEM, SFMBlocks.PRINTING_PRESS_BLOCK);

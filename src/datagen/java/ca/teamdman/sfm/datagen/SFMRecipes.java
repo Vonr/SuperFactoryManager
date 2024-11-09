@@ -63,6 +63,17 @@ public class SFMRecipes extends RecipeProvider {
                 .save(consumer);
 
         ShapedRecipeBuilder
+                .shaped(SFMBlocks.TUNNELED_MANAGER_BLOCK.get())
+                .define('M', SFMBlocks.MANAGER_BLOCK.get())
+                .define('H', Items.HOPPER)
+                .unlockedBy("has_iron_ingot", RecipeProvider.has(Items.IRON_INGOT))
+                .unlockedBy("has_chest", RecipeProvider.has(Tags.Items.CHESTS))
+                .pattern("M  ")
+                .pattern("H  ")
+                .pattern("   ")
+                .save(consumer);
+
+        ShapedRecipeBuilder
                 .shaped(SFMItems.LABEL_GUN_ITEM.get())
                 .define('S', Tags.Items.RODS_WOODEN)
                 .define('B', Tags.Items.DYES_BLACK)
