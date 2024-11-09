@@ -5,7 +5,6 @@ import ca.teamdman.sfm.common.program.IOutputResourceTracker;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +45,9 @@ public record ResourceLimits(
         return new ResourceLimits(resourceLimitList, exclusions);
     }
 
+    /**
+     * See also: {@link ResourceIdSet#getReferencedResourceTypes()}
+     */
     public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
         Set<ResourceType<?,?,?>> rtn = new HashSet<>(8);
         for (ResourceLimit resourceLimit : resourceLimitList) {

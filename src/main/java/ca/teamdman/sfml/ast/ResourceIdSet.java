@@ -21,6 +21,9 @@ public final class ResourceIdSet implements ASTNode {
         this(new LinkedHashSet<>(contents));
     }
 
+    /**
+     * See also: {@link ResourceLimits#getReferencedResourceTypes()}
+     */
     public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
         HashSet<ResourceType<?,?,?>> rtn = new HashSet<>(this.resourceIds.size());
         for (ResourceIdentifier<?, ?, ?> resourceId : this.resourceIds) {
