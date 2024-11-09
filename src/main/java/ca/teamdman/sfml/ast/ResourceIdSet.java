@@ -22,7 +22,7 @@ public final class ResourceIdSet implements ASTNode {
     }
 
     public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
-        HashSet<ResourceType<?,?,?>> rtn = new HashSet<>(8);
+        HashSet<ResourceType<?,?,?>> rtn = new HashSet<>(this.resourceIds.size());
         for (ResourceIdentifier<?, ?, ?> resourceId : this.resourceIds) {
             rtn.add(resourceId.getResourceType());
         }
@@ -77,6 +77,12 @@ public final class ResourceIdSet implements ASTNode {
 
     public Stream<ResourceIdentifier<?,?,?>> stream() {
         return resourceIds.stream();
+    }
+
+    // It is unsafe to modify this collection.
+    // This method is used in order to avoid having to copy the set.
+    public Collection<ResourceIdentifier<?,?,?>> unsafeGetIdentifiers() {
+        return resourceIds;
     }
 
     @Override

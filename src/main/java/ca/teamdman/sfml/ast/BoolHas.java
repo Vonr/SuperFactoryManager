@@ -29,7 +29,11 @@ public record BoolHas(
         for (Pair<Label, BlockPos> entry : labelledPositions) {
             BlockPos pos = entry.getSecond();
             AtomicLong inThisInv = new AtomicLong(0);
-            for (ResourceType<?, ?, ?> resourceType : resourceIdSet.getReferencedResourceTypes()) {
+            for (var resourceId : resourceIdSet.unsafeGetIdentifiers()) {
+                var resourceType = resourceId.getResourceType();
+                if (resourceType == null) {
+                    continue;
+                }
                 accumulate(
                         programContext,
                         pos,

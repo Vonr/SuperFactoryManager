@@ -190,8 +190,8 @@ public class SFMUtils {
                 List.of(new Label(label)),
                 new DirectionQualifier(
                         direction == null
-                        ? EnumSet.noneOf(Direction.class)
-                        : EnumSet.of(direction)),
+                                ? EnumSet.noneOf(Direction.class)
+                                : EnumSet.of(direction)),
                 new NumberRangeSet(
                         new NumberRange[]{new NumberRange(slot, slot)}
                 ),
@@ -259,6 +259,7 @@ public class SFMUtils {
             BlockPos pos
     ) {
         if (!level.isLoaded(pos)) return Optional.empty();
+
         Collection<CapabilityProviderMapper> mappers = SFMCapabilityProviderMappers.DEFERRED_MAPPERS.get().getValues();
         for (CapabilityProviderMapper mapper : mappers) {
             Optional<ICapabilityProvider> capabilityProvider = mapper.getProviderFor(level, pos);
@@ -266,6 +267,7 @@ public class SFMUtils {
                 return capabilityProvider;
             }
         }
+
         return Optional.empty();
     }
 

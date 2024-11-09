@@ -48,18 +48,14 @@ public class CapabilityCache {
             Capability<CAP> capKind,
             @Nullable Direction direction
     ) {
-        if (CACHE.containsKey(pos.asLong())) {
-            var capMap = CACHE.get(pos.asLong());
-            if (capMap.containsKey(capKind)) {
-                var dirMap = capMap.get(capKind);
-                if (dirMap.containsKey(direction)) {
-                    var found = dirMap.get(direction);
-                    if (found == null) {
-                        return null;
-                    } else {
-                        //noinspection unchecked
-                        return (LazyOptional<CAP>) found;
-                    }
+        var capMap = CACHE.get(pos.asLong());
+        if (capMap != null) {
+            var dirMap = capMap.get(capKind);
+            if (dirMap != null) {
+                var found = dirMap.get(direction);
+                if (found != null) {
+                    //noinspection unchecked
+                    return (LazyOptional<CAP>) found;
                 }
 
             }
@@ -67,15 +63,24 @@ public class CapabilityCache {
         return null;
     }
 
-    @SuppressWarnings({"CodeBlock2Expr", "rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void putAll(CapabilityCache other) {
-        other.CACHE.forEach((pos, capMap) -> {
-            capMap.forEach((capKind, dirMap) -> {
-                dirMap.forEach((direction, cap) -> {
-                    putCapability(BlockPos.of(pos), (Capability) capKind, direction, cap);
-                });
-            });
-        });
+        for (var entry : other.CACHE.long2ObjectEntrySet()) {
+            long pos = entry.getLongKey();
+
+            var capMap = entry.getValue();
+            for (var e : capMap.entrySet()) {
+                Capability<?> capKind = e.getKey();
+
+                var dirMap = e.getValue();
+                for (var direction : Direction.values()) {
+                    LazyOptional<?> cap = dirMap.get(direction);
+                    if (cap != null) {
+                        putCapability(BlockPos.of(pos), (Capability) capKind, direction, cap);
+                    }
+                }
+            }
+        }
     }
 
     public Stream<BlockPos> getPositions() {
@@ -124,10 +129,10 @@ public class CapabilityCache {
             Capability<?> capKind,
             @Nullable Direction direction
     ) {
-        if (CACHE.containsKey(pos.asLong())) {
-            var capMap = CACHE.get(pos.asLong());
-            if (capMap.containsKey(capKind)) {
-                var dirMap = capMap.get(capKind);
+        var capMap = CACHE.get(pos.asLong());
+        if (capMap != null) {
+            var dirMap = capMap.get(capKind);
+            if (dirMap != null) {
                 dirMap.remove(direction);
                 if (dirMap.isEmpty()) {
                     capMap.remove(capKind);
