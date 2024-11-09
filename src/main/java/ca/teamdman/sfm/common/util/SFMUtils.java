@@ -190,8 +190,8 @@ public class SFMUtils {
                 List.of(new Label(label)),
                 new DirectionQualifier(
                         direction == null
-                        ? EnumSet.noneOf(Direction.class)
-                        : EnumSet.of(direction)),
+                                ? EnumSet.noneOf(Direction.class)
+                                : EnumSet.of(direction)),
                 new NumberRangeSet(
                         new NumberRange[]{new NumberRange(slot, slot)}
                 ),
@@ -259,14 +259,16 @@ public class SFMUtils {
             BlockPos pos
     ) {
         if (!level.isLoaded(pos)) return Optional.empty();
-        return SFMCapabilityProviderMappers.DEFERRED_MAPPERS
-                .get()
-                .getValues()
-                .stream()
-                .map(mapper -> mapper.getProviderFor(level, pos))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst();
+
+        for (var mapper : SFMCapabilityProviderMappers.DEFERRED_MAPPERS.get().getValues()) {
+            var providerFor = mapper.getProviderFor(level, pos);
+            if (providerFor.isPresent()) {
+                var iCapabilityProvider = providerFor.get();
+                return Optional.of(iCapabilityProvider);
+            }
+        }
+
+        return Optional.empty();
     }
 
     public static Stream<BlockPos> get3DNeighboursIncludingKittyCorner(BlockPos pos) {

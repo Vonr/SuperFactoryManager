@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class RoundRobin implements ASTNode {
     private final Behaviour behaviour;
@@ -51,7 +52,9 @@ public class RoundRobin implements ASTNode {
             case BY_LABEL -> {
                 int index = next(labels.size());
                 Label label = labels.get(index);
-                for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
+                Set<BlockPos> labelPositions = labelPositionHolder.getPositions(label.name());
+                positions.ensureCapacity(labelPositions.size());
+                for (BlockPos pos : labelPositions) {
                     positions.add(Pair.of(label, pos));
                 }
             }
@@ -70,7 +73,9 @@ public class RoundRobin implements ASTNode {
             }
             case UNMODIFIED -> {
                 for (Label label : labels) {
-                    for (BlockPos pos : labelPositionHolder.getPositions(label.name())) {
+                    var labelPositions = labelPositionHolder.getPositions(label.name());
+                    positions.ensureCapacity(labelPositions.size());
+                    for (BlockPos pos : labelPositions) {
                         positions.add(Pair.of(label, pos));
                     }
                 }

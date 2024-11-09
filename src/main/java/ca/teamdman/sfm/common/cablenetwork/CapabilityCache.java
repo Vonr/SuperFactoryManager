@@ -16,11 +16,13 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class CapabilityCache {
     // Position => Capability => Direction => LazyOptional
-    private final Long2ObjectMap<Object2ObjectOpenHashMap<Capability<?>, Object2ObjectOpenHashMap<Direction, LazyOptional<?>>>> CACHE = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectMap<Object2ObjectOpenHashMap<Capability<?>, LazyOptional<?>[]>> CACHE = new Long2ObjectOpenHashMap<>();
     // Chunk position => Set of Block positions
     private final Long2ObjectMap<LongArraySet> CHUNK_TO_BLOCK_POSITIONS = new Long2ObjectOpenHashMap<>();
 
@@ -30,7 +32,16 @@ public class CapabilityCache {
     }
 
     public int size() {
-        return CACHE.values().stream().flatMap(x -> x.values().stream()).mapToInt(Object2ObjectOpenHashMap::size).sum();
+        int sum = 0;
+        for (var posMap : CACHE.values()) {
+            for (var capMap : posMap.values()) {
+                for (var dirs : capMap) {
+                    sum += dirs == null ? 0 : 1;
+                }
+            }
+        }
+
+        return sum;
     }
 
     public void overwriteFromOther(BlockPos pos, CapabilityCache other) {
@@ -46,18 +57,14 @@ public class CapabilityCache {
             Capability<CAP> capKind,
             @Nullable Direction direction
     ) {
-        if (CACHE.containsKey(pos.asLong())) {
-            var capMap = CACHE.get(pos.asLong());
-            if (capMap.containsKey(capKind)) {
-                var dirMap = capMap.get(capKind);
-                if (dirMap.containsKey(direction)) {
-                    var found = dirMap.get(direction);
-                    if (found == null) {
-                        return null;
-                    } else {
-                        //noinspection unchecked
-                        return (LazyOptional<CAP>) found;
-                    }
+        var capMap = CACHE.get(pos.asLong());
+        if (capMap != null) {
+            var dirMap = capMap.get(capKind);
+            if (dirMap != null) {
+                var found = dirMap[directionToIndex(direction)];
+                if (found != null) {
+                    //noinspection unchecked
+                    return (LazyOptional<CAP>) found;
                 }
 
             }
@@ -65,15 +72,23 @@ public class CapabilityCache {
         return null;
     }
 
-    @SuppressWarnings({"CodeBlock2Expr", "rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void putAll(CapabilityCache other) {
-        other.CACHE.forEach((pos, capMap) -> {
-            capMap.forEach((capKind, dirMap) -> {
-                dirMap.forEach((direction, cap) -> {
+        for (var entry : other.CACHE.long2ObjectEntrySet()) {
+            long pos = entry.getLongKey();
+
+            var capMap = entry.getValue();
+            for (var e : capMap.entrySet()) {
+                Capability<?> capKind = e.getKey();
+
+                var dirMap = e.getValue();
+                for (var i = 0; i < dirMap.length; i++) {
+                    Direction direction = i == 6 ? null : Direction.from3DDataValue(i);
+                    LazyOptional<?> cap = dirMap[i];
                     putCapability(BlockPos.of(pos), (Capability) capKind, direction, cap);
-                });
-            });
-        });
+                }
+            }
+        }
     }
 
     public Stream<BlockPos> getPositions() {
@@ -122,12 +137,12 @@ public class CapabilityCache {
             Capability<?> capKind,
             @Nullable Direction direction
     ) {
-        if (CACHE.containsKey(pos.asLong())) {
-            var capMap = CACHE.get(pos.asLong());
-            if (capMap.containsKey(capKind)) {
-                var dirMap = capMap.get(capKind);
-                dirMap.remove(direction);
-                if (dirMap.isEmpty()) {
+        var capMap = CACHE.get(pos.asLong());
+        if (capMap != null) {
+            var dirMap = capMap.get(capKind);
+            if (dirMap != null) {
+                dirMap[directionToIndex(direction)] = null;
+                if (Arrays.stream(dirMap).allMatch(Objects::isNull)) {
                     capMap.remove(capKind);
                     if (capMap.isEmpty()) {
                         CACHE.remove(pos.asLong());
@@ -145,8 +160,8 @@ public class CapabilityCache {
             LazyOptional<CAP> cap
     ) {
         var capMap = CACHE.computeIfAbsent(pos.asLong(), k -> new Object2ObjectOpenHashMap<>());
-        var dirMap = capMap.computeIfAbsent(capKind, k -> new Object2ObjectOpenHashMap<>());
-        dirMap.put(direction, cap);
+        var dirMap = capMap.computeIfAbsent(capKind, k -> new LazyOptional[7]);
+        dirMap[directionToIndex(direction)] = cap;
         addToChunkMap(pos);
     }
 
@@ -179,5 +194,9 @@ public class CapabilityCache {
                 CHUNK_TO_BLOCK_POSITIONS.remove(chunkKey);
             }
         }
+    }
+
+    public static int directionToIndex(@Nullable Direction direction) {
+        return direction == null ? 6 : direction.get3DDataValue();
     }
 }

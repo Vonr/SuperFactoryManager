@@ -3,6 +3,7 @@ package ca.teamdman.sfml.ast;
 import ca.teamdman.sfm.common.program.IInputResourceTracker;
 import ca.teamdman.sfm.common.program.IOutputResourceTracker;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,20 +16,28 @@ public record ResourceLimits(
         ResourceIdSet exclusions
 ) implements ASTNode, ToStringPretty {
     public List<IInputResourceTracker> createInputTrackers() {
-        List<IInputResourceTracker> rtn = new ArrayList<>();
-        resourceLimitList.stream().map(rl -> rl.createInputTracker(exclusions)).forEach(rtn::add);
+        List<IInputResourceTracker> rtn = new ObjectArrayList<>(resourceLimitList.size());
+        for (ResourceLimit rl : resourceLimitList) {
+            rtn.add(rl.createInputTracker(exclusions));
+        }
         return rtn;
     }
 
     public List<IOutputResourceTracker> createOutputTrackers() {
-        List<IOutputResourceTracker> rtn = new ArrayList<>();
-        resourceLimitList.stream().map(rl -> rl.createOutputTracker(exclusions)).forEach(rtn::add);
+        List<IOutputResourceTracker> rtn = new ObjectArrayList<>(resourceLimitList.size());
+        for (ResourceLimit rl : resourceLimitList) {
+            rtn.add(rl.createOutputTracker(exclusions));
+        }
         return rtn;
     }
 
     public ResourceLimits withDefaultLimit(Limit limit) {
+        List<ResourceLimit> defaulted = new ObjectArrayList<>(this.resourceLimitList.size());
+        for (ResourceLimit rl : this.resourceLimitList) {
+            defaulted.add(rl.withDefaultLimit(limit));
+        }
         return new ResourceLimits(
-                resourceLimitList.stream().map(il -> il.withDefaultLimit(limit)).toList(),
+                defaulted,
                 exclusions
         );
     }
