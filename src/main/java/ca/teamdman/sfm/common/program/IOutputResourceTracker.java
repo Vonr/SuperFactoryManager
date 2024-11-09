@@ -31,13 +31,11 @@ public interface IOutputResourceTracker {
     );
 
     default boolean matchesCapabilityType(Object capability) {
-        for (var resourceId : getResourceLimit().resourceIds().unsafeGetIdentifiers()) {
-            var ty = resourceId.getResourceType();
-            if (ty != null && ty.matchesCapabilityType(capability)) {
+        for (ResourceType<?, ?, ?> resourceType : getResourceLimit().resourceIds().getReferencedResourceTypes()) {
+            if (resourceType.matchesCapabilityType(capability)) {
                 return true;
             }
         }
-
         return false;
     }
 

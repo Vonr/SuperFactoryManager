@@ -1,5 +1,6 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -10,12 +11,13 @@ import java.util.stream.Stream;
 
 /**
  * A read-only set of {@link ResourceIdentifier} objects.
- * Do NOT modify this after creation since the cache of resource types will become inaccurate.
+ * Do NOT modify this after creation since the {@link this#referencedResourceTypes} will become inaccurate.
  */
 public final class ResourceIdSet implements ASTNode {
     public static final ResourceIdSet EMPTY = new ResourceIdSet(new LinkedHashSet<>());
     public static final ResourceIdSet MATCH_ALL = new ResourceIdSet(new LinkedHashSet<>(List.of(ResourceIdentifier.MATCH_ALL)));
     private final LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds;
+    private @Nullable HashSet<ResourceType<?,?,?>> referencedResourceTypes = null;
 
     public ResourceIdSet(Collection<ResourceIdentifier<?, ?, ?>> contents) {
         this(new LinkedHashSet<>(contents));
@@ -25,11 +27,13 @@ public final class ResourceIdSet implements ASTNode {
      * See also: {@link ResourceLimits#getReferencedResourceTypes()}
      */
     public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
-        HashSet<ResourceType<?,?,?>> rtn = new HashSet<>(this.resourceIds.size());
-        for (ResourceIdentifier<?, ?, ?> resourceId : this.resourceIds) {
-            rtn.add(resourceId.getResourceType());
+        if (referencedResourceTypes == null) {
+            referencedResourceTypes = new HashSet<>(SFMResourceTypes.getResourceTypeCount());
+            for (ResourceIdentifier<?, ?, ?> resourceId : resourceIds) {
+                referencedResourceTypes.add(resourceId.getResourceType());
+            }
         }
-        return rtn;
+        return referencedResourceTypes;
     }
 
     public boolean couldMatchMoreThanOne() {
@@ -80,12 +84,6 @@ public final class ResourceIdSet implements ASTNode {
 
     public Stream<ResourceIdentifier<?,?,?>> stream() {
         return resourceIds.stream();
-    }
-
-    // It is unsafe to modify this collection.
-    // This method is used in order to avoid having to copy the set.
-    public Collection<ResourceIdentifier<?,?,?>> unsafeGetIdentifiers() {
-        return resourceIds;
     }
 
     @Override

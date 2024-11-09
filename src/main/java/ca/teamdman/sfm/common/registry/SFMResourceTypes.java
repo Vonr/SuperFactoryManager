@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 
 public class SFMResourceTypes {
     public static final ResourceLocation REGISTRY_ID = new ResourceLocation(SFM.MOD_ID, "resource_type");
-
     private static final DeferredRegister<ResourceType<?, ?, ?>> TYPES = DeferredRegister.create(
             REGISTRY_ID,
             SFM.MOD_ID
@@ -37,7 +36,6 @@ public class SFMResourceTypes {
     public static final Supplier<IForgeRegistry<ResourceType<?, ?, ?>>> DEFERRED_TYPES = TYPES.makeRegistry(
             () -> new RegistryBuilder<ResourceType<?, ?, ?>>().setName(
                     REGISTRY_ID));
-
     public static final RegistryObject<ResourceType<ItemStack, Item, IItemHandler>> ITEM = TYPES.register(
             "item",
             ItemResourceType::new
@@ -50,10 +48,22 @@ public class SFMResourceTypes {
             "forge_energy",
             ForgeEnergyResourceType::new
     );
-
     private static final Int2ObjectArrayMap<ResourceType<?, ?, ?>> DEFERRED_TYPES_BY_ID = new Int2ObjectArrayMap<>();
 
-    public static @Nullable ResourceType<?, ?, ?> fastLookup(String resourceTypeNamespace, String resourceTypeName) {
+    static {
+        if (SFMCompat.isMekanismLoaded()) {
+            SFMMekanismCompat.register(TYPES);
+        }
+    }
+
+    public static int getResourceTypeCount() {
+        return TYPES.getEntries().size();
+    }
+
+    public static @Nullable ResourceType<?, ?, ?> fastLookup(
+            String resourceTypeNamespace,
+            String resourceTypeName
+    ) {
         return DEFERRED_TYPES_BY_ID.computeIfAbsent(
                 resourceTypeNamespace.hashCode() ^ resourceTypeName.hashCode(),
                 i -> DEFERRED_TYPES.get().getValue(new ResourceLocation(resourceTypeNamespace, resourceTypeName))
@@ -62,12 +72,6 @@ public class SFMResourceTypes {
 
     public static Stream<Capability<?>> getCapabilities() {
         return TYPES.getEntries().stream().map(RegistryObject::get).map(resourceType -> resourceType.CAPABILITY_KIND);
-    }
-
-    static {
-        if (SFMCompat.isMekanismLoaded()) {
-            SFMMekanismCompat.register(TYPES);
-        }
     }
 
     public static void register(IEventBus bus) {
