@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.compat.SFMCompat;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.DirectionQualifier;
 import net.minecraft.core.BlockPos;
@@ -62,7 +63,7 @@ public record ServerboundNetworkToolUsePacket(
             payload.append(state).append("\n");
 
             List<CableNetwork> foundNetworks = new ArrayList<>();
-            for (Direction direction : Direction.values()) {
+            for (Direction direction : SFMDirections.DIRECTIONS) {
                 BlockPos cablePosition = pos.relative(direction);
                 CableNetworkManager
                         .getOrRegisterNetworkFromCablePosition(level, cablePosition)

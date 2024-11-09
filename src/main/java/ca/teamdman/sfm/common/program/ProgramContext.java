@@ -125,13 +125,8 @@ public class ProgramContext {
         return REDSTONE_PULSES;
     }
 
-    /**
-     * We free in reverse order because the {@link InputStatement#inputCheck} needs LIFO ordering for the math to work
-     */
     public void free() {
-        for (int i = INPUTS.size() - 1; i >= 0; i--) {
-            INPUTS.get(i).freeSlots();
-        }
+        INPUTS.forEach(InputStatement::freeSlots);
     }
 
 

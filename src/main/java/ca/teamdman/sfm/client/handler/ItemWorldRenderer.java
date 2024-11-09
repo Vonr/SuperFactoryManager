@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.item.LabelGunItem;
 import ca.teamdman.sfm.common.item.NetworkToolItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.util.HelpsWithMinecraftVersionIndependence;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import com.google.common.collect.HashMultimap;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -24,6 +25,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -111,9 +113,12 @@ public class ItemWorldRenderer {
         double y = (rt.getLocation().y);
         double z = (rt.getLocation().z);
 
-        double xla = Minecraft.getInstance().player.getLookAngle().x;
-        double yla = Minecraft.getInstance().player.getLookAngle().y;
-        double zla = Minecraft.getInstance().player.getLookAngle().z;
+        LocalPlayer player = Minecraft.getInstance().player;
+        assert player != null;
+        Vec3 lookAngle = player.getLookAngle();
+        double xla = lookAngle.x;
+        double yla = lookAngle.y;
+        double zla = lookAngle.z;
 
         if ((x % 1 == 0) && (xla < 0)) x -= 0.01;
         if ((y % 1 == 0) && (yla < 0)) y -= 0.01;
@@ -198,7 +203,7 @@ public class ItemWorldRenderer {
     private static void handleNetworkTool(
             RenderLevelStageEvent event,
             PoseStack poseStack,
-            Camera camera,
+            Camera ignoredCamera,
             MultiBufferSource.BufferSource bufferSource,
             ItemStack networkTool
     ) {
@@ -448,7 +453,7 @@ public class ItemWorldRenderer {
                 poseStack.pushPose();
                 poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
                 Matrix4f matrix4f = poseStack.last().pose();
-                for (Direction face : Direction.values()) {
+                for (Direction face : SFMDirections.DIRECTIONS) {
                     if (!positions.contains(blockPos.relative(face))) {
                         writeFaceVertices(bufferBuilder, matrix4f, face, r, g, b, a);
                     }

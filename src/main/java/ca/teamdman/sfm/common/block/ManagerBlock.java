@@ -29,8 +29,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICableBlock {
     public static final BooleanProperty TRIGGERED = BlockStateProperties.TRIGGERED;

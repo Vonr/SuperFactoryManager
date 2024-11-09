@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.cablenetwork;
 
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -11,9 +12,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,7 +59,7 @@ public class CableNetwork {
         // discover connected cables
         var cables = SFMUtils.<BlockPos, BlockPos>getRecursiveStream((current, next, results) -> {
             results.accept(current);
-            for (Direction d : Direction.values()) {
+            for (Direction d : SFMDirections.DIRECTIONS) {
                 BlockPos offset = current.offset(d.getNormal());
                 if (other.containsCablePosition(offset)) {
                     next.accept(offset);
@@ -72,7 +73,7 @@ public class CableNetwork {
         // discover capabilities
         cables
                 .stream()
-                .flatMap(cablePos -> Arrays.stream(Direction.values()).map(Direction::getNormal).map(cablePos::offset))
+                .flatMap(cablePos -> Arrays.stream(SFMDirections.DIRECTIONS).map(Direction::getNormal).map(cablePos::offset))
                 .distinct()
                 .forEach(pos -> CAPABILITY_CACHE.overwriteFromOther(pos, other.CAPABILITY_CACHE));
     }
@@ -83,7 +84,7 @@ public class CableNetwork {
     ) {
         return SFMUtils.getRecursiveStream((current, next, results) -> {
             results.accept(current);
-            for (Direction d : Direction.values()) {
+            for (Direction d : SFMDirections.DIRECTIONS) {
                 BlockPos offset = current.offset(d.getNormal());
                 if (isCable(level, offset)) {
                     next.accept(offset);
@@ -118,7 +119,7 @@ public class CableNetwork {
      * @return {@code true} if adjacent to cable in network
      */
     public boolean isAdjacentToCable(BlockPos pos) {
-        for (Direction direction : Direction.values()) {
+        for (Direction direction : SFMDirections.DIRECTIONS) {
             if (containsCablePosition(pos.offset(direction.getNormal()))) {
                 return true;
             }
@@ -189,7 +190,7 @@ public class CableNetwork {
     protected List<CableNetwork> withoutCable(BlockPos cablePos) {
         CABLE_POSITIONS.remove(cablePos.asLong());
         List<CableNetwork> branches = new ArrayList<>();
-        for (var direction : Direction.values()) {
+        for (var direction : SFMDirections.DIRECTIONS) {
             var offsetPos = cablePos.offset(direction.getNormal());
             if (!containsCablePosition(offsetPos)) continue;
             // make sure that a branch network doesn't already contain this cable

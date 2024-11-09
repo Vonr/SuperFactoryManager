@@ -4,8 +4,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.ast.Label;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class LimitedInputSlot<STACK, ITEM, CAP> {
     @SuppressWarnings("NotNullFieldNotInitialized") // done in init method in constructor

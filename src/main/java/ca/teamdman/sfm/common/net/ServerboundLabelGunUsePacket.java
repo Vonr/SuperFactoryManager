@@ -6,9 +6,9 @@ import ca.teamdman.sfm.common.cablenetwork.CableNetworkManager;
 import ca.teamdman.sfm.common.item.LabelGunItem;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Block;
@@ -111,7 +111,7 @@ public record ServerboundLabelGunUsePacket(
 
                     // predicate to check if a position is adjacent to a cable
                     Predicate<BlockPos> isAdjacentToCable = p -> Arrays
-                            .stream(Direction.values())
+                            .stream(SFMDirections.DIRECTIONS)
                             .anyMatch(d -> cablePositions.contains(p.offset(d.getNormal())));
 
                     // get positions of all connected blocks of the same type

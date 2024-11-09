@@ -6,6 +6,7 @@ import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -21,10 +22,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Supplier;
@@ -84,9 +84,7 @@ public record ServerboundContainerExportsInspectionRequestPacket(
             BlockPos pos
     ) {
         StringBuilder sb = new StringBuilder();
-        Direction[] dirs = Arrays.copyOf(Direction.values(), Direction.values().length + 1);
-        dirs[dirs.length - 1] = null;
-        for (Direction direction : dirs) {
+        for (Direction direction : SFMDirections.DIRECTIONS_WITH_NULL) {
             sb.append("-- ").append(direction).append("\n");
             int len = sb.length();
             //noinspection unchecked,rawtypes

@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.registry.SFMPackets;
+import ca.teamdman.sfm.common.util.SFMUtils;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -17,7 +18,12 @@ import java.util.function.Supplier;
 public record ServerboundLabelInspectionRequestPacket(
         String label
 ) {
-    public static void encode(ServerboundLabelInspectionRequestPacket msg, FriendlyByteBuf friendlyByteBuf) {
+    private static final int MAX_RESULTS_LENGTH = 20480;
+
+    public static void encode(
+            ServerboundLabelInspectionRequestPacket msg,
+            FriendlyByteBuf friendlyByteBuf
+    ) {
         friendlyByteBuf.writeUtf(msg.label(), Program.MAX_LABEL_LENGTH);
     }
 
@@ -112,7 +118,10 @@ public record ServerboundLabelInspectionRequestPacket(
             SFMPackets.INSPECTION_CHANNEL.send(
                     PacketDistributor.PLAYER.with(() -> player),
                     new ClientboundLabelInspectionResultsPacket(
-                            payload.toString()
+                            SFMUtils.truncate(
+                                    payload.toString(),
+                                    ServerboundLabelInspectionRequestPacket.MAX_RESULTS_LENGTH
+                            )
                     )
             );
         });

@@ -23,8 +23,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -260,11 +260,11 @@ public class SFMUtils {
     ) {
         if (!level.isLoaded(pos)) return Optional.empty();
 
-        for (var mapper : SFMCapabilityProviderMappers.DEFERRED_MAPPERS.get().getValues()) {
-            var providerFor = mapper.getProviderFor(level, pos);
-            if (providerFor.isPresent()) {
-                var iCapabilityProvider = providerFor.get();
-                return Optional.of(iCapabilityProvider);
+        Collection<CapabilityProviderMapper> mappers = SFMCapabilityProviderMappers.DEFERRED_MAPPERS.get().getValues();
+        for (CapabilityProviderMapper mapper : mappers) {
+            Optional<ICapabilityProvider> capabilityProvider = mapper.getProviderFor(level, pos);
+            if (capabilityProvider.isPresent()) {
+                return capabilityProvider;
             }
         }
 
