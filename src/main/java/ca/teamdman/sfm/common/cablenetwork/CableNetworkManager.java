@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.cablenetwork;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -139,7 +140,7 @@ public class CableNetworkManager {
         // find potential networks by getting networks adjacent to this cable
         ArrayDeque<BlockPos> danglingCables = new ArrayDeque<>(6);
         Set<CableNetwork> neighbouringNetworks = new HashSet<>();
-        for (Direction direction : Direction.values()) {
+        for (Direction direction : SFMDirections.DIRECTIONS) {
             BlockPos offset = pos.relative(direction);
             Optional<CableNetwork> found = getNetworkFromCablePosition(level, offset);
             if (found.isPresent()) {
@@ -188,7 +189,7 @@ public class CableNetworkManager {
         Set<BlockPos> allDanglingCables = SFMUtils.<BlockPos, BlockPos>getRecursiveStream(
                 (current, next, results) -> {
                     results.accept(current);
-                    for (Direction d : Direction.values()) {
+                    for (Direction d : SFMDirections.DIRECTIONS) {
                         BlockPos offset = current.offset(d.getNormal());
                         if (CableNetwork.isCable(rtn.getLevel(), offset) && !rtn.containsCablePosition(offset)) {
                             next.accept(offset);

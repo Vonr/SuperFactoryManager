@@ -13,6 +13,7 @@ import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -597,14 +598,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
 
         // create a new network in a plus shape
         helper.setBlock(new BlockPos(15, 2, 15), SFMBlocks.CABLE_BLOCK.get());
-        for (Direction value : Direction.values()) {
+        for (Direction value : SFMDirections.DIRECTIONS) {
             helper.setBlock(new BlockPos(15, 2, 15).relative(value), SFMBlocks.CABLE_BLOCK.get());
         }
         // should all be on the same network
         net = CableNetworkManager
                 .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
                 .get();
-        for (Direction value : Direction.values()) {
+        for (Direction value : SFMDirections.DIRECTIONS) {
             assertTrue(CableNetworkManager
                                .getOrRegisterNetworkFromCablePosition(
                                        helper.getLevel(),
@@ -624,7 +625,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                            )
                            .isEmpty(), "Network should not be present where the cable was removed from");
         var networks = new ArrayList<CableNetwork>();
-        for (Direction value : Direction.values()) {
+        for (Direction value : SFMDirections.DIRECTIONS) {
             networks.add(CableNetworkManager
                                  .getOrRegisterNetworkFromCablePosition(
                                          helper.getLevel(),
@@ -646,7 +647,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         net = CableNetworkManager
                 .getOrRegisterNetworkFromCablePosition(helper.getLevel(), helper.absolutePos(new BlockPos(15, 2, 15)))
                 .get();
-        for (Direction value : Direction.values()) {
+        for (Direction value : SFMDirections.DIRECTIONS) {
             assertTrue(CableNetworkManager
                                .getOrRegisterNetworkFromCablePosition(
                                        helper.getLevel(),

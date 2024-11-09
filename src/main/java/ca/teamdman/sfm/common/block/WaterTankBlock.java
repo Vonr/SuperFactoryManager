@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.block;
 
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import ca.teamdman.sfm.common.registry.SFMBlockEntities;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import ca.teamdman.sfm.common.watertanknetwork.WaterNetworkManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -108,7 +109,7 @@ public class WaterTankBlock extends BaseEntityBlock implements EntityBlock, Buck
             BlockPos pos
     ) {
         int neighbourWaterCount = 0;
-        for (Direction direction : Direction.values()) {
+        for (Direction direction : SFMDirections.DIRECTIONS) {
             FluidState state = level.getFluidState(pos.relative(direction));
             if (state.isSource() && state.is(FluidTags.WATER)) {
                 if (++neighbourWaterCount == 2) {

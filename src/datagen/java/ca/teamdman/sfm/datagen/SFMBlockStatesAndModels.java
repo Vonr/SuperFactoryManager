@@ -4,6 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block.FancyCableBlock;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
@@ -153,7 +154,7 @@ public class SFMBlockStatesAndModels extends BlockStateProvider {
                 .end();
 
         // Parts (connections)
-        for (Direction direction: Direction.values()) {
+        for (Direction direction: SFMDirections.DIRECTIONS) {
             var rotX = 0;
             var rotY = 0;
 

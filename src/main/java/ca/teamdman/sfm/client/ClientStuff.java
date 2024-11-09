@@ -16,6 +16,7 @@ import ca.teamdman.sfm.common.registry.SFMBlockEntities;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.FacadeType;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import com.mojang.blaze3d.platform.InputConstants;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.client.KeyMapping;
@@ -47,8 +48,8 @@ import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -311,7 +312,7 @@ public class ClientStuff {
                     if (level.getBlockEntity(blockPos) instanceof CableFacadeBlockEntity facadeBlockEntity
                         && facadeBlockEntity.getFacadeState().equals(paintBlockState)) continue;
                     // Increment if neighbour already in the new state
-                    for (Direction direction : Direction.values()) {
+                    for (Direction direction : SFMDirections.DIRECTIONS) {
                         BlockPos offset = blockPos.relative(direction);
                         if (level.getBlockEntity(offset) instanceof CableFacadeBlockEntity facadeBlockEntity
                             && facadeBlockEntity.getFacadeState().equals(paintBlockState)) {

@@ -2,6 +2,7 @@ package ca.teamdman.sfm.common.watertanknetwork;
 
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import ca.teamdman.sfm.common.util.SFMUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
@@ -61,7 +62,7 @@ public record WaterNetwork(
                 if (!blockState.getOptionalValue(WaterTankBlock.IN_WATER).orElse(false)) return;
             }
             results.accept(blockEntity);
-            for (Direction d : Direction.values()) {
+            for (Direction d : SFMDirections.DIRECTIONS) {
                 next.accept(current.offset(d.getNormal()));
             }
         }, start);
@@ -75,7 +76,7 @@ public record WaterNetwork(
             WaterTankBlockEntity blockEntity = cache.members.get(current.asLong());
             if (blockEntity == null) return;
             results.accept(blockEntity);
-            for (Direction d : Direction.values()) {
+            for (Direction d : SFMDirections.DIRECTIONS) {
                 next.accept(current.offset(d.getNormal()));
             }
         }, start);
@@ -104,7 +105,7 @@ public record WaterNetwork(
     List<WaterNetwork> withoutMember(BlockPos pos) {
         members.remove(pos.asLong());
         List<WaterNetwork> branches = new ArrayList<>();
-        for (Direction direction : Direction.values()) {
+        for (Direction direction : SFMDirections.DIRECTIONS) {
             BlockPos offset = pos.offset(direction.getNormal());
             if (!members.containsKey(offset.asLong())) continue;
             if (branches.stream().anyMatch(branch -> branch.members.containsKey(offset.asLong()))) continue;

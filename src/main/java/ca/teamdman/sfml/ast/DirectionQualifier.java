@@ -1,9 +1,9 @@
 package ca.teamdman.sfml.ast;
 
+import ca.teamdman.sfm.common.util.SFMDirections;
 import net.minecraft.core.Direction;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Objects;
@@ -45,9 +45,17 @@ public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNo
     }
 
     @Override
-    public @NotNull Iterator<Direction> iterator() {
-        return stream().iterator();
+    public Iterator<@Nullable Direction> iterator() {
+        if (this == EVERY_DIRECTION) {
+            return new SFMDirections.NullableDirectionIterator();
+        }
+        if (directions.isEmpty()) {
+            return new SFMDirections.SingleNullDirectionIterator();
+        }
+        // Return the iterator of the original collection directly.
+        return directions.iterator();
     }
+
 
     @Override
     public boolean equals(Object o) {
@@ -60,4 +68,5 @@ public record DirectionQualifier(EnumSet<Direction> directions) implements ASTNo
     public int hashCode() {
         return Objects.hashCode(directions);
     }
+
 }

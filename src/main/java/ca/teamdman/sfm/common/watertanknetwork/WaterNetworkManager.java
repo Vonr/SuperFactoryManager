@@ -3,6 +3,7 @@ package ca.teamdman.sfm.common.watertanknetwork;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block.WaterTankBlock;
 import ca.teamdman.sfm.common.blockentity.WaterTankBlockEntity;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -186,7 +187,7 @@ public class WaterNetworkManager {
             BlockPos pos
     ) {
         Set<WaterNetwork> rtn = new HashSet<>();
-        for (Direction direction : Direction.values()) {
+        for (Direction direction : SFMDirections.DIRECTIONS) {
             BlockPos offset = pos.relative(direction);
             Optional<WaterNetwork> network = getNetwork(level, offset);
             network.ifPresent(rtn::add);

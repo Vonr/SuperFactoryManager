@@ -5,6 +5,7 @@ import ca.teamdman.sfm.common.item.LabelGunItem;
 import ca.teamdman.sfm.common.item.NetworkToolItem;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.util.HelpsWithMinecraftVersionIndependence;
+import ca.teamdman.sfm.common.util.SFMDirections;
 import com.google.common.collect.HashMultimap;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -448,7 +449,7 @@ public class ItemWorldRenderer {
                 poseStack.pushPose();
                 poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
                 Matrix4f matrix4f = poseStack.last().pose();
-                for (Direction face : Direction.values()) {
+                for (Direction face : SFMDirections.DIRECTIONS) {
                     if (!positions.contains(blockPos.relative(face))) {
                         writeFaceVertices(bufferBuilder, matrix4f, face, r, g, b, a);
                     }
