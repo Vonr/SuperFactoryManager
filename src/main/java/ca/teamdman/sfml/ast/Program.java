@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.DataOutput;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static ca.teamdman.sfm.common.blockentity.ManagerBlockEntity.TICK_TIME_HISTORY_SIZE;
 import static ca.teamdman.sfm.common.net.ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH;
@@ -247,23 +246,6 @@ public record Program(
                 Statement child = children.get(i);
                 if (child == oldStatement) {
                     children.set(i, newStatement);
-                } else {
-                    toPatch.add(child);
-                }
-            }
-        }
-    }
-
-    public void replaceAllOutputStatements(Function<OutputStatement, OutputStatement> mapper) {
-        Deque<Statement> toPatch = new ArrayDeque<>();
-        toPatch.add(this);
-        while (!toPatch.isEmpty()) {
-            Statement statement = toPatch.pollFirst();
-            List<Statement> children = statement.getStatements();
-            for (int i = 0; i < children.size(); i++) {
-                Statement child = children.get(i);
-                if (child instanceof OutputStatement outputStatement) {
-                    children.set(i, mapper.apply(outputStatement));
                 } else {
                     toPatch.add(child);
                 }

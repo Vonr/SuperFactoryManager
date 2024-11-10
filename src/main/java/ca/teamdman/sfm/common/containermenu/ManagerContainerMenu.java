@@ -22,8 +22,8 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
     public final Container CONTAINER;
     public final Inventory PLAYER_INVENTORY;
     public final BlockPos MANAGER_POSITION;
+    public final ArrayDeque<TranslatableLogEvent> logs;
     public String logLevel;
-    public ArrayDeque<TranslatableLogEvent> logs;
     public boolean isLogScreenOpen = false;
     public String program;
     public ManagerBlockEntity.State state;
@@ -75,7 +75,11 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
         }
     }
 
-    public ManagerContainerMenu(int windowId, Inventory inventory, FriendlyByteBuf buf) {
+    public ManagerContainerMenu(
+            int windowId,
+            Inventory inventory,
+            FriendlyByteBuf buf
+    ) {
         this(
                 windowId,
                 inventory,
@@ -89,7 +93,11 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
         );
     }
 
-    public ManagerContainerMenu(int windowId, Inventory inventory, ManagerBlockEntity manager) {
+    public ManagerContainerMenu(
+            int windowId,
+            Inventory inventory,
+            ManagerBlockEntity manager
+    ) {
         this(
                 windowId,
                 inventory,
@@ -103,7 +111,10 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
         );
     }
 
-    public static void encode(ManagerBlockEntity manager, FriendlyByteBuf buf) {
+    public static void encode(
+            ManagerBlockEntity manager,
+            FriendlyByteBuf buf
+    ) {
         buf.writeBlockPos(manager.getBlockPos());
         buf.writeUtf(manager.getProgramString().orElse(""), Program.MAX_PROGRAM_LENGTH);
         buf.writeUtf(
@@ -124,7 +135,10 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public ItemStack quickMoveStack(Player player, int slotIndex) {
+    public ItemStack quickMoveStack(
+            Player player,
+            int slotIndex
+    ) {
         var slot = this.slots.get(slotIndex);
         if (!slot.hasItem()) return ItemStack.EMPTY;
 
