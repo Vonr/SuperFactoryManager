@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.gametest;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.SFMConfig;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
@@ -14,6 +15,7 @@ import ca.teamdman.sfm.common.program.ProgramContext;
 import ca.teamdman.sfm.common.registry.SFMBlocks;
 import ca.teamdman.sfm.common.registry.SFMItems;
 import ca.teamdman.sfm.common.util.SFMDirections;
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -1356,33 +1358,53 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
         ItemStack enchBook = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
                 Enchantments.SHARPNESS,
-                3
+                4
         ));
-        for (int i = 0; i < 10; i++) {
-            helper
-                    .getLevel()
-                    .addFreshEntity(new ItemEntity(
-                            helper.getLevel(),
-                            pos.x, pos.y, pos.z,
-                            enchBook,
-                            0, 0, 0
-                    ));
+        enchBook.enchant(Enchantments.BLOCK_EFFICIENCY, 2);
+
+        var cases = List.of(
+                Pair.of(SFMConfig.Common.LevelsToShards.JustOne, 10),
+                Pair.of(SFMConfig.Common.LevelsToShards.EachOne, 20),
+                Pair.of(SFMConfig.Common.LevelsToShards.SumLevels, 60),
+                Pair.of(SFMConfig.Common.LevelsToShards.SumLevelsScaledExponentially, 100)
+        );
+
+        var currentConfig = SFMConfig.COMMON.levelsToShards.get();
+        for (var c : cases) {
+            SFMConfig.COMMON.levelsToShards.set(c.first());
+            // kill old item entities
+            helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)).forEach(e -> e.discard());
+
+            for (int i = 0; i < 10; i++) {
+                helper
+                        .getLevel()
+                        .addFreshEntity(new ItemEntity(
+                                helper.getLevel(),
+                                pos.x, pos.y, pos.z,
+                                enchBook,
+                                0, 0, 0
+                        ));
+            }
+            helper.setBlock(new BlockPos(1, 4, 1), Blocks.ANVIL);
+            helper.runAfterDelay(20, () -> {
+                List<ItemEntity> found = helper
+                        .getLevel()
+                        .getEntitiesOfClass(
+                                ItemEntity.class,
+                                new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
+                        );
+                assertTrue(
+                        found.stream().allMatch(e -> e.getItem().is(SFMItems.EXPERIENCE_SHARD_ITEM.get())),
+                        "should only be xp shards"
+                );
+
+                var cnt = found.stream().mapToInt(e -> e.getItem().getCount()).sum();
+                assertTrue(cnt == c.second(), "bad count for " + c.first().name() + ": expected " + c.second() + " but got " + cnt);
+            });
         }
-        helper.setBlock(new BlockPos(1, 4, 1), Blocks.ANVIL);
-        helper.runAfterDelay(20, () -> {
-            List<ItemEntity> found = helper
-                    .getLevel()
-                    .getEntitiesOfClass(
-                            ItemEntity.class,
-                            new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
-                    );
-            assertTrue(
-                    found.stream().allMatch(e -> e.getItem().is(SFMItems.EXPERIENCE_SHARD_ITEM.get())),
-                    "should only be xp shards"
-            );
-            assertTrue(found.stream().mapToInt(e -> e.getItem().getCount()).sum() == 10, "bad count");
-            helper.succeed();
-        });
+
+        SFMConfig.COMMON.levelsToShards.set(currentConfig);
+        helper.succeed();
     }
 
     @GameTest(template = "1x2x1")

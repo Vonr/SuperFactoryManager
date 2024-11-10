@@ -43,6 +43,14 @@ public class SFMConfig {
         public final ForgeConfigSpec.IntValue timerTriggerMinimumIntervalInTicksWhenOnlyForgeEnergyIO;
         public final ForgeConfigSpec.IntValue maxIfStatementsInTriggerBeforeSimulationIsntAllowed;
         public final ForgeConfigSpec.ConfigValue<List<?  extends String>> disallowedResourceTypesForTransfer;
+        public final ForgeConfigSpec.EnumValue<LevelsToShards> levelsToShards;
+
+        public enum LevelsToShards {
+            JustOne,
+            EachOne,
+            SumLevels,
+            SumLevelsScaledExponentially,
+        }
 
         Common(ForgeConfigSpec.Builder builder) {
             timerTriggerMinimumIntervalInTicks = builder
@@ -65,6 +73,9 @@ public class SFMConfig {
                             List::of,
                             String.class::isInstance
                     );
+            levelsToShards = builder
+                    .comment("How to convert Enchanted Books to Experience Shards", "JustOne = always produces 1 shard regardless of enchantments", "EachOne = produces 1 shard per enchantment on the book.", "SumLevels = produces a number of shards equal to the sum of the enchantments' levels", "SumLevelsScaledExponentially = produces a number of shards equal to the sum of 2 to the power of each enchantment's level (1 -> 1 shard, 2 -> 4 shards, 3 -> 8 shards, etc)")
+                    .defineEnum("levelsToShards", LevelsToShards.JustOne);
         }
     }
 
