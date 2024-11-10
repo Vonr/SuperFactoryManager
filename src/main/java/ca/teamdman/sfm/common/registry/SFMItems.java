@@ -21,7 +21,10 @@ public class SFMItems {
     };
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, SFM.MOD_ID);
     public static final RegistryObject<Item> MANAGER_ITEM = register("manager", SFMBlocks.MANAGER_BLOCK);
-    public static final RegistryObject<Item> TUNNELLED_MANAGER_ITEM = register("tunnelled_manager", SFMBlocks.TUNNELLED_MANAGER_BLOCK);
+    public static final RegistryObject<Item> TUNNELLED_MANAGER_ITEM = register(
+            "tunnelled_manager",
+            SFMBlocks.TUNNELLED_MANAGER_BLOCK
+    );
     public static final RegistryObject<Item> CABLE_ITEM = register("cable", SFMBlocks.CABLE_BLOCK);
     public static final RegistryObject<Item> FANCY_CABLE_ITEM = register("fancy_cable", SFMBlocks.FANCY_CABLE_BLOCK);
     public static final RegistryObject<Item> PRINTING_PRESS_ITEM = ITEMS.register(
@@ -32,9 +35,9 @@ public class SFMItems {
     public static final RegistryObject<Item> WATER_TANK_ITEM = register("water_tank", SFMBlocks.WATER_TANK_BLOCK);
     public static final RegistryObject<Item> DISK_ITEM = ITEMS.register("disk", DiskItem::new);
     public static final RegistryObject<Item> LABEL_GUN_ITEM = ITEMS.register(
-            "labelgun",
+            "labelgun", // TODO: rename on a major version update to label_gun
             LabelGunItem::new
-    ); // TODO: rename on a major version update to label_gun
+    );
     public static final RegistryObject<Item> NETWORK_TOOL_ITEM = ITEMS.register("network_tool", NetworkToolItem::new);
 
     public static final RegistryObject<Item> FORM_ITEM = ITEMS.register("form", FormItem::new);
@@ -45,7 +48,10 @@ public class SFMItems {
         ITEMS.register(bus);
     }
 
-    private static RegistryObject<Item> register(String name, RegistryObject<Block> block) {
+    private static RegistryObject<Item> register(
+            String name,
+            RegistryObject<Block> block
+    ) {
         return ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties().tab(TAB)));
     }
 }

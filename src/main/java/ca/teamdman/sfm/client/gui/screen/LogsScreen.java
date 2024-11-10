@@ -36,7 +36,6 @@ import java.util.*;
 import static ca.teamdman.sfm.common.localization.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
 // todo: checkbox for auto-scrolling
-// todo: clear button
 public class LogsScreen extends Screen {
     private final ManagerContainerMenu MENU;
     @SuppressWarnings("NotNullFieldNotInitialized")

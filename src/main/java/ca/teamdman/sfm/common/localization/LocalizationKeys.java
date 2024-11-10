@@ -764,6 +764,10 @@ public final class LocalizationKeys {
             "key.categories.sfm",
             "Super Factory Manager"
     );
+    public static final LocalizationEntry ITEM_INSPECTOR_COPIED_TO_CLIPBOARD = new LocalizationEntry(
+            "gui.sfm.item_inspector.copied_to_clipboard",
+            "Copied {} characters to clipboard!"
+    );
     @SuppressWarnings("unused") // used by minecraft without us having to directly reference
     public static LocalizationEntry MOD_NAME = new LocalizationEntry(
             "mod.name",

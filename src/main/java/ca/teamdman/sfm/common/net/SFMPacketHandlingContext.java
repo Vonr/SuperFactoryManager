@@ -1,5 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.registry.SFMPackets;
@@ -59,22 +60,54 @@ public class SFMPacketHandlingContext {
             int containerId,
             BiConsumer<MENU, BE> callback
     ) {
-        // TODO: log return cases about invalid packet received
         var sender = ctx.sender();
-        if (sender == null) return;
-        if (sender.isSpectator()) return;
+        if (sender == null) {
+            SFM.LOGGER.warn("Invalid packet received: no sender");
+            return;
+        }
+        if (sender.isSpectator()) {
+            SFM.LOGGER.warn("Invalid packet received from {}: sender is spectator", sender.getName().getString());
+            return;
+        }
 
         var menu = sender.containerMenu;
-        if (!menuClass.isInstance(menu)) return;
-        if (menu.containerId != containerId) return;
+        if (!menuClass.isInstance(menu)) {
+            SFM.LOGGER.warn(
+                    "Invalid packet received from {}: menu is not instance of expected class",
+                    sender.getName().getString()
+            );
+            return;
+        }
+        if (menu.containerId != containerId) {
+            SFM.LOGGER.warn(
+                    "Invalid packet received from {}: containerId does not match",
+                    sender.getName().getString()
+            );
+            return;
+        }
 
         var level = sender.getLevel();
         //noinspection ConstantValue
-        if (level == null) return;
-        if (!level.isLoaded(pos)) return;
+        if (level == null) {
+            SFM.LOGGER.warn("Invalid packet received from {}: level is null", sender.getName().getString());
+            return;
+        }
+        if (!level.isLoaded(pos)) {
+            SFM.LOGGER.warn(
+                    "Invalid packet received from {}: block entity is not loaded",
+                    sender.getName().getString()
+            );
+            return;
+        }
 
         var blockEntity = level.getBlockEntity(pos);
-        if (!blockEntityClass.isInstance(blockEntity)) return;
+        if (!blockEntityClass.isInstance(blockEntity)) {
+            SFM.LOGGER.warn(
+                    "Invalid packet received from {}: block entity is not instance of expected class",
+                    sender.getName().getString()
+            );
+            return;
+        }
         //noinspection unchecked
         callback.accept((MENU) menu, (BE) blockEntity);
     }
@@ -102,7 +135,7 @@ public class SFMPacketHandlingContext {
                 programString,
                 successProgram -> callback.accept(successProgram, player, manager),
                 failure -> {
-                    //todo: translate
+                    //todo: localize
                     SFMPackets.sendToPlayer(
                             () -> player,
                             new ClientboundOutputInspectionResultsPacket("failed to compile program")
