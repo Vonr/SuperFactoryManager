@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 public final class ResourceIdSet implements ASTNode {
     public static final ResourceIdSet EMPTY = new ResourceIdSet(new LinkedHashSet<>());
     public static final ResourceIdSet MATCH_ALL = new ResourceIdSet(new LinkedHashSet<>(List.of(ResourceIdentifier.MATCH_ALL)));
-    private final LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds;
+    private final ArrayList<ResourceIdentifier<?, ?, ?>> resourceIds;
     private @Nullable List<ResourceType<?,?,?>> referencedResourceTypes;
 
     public ResourceIdSet(Collection<ResourceIdentifier<?, ?, ?>> contents) {
@@ -53,7 +53,7 @@ public final class ResourceIdSet implements ASTNode {
     public ResourceIdSet(
             LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds
     ) {
-        this.resourceIds = resourceIds;
+        this.resourceIds = new ArrayList<>(resourceIds);
     }
 
     public @Nullable ResourceIdentifier<?, ?, ?> getMatchingFromStack(Object stack) {
