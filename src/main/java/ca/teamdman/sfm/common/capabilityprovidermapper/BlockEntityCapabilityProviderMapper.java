@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public class BlockEntityCapabilityProviderMapper implements CapabilityProviderMapper {
     @Override
-    public Optional<ICapabilityProvider> getProviderFor(LevelAccessor level, BlockPos pos) {
-        return Optional.ofNullable(level.getBlockEntity(pos));
+    public ICapabilityProvider getProviderFor(LevelAccessor level, BlockPos pos) {
+        return level.getBlockEntity(pos);
     }
 }

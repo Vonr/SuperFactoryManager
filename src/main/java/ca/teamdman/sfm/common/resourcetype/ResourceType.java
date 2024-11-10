@@ -12,12 +12,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -138,9 +138,8 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             BiConsumer<Direction, CAP> consumer
     ) {
         for (Direction dir : directions) {
-            Optional<CAP> maybeCap = programContext.getNetwork()
-                    .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger())
-                    .resolve();
+            LazyOptional<CAP> maybeCap = programContext.getNetwork()
+                    .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger());
             if (maybeCap.isPresent()) {
                 programContext
                         .getLogger()
@@ -149,7 +148,8 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                                 pos,
                                 dir
                         )));
-                CAP cap = maybeCap.get();
+                //noinspection OptionalGetWithoutIsPresent
+                CAP cap = maybeCap.resolve().get();
                 consumer.accept(dir, cap);
             } else {
                 // Log error

@@ -34,7 +34,6 @@ import org.apache.logging.log4j.core.time.MutableInstant;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 
 public class ManagerBlockEntity extends BaseContainerBlockEntity {
@@ -67,7 +66,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     @Override
     public String toString() {
         return "ManagerBlockEntity{" +
-               "hasDisk=" + getDisk().isPresent() +
+               "hasDisk=" + (getDisk() != null) +
                '}';
     }
 
@@ -122,16 +121,18 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return tick;
     }
 
-    public Optional<Program> getProgram() {
-        return Optional.ofNullable(program);
+    @Nullable
+    public Program getProgram() {
+        return program;
     }
 
     public void setProgram(String program) {
-        getDisk().ifPresent(disk -> {
+        var disk = getDisk();
+        if (disk != null) {
             DiskItem.setProgram(disk, program);
             rebuildProgramAndUpdateDisk();
             setChanged();
-        });
+        }
     }
 
     public void trackRedstonePulseUnprocessed() {
@@ -147,14 +148,26 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public State getState() {
-        if (getDisk().isEmpty()) return State.NO_DISK;
-        if (getProgramString().isEmpty()) return State.NO_PROGRAM;
+        if (getDisk() == null) return State.NO_DISK;
+        if (getProgramString() == null) return State.NO_PROGRAM;
         if (program == null) return State.INVALID_PROGRAM;
         return State.RUNNING;
     }
 
-    public Optional<String> getProgramString() {
-        return getDisk().map(DiskItem::getProgram).filter(prog -> !prog.isBlank());
+    @Nullable
+    public String getProgramString() {
+        var disk = getDisk();
+        if (disk == null) {
+            return null;
+        }
+
+        var program = DiskItem.getProgram(disk);
+        return program.isBlank() ? null : program;
+    }
+
+    public String getProgramStringOrEmptyIfNull() {
+        var programString = this.getProgramString();
+        return programString == null ? "" : programString;
     }
 
     public Set<String> getReferencedLabels() {
@@ -162,17 +175,21 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return program.referencedLabels();
     }
 
-    public Optional<ItemStack> getDisk() {
+    @Nullable
+    public ItemStack getDisk() {
         var item = getItem(0);
-        if (item.getItem() instanceof DiskItem) return Optional.of(item);
-        return Optional.empty();
+        if (item.getItem() instanceof DiskItem) return item;
+        return null;
     }
 
     public void rebuildProgramAndUpdateDisk() {
         if (level != null && level.isClientSide()) return;
-        this.program = getDisk()
-                .flatMap(itemStack -> DiskItem.compileAndUpdateErrorsAndWarnings(itemStack, this))
-                .orElse(null);
+        var disk = getDisk();
+        if (disk == null) {
+            this.program = null;
+        } else {
+            this.program = DiskItem.compileAndUpdateErrorsAndWarnings(disk, this);
+        }
         sendUpdatePacket();
     }
 
@@ -247,12 +264,13 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     public void reset() {
-        getDisk().ifPresent(disk -> {
+        var disk = getDisk();
+        if (disk != null) {
             LabelPositionHolder.purge(disk);
             disk.setTag(null);
             setItem(0, disk);
             setChanged();
-        });
+        }
     }
 
     public long[] getTickTimeNanos() {
@@ -267,7 +285,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         // Create one packet and clone it for each receiver
         var managerUpdatePacket = new ClientboundManagerGuiUpdatePacket(
                 -1,
-                getProgramString().orElse(""),
+                getProgramStringOrEmptyIfNull(),
                 getState(),
                 getTickTimeNanos()
         );

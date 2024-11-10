@@ -95,7 +95,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
                 inventory,
                 manager,
                 manager.getBlockPos(),
-                manager.getProgramString().orElse(""),
+                manager.getProgramStringOrEmptyIfNull(),
                 manager.logger.getLogLevel().name(),
                 manager.getState(),
                 manager.getTickTimeNanos(),
@@ -105,7 +105,7 @@ public class ManagerContainerMenu extends AbstractContainerMenu {
 
     public static void encode(ManagerBlockEntity manager, FriendlyByteBuf buf) {
         buf.writeBlockPos(manager.getBlockPos());
-        buf.writeUtf(manager.getProgramString().orElse(""), Program.MAX_PROGRAM_LENGTH);
+        buf.writeUtf(manager.getProgramStringOrEmptyIfNull(), Program.MAX_PROGRAM_LENGTH);
         buf.writeUtf(
                 manager.logger.getLogLevel().name(),
                 ServerboundManagerSetLogLevelPacket.MAX_LOG_LEVEL_NAME_LENGTH
