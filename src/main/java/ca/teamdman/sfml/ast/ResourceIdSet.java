@@ -17,7 +17,7 @@ public final class ResourceIdSet implements ASTNode {
     public static final ResourceIdSet EMPTY = new ResourceIdSet(new LinkedHashSet<>());
     public static final ResourceIdSet MATCH_ALL = new ResourceIdSet(new LinkedHashSet<>(List.of(ResourceIdentifier.MATCH_ALL)));
     private final LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds;
-    private @Nullable HashSet<ResourceType<?,?,?>> referencedResourceTypes = null;
+    private @Nullable List<ResourceType<?,?,?>> referencedResourceTypes;
 
     public ResourceIdSet(Collection<ResourceIdentifier<?, ?, ?>> contents) {
         this(new LinkedHashSet<>(contents));
@@ -26,12 +26,14 @@ public final class ResourceIdSet implements ASTNode {
     /**
      * See also: {@link ResourceLimits#getReferencedResourceTypes()}
      */
-    public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
+    public Collection<? extends ResourceType<?, ?, ?>> getReferencedResourceTypes() {
         if (referencedResourceTypes == null) {
-            referencedResourceTypes = new HashSet<>(SFMResourceTypes.getResourceTypeCount());
+            HashSet<ResourceType<?, ?, ?>> set = new HashSet<>(SFMResourceTypes.getResourceTypeCount());
             for (ResourceIdentifier<?, ?, ?> resourceId : resourceIds) {
-                referencedResourceTypes.add(resourceId.getResourceType());
+                set.add(resourceId.getResourceType());
             }
+
+            referencedResourceTypes = new ArrayList<>(set);
         }
         return referencedResourceTypes;
     }
