@@ -7,10 +7,7 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.localization.LocalizationEntry;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
-import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
+import ca.teamdman.sfm.common.net.*;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
@@ -314,12 +311,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
         statusCountdown = STATUS_DURATION;
     }
     private void onServerConfigButtonClicked() {
-        SFMPackets.sendToServer(new ServerboundManagerRebuildPacket(
-                menu.containerId,
-                menu.MANAGER_POSITION
-        ));
-        status = MANAGER_GUI_STATUS_REBUILD.getComponent();
-        statusCountdown = STATUS_DURATION;
+        SFMPackets.sendToServer(new ServerboundServerConfigRequestPacket(false));
     }
 
     private void sendAttemptFix() {

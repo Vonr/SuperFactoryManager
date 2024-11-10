@@ -31,7 +31,8 @@ public record Program(
         String name,
         List<Trigger> triggers,
         Set<String> referencedLabels,
-        Set<ResourceIdentifier<?, ?, ?>> referencedResources
+        Set<ResourceIdentifier<?, ?, ?>> referencedResources,
+        int configRevision
 ) implements Statement {
     /** 
      * This comes from {@link java.io.DataOutputStream#writeUTF(String, DataOutput)}

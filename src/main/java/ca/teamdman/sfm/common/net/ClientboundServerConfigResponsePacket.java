@@ -1,10 +1,12 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.client.ClientStuff;
+import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.network.FriendlyByteBuf;
 
 public record ClientboundServerConfigResponsePacket(
-        String configToml
+        String configToml,
+        boolean requestingEditMode
 ) implements SFMPacket {
     public static final int MAX_LENGTH = 20480;
 
@@ -15,12 +17,14 @@ public record ClientboundServerConfigResponsePacket(
                 FriendlyByteBuf friendlyByteBuf
         ) {
             friendlyByteBuf.writeUtf(msg.configToml(), MAX_LENGTH);
+            friendlyByteBuf.writeBoolean(msg.requestingEditMode());
         }
 
         @Override
         public ClientboundServerConfigResponsePacket decode(FriendlyByteBuf friendlyByteBuf) {
             return new ClientboundServerConfigResponsePacket(
-                    friendlyByteBuf.readUtf(MAX_LENGTH)
+                    friendlyByteBuf.readUtf(MAX_LENGTH),
+                    friendlyByteBuf.readBoolean()
             );
         }
 
@@ -29,7 +33,13 @@ public record ClientboundServerConfigResponsePacket(
                 ClientboundServerConfigResponsePacket msg,
                 SFMPacketHandlingContext context
         ) {
-            ClientStuff.showProgramEditScreen(msg.configToml());
+            if (msg.requestingEditMode()) {
+                ClientStuff.showProgramEditScreen(msg.configToml(), (newContent) -> {
+                    SFMPackets.sendToServer(new ServerboundServerConfigUpdatePacket(newContent));
+                });
+            } else {
+                ClientStuff.showProgramEditScreen(msg.configToml());
+            }
         }
 
         @Override

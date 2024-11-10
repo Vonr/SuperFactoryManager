@@ -657,7 +657,7 @@ public final class LocalizationKeys {
     );
     public static final LocalizationEntry MANAGER_GUI_SERVER_CONFIG_BUTTON = new LocalizationEntry(
             "gui.sfm.manager.button.server_config",
-            "Server config"
+            "View server config"
     );
     public static final LocalizationEntry LOG_LEVEL_UPDATED = new LocalizationEntry(
             "log.sfm.level_updated",
