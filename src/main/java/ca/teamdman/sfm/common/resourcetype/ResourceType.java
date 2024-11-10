@@ -116,6 +116,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                         labelAccess
                 )));
 
+        DirectionQualifier directions = labelAccess.directions();
         LabelPositionHolder labelPositionHolder = programContext.getLabelPositionHolder();
         ArrayList<Pair<Label, BlockPos>> positions = labelAccess.getLabelledPositions(labelPositionHolder);
 
@@ -124,7 +125,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             BlockPos pos = pair.getSecond();
             forEachDirectionalCapability(
                     programContext,
-                    labelAccess.directions(),
+                    directions,
                     pos,
                     (dir, cap) -> consumer.accept(label, pos, dir, cap)
             );
