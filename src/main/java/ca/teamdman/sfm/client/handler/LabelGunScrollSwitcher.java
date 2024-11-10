@@ -18,16 +18,16 @@ public class LabelGunScrollSwitcher {
         var player = Minecraft.getInstance().player;
         if (player == null) return;
         if (!player.isShiftKeyDown()) return;
-        var gun  = player.getMainHandItem();
+        var gun = player.getMainHandItem();
         var hand = InteractionHand.MAIN_HAND;
         if (!(gun.getItem() instanceof LabelGunItem)) {
-            gun  = player.getOffhandItem();
+            gun = player.getOffhandItem();
             hand = InteractionHand.OFF_HAND;
         }
         if (!(gun.getItem() instanceof LabelGunItem)) return;
 
         var next = LabelGunItem.getNextLabel(gun, event.getScrollDelta() < 0 ? -1 : 1);
-        SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
+        SFMPackets.sendToServer(new ServerboundLabelGunUpdatePacket(
                 next,
                 hand
         ));

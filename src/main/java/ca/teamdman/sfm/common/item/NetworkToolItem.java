@@ -39,7 +39,7 @@ public class NetworkToolItem extends Item {
             UseOnContext pContext
     ) {
         if (!pContext.getLevel().isClientSide) return InteractionResult.SUCCESS;
-        SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundNetworkToolUsePacket(
+        SFMPackets.sendToServer(new ServerboundNetworkToolUsePacket(
                 pContext.getClickedPos(),
                 pContext.getClickedFace()
         ));

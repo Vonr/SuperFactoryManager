@@ -4,34 +4,35 @@ import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfml.ast.Program;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public record ServerboundDiskItemSetProgramPacket(
         String programString,
         InteractionHand hand
-) {
+) implements SFMPacket {
+    public static class Daddy implements SFMPacketDaddy<ServerboundDiskItemSetProgramPacket> {
+        @Override
+        public void encode(
+                ServerboundDiskItemSetProgramPacket msg,
+                FriendlyByteBuf buf
+        ) {
+            buf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
+            buf.writeEnum(msg.hand);
+        }
 
-    public static void encode(ServerboundDiskItemSetProgramPacket msg, FriendlyByteBuf buf) {
-        buf.writeUtf(msg.programString, Program.MAX_PROGRAM_LENGTH);
-        buf.writeEnum(msg.hand);
-    }
+        @Override
+        public ServerboundDiskItemSetProgramPacket decode(FriendlyByteBuf buf) {
+            return new ServerboundDiskItemSetProgramPacket(
+                    buf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                    buf.readEnum(InteractionHand.class)
+            );
+        }
 
-    public static ServerboundDiskItemSetProgramPacket decode(
-            FriendlyByteBuf buf
-    ) {
-        return new ServerboundDiskItemSetProgramPacket(
-                buf.readUtf(Program.MAX_PROGRAM_LENGTH),
-                buf.readEnum(InteractionHand.class)
-        );
-    }
-
-    public static void handle(
-            ServerboundDiskItemSetProgramPacket msg, Supplier<NetworkEvent.Context> ctx
-    ) {
-        ctx.get().enqueueWork(() -> {
-            var sender = ctx.get().getSender();
+        @Override
+        public void handle(
+                ServerboundDiskItemSetProgramPacket msg,
+                SFMPacketHandlingContext context
+        ) {
+            var sender = context.sender();
             if (sender == null) {
                 return;
             }
@@ -40,8 +41,11 @@ public record ServerboundDiskItemSetProgramPacket(
                 DiskItem.setProgram(stack, msg.programString);
                 DiskItem.compileAndUpdateErrorsAndWarnings(stack, null);
             }
+        }
 
-        });
-        ctx.get().setPacketHandled(true);
+        @Override
+        public Class<ServerboundDiskItemSetProgramPacket> getPacketClass() {
+            return ServerboundDiskItemSetProgramPacket.class;
+        }
     }
 }

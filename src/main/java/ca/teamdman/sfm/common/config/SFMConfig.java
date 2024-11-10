@@ -1,4 +1,4 @@
-package ca.teamdman.sfm.common;
+package ca.teamdman.sfm.common.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;

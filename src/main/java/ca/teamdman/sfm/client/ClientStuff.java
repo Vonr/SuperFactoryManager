@@ -118,7 +118,7 @@ public class ClientStuff {
         LogsScreen screen = new LogsScreen(menu);
         setOrPushScreen(screen);
         screen.scrollToBottom();
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
+        SFMPackets.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
                 menu.containerId,
                 menu.MANAGER_POSITION,
                 true
@@ -212,7 +212,7 @@ public class ClientStuff {
         switch (msg.spreadLogic()) {
             case SINGLE -> {
                 // No confirmation necessary for single updates
-                SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                SFMPackets.sendToServer(msg);
                 // Perform eager update
                 ServerboundFacadePacket.handle(msg, player);
             }
@@ -252,7 +252,7 @@ public class ClientStuff {
                             (confirmed) -> {
                                 minecraft.popGuiLayer(); // Close confirm screen
                                 if (confirmed) {
-                                    SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                                    SFMPackets.sendToServer(msg);
                                     // Perform eager update
                                     ServerboundFacadePacket.handle(msg, player);
                                 }
@@ -269,7 +269,7 @@ public class ClientStuff {
                     confirmScreen.setDelay(10);
                 } else {
                     // No confirmation necessary
-                    SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                    SFMPackets.sendToServer(msg);
                     // Perform eager update
                     ServerboundFacadePacket.handle(msg, player);
                 }
@@ -327,7 +327,7 @@ public class ClientStuff {
                             (confirmed) -> {
                                 minecraft.popGuiLayer(); // Close confirm screen
                                 if (confirmed) {
-                                    SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                                    SFMPackets.sendToServer(msg);
                                     // Perform eager update
                                     ServerboundFacadePacket.handle(msg, player);
                                 }
@@ -344,7 +344,7 @@ public class ClientStuff {
                     confirmScreen.setDelay(10);
                 } else {
                     // No confirmation necessary
-                    SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                    SFMPackets.sendToServer(msg);
                     // Perform eager update
                     ServerboundFacadePacket.handle(msg, player);
                 }

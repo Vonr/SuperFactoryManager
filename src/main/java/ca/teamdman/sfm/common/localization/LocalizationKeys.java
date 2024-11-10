@@ -655,6 +655,10 @@ public final class LocalizationKeys {
             "gui.sfm.manager.button.rebuild",
             "Rebuild cable network"
     );
+    public static final LocalizationEntry MANAGER_GUI_SERVER_CONFIG_BUTTON = new LocalizationEntry(
+            "gui.sfm.manager.button.server_config",
+            "Server config"
+    );
     public static final LocalizationEntry LOG_LEVEL_UPDATED = new LocalizationEntry(
             "log.sfm.level_updated",
             "Log level updated to %s"

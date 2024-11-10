@@ -108,7 +108,7 @@ public class LabelGunReminderOverlay implements IGuiOverlay {
                     InteractionHand hand = getHandHoldingLabelGun(minecraft.player);
                     if (hand == null) return;
                     // send packet to server to toggle mode
-                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunToggleLabelViewPacket(hand));
+                    SFMPackets.sendToServer(new ServerboundLabelGunToggleLabelViewPacket(hand));
                 }
             }
             case PressCancelledExternally -> {

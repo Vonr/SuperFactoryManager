@@ -17,7 +17,10 @@ import java.util.stream.Stream;
 
 public class ProgramTokenContextActions {
 
-    public static Optional<Runnable> getContextAction(String programString, int cursorPosition) {
+    public static Optional<Runnable> getContextAction(
+            String programString,
+            int cursorPosition
+    ) {
         var lexer = new SFMLLexer(CharStreams.fromString(programString));
         var tokens = new CommonTokenStream(lexer);
         var parser = new SFMLParser(tokens);
@@ -33,7 +36,13 @@ public class ProgramTokenContextActions {
                                     .getNodesUnderCursor(cursorPosition - 1)
                                     .stream()
                     )
-                    .map(pair -> getContextAction(programString, builder, pair.getFirst(), pair.getSecond(), cursorPosition))
+                    .map(pair -> getContextAction(
+                            programString,
+                            builder,
+                            pair.getFirst(),
+                            pair.getSecond(),
+                            cursorPosition
+                    ))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .findFirst();
@@ -63,7 +72,7 @@ public class ProgramTokenContextActions {
             });
         } else if (node instanceof Label label) {
             SFM.LOGGER.info("Found context action for label node");
-            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundLabelInspectionRequestPacket(
+            return Optional.of(() -> SFMPackets.sendToServer(new ServerboundLabelInspectionRequestPacket(
                     label.name()
             )));
         } else if (node instanceof InputStatement) {
@@ -73,7 +82,7 @@ public class ProgramTokenContextActions {
             }
             SFM.LOGGER.info("Found context action for input node");
             int nodeIndex = builder.getIndexForNode(node);
-            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundInputInspectionRequestPacket(
+            return Optional.of(() -> SFMPackets.sendToServer(new ServerboundInputInspectionRequestPacket(
                     programString,
                     nodeIndex
             )));
@@ -84,21 +93,21 @@ public class ProgramTokenContextActions {
             }
             SFM.LOGGER.info("Found context action for output node");
             int nodeIndex = builder.getIndexForNode(node);
-            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundOutputInspectionRequestPacket(
+            return Optional.of(() -> SFMPackets.sendToServer(new ServerboundOutputInspectionRequestPacket(
                     programString,
                     nodeIndex
             )));
         } else if (node instanceof BoolExpr) {
             SFM.LOGGER.info("Found context action for BoolExpr node");
             int nodeIndex = builder.getIndexForNode(node);
-            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundBoolExprStatementInspectionRequestPacket(
+            return Optional.of(() -> SFMPackets.sendToServer(new ServerboundBoolExprStatementInspectionRequestPacket(
                     programString,
                     nodeIndex
             )));
         } else if (node instanceof IfStatement) {
             SFM.LOGGER.info("Found context action for if statement node");
             int nodeIndex = builder.getIndexForNode(node);
-            return Optional.of(() -> SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundIfStatementInspectionRequestPacket(
+            return Optional.of(() -> SFMPackets.sendToServer(new ServerboundIfStatementInspectionRequestPacket(
                     programString,
                     nodeIndex
             )));

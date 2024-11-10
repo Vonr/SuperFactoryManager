@@ -2,7 +2,7 @@ package ca.teamdman.sfml;
 
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
-import ca.teamdman.sfm.common.SFMConfig;
+import ca.teamdman.sfm.common.config.SFMConfig;
 import ca.teamdman.sfml.ast.ResourceIdentifier;
 import com.google.common.collect.Sets;
 import net.minecraft.network.chat.Component;

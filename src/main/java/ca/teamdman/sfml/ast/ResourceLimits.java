@@ -7,7 +7,7 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * Do NOT modify this after creation since the {@link this#referencedResourceTypes} will become inaccurate.
  */
 public final class ResourceLimits implements ASTNode, ToStringPretty {
-    private @Nullable HashSet<ResourceType<?,?,?>> referencedResourceTypes = null;
+    private @Nullable LinkedHashSet<ResourceType<?,?,?>> referencedResourceTypes = null;
     private final List<ResourceLimit> resourceLimitList;
     private final ResourceIdSet exclusions;
 
@@ -69,7 +69,7 @@ public final class ResourceLimits implements ASTNode, ToStringPretty {
      */
     public Set<ResourceType<?, ?, ?>> getReferencedResourceTypes() {
         if (referencedResourceTypes == null) {
-            referencedResourceTypes = new HashSet<>(SFMResourceTypes.getResourceTypeCount());
+            referencedResourceTypes = new LinkedHashSet<>(SFMResourceTypes.getResourceTypeCount());
             for (ResourceLimit resourceLimit : resourceLimitList) {
                 referencedResourceTypes.addAll(resourceLimit.resourceIds().getReferencedResourceTypes());
             }

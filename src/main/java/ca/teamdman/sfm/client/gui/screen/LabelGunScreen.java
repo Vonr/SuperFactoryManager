@@ -62,7 +62,7 @@ public class LabelGunScreen extends Screen {
                 20,
                 LocalizationKeys.LABEL_GUN_GUI_CLEAR_BUTTON.getComponent(),
                 (btn) -> {
-                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunClearPacket(HAND));
+                    SFMPackets.sendToServer(new ServerboundLabelGunClearPacket(HAND));
                     LABEL_HOLDER.clear();
                     shouldRebuildWidgets = true;
                 }
@@ -74,7 +74,7 @@ public class LabelGunScreen extends Screen {
                 20,
                 LocalizationKeys.LABEL_GUN_GUI_PRUNE_BUTTON.getComponent(),
                 (btn) -> {
-                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunPrunePacket(HAND));
+                    SFMPackets.sendToServer(new ServerboundLabelGunPrunePacket(HAND));
                     LABEL_HOLDER.prune();
                     shouldRebuildWidgets = true;
                 }
@@ -86,7 +86,7 @@ public class LabelGunScreen extends Screen {
                 20,
                 LocalizationKeys.LABEL_GUN_GUI_TOGGLE_LABEL_VIEW_BUTTON.getComponent(),
                 (btn) -> {
-                    SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunToggleLabelViewPacket(HAND));
+                    SFMPackets.sendToServer(new ServerboundLabelGunToggleLabelViewPacket(HAND));
                     onClose();
                 }
         ));
@@ -110,7 +110,7 @@ public class LabelGunScreen extends Screen {
     }
 
     public void onDone() {
-        SFMPackets.LABEL_GUN_ITEM_CHANNEL.sendToServer(new ServerboundLabelGunUpdatePacket(
+        SFMPackets.sendToServer(new ServerboundLabelGunUpdatePacket(
                 labelField.getValue(),
                 HAND
         ));

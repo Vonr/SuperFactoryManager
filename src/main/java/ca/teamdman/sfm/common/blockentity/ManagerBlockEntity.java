@@ -29,7 +29,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.network.PacketDistributor;
 import org.apache.logging.log4j.core.time.MutableInstant;
 import org.jetbrains.annotations.Nullable;
 
@@ -277,23 +276,17 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                     ManagerContainerMenu menu = entry.getValue();
 
                     // Send a copy of the manager update packet
-                    SFMPackets.MANAGER_CHANNEL.send(
-                            PacketDistributor.PLAYER.with(entry::getKey),
-                            managerUpdatePacket.cloneWithWindowId(menu.containerId)
-                    );
+                    SFMPackets.sendToPlayer(entry::getKey, managerUpdatePacket.cloneWithWindowId(menu.containerId));
 
                     // The rest of the sync is only relevant if the log screen is open
                     if (!menu.isLogScreenOpen) return;
 
                     // Send log level changes
                     if (!menu.logLevel.equals(logger.getLogLevel().name())) {
-                        SFMPackets.MANAGER_CHANNEL.send(
-                                PacketDistributor.PLAYER.with(entry::getKey),
-                                new ClientboundManagerLogLevelUpdatedPacket(
-                                        menu.containerId,
-                                        logger.getLogLevel().name()
-                                )
-                        );
+                        SFMPackets.sendToPlayer(entry::getKey, new ClientboundManagerLogLevelUpdatedPacket(
+                                menu.containerId,
+                                logger.getLogLevel().name()
+                        ));
                         menu.logLevel = logger.getLogLevel().name();
                     }
 
@@ -311,13 +304,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                         // Send the logs
                         while (!logsToSend.isEmpty()) {
                             int remaining = logsToSend.size();
-                            SFMPackets.MANAGER_CHANNEL.send(
-                                    PacketDistributor.PLAYER.with(entry::getKey),
-                                    ClientboundManagerLogsPacket.drainToCreate(
-                                            menu.containerId,
-                                            logsToSend
-                                    )
-                            );
+                            SFMPackets.sendToPlayer(entry::getKey, ClientboundManagerLogsPacket.drainToCreate(
+                                    menu.containerId,
+                                    logsToSend
+                            ));
                             if (logsToSend.size() >= remaining) {
                                 throw new IllegalStateException("Failed to send logs, infinite loop detected");
                             }
