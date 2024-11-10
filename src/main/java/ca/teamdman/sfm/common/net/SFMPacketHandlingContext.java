@@ -52,40 +52,6 @@ public class SFMPacketHandlingContext {
     }
 
     public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(
-            @Nullable Supplier<NetworkEvent.Context> ctxSupplier,
-            Class<MENU> menuClass,
-            Class<BE> blockEntityClass,
-            BlockPos pos,
-            int containerId,
-            BiConsumer<MENU, BE> callback
-    ) {
-        if (ctxSupplier == null) return;
-
-        var ctx = ctxSupplier.get();
-        if (ctx == null) return;
-        // TODO: log return cases about invalid packet received
-        ctx.enqueueWork(() -> {
-            var sender = ctx.getSender();
-            if (sender == null) return;
-            if (sender.isSpectator()) return; // ignore packets from spectators
-
-            var menu = sender.containerMenu;
-            if (!menuClass.isInstance(menu)) return;
-            if (menu.containerId != containerId) return;
-
-            var level = sender.getLevel();
-            //noinspection ConstantValue
-            if (level == null) return;
-            if (!level.isLoaded(pos)) return;
-
-            var blockEntity = level.getBlockEntity(pos);
-            if (!blockEntityClass.isInstance(blockEntity)) return;
-            //noinspection unchecked
-            callback.accept((MENU) menu, (BE) blockEntity);
-        });
-    }
-
-    public static <MENU extends AbstractContainerMenu, BE extends BlockEntity> void handleServerboundContainerPacket(
             SFMPacketHandlingContext ctx,
             Class<MENU> menuClass,
             Class<BE> blockEntityClass,
