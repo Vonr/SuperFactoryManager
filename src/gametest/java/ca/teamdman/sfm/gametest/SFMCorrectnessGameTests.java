@@ -1360,7 +1360,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 Enchantments.SHARPNESS,
                 4
         ));
-        enchBook.enchant(Enchantments.BLOCK_EFFICIENCY, 2);
+        EnchantedBookItem.addEnchantment(enchBook, new EnchantmentInstance(Enchantments.BLOCK_EFFICIENCY, 2));
 
         var cases = List.of(
                 Pair.of(SFMConfig.Common.LevelsToShards.JustOne, 10),

@@ -81,22 +81,24 @@ public class FallingAnvilHandler {
                             }
 
                             var item = e.getItem();
-                            var enchantments = item.getAllEnchantments();
+                            var enchantments = EnchantedBookItem.getEnchantments(item);
 
                             int count = item.getCount() * switch (SFMConfig.COMMON.levelsToShards.get()) {
                                 case JustOne -> 1;
                                 case EachOne -> enchantments.size();
                                 case SumLevels -> {
                                     int sum = 0;
-                                    for (int lvl : enchantments.values()) {
-                                        sum += lvl;
+                                    for (int i = 0; i < enchantments.size(); i++) {
+                                        var ench = enchantments.getCompound(i);
+                                        sum += ench.getInt("lvl");
                                     }
                                     yield sum;
                                 }
                                 case SumLevelsScaledExponentially -> {
                                     int sum = 0;
-                                    for (int lvl : enchantments.values()) {
-                                        sum += 1 << Math.max(0, lvl - 1);
+                                    for (int i = 0; i < enchantments.size(); i++) {
+                                        var ench = enchantments.getCompound(i);
+                                        sum += 1 << Math.max(0, ench.getInt("lvl") - 1);
                                     }
                                     yield sum;
                                 }
