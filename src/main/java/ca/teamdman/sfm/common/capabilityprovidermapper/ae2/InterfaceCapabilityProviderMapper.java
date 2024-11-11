@@ -15,7 +15,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -48,29 +47,16 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             return Optional.empty();
         }
 
-        var grid = in.getMainNode().getGrid();
-        if (grid == null) {
-            return Optional.empty();
-        }
-
-        var energy = grid.getEnergyService();
-
-        return Optional.of(new InterfaceCapabilityProvider(level, be, energy));
+        return Optional.of(new InterfaceCapabilityProvider(level, pos));
     }
 
     private static class InterfaceCapabilityProvider implements ICapabilityProvider {
         private final LazyOptional<IItemHandler> itemHandler;
         private final LazyOptional<IFluidHandler> fluidHandler;
 
-        InterfaceCapabilityProvider(LevelAccessor level, BlockEntity be, IEnergyService energy) {
-            this.itemHandler = LazyOptional.of(() -> {
-                var cap = be.getCapability(Capabilities.STORAGE_MONITORABLE_ACCESSOR);
-                return new InterfaceItemHandler(level, cap, energy);
-            });
-            this.fluidHandler = LazyOptional.of(() -> {
-                var cap = be.getCapability(Capabilities.STORAGE_MONITORABLE_ACCESSOR);
-                return new InterfaceFluidHandler(level, cap, energy);
-            });
+        InterfaceCapabilityProvider(LevelAccessor level, BlockPos pos) {
+            this.itemHandler = LazyOptional.of(() -> new InterfaceItemHandler(level, pos));
+            this.fluidHandler = LazyOptional.of(() -> new InterfaceFluidHandler(level, pos));
         }
 
         @Override
@@ -87,23 +73,59 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
 
     static class InterfaceHandler {
         final LevelAccessor level;
-        final LazyOptional<IStorageMonitorableAccessor> cap;
-        final IEnergyService energy;
+        final BlockPos pos;
 
-        InterfaceHandler(LevelAccessor level, LazyOptional<IStorageMonitorableAccessor> cap, IEnergyService energy) {
+        InterfaceHandler(LevelAccessor level, BlockPos pos) {
             this.level = level;
-            this.cap = cap;
-            this.energy = energy;
+            this.pos = pos;
+        }
+
+        @Nullable
+        InterfaceBlockEntity getInterface() {
+            var be = level.getBlockEntity(pos);
+            if (be instanceof InterfaceBlockEntity in) {
+                return in;
+            }
+            return null;
+        }
+
+        @Nullable
+        IEnergyService getEnergy() {
+            var in = this.getInterface();
+            if (in == null) {
+                return null;
+            }
+
+            var grid = in.getMainNode().getGrid();
+            if (grid == null) {
+                return null;
+            }
+
+            return grid.getEnergyService();
+        }
+
+        @NotNull
+        LazyOptional<IStorageMonitorableAccessor> getCapability() {
+            var in = this.getInterface();
+            if (in == null) {
+                return LazyOptional.empty();
+            }
+
+            if (!in.getConfig().isEmpty() || in.getMainNode() == null || in.getGridNode() == null || !in.getGridNode().isActive()) {
+                return LazyOptional.empty();
+            }
+
+            return in.getCapability(Capabilities.STORAGE_MONITORABLE_ACCESSOR);
         }
 
         void withStorage(Consumer<MEStorage> callback) {
-            this.cap.ifPresent(t -> callback.accept(t.getInventory(IActionSource.empty())));
+            this.getCapability().ifPresent(t -> callback.accept(t.getInventory(IActionSource.empty())));
         }
     }
 
     private static class InterfaceItemHandler extends InterfaceHandler implements IItemHandler {
-        InterfaceItemHandler(LevelAccessor level, LazyOptional<IStorageMonitorableAccessor> cap, IEnergyService energy) {
-            super(level, cap, energy);
+        InterfaceItemHandler(LevelAccessor level, BlockPos pos) {
+            super(level, pos);
         }
 
         @Override
@@ -153,7 +175,13 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                     return;
                 }
 
-                int ins = (int) StorageHelper.poweredInsert(this.energy,
+                var energy = this.getEnergy();
+                if (energy == null) {
+                    return;
+                }
+
+                int ins = (int) StorageHelper.poweredInsert(
+                        energy,
                         s,
                         key,
                         stack.getCount(),
@@ -185,6 +213,11 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEItemKey key) {
                         if (slot == i++) {
+                            var energy = this.getEnergy();
+                            if (energy == null) {
+                                return;
+                            }
+
                             int extracted = (int) StorageHelper.poweredExtraction(
                                     energy,
                                     s,
@@ -216,8 +249,8 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
     }
 
     private static class InterfaceFluidHandler extends InterfaceItemHandler implements IFluidHandler {
-        InterfaceFluidHandler(LevelAccessor level, LazyOptional<IStorageMonitorableAccessor> cap, IEnergyService energy) {
-            super(level, cap, energy);
+        InterfaceFluidHandler(LevelAccessor level, BlockPos pos) {
+            super(level, pos);
         }
 
         @Override
@@ -275,6 +308,11 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                     return;
                 }
 
+                var energy = this.getEnergy();
+                if (energy == null) {
+                    return;
+                }
+
                 int ins = (int) StorageHelper.poweredInsert(
                         energy,
                         s,
@@ -303,6 +341,11 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                     return;
                 }
 
+                var energy = this.getEnergy();
+                if (energy == null) {
+                    return;
+                }
+
                 int extracted = (int) StorageHelper.poweredExtraction(
                         energy,
                         s,
@@ -325,6 +368,11 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             this.withStorage(s -> {
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEFluidKey key) {
+                        var energy = this.getEnergy();
+                        if (energy == null) {
+                            return;
+                        }
+
                         int extracted = (int) StorageHelper.poweredExtraction(
                                 energy,
                                 s,
