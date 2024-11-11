@@ -51,35 +51,23 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
     }
 
     private static class InterfaceCapabilityProvider implements ICapabilityProvider {
-        private final LazyOptional<IItemHandler> itemHandler;
-        private final LazyOptional<IFluidHandler> fluidHandler;
+        private final LazyOptional<IItemHandler> handler;
 
         InterfaceCapabilityProvider(LevelAccessor level, BlockPos pos) {
-            this.itemHandler = LazyOptional.of(() -> new InterfaceItemHandler(level, pos));
-            this.fluidHandler = LazyOptional.of(() -> new InterfaceFluidHandler(level, pos));
+            this.handler = LazyOptional.of(() -> new InterfaceHandler(level, pos));
         }
 
         @Override
         public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-            if (cap == ForgeCapabilities.ITEM_HANDLER) {
-                return itemHandler.cast();
-            } else if (cap == ForgeCapabilities.FLUID_HANDLER) {
-                return fluidHandler.cast();
+            if (cap == ForgeCapabilities.ITEM_HANDLER || cap == ForgeCapabilities.FLUID_HANDLER) {
+                return handler.cast();
             }
 
             return LazyOptional.empty();
         }
     }
 
-    static class InterfaceHandler {
-        final LevelAccessor level;
-        final BlockPos pos;
-
-        InterfaceHandler(LevelAccessor level, BlockPos pos) {
-            this.level = level;
-            this.pos = pos;
-        }
-
+    record InterfaceHandler(LevelAccessor level, BlockPos pos) implements IItemHandler, IFluidHandler {
         @Nullable
         InterfaceBlockEntity getInterface() {
             var be = level.getBlockEntity(pos);
@@ -120,12 +108,6 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
 
         void withStorage(Consumer<MEStorage> callback) {
             this.getCapability().ifPresent(t -> callback.accept(t.getInventory(IActionSource.empty())));
-        }
-    }
-
-    private static class InterfaceItemHandler extends InterfaceHandler implements IItemHandler {
-        InterfaceItemHandler(LevelAccessor level, BlockPos pos) {
-            super(level, pos);
         }
 
         @Override
@@ -245,12 +227,6 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             return false;
-        }
-    }
-
-    private static class InterfaceFluidHandler extends InterfaceItemHandler implements IFluidHandler {
-        InterfaceFluidHandler(LevelAccessor level, BlockPos pos) {
-            super(level, pos);
         }
 
         @Override
