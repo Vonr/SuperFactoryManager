@@ -19,66 +19,17 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.function.Supplier;
 
 public record ServerboundContainerExportsInspectionRequestPacket(
         int windowId,
         BlockPos pos
-) {
-    public static void encode(
-            ServerboundContainerExportsInspectionRequestPacket msg,
-            FriendlyByteBuf friendlyByteBuf
-    ) {
-        friendlyByteBuf.writeVarInt(msg.windowId());
-        friendlyByteBuf.writeBlockPos(msg.pos());
-    }
-
-    public static ServerboundContainerExportsInspectionRequestPacket decode(FriendlyByteBuf friendlyByteBuf) {
-        return new ServerboundContainerExportsInspectionRequestPacket(
-                friendlyByteBuf.readVarInt(),
-                friendlyByteBuf.readBlockPos()
-        );
-    }
-
-    public static void handle(
-            ServerboundContainerExportsInspectionRequestPacket msg,
-            Supplier<NetworkEvent.Context> contextSupplier
-    ) {
-        SFMPackets.handleServerboundContainerPacket(
-                contextSupplier,
-                AbstractContainerMenu.class,
-                BlockEntity.class,
-                msg.pos,
-                msg.windowId,
-                (menu, blockEntity) -> {
-                    assert blockEntity.getLevel() != null;
-                    String payload = buildInspectionResults(blockEntity.getLevel(), blockEntity.getBlockPos());
-                    var player = contextSupplier.get().getSender();
-
-                    SFMPackets.INSPECTION_CHANNEL.send(
-                            PacketDistributor.PLAYER.with(() -> player),
-                            new ClientboundContainerExportsInspectionResultsPacket(
-                                    msg.windowId,
-                                    SFMUtils.truncate(
-                                            payload,
-                                            ClientboundContainerExportsInspectionResultsPacket.MAX_RESULTS_LENGTH
-                                    )
-                            )
-                    );
-                }
-        );
-        contextSupplier.get().setPacketHandled(true);
-    }
-
-
+) implements SFMPacket {
     public static String buildInspectionResults(
             Level level,
             BlockPos pos
@@ -197,6 +148,56 @@ public record ServerboundContainerExportsInspectionRequestPacket(
             }
         }
         return result;
+    }
+
+    public static class Daddy implements SFMPacketDaddy<ServerboundContainerExportsInspectionRequestPacket> {
+        @Override
+        public void encode(
+                ServerboundContainerExportsInspectionRequestPacket msg,
+                FriendlyByteBuf friendlyByteBuf
+        ) {
+            friendlyByteBuf.writeVarInt(msg.windowId());
+            friendlyByteBuf.writeBlockPos(msg.pos());
+        }
+
+        @Override
+        public ServerboundContainerExportsInspectionRequestPacket decode(FriendlyByteBuf friendlyByteBuf) {
+            return new ServerboundContainerExportsInspectionRequestPacket(
+                    friendlyByteBuf.readVarInt(),
+                    friendlyByteBuf.readBlockPos()
+            );
+        }
+
+        @Override
+        public void handle(
+                ServerboundContainerExportsInspectionRequestPacket msg,
+                SFMPacketHandlingContext context
+        ) {
+            context.handleServerboundContainerPacket(
+                    AbstractContainerMenu.class,
+                    BlockEntity.class,
+                    msg.pos,
+                    msg.windowId,
+                    (menu, blockEntity) -> {
+                        assert blockEntity.getLevel() != null;
+                        String payload = buildInspectionResults(blockEntity.getLevel(), blockEntity.getBlockPos());
+                        var player = context.sender();
+
+                        SFMPackets.sendToPlayer(() -> player, new ClientboundContainerExportsInspectionResultsPacket(
+                                msg.windowId,
+                                SFMUtils.truncate(
+                                        payload,
+                                        ClientboundContainerExportsInspectionResultsPacket.MAX_RESULTS_LENGTH
+                                )
+                        ));
+                    }
+            );
+        }
+
+        @Override
+        public Class<ServerboundContainerExportsInspectionRequestPacket> getPacketClass() {
+            return ServerboundContainerExportsInspectionRequestPacket.class;
+        }
     }
 
 }

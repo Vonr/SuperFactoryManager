@@ -39,7 +39,7 @@ public class ContainerScreenInspectorHandler {
             (button) -> {
                 BlockEntity lookBlockEntity = ClientStuff.getLookBlockEntity();
                 if (lastScreen != null && lookBlockEntity != null) {
-                    SFMPackets.INSPECTION_CHANNEL.sendToServer(new ServerboundContainerExportsInspectionRequestPacket(
+                    SFMPackets.sendToServer(new ServerboundContainerExportsInspectionRequestPacket(
                             lastScreen.getMenu().containerId,
                             lookBlockEntity.getBlockPos()
                     ));

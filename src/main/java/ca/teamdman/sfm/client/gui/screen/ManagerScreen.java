@@ -7,10 +7,7 @@ import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.item.DiskItem;
 import ca.teamdman.sfm.common.localization.LocalizationEntry;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
-import ca.teamdman.sfm.common.net.ServerboundManagerFixPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerProgramPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerRebuildPacket;
-import ca.teamdman.sfm.common.net.ServerboundManagerResetPacket;
+import ca.teamdman.sfm.common.net.*;
 import ca.teamdman.sfm.common.program.LabelPositionHolder;
 import ca.teamdman.sfm.common.registry.SFMPackets;
 import ca.teamdman.sfm.common.util.SFMUtils;
@@ -63,6 +60,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     private ExtendedButton logsButton;
     @SuppressWarnings("NotNullFieldNotInitialized")
     private ExtendedButton rebuildButton;
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    private ExtendedButton serverConfigButton;
 
     public ManagerScreen(
             ManagerContainerMenu menu,
@@ -79,7 +78,8 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 examplesButton,
                 clipboardCopyButton,
                 logsButton,
-                rebuildButton
+                rebuildButton,
+                serverConfigButton
         );
     }
 
@@ -215,6 +215,14 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
                 MANAGER_GUI_REBUILD_BUTTON.getComponent(),
                 button -> this.onRebuildButtonClicked()
         ));
+        serverConfigButton = this.addRenderableWidget(new ExtendedButton(
+                (this.width - this.imageWidth) / 2 - buttonWidth,
+                (this.height - this.imageHeight) / 2 + 16 * 11,
+                buttonWidth,
+                16,
+                MANAGER_GUI_SERVER_CONFIG_BUTTON.getComponent(),
+                button -> this.onServerConfigButtonClicked()
+        ));
         resetButton = this.addRenderableWidget(new ExtendedButtonWithTooltip(
                 (this.width - this.imageWidth) / 2 + 120,
                 (this.height - this.imageHeight) / 2 + 10,
@@ -263,7 +271,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void performReset() {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerResetPacket(
+        SFMPackets.sendToServer(new ServerboundManagerResetPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION
         ));
@@ -295,16 +303,19 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
     }
 
     private void onRebuildButtonClicked() {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerRebuildPacket(
+        SFMPackets.sendToServer(new ServerboundManagerRebuildPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION
         ));
         status = MANAGER_GUI_STATUS_REBUILD.getComponent();
         statusCountdown = STATUS_DURATION;
     }
+    private void onServerConfigButtonClicked() {
+        SFMPackets.sendToServer(new ServerboundServerConfigRequestPacket(false));
+    }
 
     private void sendAttemptFix() {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerFixPacket(
+        SFMPackets.sendToServer(new ServerboundManagerFixPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION
         ));
@@ -314,7 +325,7 @@ public class ManagerScreen extends AbstractContainerScreen<ManagerContainerMenu>
 
     private void sendProgram(String program) {
         program = SFMUtils.truncate(program, Program.MAX_PROGRAM_LENGTH);
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerProgramPacket(
+        SFMPackets.sendToServer(new ServerboundManagerProgramPacket(
                 menu.containerId,
                 menu.MANAGER_POSITION,
                 program

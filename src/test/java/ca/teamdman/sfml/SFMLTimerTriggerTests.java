@@ -1,6 +1,6 @@
 package ca.teamdman.sfml;
 
-import ca.teamdman.sfm.common.SFMConfig;
+import ca.teamdman.sfm.common.config.SFMConfig;
 import org.junit.jupiter.api.Test;
 
 import static ca.teamdman.sfml.SFMLTestHelpers.assertCompileErrorsPresent;

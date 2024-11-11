@@ -1,14 +1,11 @@
 package ca.teamdman.sfm.common.logging;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
-import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.network.NetworkHooks;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;

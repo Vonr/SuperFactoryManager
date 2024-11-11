@@ -4,7 +4,7 @@ import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ProgramSyntaxHighlightingHelper;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
 import ca.teamdman.sfm.client.gui.EditorUtils;
-import ca.teamdman.sfm.common.SFMConfig;
+import ca.teamdman.sfm.common.config.SFMConfig;
 import ca.teamdman.sfm.common.localization.LocalizationEntry;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -132,6 +132,9 @@ public class ProgramEditScreen extends Screen {
         SFMConfig.CLIENT.showLineNumbers.set(!shouldShowLineNumbers());
     }
 
+    /**
+     * The user has indicated to save by hitting Shift+Enter or by pressing the Done button
+     */
     public void saveAndClose() {
         SAVE_CALLBACK.accept(textarea.getValue());
 
@@ -144,9 +147,11 @@ public class ProgramEditScreen extends Screen {
         this.minecraft.popGuiLayer();
     }
 
+    /**
+     * The user has tried to close the GUI without saving by hitting the Esc key
+     */
     @Override
     public void onClose() {
-        // The user has requested to close the screen.
         // If the content is different, ask to save
         if (!INITIAL_CONTENT.equals(textarea.getValue())) {
             assert this.minecraft != null;

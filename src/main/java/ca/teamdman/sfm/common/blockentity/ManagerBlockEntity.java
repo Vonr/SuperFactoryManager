@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.common.blockentity;
 
 import ca.teamdman.sfm.SFM;
+import ca.teamdman.sfm.common.config.SFMConfig;
 import ca.teamdman.sfm.common.containermenu.ManagerContainerMenu;
 import ca.teamdman.sfm.common.handler.OpenContainerTracker;
 import ca.teamdman.sfm.common.item.DiskItem;
@@ -29,7 +30,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.network.PacketDistributor;
 import org.apache.logging.log4j.core.time.MutableInstant;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,11 +48,18 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     private boolean shouldRebuildProgram = false;
     private int tickIndex = 0;
 
-    public ManagerBlockEntity(BlockPos blockPos, BlockState blockState) {
+    public ManagerBlockEntity(
+            BlockPos blockPos,
+            BlockState blockState
+    ) {
         this(SFMBlockEntities.MANAGER_BLOCK_ENTITY.get(), blockPos, blockState);
     }
 
-    public ManagerBlockEntity(BlockEntityType<?> pType, BlockPos blockPos, BlockState blockState) {
+    public ManagerBlockEntity(
+            BlockEntityType<?> pType,
+            BlockPos blockPos,
+            BlockState blockState
+    ) {
         super(pType, blockPos, blockState);
         // Logger name should be unique to (isClient,managerpos)
         // We can't check isClient here, so instead to guarantee uniqueness we can just use hash
@@ -79,6 +86,9 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     ) {
         long start = System.nanoTime();
         manager.tick++;
+        if (manager.program != null && manager.program.configRevision() != SFMConfig.COMMON.getRevision()) {
+            manager.shouldRebuildProgram = true;
+        }
         if (manager.shouldRebuildProgram) {
             manager.rebuildProgramAndUpdateDisk();
             manager.shouldRebuildProgram = false;
@@ -193,7 +203,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
-    public ItemStack removeItem(int slot, int amount) {
+    public ItemStack removeItem(
+            int slot,
+            int amount
+    ) {
         var result = ContainerHelper.removeItem(ITEMS, slot, amount);
         if (slot == 0) rebuildProgramAndUpdateDisk();
         setChanged();
@@ -209,7 +222,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
-    public void setItem(int slot, ItemStack stack) {
+    public void setItem(
+            int slot,
+            ItemStack stack
+    ) {
         if (slot < 0 || slot >= ITEMS.size()) return;
         ITEMS.set(slot, stack);
         if (slot == 0) rebuildProgramAndUpdateDisk();
@@ -222,7 +238,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
-    public boolean canPlaceItem(int slot, ItemStack stack) {
+    public boolean canPlaceItem(
+            int slot,
+            ItemStack stack
+    ) {
         return stack.getItem() instanceof DiskItem;
     }
 
@@ -277,23 +296,17 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                     ManagerContainerMenu menu = entry.getValue();
 
                     // Send a copy of the manager update packet
-                    SFMPackets.MANAGER_CHANNEL.send(
-                            PacketDistributor.PLAYER.with(entry::getKey),
-                            managerUpdatePacket.cloneWithWindowId(menu.containerId)
-                    );
+                    SFMPackets.sendToPlayer(entry::getKey, managerUpdatePacket.cloneWithWindowId(menu.containerId));
 
                     // The rest of the sync is only relevant if the log screen is open
                     if (!menu.isLogScreenOpen) return;
 
                     // Send log level changes
                     if (!menu.logLevel.equals(logger.getLogLevel().name())) {
-                        SFMPackets.MANAGER_CHANNEL.send(
-                                PacketDistributor.PLAYER.with(entry::getKey),
-                                new ClientboundManagerLogLevelUpdatedPacket(
-                                        menu.containerId,
-                                        logger.getLogLevel().name()
-                                )
-                        );
+                        SFMPackets.sendToPlayer(entry::getKey, new ClientboundManagerLogLevelUpdatedPacket(
+                                menu.containerId,
+                                logger.getLogLevel().name()
+                        ));
                         menu.logLevel = logger.getLogLevel().name();
                     }
 
@@ -311,13 +324,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
                         // Send the logs
                         while (!logsToSend.isEmpty()) {
                             int remaining = logsToSend.size();
-                            SFMPackets.MANAGER_CHANNEL.send(
-                                    PacketDistributor.PLAYER.with(entry::getKey),
-                                    ClientboundManagerLogsPacket.drainToCreate(
-                                            menu.containerId,
-                                            logsToSend
-                                    )
-                            );
+                            SFMPackets.sendToPlayer(entry::getKey, ClientboundManagerLogsPacket.drainToCreate(
+                                    menu.containerId,
+                                    logsToSend
+                            ));
                             if (logsToSend.size() >= remaining) {
                                 throw new IllegalStateException("Failed to send logs, infinite loop detected");
                             }
@@ -332,7 +342,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
     }
 
     @Override
-    protected AbstractContainerMenu createMenu(int windowId, Inventory inv) {
+    protected AbstractContainerMenu createMenu(
+            int windowId,
+            Inventory inv
+    ) {
         return new ManagerContainerMenu(windowId, inv, this);
     }
 
@@ -357,7 +370,10 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         public final ChatFormatting COLOR;
         public final LocalizationEntry LOC;
 
-        State(ChatFormatting color, LocalizationEntry loc) {
+        State(
+                ChatFormatting color,
+                LocalizationEntry loc
+        ) {
             COLOR = color;
             LOC = loc;
         }

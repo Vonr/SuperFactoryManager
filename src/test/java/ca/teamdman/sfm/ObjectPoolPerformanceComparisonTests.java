@@ -44,12 +44,14 @@ public class ObjectPoolPerformanceComparisonTests {
         for (int x = 0; x < 25; x++) {
             for (int y = 0; y < 25; y++) {
                 for (int slot = 0; slot < 2700; slot++) {
+                    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
                     List<Thingy> things = new ArrayList<>();
                     things.add(new Thingy(x, y, slot));
                 }
                 // do some junk work to complicate stuff
                 for (int i = 0; i < 100; i++) {
                     var pattern = Pattern.compile("[a-zA-Z]{4,6}jkl[^_]");
+                    //noinspection ResultOfMethodCallIgnored
                     pattern.matcher("abcdefghijklmnopqrstuvwxyz").matches();
                 }
             }
@@ -68,6 +70,7 @@ public class ObjectPoolPerformanceComparisonTests {
                 // do some junk work to complicate stuff
                 for (int i = 0; i < 100; i++) {
                     var pattern = Pattern.compile("[a-zA-Z]{4,6}jkl[^_]");
+                    //noinspection ResultOfMethodCallIgnored
                     pattern.matcher("abcdefghijklmnopqrstuvwxyz").matches();
                 }
             }

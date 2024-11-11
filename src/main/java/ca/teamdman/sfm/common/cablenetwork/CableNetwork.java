@@ -172,7 +172,6 @@ public class CableNetwork {
         return CABLE_POSITIONS;
     }
 
-    // TODO: replace the logging that uses this with something that shows sidedness
     public Stream<BlockPos> getCapabilityProviderPositions() {
         return CAPABILITY_CACHE.getPositions();
     }

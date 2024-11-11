@@ -7,56 +7,60 @@ import ca.teamdman.sfml.ast.Program;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public record ClientboundManagerGuiUpdatePacket(
         int windowId,
         String program,
         ManagerBlockEntity.State state,
         long[] tickTimes
-) {
-
-    public static void encode(
-            ClientboundManagerGuiUpdatePacket msg, FriendlyByteBuf friendlyByteBuf
-    ) {
-        friendlyByteBuf.writeVarInt(msg.windowId());
-        friendlyByteBuf.writeUtf(msg.program(), Program.MAX_PROGRAM_LENGTH);
-        friendlyByteBuf.writeEnum(msg.state());
-        friendlyByteBuf.writeLongArray(msg.tickTimes());
-    }
-
-    public static ClientboundManagerGuiUpdatePacket decode(FriendlyByteBuf friendlyByteBuf) {
-        return new ClientboundManagerGuiUpdatePacket(
-                friendlyByteBuf.readVarInt(),
-                friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH),
-                friendlyByteBuf.readEnum(ManagerBlockEntity.State.class),
-                friendlyByteBuf.readLongArray()
-        );
-    }
-
-    public static void handle(
-            ClientboundManagerGuiUpdatePacket msg, Supplier<NetworkEvent.Context> contextSupplier
-    ) {
-        contextSupplier.get().enqueueWork(msg::handle);
-        contextSupplier.get().setPacketHandled(true);
-    }
-
+) implements SFMPacket {
     public ClientboundManagerGuiUpdatePacket cloneWithWindowId(int windowId) {
         return new ClientboundManagerGuiUpdatePacket(windowId, program(), state(), tickTimes());
     }
 
-    public void handle() {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null
-            || !(player.containerMenu instanceof ManagerContainerMenu menu)
-            || menu.containerId != this.windowId()) {
-            SFM.LOGGER.error("Invalid logs packet received, ignoring.");
-            return;
+    public static class Daddy implements SFMPacketDaddy<ClientboundManagerGuiUpdatePacket> {
+        @Override
+        public Class<ClientboundManagerGuiUpdatePacket> getPacketClass() {
+            return ClientboundManagerGuiUpdatePacket.class;
         }
-        menu.tickTimeNanos = this.tickTimes();
-        menu.state = this.state();
-        menu.program = this.program();
+
+        @Override
+        public void encode(
+                ClientboundManagerGuiUpdatePacket msg,
+                FriendlyByteBuf friendlyByteBuf
+        ) {
+            friendlyByteBuf.writeVarInt(msg.windowId());
+            friendlyByteBuf.writeUtf(msg.program(), Program.MAX_PROGRAM_LENGTH);
+            friendlyByteBuf.writeEnum(msg.state());
+            friendlyByteBuf.writeLongArray(msg.tickTimes());
+        }
+
+        @Override
+        public ClientboundManagerGuiUpdatePacket decode(FriendlyByteBuf friendlyByteBuf) {
+            return new ClientboundManagerGuiUpdatePacket(
+                    friendlyByteBuf.readVarInt(),
+                    friendlyByteBuf.readUtf(Program.MAX_PROGRAM_LENGTH),
+                    friendlyByteBuf.readEnum(ManagerBlockEntity.State.class),
+                    friendlyByteBuf.readLongArray()
+            );
+        }
+
+        @Override
+        public void handle(
+                ClientboundManagerGuiUpdatePacket msg,
+                SFMPacketHandlingContext context
+        ) {
+            LocalPlayer player = Minecraft.getInstance().player;
+            if (player == null
+                || !(player.containerMenu instanceof ManagerContainerMenu menu)
+                || menu.containerId != msg.windowId()) {
+                SFM.LOGGER.error("Invalid logs packet received, ignoring.");
+                return;
+            }
+            menu.tickTimeNanos = msg.tickTimes();
+            menu.state = msg.state();
+            menu.program = msg.program();
+        }
+
     }
 }

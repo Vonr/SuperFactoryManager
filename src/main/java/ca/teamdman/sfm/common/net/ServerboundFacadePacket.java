@@ -20,47 +20,17 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public record ServerboundFacadePacket(
         BlockHitResult pHitResult,
         SpreadLogic spreadLogic
-) {
-    public static void encode(
-            ServerboundFacadePacket msg,
-            FriendlyByteBuf buf
-    ) {
-        buf.writeBlockHitResult(msg.pHitResult);
-        buf.writeEnum(msg.spreadLogic);
-    }
-
-    public static ServerboundFacadePacket decode(FriendlyByteBuf buf) {
-        return new ServerboundFacadePacket(
-                buf.readBlockHitResult(),
-                buf.readEnum(SpreadLogic.class)
-        );
-    }
-
-    public static void handle(
-            ServerboundFacadePacket msg,
-            Supplier<NetworkEvent.Context> contextSupplier
-    ) {
-        contextSupplier.get().enqueueWork(() -> {
-            Player sender = contextSupplier.get().getSender();
-            if (sender == null) return;
-
-            handle(msg, sender);
-        });
-        contextSupplier.get().setPacketHandled(true);
-    }
-
+) implements SFMPacket {
     public static void handle(
             ServerboundFacadePacket msg,
             Player sender
@@ -217,6 +187,40 @@ public record ServerboundFacadePacket(
                 return NETWORK_CONTIGUOUS_SAME_BLOCK;
             }
             return SINGLE;
+        }
+    }
+
+    public static class Daddy implements SFMPacketDaddy<ServerboundFacadePacket> {
+        @Override
+        public void encode(
+                ServerboundFacadePacket msg,
+                FriendlyByteBuf buf
+        ) {
+            buf.writeBlockHitResult(msg.pHitResult);
+            buf.writeEnum(msg.spreadLogic);
+        }
+
+        @Override
+        public ServerboundFacadePacket decode(FriendlyByteBuf buf) {
+            return new ServerboundFacadePacket(
+                    buf.readBlockHitResult(),
+                    buf.readEnum(SpreadLogic.class)
+            );
+        }
+
+        @Override
+        public void handle(
+                ServerboundFacadePacket msg,
+                SFMPacketHandlingContext context
+        ) {
+            Player sender = context.sender();
+            if (sender == null) return;
+            ServerboundFacadePacket.handle(msg, sender);
+        }
+
+        @Override
+        public Class<ServerboundFacadePacket> getPacketClass() {
+            return ServerboundFacadePacket.class;
         }
     }
 }

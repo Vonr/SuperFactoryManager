@@ -16,7 +16,6 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -74,22 +73,21 @@ public class WaterNetworkManager {
         } else {
             removeMember(level, pos);
         }
-        if (!FMLEnvironment.production) {
-            // TODO: comment this out before release
-            Long2ObjectMap<WaterNetwork> levelNetworks = NETWORKS.get(level);
-            if (levelNetworks == null) return;
-            List<WaterNetwork> logNetworks = levelNetworks.values().stream().distinct().toList();
-            SFM.LOGGER.debug(
-                    "There are now {} networks ({})",
-                    logNetworks.size(),
-                    logNetworks
-                            .stream()
-                            .mapToInt(net -> net.members().size())
-                            .mapToObj(Integer::toString)
-                            .reduce((a, b) -> a + ", " + b)
-                            .orElse("")
-            );
-        }
+//        if (!FMLEnvironment.production) {
+//            Long2ObjectMap<WaterNetwork> levelNetworks = NETWORKS.get(level);
+//            if (levelNetworks == null) return;
+//            List<WaterNetwork> logNetworks = levelNetworks.values().stream().distinct().toList();
+//            SFM.LOGGER.debug(
+//                    "There are now {} networks ({})",
+//                    logNetworks.size(),
+//                    logNetworks
+//                            .stream()
+//                            .mapToInt(net -> net.members().size())
+//                            .mapToObj(Integer::toString)
+//                            .reduce((a, b) -> a + ", " + b)
+//                            .orElse("")
+//            );
+//        }
     }
 
     /**

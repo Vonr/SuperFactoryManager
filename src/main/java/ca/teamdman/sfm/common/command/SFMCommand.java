@@ -20,21 +20,21 @@ public class SFMCommand {
     public static void onRegisterCommand(final RegisterCommandsEvent event) {
         var command = Commands.literal("sfm");
         command.then(Commands.literal("bust_cable_network_cache")
-                             .requires(source -> source.hasPermission(0))
+                             .requires(source -> source.hasPermission(Commands.LEVEL_ALL))
                              .executes(ctx -> {
                                  SFM.LOGGER.info("Busting cable networks - slash command used by {}", ctx.getSource().getTextName());
                                  CableNetworkManager.clear();
                                  return SINGLE_SUCCESS;
                              }));
         command.then(Commands.literal("bust_water_network_cache")
-                             .requires(source -> source.hasPermission(0))
+                             .requires(source -> source.hasPermission(Commands.LEVEL_ALL))
                              .executes(ctx -> {
                                  SFM.LOGGER.info("Busting water networks - slash command used by {}", ctx.getSource().getTextName());
                                  WaterNetworkManager.clear();
                                  return SINGLE_SUCCESS;
                              }));
         command.then(Commands.literal("show_bad_cable_cache_entries")
-                             .requires(source -> source.hasPermission(2))
+                             .requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
                              .then(Commands.argument("block", BlockStateArgument.block(event.getBuildContext()))
                                            .executes(ctx -> {
                                                ServerLevel level = ctx.getSource().getLevel();

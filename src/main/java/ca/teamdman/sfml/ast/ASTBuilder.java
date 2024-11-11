@@ -1,7 +1,7 @@
 package ca.teamdman.sfml.ast;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.SFMConfig;
+import ca.teamdman.sfm.common.config.SFMConfig;
 import ca.teamdman.sfm.common.registry.SFMResourceTypes;
 import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import ca.teamdman.sfml.SFMLBaseVisitor;
@@ -141,6 +141,10 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
 
     @Override
     public Program visitProgram(SFMLParser.ProgramContext ctx) {
+        int configRevision = SFMConfig.COMMON.getRevision();
+        if (SFMConfig.COMMON.disableProgramExecution.get()) {
+            throw new AssertionError("Program execution is disabled via config");
+        }
         var name = visitName(ctx.name());
         var triggers = ctx
                 .trigger()
@@ -152,7 +156,7 @@ public class ASTBuilder extends SFMLBaseVisitor<ASTNode> {
                 .stream()
                 .map(Label::name)
                 .collect(Collectors.toSet());
-        Program program = new Program(this, name.value(), triggers, labels, USED_RESOURCES);
+        Program program = new Program(this, name.value(), triggers, labels, USED_RESOURCES, configRevision);
         AST_NODE_CONTEXTS.add(new Pair<>(program, ctx));
         return program;
     }

@@ -53,7 +53,7 @@ import java.util.stream.IntStream;
 // https://docs.minecraftforge.net/en/1.19.x/misc/gametest/
 // https://github.com/MinecraftForge/MinecraftForge/blob/1.19.x/src/test/java/net/minecraftforge/debug/misc/GameTestTest.java#LL101-L116C6
 // https://github.com/XFactHD/FramedBlocks/blob/1.19.4/src/main/java/xfacthd/framedblocks/api/test/TestUtils.java#L65-L87
-@SuppressWarnings({"DataFlowIssue", "deprecation", "OptionalGetWithoutIsPresent", "DuplicatedCode"})
+@SuppressWarnings({"DataFlowIssue", "deprecation", "OptionalGetWithoutIsPresent"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMCorrectnessGameTests extends SFMGameTestBase {

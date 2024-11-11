@@ -12,11 +12,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.network.NetworkEvent;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public record ServerboundLabelGunUsePacket(
@@ -25,33 +23,37 @@ public record ServerboundLabelGunUsePacket(
         boolean isCtrlKeyDown,
         boolean isPickBlockModifierKeyDown,
         boolean isShiftKeyDown
-) {
+) implements SFMPacket {
+    public static class Daddy implements SFMPacketDaddy<ServerboundLabelGunUsePacket> {
+        @Override
+        public void encode(
+                ServerboundLabelGunUsePacket msg,
+                FriendlyByteBuf buf
+        ) {
+            buf.writeEnum(msg.hand);
+            buf.writeBlockPos(msg.pos);
+            buf.writeBoolean(msg.isCtrlKeyDown);
+            buf.writeBoolean(msg.isPickBlockModifierKeyDown);
+            buf.writeBoolean(msg.isShiftKeyDown);
+        }
 
-    public static void encode(ServerboundLabelGunUsePacket msg, FriendlyByteBuf buf) {
-        buf.writeEnum(msg.hand);
-        buf.writeBlockPos(msg.pos);
-        buf.writeBoolean(msg.isCtrlKeyDown);
-        buf.writeBoolean(msg.isPickBlockModifierKeyDown);
-        buf.writeBoolean(msg.isShiftKeyDown);
-    }
+        @Override
+        public ServerboundLabelGunUsePacket decode(FriendlyByteBuf buf) {
+            return new ServerboundLabelGunUsePacket(
+                    buf.readEnum(InteractionHand.class),
+                    buf.readBlockPos(),
+                    buf.readBoolean(),
+                    buf.readBoolean(),
+                    buf.readBoolean()
+            );
+        }
 
-    public static ServerboundLabelGunUsePacket decode(
-            FriendlyByteBuf buf
-    ) {
-        return new ServerboundLabelGunUsePacket(
-                buf.readEnum(InteractionHand.class),
-                buf.readBlockPos(),
-                buf.readBoolean(),
-                buf.readBoolean(),
-                buf.readBoolean()
-        );
-    }
-
-    public static void handle(
-            ServerboundLabelGunUsePacket msg, Supplier<NetworkEvent.Context> contextSupplier
-    ) {
-        contextSupplier.get().enqueueWork(() -> {
-            var sender = contextSupplier.get().getSender();
+        @Override
+        public void handle(
+                ServerboundLabelGunUsePacket msg,
+                SFMPacketHandlingContext context
+        ) {
+            var sender = context.sender();
             if (sender == null) {
                 return;
             }
@@ -95,7 +97,7 @@ public record ServerboundLabelGunUsePacket(
             if (msg.isShiftKeyDown) {
                 // clear all labels from pos
                 gunLabels.removeAll(pos);
-            } else if (!activeLabel.isEmpty()){
+            } else if (!activeLabel.isEmpty()) {
                 if (msg.isCtrlKeyDown) {
                     // find all connected inventories of the same block type and toggle the label on all of them
                     // if any of them don't have it, apply it, otherwise strip from all
@@ -115,13 +117,15 @@ public record ServerboundLabelGunUsePacket(
                             .anyMatch(d -> cablePositions.contains(p.offset(d.getNormal())));
 
                     // get positions of all connected blocks of the same type
-                    List<BlockPos> positions = SFMUtils.<BlockPos, BlockPos>getRecursiveStream((current, nextQueue, results) -> {
-                        results.accept(current);
-                        SFMUtils.get3DNeighboursIncludingKittyCorner(current)
-                                .filter(p -> level.getBlockState(p).getBlock() == targetBlock)
-                                .filter(isAdjacentToCable)
-                                .forEach(nextQueue);
-                    }, pos).toList();
+                    List<BlockPos> positions = SFMUtils
+                            .<BlockPos, BlockPos>getRecursiveStream((current, nextQueue, results) -> {
+                                results.accept(current);
+                                SFMUtils.get3DNeighboursIncludingKittyCorner(current)
+                                        .filter(p -> level.getBlockState(p).getBlock() == targetBlock)
+                                        .filter(isAdjacentToCable)
+                                        .forEach(nextQueue);
+                            }, pos)
+                            .toList();
 
                     // check if any of the positions are missing the label
                     var existing = new HashSet<>(gunLabels.getPositions(activeLabel));
@@ -148,7 +152,11 @@ public record ServerboundLabelGunUsePacket(
 
             // write changes to label gun stack
             gunLabels.save(stack);
-        });
-        contextSupplier.get().setPacketHandled(true);
+        }
+
+        @Override
+        public Class<ServerboundLabelGunUsePacket> getPacketClass() {
+            return ServerboundLabelGunUsePacket.class;
+        }
     }
 }

@@ -28,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 public class TestBarrelTankBlockEntity extends BaseContainerBlockEntity {
     private final LazyOptional<IItemHandler> item_capability = LazyOptional.of(() -> new InvWrapper(this));
     private NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
-    private FluidTank tank = new FluidTank(1000);
+    private final FluidTank tank = new FluidTank(1000);
     public final LazyOptional<IFluidHandler> fluid_capability = LazyOptional.of(() -> tank);
 
     public TestBarrelTankBlockEntity(

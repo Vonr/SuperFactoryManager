@@ -19,6 +19,7 @@ import ca.teamdman.sfm.common.util.FacadeType;
 import ca.teamdman.sfm.common.util.SFMDirections;
 import com.mojang.blaze3d.platform.InputConstants;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConfirmScreen;
@@ -29,6 +30,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
@@ -118,7 +120,7 @@ public class ClientStuff {
         LogsScreen screen = new LogsScreen(menu);
         setOrPushScreen(screen);
         screen.scrollToBottom();
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
+        SFMPackets.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
                 menu.containerId,
                 menu.MANAGER_POSITION,
                 true
@@ -160,15 +162,21 @@ public class ClientStuff {
         return I18n.get(contents.getKey(), contents.getArgs());
     }
 
-    // TODO: chat message for feedback that something happened
     // TODO: copy item id, not just NBT
     // TODO: replace with showing a screen with the data
     public static void showItemInspectorScreen(ItemStack stack) {
         CompoundTag tag = stack.getTag();
         if (tag != null) {
             String content = tag.toString();
-            Minecraft.getInstance().keyboardHandler.setClipboard(content);
+            Minecraft minecraft = Minecraft.getInstance();
+            minecraft.keyboardHandler.setClipboard(content);
             SFM.LOGGER.info("Copied {} characters to clipboard", content.length());
+            assert minecraft.player != null;
+            minecraft.player.sendSystemMessage(
+                    LocalizationKeys.ITEM_INSPECTOR_COPIED_TO_CLIPBOARD.getComponent(
+                            Component.literal(String.valueOf(content.length())).withStyle(ChatFormatting.AQUA)
+                    )
+            );
         }
     }
 
@@ -212,7 +220,7 @@ public class ClientStuff {
         switch (msg.spreadLogic()) {
             case SINGLE -> {
                 // No confirmation necessary for single updates
-                SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                SFMPackets.sendToServer(msg);
                 // Perform eager update
                 ServerboundFacadePacket.handle(msg, player);
             }
@@ -252,7 +260,7 @@ public class ClientStuff {
                             (confirmed) -> {
                                 minecraft.popGuiLayer(); // Close confirm screen
                                 if (confirmed) {
-                                    SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                                    SFMPackets.sendToServer(msg);
                                     // Perform eager update
                                     ServerboundFacadePacket.handle(msg, player);
                                 }
@@ -269,7 +277,7 @@ public class ClientStuff {
                     confirmScreen.setDelay(10);
                 } else {
                     // No confirmation necessary
-                    SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                    SFMPackets.sendToServer(msg);
                     // Perform eager update
                     ServerboundFacadePacket.handle(msg, player);
                 }
@@ -327,7 +335,7 @@ public class ClientStuff {
                             (confirmed) -> {
                                 minecraft.popGuiLayer(); // Close confirm screen
                                 if (confirmed) {
-                                    SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                                    SFMPackets.sendToServer(msg);
                                     // Perform eager update
                                     ServerboundFacadePacket.handle(msg, player);
                                 }
@@ -344,7 +352,7 @@ public class ClientStuff {
                     confirmScreen.setDelay(10);
                 } else {
                     // No confirmation necessary
-                    SFMPackets.CABLE_CHANNEL.sendToServer(msg);
+                    SFMPackets.sendToServer(msg);
                     // Perform eager update
                     ServerboundFacadePacket.handle(msg, player);
                 }
