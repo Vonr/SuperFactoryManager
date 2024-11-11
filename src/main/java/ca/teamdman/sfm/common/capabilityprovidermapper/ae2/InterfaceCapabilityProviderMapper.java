@@ -34,9 +34,6 @@ import java.util.function.Consumer;
 public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapper {
     @Override
     public Optional<ICapabilityProvider> getProviderFor(LevelAccessor level, BlockPos pos) {
-        var state = level.getBlockState(pos);
-        var block = state.getBlock();
-
         var be = level.getBlockEntity(pos);
         if (!(be instanceof InterfaceBlockEntity in)) {
             return Optional.empty();
@@ -273,26 +270,23 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             var inserted = new AtomicInteger(0);
 
             this.withStorage(s -> {
-                for (var stored : s.getAvailableStacks()) {
-                    if (stored.getKey() instanceof AEFluidKey key) {
-                        if (resource.getFluid() == key.getFluid()) {
-                            int ins = (int) StorageHelper.poweredInsert(
-                                    energy,
-                                    s,
-                                    key,
-                                    resource.getAmount(),
-                                    IActionSource.empty(),
-                                    fluidActionToActionable(action)
-                            );
+                var key = AEFluidKey.of(resource);
+                if (key == null) {
+                    return;
+                }
 
-                            inserted.set(ins);
-                            if (!action.simulate()) {
-                                resource.shrink(ins);
-                            }
+                int ins = (int) StorageHelper.poweredInsert(
+                        energy,
+                        s,
+                        key,
+                        resource.getAmount(),
+                        IActionSource.empty(),
+                        fluidActionToActionable(action)
+                );
 
-                            break;
-                        }
-                    }
+                inserted.set(ins);
+                if (!action.simulate()) {
+                    resource.shrink(ins);
                 }
             });
 
@@ -304,23 +298,21 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             AtomicReference<FluidStack> stack = new AtomicReference<>(FluidStack.EMPTY);
 
             this.withStorage(s -> {
-                for (var stored : s.getAvailableStacks()) {
-                    if (stored.getKey() instanceof AEFluidKey key) {
-                        if (resource.getFluid() == key.getFluid()) {
-                            int extracted = (int) StorageHelper.poweredExtraction(
-                                    energy,
-                                    s,
-                                    key,
-                                    resource.getAmount(),
-                                    IActionSource.empty(),
-                                    fluidActionToActionable(action)
-                            );
-
-                            stack.set(key.toStack(extracted));
-                            break;
-                        }
-                    }
+                var key = AEFluidKey.of(resource);
+                if (key == null) {
+                    return;
                 }
+
+                int extracted = (int) StorageHelper.poweredExtraction(
+                        energy,
+                        s,
+                        key,
+                        resource.getAmount(),
+                        IActionSource.empty(),
+                        fluidActionToActionable(action)
+                );
+
+                stack.set(key.toStack(extracted));
             });
 
             return stack.get();
