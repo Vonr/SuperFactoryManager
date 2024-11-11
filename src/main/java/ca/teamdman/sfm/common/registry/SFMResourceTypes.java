@@ -78,7 +78,7 @@ public class SFMResourceTypes {
         TYPES.register(bus);
     }
 
-    /* TODO: add support for
+    /* TODO: add support for new resource types
      * - mekanism heat
      * - botania mana
      * - ars nouveau source

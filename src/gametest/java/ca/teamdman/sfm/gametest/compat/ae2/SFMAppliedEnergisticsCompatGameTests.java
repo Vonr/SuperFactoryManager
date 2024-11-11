@@ -24,7 +24,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.stream.Stream;
 
-@SuppressWarnings({"OptionalGetWithoutIsPresent", "DuplicatedCode", "DataFlowIssue"})
+@SuppressWarnings({"OptionalGetWithoutIsPresent", "DataFlowIssue"})
 @GameTestHolder(SFM.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class SFMAppliedEnergisticsCompatGameTests extends SFMGameTestBase {

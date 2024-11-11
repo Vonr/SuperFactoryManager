@@ -94,7 +94,7 @@ public class SFMLTestHelpers {
             List<String> parserErrors,
             List<Throwable> visitProblems
     ) {
-        public static CompileErrors NONE = new CompileErrors(List.of(), List.of(), List.of());
+        public static final CompileErrors NONE = new CompileErrors(List.of(), List.of(), List.of());
 
         public CompileErrors(Throwable... visitProblems) {
             this(List.of(), List.of(), List.of(visitProblems));

@@ -655,6 +655,10 @@ public final class LocalizationKeys {
             "gui.sfm.manager.button.rebuild",
             "Rebuild cable network"
     );
+    public static final LocalizationEntry MANAGER_GUI_SERVER_CONFIG_BUTTON = new LocalizationEntry(
+            "gui.sfm.manager.button.server_config",
+            "View server config"
+    );
     public static final LocalizationEntry LOG_LEVEL_UPDATED = new LocalizationEntry(
             "log.sfm.level_updated",
             "Log level updated to %s"
@@ -759,6 +763,10 @@ public final class LocalizationKeys {
     public static final LocalizationEntry SFM_KEY_CATEGORY = new LocalizationEntry(
             "key.categories.sfm",
             "Super Factory Manager"
+    );
+    public static final LocalizationEntry ITEM_INSPECTOR_COPIED_TO_CLIPBOARD = new LocalizationEntry(
+            "gui.sfm.item_inspector.copied_to_clipboard",
+            "Copied {} characters to clipboard!"
     );
     @SuppressWarnings("unused") // used by minecraft without us having to directly reference
     public static LocalizationEntry MOD_NAME = new LocalizationEntry(

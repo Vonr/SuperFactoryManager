@@ -10,36 +10,35 @@ import ca.teamdman.sfml.ast.Program;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
-
-import java.util.function.Supplier;
 
 public record ServerboundLabelInspectionRequestPacket(
         String label
-) {
+) implements SFMPacket {
     private static final int MAX_RESULTS_LENGTH = 20480;
 
-    public static void encode(
-            ServerboundLabelInspectionRequestPacket msg,
-            FriendlyByteBuf friendlyByteBuf
-    ) {
-        friendlyByteBuf.writeUtf(msg.label(), Program.MAX_LABEL_LENGTH);
-    }
+    public static class Daddy implements SFMPacketDaddy<ServerboundLabelInspectionRequestPacket> {
+        @Override
+        public void encode(
+                ServerboundLabelInspectionRequestPacket msg,
+                FriendlyByteBuf friendlyByteBuf
+        ) {
+            friendlyByteBuf.writeUtf(msg.label(), Program.MAX_LABEL_LENGTH);
+        }
 
-    public static ServerboundLabelInspectionRequestPacket decode(FriendlyByteBuf friendlyByteBuf) {
-        return new ServerboundLabelInspectionRequestPacket(
-                friendlyByteBuf.readUtf(Program.MAX_LABEL_LENGTH)
-        );
-    }
+        @Override
+        public ServerboundLabelInspectionRequestPacket decode(FriendlyByteBuf friendlyByteBuf) {
+            return new ServerboundLabelInspectionRequestPacket(
+                    friendlyByteBuf.readUtf(Program.MAX_LABEL_LENGTH)
+            );
+        }
 
-    public static void handle(
-            ServerboundLabelInspectionRequestPacket msg,
-            Supplier<NetworkEvent.Context> contextSupplier
-    ) {
-        contextSupplier.get().enqueueWork(() -> {
+        @Override
+        public void handle(
+                ServerboundLabelInspectionRequestPacket msg,
+                SFMPacketHandlingContext context
+        ) {
             // we don't know if the player has the program edit screen open from a manager or a disk in hand
-            ServerPlayer player = contextSupplier.get().getSender();
+            ServerPlayer player = context.sender();
             if (player == null) return;
             SFM.LOGGER.info("Received label inspection request packet from player {}", player.getStringUUID());
             LabelPositionHolder labelPositionHolder;
@@ -115,16 +114,18 @@ public record ServerboundLabelInspectionRequestPacket(
                     payload.length(),
                     player.getStringUUID()
             );
-            SFMPackets.INSPECTION_CHANNEL.send(
-                    PacketDistributor.PLAYER.with(() -> player),
-                    new ClientboundLabelInspectionResultsPacket(
-                            SFMUtils.truncate(
-                                    payload.toString(),
-                                    ServerboundLabelInspectionRequestPacket.MAX_RESULTS_LENGTH
-                            )
+            SFMPackets.sendToPlayer(() -> player, new ClientboundLabelInspectionResultsPacket(
+                    SFMUtils.truncate(
+                            payload.toString(),
+                            ServerboundLabelInspectionRequestPacket.MAX_RESULTS_LENGTH
                     )
-            );
-        });
-        contextSupplier.get().setPacketHandled(true);
+            ));
+        }
+
+        @Override
+        public Class<ServerboundLabelInspectionRequestPacket> getPacketClass() {
+            return ServerboundLabelInspectionRequestPacket.class;
+        }
     }
+
 }

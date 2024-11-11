@@ -36,7 +36,6 @@ import java.util.*;
 import static ca.teamdman.sfm.common.localization.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
 // todo: checkbox for auto-scrolling
-// todo: clear button
 public class LogsScreen extends Screen {
     private final ManagerContainerMenu MENU;
     @SuppressWarnings("NotNullFieldNotInitialized")
@@ -192,7 +191,7 @@ public class LogsScreen extends Screen {
                     Component.literal(level.name()),
                     button -> {
                         String logLevel = level.name();
-                        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerSetLogLevelPacket(
+                        SFMPackets.sendToServer(new ServerboundManagerSetLogLevelPacket(
                                 MENU.containerId,
                                 MENU.MANAGER_POSITION,
                                 logLevel
@@ -254,7 +253,7 @@ public class LogsScreen extends Screen {
                     20,
                     LocalizationKeys.LOGS_GUI_CLEAR_LOGS_BUTTON.getComponent(),
                     (button) -> {
-                        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerClearLogsPacket(
+                        SFMPackets.sendToServer(new ServerboundManagerClearLogsPacket(
                                 MENU.containerId,
                                 MENU.MANAGER_POSITION
                         ));
@@ -284,7 +283,7 @@ public class LogsScreen extends Screen {
 
     @Override
     public void onClose() {
-        SFMPackets.MANAGER_CHANNEL.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
+        SFMPackets.sendToServer(new ServerboundManagerLogDesireUpdatePacket(
                 MENU.containerId,
                 MENU.MANAGER_POSITION,
                 false

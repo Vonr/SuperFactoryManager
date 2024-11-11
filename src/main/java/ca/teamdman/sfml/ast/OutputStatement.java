@@ -338,7 +338,7 @@ public class OutputStatement implements IOStatement {
      * <p>
      * We want collect the slots from all the labelled blocks.
      */
-    @SuppressWarnings({"rawtypes", "unchecked"}) // basically impossible to make this method generic safe
+    @SuppressWarnings({"unchecked"}) // basically impossible to make this method generic safe
     public void gatherSlots(
             ProgramContext context,
             Consumer<LimitedOutputSlot<?, ?, ?>> slotConsumer

@@ -166,7 +166,7 @@ public class DiskItem extends Item {
         if (pLevel.isClientSide) {
             ClientStuff.showProgramEditScreen(
                     getProgram(stack),
-                    programString -> SFMPackets.DISK_ITEM_CHANNEL.sendToServer(new ServerboundDiskItemSetProgramPacket(
+                    programString -> SFMPackets.sendToServer(new ServerboundDiskItemSetProgramPacket(
                                 programString,
                                 pUsedHand
                         ))

@@ -92,9 +92,7 @@ public class FluidResourceType extends ResourceType<FluidStack, Fluid, IFluidHan
 
     @Override
     public FluidStack insert(IFluidHandler handler, int slot, FluidStack stack, boolean simulate) {
-        //todo: PR to forge to add a method that takes tank slot index
         var x = handler.fill(stack, simulate ? IFluidHandler.FluidAction.SIMULATE : IFluidHandler.FluidAction.EXECUTE);
-
         // convert units to find amount NOT inserted
         return new FluidStack(stack.getFluid(), stack.getAmount() - x);
     }

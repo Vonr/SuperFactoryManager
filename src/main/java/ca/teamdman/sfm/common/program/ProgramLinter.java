@@ -56,7 +56,7 @@ public class ProgramLinter {
                 .forEach(statement -> {
                     addWarningsForSmellyRoundRobinUsage(warnings, statement);
                     addWarningsForUsingEachWithoutAPattern(warnings, statement);
-                    {
+                    if (level != null) {
                         DirectionQualifier directions = statement.labelAccess().directions();
                         if (directions.equals(DirectionQualifier.NULL_DIRECTION)) {
                             // add warning if interacting with mekanism without specifying a side
@@ -66,9 +66,10 @@ public class ProgramLinter {
                                     .getLabelledPositions(labelPositionHolder)
                                     .stream()
                                     .filter(pair -> SFMUtils.isMekanismBlock(level, pair.getSecond()))
-                                    .forEach(pair -> {
-                                        warnings.add(PROGRAM_WARNING_MEKANISM_USED_WITHOUT_DIRECTION.get(pair.getFirst(), statement.toStringPretty()));
-                                    });
+                                    .forEach(pair -> warnings.add(PROGRAM_WARNING_MEKANISM_USED_WITHOUT_DIRECTION.get(
+                                            pair.getFirst(),
+                                            statement.toStringPretty()
+                                    )));
                         }
                     }
 
