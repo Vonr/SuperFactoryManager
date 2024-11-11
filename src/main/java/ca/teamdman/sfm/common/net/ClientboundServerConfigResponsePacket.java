@@ -1,7 +1,6 @@
 package ca.teamdman.sfm.common.net;
 
 import ca.teamdman.sfm.client.ClientStuff;
-import ca.teamdman.sfm.common.registry.SFMPackets;
 import net.minecraft.network.FriendlyByteBuf;
 
 public record ClientboundServerConfigResponsePacket(
@@ -35,7 +34,7 @@ public record ClientboundServerConfigResponsePacket(
         ) {
             if (msg.requestingEditMode()) {
                 ClientStuff.showProgramEditScreen(msg.configToml(), (newContent) -> {
-                    SFMPackets.sendToServer(new ServerboundServerConfigUpdatePacket(newContent));
+//                    SFMPackets.sendToServer(new ServerboundServerConfigUpdatePacket(newContent, msg.requestingEditMode));
                 });
             } else {
                 ClientStuff.showProgramEditScreen(msg.configToml());
