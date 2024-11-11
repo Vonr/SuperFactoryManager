@@ -62,21 +62,17 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
     }
 
     private static class InterfaceCapabilityProvider implements ICapabilityProvider {
-        LevelAccessor level;
-        IEnergyService energy;
         private final LazyOptional<IItemHandler> itemHandler;
         private final LazyOptional<IFluidHandler> fluidHandler;
 
         InterfaceCapabilityProvider(LevelAccessor level, BlockEntity be, IEnergyService energy) {
-            this.level = level;
-            this.energy = energy;
             this.itemHandler = LazyOptional.of(() -> {
                 var cap = be.getCapability(Capabilities.STORAGE_MONITORABLE_ACCESSOR);
-                return new InterfaceItemHandler(level, cap, this.energy);
+                return new InterfaceItemHandler(level, cap, energy);
             });
             this.fluidHandler = LazyOptional.of(() -> {
                 var cap = be.getCapability(Capabilities.STORAGE_MONITORABLE_ACCESSOR);
-                return new InterfaceFluidHandler(level, cap, this.energy);
+                return new InterfaceFluidHandler(level, cap, energy);
             });
         }
 
@@ -93,9 +89,9 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
     }
 
     static class InterfaceHandler {
-        LevelAccessor level;
-        LazyOptional<IStorageMonitorableAccessor> cap;
-        IEnergyService energy;
+        final LevelAccessor level;
+        final LazyOptional<IStorageMonitorableAccessor> cap;
+        final IEnergyService energy;
 
         InterfaceHandler(LevelAccessor level, LazyOptional<IStorageMonitorableAccessor> cap, IEnergyService energy) {
             this.level = level;
