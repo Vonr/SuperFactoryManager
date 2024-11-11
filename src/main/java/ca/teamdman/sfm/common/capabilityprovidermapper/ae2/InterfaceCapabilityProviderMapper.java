@@ -26,9 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapper {
     @Override
@@ -106,42 +104,81 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             return in.getCapability(Capabilities.STORAGE_MONITORABLE_ACCESSOR);
         }
 
-        void withStorage(Consumer<MEStorage> callback) {
-            this.getCapability().ifPresent(t -> callback.accept(t.getInventory(IActionSource.empty())));
+        <T> T withStorage(Function<MEStorage, T> callback) {
+            var cap = this.getCapability();
+            if (cap.isPresent()) {
+                //noinspection DataFlowIssue
+                return callback.apply(cap.map(c -> c.getInventory(IActionSource.empty())).orElse(null));
+            }
+            return null;
+        }
+
+        <T> T withBaseItemHandler(Function<IItemHandler, T> callback) {
+            var in = this.getInterface();
+            if (in == null) {
+                return null;
+            }
+
+            var maybeCap = in.getCapability(ForgeCapabilities.ITEM_HANDLER);
+            if (maybeCap.isPresent()) {
+                //noinspection DataFlowIssue
+                return callback.apply(maybeCap.orElse(null));
+            }
+            return null;
+        }
+
+        <T> T withBaseFluidHandler(Function<IFluidHandler, T> callback) {
+            var in = this.getInterface();
+            if (in == null) {
+                return null;
+            }
+
+            var maybeCap = in.getCapability(ForgeCapabilities.FLUID_HANDLER);
+            if (maybeCap.isPresent()) {
+                //noinspection DataFlowIssue
+                return callback.apply(maybeCap.orElse(null));
+            }
+            return null;
         }
 
         @Override
         public int getSlots() {
-            var slots = new AtomicInteger(0);
-            this.withStorage(s -> {
+            Integer slots = this.withStorage(s -> {
                 int i = 0;
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEItemKey) {
                         i++;
                     }
                 }
-                slots.set(i);
+                return i;
             });
 
-            return slots.get();
+            if (slots == null) {
+                slots = this.withBaseItemHandler(IItemHandler::getSlots);
+            }
+
+            return slots == null ? 0 : slots;
         }
 
         @Override
         public @NotNull ItemStack getStackInSlot(int slot) {
-            AtomicReference<ItemStack> stack = new AtomicReference<>(ItemStack.EMPTY);
-            this.withStorage(s -> {
+            var stack = this.withStorage(s -> {
                 int i = 0;
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEItemKey key) {
                         if (slot == i++) {
-                            stack.set(key.toStack((int) Math.min(Integer.MAX_VALUE, stored.getLongValue())));
-                            break;
+                            return key.toStack((int) Math.min(Integer.MAX_VALUE, stored.getLongValue()));
                         }
                     }
                 }
+                return ItemStack.EMPTY;
             });
 
-            return stack.get();
+            if (stack == null) {
+                stack = this.withBaseItemHandler(c -> c.getStackInSlot(slot));
+            }
+
+            return stack == null ? ItemStack.EMPTY : stack;
         }
 
         @Override
@@ -150,19 +187,18 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                 return stack;
             }
 
-            var inserted = new AtomicInteger(0);
-            this.withStorage(s -> {
+            Integer inserted = this.withStorage(s -> {
                 var key = AEItemKey.of(stack);
                 if (key == null) {
-                    return;
+                    return 0;
                 }
 
                 var energy = this.getEnergy();
                 if (energy == null) {
-                    return;
+                    return 0;
                 }
 
-                int ins = (int) StorageHelper.poweredInsert(
+                return (int) StorageHelper.poweredInsert(
                         energy,
                         s,
                         key,
@@ -170,16 +206,20 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                         IActionSource.empty(),
                         simulate ? Actionable.SIMULATE : Actionable.MODULATE
                 );
-                inserted.set(ins);
             });
 
+            if (inserted == null) {
+                var stack2 = this.withBaseItemHandler(c -> c.insertItem(slot, stack, simulate));
+                return stack2 == null ? ItemStack.EMPTY : stack2;
+            }
+
             if (!simulate) {
-                stack.shrink(inserted.get());
+                stack.shrink(inserted);
                 return stack;
             }
 
             var rtn = stack.copy();
-            rtn.shrink(inserted.get());
+            rtn.shrink(inserted);
             return rtn;
         }
 
@@ -189,15 +229,14 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                 return ItemStack.EMPTY;
             }
 
-            AtomicReference<ItemStack> stack = new AtomicReference<>(ItemStack.EMPTY);
-            this.withStorage(s -> {
+            var stack = this.withStorage(s -> {
                 int i = 0;
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEItemKey key) {
                         if (slot == i++) {
                             var energy = this.getEnergy();
                             if (energy == null) {
-                                return;
+                                return ItemStack.EMPTY;
                             }
 
                             int extracted = (int) StorageHelper.poweredExtraction(
@@ -209,14 +248,18 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                                     simulate ? Actionable.SIMULATE : Actionable.MODULATE
                             );
 
-                            stack.set(key.toStack(extracted));
-                            break;
+                            return key.toStack(extracted);
                         }
                     }
                 }
+                return ItemStack.EMPTY;
             });
 
-            return stack.get();
+            if (stack == null) {
+                stack = this.withBaseItemHandler(c -> c.extractItem(slot, amount, simulate));
+            }
+
+            return stack == null ? ItemStack.EMPTY : stack;
         }
 
         @Override
@@ -226,67 +269,80 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            return false;
+            return ItemStack.isSameItemSameTags(this.getStackInSlot(slot), stack);
         }
 
         @Override
         public int getTanks() {
-            var slots = new AtomicInteger(0);
-            this.withStorage(s -> {
+            var slots = this.withStorage(s -> {
                 int i = 0;
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEFluidKey) {
                         i++;
                     }
                 }
-                slots.set(i);
+                return i;
             });
 
-            return slots.get();
+            if (slots == null) {
+                slots = this.withBaseFluidHandler(IFluidHandler::getTanks);
+            }
+
+            return slots == null ? 0 : slots;
         }
 
         @Override
         public @NotNull FluidStack getFluidInTank(int tank) {
-            AtomicReference<FluidStack> stack = new AtomicReference<>(FluidStack.EMPTY);
-
-            this.withStorage(s -> {
+            var stack = this.withStorage(s -> {
                 int i = 0;
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEFluidKey key) {
                         if (tank == i++) {
-                            stack.set(key.toStack((int) Math.min(Integer.MAX_VALUE, stored.getLongValue())));
-                            break;
+                            return key.toStack((int) Math.min(Integer.MAX_VALUE, stored.getLongValue()));
                         }
                     }
                 }
+                return FluidStack.EMPTY;
             });
 
-            return stack.get();
+            if (stack == null) {
+                stack = this.withBaseFluidHandler(c -> c.getFluidInTank(tank));
+            }
+
+            return stack == null ? FluidStack.EMPTY : stack;
         }
 
         @Override
         public int getTankCapacity(int tank) {
-            return Integer.MAX_VALUE;
+            if (this.getCapability().isPresent()) {
+                return Integer.MAX_VALUE;
+            }
+
+            var capacity = this.withBaseFluidHandler(c -> c.getTankCapacity(tank));
+            return capacity == null ? 0 : capacity;
         }
 
         @Override
         public boolean isFluidValid(int tank, @NotNull FluidStack stack) {
-            return this.getFluidInTank(tank).isFluidEqual(stack);
+            if (this.getCapability().isPresent()) {
+                return this.getFluidInTank(tank).isFluidEqual(stack);
+            }
+
+            Boolean valid = this.withBaseFluidHandler(c -> c.isFluidValid(tank, stack));
+            return valid != null && valid;
         }
 
         @Override
         public int fill(FluidStack resource, FluidAction action) {
-            var inserted = new AtomicInteger(0);
-
-            this.withStorage(s -> {
+            Integer inserted = this.withStorage(s -> {
                 var key = AEFluidKey.of(resource);
                 if (key == null) {
-                    return;
+                    return 0;
                 }
 
                 var energy = this.getEnergy();
                 if (energy == null) {
-                    return;
+                    return 0;
                 }
 
                 int ins = (int) StorageHelper.poweredInsert(
@@ -298,28 +354,31 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                         fluidActionToActionable(action)
                 );
 
-                inserted.set(ins);
                 if (!action.simulate()) {
                     resource.shrink(ins);
                 }
+
+                return ins;
             });
 
-            return inserted.get();
+            if (inserted == null) {
+                inserted = this.withBaseFluidHandler(c -> c.fill(resource, action));
+            }
+
+            return inserted == null ? 0 : inserted;
         }
 
         @Override
         public @NotNull FluidStack drain(FluidStack resource, FluidAction action) {
-            AtomicReference<FluidStack> stack = new AtomicReference<>(FluidStack.EMPTY);
-
-            this.withStorage(s -> {
+            var stack = this.withStorage(s -> {
                 var key = AEFluidKey.of(resource);
                 if (key == null) {
-                    return;
+                    return FluidStack.EMPTY;
                 }
 
                 var energy = this.getEnergy();
                 if (energy == null) {
-                    return;
+                    return FluidStack.EMPTY;
                 }
 
                 int extracted = (int) StorageHelper.poweredExtraction(
@@ -331,22 +390,24 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                         fluidActionToActionable(action)
                 );
 
-                stack.set(key.toStack(extracted));
+                return key.toStack(extracted);
             });
 
-            return stack.get();
+            if (stack == null) {
+                stack = this.withBaseFluidHandler(c -> c.drain(resource, action));
+            }
+
+            return stack == null ? FluidStack.EMPTY : stack;
         }
 
         @Override
         public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
-            AtomicReference<FluidStack> stack = new AtomicReference<>(FluidStack.EMPTY);
-
-            this.withStorage(s -> {
+            var stack = this.withStorage(s -> {
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEFluidKey key) {
                         var energy = this.getEnergy();
                         if (energy == null) {
-                            return;
+                            return FluidStack.EMPTY;
                         }
 
                         int extracted = (int) StorageHelper.poweredExtraction(
@@ -358,13 +419,17 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
                                 fluidActionToActionable(action)
                         );
 
-                        stack.set(key.toStack(extracted));
-                        break;
+                        return key.toStack(extracted);
                     }
                 }
+                return FluidStack.EMPTY;
             });
 
-            return stack.get();
+            if (stack == null) {
+                stack = this.withBaseFluidHandler(c -> c.drain(maxDrain, action));
+            }
+
+            return stack == null ? FluidStack.EMPTY : stack;
         }
 
         private static Actionable fluidActionToActionable(FluidAction fluidAction) {
