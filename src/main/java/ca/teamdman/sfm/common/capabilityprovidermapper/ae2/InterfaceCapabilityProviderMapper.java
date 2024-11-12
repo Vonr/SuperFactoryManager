@@ -48,31 +48,35 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         return Optional.of(new InterfaceCapabilityProvider(level, pos));
     }
 
-    private static class InterfaceCapabilityProvider implements ICapabilityProvider {
-        private final LazyOptional<IItemHandler> handler;
-
-        InterfaceCapabilityProvider(LevelAccessor level, BlockPos pos) {
-            this.handler = LazyOptional.of(() -> new InterfaceHandler(level, pos));
-        }
-
+    private record InterfaceCapabilityProvider(LevelAccessor level, BlockPos pos) implements ICapabilityProvider {
         @Override
         public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
             if (cap == ForgeCapabilities.ITEM_HANDLER || cap == ForgeCapabilities.FLUID_HANDLER) {
-                return handler.cast();
+                return LazyOptional.of(() -> new InterfaceHandler(level, pos)).cast();
+            }
+
+            var in = interfaceAt(level, pos);
+            if (in != null) {
+                return in.getCapability(cap, side);
             }
 
             return LazyOptional.empty();
         }
     }
 
+    @Nullable
+    private static InterfaceBlockEntity interfaceAt(LevelAccessor level, BlockPos pos) {
+        var be = level.getBlockEntity(pos);
+        if (be instanceof InterfaceBlockEntity in) {
+            return in;
+        }
+        return null;
+    }
+
     record InterfaceHandler(LevelAccessor level, BlockPos pos) implements IItemHandler, IFluidHandler {
         @Nullable
         InterfaceBlockEntity getInterface() {
-            var be = level.getBlockEntity(pos);
-            if (be instanceof InterfaceBlockEntity in) {
-                return in;
-            }
-            return null;
+            return interfaceAt(this.level, this.pos);
         }
 
         @Nullable
