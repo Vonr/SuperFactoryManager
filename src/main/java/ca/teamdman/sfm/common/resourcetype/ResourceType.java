@@ -18,6 +18,7 @@ import net.minecraftforge.registries.IForgeRegistry;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -139,8 +140,9 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
             BiConsumer<Direction, CAP> consumer
     ) {
         for (Direction dir : directions) {
-            LazyOptional<CAP> maybeCap = programContext.getNetwork()
-                    .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger());
+            Optional<CAP> maybeCap = programContext.getNetwork()
+                    .getCapability(CAPABILITY_KIND, pos, dir, programContext.getLogger())
+                    .resolve();
             if (maybeCap.isPresent()) {
                 programContext
                         .getLogger()
@@ -150,7 +152,7 @@ public abstract class ResourceType<STACK, ITEM, CAP> {
                                 dir
                         )));
                 //noinspection OptionalGetWithoutIsPresent
-                CAP cap = maybeCap.resolve().get();
+                CAP cap = maybeCap.get();
                 consumer.accept(dir, cap);
             } else {
                 // Log error

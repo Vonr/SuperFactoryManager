@@ -23,8 +23,7 @@ import java.util.stream.Collectors;
 
 public class SFMMekanismCompat {
     @SuppressWarnings("DataFlowIssue")
-    @Nullable
-    public static ResourceType<?, ?, ?> getResourceType(TransmissionType trans) {
+    public static @Nullable ResourceType<?, ?, ?> getResourceType(TransmissionType trans) {
         return switch (trans) {
             case ITEM -> SFMResourceTypes.ITEM.get();
             case FLUID -> SFMResourceTypes.FLUID.get();

@@ -16,8 +16,8 @@ import java.util.stream.Stream;
 public final class ResourceIdSet implements ASTNode {
     public static final ResourceIdSet EMPTY = new ResourceIdSet(new LinkedHashSet<>());
     public static final ResourceIdSet MATCH_ALL = new ResourceIdSet(new LinkedHashSet<>(List.of(ResourceIdentifier.MATCH_ALL)));
-    private final ArrayList<ResourceIdentifier<?, ?, ?>> resourceIds;
-    private @Nullable List<ResourceType<?,?,?>> referencedResourceTypes;
+    private final LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds;
+    private @Nullable LinkedHashSet<ResourceType<?,?,?>> referencedResourceTypes = null;
 
     public ResourceIdSet(Collection<ResourceIdentifier<?, ?, ?>> contents) {
         this(new LinkedHashSet<>(contents));
@@ -26,14 +26,12 @@ public final class ResourceIdSet implements ASTNode {
     /**
      * See also: {@link ResourceLimits#getReferencedResourceTypes()}
      */
-    public Collection<? extends ResourceType<?, ?, ?>> getReferencedResourceTypes() {
+    public Set<ResourceType<?,?,?>> getReferencedResourceTypes() {
         if (referencedResourceTypes == null) {
-            HashSet<ResourceType<?, ?, ?>> set = new HashSet<>(SFMResourceTypes.getResourceTypeCount());
+            referencedResourceTypes = new LinkedHashSet<>(SFMResourceTypes.getResourceTypeCount());
             for (ResourceIdentifier<?, ?, ?> resourceId : resourceIds) {
-                set.add(resourceId.getResourceType());
+                referencedResourceTypes.add(resourceId.getResourceType());
             }
-
-            referencedResourceTypes = new ArrayList<>(set);
         }
         return referencedResourceTypes;
     }
@@ -53,7 +51,7 @@ public final class ResourceIdSet implements ASTNode {
     public ResourceIdSet(
             LinkedHashSet<ResourceIdentifier<?, ?, ?>> resourceIds
     ) {
-        this.resourceIds = new ArrayList<>(resourceIds);
+        this.resourceIds = resourceIds;
     }
 
     public @Nullable ResourceIdentifier<?, ?, ?> getMatchingFromStack(Object stack) {

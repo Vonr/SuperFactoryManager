@@ -7,7 +7,10 @@ import ca.teamdman.sfm.common.resourcetype.ResourceType;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -15,7 +18,7 @@ import java.util.stream.Collectors;
  * Do NOT modify this after creation since the {@link this#referencedResourceTypes} will become inaccurate.
  */
 public final class ResourceLimits implements ASTNode, ToStringPretty {
-    private @Nullable List<ResourceType<?,?,?>> referencedResourceTypes = null;
+    private @Nullable LinkedHashSet<ResourceType<?,?,?>> referencedResourceTypes = null;
     private final List<ResourceLimit> resourceLimitList;
     private final ResourceIdSet exclusions;
 
@@ -64,14 +67,12 @@ public final class ResourceLimits implements ASTNode, ToStringPretty {
     /**
      * See also: {@link ResourceIdSet#getReferencedResourceTypes()}
      */
-    public Collection<ResourceType<?, ?, ?>> getReferencedResourceTypes() {
+    public Set<ResourceType<?, ?, ?>> getReferencedResourceTypes() {
         if (referencedResourceTypes == null) {
-            HashSet<ResourceType<?, ?, ?>> set = new HashSet<>(SFMResourceTypes.getResourceTypeCount());
+            referencedResourceTypes = new LinkedHashSet<>(SFMResourceTypes.getResourceTypeCount());
             for (ResourceLimit resourceLimit : resourceLimitList) {
-                set.addAll(resourceLimit.resourceIds().getReferencedResourceTypes());
+                referencedResourceTypes.addAll(resourceLimit.resourceIds().getReferencedResourceTypes());
             }
-
-            referencedResourceTypes = new ArrayList<>(set);
         }
         return referencedResourceTypes;
     }

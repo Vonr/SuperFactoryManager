@@ -181,7 +181,7 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
     public record IO(
             IOStatement statement,
             IOKind kind,
-            Collection<ResourceType<?,?,?>> usedResourceTypes,
+            Set<ResourceType<?,?,?>> usedResourceTypes,
             Set<Label> usedLabels
     ) implements ExecutionPathElement {
         public IO(IOStatement statement) {
@@ -191,7 +191,7 @@ public class SimulateExploreAllPathsProgramBehaviour implements ProgramBehaviour
                     statement instanceof InputStatement
                     ? IOKind.INPUT
                     : (statement instanceof OutputStatement ? IOKind.OUTPUT : null),
-                    statement.resourceLimits().getReferencedResourceTypes(),
+                    new HashSet<>(statement.resourceLimits().getReferencedResourceTypes()),
                     new HashSet<>(statement.labelAccess().labels())
             );
             if (kind == null) {

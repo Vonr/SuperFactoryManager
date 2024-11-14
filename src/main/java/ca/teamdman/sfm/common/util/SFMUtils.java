@@ -254,8 +254,7 @@ public class SFMUtils {
      * If multiple {@link CapabilityProviderMapper}s match, the first one is returned.
      */
     @SuppressWarnings("UnstableApiUsage") // for the javadoc lol
-    @Nullable
-    public static ICapabilityProvider discoverCapabilityProvider(
+    public static @Nullable ICapabilityProvider discoverCapabilityProvider(
             Level level,
             BlockPos pos
     ) {

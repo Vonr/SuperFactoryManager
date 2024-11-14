@@ -20,7 +20,7 @@ import javax.annotation.Nonnull;
 
 public class CauldronCapabilityProviderMapper implements CapabilityProviderMapper {
     @Override
-    public ICapabilityProvider getProviderFor(LevelAccessor level, BlockPos pos) {
+    public @Nullable ICapabilityProvider getProviderFor(LevelAccessor level, BlockPos pos) {
         var state = level.getBlockState(pos);
         if (state.getBlock() == Blocks.CAULDRON
             || state.getBlock() == Blocks.WATER_CAULDRON

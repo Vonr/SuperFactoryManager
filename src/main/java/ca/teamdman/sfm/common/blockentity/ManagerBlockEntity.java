@@ -164,8 +164,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return State.RUNNING;
     }
 
-    @Nullable
-    public String getProgramString() {
+    public @Nullable String getProgramString() {
         var disk = getDisk();
         if (disk == null) {
             return null;
@@ -185,8 +184,7 @@ public class ManagerBlockEntity extends BaseContainerBlockEntity {
         return program.referencedLabels();
     }
 
-    @Nullable
-    public ItemStack getDisk() {
+    public @Nullable ItemStack getDisk() {
         var item = getItem(0);
         if (item.getItem() instanceof DiskItem) return item;
         return null;
