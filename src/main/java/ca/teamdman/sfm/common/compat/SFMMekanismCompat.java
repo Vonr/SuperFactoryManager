@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber
 public class SFMMekanismCompat {
     @SuppressWarnings("DataFlowIssue")
     public static Optional<ResourceType<?, ?, ?>> getResourceType(TransmissionType trans) {

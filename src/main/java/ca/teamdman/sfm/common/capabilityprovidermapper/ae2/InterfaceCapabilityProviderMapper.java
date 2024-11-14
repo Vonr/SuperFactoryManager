@@ -11,6 +11,7 @@ import appeng.api.storage.StorageHelper;
 import appeng.blockentity.misc.InterfaceBlockEntity;
 import appeng.capabilities.Capabilities;
 import ca.teamdman.sfm.common.capabilityprovidermapper.CapabilityProviderMapper;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -64,8 +65,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         }
     }
 
-    @Nullable
-    private static InterfaceBlockEntity interfaceAt(LevelAccessor level, BlockPos pos) {
+    private static @Nullable InterfaceBlockEntity interfaceAt(LevelAccessor level, BlockPos pos) {
         var be = level.getBlockEntity(pos);
         if (be instanceof InterfaceBlockEntity in) {
             return in;
@@ -73,14 +73,13 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         return null;
     }
 
+    @MethodsReturnNonnullByDefault
     record InterfaceHandler(LevelAccessor level, BlockPos pos) implements IItemHandler, IFluidHandler {
-        @Nullable
-        InterfaceBlockEntity getInterface() {
+        @Nullable InterfaceBlockEntity getInterface() {
             return interfaceAt(this.level, this.pos);
         }
 
-        @Nullable
-        IEnergyService getEnergy() {
+        @Nullable IEnergyService getEnergy() {
             var in = this.getInterface();
             if (in == null) {
                 return null;
@@ -94,7 +93,6 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             return grid.getEnergyService();
         }
 
-        @NotNull
         LazyOptional<IStorageMonitorableAccessor> getCapability() {
             var in = this.getInterface();
             if (in == null) {
@@ -108,7 +106,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             return in.getCapability(Capabilities.STORAGE_MONITORABLE_ACCESSOR);
         }
 
-        <T> T withStorage(Function<MEStorage, T> callback) {
+        <T> @Nullable T withStorage(Function<MEStorage, T> callback) {
             var cap = this.getCapability();
             if (cap.isPresent()) {
                 //noinspection DataFlowIssue
@@ -117,7 +115,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             return null;
         }
 
-        <T> T withBaseItemHandler(Function<IItemHandler, T> callback) {
+        <T> @Nullable T withBaseItemHandler(Function<IItemHandler, T> callback) {
             var in = this.getInterface();
             if (in == null) {
                 return null;
@@ -131,7 +129,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
             return null;
         }
 
-        <T> T withBaseFluidHandler(Function<IFluidHandler, T> callback) {
+        <T> @Nullable T withBaseFluidHandler(Function<IFluidHandler, T> callback) {
             var in = this.getInterface();
             if (in == null) {
                 return null;
@@ -165,7 +163,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         }
 
         @Override
-        public @NotNull ItemStack getStackInSlot(int slot) {
+        public ItemStack getStackInSlot(int slot) {
             var stack = this.withStorage(s -> {
                 int i = 0;
                 for (var stored : s.getAvailableStacks()) {
@@ -186,7 +184,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         }
 
         @Override
-        public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+        public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
             if (stack.isEmpty()) {
                 return stack;
             }
@@ -228,7 +226,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         }
 
         @Override
-        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
             if (amount <= 0) {
                 return ItemStack.EMPTY;
             }
@@ -296,7 +294,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         }
 
         @Override
-        public @NotNull FluidStack getFluidInTank(int tank) {
+        public FluidStack getFluidInTank(int tank) {
             var stack = this.withStorage(s -> {
                 int i = 0;
                 for (var stored : s.getAvailableStacks()) {
@@ -373,7 +371,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         }
 
         @Override
-        public @NotNull FluidStack drain(FluidStack resource, FluidAction action) {
+        public FluidStack drain(FluidStack resource, FluidAction action) {
             var stack = this.withStorage(s -> {
                 var key = AEFluidKey.of(resource);
                 if (key == null) {
@@ -405,7 +403,7 @@ public class InterfaceCapabilityProviderMapper implements CapabilityProviderMapp
         }
 
         @Override
-        public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
+        public FluidStack drain(int maxDrain, FluidAction action) {
             var stack = this.withStorage(s -> {
                 for (var stored : s.getAvailableStacks()) {
                     if (stored.getKey() instanceof AEFluidKey key) {

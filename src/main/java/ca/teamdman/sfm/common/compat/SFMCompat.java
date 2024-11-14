@@ -49,9 +49,7 @@ public class SFMCompat {
             ));
         }
 
-        MinecraftForge.EVENT_BUS.post(new SFMCompatGatherCapabilitiesEvent(caps));
         CAPABILITIES.addAll(caps);
-
         return CAPABILITIES;
     }
 }
