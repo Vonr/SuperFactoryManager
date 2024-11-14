@@ -1,7 +1,7 @@
 package ca.teamdman.sfm.gametest;
 
 import ca.teamdman.sfm.SFM;
-import ca.teamdman.sfm.common.SFMConfig;
+import ca.teamdman.sfm.common.config.SFMConfig;
 import ca.teamdman.sfm.common.blockentity.ManagerBlockEntity;
 import ca.teamdman.sfm.common.blockentity.PrintingPressBlockEntity;
 import ca.teamdman.sfm.common.cablenetwork.CableNetwork;
@@ -1327,33 +1327,21 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
     public static void falling_anvil_xp_shard(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 1), Blocks.OBSIDIAN);
         var pos = helper.absoluteVec(new Vec3(1.5, 3.5, 1.5));
-        var currentConfig = SFMConfig.COMMON.levelsToShards.get();
-        SFMConfig.COMMON.levelsToShards.set(SFMConfig.Common.LevelsToShards.JustOne);
-        helper
-                .getLevel()
-                .addFreshEntity(new ItemEntity(
-                        helper.getLevel(),
-                        pos.x, pos.y, pos.z,
-                        EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
-                                Enchantments.SHARPNESS,
-                                3
-                        )),
-                        0, 0, 0
-                ));
-        helper.setBlock(new BlockPos(1, 4, 1), Blocks.ANVIL);
-        helper.runAfterDelay(20, () -> {
-            List<ItemEntity> found = helper
-                    .getLevel()
-                    .getEntitiesOfClass(
-                            ItemEntity.class,
-                            new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)
-                    );
-            assertTrue(found.size() == 1, "should only be one item");
-            assertTrue(found.get(0).getItem().is(SFMItems.EXPERIENCE_SHARD_ITEM.get()), "should be an xp shard");
-            assertTrue(found.get(0).getItem().getCount() == 1, "should only be one");
-            SFMConfig.COMMON.levelsToShards.set(currentConfig);
-            helper.succeed();
-        });
+        ItemStack enchBook = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(
+                Enchantments.SHARPNESS,
+                4
+        ));
+        EnchantedBookItem.addEnchantment(enchBook, new EnchantmentInstance(Enchantments.BLOCK_EFFICIENCY, 2));
+
+        var cases = List.of(
+                Pair.of(SFMConfig.Common.LevelsToShards.JustOne, 1),
+                Pair.of(SFMConfig.Common.LevelsToShards.EachOne, 2),
+                Pair.of(SFMConfig.Common.LevelsToShards.SumLevels, 6),
+                Pair.of(SFMConfig.Common.LevelsToShards.SumLevelsScaledExponentially, 10)
+        );
+
+        var restore = SFMConfig.COMMON.levelsToShards.get();
+        falling_anvil_xp_shard_inner(helper, 1, restore, pos, enchBook, cases.iterator());
     }
 
     @GameTest(template = "3x4x3")
@@ -1374,12 +1362,11 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         );
 
         var restore = SFMConfig.COMMON.levelsToShards.get();
-        falling_anvil_xp_shard_many_inner(helper, restore, pos, enchBook, cases.iterator());
+        falling_anvil_xp_shard_inner(helper, 10, restore, pos, enchBook, cases.iterator());
     }
 
-    private static void falling_anvil_xp_shard_many_inner(GameTestHelper helper, SFMConfig.Common.LevelsToShards restore, Vec3 pos, ItemStack enchBook, Iterator<Pair<SFMConfig.Common.LevelsToShards, Integer>> iter) {
+    private static void falling_anvil_xp_shard_inner(GameTestHelper helper, int numBooks, SFMConfig.Common.LevelsToShards restore, Vec3 pos, ItemStack enchBook, Iterator<Pair<SFMConfig.Common.LevelsToShards, Integer>> iter) {
         if (!iter.hasNext()) {
-            helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)).forEach(e -> e.discard());
             SFMConfig.COMMON.levelsToShards.set(restore);
             helper.succeed();
             return;
@@ -1390,7 +1377,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
         // kill old item entities
         helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(helper.absolutePos(new BlockPos(1, 4, 1))).inflate(3)).forEach(e -> e.discard());
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < numBooks; i++) {
             helper
                     .getLevel()
                     .addFreshEntity(new ItemEntity(
@@ -1419,7 +1406,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             var cnt = found.stream().mapToInt(e -> e.getItem().getCount()).sum();
             assertTrue(cnt == c.second(), "bad count for " + c.first().name() + ": expected " + c.second() + " but got " + cnt);
 
-            falling_anvil_xp_shard_many_inner(helper, restore, pos, enchBook, iter);
+            falling_anvil_xp_shard_inner(helper, numBooks, restore, pos, enchBook, iter);
         });
     }
 
