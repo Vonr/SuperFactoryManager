@@ -1340,8 +1340,8 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 Pair.of(SFMConfig.Common.LevelsToShards.SumLevelsScaledExponentially, 10)
         );
 
-        var restore = SFMConfig.COMMON.levelsToShards.get();
-        falling_anvil_xp_shard_inner(helper, 1, restore, pos, enchBook, cases.iterator());
+        var currentConfig = SFMConfig.COMMON.levelsToShards.get();
+        falling_anvil_xp_shard_inner(helper, 1, currentConfig, pos, enchBook, cases.iterator());
     }
 
     @GameTest(template = "3x4x3")
@@ -1361,13 +1361,14 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
                 Pair.of(SFMConfig.Common.LevelsToShards.SumLevelsScaledExponentially, 100)
         );
 
-        var restore = SFMConfig.COMMON.levelsToShards.get();
-        falling_anvil_xp_shard_inner(helper, 10, restore, pos, enchBook, cases.iterator());
+        var currentConfig = SFMConfig.COMMON.levelsToShards.get();
+        falling_anvil_xp_shard_inner(helper, 10, currentConfig, pos, enchBook, cases.iterator());
     }
 
-    private static void falling_anvil_xp_shard_inner(GameTestHelper helper, int numBooks, SFMConfig.Common.LevelsToShards restore, Vec3 pos, ItemStack enchBook, Iterator<Pair<SFMConfig.Common.LevelsToShards, Integer>> iter) {
+    private static void falling_anvil_xp_shard_inner(GameTestHelper helper, int numBooks, SFMConfig.Common.LevelsToShards configToRestore, Vec3 pos, ItemStack enchBook, Iterator<Pair<SFMConfig.Common.LevelsToShards, Integer>> iter) {
         if (!iter.hasNext()) {
-            SFMConfig.COMMON.levelsToShards.set(restore);
+            // restore config to value before the test
+            SFMConfig.COMMON.levelsToShards.set(configToRestore);
             helper.succeed();
             return;
         }
@@ -1406,7 +1407,7 @@ public class SFMCorrectnessGameTests extends SFMGameTestBase {
             var cnt = found.stream().mapToInt(e -> e.getItem().getCount()).sum();
             assertTrue(cnt == c.second(), "bad count for " + c.first().name() + ": expected " + c.second() + " but got " + cnt);
 
-            falling_anvil_xp_shard_inner(helper, numBooks, restore, pos, enchBook, iter);
+            falling_anvil_xp_shard_inner(helper, numBooks, configToRestore, pos, enchBook, iter);
         });
     }
 
