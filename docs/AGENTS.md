@@ -18,6 +18,8 @@ D:/Repos/Minecraft/SFM/repos2/1.21.0  d65d77ea5 [1.21.0]
 D:/Repos/Minecraft/SFM/repos2/1.21.1  a5b79ec84 [1.21.1]
 ```
 
+The other branches' AGENTS.md files all point to this one, do not read those other agent files to save us some tokens.
+
 ## 🛠️ Gradle Commands
 
 Gradle commands against a specific version should be run from the `platform/minecraft/` directory.
