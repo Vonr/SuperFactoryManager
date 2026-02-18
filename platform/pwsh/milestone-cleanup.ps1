@@ -1,3 +1,6 @@
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
 $repo_root = Get-Content $env:APPDATA\teamdman\sfm-propagate-changes\config\repo_root.txt
 $repo = "TeamDman/SuperFactoryManager"
 $gradleProperties = "$repo_root/platform/minecraft/gradle.properties"

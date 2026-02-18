@@ -104,24 +104,18 @@ The following steps must run for each MC version.
 
 By this phase, the mod code is locked in so a new git tag should be created.
 
-1. Run `sfm-propagate-changes.exe git tag`
+1. Run `sfm-propagate-changes.exe git merge`
+2. Run `sfm-propagate-changes.exe git tag`
 2. Run `sfm-propagate-changes.exe git push --tags`
 
-## Phase ? - Publishing to GitHub
+## Phase 8 - Publishing to GitHub
 
-8. Draft a new release
-"https://github.com/TeamDman/SuperFactoryManager/releases/new"
-Choose a tag=latest
-Target=latest
-Release title=$modVersion
-Description= <<
+1. Run GitHub release script from repo root
+    ```pwsh
+    pwsh -File ./platform/pwsh/github-release.ps1
     ```
-        $section from changelog.sfml
-    ```
->>
-Attach=latest jar for each mc version
 
-## Phase ? - Publishing (WIP)
+## Phase 9 - Publishing (WIP)
 
 These steps finalize the release to make the built jar file available to people for download.
 
