@@ -117,12 +117,20 @@
             "default": "Experience Goop",
             "enum": [
               "Disk",
+              "Disk Classic",
               "Controller",
+              "Controller Classic",
+              "Controller Tunneled",
               "Label Gun",
+              "Label Gun Classic",
               "Experience Goop",
+              "Experience Goop Classic",
               "Experience Shard",
+              "Experience Shard Classic",
               "Tool Network",
-              "Printing Form"
+              "Tool Network Classic",
+              "Printing Form",
+              "Printing Form Classic"
             ]
           },
           "sfml.changeFolderIconsOnActivityBar": {
@@ -131,12 +139,20 @@
             "default": "Tool Network",
             "enum": [
               "Disk",
+              "Disk Classic",
               "Controller",
+              "Controller Classic",
+              "Controller Tunneled",
               "Label Gun",
+              "Label Gun Classic",
               "Experience Goop",
+              "Experience Goop Classic",
               "Experience Shard",
+              "Experience Shard Classic",
               "Tool Network",
-              "Printing Form"
+              "Tool Network Classic",
+              "Printing Form",
+              "Printing Form Classic"
             ]
           },
           "sfml.externalURLs": {

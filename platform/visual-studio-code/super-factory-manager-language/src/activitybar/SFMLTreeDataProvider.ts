@@ -400,12 +400,20 @@ export function loadIconPaths(context: vscode.ExtensionContext)
     
     const iconMap: { [key: string]: string } = {
         'Disk': 'disk.png',
+        'Disk Classic': 'disk_classic.png',
         'Controller': 'controller.png',
-        'Label Gun': 'label gun.png',
+        'Controller Classic': 'controller_classic.png',
+        'Controller Tunneled': 'controller_tunneled.png',
+        'Label Gun': 'label.png',
+        'Label Gun Classic': 'label gun_classic.png',
         'Experience Goop': 'experience goop.png',
+        'Experience Goop Classic': 'experience goop_classic.png',
         'Experience Shard': 'experience shard.png',
+        'Experience Shard Classic': 'experience shard_classic.png',
         'Tool Network': 'tool.png',
-        'Printing Form': 'printing press.png'
+        'Tool Network Classic': 'tool_classic.png',
+        'Printing Form': 'printing press.png',
+        'Printing Form Classic': 'printing press_classic.png'
     };
     
     return {
