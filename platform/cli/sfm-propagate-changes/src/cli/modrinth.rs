@@ -15,6 +15,8 @@ use reqwest::header::AUTHORIZATION;
 use reqwest::header::HeaderMap;
 use reqwest::header::HeaderValue;
 use reqwest::header::USER_AGENT;
+use sha1::Digest;
+use sha1::Sha1;
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::io::Write;
@@ -82,6 +84,15 @@ pub enum ModrinthReleaseCommand {
         #[facet(default, args::named)]
         project: Option<String>,
     },
+    /// Validate remote downloadable jars against local release jars by hash
+    Validate {
+        /// Minecraft version filter expression list, comma-separated (example: "=1.20.1" or ">=1.19.2,<=1.21.1")
+        #[facet(default, args::named)]
+        mc: Option<String>,
+        /// Modrinth project id/slug (defaults to Super Factory Manager)
+        #[facet(default, args::named)]
+        project: Option<String>,
+    },
     /// Create new Modrinth versions for each release jar
     Now {
         /// Modrinth project id/slug (defaults to Super Factory Manager)
@@ -129,6 +140,7 @@ impl ModrinthReleaseCommand {
     pub fn invoke(self) -> eyre::Result<()> {
         match self {
             Self::Check { mc, project } => check_release_metadata(mc, project),
+            Self::Validate { mc, project } => validate_release_hashes(mc, project),
             Self::Now {
                 project,
                 token,
@@ -157,6 +169,24 @@ struct ModrinthProjectVersion {
     loaders: Vec<String>,
     #[facet(default, rename = "date_published")]
     date_published: Option<String>,
+    #[facet(default)]
+    files: Vec<ModrinthProjectVersionFile>,
+}
+
+#[derive(Facet, Debug, Clone)]
+struct ModrinthProjectVersionFile {
+    filename: String,
+    url: String,
+    #[facet(default)]
+    primary: Option<bool>,
+    #[facet(default)]
+    hashes: ModrinthProjectVersionFileHashes,
+}
+
+#[derive(Facet, Debug, Clone, Default)]
+struct ModrinthProjectVersionFileHashes {
+    #[facet(default)]
+    sha1: Option<String>,
 }
 
 #[derive(Facet, Debug, Clone)]
@@ -408,6 +438,110 @@ fn check_release_metadata(mc: Option<String>, project: Option<String>) -> eyre::
     Ok(())
 }
 
+fn validate_release_hashes(mc: Option<String>, project: Option<String>) -> eyre::Result<()> {
+    let project_id = resolve_project_id(project)?;
+
+    let repo_root = get_repo_root()?;
+    let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
+    let jar_dir = get_jar_dir()?;
+
+    let mod_version = read_mod_version(&gradle_properties)?;
+    let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
+    let jars = filter_release_jars_by_mc(all_jars, mc.as_deref())?;
+
+    let client = build_http_client(None)?;
+    let existing_versions = fetch_project_versions(&client, &project_id)?;
+
+    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    println!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
+
+    for jar in jars {
+        let mc_version = parse_mc_version_from_jar_name(&jar)?;
+        let local_bytes = std::fs::read(&jar)
+            .wrap_err_with(|| format!("Failed to read local jar for hashing: {}", jar.display()))?;
+        let local_sha1 = sha1_hex(&local_bytes);
+
+        let historical = find_latest_historical_version_for_mc(&existing_versions, &mc_version)?;
+        let historical_version_number = historical
+            .version_number
+            .as_deref()
+            .unwrap_or_default()
+            .trim();
+        if historical_version_number != mod_version {
+            eyre::bail!(
+                "Latest historical Modrinth version for MC {} was {}, expected {} (version id {}).",
+                mc_version,
+                if historical_version_number.is_empty() {
+                    "<missing>"
+                } else {
+                    historical_version_number
+                },
+                mod_version,
+                historical.id
+            );
+        }
+
+        let remote_file = select_download_file(historical, &mc_version, &mod_version)?;
+        let remote_sha1 = remote_file
+            .hashes
+            .sha1
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| {
+                eyre::eyre!(
+                    "Modrinth version {} file {} did not contain a sha1 hash",
+                    historical.id,
+                    remote_file.filename
+                )
+            })?
+            .to_ascii_lowercase();
+
+        if local_sha1 != remote_sha1 {
+            eyre::bail!(
+                "Hash mismatch (local vs remote metadata) for MC {} (version id {}, file {}).\nlocal sha1: {}\nremote sha1: {}",
+                mc_version,
+                historical.id,
+                remote_file.filename,
+                local_sha1,
+                remote_sha1
+            );
+        }
+
+        let downloaded_sha1 = download_sha1(&client, &remote_file.url)?;
+        if downloaded_sha1 != local_sha1 {
+            eyre::bail!(
+                "Hash mismatch (local vs downloaded) for MC {} (version id {}, file {}).\nlocal sha1: {}\ndownloaded sha1: {}",
+                mc_version,
+                historical.id,
+                remote_file.filename,
+                local_sha1,
+                downloaded_sha1
+            );
+        }
+
+        println!(
+            "{} {} {} {} {}",
+            style("✓", ANSI_BOLD_GREEN),
+            style(&mc_version, ANSI_BOLD_BLUE),
+            style("hash validated", ANSI_DIM),
+            historical.id,
+            style(&format!("({})", remote_file.filename), ANSI_DIM)
+        );
+    }
+
+    println!(
+        "{}",
+        style(
+            "Hash validation passed: downloaded Modrinth files match local release jars.",
+            ANSI_BOLD_GREEN
+        )
+    );
+
+    Ok(())
+}
+
 fn release_now(
     project: Option<String>,
     token: Option<String>,
@@ -600,7 +734,10 @@ fn release_amend(
 
     let prompt = format!(
         "{} {}",
-        style("Proceed to amend changelog on these versions?", ANSI_BOLD_YELLOW),
+        style(
+            "Proceed to amend changelog on these versions?",
+            ANSI_BOLD_YELLOW
+        ),
         style("(y/N)", ANSI_BOLD_YELLOW)
     );
     if !prompt_yes_no(&prompt)? {
@@ -624,7 +761,10 @@ fn release_amend(
 
     println!(
         "{}",
-        style("Modrinth release changelog amend complete.", ANSI_BOLD_GREEN)
+        style(
+            "Modrinth release changelog amend complete.",
+            ANSI_BOLD_GREEN
+        )
     );
 
     Ok(())
@@ -778,6 +918,63 @@ fn find_latest_historical_version_for_mc<'a>(
             left_key.cmp(&right_key)
         })
         .ok_or_else(|| eyre::eyre!("No historical Modrinth version found for MC {mc_version}"))
+}
+
+fn select_download_file<'a>(
+    version: &'a ModrinthProjectVersion,
+    mc_version: &str,
+    mod_version: &str,
+) -> eyre::Result<&'a ModrinthProjectVersionFile> {
+    let expected_marker = format!("-MC{mc_version}-");
+    let expected_suffix = format!("-{mod_version}.jar");
+
+    if let Some(file) = version.files.iter().find(|file| {
+        file.filename.contains(&expected_marker) && file.filename.ends_with(&expected_suffix)
+    }) {
+        return Ok(file);
+    }
+
+    if let Some(file) = version
+        .files
+        .iter()
+        .find(|file| file.primary.unwrap_or(false))
+    {
+        return Ok(file);
+    }
+
+    version.files.first().ok_or_else(|| {
+        eyre::eyre!(
+            "Modrinth version {} does not contain any downloadable files",
+            version.id
+        )
+    })
+}
+
+fn download_sha1(client: &Client, url: &str) -> eyre::Result<String> {
+    let response = client
+        .get(url)
+        .send()
+        .wrap_err_with(|| format!("Failed to download file from {url}"))?;
+
+    let status = response.status();
+    if !status.is_success() {
+        let body = response
+            .text()
+            .unwrap_or_else(|_| "<failed to read response body>".to_string());
+        eyre::bail!("Failed to download file from {} ({status}): {}", url, body);
+    }
+
+    let bytes = response
+        .bytes()
+        .wrap_err_with(|| format!("Failed to read downloaded bytes from {url}"))?;
+    Ok(sha1_hex(bytes.as_ref()))
+}
+
+fn sha1_hex(bytes: &[u8]) -> String {
+    let mut hasher = Sha1::new();
+    hasher.update(bytes);
+    let digest = hasher.finalize();
+    digest.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 fn to_normalized_set(values: &[String]) -> BTreeSet<String> {
@@ -1000,8 +1197,8 @@ fn parse_mc_version_from_jar_name(jar_path: &Path) -> eyre::Result<String> {
 }
 
 fn compute_wrapped_release_changelog(repo_root: &Path, mod_version: &str) -> eyre::Result<String> {
-    let changelog_path =
-        repo_root.join("platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml");
+    let changelog_path = repo_root
+        .join("platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml");
     let changelog_section = read_changelog_section(&changelog_path, mod_version)?;
     Ok(format!("```\n{}\n```", changelog_section.trim()))
 }

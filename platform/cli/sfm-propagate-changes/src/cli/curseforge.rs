@@ -15,6 +15,8 @@ use reqwest::blocking::multipart;
 use reqwest::header::HeaderMap;
 use reqwest::header::HeaderValue;
 use reqwest::header::USER_AGENT;
+use sha1::Digest;
+use sha1::Sha1;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -108,6 +110,24 @@ pub enum CurseforgeCommand {
 pub enum CurseforgeReleaseCommand {
     /// Verify computed release metadata against historical project uploads
     Check {
+        /// Minecraft version filter expression list, comma-separated (example: "=1.20.1" or ">=1.19.2,<=1.21.1")
+        #[facet(default, args::named)]
+        mc: Option<String>,
+        /// CurseForge project ID (defaults to configured default project)
+        #[facet(default, args::named)]
+        project: Option<u64>,
+        /// CurseForge Core API key; if omitted, CURSEFORGE_CORE_API_KEY is used
+        #[facet(default, args::named, rename = "api-key")]
+        api_key: Option<String>,
+        /// CurseForge API token; if omitted, CURSEFORGE_API_TOKEN is used, then 1Password lookup
+        #[facet(default, args::named)]
+        token: Option<String>,
+        /// 1Password secret reference used when credentials are omitted
+        #[facet(default, args::named, rename = "op-secret")]
+        op_secret: Option<String>,
+    },
+    /// Validate remote downloadable files against local release jars by hash
+    Validate {
         /// Minecraft version filter expression list, comma-separated (example: "=1.20.1" or ">=1.19.2,<=1.21.1")
         #[facet(default, args::named)]
         mc: Option<String>,
@@ -265,6 +285,13 @@ impl CurseforgeReleaseCommand {
                 token,
                 op_secret,
             } => check_minecraft_version_metadata(mc, project, api_key, token, op_secret),
+            Self::Validate {
+                mc,
+                project,
+                api_key,
+                token,
+                op_secret,
+            } => validate_release_hashes(mc, project, api_key, token, op_secret),
             Self::Now {
                 project,
                 token,
@@ -337,6 +364,18 @@ struct CurseforgeProjectFileItem {
     file_status: Option<u32>,
     #[facet(default, rename = "gameVersions")]
     game_versions: Vec<String>,
+    #[facet(default, rename = "downloadUrl")]
+    download_url: Option<String>,
+    #[facet(default)]
+    hashes: Vec<CurseforgeProjectFileHash>,
+}
+
+#[derive(Facet, Debug, Clone)]
+struct CurseforgeProjectFileHash {
+    #[facet(default)]
+    algo: Option<u32>,
+    #[facet(default)]
+    value: Option<String>,
 }
 
 #[derive(Facet, Debug, Clone)]
@@ -1110,6 +1149,118 @@ fn check_minecraft_version_metadata(
     Ok(())
 }
 
+fn validate_release_hashes(
+    mc: Option<String>,
+    project: Option<u64>,
+    api_key: Option<String>,
+    token: Option<String>,
+    op_secret: Option<String>,
+) -> eyre::Result<()> {
+    let project_id = resolve_project_id(project)?;
+
+    let repo_root = get_repo_root()?;
+    let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
+    let jar_dir = get_jar_dir()?;
+
+    let mod_version = read_mod_version(&gradle_properties)?;
+    let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
+    let jars = filter_release_jars_by_mc(all_jars, mc.as_deref())?;
+
+    let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
+    let core_client = build_core_http_client(&core_key)?;
+    let project_files = fetch_project_files(&core_client, project_id, &credential_source)?;
+
+    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    println!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
+
+    for jar in jars {
+        let mc_version = parse_mc_version_from_jar_name(&jar)?;
+        let local_bytes = std::fs::read(&jar)
+            .wrap_err_with(|| format!("Failed to read local jar for hashing: {}", jar.display()))?;
+        let local_sha1 = sha1_hex(&local_bytes);
+
+        let historical = find_latest_historical_file_for_mc(&project_files, &mc_version)?;
+        let historical_version = historical_mod_version(historical).ok_or_else(|| {
+            eyre::eyre!(
+                "Could not parse mod version from latest historical file {} for MC {}",
+                historical.id,
+                mc_version
+            )
+        })?;
+
+        if historical_version != mod_version {
+            eyre::bail!(
+                "Latest historical CurseForge file for MC {} was {}, expected {} (file id {}).",
+                mc_version,
+                historical_version,
+                mod_version,
+                historical.id
+            );
+        }
+
+        let remote_sha1 = find_sha1_hash(&historical.hashes).ok_or_else(|| {
+            eyre::eyre!(
+                "CurseForge file {} did not include a sha1 hash in metadata",
+                historical.id
+            )
+        })?;
+
+        if local_sha1 != remote_sha1 {
+            eyre::bail!(
+                "Hash mismatch (local vs remote metadata) for MC {} (file id {}).\nlocal sha1: {}\nremote sha1: {}",
+                mc_version,
+                historical.id,
+                local_sha1,
+                remote_sha1
+            );
+        }
+
+        let download_url = historical.download_url.as_deref().ok_or_else(|| {
+            eyre::eyre!(
+                "CurseForge file {} did not include a download URL",
+                historical.id
+            )
+        })?;
+
+        let downloaded_sha1 = download_sha1(&core_client, download_url)?;
+        if downloaded_sha1 != local_sha1 {
+            eyre::bail!(
+                "Hash mismatch (local vs downloaded) for MC {} (file id {}).\nlocal sha1: {}\ndownloaded sha1: {}",
+                mc_version,
+                historical.id,
+                local_sha1,
+                downloaded_sha1
+            );
+        }
+
+        let file_label = historical
+            .file_name
+            .as_deref()
+            .unwrap_or("<unknown>")
+            .to_string();
+
+        println!(
+            "{} {} {} {} {}",
+            style("✓", ANSI_BOLD_GREEN),
+            style(&mc_version, ANSI_BOLD_BLUE),
+            style("hash validated", ANSI_DIM),
+            historical.id,
+            style(&format!("({})", file_label), ANSI_DIM)
+        );
+    }
+
+    println!(
+        "{}",
+        style(
+            "Hash validation passed: downloaded CurseForge files match local release jars.",
+            ANSI_BOLD_GREEN
+        )
+    );
+
+    Ok(())
+}
+
 fn release_amend(
     project: Option<u64>,
     api_key: Option<String>,
@@ -1454,6 +1605,48 @@ fn fetch_game_versions(client: &Client) -> eyre::Result<Vec<CurseforgeGameVersio
     }
 
     facet_json::from_str(&body).wrap_err("Failed to parse game versions response JSON")
+}
+
+fn find_sha1_hash(hashes: &[CurseforgeProjectFileHash]) -> Option<String> {
+    hashes.iter().find_map(|hash| {
+        let is_sha1 = hash.algo == Some(1);
+        if !is_sha1 {
+            return None;
+        }
+
+        hash.value
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(|value| value.to_ascii_lowercase())
+    })
+}
+
+fn download_sha1(client: &Client, url: &str) -> eyre::Result<String> {
+    let response = client
+        .get(url)
+        .send()
+        .wrap_err_with(|| format!("Failed to download file from {url}"))?;
+
+    let status = response.status();
+    if !status.is_success() {
+        let body = response
+            .text()
+            .unwrap_or_else(|_| "<failed to read response body>".to_string());
+        eyre::bail!("Failed to download file from {} ({status}): {}", url, body);
+    }
+
+    let bytes = response
+        .bytes()
+        .wrap_err_with(|| format!("Failed to read downloaded bytes from {url}"))?;
+    Ok(sha1_hex(bytes.as_ref()))
+}
+
+fn sha1_hex(bytes: &[u8]) -> String {
+    let mut hasher = Sha1::new();
+    hasher.update(bytes);
+    let digest = hasher.finalize();
+    digest.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 fn build_game_version_index(
