@@ -20,6 +20,8 @@ D:/Repos/Minecraft/SFM/repos2/1.21.1  a5b79ec84 [1.21.1]
 
 The other branches' AGENTS.md files all point to this one, do not read those other agent files to save us some tokens.
 
+I work out of the 1.19.2 branch most of the time. Do NOT propose changes outside of the branch that's currently being worked on; the `sfm-propagate-changes.exe git merge` command will handle updating the other branches.
+
 ## 🛠️ Gradle Commands
 
 Gradle commands against a specific version should be run from the `platform/minecraft/` directory.
@@ -43,8 +45,6 @@ To run a command multiple versions, see `sfm-propagate-changes gradle`.
 
 ```pwsh
 ❯ sfm-propagate-changes.exe --help
-sfm-propagate-changes.exe 0.1.0
-
 A tool for propagating git changes across Minecraft version worktrees.
 This CLI manages merging changes from older Minecraft version branches
 to newer ones in a sequential manner.
@@ -67,22 +67,26 @@ OPTIONS:
             Generate shell completions.
 
 COMMANDS:
-    merge
-            Propagate changes by merging from older to newer version branches
     gradle
             Run arbitrary gradle task(s) for each worktree in strict sequence
     check
             Check workspace files for correctness
-    push
-            Push branches (runs `git push` in each worktree)
+    client
+            Client instance tracking and management commands
+    server
+            Server instance tracking and management commands
+    git
+            Git operation commands across all worktrees
     home
             Home directory related commands
     cache
             Cache directory related commands
+    curseforge
+            CurseForge release and file related commands
+    jar
+            Jar directory and release artifact related commands
     repo-root
             Repo root related commands
-    status
-            Show git status for all worktrees
 
 ❯ sfm-propagate-changes gradle --help
 sfm-propagate-changes.exe gradle
