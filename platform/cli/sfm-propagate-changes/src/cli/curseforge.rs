@@ -956,6 +956,42 @@ fn find_latest_historical_file_for_mc<'a>(
         .ok_or_else(|| eyre::eyre!("No historical project file found for MC {}", mc_version))
 }
 
+fn parse_mod_version_from_release_name(name: &str) -> Option<String> {
+    let trimmed = name.trim();
+    if let Some(without_jar) = trimmed.strip_suffix(".jar") {
+        let version = without_jar.rsplit('-').next()?;
+        if version
+            .chars()
+            .all(|character| character.is_ascii_digit() || character == '.')
+        {
+            return Some(version.to_string());
+        }
+    }
+
+    if let Some((_, remainder)) = trimmed.rsplit_once('v') {
+        let version = remainder.trim();
+        if version
+            .chars()
+            .all(|character| character.is_ascii_digit() || character == '.')
+        {
+            return Some(version.to_string());
+        }
+    }
+
+    None
+}
+
+fn historical_mod_version(file: &CurseforgeProjectFileItem) -> Option<String> {
+    file.file_name
+        .as_deref()
+        .and_then(parse_mod_version_from_release_name)
+        .or_else(|| {
+            file.display_name
+                .as_deref()
+                .and_then(parse_mod_version_from_release_name)
+        })
+}
+
 fn check_minecraft_version_metadata(
     mc: Option<String>,
     project: Option<u64>,
@@ -993,6 +1029,23 @@ fn check_minecraft_version_metadata(
 
     for plan in metadata_plans {
         let historical = find_latest_historical_file_for_mc(&project_files, &plan.mc_version)?;
+        let historical_version = historical_mod_version(historical).ok_or_else(|| {
+            eyre::eyre!(
+                "Could not parse mod version from latest historical file {} for MC {}",
+                historical.id,
+                plan.mc_version
+            )
+        })?;
+
+        if historical_version == mod_version {
+            eyre::bail!(
+                "Latest historical file already matches current mod version for MC {} (file id {}, version {}).\nThis release appears to already be published.",
+                plan.mc_version,
+                historical.id,
+                mod_version
+            );
+        }
+
         let expected = to_comparison_name_set(&plan.metadata_names);
         let historical_set = to_comparison_name_set(&historical.game_versions);
 
