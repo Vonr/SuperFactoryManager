@@ -139,6 +139,21 @@ pub enum CurseforgeReleaseCommand {
         #[facet(default, args::named)]
         dry_run: bool,
     },
+    /// Amend changelog for latest file per MC version in current release jars
+    Amend {
+        /// CurseForge project ID (defaults to configured default project)
+        #[facet(default, args::named)]
+        project: Option<u64>,
+        /// CurseForge Core API key; if omitted, CURSEFORGE_CORE_API_KEY is used
+        #[facet(default, args::named, rename = "api-key")]
+        api_key: Option<String>,
+        /// CurseForge API token; if omitted, CURSEFORGE_API_TOKEN is used, then 1Password lookup
+        #[facet(default, args::named)]
+        token: Option<String>,
+        /// 1Password secret reference used when credentials are omitted
+        #[facet(default, args::named, rename = "op-secret")]
+        op_secret: Option<String>,
+    },
 }
 
 /// CurseForge project subcommands
@@ -256,6 +271,12 @@ impl CurseforgeReleaseCommand {
                 op_secret,
                 dry_run,
             } => release_now(project, token, op_secret, dry_run),
+            Self::Amend {
+                project,
+                api_key,
+                token,
+                op_secret,
+            } => release_amend(project, api_key, token, op_secret),
         }
     }
 }
@@ -350,6 +371,17 @@ struct UploadMetadata {
     game_versions: Vec<u64>,
     #[facet(rename = "releaseType")]
     release_type: String,
+}
+
+#[derive(Facet, Debug, Clone)]
+struct CurseforgeAmendFilePayload {
+    #[facet(rename = "fileID")]
+    file_id: u64,
+    changelog: String,
+    #[facet(rename = "changelogType")]
+    changelog_type: String,
+    #[facet(rename = "displayName")]
+    display_name: String,
 }
 
 fn set_default_project_id(project: u64) -> eyre::Result<()> {
@@ -1003,6 +1035,143 @@ fn check_minecraft_version_metadata(
         "{}",
         style("Metadata check passed: computed metadata matches historical uploads.", ANSI_BOLD_GREEN)
     );
+
+    Ok(())
+}
+
+fn release_amend(
+    project: Option<u64>,
+    api_key: Option<String>,
+    token: Option<String>,
+    op_secret: Option<String>,
+) -> eyre::Result<()> {
+    let project_id = resolve_project_id(project)?;
+
+    let repo_root = get_repo_root()?;
+    let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
+    let changelog_path = repo_root
+        .join("platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml");
+    let jar_dir = get_jar_dir()?;
+
+    let mod_version = read_mod_version(&gradle_properties)?;
+    let changelog_section = read_changelog_section(&changelog_path, &mod_version)?;
+    let wrapped_changelog = format!("```\n{}\n```", changelog_section.trim());
+
+    let token_value = resolve_token(token.clone(), op_secret.clone())?;
+    let upload_client = build_http_client(&token_value)?;
+
+    let jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
+    let mut target_versions: Vec<(String, String)> = Vec::new();
+    for jar in jars {
+        let mc_version = parse_mc_version_from_jar_name(&jar)?;
+        let jar_name = jar
+            .file_name()
+            .and_then(OsStr::to_str)
+            .map(ToString::to_string)
+            .ok_or_else(|| eyre::eyre!("Invalid jar filename: {}", jar.display()))?;
+        if target_versions
+            .iter()
+            .all(|(existing_mc, _)| existing_mc != &mc_version)
+        {
+            target_versions.push((mc_version, jar_name));
+        }
+    }
+
+    let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
+    let client = build_core_http_client(&core_key)?;
+    let files = fetch_project_files(&client, project_id, &credential_source)?;
+
+    let mut file_targets: Vec<(String, u64, String)> = Vec::new();
+    for (mc_version, jar_name) in target_versions {
+        let file = find_latest_historical_file_for_mc(&files, &mc_version)?;
+        file_targets.push((mc_version, file.id, jar_name));
+    }
+
+    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    println!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
+    for (mc_version, file_id, jar_name) in &file_targets {
+        println!(
+            "  {} {} {} {} {} {}",
+            style("MC", ANSI_DIM),
+            style(mc_version, ANSI_BOLD_BLUE),
+            style("file id", ANSI_DIM),
+            file_id,
+            style("name", ANSI_DIM),
+            jar_name
+        );
+    }
+
+    let prompt = format!(
+        "{} {}",
+        style("Proceed to amend changelog on these files?", ANSI_BOLD_YELLOW),
+        style("(y/N)", ANSI_BOLD_YELLOW)
+    );
+    if !prompt_yes_no(&prompt)? {
+        println!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
+        return Ok(());
+    }
+
+    for (mc_version, file_id, jar_name) in &file_targets {
+        println!(
+            "{} {} {} {} {} {}",
+            style("Amending file", ANSI_BOLD_WHITE),
+            style(&file_id.to_string(), ANSI_BOLD_MAGENTA),
+            style("for MC", ANSI_DIM),
+            style(mc_version, ANSI_BOLD_BLUE),
+            style("as", ANSI_DIM),
+            jar_name
+        );
+        amend_file_changelog(&upload_client, project_id, *file_id, jar_name, &wrapped_changelog)?;
+    }
+
+    println!(
+        "{}",
+        style("CurseForge release changelog amend complete.", ANSI_BOLD_GREEN)
+    );
+
+    Ok(())
+}
+
+fn amend_file_changelog(
+    client: &Client,
+    project_id: u64,
+    file_id: u64,
+    display_name: &str,
+    changelog: &str,
+) -> eyre::Result<()> {
+    let payload = CurseforgeAmendFilePayload {
+        file_id,
+        changelog: changelog.to_string(),
+        changelog_type: "markdown".to_string(),
+        display_name: display_name.to_string(),
+    };
+    let body = facet_json::to_string(&payload)
+        .wrap_err("Failed to encode amend changelog payload JSON")?;
+
+    let form = multipart::Form::new().text("metadata", body);
+
+    let url = format!("{CURSEFORGE_API_ROOT}/projects/{project_id}/update-file");
+    let response = client
+        .post(&url)
+        .multipart(form)
+        .send()
+        .wrap_err_with(|| format!("Failed to amend CurseForge file {file_id}"))?;
+
+    let status = response.status();
+    let response_body = response
+        .text()
+        .wrap_err("Failed to read amend file response body")?;
+
+    if !status.is_success() {
+        eyre::bail!(
+            "CurseForge amend failed for file {} ({status}): {response_body}",
+            file_id
+        );
+    }
+
+    let _parsed: CurseforgeUploadResponse = facet_json::from_str(&response_body)
+        .wrap_err("Failed to parse amend response JSON")?;
 
     Ok(())
 }
