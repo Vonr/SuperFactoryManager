@@ -94,9 +94,38 @@ pub enum CurseforgeCommand {
         #[facet(args::subcommand)]
         command: CurseforgeMinecraftCommand,
     },
+    /// Release metadata validation and upload operations
+    Release {
+        /// Release subcommand
+        #[facet(args::subcommand)]
+        command: CurseforgeReleaseCommand,
+    },
+}
+
+/// CurseForge release subcommands
+#[derive(Facet, Debug)]
+#[repr(u8)]
+pub enum CurseforgeReleaseCommand {
+    /// Verify computed release metadata against historical project uploads
+    Check {
+        /// Minecraft version filter expression list, comma-separated (example: "=1.20.1" or ">=1.19.2,<=1.21.1")
+        #[facet(default, args::named)]
+        mc: Option<String>,
+        /// CurseForge project ID (defaults to configured default project)
+        #[facet(default, args::named)]
+        project: Option<u64>,
+        /// CurseForge Core API key; if omitted, CURSEFORGE_CORE_API_KEY is used
+        #[facet(default, args::named, rename = "api-key")]
+        api_key: Option<String>,
+        /// CurseForge API token; if omitted, CURSEFORGE_API_TOKEN is used, then 1Password lookup
+        #[facet(default, args::named)]
+        token: Option<String>,
+        /// 1Password secret reference used when credentials are omitted
+        #[facet(default, args::named, rename = "op-secret")]
+        op_secret: Option<String>,
+    },
     /// Upload each release jar to CurseForge according to release-process rules
-    #[facet(rename = "release-now")]
-    ReleaseNow {
+    Now {
         /// CurseForge project ID (defaults to configured default project)
         #[facet(default, args::named)]
         project: Option<u64>,
@@ -193,24 +222,6 @@ pub enum CurseforgeMinecraftVersionCommand {
         #[facet(default, args::named, rename = "op-secret")]
         op_secret: Option<String>,
     },
-    /// Verify computed release metadata against historical project uploads
-    Check {
-        /// Minecraft version filter expression list, comma-separated (example: "=1.20.1" or ">=1.19.2,<=1.21.1")
-        #[facet(default, args::named)]
-        mc: Option<String>,
-        /// CurseForge project ID (defaults to configured default project)
-        #[facet(default, args::named)]
-        project: Option<u64>,
-        /// CurseForge Core API key; if omitted, CURSEFORGE_CORE_API_KEY is used
-        #[facet(default, args::named, rename = "api-key")]
-        api_key: Option<String>,
-        /// CurseForge API token; if omitted, CURSEFORGE_API_TOKEN is used, then 1Password lookup
-        #[facet(default, args::named)]
-        token: Option<String>,
-        /// 1Password secret reference used when credentials are omitted
-        #[facet(default, args::named, rename = "op-secret")]
-        op_secret: Option<String>,
-    },
 }
 
 impl CurseforgeCommand {
@@ -221,7 +232,25 @@ impl CurseforgeCommand {
         match self {
             Self::Project { command } => command.invoke(),
             Self::Minecraft { command } => command.invoke(),
-            Self::ReleaseNow {
+            Self::Release { command } => command.invoke(),
+        }
+    }
+}
+
+impl CurseforgeReleaseCommand {
+    /// # Errors
+    ///
+    /// This function will return an error if the subcommand fails.
+    pub fn invoke(self) -> eyre::Result<()> {
+        match self {
+            Self::Check {
+                mc,
+                project,
+                api_key,
+                token,
+                op_secret,
+            } => check_minecraft_version_metadata(mc, project, api_key, token, op_secret),
+            Self::Now {
                 project,
                 token,
                 op_secret,
@@ -1378,13 +1407,6 @@ impl CurseforgeMinecraftVersionCommand {
                 let mc = mc.unwrap_or_else(|| ">=1.19.2,<=1.21.1".to_string());
                 list_minecraft_versions(&mc, token, op_secret)
             }
-            Self::Check {
-                mc,
-                project,
-                api_key,
-                token,
-                op_secret,
-            } => check_minecraft_version_metadata(mc, project, api_key, token, op_secret),
         }
     }
 }

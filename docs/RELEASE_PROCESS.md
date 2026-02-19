@@ -119,9 +119,13 @@ This phase creates a GitHub release with the jar files uploaded as attachments.
 
 This phase makes the new builds available for download on CurseForge.
 
-1. Run CurseForge upload command from repo root:
+1. Run CurseForge metadata check command from repo root:
     ```pwsh
-    sfm-propagate-changes.exe curseforge release-now
+    sfm-propagate-changes.exe curseforge release check
+    ```
+2. Run CurseForge upload command from repo root:
+    ```pwsh
+    sfm-propagate-changes.exe curseforge release now
     ```
 
 ## Phase 10 - Publishing to Modrinth
