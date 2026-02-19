@@ -102,56 +102,38 @@ The following steps must run for each MC version.
 
 ## Phase 7 - Tagging
 
-By this phase, the mod code is locked in so a new git tag should be created.
-
 1. Run `sfm-propagate-changes.exe git merge`
 2. Run `sfm-propagate-changes.exe git tag`
 2. Run `sfm-propagate-changes.exe git push --tags`
 
 ## Phase 8 - Publishing to GitHub
 
+This phase creates a GitHub release with the jar files uploaded as attachments.
+
 1. Run GitHub release script from repo root
     ```pwsh
     pwsh -File ./platform/pwsh/github-release.ps1
     ```
 
-## Phase 9 - Publishing (WIP)
+## Phase 9 - Publishing to CurseForge
 
-These steps finalize the release to make the built jar file available to people for download.
+This phase makes the new builds available for download on CurseForge.
 
-(WIP - The rest of this phase is from an older version of this document and needs to be revamped with new `sfm-propagate-changes.exe` commands)
+1. Run CurseForge upload command from repo root:
+    ```pwsh
+    sfm-propagate-changes.exe curseforge release-now
+    ```
 
-```pwsh
-
-28. For each version:
-    29. CurseForge -> Upload file
-"https://authors.curseforge.com/#/projects/306935/files/create"
-    Environment=Server+Client
-    Modloader=match mc version {
-        ..1.20   -> Forge
-        1.20.1   -> Forge+NeoForge
-        1.20.2.. -> NeoForge
-    }
-    Java=match mc version {
-        ..1.20.4 -> Java 17
-        1.21.. -> Java 21
-    }
-    Minecraft=$version
-    Changelog= <<
-        ```
-        $section from changelog.sfml
-        ```
-    >>
+## Phase 10 - Publishing to Modrinth
 
 30. For each version:
     31. Modrinth -> Versions -> Drag n drop
 "https://modrinth.com/mod/super-factory-manager/versions"
     Adjust populated version numbers
     Changelog=same as above
-```
 
 
-## Phase ? - Milestone Cleanup
+## Phase 11 - Milestone Cleanup
 
 This phase manages identifying the GitHub milestone for this release and ensuring that the related issues are closed.
 
