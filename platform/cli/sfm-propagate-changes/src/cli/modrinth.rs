@@ -97,6 +97,18 @@ pub enum ModrinthReleaseCommand {
         #[facet(default, args::named)]
         dry_run: bool,
     },
+    /// Amend changelog for latest version per MC in current release jars
+    Amend {
+        /// Modrinth project id/slug (defaults to Super Factory Manager)
+        #[facet(default, args::named)]
+        project: Option<String>,
+        /// Modrinth API token; if omitted, MODRINTH_TOKEN is used, then 1Password lookup
+        #[facet(default, args::named)]
+        token: Option<String>,
+        /// 1Password secret reference used when token is omitted
+        #[facet(default, args::named, rename = "op-secret")]
+        op_secret: Option<String>,
+    },
 }
 
 impl ModrinthCommand {
@@ -123,6 +135,11 @@ impl ModrinthReleaseCommand {
                 op_secret,
                 dry_run,
             } => release_now(project, token, op_secret, dry_run),
+            Self::Amend {
+                project,
+                token,
+                op_secret,
+            } => release_amend(project, token, op_secret),
         }
     }
 }
@@ -401,12 +418,10 @@ fn release_now(
 
     let repo_root = get_repo_root()?;
     let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
-    let changelog_path = repo_root
-        .join("platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml");
     let jar_dir = get_jar_dir()?;
 
     let mod_version = read_mod_version(&gradle_properties)?;
-    let changelog_section = read_changelog_section(&changelog_path, &mod_version)?;
+    let changelog_section = compute_wrapped_release_changelog(&repo_root, &mod_version)?;
     let jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
     let plans = build_release_plans(&jars, &mod_version)?;
 
@@ -520,6 +535,133 @@ fn release_now(
         println!(
             "{}",
             style("Modrinth release upload complete.", ANSI_BOLD_GREEN)
+        );
+    }
+
+    Ok(())
+}
+
+fn release_amend(
+    project: Option<String>,
+    token: Option<String>,
+    op_secret: Option<String>,
+) -> eyre::Result<()> {
+    let project_id = resolve_project_id(project)?;
+
+    let repo_root = get_repo_root()?;
+    let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
+    let jar_dir = get_jar_dir()?;
+
+    let mod_version = read_mod_version(&gradle_properties)?;
+    let wrapped_changelog = compute_wrapped_release_changelog(&repo_root, &mod_version)?;
+
+    let token_value = resolve_token(token, op_secret)?;
+    let client = build_http_client(Some(&token_value))?;
+
+    let jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
+    let mut target_versions: Vec<(String, String)> = Vec::new();
+    for jar in jars {
+        let mc_version = parse_mc_version_from_jar_name(&jar)?;
+        let jar_name = jar
+            .file_name()
+            .and_then(OsStr::to_str)
+            .map(ToString::to_string)
+            .ok_or_else(|| eyre::eyre!("Invalid jar filename: {}", jar.display()))?;
+
+        if target_versions
+            .iter()
+            .all(|(existing_mc, _)| existing_mc != &mc_version)
+        {
+            target_versions.push((mc_version, jar_name));
+        }
+    }
+
+    let versions = fetch_project_versions(&client, &project_id)?;
+    let mut amend_targets: Vec<(String, String, String)> = Vec::new();
+    for (mc_version, jar_name) in target_versions {
+        let version = find_latest_historical_version_for_mc(&versions, &mc_version)?;
+        amend_targets.push((mc_version, version.id.clone(), jar_name));
+    }
+
+    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    println!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
+    for (mc_version, version_id, jar_name) in &amend_targets {
+        println!(
+            "  {} {} {} {} {} {}",
+            style("MC", ANSI_DIM),
+            style(mc_version, ANSI_BOLD_BLUE),
+            style("version id", ANSI_DIM),
+            version_id,
+            style("name", ANSI_DIM),
+            jar_name
+        );
+    }
+
+    let prompt = format!(
+        "{} {}",
+        style("Proceed to amend changelog on these versions?", ANSI_BOLD_YELLOW),
+        style("(y/N)", ANSI_BOLD_YELLOW)
+    );
+    if !prompt_yes_no(&prompt)? {
+        println!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
+        return Ok(());
+    }
+
+    for (mc_version, version_id, jar_name) in &amend_targets {
+        println!(
+            "{} {} {} {} {} {}",
+            style("Amending version", ANSI_BOLD_WHITE),
+            style(version_id, ANSI_BOLD_MAGENTA),
+            style("for MC", ANSI_DIM),
+            style(mc_version, ANSI_BOLD_BLUE),
+            style("as", ANSI_DIM),
+            jar_name
+        );
+
+        amend_version_changelog(&client, version_id, &wrapped_changelog)?;
+    }
+
+    println!(
+        "{}",
+        style("Modrinth release changelog amend complete.", ANSI_BOLD_GREEN)
+    );
+
+    Ok(())
+}
+
+#[derive(Facet, Debug, Clone)]
+struct ModrinthAmendVersionPayload {
+    changelog: String,
+}
+
+fn amend_version_changelog(client: &Client, version_id: &str, changelog: &str) -> eyre::Result<()> {
+    let payload = ModrinthAmendVersionPayload {
+        changelog: changelog.to_string(),
+    };
+    let body = facet_json::to_string(&payload)
+        .wrap_err("Failed to encode Modrinth amend changelog payload JSON")?;
+
+    let url = format!("{MODRINTH_API_ROOT}/version/{version_id}");
+    let response = client
+        .patch(&url)
+        .header("Content-Type", "application/json")
+        .body(body)
+        .send()
+        .wrap_err_with(|| format!("Failed to amend Modrinth version {version_id}"))?;
+
+    let status = response.status();
+    let response_body = response
+        .text()
+        .wrap_err("Failed to read amend version response body")?;
+
+    debug!(response_body, url, ?status);
+
+    if !status.is_success() {
+        eyre::bail!(
+            "Modrinth amend failed for version {} ({status}): {}",
+            version_id,
+            response_body
         );
     }
 
@@ -855,4 +997,11 @@ fn parse_mc_version_from_jar_name(jar_path: &Path) -> eyre::Result<String> {
     }
 
     Ok(version.to_string())
+}
+
+fn compute_wrapped_release_changelog(repo_root: &Path, mod_version: &str) -> eyre::Result<String> {
+    let changelog_path =
+        repo_root.join("platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml");
+    let changelog_section = read_changelog_section(&changelog_path, mod_version)?;
+    Ok(format!("```\n{}\n```", changelog_section.trim()))
 }
