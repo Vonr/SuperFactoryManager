@@ -2,7 +2,6 @@
 //! https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api
 //! https://www.curseforge.com/minecraft/mc-mods/super-factory-manager Project ID - 306935
 
-use tracing::debug;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
 use crate::mc_version_filter::McVersionFilter;
@@ -24,6 +23,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
+use tracing::debug;
 
 const CURSEFORGE_API_ROOT: &str = "https://minecraft.curseforge.com/api";
 const CURSEFORGE_CORE_API_ROOT: &str = "https://api.curseforge.com/v1";
@@ -508,10 +508,9 @@ fn resolve_core_api_key(
             .map(|value| (value, format!("1Password ({secret_reference})")));
     }
 
-    if let Ok(value) = read_secret_from_1password(
-        DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE,
-        "Core API key",
-    ) {
+    if let Ok(value) =
+        read_secret_from_1password(DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE, "Core API key")
+    {
         return Ok((
             value,
             format!("1Password ({DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE})"),
@@ -519,10 +518,7 @@ fn resolve_core_api_key(
     }
 
     if let Ok(value) = read_secret_from_1password(DEFAULT_OP_SECRET_REFERENCE, "Core API key") {
-        return Ok((
-            value,
-            format!("1Password ({DEFAULT_OP_SECRET_REFERENCE})"),
-        ));
+        return Ok((value, format!("1Password ({DEFAULT_OP_SECRET_REFERENCE})")));
     }
 
     if let Some(value) = token {
@@ -565,7 +561,11 @@ fn build_core_http_client(api_key: &str) -> eyre::Result<Client> {
         .wrap_err("Failed to build Core API HTTP client")
 }
 
-fn list_minecraft_versions(mc_filter_text: &str, token: Option<String>, op_secret: Option<String>) -> eyre::Result<()> {
+fn list_minecraft_versions(
+    mc_filter_text: &str,
+    token: Option<String>,
+    op_secret: Option<String>,
+) -> eyre::Result<()> {
     let token_value = resolve_token(token, op_secret)?;
     let client = build_http_client(&token_value)?;
 
@@ -663,7 +663,9 @@ fn fetch_project_files(
         .wrap_err_with(|| format!("Failed to query project files: {url}"))?;
 
     let status = response.status();
-    let body = response.text().wrap_err("Failed to read project files response")?;
+    let body = response
+        .text()
+        .wrap_err("Failed to read project files response")?;
     debug!(body, url, ?status);
 
     if !status.is_success() {
@@ -675,9 +677,7 @@ fn fetch_project_files(
             );
         }
 
-        eyre::bail!(
-            "CurseForge project files API failed ({status}): {body}",
-        );
+        eyre::bail!("CurseForge project files API failed ({status}): {body}",);
     }
 
     if let Ok(items) = facet_json::from_str::<Vec<CurseforgeProjectFileItem>>(&body) {
@@ -718,7 +718,11 @@ fn release_now(
 
     println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
     println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    println!("{} {}", style("Jar dir:", ANSI_BOLD_CYAN), jar_dir.display());
+    println!(
+        "{} {}",
+        style("Jar dir:", ANSI_BOLD_CYAN),
+        jar_dir.display()
+    );
     if dry_run {
         println!(
             "{} {}",
@@ -811,11 +815,13 @@ fn release_now(
         let plan = upload_plans
             .as_ref()
             .and_then(|plans| plans.iter().find(|plan| plan.jar_path == jar))
-            .ok_or_else(|| eyre::eyre!("internal error: missing upload plan for {}", jar.display()))?;
+            .ok_or_else(|| {
+                eyre::eyre!("internal error: missing upload plan for {}", jar.display())
+            })?;
 
-        let (client, _) = game_version_index
-            .as_ref()
-            .ok_or_else(|| eyre::eyre!("internal error: missing CurseForge client for non-dry-run upload"))?;
+        let (client, _) = game_version_index.as_ref().ok_or_else(|| {
+            eyre::eyre!("internal error: missing CurseForge client for non-dry-run upload")
+        })?;
 
         let uploaded_id = upload_project_file(client, project_id, &jar, &plan.metadata)?;
         println!(
@@ -919,8 +925,13 @@ fn filter_release_jars_by_mc(
     let mut filtered = Vec::new();
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(&jar)?;
-        let parsed = parse_version(&mc_version)
-            .ok_or_else(|| eyre::eyre!("Could not parse MC version '{}' from {}", mc_version, jar.display()))?;
+        let parsed = parse_version(&mc_version).ok_or_else(|| {
+            eyre::eyre!(
+                "Could not parse MC version '{}' from {}",
+                mc_version,
+                jar.display()
+            )
+        })?;
         if filter.matches_parsed(parsed) {
             filtered.push(jar);
         }
@@ -1058,7 +1069,11 @@ fn check_minecraft_version_metadata(
                 historical.id,
                 plan.metadata_names.join(", "),
                 historical.game_versions.join(", "),
-                if missing.is_empty() { "<none>".to_string() } else { missing.join(", ") },
+                if missing.is_empty() {
+                    "<none>".to_string()
+                } else {
+                    missing.join(", ")
+                },
                 if unexpected.is_empty() {
                     "<none>".to_string()
                 } else {
@@ -1086,7 +1101,10 @@ fn check_minecraft_version_metadata(
 
     println!(
         "{}",
-        style("Metadata check passed: computed metadata matches historical uploads.", ANSI_BOLD_GREEN)
+        style(
+            "Metadata check passed: computed metadata matches historical uploads.",
+            ANSI_BOLD_GREEN
+        )
     );
 
     Ok(())
@@ -1157,7 +1175,10 @@ fn release_amend(
 
     let prompt = format!(
         "{} {}",
-        style("Proceed to amend changelog on these files?", ANSI_BOLD_YELLOW),
+        style(
+            "Proceed to amend changelog on these files?",
+            ANSI_BOLD_YELLOW
+        ),
         style("(y/N)", ANSI_BOLD_YELLOW)
     );
     if !prompt_yes_no(&prompt)? {
@@ -1175,12 +1196,21 @@ fn release_amend(
             style("as", ANSI_DIM),
             jar_name
         );
-        amend_file_changelog(&upload_client, project_id, *file_id, jar_name, &wrapped_changelog)?;
+        amend_file_changelog(
+            &upload_client,
+            project_id,
+            *file_id,
+            jar_name,
+            &wrapped_changelog,
+        )?;
     }
 
     println!(
         "{}",
-        style("CurseForge release changelog amend complete.", ANSI_BOLD_GREEN)
+        style(
+            "CurseForge release changelog amend complete.",
+            ANSI_BOLD_GREEN
+        )
     );
 
     Ok(())
@@ -1223,8 +1253,8 @@ fn amend_file_changelog(
         );
     }
 
-    let _parsed: CurseforgeUploadResponse = facet_json::from_str(&response_body)
-        .wrap_err("Failed to parse amend response JSON")?;
+    let _parsed: CurseforgeUploadResponse =
+        facet_json::from_str(&response_body).wrap_err("Failed to parse amend response JSON")?;
 
     Ok(())
 }
@@ -1235,19 +1265,24 @@ fn upload_project_file(
     jar_path: &Path,
     metadata: &UploadMetadata,
 ) -> eyre::Result<u64> {
-    let metadata_json = facet_json::to_string(metadata).wrap_err("Failed to encode upload metadata JSON")?;
+    let metadata_json =
+        facet_json::to_string(metadata).wrap_err("Failed to encode upload metadata JSON")?;
 
     let form = multipart::Form::new()
         .text("metadata", metadata_json)
         .file("file", jar_path)
-        .wrap_err_with(|| format!("Failed to attach jar file to upload form: {}", jar_path.display()))?;
+        .wrap_err_with(|| {
+            format!(
+                "Failed to attach jar file to upload form: {}",
+                jar_path.display()
+            )
+        })?;
 
     let url = format!("{CURSEFORGE_API_ROOT}/projects/{project_id}/upload-file");
-    let response = client
-        .post(&url)
-        .multipart(form)
-        .send()
-        .wrap_err_with(|| format!("Failed to upload jar to CurseForge: {}", jar_path.display()))?;
+    let response =
+        client.post(&url).multipart(form).send().wrap_err_with(|| {
+            format!("Failed to upload jar to CurseForge: {}", jar_path.display())
+        })?;
 
     let status = response.status();
     let body = response
@@ -1408,7 +1443,9 @@ fn fetch_game_versions(client: &Client) -> eyre::Result<Vec<CurseforgeGameVersio
         .wrap_err_with(|| format!("Failed to query game versions: {url}"))?;
 
     let status = response.status();
-    let body = response.text().wrap_err("Failed to read game versions response")?;
+    let body = response
+        .text()
+        .wrap_err("Failed to read game versions response")?;
 
     debug!(body, url, ?status);
 
@@ -1495,9 +1532,9 @@ fn resolve_minecraft_version_id(
     minecraft_version: &str,
 ) -> eyre::Result<u64> {
     let key = normalize_version_key(minecraft_version);
-    let candidates = game_version_index
-        .get(&key)
-        .ok_or_else(|| eyre::eyre!("Could not find required Minecraft version '{minecraft_version}'"))?;
+    let candidates = game_version_index.get(&key).ok_or_else(|| {
+        eyre::eyre!("Could not find required Minecraft version '{minecraft_version}'")
+    })?;
 
     let matches: Vec<&CurseforgeGameVersion> = candidates
         .iter()
@@ -1564,17 +1601,18 @@ fn resolve_game_version_ids(
 }
 
 fn normalize_version_key(input: &str) -> String {
-    input
-        .trim()
-        .to_ascii_lowercase()
-        .replace([' ', '_'], "-")
+    input.trim().to_ascii_lowercase().replace([' ', '_'], "-")
 }
 
 fn game_version_names_for_release(mc_version: &str) -> eyre::Result<Vec<String>> {
     let parsed = parse_version(mc_version)
         .ok_or_else(|| eyre::eyre!("Could not parse MC version '{mc_version}'"))?;
 
-    let mut names = vec!["Client".to_string(), "Server".to_string(), mc_version.to_string()];
+    let mut names = vec![
+        "Client".to_string(),
+        "Server".to_string(),
+        mc_version.to_string(),
+    ];
     names.extend(loader_names_for(parsed).into_iter().map(str::to_string));
     names.push(java_version_name_for(parsed).to_string());
     Ok(names)
