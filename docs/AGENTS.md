@@ -20,6 +20,11 @@ D:/Repos/Minecraft/SFM/repos2/1.21.1  a5b79ec84 [1.21.1]
 
 The other branches' AGENTS.md files all point to this one, do not read those other agent files to save us some tokens.
 
+
+## The Golden Rule
+
+> Work only on the oldest version/branch that needs attention; `sfm-propagate-changes.exe git merge` will handle updating the other branches.
+
 I work out of the 1.19.2 branch most of the time. Do NOT propose changes outside of the branch that's currently being worked on; the `sfm-propagate-changes.exe git merge` command will handle updating the other branches.
 
 ## 🛠️ Gradle Commands
