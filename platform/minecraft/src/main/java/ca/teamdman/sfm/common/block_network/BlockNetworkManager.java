@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraftforge.event.level.ChunkEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -60,18 +61,79 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
         return blockPosMap;
     }
 
-    public void clearChunk(
+    /// MUST be called in response to {@link ChunkEvent.Unload} events.
+    public void purgeChunk(
             LEVEL level,
             ChunkPos chunkPos
     ) {
+        // GET THE NETWORKS IN THE CHUNK IF ANY
 
-        ChunkPosMap<Set<NETWORK>> levelChunkPosMap = networksByLevelChunk.get(level);
-        if (levelChunkPosMap == null) return;
-        Set<NETWORK> networksForChunk = levelChunkPosMap.get(chunkPos);
-        if (networksForChunk == null) return;
-        for (NETWORK network : networksForChunk) {
-            network.purgeChunk(chunkPos);
+        @Nullable ChunkPosMap<Set<NETWORK>> levelChunkPosMap = networksByLevelChunk.get(level);
+        if (levelChunkPosMap == null) return; // this level may have zero networks
+
+        @Nullable Collection<NETWORK> networksForChunk = levelChunkPosMap.get(chunkPos);
+        if (networksForChunk == null) return; // this chunk may have zero networks
+        networksForChunk = new ArrayList<>(networksForChunk); // mitigate concurrent modification problems
+        long chunkPosLong = chunkPos.toLong();
+
+        @Nullable BlockPosMap<NETWORK> levelBlockPosMap = networksByLevelBlockPos.get(level);
+        if (levelBlockPosMap == null) { // must exist after previous checks passed
+            throw new IllegalStateException("Level "
+                                            + level
+                                            + " has no block position lookup after validating networksByLevelChunk entry exists");
         }
+
+        @Nullable Set<NETWORK> networksInLevel = networksByLevel.get(level);
+        if (networksInLevel == null) { // must exist after previous checks passed
+            throw new IllegalStateException("Level "
+                                            + level
+                                            + " has no network lookup after validating networksByLevelChunk entry exists");
+        }
+
+        // FOR EACH NETWORK:
+        // PURGE THE CHUNK FROM THE NETWORK'S INTERNAL REPRESENTATION
+        // PURGE THE CHUNK FROM THE BLOCK NETWORK MANAGER'S STATE
+
+        for (NETWORK network : networksForChunk) {
+            @Nullable BlockPosSet networkMemberPositionsInChunk = network
+                    .memberBlockPositionsByChunk()
+                    .get(chunkPosLong);
+            if (networkMemberPositionsInChunk == null) {
+                throw new IllegalStateException("Network "
+                                                + network
+                                                + " has no member positions in chunk "
+                                                + chunkPos
+                                                + " after validating networksByLevelChunk entry exists");
+            }
+
+            BlockPosSet memberPositionsInChunkSnapshot = new BlockPosSet(networkMemberPositionsInChunk);
+
+            // Notify the network to update its internal representation
+            network.purgeChunk(chunkPos);
+
+            // Bulk remove position lookups for this chunk from the block network manager's state
+            levelBlockPosMap.keySet().removeAll(memberPositionsInChunkSnapshot);
+
+            // If the network is now empty, remove it from level tracking
+            if (network.isEmpty()) {
+                networksInLevel.remove(network);
+            }
+        }
+
+        // The cleared chunk no longer tracks any networks
+        levelChunkPosMap.remove(chunkPosLong);
+
+        // Clean up emptied level maps
+        if (levelBlockPosMap.isEmpty()) {
+            networksByLevelBlockPos.remove(level);
+        }
+        if (levelChunkPosMap.isEmpty()) {
+            networksByLevelChunk.remove(level);
+        }
+        if (networksInLevel.isEmpty()) {
+            networksByLevel.remove(level);
+        }
+
         onChange("Cleared chunk at " + chunkPos);
     }
 
@@ -601,6 +663,7 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
 
     /// Remove the lookup table entries for the given position.
     /// This DOES NOT perform network splitting!
+    /// This DOES NOT call {@link #onChange}!
     private void untrackMemberFromNetwork(
             BlockPos memberBlockPos,
             NETWORK network
