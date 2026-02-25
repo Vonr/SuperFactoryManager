@@ -12,7 +12,6 @@ import ca.teamdman.sfm.common.registry.registration.SFMPackets;
 import ca.teamdman.sfm.common.util.MCVersionDependentBehaviour;
 import ca.teamdman.sfm.common.util.SFMEnvironmentUtils;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -172,7 +171,7 @@ public class SFMCommand {
         event.getDispatcher().register(command);
     }
 
-        private static int giveKitToPlayers(CommandSourceStack source, Collection<ServerPlayer> targets) throws CommandSyntaxException {
+        private static int giveKitToPlayers(CommandSourceStack source, Collection<ServerPlayer> targets) {
                 List<ItemStack> kitItems = List.of(
                                 new ItemStack(SFMItems.LABEL_GUN.get()),
                                 new ItemStack(SFMItems.MANAGER.get()),
@@ -219,7 +218,7 @@ public class SFMCommand {
         BlockPos startPos = new BlockPos(sourcePos.getX(), surfaceY, sourcePos.getZ() + 3);
 
         GameTestRunner.clearMarkers(level);
-        runTests(source, matchingTests, startPos, level);
+        runTests(matchingTests, startPos, level);
 
         sendSuccess(
                 source,
@@ -229,7 +228,7 @@ public class SFMCommand {
     }
 
     @MCVersionDependentBehaviour
-    private static void runTests(CommandSourceStack source, List<TestFunction> matchingTests, BlockPos startPos, ServerLevel level) {
+    private static void runTests(List<TestFunction> matchingTests, BlockPos startPos, ServerLevel level) {
         GameTestRunner.runTests(
                 matchingTests,
                 startPos,
