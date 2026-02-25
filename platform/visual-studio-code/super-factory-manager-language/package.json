@@ -252,9 +252,11 @@
     ]
   },
   "devDependencies": {
+    "antlr4ts-cli": "^0.5.0-alpha.4",
     "@types/node": "^25.2.2",
     "@types/vscode": "^1.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vsce": "^2.15.0"
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -266,8 +268,6 @@
   },
   "dependencies": {
     "antlr4ts": "^0.5.0-alpha.4",
-    "antlr4ts-cli": "^0.5.0-alpha.4",
-    "axios": "^1.13.5",
-    "vsce": "^2.15.0"
+    "axios": "^1.13.5"
   }
 }
