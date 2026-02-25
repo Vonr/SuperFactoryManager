@@ -43,16 +43,6 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
         this.networkConstructor = networkConstructor;
     }
 
-    /// Called when the network structure changes.
-    /// Override to add custom behavior like additional logging.
-    /// Default implementation prints diagnostics and asserts invariants in IDE.
-    protected void onChange() {
-        printChangeDiagnostics();
-        if (SFMEnvironmentUtils.isInIDE()) {
-            assertInvariants();
-        }
-    }
-
     public @Nullable NETWORK getNetwork(
             LEVEL level,
             BlockPos blockPos
@@ -82,7 +72,7 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
         for (NETWORK network : networksForChunk) {
             network.purgeChunk(chunkPos);
         }
-        onChange();
+        onChange("Cleared chunk at " + chunkPos);
     }
 
     public @Nullable NETWORK getOrRegisterNetworkFromMemberPosition(
@@ -160,7 +150,7 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
             });
         }
 
-        onChange();
+        onChange("Added member to network at " + memberBlockPos);
         return resultNetwork;
     }
 
@@ -196,7 +186,7 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
             if (SFMEnvironmentUtils.isInIDE()) {
                 assertNetworkForgotten(oldNetwork);
             }
-            onChange();
+            onChange("Removed member at " + memberBlockPos + " and cleared oversized network");
             return List.of();
         }
 
@@ -215,10 +205,9 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
             assertNetworkForgotten(oldNetwork);
         }
 
-        onChange();
+        onChange("Removed member from network at " + memberBlockPos);
         return resultingNetworks;
     }
-
 
     public void assertNetworkForgotten(NETWORK network) {
 
@@ -351,7 +340,7 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
         networksByLevelBlockPos.remove(level);
         networksByLevelChunk.remove(level);
         networksByLevel.remove(level);
-        onChange();
+        onChange("Cleared level " + level);
     }
 
     public void clear() {
@@ -359,7 +348,7 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
         networksByLevelBlockPos.clear();
         networksByLevelChunk.clear();
         networksByLevel.clear();
-        onChange();
+        onChange("Cleared all levels");
     }
 
     public void printDebugInfo() {
@@ -493,32 +482,29 @@ public class BlockNetworkManager<LEVEL, T, NETWORK extends BlockNetwork<LEVEL, T
                 networksByLevel.remove(level);
             }
         }
-        onChange();
+        onChange("Untracked network " + Integer.toHexString(System.identityHashCode(network)) + " from level " + level);
     }
 
-    private void printChangeDiagnostics() {
+    /// Called when the network structure changes.
+    /// Override to add custom behavior like additional logging.
+    /// Default implementation prints diagnostics and asserts invariants in IDE.
+    protected void onChange(String changeDescription) {
 
-        boolean enabled = false;
+        printChangeDiagnostics(changeDescription);
+        if (SFMEnvironmentUtils.isInIDE()) {
+            assertInvariants();
+        }
+    }
+
+    private void printChangeDiagnostics(String changeDescription) {
+
+        boolean enabled = true;
         if (!enabled) return;
         if (!SFMEnvironmentUtils.isInIDE()) return;
-        SFM.LOGGER.info("Network lookup changed");
-        SFM.LOGGER.info("NETWORKS_BY_LEVEL:");
-        for (Map.Entry<LEVEL, Set<NETWORK>> entry : networksByLevel.entrySet()) {
-            LEVEL level = entry.getKey();
-            Set<NETWORK> networks = entry.getValue();
-            SFM.LOGGER.debug("Level {} has {} networks", level, networks.size());
-            StringBuilder builder = new StringBuilder();
-            for (NETWORK network : networks) {
-                builder.append(network.members().size()).append(" members; ");
-            }
-            SFM.LOGGER.debug(builder.toString());
-        }
-        SFM.LOGGER.info("NETWORKS_BY_CABLE_POSITION:");
-        for (Map.Entry<LEVEL, BlockPosMap<NETWORK>> entry : networksByLevelBlockPos.entrySet()) {
-            LEVEL level = entry.getKey();
-            BlockPosMap<NETWORK> networksByCablePosition = entry.getValue();
-            SFM.LOGGER.debug("Level {} has {} cables", level, networksByCablePosition.size());
-        }
+        SFM.LOGGER.info("================= SFM BEGIN ================= ");
+        SFM.LOGGER.info("Network lookup changed: {}", changeDescription, new Throwable("stacktrace"));
+        printDebugInfo();
+        SFM.LOGGER.info("=================  SFM END  ================= ");
     }
 
     private void trackMemberBlockPosForNetwork(
