@@ -10,6 +10,7 @@ use facet::Facet;
 use figue::{self as args};
 use humansize::DECIMAL;
 use humansize::format_size;
+use std::ffi::OsStr;
 use std::fmt::Write as _;
 use std::fs;
 use std::io::Write as _;
@@ -73,6 +74,12 @@ struct TaskError {
     message: String,
     output: Option<TaskOutput>,
     interrupted: bool,
+}
+
+#[derive(Debug, Copy, Clone)]
+enum LogStreamKind {
+    Stdout,
+    Stderr,
 }
 
 impl GradleTask {
@@ -294,6 +301,10 @@ fn print_report_to_stdout(branches: &[BranchRun], tasks: &[GradleTask]) {
     println!("{}", format_report(branches, tasks));
 }
 
+fn print_stream_path(label: &str, path: &Path) {
+    println!("{}", format!("  {label}: {}", path.display()).dimmed());
+}
+
 fn sanitize_for_path(input: &str) -> String {
     let sanitized: String = input
         .chars()
@@ -341,6 +352,282 @@ fn create_gradle_run_log_dir(tasks: &[String]) -> eyre::Result<PathBuf> {
         )
     })?;
     Ok(run_dir)
+}
+
+fn gradle_runs_dir() -> PathBuf {
+    CACHE_DIR.0.join("gradle-runs")
+}
+
+fn latest_gradle_run_dir() -> eyre::Result<PathBuf> {
+    let runs_dir = gradle_runs_dir();
+
+    if !runs_dir.exists() {
+        bail!("No gradle run logs exist yet: {}", runs_dir.display());
+    }
+
+    let mut run_dirs = Vec::new();
+    for entry in fs::read_dir(&runs_dir).wrap_err_with(|| {
+        format!(
+            "Failed to read gradle runs directory: {}",
+            runs_dir.display()
+        )
+    })? {
+        let entry = entry.wrap_err("Failed to read gradle runs directory entry")?;
+        let path = entry.path();
+        let file_type = entry
+            .file_type()
+            .wrap_err_with(|| format!("Failed to inspect: {}", path.display()))?;
+        if !file_type.is_dir() {
+            continue;
+        }
+        let modified = entry.metadata().and_then(|meta| meta.modified()).ok();
+        run_dirs.push((modified, path));
+    }
+
+    run_dirs.sort_by(|left, right| right.0.cmp(&left.0).then_with(|| right.1.cmp(&left.1)));
+
+    run_dirs
+        .into_iter()
+        .next()
+        .map(|(_, path)| path)
+        .ok_or_else(|| eyre::eyre!("No gradle run directories found in {}", runs_dir.display()))
+}
+
+fn collect_named_logs(root: &Path, file_name: &str) -> eyre::Result<Vec<PathBuf>> {
+    let mut logs = Vec::new();
+    let mut pending = vec![root.to_path_buf()];
+
+    while let Some(dir) = pending.pop() {
+        for entry in fs::read_dir(&dir)
+            .wrap_err_with(|| format!("Failed to read directory: {}", dir.display()))?
+        {
+            let entry = entry.wrap_err("Failed to read directory entry")?;
+            let path = entry.path();
+            let file_type = entry
+                .file_type()
+                .wrap_err_with(|| format!("Failed to inspect: {}", path.display()))?;
+
+            if file_type.is_dir() {
+                pending.push(path);
+            } else if file_type.is_file() && path.file_name() == Some(OsStr::new(file_name)) {
+                logs.push(path);
+            }
+        }
+    }
+
+    logs.sort();
+    Ok(logs)
+}
+
+fn line_is_noise(line: &str) -> bool {
+    let trimmed = line.trim();
+    if trimmed.is_empty() {
+        return true;
+    }
+
+    if trimmed.starts_with("To honour the JVM settings for this build")
+        || trimmed.starts_with("Daemon will be stopped at the end of the build")
+        || trimmed.contains("did not locate the diffplug APT plugin")
+        || trimmed.contains("[main/DEBUG]")
+        || trimmed.contains("/DEBUG]")
+        || trimmed.contains("[mixin/]: Initialising Mixin Platform Manager")
+        || trimmed.contains("found additional transformation services")
+    {
+        return true;
+    }
+
+    trimmed.starts_with("> Task :")
+        && (trimmed.contains("UP-TO-DATE")
+            || trimmed.contains("NO-SOURCE")
+            || trimmed.ends_with("FROM-CACHE"))
+}
+
+fn line_is_signal(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed.contains("BUILD SUCCESSFUL")
+        || trimmed.contains("BUILD FAILED")
+        || trimmed.contains("required tests passed :)")
+        || trimmed.contains("required tests failed :(")
+        || trimmed.contains("Exception")
+        || trimmed.contains("Caused by:")
+        || trimmed.contains(" FAILURE:")
+        || trimmed.contains(" ERROR")
+        || trimmed.contains(" WARN")
+}
+
+const TLDR_MAX_LINES: usize = 100;
+const TLDR_MAX_CHARS: usize = 50_000;
+
+fn truncate_tldr_summary(summary: &str) -> String {
+    let lines: Vec<&str> = summary.lines().collect();
+    if lines.is_empty() {
+        return summary.to_string();
+    }
+
+    let mut kept_lines = Vec::new();
+    let mut used_chars = 0_usize;
+    let mut used_bytes = 0_u64;
+
+    for line in &lines {
+        if kept_lines.len() >= TLDR_MAX_LINES {
+            break;
+        }
+
+        let separator_chars = usize::from(!kept_lines.is_empty());
+        let separator_bytes = u64::from(!kept_lines.is_empty());
+        let line_chars = line.chars().count();
+
+        if used_chars
+            .saturating_add(separator_chars)
+            .saturating_add(line_chars)
+            > TLDR_MAX_CHARS
+        {
+            break;
+        }
+
+        kept_lines.push(*line);
+        used_chars = used_chars
+            .saturating_add(separator_chars)
+            .saturating_add(line_chars);
+        used_bytes = used_bytes
+            .saturating_add(separator_bytes)
+            .saturating_add(u64::try_from(line.len()).unwrap_or(u64::MAX));
+    }
+
+    if kept_lines.len() == lines.len() {
+        return summary.to_string();
+    }
+
+    let omitted_lines = lines.len().saturating_sub(kept_lines.len());
+    let total_bytes = u64::try_from(summary.len()).unwrap_or(u64::MAX);
+    let omitted_bytes = total_bytes.saturating_sub(used_bytes);
+    let truncated_line = format!(
+        "... truncated, {} lines ({}) omitted",
+        omitted_lines,
+        format_size(omitted_bytes, DECIMAL)
+    )
+    .dimmed()
+    .to_string();
+
+    if kept_lines.is_empty() {
+        truncated_line
+    } else {
+        format!("{}\n{}", kept_lines.join("\n"), truncated_line)
+    }
+}
+
+fn summarize_log_for_tldr(content: &str) -> (String, usize, usize) {
+    let mut kept = Vec::new();
+    let mut omitted_streak = 0_usize;
+    let mut total = 0_usize;
+
+    let flush_omitted = |streak: &mut usize, lines: &mut Vec<String>| {
+        if *streak > 0 {
+            lines.push(
+                format!("… omitted {} noisy lines", *streak)
+                    .dimmed()
+                    .to_string(),
+            );
+            *streak = 0;
+        }
+    };
+
+    for line in content.lines() {
+        total += 1;
+        let keep = line_is_signal(line) || !line_is_noise(line);
+        if keep {
+            flush_omitted(&mut omitted_streak, &mut kept);
+            kept.push(line.to_string());
+        } else {
+            omitted_streak += 1;
+        }
+    }
+
+    flush_omitted(&mut omitted_streak, &mut kept);
+
+    if kept.is_empty() {
+        kept.push(
+            "(no high-signal lines after filtering)"
+                .dimmed()
+                .to_string(),
+        );
+    }
+
+    let kept_count = kept
+        .iter()
+        .filter(|line| !line.starts_with('…') && !line.starts_with("(no high-signal"))
+        .count();
+
+    let summary = truncate_tldr_summary(&kept.join("\n"));
+
+    (summary, total, kept_count)
+}
+
+fn print_tldr_for_stream(run_dir: &Path, stream: LogStreamKind) -> eyre::Result<()> {
+    let (file_name, stream_label) = match stream {
+        LogStreamKind::Stdout => ("stdout.log", "STDOUT"),
+        LogStreamKind::Stderr => ("stderr.log", "STDERR"),
+    };
+
+    let logs = collect_named_logs(run_dir, file_name)?;
+    if logs.is_empty() {
+        match stream {
+            LogStreamKind::Stdout => {
+                println!("No {file_name} files found in {}", run_dir.display())
+            }
+            LogStreamKind::Stderr => {
+                eprintln!("No {file_name} files found in {}", run_dir.display())
+            }
+        }
+        return Ok(());
+    }
+
+    match stream {
+        LogStreamKind::Stdout => {
+            println!();
+            println!(
+                "{}",
+                format!("TLDR {stream_label} ({})", run_dir.display())
+                    .cyan()
+                    .bold()
+            );
+        }
+        LogStreamKind::Stderr => {
+            eprintln!();
+            eprintln!(
+                "{}",
+                format!("TLDR {stream_label} ({})", run_dir.display())
+                    .cyan()
+                    .bold()
+            );
+        }
+    }
+
+    for log_path in logs {
+        let relative = log_path
+            .strip_prefix(run_dir)
+            .map_or_else(|_| log_path.clone(), Path::to_path_buf);
+        let content = fs::read_to_string(&log_path)
+            .wrap_err_with(|| format!("Failed to read log file: {}", log_path.display()))?;
+        let (summary, total, kept_count) = summarize_log_for_tldr(&content);
+
+        let header = format!("{} (kept {kept_count}/{total} lines)", relative.display())
+            .bold()
+            .to_string();
+
+        match stream {
+            LogStreamKind::Stdout => {
+                println!("{}", header);
+                println!("{}", summary);
+            }
+            LogStreamKind::Stderr => {
+                eprintln!("{}", header);
+                eprintln!("{}", summary);
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn create_task_log_paths(
@@ -461,12 +748,10 @@ async fn run_gradle_task(
 
     let stdout_log_path_buf = stdout_log_path.to_path_buf();
     let stderr_log_path_buf = stderr_log_path.to_path_buf();
-    let stdout_task = tokio::spawn(async move {
-        collect_output(stdout, show_logs, stdout_log_path_buf).await
-    });
-    let stderr_task = tokio::spawn(async move {
-        collect_output(stderr, show_logs, stderr_log_path_buf).await
-    });
+    let stdout_task =
+        tokio::spawn(async move { collect_output(stdout, show_logs, stdout_log_path_buf).await });
+    let stderr_task =
+        tokio::spawn(async move { collect_output(stderr, show_logs, stderr_log_path_buf).await });
 
     let (status, interrupted) = tokio::select! {
         status_res = child.wait() => {
@@ -587,9 +872,39 @@ async fn run_gradle_task(
     }
 }
 
+/// Gradle-related commands.
+#[derive(Facet, Debug)]
+#[repr(u8)]
+pub enum GradleCommand {
+    /// Run arbitrary gradle task(s) for each worktree in strict sequence
+    Run {
+        /// Gradle run options
+        #[facet(flatten)]
+        command: GradleRunCommand,
+    },
+    /// Inspect previously captured gradle logs
+    Logs {
+        /// Log inspection subcommand
+        #[facet(args::subcommand)]
+        command: GradleLogsCommand,
+    },
+}
+
+impl GradleCommand {
+    /// # Errors
+    ///
+    /// This function will return an error if the subcommand fails.
+    pub fn invoke(self) -> eyre::Result<()> {
+        match self {
+            Self::Run { command } => command.invoke(),
+            Self::Logs { command } => command.invoke(),
+        }
+    }
+}
+
 /// Gradle command - runs arbitrary gradle tasks in each worktree in strict sequence.
 #[derive(Facet, Debug, Default)]
-pub struct GradleCommand {
+pub struct GradleRunCommand {
     /// Gradle tasks to run (for example: `runData`, `runGameTestServer`, `test`).
     #[facet(args::positional)]
     pub tasks: Vec<String>,
@@ -611,7 +926,7 @@ pub struct GradleCommand {
     pub continue_on_error: bool,
 }
 
-impl GradleCommand {
+impl GradleRunCommand {
     /// # Errors
     ///
     /// Returns an error if any task fails.
@@ -783,8 +1098,8 @@ impl GradleCommand {
                         current_task.as_gradle_arg().cyan().bold(),
                         wt.branch.cyan().bold()
                     );
-                    println!("  stdout: {}", stdout_log_path.display());
-                    println!("  stderr: {}", stderr_log_path.display());
+                    print_stream_path("stdout", &stdout_log_path);
+                    print_stream_path("stderr", &stderr_log_path);
 
                     run_gradle_task(
                         &gradlew,
@@ -837,11 +1152,19 @@ impl GradleCommand {
                         if let Some(ref output) = err.output {
                             println!(
                                 "{}",
-                                format_log_summary("stdout", &output.stdout, &output.stdout_log_path)
+                                format_log_summary(
+                                    "stdout",
+                                    &output.stdout,
+                                    &output.stdout_log_path
+                                )
                             );
                             println!(
                                 "{}",
-                                format_log_summary("stderr", &output.stderr, &output.stderr_log_path)
+                                format_log_summary(
+                                    "stderr",
+                                    &output.stderr,
+                                    &output.stderr_log_path
+                                )
                             );
                         }
 
@@ -918,5 +1241,40 @@ impl GradleCommand {
         }
 
         Ok(())
+    }
+}
+
+/// Gradle log inspection commands.
+#[derive(Facet, Debug)]
+#[repr(u8)]
+pub enum GradleLogsCommand {
+    /// Summarize log files with noise filtering
+    Tldr {
+        /// Summarize the latest run directory under `cache/gradle-runs`
+        #[facet(args::named, default = false)]
+        latest: bool,
+    },
+}
+
+impl GradleLogsCommand {
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+    pub fn invoke(self) -> eyre::Result<()> {
+        match self {
+            Self::Tldr { latest } => {
+                if !latest {
+                    bail!("Only `--latest` is currently supported for `gradle logs tldr`.");
+                }
+
+                let run_dir = latest_gradle_run_dir()?;
+                println!("Summarizing latest gradle logs from {}", run_dir.display());
+
+                print_tldr_for_stream(&run_dir, LogStreamKind::Stdout)?;
+                print_tldr_for_stream(&run_dir, LogStreamKind::Stderr)?;
+
+                Ok(())
+            }
+        }
     }
 }
