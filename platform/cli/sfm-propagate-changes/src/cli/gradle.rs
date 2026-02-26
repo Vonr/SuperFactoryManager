@@ -1,20 +1,28 @@
 use crate::cli::status::assert_worktrees_clean_or_autocommit_generated;
 use crate::mc_version_filter::McVersionFilter;
+use crate::paths::CACHE_DIR;
 use crate::worktree::get_sorted_worktrees;
+use chrono::Local;
 use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
 use eyre::bail;
 use facet::Facet;
 use figue::{self as args};
+use humansize::DECIMAL;
+use humansize::format_size;
 use std::fmt::Write as _;
+use std::fs;
+use std::io::Write as _;
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::ExitStatus;
 use std::process::Stdio;
 use std::time::Duration;
 use std::time::Instant;
-use tokio::io::AsyncBufReadExt;
+use tokio::fs::File;
 use tokio::io::AsyncRead;
-use tokio::io::BufReader;
+use tokio::io::AsyncReadExt;
+use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use tracing::debug;
 use tracing::error;
@@ -56,6 +64,8 @@ struct TaskOutput {
     stdout: String,
     stderr: String,
     duration: Duration,
+    stdout_log_path: PathBuf,
+    stderr_log_path: PathBuf,
 }
 
 #[derive(Debug)]
@@ -203,6 +213,15 @@ fn format_duration(duration: Duration) -> String {
     }
 }
 
+fn format_log_summary(label: &str, output: &str, log_path: &Path) -> String {
+    let lines = output.lines().count();
+    let bytes = fs::metadata(log_path)
+        .map(|meta| meta.len())
+        .unwrap_or_else(|_| u64::try_from(output.len()).unwrap_or(u64::MAX));
+
+    format!("  {label}: {lines} lines ({})", format_size(bytes, DECIMAL))
+}
+
 fn format_report(branches: &[BranchRun], tasks: &[GradleTask]) -> String {
     let mut widths = Vec::with_capacity(tasks.len() + 1);
     widths.push(
@@ -275,22 +294,108 @@ fn print_report_to_stdout(branches: &[BranchRun], tasks: &[GradleTask]) {
     println!("{}", format_report(branches, tasks));
 }
 
-async fn collect_output<R>(reader: R, hide_logs: bool) -> std::io::Result<String>
+fn sanitize_for_path(input: &str) -> String {
+    let sanitized: String = input
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '.' || c == '-' || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+
+    let trimmed = sanitized.trim_matches('_');
+    if trimmed.is_empty() {
+        "unnamed".to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn create_gradle_run_log_dir(tasks: &[String]) -> eyre::Result<PathBuf> {
+    let timestamp = Local::now().format("%Y-%m-%d_%H-%M-%S");
+    let task_segment = tasks
+        .iter()
+        .map(|t| sanitize_for_path(t))
+        .collect::<Vec<_>>()
+        .join("+");
+    let task_segment = if task_segment.len() > 80 {
+        task_segment[..80].to_string()
+    } else {
+        task_segment
+    };
+
+    let run_dir_name = if task_segment.is_empty() {
+        format!("gradle_{timestamp}")
+    } else {
+        format!("gradle_{timestamp}_{task_segment}")
+    };
+
+    let run_dir = CACHE_DIR.0.join("gradle-runs").join(run_dir_name);
+    fs::create_dir_all(&run_dir).wrap_err_with(|| {
+        format!(
+            "Failed to create gradle run log directory: {}",
+            run_dir.display()
+        )
+    })?;
+    Ok(run_dir)
+}
+
+fn create_task_log_paths(
+    run_log_dir: &Path,
+    branch: &str,
+    task_idx: usize,
+    task: &GradleTask,
+) -> eyre::Result<(PathBuf, PathBuf)> {
+    let branch_dir = sanitize_for_path(branch);
+    let task_dir = format!(
+        "{:02}_{}",
+        task_idx + 1,
+        sanitize_for_path(task.as_gradle_arg())
+    );
+
+    let dir = run_log_dir.join(branch_dir).join(task_dir);
+    fs::create_dir_all(&dir)
+        .wrap_err_with(|| format!("Failed to create task log directory: {}", dir.display()))?;
+
+    Ok((dir.join("stdout.log"), dir.join("stderr.log")))
+}
+
+async fn collect_output<R>(
+    reader: R,
+    stream_logs_to_console: bool,
+    log_path: PathBuf,
+) -> std::io::Result<String>
 where
     R: AsyncRead + Unpin,
 {
-    let mut lines = BufReader::new(reader).lines();
-    let mut out = String::new();
+    let mut reader = reader;
+    let mut log_file = File::create(log_path).await?;
+    let mut buf = [0_u8; 8 * 1024];
+    let mut out = Vec::new();
 
-    while let Some(line) = lines.next_line().await? {
-        if !hide_logs {
-            eprintln!("{line}");
+    loop {
+        let bytes_read = reader.read(&mut buf).await?;
+        if bytes_read == 0 {
+            break;
         }
-        out.push_str(&line);
-        out.push('\n');
+
+        let chunk = &buf[..bytes_read];
+        if stream_logs_to_console {
+            eprint!("{}", String::from_utf8_lossy(chunk));
+            std::io::stderr().flush()?;
+        }
+
+        log_file.write_all(chunk).await?;
+        log_file.flush().await?;
+        out.extend_from_slice(chunk);
     }
 
-    Ok(out)
+    log_file.flush().await?;
+
+    Ok(String::from_utf8_lossy(&out).into_owned())
 }
 
 #[expect(
@@ -301,7 +406,9 @@ async fn run_gradle_task(
     gradlew: &Path,
     minecraft_dir: &Path,
     task: &GradleTask,
-    hide_logs: bool,
+    show_logs: bool,
+    stdout_log_path: &Path,
+    stderr_log_path: &Path,
 ) -> Result<TaskOutput, TaskError> {
     debug!(
         path = %minecraft_dir.display(),
@@ -309,7 +416,7 @@ async fn run_gradle_task(
         "Running task"
     );
 
-    if !hide_logs {
+    if show_logs {
         eprintln!(
             "{}",
             format!("━━━ {} ({})", task.as_gradle_arg(), minecraft_dir.display())
@@ -320,6 +427,7 @@ async fn run_gradle_task(
 
     let start = Instant::now();
     let mut child = Command::new(gradlew)
+        .arg("--console=plain")
         .arg(task.as_gradle_arg())
         .current_dir(minecraft_dir)
         .kill_on_drop(true)
@@ -351,8 +459,14 @@ async fn run_gradle_task(
         interrupted: false,
     })?;
 
-    let stdout_task = tokio::spawn(collect_output(stdout, hide_logs));
-    let stderr_task = tokio::spawn(collect_output(stderr, hide_logs));
+    let stdout_log_path_buf = stdout_log_path.to_path_buf();
+    let stderr_log_path_buf = stderr_log_path.to_path_buf();
+    let stdout_task = tokio::spawn(async move {
+        collect_output(stdout, show_logs, stdout_log_path_buf).await
+    });
+    let stderr_task = tokio::spawn(async move {
+        collect_output(stderr, show_logs, stderr_log_path_buf).await
+    });
 
     let (status, interrupted) = tokio::select! {
         status_res = child.wait() => {
@@ -441,6 +555,8 @@ async fn run_gradle_task(
         stdout,
         stderr,
         duration: start.elapsed(),
+        stdout_log_path: stdout_log_path.to_path_buf(),
+        stderr_log_path: stderr_log_path.to_path_buf(),
     };
 
     if interrupted {
@@ -482,9 +598,11 @@ pub struct GradleCommand {
     #[facet(default, args::named)]
     pub mc: Option<String>,
 
-    /// If set, hide stdout of each gradle process while it runs.
-    #[facet(rename = "hide-logs", args::named, default = false)]
-    pub hide_logs: bool,
+    /// If set, stream gradle stdout/stderr to the console while tasks run.
+    ///
+    /// By default logs are written to cache files only and not streamed.
+    #[facet(rename = "show-logs", args::named, default = false)]
+    pub show_logs: bool,
 
     /// If set, continue with later branches after a task failure.
     ///
@@ -553,6 +671,9 @@ impl GradleCommand {
             .iter()
             .map(|task| GradleTask::from_input(task))
             .collect();
+
+        let run_log_dir = create_gradle_run_log_dir(&self.tasks)?;
+        println!("Gradle run logs: {}", run_log_dir.display());
 
         if tasks.iter().any(GradleTask::needs_generated_preflight) {
             assert_worktrees_clean_or_autocommit_generated(&worktrees)?;
@@ -640,8 +761,41 @@ impl GradleCommand {
                     "Starting gradle task"
                 );
 
-                let result =
-                    run_gradle_task(&gradlew, &minecraft_dir, &current_task, self.hide_logs).await;
+                let result = {
+                    let (stdout_log_path, stderr_log_path) =
+                        create_task_log_paths(&run_log_dir, &wt.branch, task_idx, &current_task)?;
+
+                    fs::write(&stdout_log_path, "").wrap_err_with(|| {
+                        format!(
+                            "Failed to initialize stdout log file: {}",
+                            stdout_log_path.display()
+                        )
+                    })?;
+                    fs::write(&stderr_log_path, "").wrap_err_with(|| {
+                        format!(
+                            "Failed to initialize stderr log file: {}",
+                            stderr_log_path.display()
+                        )
+                    })?;
+
+                    println!(
+                        "Running {} for {}",
+                        current_task.as_gradle_arg().cyan().bold(),
+                        wt.branch.cyan().bold()
+                    );
+                    println!("  stdout: {}", stdout_log_path.display());
+                    println!("  stderr: {}", stderr_log_path.display());
+
+                    run_gradle_task(
+                        &gradlew,
+                        &minecraft_dir,
+                        &current_task,
+                        self.show_logs,
+                        &stdout_log_path,
+                        &stderr_log_path,
+                    )
+                    .await
+                };
 
                 match result {
                     Ok(output) => {
@@ -680,6 +834,17 @@ impl GradleCommand {
                             }
                         }
 
+                        if let Some(ref output) = err.output {
+                            println!(
+                                "{}",
+                                format_log_summary("stdout", &output.stdout, &output.stdout_log_path)
+                            );
+                            println!(
+                                "{}",
+                                format_log_summary("stderr", &output.stderr, &output.stderr_log_path)
+                            );
+                        }
+
                         error!(
                             branch = %wt.branch,
                             task = %current_task.as_gradle_arg(),
@@ -710,7 +875,7 @@ impl GradleCommand {
 
                         if let Some(output) = err.output {
                             println!();
-                            println!("{}", "FAILED COMMAND OUTPUT".red().bold());
+                            println!("{}", "FAILED COMMAND LOGS".red().bold());
                             println!(
                                 "{}",
                                 format!(
@@ -721,14 +886,6 @@ impl GradleCommand {
                                 )
                                 .red()
                             );
-                            if !output.stdout.trim().is_empty() {
-                                println!("{}", "--- stdout ---".red().bold());
-                                println!("{}", output.stdout);
-                            }
-                            if !output.stderr.trim().is_empty() {
-                                println!("{}", "--- stderr ---".red().bold());
-                                println!("{}", output.stderr);
-                            }
                         }
 
                         if self.continue_on_error && !err.interrupted {
