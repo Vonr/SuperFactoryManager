@@ -9,5 +9,4 @@ TODO.md
 tsconfig.json
 vsce-versions/**
 out/**/*.map
-node_modules/**/*.d.ts
-node_modules/**/*.map
+node_modules/**
