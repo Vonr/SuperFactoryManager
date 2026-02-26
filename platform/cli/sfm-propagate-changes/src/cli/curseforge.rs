@@ -38,6 +38,7 @@ const CURSEFORGE_CORE_API_KEY_ENV_VAR: &str = "CURSEFORGE_CORE_API_KEY";
 const DEFAULT_OP_SECRET_REFERENCE: &str = "op://Private/CurseForge SFM Upload token/credential";
 const DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE: &str =
     "op://Private/SFM CurseForge studios token/credential";
+const DEFAULT_AMEND_SAFETY_AGE: &str = "30m";
 const CURSEFORGE_AUTHORS_FILES_URL_PREFIX: &str = "https://authors.curseforge.com/#/projects";
 
 const ANSI_RESET: &str = "\x1b[0m";
@@ -1384,7 +1385,7 @@ fn release_amend(
     let client = build_core_http_client(&core_key)?;
     let files = fetch_project_files(&client, project_id, &credential_source)?;
 
-    let safety_age_text = safety_age.unwrap_or_else(|| "30m".to_string());
+    let safety_age_text = safety_age.unwrap_or_else(|| DEFAULT_AMEND_SAFETY_AGE.to_string());
     let max_file_age = parse_safety_age(&safety_age_text)?;
     let now = Utc::now();
 
