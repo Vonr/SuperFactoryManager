@@ -15,7 +15,7 @@
       "name": "Titop54"
     }
   ],
-  "version": "0.0.15",
+  "version": "0.0.16",
   "icon": "media/controller.png",
   "main": "./out/extension.js",
   "engines": {
