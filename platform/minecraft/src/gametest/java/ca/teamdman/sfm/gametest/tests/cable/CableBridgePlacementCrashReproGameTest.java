@@ -94,8 +94,6 @@ public class CableBridgePlacementCrashReproGameTest extends SFMGameTestDefinitio
                     != null,
                     "Expected directional (UP) item capability cache entry before bridge placement"
             );
-            // TODO: Investigate null-side capability cache merge semantics in SFMBlockCapabilityCacheForLevel.putAll;
-            //       putAll currently iterates non-null directions only, while this test exercises sided cache entries.
 
             // This is the critical placement: it touches the same existing network on two sides.
             // On buggy versions this can crash with listener double-registration during network merge.
