@@ -4,7 +4,6 @@ import ca.teamdman.sfm.common.registry.registration.SFMGlobalBlockCapabilityProv
 import ca.teamdman.sfm.common.util.MCVersionDependentBehaviour;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullConsumer;
-import org.jetbrains.annotations.NotNull;
 
 /// In Minecraft before 1.20.3, NeoForge uses {@code LazyOptional<T>} for the type of retrieved Capabilities.
 /// In Minecraft 1.20.3 and later, {@code @Nullable T} is used instead.
@@ -32,7 +31,7 @@ public record SFMBlockCapabilityResult<CAP>(LazyOptional<CAP> inner) {
         return SFMBlockCapabilityResult.of(LazyOptional.empty());
     }
 
-    public @NotNull CAP unwrap() {
+    public CAP unwrap() {
 
         return inner.orElseThrow(IllegalStateException::new);
     }
