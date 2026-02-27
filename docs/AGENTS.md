@@ -95,13 +95,12 @@ COMMANDS:
     repo-root
             Repo root related commands
 
-❯ sfm-propagate-changes gradle --help
-sfm-propagate-changes.exe gradle
+❯ sfm-propagate-changes.exe gradle run --help
 
 Run arbitrary gradle task(s) for each worktree in strict sequence
 
 USAGE:
-    sfm-propagate-changes.exe gradle [OPTIONS] <TASKS>
+    sfm-propagate-changes.exe gradle run [OPTIONS] <TASKS>
 
 ARGUMENTS:
         <TASKS>
@@ -110,8 +109,13 @@ ARGUMENTS:
 OPTIONS:
         --mc <STRING>
             Minecraft version filter expression for branch names (examples: `>=1.21.0`, `<1.20`, `=1.20.4`).
-        --hide-logs
-            If set, hide stdout of each gradle process while it runs.
+        --show-logs
+            If set, stream gradle stdout/stderr to the console while tasks run.
+        --continue-on-error
+            If set, continue with later branches after a task failure.
+
+
+platform\cli\sfm-propagate-changes on  1.19.2 [$!⇡] is 📦 v0.1.0 via 🦀 v1.92.0 
 ```
 
 After making changes to rust code, run [`check-all.ps1`](../platform/cli/sfm-propagate-changes/check-all.ps1) to validate formatting and linting and build errors.

@@ -624,11 +624,23 @@ fn is_ignorable_surprise_line(line: &str) -> bool {
         || trimmed.starts_with("BUILD FAILED in ")
 }
 
+fn is_daemon_shutdown_noise_line(line: &str) -> bool {
+    let trimmed = line.trim();
+
+    trimmed.contains("Daemon vm is shutting down")
+        || trimmed.contains("The daemon has exited normally")
+        || trimmed == "----- End of the daemon log -----"
+        || trimmed == "* What went wrong:"
+        || trimmed == "Could not dispatch a message to the daemon."
+        || trimmed == "FAILURE: Build failed with an exception."
+}
+
 fn is_ignorable_exception_head_line(line: &str) -> bool {
     let trimmed = line.trim();
-    trimmed.contains("java.lang.UnsupportedOperationException: Reflective setAccessible(true) disabled")
-        || (trimmed.contains("java.lang.IllegalAccessException")
-            && trimmed.contains("jdk.internal.misc.Unsafe"))
+    trimmed.contains(
+        "java.lang.UnsupportedOperationException: Reflective setAccessible(true) disabled",
+    ) || (trimmed.contains("java.lang.IllegalAccessException")
+        && trimmed.contains("jdk.internal.misc.Unsafe"))
 }
 
 fn is_relevant_stack_line(line: &str) -> bool {
@@ -651,6 +663,8 @@ fn reduce_log_content(content: &str, stream: LogStreamKind) -> LogReduction {
         tests_passed: has_gametest_success(content),
         ..LogReduction::default()
     };
+    let has_daemon_shutdown_noise = content.contains("Daemon vm is shutting down")
+        || content.contains("The daemon has exited normally");
 
     for line in content.lines() {
         let mut reprocess = true;
@@ -690,6 +704,10 @@ fn reduce_log_content(content: &str, stream: LogStreamKind) -> LogReduction {
                 && event == LogEvent::StackLine
                 && suppress_exception_stack
             {
+                continue;
+            }
+
+            if has_daemon_shutdown_noise && is_daemon_shutdown_noise_line(line) {
                 continue;
             }
 
@@ -766,7 +784,13 @@ fn merge_reduction(into: &mut LogReduction, from: LogReduction) {
 fn normalize_spaces(input: &str) -> String {
     input
         .chars()
-        .map(|c| if c.is_alphanumeric() { c.to_ascii_lowercase() } else { ' ' })
+        .map(|c| {
+            if c.is_alphanumeric() {
+                c.to_ascii_lowercase()
+            } else {
+                ' '
+            }
+        })
         .collect::<String>()
         .split_whitespace()
         .collect::<Vec<_>>()
@@ -861,7 +885,7 @@ fn find_gametest_source(test_name: &str) -> Option<PathBuf> {
     None
 }
 
-fn summarize_reduction(pair: &LogPair, reduction: &LogReduction) -> String {
+fn summarize_reduction(_pair: &LogPair, reduction: &LogReduction) -> String {
     let mut unique_failed = reduction.failed_tests.clone();
     unique_failed.sort();
     unique_failed.dedup();
@@ -873,13 +897,10 @@ fn summarize_reduction(pair: &LogPair, reduction: &LogReduction) -> String {
     if unique_failed.len() == 1 {
         let test_name = &unique_failed[0];
         if let Some(path) = find_gametest_source(test_name) {
-            return format!(
-                "One test failed: {test_name} at {}",
-                path.display()
-            )
-            .red()
-            .bold()
-            .to_string();
+            return format!("One test failed: {test_name} at {}", path.display())
+                .red()
+                .bold()
+                .to_string();
         }
 
         return format!("One test failed: {test_name}")
@@ -903,21 +924,15 @@ fn summarize_reduction(pair: &LogPair, reduction: &LogReduction) -> String {
         return "Build failed with surprises".red().bold().to_string();
     }
 
-    format!(
-        "Potential surprises in {}",
-        pair.relative_task_dir.display()
-    )
-    .yellow()
-    .bold()
-    .to_string()
+    "Potential surprises".yellow().bold().to_string()
 }
 
 fn read_log_stats(path: &Path) -> eyre::Result<(usize, u64)> {
     let bytes = fs::metadata(path)
         .wrap_err_with(|| format!("Failed to stat log file: {}", path.display()))?
         .len();
-    let content = fs::read(path)
-        .wrap_err_with(|| format!("Failed to read log file: {}", path.display()))?;
+    let content =
+        fs::read(path).wrap_err_with(|| format!("Failed to read log file: {}", path.display()))?;
     let text = String::from_utf8_lossy(&content);
     Ok((text.lines().count(), bytes))
 }
@@ -929,7 +944,12 @@ fn print_log_list(run_dir: &Path) -> eyre::Result<()> {
         return Ok(());
     }
 
-    println!("{}", format!("Gradle logs in {}", run_dir.display()).cyan().bold());
+    println!(
+        "{}",
+        format!("Gradle logs in {}", run_dir.display())
+            .cyan()
+            .bold()
+    );
 
     for pair in pairs {
         println!("{}", pair.relative_task_dir.display().to_string().bold());
@@ -1551,6 +1571,14 @@ impl GradleRunCommand {
                         branches[branch_idx].tasks[task_idx].state = TaskState::Success {
                             duration: output.duration,
                         };
+                        println!(
+                            "{}",
+                            format_log_summary("stdout", &output.stdout, &output.stdout_log_path)
+                        );
+                        println!(
+                            "{}",
+                            format_log_summary("stderr", &output.stderr, &output.stderr_log_path)
+                        );
                         info!(
                             branch = %wt.branch,
                             task = %current_task.as_gradle_arg(),

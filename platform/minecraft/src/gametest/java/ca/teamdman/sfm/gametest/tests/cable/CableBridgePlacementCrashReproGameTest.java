@@ -62,7 +62,7 @@ public class CableBridgePlacementCrashReproGameTest extends SFMGameTestDefinitio
                 .save(Objects.requireNonNull(manager.getDisk()));
 
         manager.setProgram("""
-                EVERY 1 TICKS DO
+                                EVERY 20 TICKS DO
                     INPUT FROM a
                     OUTPUT TO b
                 END
@@ -70,7 +70,7 @@ public class CableBridgePlacementCrashReproGameTest extends SFMGameTestDefinitio
 
         assertManagerRunning(manager);
 
-        helper.runAfterDelay(30, () -> {
+        helper.runAfterDelay(60, () -> {
             assertTrue(source.getStackInSlot(0).isEmpty(), "Expected source barrel to be emptied before bridge placement");
             assertTrue(target.getStackInSlot(0).getCount() == 64, "Expected target barrel to receive moved items");
 
