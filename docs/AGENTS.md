@@ -31,7 +31,7 @@ I work out of the 1.19.2 branch most of the time. Do NOT propose changes outside
 
 Gradle commands against a specific version should be run from the `platform/minecraft/` directory.
 
-To run a command multiple versions, see `sfm-propagate-changes gradle`.
+To run a command multiple versions, see `sfm-propagate-changes gradle run --help`.
 
 | Task | Command | Description |
 | :--- | :--- | :--- |
@@ -41,6 +41,8 @@ To run a command multiple versions, see `sfm-propagate-changes gradle`.
 | **Datagen** | `./gradlew runDatagen` | **Crucial.** Generates recipes, tags, and models. Run after modifying datagen sources. |
 | **Game Tests** | `./gradlew runGameTestServer`| Runs in-game tests. |
 | **Java Tests** | `./gradlew test`| Runs junit tests. |
+
+There is a `sfm-propagate-changes.exe gradle log tldr [--latest|<path>]` command to summarize the gradle output.
 
 ## 💻 The CLI
 
