@@ -81,7 +81,7 @@ public record ServerboundManagerRebuildPacket(
                             CableNetworkManager.purgeCableNetworkForManager(manager);
                             manager.logger.warn(x -> x.accept(LOG_MANAGER_CABLE_NETWORK_REBUILD.get()));
                             player.sendSystemMessage(
-                                    CHAT_MANAGER_CABLE_NETWORK_REBUILD_SUCCESS.getComponent(msg.pos())
+                                    CHAT_MANAGER_CABLE_NETWORK_REBUILD_SUCCESS.getComponent(msg.pos().toString())
                             );
 
                             // log it
@@ -100,7 +100,7 @@ public record ServerboundManagerRebuildPacket(
                             );
                             CableNetworkManager.clear();
                             player.sendSystemMessage(
-                                    CHAT_MANAGER_CABLE_NETWORK_REBUILD_FAILED_FALLBACK.getComponent(msg.pos())
+                                    CHAT_MANAGER_CABLE_NETWORK_REBUILD_FAILED_FALLBACK.getComponent(msg.pos().toString())
                             );
                         }
                     }
