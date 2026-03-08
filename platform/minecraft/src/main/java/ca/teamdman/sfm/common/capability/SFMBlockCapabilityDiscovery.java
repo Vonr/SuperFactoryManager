@@ -3,7 +3,9 @@ package ca.teamdman.sfm.common.capability;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.common.block_network.CableNetwork;
 import ca.teamdman.sfm.common.block_network.SFMBlockCapabilityCacheForLevel;
+import ca.teamdman.sfm.common.localization.LocalizationEntry;
 import ca.teamdman.sfm.common.localization.LocalizationKeys;
+import ca.teamdman.sfm.common.localization.SFMLocalizationDatagen;
 import ca.teamdman.sfm.common.logging.TranslatableLogger;
 import ca.teamdman.sfm.common.program.LimitedInputSlot;
 import ca.teamdman.sfm.common.program.LimitedOutputSlot;
@@ -43,6 +45,18 @@ import java.util.ArrayList;
 /// will be cached in the {@link CableNetwork#getLevelCapabilityCache()}
 /// so the {@link SFMBlockCapabilityProviderDiscovery} can focus on its job.
 public class SFMBlockCapabilityDiscovery {
+    @SFMLocalizationDatagen
+    public static final LocalizationEntry LOGS_MISSING_ADJACENT_CABLE = new LocalizationEntry(
+            "gui.sfm.logs.missing_adjacent_cable",
+            "No adjacent cable found for %s"
+    );
+
+    @SFMLocalizationDatagen
+    public static final LocalizationEntry LOGS_EMPTY_CAPABILITY = new LocalizationEntry(
+            "gui.sfm.logs.empty_capability",
+            "Received an empty capability result for %s %s direction=%s"
+    );
+
     public static <CAP> @NotNull SFMBlockCapabilityResult<CAP> discoverCapabilityFromNetwork(
             CableNetwork cableNetwork,
             SFMBlockCapabilityKind<CAP> capKind,
@@ -75,7 +89,7 @@ public class SFMBlockCapabilityDiscovery {
         // Any BlockPos can have labels assigned to it.
         // We must only proceed here if there is an adjacent cable from this network.
         if (!cableNetwork.isAdjacentToCable(pos)) {
-            logger.warn(x -> x.accept(LocalizationKeys.LOGS_MISSING_ADJACENT_CABLE.get(pos)));
+            logger.warn(x -> x.accept(LOGS_MISSING_ADJACENT_CABLE.get(pos)));
             return SFMBlockCapabilityResult.empty();
         }
 
@@ -92,7 +106,7 @@ public class SFMBlockCapabilityDiscovery {
             // Track in cache
             levelCapabilityCache.putCapability(pos, capKind, direction, cap);
         } else {
-            logger.warn(x -> x.accept(LocalizationKeys.LOGS_EMPTY_CAPABILITY.get(
+            logger.warn(x -> x.accept(LOGS_EMPTY_CAPABILITY.get(
                     pos,
                     capKind.getName(),
                     direction
