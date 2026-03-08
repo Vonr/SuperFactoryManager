@@ -4,7 +4,7 @@ import ca.teamdman.sfm.SFM;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation;
 import net.minecraftforge.forgespi.language.ModFileScanData;
-import org.jetbrains.annotations.UnknownNullability;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
@@ -52,6 +52,7 @@ public class SFMAnnotationUtils {
         return holder.getValue();
     }
 
+    @SuppressWarnings("unused")
     public record SFMAnnotationData(
             ModFileScanData.AnnotationData inner
     ) {
@@ -99,7 +100,7 @@ public class SFMAnnotationUtils {
             return rtn;
         }
 
-        public <T extends Enum<T>> @UnknownNullability T getEnum(
+        public <T extends Enum<T>> @Nullable T getEnum(
                 String key,
                 Class<T> clazz
         ) {

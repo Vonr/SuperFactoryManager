@@ -24,22 +24,18 @@ public class ClientLabelGunResponseChatHelper {
 
     public static void handle(
             ClientboundLabelGunUseResponsePacket msg,
-            SFMPacketHandlingContext context
+            SFMPacketHandlingContext ignoredContext
     ) {
 
         LocalPlayer player = Minecraft.getInstance().player;
         assert player != null;
         switch (msg.behaviour()) {
-            case Pushed -> {
-                player.sendSystemMessage(LABEL_GUN_CHAT_PUSHED.getComponent(
-                        SFMKeyMappings.getKeyDisplay(SFMKeyMappings.LABEL_GUN_PULL_MODIFIER_KEY)
-                ));
-            }
-            case Pulled -> {
-                player.sendSystemMessage(LABEL_GUN_CHAT_PULLED.getComponent(
-                        SFMKeyMappings.getKeyDisplay(SFMKeyMappings.LABEL_GUN_PULL_MODIFIER_KEY)
-                ));
-            }
+            case Pushed -> player.sendSystemMessage(LABEL_GUN_CHAT_PUSHED.getComponent(
+                    SFMKeyMappings.getKeyDisplay(SFMKeyMappings.LABEL_GUN_PULL_MODIFIER_KEY)
+            ));
+            case Pulled -> player.sendSystemMessage(LABEL_GUN_CHAT_PULLED.getComponent(
+                    SFMKeyMappings.getKeyDisplay(SFMKeyMappings.LABEL_GUN_PULL_MODIFIER_KEY)
+            ));
         }
     }
 

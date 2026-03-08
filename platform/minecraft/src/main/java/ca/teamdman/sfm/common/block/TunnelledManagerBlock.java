@@ -34,7 +34,7 @@ public class TunnelledManagerBlock extends ManagerBlock {
     );
 
     @Override
-    public BlockEntity newBlockEntity(
+    public @Nullable BlockEntity newBlockEntity(
             BlockPos pos,
             BlockState state
     ) {

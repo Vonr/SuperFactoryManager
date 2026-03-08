@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
+import org.jetbrains.annotations.Nullable;
 
 public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
 
@@ -34,7 +35,7 @@ public class PrintingPressBlock extends BaseEntityBlock implements EntityBlock {
     }
 
     @Override
-    public BlockEntity newBlockEntity(
+    public @Nullable BlockEntity newBlockEntity(
             BlockPos pos,
             BlockState state
     ) {

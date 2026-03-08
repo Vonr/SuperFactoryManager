@@ -214,6 +214,7 @@ public record LabelPositionHolder(Map<String, BlockPosSet> labels) {
         return "-- LabelPositionHolder - " + total + " total labels\n" + rtn;
     }
 
+    @SuppressWarnings("unused")
     public LabelPositionHolder removeAll(BlockPos blockPos) {
 
         labels().values().forEach(list -> list.remove(blockPos));

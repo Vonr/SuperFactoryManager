@@ -12,7 +12,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
-import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("NotNullFieldNotInitialized")
 public class SFMTextEditorConfigScreen extends Screen {
@@ -116,7 +115,7 @@ public class SFMTextEditorConfigScreen extends Screen {
 
     @Override
     public void render(
-            @NotNull PoseStack pPoseStack,
+            PoseStack pPoseStack,
             int pMouseX,
             int pMouseY,
             float pPartialTick

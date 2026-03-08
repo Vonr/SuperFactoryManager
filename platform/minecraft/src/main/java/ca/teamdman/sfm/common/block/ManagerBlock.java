@@ -84,11 +84,10 @@ public class ManagerBlock extends BaseEntityBlock implements EntityBlock, ICable
     }
 
     @Override
-    public BlockEntity newBlockEntity(
+    public @Nullable BlockEntity newBlockEntity(
             BlockPos pos,
             BlockState state
     ) {
-        //noinspection DataFlowIssue
         return SFMBlockEntities.MANAGER.get().create(pos, state);
     }
 
