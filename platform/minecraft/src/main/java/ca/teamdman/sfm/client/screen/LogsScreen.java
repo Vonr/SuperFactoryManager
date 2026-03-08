@@ -24,7 +24,7 @@ import org.apache.logging.log4j.Level;
 import java.util.HashMap;
 import java.util.Map;
 
-import static ca.teamdman.sfm.common.localization.LocalizationKeys.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
+import static ca.teamdman.sfm.client.screen.text_editor.SFMTextEditScreenV1.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP;
 
 // todo: checkbox for auto-scrolling
 public class LogsScreen extends Screen {
@@ -269,7 +269,7 @@ public class LogsScreen extends Screen {
                     new SFMButtonBuilder()
                             .setPosition(this.width / 2 - 2 + 115, this.height / 2 - 100 + 195)
                             .setSize(80, 20)
-                             .setText(LOGS_GUI_CLEAR_LOGS_BUTTON)
+                            .setText(LOGS_GUI_CLEAR_LOGS_BUTTON)
                             .setOnPress((button) -> {
                                 SFMPackets.sendToServer(new ServerboundManagerClearLogsPacket(
                                         MENU.containerId,

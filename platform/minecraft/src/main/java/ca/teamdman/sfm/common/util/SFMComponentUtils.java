@@ -1,6 +1,6 @@
 package ca.teamdman.sfm.common.util;
 
-import ca.teamdman.sfm.common.localization.LocalizationKeys;
+import ca.teamdman.sfm.client.jei.FallingAnvilJEICategory;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -68,7 +68,7 @@ public class SFMComponentUtils {
         }
 
         // Append our lore
-        lore.add(StringTag.valueOf(Component.Serializer.toJson(LocalizationKeys.FALLING_ANVIL_JEI_CONSUMED.getComponent())));
+        lore.add(StringTag.valueOf(Component.Serializer.toJson(FallingAnvilJEICategory.Localization.FALLING_ANVIL_JEI_CONSUMED.getComponent())));
 
         // Track the lore list back into the display tag
         displayTag.put("Lore", lore);

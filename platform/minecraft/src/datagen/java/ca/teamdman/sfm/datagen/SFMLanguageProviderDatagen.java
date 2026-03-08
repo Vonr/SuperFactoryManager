@@ -16,16 +16,18 @@ import java.util.Set;
 
 public class SFMLanguageProviderDatagen extends MCVersionAgnosticLanguageDataGen {
     public SFMLanguageProviderDatagen(GatherDataEvent event) {
+
         super(event, SFM.MOD_ID, "en_us");
     }
 
     public static List<LocalizationEntry> getEntries() {
+
         var rtn = new ArrayList<LocalizationEntry>();
 
         SFMAnnotationUtils.discoverAnnotations(SFMLocalizationDatagen.class)
                 .forEach(annotationData -> {
                     // Load the class containing the field with the annotation
-                    Class<?> parentClass = annotationData.tryLoadAnnotatedClass();
+                    Class<?> parentClass = annotationData.tryLoadClass();
 
                     // Load the field
                     Field declaredField;
@@ -37,7 +39,9 @@ public class SFMLanguageProviderDatagen extends MCVersionAgnosticLanguageDataGen
 
                     // Ensure the field is of the correct type
                     if (!declaredField.getType().equals(LocalizationEntry.class)) {
-                        throw new RuntimeException("Field " + declaredField.getName() + " is not of type LocalizationEntry");
+                        throw new RuntimeException("Field "
+                                                   + declaredField.getName()
+                                                   + " is not of type LocalizationEntry");
                     }
 
                     // Get the instance
@@ -48,7 +52,12 @@ public class SFMLanguageProviderDatagen extends MCVersionAgnosticLanguageDataGen
                         throw new RuntimeException(e);
                     }
 
-                    SFM.LOGGER.info("Found localization entry \"{}\" in {}", entry.key().get(), parentClass.getName());
+                    SFM.LOGGER.info(
+                            "Found localization entry \"{}\" in {}#{}",
+                            entry.key().get(),
+                            parentClass.getName(),
+                            declaredField.getName()
+                    );
 
                     // Add to the results list
                     rtn.add(entry);
@@ -59,6 +68,7 @@ public class SFMLanguageProviderDatagen extends MCVersionAgnosticLanguageDataGen
 
     @Override
     protected void addTranslations() {
+
         Set<String> seen = new HashSet<>();
         for (var entry : getEntries()) {
             add(entry.key().get(), entry.value().get());
@@ -83,4 +93,5 @@ public class SFMLanguageProviderDatagen extends MCVersionAgnosticLanguageDataGen
             throw new IllegalStateException("Unmapped entries: " + String.join(", ", unmapped));
         }
     }
+
 }

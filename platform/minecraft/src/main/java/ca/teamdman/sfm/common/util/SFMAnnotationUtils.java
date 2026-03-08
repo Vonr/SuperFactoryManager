@@ -108,7 +108,7 @@ public class SFMAnnotationUtils {
             return existing == null ? null : Enum.valueOf(clazz, getEnumValue(existing));
         }
 
-        public Class<?> tryLoadAnnotatedClass() {
+        public Class<?> tryLoadClass() {
             // load the class
             try {
                 return Class.forName(
@@ -116,8 +116,8 @@ public class SFMAnnotationUtils {
                         true,
                         SFM.class.getClassLoader()
                 );
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
+            } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                throw new RuntimeException("Failed to load class " + clazz().getClassName(), e);
             }
         }
 
