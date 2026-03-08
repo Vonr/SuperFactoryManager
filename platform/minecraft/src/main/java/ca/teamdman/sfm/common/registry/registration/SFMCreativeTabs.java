@@ -13,7 +13,7 @@ public class SFMCreativeTabs {
     public static final CreativeModeTab MAIN = new SFMCreativeModeTab();
 
     @SFMLocalizationDatagen
-    public static final LocalizationEntry CREATIVE_TAB = new LocalizationEntry(
+    public static final LocalizationEntry CREATIVE_TAB_NAME = new LocalizationEntry(
             "item_group.sfm",
             "Super Factory Manager"
     );
@@ -33,7 +33,7 @@ public class SFMCreativeTabs {
         @Override
         public Component getDisplayName() {
 
-            return CREATIVE_TAB.getComponent();
+            return CREATIVE_TAB_NAME.getComponent();
         }
 
     }
