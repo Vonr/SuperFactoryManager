@@ -2,6 +2,7 @@ package ca.teamdman.sfm.client.screen.text_editor;
 
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.ProgramTokenContextActions;
+import ca.teamdman.sfm.client.registry.SFMKeyMappings;
 import ca.teamdman.sfm.client.screen.*;
 import ca.teamdman.sfm.client.text_editor.ISFMTextEditScreenOpenContext;
 import ca.teamdman.sfm.client.text_styling.ProgramSyntaxHighlightingHelper;
@@ -82,6 +83,8 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
 
     private boolean scrolledOnFirstInit = false;
 
+    private boolean suppressNextCharTypedForIntellisenseAccept = false;
+
     public SFMTextEditScreenV1(
             ISFMTextEditScreenOpenContext openContext
     ) {
@@ -137,12 +140,17 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
             int pModifiers
     ) {
 
+        boolean handled = false;
         if (pKeyCode == GLFW.GLFW_KEY_LEFT_CONTROL || pKeyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
             // if control released => update syntax highlighting
             textarea.rebuild(Screen.hasControlDown());
-            return true;
+            handled = true;
         }
-        return false;
+        if (suppressNextCharTypedForIntellisenseAccept && isIntellisenseAcceptKey(pKeyCode, pScanCode)) {
+            suppressNextCharTypedForIntellisenseAccept = false;
+            handled = true;
+        }
+        return handled;
     }
 
     @Override
@@ -151,14 +159,48 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
             int pModifiers
     ) {
 
+        if (suppressNextCharTypedForIntellisenseAccept) {
+            suppressNextCharTypedForIntellisenseAccept = false;
+            return true;
+        }
         if (Screen.hasControlDown() && pCodePoint == ' ') {
             return true;
         }
-        if (!suggestedActions.isEmpty() && pCodePoint == '\\') {
-            // prevent intellisense-accept hotkey from being typed
-            return true;
-        }
         return super.charTyped(pCodePoint, pModifiers);
+    }
+
+    private boolean isIntellisenseAcceptKey(
+            int pKeyCode,
+            int pScanCode
+    ) {
+
+        return SFMKeyMappings.TEXT_EDITOR_ACCEPT_INTELLISENSE_KEY.get().matches(pKeyCode, pScanCode);
+    }
+
+    private boolean acceptSelectedIntellisenseAction() {
+
+        if (suggestedActions.isEmpty()) {
+            return false;
+        }
+        IntellisenseAction action = suggestedActions.getSelected();
+        assert action != null;
+
+        ManipulationResult result = action.perform(
+                new IntellisenseContext(
+                        new ProgramBuilder(textarea.getValue()).build(),
+                        textarea.getCursorPosition(),
+                        textarea.getSelectionCursorPosition(),
+                        openContext.labelPositionHolder(),
+                        SFMConfig.CLIENT_TEXT_EDITOR_CONFIG.intellisenseLevel.get()
+                )
+        );
+        double scrollAmount = textarea.getScrollAmount();
+        textarea.setValue(result.content());
+        textarea.setSelectionCursorPosition(result.selectionCursorPosition());
+        textarea.setCursorPosition(result.cursorPosition());
+        textarea.setScrollAmount(scrollAmount);
+        suppressNextCharTypedForIntellisenseAccept = true;
+        return true;
     }
 
     @Override
@@ -199,24 +241,7 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
             textarea.setScrollAmount(scrollAmount);
             return true;
         }
-        if (pKeyCode == GLFW.GLFW_KEY_BACKSLASH && !suggestedActions.isEmpty()) {
-            IntellisenseAction action = suggestedActions.getSelected();
-            assert action != null;
-
-            ManipulationResult result = action.perform(
-                    new IntellisenseContext(
-                            new ProgramBuilder(textarea.getValue()).build(),
-                            textarea.getCursorPosition(),
-                            textarea.getSelectionCursorPosition(),
-                            openContext.labelPositionHolder(),
-                            SFMConfig.CLIENT_TEXT_EDITOR_CONFIG.intellisenseLevel.get()
-                    )
-            );
-            double scrollAmount = textarea.getScrollAmount();
-            textarea.setValue(result.content());
-            textarea.setSelectionCursorPosition(result.selectionCursorPosition());
-            textarea.setCursorPosition(result.cursorPosition());
-            textarea.setScrollAmount(scrollAmount);
+        if (isIntellisenseAcceptKey(pKeyCode, pScanCode) && acceptSelectedIntellisenseAction()) {
             return true;
         }
         if (pKeyCode == GLFW.GLFW_KEY_LEFT_CONTROL || pKeyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
