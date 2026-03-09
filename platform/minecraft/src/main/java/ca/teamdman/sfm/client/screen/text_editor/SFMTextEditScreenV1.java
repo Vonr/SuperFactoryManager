@@ -169,40 +169,6 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
         return super.charTyped(pCodePoint, pModifiers);
     }
 
-    private boolean isIntellisenseAcceptKey(
-            int pKeyCode,
-            int pScanCode
-    ) {
-
-        return SFMKeyMappings.TEXT_EDITOR_ACCEPT_INTELLISENSE_KEY.get().matches(pKeyCode, pScanCode);
-    }
-
-    private boolean acceptSelectedIntellisenseAction() {
-
-        if (suggestedActions.isEmpty()) {
-            return false;
-        }
-        IntellisenseAction action = suggestedActions.getSelected();
-        assert action != null;
-
-        ManipulationResult result = action.perform(
-                new IntellisenseContext(
-                        new ProgramBuilder(textarea.getValue()).build(),
-                        textarea.getCursorPosition(),
-                        textarea.getSelectionCursorPosition(),
-                        openContext.labelPositionHolder(),
-                        SFMConfig.CLIENT_TEXT_EDITOR_CONFIG.intellisenseLevel.get()
-                )
-        );
-        double scrollAmount = textarea.getScrollAmount();
-        textarea.setValue(result.content());
-        textarea.setSelectionCursorPosition(result.selectionCursorPosition());
-        textarea.setCursorPosition(result.cursorPosition());
-        textarea.setScrollAmount(scrollAmount);
-        suppressNextCharTypedForIntellisenseAccept = true;
-        return true;
-    }
-
     @Override
     public boolean keyPressed(
             int pKeyCode,
@@ -328,6 +294,40 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
     public void tick() {
 
         this.textarea.tick();
+    }
+
+    private boolean isIntellisenseAcceptKey(
+            int pKeyCode,
+            int pScanCode
+    ) {
+
+        return SFMKeyMappings.TEXT_EDITOR_ACCEPT_INTELLISENSE_KEY.get().matches(pKeyCode, pScanCode);
+    }
+
+    private boolean acceptSelectedIntellisenseAction() {
+
+        if (suggestedActions.isEmpty()) {
+            return false;
+        }
+        IntellisenseAction action = suggestedActions.getSelected();
+        assert action != null;
+
+        ManipulationResult result = action.perform(
+                new IntellisenseContext(
+                        new ProgramBuilder(textarea.getValue()).build(),
+                        textarea.getCursorPosition(),
+                        textarea.getSelectionCursorPosition(),
+                        openContext.labelPositionHolder(),
+                        SFMConfig.CLIENT_TEXT_EDITOR_CONFIG.intellisenseLevel.get()
+                )
+        );
+        double scrollAmount = textarea.getScrollAmount();
+        textarea.setValue(result.content());
+        textarea.setSelectionCursorPosition(result.selectionCursorPosition());
+        textarea.setCursorPosition(result.cursorPosition());
+        textarea.setScrollAmount(scrollAmount);
+        suppressNextCharTypedForIntellisenseAccept = true;
+        return true;
     }
 
     @Override
@@ -864,8 +864,8 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
                 String plainLine = componentColoured.getString();
                 int lineLength = plainLine.length();
 
-                boolean cursorOnThisLine =
-                        isCursorVisible && cursorIndex >= charCountAccum
+                boolean isCursorOnThisLine =
+                        cursorIndex >= charCountAccum
                         && cursorIndex <= charCountAccum + lineLength;
 
                 if (SFMTextEditorUtils.shouldShowLineNumbers()) {
@@ -883,7 +883,7 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
                     );
                 }
 
-                if (cursorOnThisLine) {
+                if (isCursorOnThisLine) {
                     isCursorAtEndOfLine = cursorIndex == charCountAccum + lineLength;
                     cursorY = lineY;
                     int relativeCursorIndex = cursorIndex - charCountAccum;
@@ -912,7 +912,7 @@ public class SFMTextEditScreenV1 extends Screen implements ISFMTextEditScreen {
                             matrix4f,
                             buffer
                     );
-                    drewCursorGlyph = true;
+                    drewCursorGlyph = isCursorVisible;
                 } else {
                     SFMFontUtils.drawInBatch(
                             componentColoured,
