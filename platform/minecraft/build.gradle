@@ -138,8 +138,7 @@ minecraft {
 
             // https://github.com/ChiefArug/ThermalSysteams/blob/main/build.gradle#L27
             // https://discord.com/channels/313125603924639766/983834532904042537/1089449308048343090
-            jvmArgs '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods',
-                    '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED'
+            jvmArgs '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
                 "${mod_id}" {
@@ -173,8 +172,7 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
-            jvmArgs '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods',
-                    '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED'
+            jvmArgs '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
                 "${mod_id}" {
@@ -199,8 +197,7 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
-            jvmArgs '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods',
-                    '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED'
+            jvmArgs '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             mods {
                 "${mod_id}" {
@@ -220,8 +217,7 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
-            jvmArgs '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods',
-                    '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED'
+            jvmArgs '-XX:+IgnoreUnrecognizedVMOptions', '-XX:+AllowRedefinitionToAddDeleteMethods'
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
