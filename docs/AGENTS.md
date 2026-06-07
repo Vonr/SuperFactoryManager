@@ -150,3 +150,5 @@ Commit messages should contain an emoji.
 ## Writing Java
 
 When we encounter a part of code that requires a difference across the branches, we should introduce adapter methods annotated with `@MCVersionDependentBehaviour` to minimize and make obvious the surface area where the code is forced to change to accommodate the changes in the modding platform.
+
+There's also [guidance on how to find the source code for Minecraft/Forge/NeoForge/etc](./SOURCE_CODE_NAVIGATION.md).
