@@ -40,9 +40,21 @@ To run a command multiple versions, see `sfm-propagate-changes gradle run --help
 | **Launch** | `./gradlew runClient_teamy` | Starts Minecraft for testing. My config changes the default window size. |
 | **Datagen** | `./gradlew runDatagen` | **Crucial.** Generates recipes, tags, and models. Run after modifying datagen sources. |
 | **Game Tests** | `./gradlew runGameTestServer`| Runs in-game tests. |
+| **Game Tests** | `./Run-SelectedGameTests.ps1 wither_aggro_*` | Runs only matching SFM game tests on `1.19.2`. |
 | **Java Tests** | `./gradlew test`| Runs junit tests. |
 
 There is a `sfm-propagate-changes.exe gradle log tldr [--latest|<path>]` command to summarize the gradle output.
+
+### Running Selected SFM Game Tests
+
+`1.19.2` filters SFM game tests during registration, so you can run a subset of tests without changing vanilla GameTest startup.
+
+- Preferred command: `./Run-SelectedGameTests.ps1 wither_aggro_*`
+- Direct Gradle command: `./gradlew --no-daemon runGameTestServer -PsfmGameTestSelection=sfm:wither_aggro_*`
+- Unqualified selectors are treated as `sfm:<pattern>`
+- `*` matches any number of characters and `?` matches one character
+- Multiple selectors can be passed with commas, for example: `sfm:wither_aggro_*,sfm:tough_cable_*`
+- On `1.19.2`, Forge GameTest shutdown may still make Gradle report a failure after a successful run; `runGameTest/logs/latest.log` is the authoritative result
 
 ## 💻 The CLI
 
