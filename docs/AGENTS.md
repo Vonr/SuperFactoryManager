@@ -150,7 +150,3 @@ Commit messages should contain an emoji.
 ## Writing Java
 
 When we encounter a part of code that requires a difference across the branches, we should introduce adapter methods annotated with `@MCVersionDependentBehaviour` to minimize and make obvious the surface area where the code is forced to change to accommodate the changes in the modding platform.
-
-## JAVA_HOME
-
-See the Set-JavaHome.ps1 file in the platform/minecraft dir.
