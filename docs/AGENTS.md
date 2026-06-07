@@ -128,8 +128,6 @@ After making changes to rust code, run [`check-all.ps1`](../platform/cli/sfm-pro
 
 Commit messages should contain the worktrees relevant to the work that was done (1.19.2, etc).
 
-[Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) should be used by agents.
-
 Commit messages should contain the platform relevant to the work that was done ("mod" (platform/minecraft; java), cli (platform/cli/sfm-propagate-changes), etc).
 
 Commit messages should contain an emoji.
@@ -137,3 +135,7 @@ Commit messages should contain an emoji.
 ## Writing Java
 
 When we encounter a part of code that requires a difference across the branches, we should introduce adapter methods annotated with `@MCVersionDependentBehaviour` to minimize and make obvious the surface area where the code is forced to change to accommodate the changes in the modding platform.
+
+## JAVA_HOME
+
+See the Set-JavaHome.ps1 file in the platform/minecraft dir.
