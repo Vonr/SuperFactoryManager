@@ -27,6 +27,8 @@ The other branches' AGENTS.md files all point to this one, do not read those oth
 
 I work out of the 1.19.2 branch most of the time. Do NOT propose changes outside of the branch that's currently being worked on; the `sfm-propagate-changes.exe git merge` command will handle updating the other branches.
 
+When merging, the default behaviour should be "keep existing" and subsequently meticulously graft the essence of the change over, we NEVER want to accidentally clobber changes that were present in the code for supporting the newer MC version. Absolute caution must be exercised when modifying build.gradle especially.
+
 ## 🛠️ Gradle Commands
 
 Gradle commands against a specific version should be run from the `platform/minecraft/` directory.
