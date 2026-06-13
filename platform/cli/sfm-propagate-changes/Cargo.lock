@@ -2366,8 +2366,6 @@ dependencies = [
  "rand 0.9.2",
  "ratatui",
  "reqwest",
- "serde",
- "serde_json",
  "sha1",
  "teamy-figue",
  "teamy-windows",

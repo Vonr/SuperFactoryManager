@@ -26,8 +26,6 @@ open = { version = "5.3.3", features = ["shellexecute-on-windows"] }
 rand = "0.9.2"
 ratatui = "0.30.0"
 reqwest = { version = "0.12.24", default-features = false, features = ["blocking", "multipart", "rustls-tls"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
 sha1 = "0.10.6"
 tokio = { version = "1.49.0", features = ["full"] }
 tracing = "0.1.44"

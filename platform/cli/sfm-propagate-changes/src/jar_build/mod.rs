@@ -1,11 +1,9 @@
 use crate::worktree::get_sorted_worktrees;
 use chrono::Local;
 use eyre::Context;
+use facet::Facet;
 use reqwest::StatusCode;
 use reqwest::blocking::Client;
-use serde::Deserialize;
-use serde::Serialize;
-use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
 use std::cmp::Ordering;
@@ -156,20 +154,75 @@ struct ComparePaths {
     rust_jar: PathBuf,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Facet)]
+#[facet(transparent)]
+struct JsonPath(String);
+
+impl TryFrom<JsonPath> for PathBuf {
+    type Error = String;
+
+    fn try_from(value: JsonPath) -> Result<Self, Self::Error> {
+        Ok(PathBuf::from(value.0))
+    }
+}
+
+impl TryFrom<&PathBuf> for JsonPath {
+    type Error = String;
+
+    fn try_from(value: &PathBuf) -> Result<Self, Self::Error> {
+        value
+            .to_str()
+            .map(|path| JsonPath(path.to_string()))
+            .ok_or_else(|| format!("Path is not valid Unicode: {}", value.display()))
+    }
+}
+
+#[derive(Clone, Debug, Facet)]
+#[facet(transparent)]
+struct JsonOptionalPath(Option<String>);
+
+impl TryFrom<JsonOptionalPath> for Option<PathBuf> {
+    type Error = String;
+
+    fn try_from(value: JsonOptionalPath) -> Result<Self, Self::Error> {
+        Ok(value.0.map(PathBuf::from))
+    }
+}
+
+impl TryFrom<&Option<PathBuf>> for JsonOptionalPath {
+    type Error = String;
+
+    fn try_from(value: &Option<PathBuf>) -> Result<Self, Self::Error> {
+        value
+            .as_ref()
+            .map(JsonPath::try_from)
+            .transpose()
+            .map(|path| JsonOptionalPath(path.map(|path| path.0)))
+    }
+}
+
+#[derive(Debug, Facet)]
 struct BuildPlan {
     schema_version: u32,
     mode: String,
     minecraft_version: String,
+    #[facet(proxy = JsonPath)]
     worktree_path: PathBuf,
+    #[facet(proxy = JsonPath)]
     minecraft_dir: PathBuf,
+    #[facet(proxy = JsonPath)]
     gradle_output_jar: PathBuf,
+    #[facet(proxy = JsonPath)]
     rust_output_jar: PathBuf,
+    #[facet(proxy = JsonPath)]
     cache_dir: PathBuf,
+    #[facet(proxy = JsonPath)]
     state_dir: PathBuf,
+    #[facet(proxy = JsonPath)]
     maven_cache_dir: PathBuf,
+    #[facet(proxy = JsonPath)]
     lockfile_path: PathBuf,
-    #[serde(skip_serializing)]
+    #[facet(skip_serializing)]
     lockfile: Option<ArtifactLockfile>,
     java: JavaPlan,
     refresh: bool,
@@ -185,7 +238,7 @@ struct BuildPlan {
     warnings: Vec<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Facet)]
 struct Repository {
     name: String,
     url: String,
@@ -200,12 +253,13 @@ struct MavenCoordinate {
     extension: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Facet)]
 struct ArtifactPlan {
     id: String,
     coordinate: Option<String>,
     repository: Option<String>,
     url: Option<String>,
+    #[facet(proxy = JsonPath)]
     cache_path: PathBuf,
     sha1: Option<String>,
     downloaded: bool,
@@ -213,21 +267,23 @@ struct ArtifactPlan {
     provenance: ArtifactProvenance,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Facet)]
 struct ArtifactProvenance {
     schema_version: u32,
     source: ArtifactSource,
     coordinate: Option<String>,
     repository: Option<String>,
     url: Option<String>,
+    #[facet(proxy = JsonOptionalPath)]
     original_path: Option<PathBuf>,
     sha1: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Facet)]
 struct ArtifactLockfile {
     schema_version: u32,
     minecraft_version: String,
+    #[facet(proxy = JsonPath)]
     maven_cache_dir: PathBuf,
     allow_local_artifact_cache: bool,
     repositories: Vec<Repository>,
@@ -235,29 +291,33 @@ struct ArtifactLockfile {
     artifacts: Vec<ArtifactLockEntry>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Facet)]
 struct DependencyLockEntry {
     configuration: String,
     notation: String,
     resolved_notation: String,
     source: DependencySource,
     dynamic_version: bool,
+    #[facet(proxy = JsonPath)]
     cache_path: PathBuf,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Facet)]
 struct ArtifactLockEntry {
     coordinate: Option<String>,
     source: ArtifactSource,
     repository: Option<String>,
     url: Option<String>,
+    #[facet(proxy = JsonPath)]
     cache_path: PathBuf,
+    #[facet(proxy = JsonOptionalPath)]
     original_path: Option<PathBuf>,
     sha1: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Clone, Debug, Eq, Facet, PartialEq)]
+#[facet(rename_all = "kebab-case")]
+#[repr(u8)]
 enum ArtifactSource {
     RemoteMaven,
     RemoteHttp,
@@ -266,7 +326,7 @@ enum ArtifactSource {
     ExistingSfmCacheUnknown,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct MinecraftPlan {
     version_manifest: ArtifactPlan,
     version_json: ArtifactPlan,
@@ -277,7 +337,7 @@ struct MinecraftPlan {
     libraries_count: usize,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct ForgeUserdevPlan {
     artifact: ArtifactPlan,
     spec: Option<i64>,
@@ -295,7 +355,7 @@ struct ForgeUserdevPlan {
     run_configs: Vec<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct McpConfigPlan {
     artifact: ArtifactPlan,
     joined_steps: Vec<String>,
@@ -304,24 +364,26 @@ struct McpConfigPlan {
     library_count: usize,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct DependencyPlan {
     configuration: String,
     notation: String,
     resolved_notation: String,
     source: DependencySource,
+    #[facet(proxy = JsonPath)]
     cache_path: PathBuf,
     url: Option<String>,
     dynamic_version: bool,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, Facet, PartialEq)]
+#[repr(u8)]
 enum DependencySource {
     CurseMaven,
     Maven,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct GraphNode {
     id: String,
     kind: String,
@@ -331,17 +393,21 @@ struct GraphNode {
     rebuild_reason: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct JavaPlan {
+    #[facet(proxy = JsonPath)]
     executable: PathBuf,
+    #[facet(proxy = JsonOptionalPath)]
     home: Option<PathBuf>,
     version_output: String,
     major_version: u32,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct JarCompareReport {
+    #[facet(proxy = JsonPath)]
     gradle_jar: PathBuf,
+    #[facet(proxy = JsonPath)]
     rust_jar: PathBuf,
     strict_manifest: bool,
     matches: bool,
@@ -354,14 +420,14 @@ struct JarCompareReport {
     manifest: ManifestCompare,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct ChangedEntry {
     path: String,
     gradle_sha1: String,
     rust_sha1: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct ManifestCompare {
     compared: bool,
     changed: bool,
@@ -377,7 +443,8 @@ struct NormalizedJar {
     total_entries: usize,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Eq, Facet, PartialEq)]
+#[repr(u8)]
 enum NodeStatus {
     Ready,
     Planned,
@@ -391,6 +458,186 @@ struct Resolver {
     refresh: bool,
     allow_local_artifact_cache: bool,
     lockfile: Option<ArtifactLockfile>,
+}
+
+#[derive(Debug, Facet)]
+struct MojangVersionManifest {
+    #[facet(default)]
+    versions: Vec<MojangManifestVersion>,
+}
+
+#[derive(Debug, Facet)]
+struct MojangManifestVersion {
+    id: String,
+    url: String,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftVersionJson {
+    downloads: MinecraftDownloads,
+    #[facet(default)]
+    libraries: Vec<MinecraftLibrary>,
+    #[facet(rename = "assetIndex", default)]
+    asset_index: Option<MinecraftAssetIndex>,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftDownloads {
+    client: MinecraftDownload,
+    server: MinecraftDownload,
+    client_mappings: MinecraftDownload,
+    server_mappings: MinecraftDownload,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftDownload {
+    url: String,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftAssetIndex {
+    id: String,
+    url: String,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftAssetIndexJson {
+    #[facet(default)]
+    objects: BTreeMap<String, MinecraftAssetObject>,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftAssetObject {
+    hash: String,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftLibrary {
+    #[facet(default)]
+    downloads: Option<MinecraftLibraryDownloads>,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftLibraryDownloads {
+    #[facet(default)]
+    artifact: Option<MinecraftLibraryArtifact>,
+}
+
+#[derive(Debug, Facet)]
+struct MinecraftLibraryArtifact {
+    url: String,
+    path: String,
+}
+
+#[derive(Debug, Default, Facet)]
+struct ForgeUserdevConfig {
+    #[facet(default)]
+    spec: Option<i64>,
+    #[facet(default)]
+    mcp: Option<String>,
+    #[facet(default)]
+    sources: Option<String>,
+    #[facet(default)]
+    universal: Option<String>,
+    #[facet(default)]
+    binpatcher: Option<ForgeBinpatcherConfig>,
+    #[facet(default)]
+    patches: Option<String>,
+    #[facet(rename = "patchesOriginalPrefix", default)]
+    patches_original_prefix: Option<String>,
+    #[facet(rename = "patchesModifiedPrefix", default)]
+    patches_modified_prefix: Option<String>,
+    #[facet(default)]
+    ats: Vec<String>,
+    #[facet(default)]
+    sass: Vec<String>,
+    #[facet(default)]
+    modules: Vec<String>,
+    #[facet(default)]
+    libraries: Vec<String>,
+    #[facet(default)]
+    runs: BTreeMap<String, ForgeRunConfig>,
+}
+
+#[derive(Debug, Default, Facet)]
+struct ForgeBinpatcherConfig {
+    #[facet(default)]
+    version: Option<String>,
+}
+
+#[derive(Debug, Default, Facet)]
+struct McpConfigJson {
+    #[facet(default)]
+    data: McpData,
+    #[facet(default)]
+    steps: McpSteps,
+    #[facet(default)]
+    functions: BTreeMap<String, McpFunction>,
+    #[facet(default)]
+    libraries: BTreeMap<String, Vec<String>>,
+}
+
+#[derive(Debug, Default, Facet)]
+struct McpData {
+    #[facet(default)]
+    mappings: Option<String>,
+    #[facet(default)]
+    inject: Option<String>,
+    #[facet(default)]
+    patches: Option<McpPatchData>,
+}
+
+#[derive(Debug, Default, Facet)]
+struct McpPatchData {
+    #[facet(default)]
+    client: Option<String>,
+    #[facet(default)]
+    joined: Option<String>,
+    #[facet(default)]
+    server: Option<String>,
+}
+
+#[derive(Debug, Default, Facet)]
+struct McpSteps {
+    #[facet(default)]
+    joined: Vec<McpStep>,
+}
+
+#[derive(Debug, Default, Facet)]
+struct McpStep {
+    #[facet(default)]
+    name: Option<String>,
+    #[facet(rename = "type", default)]
+    step_type: Option<String>,
+}
+
+#[derive(Debug, Default, Facet)]
+struct McpFunction {
+    #[facet(default)]
+    version: Option<String>,
+    #[facet(default)]
+    args: Vec<String>,
+    #[facet(default)]
+    jvmargs: Vec<String>,
+    #[facet(default)]
+    repo: Option<String>,
+}
+
+impl McpPatchData {
+    fn has_any_patch_root(&self) -> bool {
+        self.client.is_some() || self.joined.is_some() || self.server.is_some()
+    }
+}
+
+impl McpFunction {
+    fn has_declared_config(&self) -> bool {
+        self.version
+            .as_deref()
+            .is_some_and(|version| !version.is_empty())
+            || !self.args.is_empty()
+            || !self.jvmargs.is_empty()
+            || self.repo.as_deref().is_some_and(|repo| !repo.is_empty())
+    }
 }
 
 impl Resolver {
@@ -1148,39 +1395,19 @@ fn resolve_minecraft_plan(
     fs::create_dir_all(&minecraft_cache)?;
     let manifest_path = minecraft_cache.join("version_manifest_v2.json");
     download_to_path(client, VERSION_MANIFEST_URL, &manifest_path)?;
-    let manifest = read_json_file(&manifest_path)?;
+    let manifest: MojangVersionManifest = read_json_file(&manifest_path)?;
     let version_url = manifest
-        .get("versions")
-        .and_then(Value::as_array)
-        .and_then(|versions| {
-            versions.iter().find_map(|version| {
-                if version.get("id").and_then(Value::as_str) == Some(minecraft_version) {
-                    version.get("url").and_then(Value::as_str)
-                } else {
-                    None
-                }
-            })
-        })
+        .versions
+        .iter()
+        .find_map(|version| (version.id == minecraft_version).then_some(version.url.as_str()))
         .ok_or_else(|| {
             eyre::eyre!("Minecraft version {minecraft_version} not found in Mojang manifest")
         })?;
 
     let version_json_path = minecraft_cache.join(format!("{minecraft_version}.json"));
     download_to_path(client, version_url, &version_json_path)?;
-    let version_json = read_json_file(&version_json_path)?;
-    let downloads = version_json
-        .get("downloads")
-        .and_then(Value::as_object)
-        .ok_or_else(|| eyre::eyre!("Minecraft version JSON missing downloads object"))?;
-
-    let client_jar_url = download_url(downloads, "client")?;
-    let server_jar_url = download_url(downloads, "server")?;
-    let client_mappings_url = download_url(downloads, "client_mappings")?;
-    let server_mappings_url = download_url(downloads, "server_mappings")?;
-    let libraries_count = version_json
-        .get("libraries")
-        .and_then(Value::as_array)
-        .map_or(0, Vec::len);
+    let version_json: MinecraftVersionJson = read_json_file(&version_json_path)?;
+    let libraries_count = version_json.libraries.len();
 
     Ok(MinecraftPlan {
         version_manifest: plain_artifact(
@@ -1195,36 +1422,23 @@ fn resolve_minecraft_plan(
             version_json_path,
             "Minecraft libraries and downloads",
         )?,
-        client_jar_url,
-        server_jar_url,
-        client_mappings_url,
-        server_mappings_url,
+        client_jar_url: version_json.downloads.client.url,
+        server_jar_url: version_json.downloads.server.url,
+        client_mappings_url: version_json.downloads.client_mappings.url,
+        server_mappings_url: version_json.downloads.server_mappings.url,
         libraries_count,
     })
 }
 
-fn download_url(downloads: &serde_json::Map<String, Value>, key: &str) -> eyre::Result<String> {
-    downloads
-        .get(key)
-        .and_then(|download| download.get("url"))
-        .and_then(Value::as_str)
-        .map(str::to_string)
-        .ok_or_else(|| eyre::eyre!("Minecraft version JSON missing downloads.{key}.url"))
-}
-
 fn read_forge_userdev(artifact: &ArtifactPlan) -> eyre::Result<ForgeUserdevPlan> {
-    let config = read_zip_json_entry(&artifact.cache_path, "config.json")?;
+    let config: ForgeUserdevConfig = read_zip_json_entry(&artifact.cache_path, "config.json")?;
     let binpatcher = config
-        .get("binpatcher")
-        .and_then(|binpatcher| binpatcher.get("version"))
-        .and_then(Value::as_str)
-        .map(str::to_string);
-
-    let runs = config
-        .get("runs")
-        .and_then(Value::as_object)
-        .map(|runs| runs.keys().cloned().collect())
-        .unwrap_or_default();
+        .binpatcher
+        .as_ref()
+        .and_then(|binpatcher| binpatcher.version.clone());
+    let module_count = config.modules.len();
+    let library_count = config.libraries.len();
+    let run_configs = config.runs.keys().cloned().collect();
 
     Ok(ForgeUserdevPlan {
         artifact: ArtifactPlan {
@@ -1238,69 +1452,50 @@ fn read_forge_userdev(artifact: &ArtifactPlan) -> eyre::Result<ForgeUserdevPlan>
             required_for: artifact.required_for.clone(),
             provenance: artifact.provenance.clone(),
         },
-        spec: config.get("spec").and_then(Value::as_i64),
-        mcp: config
-            .get("mcp")
-            .and_then(Value::as_str)
-            .map(str::to_string),
-        sources: config
-            .get("sources")
-            .and_then(Value::as_str)
-            .map(str::to_string),
-        universal: config
-            .get("universal")
-            .and_then(Value::as_str)
-            .map(str::to_string),
+        spec: config.spec,
+        mcp: config.mcp,
+        sources: config.sources,
+        universal: config.universal,
         binpatcher,
-        patches: config
-            .get("patches")
-            .and_then(Value::as_str)
-            .map(str::to_string),
-        patches_original_prefix: config
-            .get("patchesOriginalPrefix")
-            .and_then(Value::as_str)
-            .map(str::to_string),
-        patches_modified_prefix: config
-            .get("patchesModifiedPrefix")
-            .and_then(Value::as_str)
-            .map(str::to_string),
-        access_transformers: string_array(&config, "ats"),
-        side_strippers: string_array(&config, "sass"),
-        module_count: config
-            .get("modules")
-            .and_then(Value::as_array)
-            .map_or(0, Vec::len),
-        library_count: config
-            .get("libraries")
-            .and_then(Value::as_array)
-            .map_or(0, Vec::len),
-        run_configs: runs,
+        patches: config.patches,
+        patches_original_prefix: config.patches_original_prefix,
+        patches_modified_prefix: config.patches_modified_prefix,
+        access_transformers: config.ats,
+        side_strippers: config.sass,
+        module_count,
+        library_count,
+        run_configs,
     })
 }
 
 fn read_mcp_config(artifact: &ArtifactPlan) -> eyre::Result<McpConfigPlan> {
-    let config = read_zip_json_entry(&artifact.cache_path, "config.json")?;
+    let config: McpConfigJson = read_zip_json_entry(&artifact.cache_path, "config.json")?;
     let joined_steps = config
-        .get("steps")
-        .and_then(|steps| steps.get("joined"))
-        .and_then(Value::as_array)
-        .map(|steps| {
-            steps
-                .iter()
-                .filter_map(|step| {
-                    step.get("name")
-                        .or_else(|| step.get("type"))
-                        .and_then(Value::as_str)
-                        .map(str::to_string)
-                })
-                .collect()
-        })
-        .unwrap_or_default();
-    let data_keys = config
-        .get("data")
-        .and_then(Value::as_object)
-        .map(|data| data.keys().cloned().collect())
-        .unwrap_or_default();
+        .steps
+        .joined
+        .iter()
+        .filter_map(|step| step.name.as_ref().or(step.step_type.as_ref()).cloned())
+        .collect();
+    let mut data_keys = Vec::new();
+    if config.data.inject.is_some() {
+        data_keys.push("inject".to_string());
+    }
+    if config.data.mappings.is_some() {
+        data_keys.push("mappings".to_string());
+    }
+    if config
+        .data
+        .patches
+        .as_ref()
+        .is_some_and(McpPatchData::has_any_patch_root)
+    {
+        data_keys.push("patches".to_string());
+    }
+    let function_count = config
+        .functions
+        .values()
+        .filter(|function| function.has_declared_config())
+        .count();
 
     Ok(McpConfigPlan {
         artifact: ArtifactPlan {
@@ -1315,30 +1510,10 @@ fn read_mcp_config(artifact: &ArtifactPlan) -> eyre::Result<McpConfigPlan> {
             provenance: artifact.provenance.clone(),
         },
         joined_steps,
-        function_count: config
-            .get("functions")
-            .and_then(Value::as_object)
-            .map_or(0, serde_json::Map::len),
+        function_count,
         data_keys,
-        library_count: config
-            .get("libraries")
-            .and_then(Value::as_array)
-            .map_or(0, Vec::len),
+        library_count: config.libraries.values().map(Vec::len).sum(),
     })
-}
-
-fn string_array(config: &Value, key: &str) -> Vec<String> {
-    config
-        .get(key)
-        .and_then(Value::as_array)
-        .map(|values| {
-            values
-                .iter()
-                .filter_map(Value::as_str)
-                .map(str::to_string)
-                .collect()
-        })
-        .unwrap_or_default()
 }
 
 #[derive(Clone, Debug)]
@@ -1648,18 +1823,18 @@ impl RunKind {
     }
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Default, Facet)]
+#[facet(rename_all = "camelCase")]
 struct ForgeRunConfig {
-    #[serde(default)]
+    #[facet(default)]
     main: String,
-    #[serde(default)]
+    #[facet(default)]
     args: Vec<String>,
-    #[serde(default)]
+    #[facet(default)]
     jvm_args: Vec<String>,
-    #[serde(default)]
+    #[facet(default)]
     env: BTreeMap<String, String>,
-    #[serde(default)]
+    #[facet(default)]
     props: BTreeMap<String, String>,
 }
 
@@ -1869,22 +2044,20 @@ fn read_forge_run_config(
     context: &ExecutionContext<'_>,
     kind: RunKind,
 ) -> eyre::Result<ForgeRunConfig> {
-    let config = read_zip_json_entry(
+    let config: ForgeUserdevConfig = read_zip_json_entry(
         &context.artifact("forge-userdev")?.cache_path,
         "config.json",
     )?;
-    let run_value = config
-        .get("runs")
-        .and_then(Value::as_object)
-        .and_then(|runs| runs.get(kind.userdev_name()))
+    config
+        .runs
+        .get(kind.userdev_name())
+        .cloned()
         .ok_or_else(|| {
             eyre::eyre!(
                 "Forge userdev config does not define run config {}",
                 kind.userdev_name()
             )
-        })?;
-    serde_json::from_value(run_value.clone())
-        .wrap_err_with(|| format!("Failed to parse Forge run config {}", kind.userdev_name()))
+        })
 }
 
 fn run_config_requires_assets(config: &ForgeRunConfig) -> bool {
@@ -1909,18 +2082,11 @@ fn resolve_forge_userdev_modules(
     context: &ExecutionContext<'_>,
     resolver: &Resolver,
 ) -> eyre::Result<Vec<PathBuf>> {
-    let config = read_zip_json_entry(
+    let config: ForgeUserdevConfig = read_zip_json_entry(
         &context.artifact("forge-userdev")?.cache_path,
         "config.json",
     )?;
-    let coordinates = config
-        .get("modules")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_str)
-        .map(str::to_string)
-        .collect::<Vec<_>>();
+    let coordinates = config.modules;
 
     coordinates
         .iter()
@@ -2248,40 +2414,24 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
         .cache_dir
         .join("minecraft")
         .join(format!("{}.json", context.plan.minecraft_version));
-    let version_json = read_json_file(&version_json_path)?;
+    let version_json: MinecraftVersionJson = read_json_file(&version_json_path)?;
     let asset_index = version_json
-        .get("assetIndex")
+        .asset_index
         .ok_or_else(|| eyre::eyre!("Minecraft version JSON missing assetIndex"))?;
-    let index_id = asset_index
-        .get("id")
-        .and_then(Value::as_str)
-        .ok_or_else(|| eyre::eyre!("Minecraft version JSON missing assetIndex.id"))?
-        .to_string();
-    let index_url = asset_index
-        .get("url")
-        .and_then(Value::as_str)
-        .ok_or_else(|| eyre::eyre!("Minecraft version JSON missing assetIndex.url"))?;
+    let MinecraftAssetIndex {
+        id: index_id,
+        url: index_url,
+    } = asset_index;
     let assets_root = context.plan.cache_dir.join("assets");
     let index_path = assets_root.join("indexes").join(format!("{index_id}.json"));
-    download_to_path(&client, index_url, &index_path)?;
+    download_to_path(&client, &index_url, &index_path)?;
 
-    let index_json = read_json_file(&index_path)?;
-    let objects = index_json
-        .get("objects")
-        .and_then(Value::as_object)
-        .ok_or_else(|| {
-            eyre::eyre!(
-                "Minecraft asset index {} missing objects",
-                index_path.display()
-            )
-        })?;
+    let index_json: MinecraftAssetIndexJson = read_json_file(&index_path)?;
+    let objects = index_json.objects;
     let mut downloaded = 0usize;
     let mut checked = 0usize;
     for object in objects.values() {
-        let hash = object
-            .get("hash")
-            .and_then(Value::as_str)
-            .ok_or_else(|| eyre::eyre!("Minecraft asset entry missing hash"))?;
+        let hash = object.hash.as_str();
         let prefix = hash
             .get(..2)
             .ok_or_else(|| eyre::eyre!("Minecraft asset hash is too short: {hash}"))?;
@@ -2329,21 +2479,23 @@ struct ExecutionContext<'a> {
     forbidden_input_roots: Vec<PathBuf>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct NodeState {
     schema_version: u32,
     id: String,
     status: String,
     started_at_unix_ms: u128,
     duration_ms: u128,
+    #[facet(proxy = JsonPath)]
     java_executable: PathBuf,
     java_version: String,
     inputs: Vec<String>,
     outputs: Vec<NodeOutputState>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Facet)]
 struct NodeOutputState {
+    #[facet(proxy = JsonPath)]
     path: PathBuf,
     exists: bool,
     sha1: Option<String>,
@@ -2402,7 +2554,7 @@ impl<'a> ExecutionContext<'a> {
 
         fs::create_dir_all(&self.plan.state_dir)?;
         let state_path = self.plan.state_dir.join(format!("{id}.json"));
-        fs::write(&state_path, serde_json::to_string_pretty(&state)?)
+        fs::write(&state_path, facet_json::to_string_pretty(&state)?)
             .wrap_err_with(|| format!("Failed to write {}", state_path.display()))?;
         Ok(())
     }
@@ -4056,22 +4208,13 @@ fn resolve_forge_userdev_libraries(
     context: &ExecutionContext<'_>,
     resolver: &Resolver,
 ) -> eyre::Result<Vec<PathBuf>> {
-    let config = read_zip_json_entry(
+    let config: ForgeUserdevConfig = read_zip_json_entry(
         &context.artifact("forge-userdev")?.cache_path,
         "config.json",
     )?;
     let mut coordinates = Vec::new();
-    if let Some(libraries) = config.get("libraries").and_then(Value::as_array) {
-        coordinates.extend(
-            libraries
-                .iter()
-                .filter_map(Value::as_str)
-                .map(str::to_string),
-        );
-    }
-    if let Some(modules) = config.get("modules").and_then(Value::as_array) {
-        coordinates.extend(modules.iter().filter_map(Value::as_str).map(str::to_string));
-    }
+    coordinates.extend(config.libraries);
+    coordinates.extend(config.modules);
     coordinates.sort();
     coordinates.dedup();
 
@@ -4493,29 +4636,17 @@ fn write_minecraft_libraries_cfg(
         .cache_dir
         .join("minecraft")
         .join(format!("{}.json", context.plan.minecraft_version));
-    let version_json = read_json_file(&version_json_path)?;
-    let libraries = version_json
-        .get("libraries")
-        .and_then(Value::as_array)
-        .ok_or_else(|| eyre::eyre!("Minecraft version JSON missing libraries array"))?;
+    let version_json: MinecraftVersionJson = read_json_file(&version_json_path)?;
     let libraries_root = context.plan.cache_dir.join("minecraft").join("libraries");
     let mut lines = Vec::new();
 
-    for library in libraries {
-        let Some(artifact) = library
-            .get("downloads")
-            .and_then(|downloads| downloads.get("artifact"))
-        else {
+    for library in version_json.libraries {
+        let Some(artifact) = library.downloads.and_then(|downloads| downloads.artifact) else {
             continue;
         };
-        let Some(url) = artifact.get("url").and_then(Value::as_str) else {
-            continue;
-        };
-        let Some(path) = artifact.get("path").and_then(Value::as_str) else {
-            continue;
-        };
-        let library_path = libraries_root.join(path.replace('/', std::path::MAIN_SEPARATOR_STR));
-        download_to_path(client, url, &library_path)?;
+        let library_path =
+            libraries_root.join(artifact.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+        download_to_path(client, &artifact.url, &library_path)?;
         context.assert_allowed_input(&library_path)?;
         lines.push(format!(
             "-e={}",
@@ -5150,28 +5281,28 @@ struct SrgMethodMapping {
 
 type ParchmentParameters = BTreeMap<String, BTreeMap<(String, String), BTreeMap<usize, String>>>;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Facet)]
 struct ParchmentData {
-    #[serde(default)]
+    #[facet(default)]
     classes: Vec<ParchmentClass>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Facet)]
 struct ParchmentClass {
     name: String,
-    #[serde(default)]
+    #[facet(default)]
     methods: Vec<ParchmentMethod>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Facet)]
 struct ParchmentMethod {
     name: String,
     descriptor: String,
-    #[serde(default)]
+    #[facet(default)]
     parameters: Vec<ParchmentParameter>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Facet)]
 struct ParchmentParameter {
     index: usize,
     name: String,
@@ -5471,7 +5602,7 @@ fn read_parchment_parameters(path: &Path) -> eyre::Result<ParchmentParameters> {
     entry
         .read_to_string(&mut content)
         .wrap_err_with(|| format!("Failed to read parchment.json from {}", path.display()))?;
-    let data: ParchmentData = serde_json::from_str(&content)
+    let data: ParchmentData = facet_json::from_str(&content)
         .wrap_err_with(|| format!("Failed to parse parchment.json from {}", path.display()))?;
 
     let mut classes = BTreeMap::new();
@@ -6006,14 +6137,14 @@ fn write_compare_report(
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(path, serde_json::to_string_pretty(report)?)
+    fs::write(path, facet_json::to_string_pretty(report)?)
         .wrap_err_with(|| format!("Failed to write {}", path.display()))?;
     Ok(())
 }
 
 fn write_plan_outputs(plan: &BuildPlan, requested_path: Option<&Path>) -> eyre::Result<()> {
     fs::create_dir_all(&plan.state_dir)?;
-    let plan_json = serde_json::to_string_pretty(plan)?;
+    let plan_json = facet_json::to_string_pretty(plan)?;
     let last_plan_path = plan.state_dir.join("last-plan.json");
     fs::write(&last_plan_path, &plan_json)
         .wrap_err_with(|| format!("Failed to write {}", last_plan_path.display()))?;
@@ -6036,7 +6167,7 @@ fn write_artifact_lockfile(plan: &BuildPlan) -> eyre::Result<()> {
     }
     fs::write(
         &plan.lockfile_path,
-        serde_json::to_string_pretty(&lockfile)?,
+        facet_json::to_string_pretty(&lockfile)?,
     )
     .wrap_err_with(|| format!("Failed to write {}", plan.lockfile_path.display()))?;
     println!(
@@ -6134,7 +6265,7 @@ fn read_optional_artifact_lockfile(
     }
     let content =
         fs::read_to_string(path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
-    let lockfile: ArtifactLockfile = serde_json::from_str(&content)
+    let lockfile: ArtifactLockfile = facet_json::from_str(&content)
         .wrap_err_with(|| format!("Failed to parse {}", path.display()))?;
     if lockfile.minecraft_version != minecraft_version {
         eyre::bail!(
@@ -6182,7 +6313,7 @@ fn artifact_path_from_provenance_path(path: &Path) -> eyre::Result<PathBuf> {
 fn read_required_artifact_provenance(path: &Path) -> eyre::Result<ArtifactProvenance> {
     let content =
         fs::read_to_string(path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
-    serde_json::from_str(&content).wrap_err_with(|| format!("Failed to parse {}", path.display()))
+    facet_json::from_str(&content).wrap_err_with(|| format!("Failed to parse {}", path.display()))
 }
 
 fn relative_path(base: &Path, path: &Path) -> PathBuf {
@@ -6472,7 +6603,7 @@ fn read_artifact_provenance(path: &Path) -> eyre::Result<Option<ArtifactProvenan
     }
     let content = fs::read_to_string(&provenance_path)
         .wrap_err_with(|| format!("Failed to read {}", provenance_path.display()))?;
-    let provenance = serde_json::from_str(&content)
+    let provenance = facet_json::from_str(&content)
         .wrap_err_with(|| format!("Failed to parse {}", provenance_path.display()))?;
     Ok(Some(provenance))
 }
@@ -6482,19 +6613,25 @@ fn write_artifact_provenance(path: &Path, provenance: &ArtifactProvenance) -> ey
     if let Some(parent) = provenance_path.parent() {
         fs::create_dir_all(parent)?;
     }
-    let content = serde_json::to_string_pretty(provenance)
+    let content = facet_json::to_string_pretty(provenance)
         .wrap_err("Failed to encode artifact provenance")?;
     fs::write(&provenance_path, content)
         .wrap_err_with(|| format!("Failed to write {}", provenance_path.display()))
 }
 
-fn read_json_file(path: &Path) -> eyre::Result<Value> {
+fn read_json_file<T>(path: &Path) -> eyre::Result<T>
+where
+    T: Facet<'static>,
+{
     let content = fs::read_to_string(path)
         .wrap_err_with(|| format!("Failed to read JSON file: {}", path.display()))?;
-    serde_json::from_str(&content).wrap_err_with(|| format!("Failed to parse {}", path.display()))
+    facet_json::from_str(&content).wrap_err_with(|| format!("Failed to parse {}", path.display()))
 }
 
-fn read_zip_json_entry(path: &Path, entry_name: &str) -> eyre::Result<Value> {
+fn read_zip_json_entry<T>(path: &Path, entry_name: &str) -> eyre::Result<T>
+where
+    T: Facet<'static>,
+{
     let bytes = fs::read(path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
     let cursor = Cursor::new(bytes);
     let mut archive = ZipArchive::new(cursor)
@@ -6506,7 +6643,7 @@ fn read_zip_json_entry(path: &Path, entry_name: &str) -> eyre::Result<Value> {
     entry
         .read_to_string(&mut content)
         .wrap_err_with(|| format!("Failed to read {entry_name} from {}", path.display()))?;
-    serde_json::from_str(&content)
+    facet_json::from_str(&content)
         .wrap_err_with(|| format!("Failed to parse {entry_name} from {}", path.display()))
 }
 
@@ -6663,7 +6800,30 @@ impl VersionPart {
 
 #[cfg(test)]
 mod tests {
+    use super::ArtifactLockEntry;
+    use super::ArtifactLockfile;
+    use super::ArtifactPlan;
+    use super::ArtifactProvenance;
+    use super::ArtifactSource;
+    use super::BuildPlan;
+    use super::ChangedEntry;
+    use super::DependencyLockEntry;
+    use super::DependencyPlan;
+    use super::DependencySource;
+    use super::ForgeUserdevConfig;
+    use super::GraphNode;
+    use super::JarCompareReport;
+    use super::JavaPlan;
+    use super::ManifestCompare;
     use super::MavenCoordinate;
+    use super::McpConfigJson;
+    use super::McpConfigPlan;
+    use super::MinecraftPlan;
+    use super::MinecraftVersionJson;
+    use super::MojangVersionManifest;
+    use super::NodeStatus;
+    use super::ParchmentData;
+    use super::Repository;
     use super::compare_version_text;
     use super::extract_quoted;
     use super::interpolate_properties;
@@ -6673,6 +6833,7 @@ mod tests {
     use std::cmp::Ordering;
     use std::collections::BTreeMap;
     use std::path::Path;
+    use std::path::PathBuf;
 
     #[test]
     fn parses_classifier_coordinate() {
@@ -6763,5 +6924,264 @@ mod tests {
             normalize_manifest_bytes(left, true),
             normalize_manifest_bytes(right, true)
         );
+    }
+
+    #[test]
+    fn facet_json_roundtrips_artifact_lockfile_and_provenance() {
+        let provenance = minimal_provenance();
+        let provenance_json =
+            facet_json::to_string_pretty(&provenance).expect("provenance should serialize");
+        assert!(provenance_json.contains("remote-maven"));
+        let parsed_provenance: ArtifactProvenance =
+            facet_json::from_str(&provenance_json).expect("provenance should parse");
+        assert_eq!(parsed_provenance.sha1, "abc123");
+
+        let lockfile = ArtifactLockfile {
+            schema_version: 1,
+            minecraft_version: "1.19.2".to_string(),
+            maven_cache_dir: PathBuf::from("build/sfm-toolchain/maven"),
+            allow_local_artifact_cache: false,
+            repositories: vec![Repository {
+                name: "Forge".to_string(),
+                url: "https://maven.minecraftforge.net".to_string(),
+            }],
+            dependencies: vec![DependencyLockEntry {
+                configuration: "implementation".to_string(),
+                notation: "curse.maven:example-1:2.0".to_string(),
+                resolved_notation: "curse.maven:example-1:2.0".to_string(),
+                source: DependencySource::CurseMaven,
+                dynamic_version: false,
+                cache_path: PathBuf::from("artifact.jar"),
+            }],
+            artifacts: vec![ArtifactLockEntry {
+                coordinate: Some("g:a:1".to_string()),
+                source: ArtifactSource::RemoteMaven,
+                repository: Some("Forge".to_string()),
+                url: Some("https://example.test/a.jar".to_string()),
+                cache_path: PathBuf::from("a.jar"),
+                original_path: None,
+                sha1: "abc123".to_string(),
+            }],
+        };
+        let json = facet_json::to_string_pretty(&lockfile).expect("lockfile should serialize");
+        assert!(json.contains("remote-maven"));
+        let parsed: ArtifactLockfile = facet_json::from_str(&json).expect("lockfile should parse");
+        assert_eq!(parsed.artifacts[0].source, ArtifactSource::RemoteMaven);
+    }
+
+    #[test]
+    fn facet_json_serializes_plan_without_embedded_lockfile() {
+        let artifact = minimal_artifact();
+        let plan = BuildPlan {
+            schema_version: 1,
+            mode: "plan".to_string(),
+            minecraft_version: "1.19.2".to_string(),
+            worktree_path: PathBuf::from("D:/Repos/Minecraft/SFM/repos2/1.19.2"),
+            minecraft_dir: PathBuf::from("platform/minecraft"),
+            gradle_output_jar: PathBuf::from("build/libs/sfm.jar"),
+            rust_output_jar: PathBuf::from("build/libs/sfm-rust.jar"),
+            cache_dir: PathBuf::from("build/sfm-toolchain"),
+            state_dir: PathBuf::from("build/sfm-toolchain/state"),
+            maven_cache_dir: PathBuf::from("build/sfm-toolchain/maven"),
+            lockfile_path: PathBuf::from("sfm-toolchain.lock.json"),
+            lockfile: Some(ArtifactLockfile {
+                schema_version: 1,
+                minecraft_version: "1.19.2".to_string(),
+                maven_cache_dir: PathBuf::from("build/sfm-toolchain/maven"),
+                allow_local_artifact_cache: false,
+                repositories: Vec::new(),
+                dependencies: Vec::new(),
+                artifacts: Vec::new(),
+            }),
+            java: JavaPlan {
+                executable: PathBuf::from("java"),
+                home: None,
+                version_output: "openjdk version \"17\"".to_string(),
+                major_version: 17,
+            },
+            refresh: false,
+            allow_local_artifact_cache: false,
+            properties: BTreeMap::new(),
+            repositories: Vec::new(),
+            artifacts: vec![artifact.clone()],
+            minecraft: MinecraftPlan {
+                version_manifest: artifact.clone(),
+                version_json: artifact.clone(),
+                client_jar_url: "https://example.test/client.jar".to_string(),
+                server_jar_url: "https://example.test/server.jar".to_string(),
+                client_mappings_url: "https://example.test/client.txt".to_string(),
+                server_mappings_url: "https://example.test/server.txt".to_string(),
+                libraries_count: 0,
+            },
+            forge_userdev: super::ForgeUserdevPlan {
+                artifact: artifact.clone(),
+                spec: Some(1),
+                mcp: Some("de.oceanlabs.mcp:mcp_config:1@zip".to_string()),
+                sources: None,
+                universal: None,
+                binpatcher: None,
+                patches: None,
+                patches_original_prefix: None,
+                patches_modified_prefix: None,
+                access_transformers: Vec::new(),
+                side_strippers: Vec::new(),
+                module_count: 0,
+                library_count: 0,
+                run_configs: Vec::new(),
+            },
+            mcp_config: McpConfigPlan {
+                artifact,
+                joined_steps: vec!["downloadManifest".to_string()],
+                function_count: 0,
+                data_keys: Vec::new(),
+                library_count: 0,
+            },
+            dependencies: vec![DependencyPlan {
+                configuration: "implementation".to_string(),
+                notation: "g:a:1".to_string(),
+                resolved_notation: "g:a:1".to_string(),
+                source: DependencySource::Maven,
+                cache_path: PathBuf::from("a.jar"),
+                url: None,
+                dynamic_version: false,
+            }],
+            graph: vec![GraphNode {
+                id: "resolve-project-config".to_string(),
+                kind: "planning".to_string(),
+                status: NodeStatus::Ready,
+                inputs: Vec::new(),
+                outputs: Vec::new(),
+                rebuild_reason: "test".to_string(),
+            }],
+            warnings: Vec::new(),
+        };
+
+        let json = facet_json::to_string_pretty(&plan).expect("plan should serialize");
+        assert!(json.contains("rust_output_jar"));
+        assert!(!json.contains("\"lockfile\""));
+    }
+
+    #[test]
+    fn facet_json_serializes_compare_report() {
+        let report = JarCompareReport {
+            gradle_jar: PathBuf::from("gradle.jar"),
+            rust_jar: PathBuf::from("rust.jar"),
+            strict_manifest: false,
+            matches: false,
+            total_gradle_entries: 1,
+            total_rust_entries: 1,
+            compared_entries: 1,
+            missing_entries: vec!["a.class".to_string()],
+            extra_entries: Vec::new(),
+            changed_entries: vec![ChangedEntry {
+                path: "b.class".to_string(),
+                gradle_sha1: "1".to_string(),
+                rust_sha1: "2".to_string(),
+            }],
+            manifest: ManifestCompare {
+                compared: true,
+                changed: false,
+                ignored_implementation_timestamp: true,
+                gradle_sha1: Some("1".to_string()),
+                rust_sha1: Some("1".to_string()),
+            },
+        };
+        let json = facet_json::to_string_pretty(&report).expect("report should serialize");
+        assert!(json.contains("missing_entries"));
+        assert!(json.contains("ignored_implementation_timestamp"));
+    }
+
+    #[test]
+    fn facet_json_parses_upstream_config_shapes() {
+        let manifest: MojangVersionManifest = facet_json::from_str(
+            r#"{"versions":[{"id":"1.19.2","url":"https://example.test/1.19.2.json"}]}"#,
+        )
+        .expect("manifest should parse");
+        assert_eq!(manifest.versions[0].id, "1.19.2");
+
+        let version_json: MinecraftVersionJson = facet_json::from_str(
+            r#"{
+                "downloads": {
+                    "client": {"url": "https://example.test/client.jar"},
+                    "server": {"url": "https://example.test/server.jar"},
+                    "client_mappings": {"url": "https://example.test/client.txt"},
+                    "server_mappings": {"url": "https://example.test/server.txt"}
+                },
+                "assetIndex": {"id": "1.19", "url": "https://example.test/assets.json"},
+                "libraries": [{"downloads": {"artifact": {"url": "https://example.test/lib.jar", "path": "g/a/1/a.jar"}}}]
+            }"#,
+        )
+        .expect("version json should parse");
+        assert_eq!(version_json.libraries.len(), 1);
+        assert_eq!(version_json.asset_index.expect("asset index").id, "1.19");
+
+        let forge: ForgeUserdevConfig = facet_json::from_str(
+            r#"{
+                "spec": 1,
+                "mcp": "de.oceanlabs.mcp:mcp_config:1.19.2@zip",
+                "binpatcher": {"version": "net.minecraftforge:binarypatcher:1"},
+                "patchesOriginalPrefix": "a/",
+                "patchesModifiedPrefix": "b/",
+                "ats": ["ats/accesstransformer.cfg"],
+                "sass": ["sas.cfg"],
+                "modules": ["g:module:1"],
+                "libraries": ["g:lib:1"],
+                "runs": {
+                    "client": {
+                        "main": "cpw.mods.bootstraplauncher.BootstrapLauncher",
+                        "args": ["--launchTarget", "forgeclientuserdev"],
+                        "jvmArgs": ["-Dexample=true"],
+                        "env": {"MOD_CLASSES": "{source_roots}"},
+                        "props": {"mixin.env.remapRefMap": "true"}
+                    }
+                }
+            }"#,
+        )
+        .expect("forge userdev config should parse");
+        assert_eq!(forge.runs["client"].jvm_args, vec!["-Dexample=true"]);
+
+        let mcp: McpConfigJson = facet_json::from_str(
+            r#"{
+                "data": {"mappings": "config/joined.tsrg", "inject": "config/inject/", "patches": {"joined": "patches/joined/"}},
+                "steps": {"joined": [{"type": "downloadManifest"}, {"name": "extractServer", "type": "bundleExtractJar"}]},
+                "functions": {"rename": {"version": "net.minecraftforge:ForgeAutoRenamingTool:0.1.22:all", "args": ["--input", "{input}"], "jvmargs": []}},
+                "libraries": {"joined": ["g:lib:1"]}
+            }"#,
+        )
+        .expect("mcp config should parse");
+        assert_eq!(mcp.steps.joined[1].name.as_deref(), Some("extractServer"));
+        assert_eq!(mcp.functions.len(), 1);
+
+        let parchment: ParchmentData = facet_json::from_str(
+            r#"{"classes":[{"name":"net/minecraft/Test","methods":[{"name":"run","descriptor":"()V","parameters":[{"index":1,"name":"level"}]}]}]}"#,
+        )
+        .expect("parchment should parse");
+        assert_eq!(parchment.classes[0].methods[0].parameters[0].name, "level");
+    }
+
+    fn minimal_artifact() -> ArtifactPlan {
+        ArtifactPlan {
+            id: "artifact".to_string(),
+            coordinate: Some("g:a:1".to_string()),
+            repository: Some("Forge".to_string()),
+            url: Some("https://example.test/a.jar".to_string()),
+            cache_path: PathBuf::from("a.jar"),
+            sha1: Some("abc123".to_string()),
+            downloaded: true,
+            required_for: "test".to_string(),
+            provenance: minimal_provenance(),
+        }
+    }
+
+    fn minimal_provenance() -> ArtifactProvenance {
+        ArtifactProvenance {
+            schema_version: 1,
+            source: ArtifactSource::RemoteMaven,
+            coordinate: Some("g:a:1".to_string()),
+            repository: Some("Forge".to_string()),
+            url: Some("https://example.test/a.jar".to_string()),
+            original_path: None,
+            sha1: "abc123".to_string(),
+        }
     }
 }
