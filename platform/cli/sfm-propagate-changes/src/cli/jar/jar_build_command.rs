@@ -37,7 +37,7 @@ pub struct JarBuildCommand {
 
 impl JarBuildCommand {
     #[must_use]
-    pub(super) fn into_options(self, mode: BuildMode) -> BuildOptions {
+    pub(crate) fn into_options(self, mode: BuildMode) -> BuildOptions {
         BuildOptions {
             mc: self.mc,
             refresh: self.refresh,
@@ -55,7 +55,7 @@ impl JarBuildCommand {
 /// # Errors
 ///
 /// Returns an error if the clean-slate plan cannot be resolved or written.
-pub(super) fn invoke_plan(command: JarBuildCommand) -> eyre::Result<()> {
+pub(crate) fn invoke_plan(command: JarBuildCommand) -> eyre::Result<()> {
     BuildCommand::new(command.into_options(BuildMode::Plan)).invoke()
 }
 
@@ -64,43 +64,43 @@ pub(super) fn invoke_plan(command: JarBuildCommand) -> eyre::Result<()> {
 /// # Errors
 ///
 /// Returns an error if planning fails or an unsupported build node is reached.
-pub(super) fn invoke_build(command: JarBuildCommand) -> eyre::Result<()> {
+pub(crate) fn invoke_build(command: JarBuildCommand) -> eyre::Result<()> {
     BuildCommand::new(command.into_options(BuildMode::Build)).invoke()
 }
 
-/// Run `jar runClient`.
+/// Run the Forge client userdev launch.
 ///
 /// # Errors
 ///
 /// Returns an error if planning, building, or launching fails.
-pub(super) fn invoke_run_client(command: JarBuildCommand) -> eyre::Result<()> {
+pub(crate) fn invoke_run_client(command: JarBuildCommand) -> eyre::Result<()> {
     RunCommand::new(command.into_options(BuildMode::Build), RunKind::Client).invoke()
 }
 
-/// Run `jar runServer`.
+/// Run the Forge server userdev launch.
 ///
 /// # Errors
 ///
 /// Returns an error if planning, building, or launching fails.
-pub(super) fn invoke_run_server(command: JarBuildCommand) -> eyre::Result<()> {
+pub(crate) fn invoke_run_server(command: JarBuildCommand) -> eyre::Result<()> {
     RunCommand::new(command.into_options(BuildMode::Build), RunKind::Server).invoke()
 }
 
-/// Run `jar runData`.
+/// Run the Forge datagen userdev launch.
 ///
 /// # Errors
 ///
 /// Returns an error if planning, building, or launching fails.
-pub(super) fn invoke_run_data(command: JarBuildCommand) -> eyre::Result<()> {
+pub(crate) fn invoke_run_data(command: JarBuildCommand) -> eyre::Result<()> {
     RunCommand::new(command.into_options(BuildMode::Build), RunKind::Data).invoke()
 }
 
-/// Run `jar runGameTestServer`.
+/// Run the Forge game test server userdev launch.
 ///
 /// # Errors
 ///
 /// Returns an error if planning, building, or launching fails.
-pub(super) fn invoke_run_game_test_server(command: JarBuildCommand) -> eyre::Result<()> {
+pub(crate) fn invoke_run_game_test_server(command: JarBuildCommand) -> eyre::Result<()> {
     RunCommand::new(
         command.into_options(BuildMode::Build),
         RunKind::GameTestServer,

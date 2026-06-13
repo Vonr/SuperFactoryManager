@@ -566,10 +566,10 @@ Public CLI status:
 - `jar plan --mc 1.19.2` resolves the graph.
 - `jar build --mc 1.19.2 --explain-rebuild` runs execution nodes.
 - `jar compare --mc 1.19.2` remains available for normalized Gradle-vs-Rust jar comparison.
-- `jar run-client --mc 1.19.2` builds the Rust-owned outputs, then launches Forge's `client` userdev run config.
-- `jar run-server --mc 1.19.2` builds the Rust-owned outputs, then launches Forge's `server` userdev run config.
-- `jar run-data --mc 1.19.2` builds the Rust-owned outputs, then launches Forge's `data` userdev run config.
-- `jar run-game-test-server --mc 1.19.2` builds the Rust-owned outputs, then launches Forge's `gameTestServer` userdev run config.
+- `run client --mc 1.19.2` builds the Rust-owned outputs, then launches Forge's `client` userdev run config.
+- `run server --mc 1.19.2` builds the Rust-owned outputs, then launches Forge's `server` userdev run config.
+- `run data --mc 1.19.2` builds the Rust-owned outputs, then launches Forge's `data` userdev run config.
+- `run game-test-server --mc 1.19.2` builds the Rust-owned outputs, then launches Forge's `gameTestServer` userdev run config.
 - `jar plan` and `jar build` now accept `--java-home <path>`.
 - `jar plan` and `jar build` now write `platform/minecraft/sfm-toolchain.lock.json`.
 - `jar plan` and `jar build` enforce `platform/minecraft/sfm-toolchain.lock.json` unless `--refresh` is supplied.
@@ -606,7 +606,7 @@ platform/minecraft/build/sfm-toolchain/assets/
 
 - `MOD_CLASSES` points at `build/sfm-toolchain/project/staged-resources` and `build/sfm-toolchain/project/classes`.
 - If future Rust-owned `datagen` or `gametest` class/resource directories exist under `build/sfm-toolchain/project`, the matching run command includes them automatically.
-- `run-data` filters the known Mouse Tweaks runtime jar from its launch classpath, preserving the existing Gradle note that Mouse Tweaks crashes datagen by touching the Minecraft client during mod init.
+- `run data` filters the known Mouse Tweaks runtime jar from its launch classpath, preserving the existing Gradle note that Mouse Tweaks crashes datagen by touching the Minecraft client during mod init.
 - Debug-agent support is intentionally out of scope for this slice; these commands launch normally and leave debugger attachment as a later explicit feature.
 - Warm-cache run commands now print build-node progress and Java tool start/finish messages before launching.
 - Warm-cache builds reuse the existing Rust-owned MCP joined source jar and Forge dev compile jar unless `--refresh` is supplied, so a normal run command does not immediately redo the expensive MCP/Forge FART/decompile/setup chain.
@@ -639,12 +639,12 @@ Observed successful planner output:
 - Graph nodes: `7`
 - Rust output path remains `platform/minecraft/build/libs/Super Factory Manager (SFM)-MC1.19.2-4.33.0-rust.jar`.
 
-Observed `run-client` status:
+Observed `run client` status:
 
 - The earlier `Could not find client-extra in classpath` failure was fixed by generating and classpathing `client-extra.jar`.
 - The earlier Forge package metadata failure was fixed by using the Forge-named runtime alias jar with Forge universal manifest metadata.
 - The earlier Forge coremod SRG field lookup failures were fixed by generating runtime MCP CSV mappings.
-- A local `jar run-client --mc 1.19.2` run reached Forge/Minecraft startup with SFM discovered and exited with code `0`.
+- A local `run client --mc 1.19.2` run reached Forge/Minecraft startup with SFM discovered and exited with code `0`.
 - Remaining runtime investigation: the dev run still reports a Mixin target lookup warning for `StructureTemplateManagerMixin.onTryLoad`, apparently tied to refmap/runtime mapping behavior. The jar compare path can still be byte-identical while this dev-run mapping path needs follow-up.
 
 Implemented execution foundations:
@@ -784,7 +784,7 @@ Immediate next resume checklist:
 2. Smoke test the `-rust.jar` in a Forge 1.19.2 instance and confirm Minecraft reaches the main menu with SFM loaded.
 3. Add a strict provenance audit command that fails when any artifact has `source=local-*` or `source=existing-sfm-cache-unknown`.
 4. Add real input fingerprinting/up-to-date checks for expensive nodes, plus temp-file/atomic-rename writes for large generated outputs so Ctrl+C cannot leave convincing partial artifacts.
-5. Add integration coverage for the MCP joined executor, Forge userdev executor, run-client launcher, and final compare report.
+5. Add integration coverage for the MCP joined executor, Forge userdev executor, run client launcher, and final compare report.
 6. Investigate inheritance-aware third-party dependency remapping only if smoke testing or future compares prove it is needed.
 7. Keep Gradle baseline compare as the regression oracle until smoke testing and repeated clean builds are boring.
 

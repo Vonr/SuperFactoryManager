@@ -1,4 +1,4 @@
-mod jar_build_command;
+pub(crate) mod jar_build_command;
 mod jar_collect_command;
 mod jar_command;
 mod jar_compare_command;
