@@ -1,3 +1,5 @@
+use super::jar_build_command::JarBuildCommand;
+use super::jar_compare_command::JarCompareCommand;
 use facet::Facet;
 use figue as args;
 use std::path::PathBuf;
@@ -11,6 +13,52 @@ pub enum JarCommand {
         /// Directory subcommand
         #[facet(args::subcommand)]
         command: JarDirCommand,
+    },
+    /// Resolve the clean-slate jar build graph without running expensive tools
+    Plan {
+        /// Jar build planning options
+        #[facet(flatten)]
+        command: JarBuildCommand,
+    },
+    /// Build an SFM mod jar without invoking Gradle
+    Build {
+        /// Jar build options
+        #[facet(flatten)]
+        command: JarBuildCommand,
+    },
+    /// Compare the Gradle jar against the Rust-built jar
+    Compare {
+        /// Jar comparison options
+        #[facet(flatten)]
+        command: JarCompareCommand,
+    },
+    /// Build the Rust-owned project outputs and launch the Forge client userdev run
+    #[facet(rename = "run-client")]
+    RunClient {
+        /// Jar build and launch options
+        #[facet(flatten)]
+        command: JarBuildCommand,
+    },
+    /// Build the Rust-owned project outputs and launch the Forge server userdev run
+    #[facet(rename = "run-server")]
+    RunServer {
+        /// Jar build and launch options
+        #[facet(flatten)]
+        command: JarBuildCommand,
+    },
+    /// Build the Rust-owned project outputs and launch the Forge datagen userdev run
+    #[facet(rename = "run-data")]
+    RunData {
+        /// Jar build and launch options
+        #[facet(flatten)]
+        command: JarBuildCommand,
+    },
+    /// Build the Rust-owned project outputs and launch the Forge game test server userdev run
+    #[facet(rename = "run-game-test-server")]
+    RunGameTestServer {
+        /// Jar build and launch options
+        #[facet(flatten)]
+        command: JarBuildCommand,
     },
     /// Collect jars from each MC version based on that version's `mod_version`
     Collect,
@@ -49,6 +97,19 @@ impl JarCommand {
     pub fn invoke(self) -> eyre::Result<()> {
         match self {
             JarCommand::Dir { command } => command.invoke(),
+            JarCommand::Plan { command } => super::jar_build_command::invoke_plan(command),
+            JarCommand::Build { command } => super::jar_build_command::invoke_build(command),
+            JarCommand::Compare { command } => super::jar_compare_command::invoke(command),
+            JarCommand::RunClient { command } => {
+                super::jar_build_command::invoke_run_client(command)
+            }
+            JarCommand::RunServer { command } => {
+                super::jar_build_command::invoke_run_server(command)
+            }
+            JarCommand::RunData { command } => super::jar_build_command::invoke_run_data(command),
+            JarCommand::RunGameTestServer { command } => {
+                super::jar_build_command::invoke_run_game_test_server(command)
+            }
             JarCommand::Collect => super::jar_collect_command::invoke(),
             JarCommand::List => super::jar_list_command::invoke(),
             JarCommand::UpdateClients => super::jar_update_clients_command::invoke(),
