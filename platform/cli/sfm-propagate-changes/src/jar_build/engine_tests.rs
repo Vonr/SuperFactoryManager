@@ -12,6 +12,8 @@ use super::ForgeUserdevConfig;
 use super::GraphNode;
 use super::JarCompareReport;
 use super::JavaPlan;
+use super::LoaderToolchainKind;
+use super::LoaderToolchainPlan;
 use super::ManifestCompare;
 use super::MavenCoordinate;
 use super::McpConfigJson;
@@ -25,8 +27,11 @@ use super::Repository;
 use super::compare_version_text;
 use super::extract_quoted;
 use super::interpolate_properties;
+use super::is_excluded_source;
 use super::normalize_manifest_bytes;
+use super::parchment_coordinate;
 use super::parse_maven_versions;
+use super::resolve_loader_toolchain;
 use super::rust_output_jar_path;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -56,6 +61,22 @@ fn parses_zip_coordinate() {
 }
 
 #[test]
+fn parses_parchment_date_first_and_mc_first_versions() {
+    assert_eq!(
+        parchment_coordinate("2022.11.27-1.19.2")
+            .expect("date-first parchment coordinate should parse")
+            .to_string(),
+        "org.parchmentmc.data:parchment-1.19.2:2022.11.27@zip"
+    );
+    assert_eq!(
+        parchment_coordinate("1.19.3-2023.03.12-1.19.4")
+            .expect("mc-first parchment coordinate should parse")
+            .to_string(),
+        "org.parchmentmc.data:parchment-1.19.3:2023.03.12@zip"
+    );
+}
+
+#[test]
 fn extracts_single_or_double_quoted_notation() {
     assert_eq!(
         extract_quoted("fg.deobf('mezz.jei:jei-1.19.2-forge:11.6.0.1018')"),
@@ -64,6 +85,80 @@ fn extracts_single_or_double_quoted_notation() {
     assert_eq!(
         extract_quoted("antlr \"org.antlr:antlr4:4.9.1\""),
         Some("org.antlr:antlr4:4.9.1".to_string())
+    );
+}
+
+#[test]
+fn source_excludes_match_files_and_directories() {
+    let excludes = vec![
+        "ca/teamdman/sfm/common/compat/SFMMekanismCompat.java".to_string(),
+        "ca/teamdman/sfm/common/program/linting/compat/mekanism".to_string(),
+        "ca/teamdman/sfm/generated/**".to_string(),
+    ];
+
+    assert!(is_excluded_source(
+        "ca/teamdman/sfm/common/compat/SFMMekanismCompat.java",
+        &excludes
+    ));
+    assert!(is_excluded_source(
+        "ca/teamdman/sfm/common/program/linting/compat/mekanism/MekanismSidednessProgramLinter.java",
+        &excludes
+    ));
+    assert!(is_excluded_source(
+        "ca/teamdman/sfm/generated/Generated.java",
+        &excludes
+    ));
+    assert!(!is_excluded_source(
+        "ca/teamdman/sfm/common/program/linting/compat/other/Other.java",
+        &excludes
+    ));
+}
+
+#[test]
+fn detects_loader_toolchain_from_versioned_dependencies() {
+    let forge = vec![super::ParsedDependency {
+        configuration: "minecraft".to_string(),
+        coordinate: MavenCoordinate::parse("net.minecraftforge:forge:1.19.2-43.4.0")
+            .expect("coordinate should parse"),
+        fg_deobf: false,
+    }];
+    let forge_plan = resolve_loader_toolchain(&forge, "1.19.2", "43.4.0")
+        .expect("forge toolchain should resolve");
+    assert_eq!(forge_plan.kind, LoaderToolchainKind::ForgeGradleForge);
+    assert_eq!(
+        forge_plan.userdev_coordinate,
+        "net.minecraftforge:forge:1.19.2-43.4.0:userdev"
+    );
+
+    let transitional_neoforge = vec![super::ParsedDependency {
+        configuration: "minecraft".to_string(),
+        coordinate: MavenCoordinate::parse("net.neoforged:forge:1.20.1-47.1.65")
+            .expect("coordinate should parse"),
+        fg_deobf: false,
+    }];
+    let transitional_plan = resolve_loader_toolchain(&transitional_neoforge, "1.20.1", "47.1.65")
+        .expect("transitional neoforge toolchain should resolve");
+    assert_eq!(
+        transitional_plan.kind,
+        LoaderToolchainKind::ForgeGradleNeoForgeGroup
+    );
+    assert_eq!(
+        transitional_plan.userdev_coordinate,
+        "net.neoforged:forge:1.20.1-47.1.65:userdev"
+    );
+
+    let neogradle = vec![super::ParsedDependency {
+        configuration: "implementation".to_string(),
+        coordinate: MavenCoordinate::parse("net.neoforged:neoforge:20.2.86")
+            .expect("coordinate should parse"),
+        fg_deobf: false,
+    }];
+    let neogradle_plan = resolve_loader_toolchain(&neogradle, "1.20.2", "20.2.86")
+        .expect("neogradle toolchain should resolve");
+    assert_eq!(neogradle_plan.kind, LoaderToolchainKind::NeoGradleUserdev);
+    assert_eq!(
+        neogradle_plan.userdev_coordinate,
+        "net.neoforged:neoforge:20.2.86:userdev"
     );
 }
 
@@ -197,24 +292,35 @@ fn facet_json_serializes_plan_without_embedded_lockfile() {
             version_output: "openjdk version \"17\"".to_string(),
             major_version: 17,
         },
+        java_release: 17,
         refresh: false,
         allow_local_artifact_cache: false,
         properties: BTreeMap::new(),
         repositories: Vec::new(),
+        loader_toolchain: LoaderToolchainPlan {
+            kind: LoaderToolchainKind::ForgeGradleForge,
+            base_coordinate: "net.minecraftforge:forge:1.19.2-43.4.0".to_string(),
+            userdev_coordinate: "net.minecraftforge:forge:1.19.2-43.4.0:userdev".to_string(),
+            sources_coordinate: Some("net.minecraftforge:forge:1.19.2-43.4.0:sources".to_string()),
+            universal_coordinate: Some(
+                "net.minecraftforge:forge:1.19.2-43.4.0:universal".to_string(),
+            ),
+        },
         artifacts: vec![artifact.clone()],
         minecraft: MinecraftPlan {
             version_manifest: artifact.clone(),
             version_json: artifact.clone(),
             client_jar_url: "https://example.test/client.jar".to_string(),
             server_jar_url: "https://example.test/server.jar".to_string(),
-            client_mappings_url: "https://example.test/client.txt".to_string(),
-            server_mappings_url: "https://example.test/server.txt".to_string(),
+            client_mappings_url: Some("https://example.test/client.txt".to_string()),
+            server_mappings_url: Some("https://example.test/server.txt".to_string()),
             libraries_count: 0,
         },
-        forge_userdev: super::ForgeUserdevPlan {
+        forge_userdev: Some(super::ForgeUserdevPlan {
             artifact: artifact.clone(),
             spec: Some(1),
             mcp: Some("de.oceanlabs.mcp:mcp_config:1@zip".to_string()),
+            neo_form: None,
             sources: None,
             universal: None,
             binpatcher: None,
@@ -226,14 +332,15 @@ fn facet_json_serializes_plan_without_embedded_lockfile() {
             module_count: 0,
             library_count: 0,
             run_configs: Vec::new(),
-        },
-        mcp_config: McpConfigPlan {
+        }),
+        mcp_config: Some(McpConfigPlan {
             artifact,
             joined_steps: vec!["downloadManifest".to_string()],
+            function_coordinates: BTreeMap::new(),
             function_count: 0,
             data_keys: Vec::new(),
             library_count: 0,
-        },
+        }),
         dependencies: vec![DependencyPlan {
             configuration: "implementation".to_string(),
             notation: "g:a:1".to_string(),
@@ -337,6 +444,30 @@ fn facet_json_parses_upstream_config_shapes() {
     )
     .expect("forge userdev config should parse");
     assert_eq!(forge.runs["client"].jvm_args, vec!["-Dexample=true"]);
+    assert_eq!(
+        forge.ats.expect("ats should parse").into_vec(),
+        vec!["ats/accesstransformer.cfg".to_string()]
+    );
+
+    let neoforge: ForgeUserdevConfig = facet_json::from_str(
+        r#"{
+                "spec": 2,
+                "mcp": "net.neoforged:neoform:1.20.2-20231019.002635@zip",
+                "ats": "ats/",
+                "sass": "sas.cfg",
+                "sources": "net.neoforged:neoforge:20.2.86:sources",
+                "universal": "net.neoforged:neoforge:20.2.86:universal"
+            }"#,
+    )
+    .expect("neoforge userdev config should parse scalar lists");
+    assert_eq!(
+        neoforge.ats.expect("ats should parse").into_vec(),
+        vec!["ats/".to_string()]
+    );
+    assert_eq!(
+        neoforge.sass.expect("sass should parse").into_vec(),
+        vec!["sas.cfg".to_string()]
+    );
 
     let mcp: McpConfigJson = facet_json::from_str(
             r#"{
@@ -349,6 +480,10 @@ fn facet_json_parses_upstream_config_shapes() {
         .expect("mcp config should parse");
     assert_eq!(mcp.steps.joined[1].name.as_deref(), Some("extractServer"));
     assert_eq!(mcp.functions.len(), 1);
+    assert_eq!(
+        mcp.functions["rename"].version.as_deref(),
+        Some("net.minecraftforge:ForgeAutoRenamingTool:0.1.22:all")
+    );
 
     let parchment: ParchmentData = facet_json::from_str(
             r#"{"classes":[{"name":"net/minecraft/Test","methods":[{"name":"run","descriptor":"()V","parameters":[{"index":1,"name":"level"}]}]}]}"#,

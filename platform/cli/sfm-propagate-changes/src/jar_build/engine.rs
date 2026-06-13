@@ -32,6 +32,7 @@ use zip::write::SimpleFileOptions;
 
 const VERSION_MANIFEST_URL: &str =
     "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
+const NEOFORM_RUNTIME_COORDINATE: &str = "net.neoforged:neoform-runtime:2.0.19:all";
 
 pub(crate) fn invoke_build(options: &BuildOptions) -> eyre::Result<()> {
     let plan = create_plan(options)?;
@@ -100,14 +101,16 @@ struct BuildPlan {
     #[facet(skip_serializing)]
     lockfile: Option<ArtifactLockfile>,
     java: JavaPlan,
+    java_release: u32,
     refresh: bool,
     allow_local_artifact_cache: bool,
     properties: BTreeMap<String, String>,
     repositories: Vec<Repository>,
+    loader_toolchain: LoaderToolchainPlan,
     artifacts: Vec<ArtifactPlan>,
     minecraft: MinecraftPlan,
-    forge_userdev: ForgeUserdevPlan,
-    mcp_config: McpConfigPlan,
+    forge_userdev: Option<ForgeUserdevPlan>,
+    mcp_config: Option<McpConfigPlan>,
     dependencies: Vec<DependencyPlan>,
     graph: Vec<GraphNode>,
     warnings: Vec<String>,
@@ -117,6 +120,24 @@ struct BuildPlan {
 struct Repository {
     name: String,
     url: String,
+}
+
+#[derive(Clone, Debug, Eq, Facet, PartialEq)]
+#[facet(rename_all = "kebab-case")]
+#[repr(u8)]
+enum LoaderToolchainKind {
+    ForgeGradleForge,
+    ForgeGradleNeoForgeGroup,
+    NeoGradleUserdev,
+}
+
+#[derive(Clone, Debug, Facet)]
+struct LoaderToolchainPlan {
+    kind: LoaderToolchainKind,
+    base_coordinate: String,
+    userdev_coordinate: String,
+    sources_coordinate: Option<String>,
+    universal_coordinate: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -207,8 +228,8 @@ struct MinecraftPlan {
     version_json: ArtifactPlan,
     client_jar_url: String,
     server_jar_url: String,
-    client_mappings_url: String,
-    server_mappings_url: String,
+    client_mappings_url: Option<String>,
+    server_mappings_url: Option<String>,
     libraries_count: usize,
 }
 
@@ -217,6 +238,7 @@ struct ForgeUserdevPlan {
     artifact: ArtifactPlan,
     spec: Option<i64>,
     mcp: Option<String>,
+    neo_form: Option<String>,
     sources: Option<String>,
     universal: Option<String>,
     binpatcher: Option<String>,
@@ -234,6 +256,7 @@ struct ForgeUserdevPlan {
 struct McpConfigPlan {
     artifact: ArtifactPlan,
     joined_steps: Vec<String>,
+    function_coordinates: BTreeMap<String, String>,
     function_count: usize,
     data_keys: Vec<String>,
     library_count: usize,
@@ -311,6 +334,33 @@ struct ManifestCompare {
     rust_sha1: Option<String>,
 }
 
+#[derive(Debug, Facet)]
+struct JarJarMetadata {
+    jars: Vec<JarJarMetadataEntry>,
+}
+
+#[derive(Debug, Facet)]
+struct JarJarMetadataEntry {
+    identifier: JarJarIdentifier,
+    version: JarJarVersion,
+    path: String,
+    #[facet(rename = "isObfuscated")]
+    is_obfuscated: bool,
+}
+
+#[derive(Debug, Facet)]
+struct JarJarIdentifier {
+    group: String,
+    artifact: String,
+}
+
+#[derive(Debug, Facet)]
+struct JarJarVersion {
+    range: String,
+    #[facet(rename = "artifactVersion")]
+    artifact_version: String,
+}
+
 #[derive(Debug)]
 struct NormalizedJar {
     entries: BTreeMap<String, String>,
@@ -360,8 +410,10 @@ struct MinecraftVersionJson {
 struct MinecraftDownloads {
     client: MinecraftDownload,
     server: MinecraftDownload,
-    client_mappings: MinecraftDownload,
-    server_mappings: MinecraftDownload,
+    #[facet(default)]
+    client_mappings: Option<MinecraftDownload>,
+    #[facet(default)]
+    server_mappings: Option<MinecraftDownload>,
 }
 
 #[derive(Debug, Facet)]
@@ -410,6 +462,8 @@ struct ForgeUserdevConfig {
     spec: Option<i64>,
     #[facet(default)]
     mcp: Option<String>,
+    #[facet(rename = "neoForm", default)]
+    neo_form: Option<String>,
     #[facet(default)]
     sources: Option<String>,
     #[facet(default)]
@@ -423,9 +477,9 @@ struct ForgeUserdevConfig {
     #[facet(rename = "patchesModifiedPrefix", default)]
     patches_modified_prefix: Option<String>,
     #[facet(default)]
-    ats: Vec<String>,
+    ats: Option<StringList>,
     #[facet(default)]
-    sass: Vec<String>,
+    sass: Option<StringList>,
     #[facet(default)]
     modules: Vec<String>,
     #[facet(default)]
@@ -438,6 +492,23 @@ struct ForgeUserdevConfig {
 struct ForgeBinpatcherConfig {
     #[facet(default)]
     version: Option<String>,
+}
+
+#[derive(Debug, Facet)]
+#[facet(untagged)]
+#[repr(u8)]
+enum StringList {
+    One(String),
+    Many(Vec<String>),
+}
+
+impl StringList {
+    fn into_vec(self) -> Vec<String> {
+        match self {
+            Self::One(value) => vec![value],
+            Self::Many(values) => values,
+        }
+    }
 }
 
 #[derive(Debug, Default, Facet)]
@@ -846,6 +917,8 @@ impl Resolver {
         } else if coordinate.group == "net.minecraftforge" || coordinate.group == "de.oceanlabs.mcp"
         {
             &["Forge"]
+        } else if coordinate.group == "net.neoforged" {
+            &["NeoForged"]
         } else if coordinate.group.starts_with("org.")
             || coordinate.group.starts_with("com.github.")
             || coordinate.group.starts_with("junit")
@@ -933,6 +1006,16 @@ impl MavenCoordinate {
             self.artifact, self.version, classifier, self.extension
         )
     }
+
+    fn with_classifier(&self, classifier: &str) -> Self {
+        Self {
+            group: self.group.clone(),
+            artifact: self.artifact.clone(),
+            version: self.version.clone(),
+            classifier: Some(classifier.to_string()),
+            extension: self.extension.clone(),
+        }
+    }
 }
 
 impl std::fmt::Display for MavenCoordinate {
@@ -1004,17 +1087,18 @@ fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
     let properties = read_properties(&properties_path)?;
 
     let minecraft_version = required_property(&properties, "minecraft_version")?;
+    let mut warnings = Vec::new();
     if minecraft_version != options.mc {
-        eyre::bail!(
-            "--mc {} selected {}, but gradle.properties says minecraft_version={minecraft_version}",
+        warnings.push(format!(
+            "--mc {} selected {}, but gradle.properties says minecraft_version={minecraft_version}; using minecraft_version for artifact coordinates.",
             options.mc,
             worktree_path.display()
-        );
+        ));
     }
 
-    let forge_version = required_property(&properties, "neo_version")?;
-    let mapping_channel = required_property(&properties, "mapping_channel")?;
-    let mapping_version = required_property(&properties, "mapping_version")?;
+    let loader_version = required_property(&properties, "neo_version")?;
+    let (mapping_channel, mapping_version) =
+        resolve_mapping_settings(&properties, minecraft_version);
     let mod_name = required_property(&properties, "mod_name")?;
     let mod_version = required_property(&properties, "mod_version")?;
 
@@ -1028,7 +1112,6 @@ fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
     let lockfile_path = minecraft_dir.join("sfm-toolchain.lock.json");
     fs::create_dir_all(&state_dir)?;
     fs::create_dir_all(&maven_cache_dir)?;
-    let java = resolve_java(options.java_home.as_deref())?;
     let lockfile = if options.refresh {
         None
     } else {
@@ -1050,40 +1133,46 @@ fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
         .join(minecraft_version)
         .join("dependencies.gradle");
     let dependencies = parse_dependency_script(&dependency_script, &properties)?;
+    let loader_toolchain =
+        resolve_loader_toolchain(&dependencies, minecraft_version, loader_version)?;
+    let java_release = read_java_toolchain_release(&minecraft_dir, minecraft_version)?;
+    let required_java = required_java_runtime_major(&loader_toolchain, java_release);
+    let java = resolve_java(options.java_home.as_deref(), required_java)?;
 
-    let forge_userdev_coordinate = MavenCoordinate::parse(&format!(
-        "net.minecraftforge:forge:{minecraft_version}-{forge_version}:userdev"
-    ))?;
+    let forge_userdev_coordinate = MavenCoordinate::parse(&loader_toolchain.userdev_coordinate)?;
     let forge_userdev_artifact = resolver.resolve_artifact(
         "forge-userdev",
         &forge_userdev_coordinate,
-        "Forge userdev configuration and patches",
+        "Loader userdev configuration and patches",
     )?;
     let forge_userdev = read_forge_userdev(&forge_userdev_artifact)?;
 
-    let mcp_coordinate = MavenCoordinate::parse(
-        forge_userdev
-            .mcp
-            .as_deref()
-            .ok_or_else(|| eyre::eyre!("Forge userdev config did not declare mcp"))?,
-    )?;
-    let mcp_artifact = resolver.resolve_artifact(
-        "mcp-config",
-        &mcp_coordinate,
-        "MCPConfig clean-slate Minecraft pipeline",
-    )?;
-    let mcp_config = read_mcp_config(&mcp_artifact)?;
+    let mcp_config = if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        None
+    } else if let Some(mcp) = &forge_userdev.mcp {
+        let mcp_coordinate = MavenCoordinate::parse(mcp)?;
+        let mcp_artifact = resolver.resolve_artifact(
+            "mcp-config",
+            &mcp_coordinate,
+            "MCPConfig clean-slate Minecraft pipeline",
+        )?;
+        Some(read_mcp_config(&mcp_artifact)?)
+    } else {
+        None
+    };
 
     let mut artifacts = Vec::new();
     artifacts.push(forge_userdev.artifact.clone());
-    artifacts.push(mcp_config.artifact.clone());
+    if let Some(mcp_config) = &mcp_config {
+        artifacts.push(mcp_config.artifact.clone());
+    }
 
     for (id, coordinate, required_for) in core_coordinates(
-        minecraft_version,
-        forge_version,
-        mapping_channel,
-        mapping_version,
+        &loader_toolchain,
+        &mapping_channel,
+        &mapping_version,
         &forge_userdev,
+        mcp_config.as_ref(),
         &dependencies,
     )? {
         let artifact = resolver.resolve_artifact(&id, &coordinate, &required_for)?;
@@ -1096,7 +1185,7 @@ fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
 
     let dependency_plans = dependencies
         .iter()
-        .filter(|dependency| dependency.fg_deobf)
+        .filter(|dependency| should_plan_project_dependency(&loader_toolchain, dependency))
         .map(|dependency| {
             resolver.resolve_dependency(&dependency.configuration, &dependency.coordinate)
         })
@@ -1104,13 +1193,10 @@ fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
 
     let graph = build_graph(
         minecraft_version,
-        forge_version,
-        mapping_version,
         &rust_output_jar,
         &dependency_plans,
+        &loader_toolchain,
     );
-
-    let warnings = Vec::new();
 
     Ok(BuildPlan {
         schema_version: 1,
@@ -1129,13 +1215,15 @@ fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
         lockfile_path,
         lockfile,
         java,
+        java_release,
         refresh: options.refresh,
         allow_local_artifact_cache: options.allow_local_artifact_cache,
         properties,
         repositories,
+        loader_toolchain,
         artifacts,
         minecraft,
-        forge_userdev,
+        forge_userdev: Some(forge_userdev),
         mcp_config,
         dependencies: dependency_plans,
         graph,
@@ -1144,29 +1232,79 @@ fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
 }
 
 fn core_coordinates(
-    minecraft_version: &str,
-    forge_version: &str,
+    loader_toolchain: &LoaderToolchainPlan,
     mapping_channel: &str,
     mapping_version: &str,
     userdev: &ForgeUserdevPlan,
+    mcp_config: Option<&McpConfigPlan>,
     dependencies: &[ParsedDependency],
 ) -> eyre::Result<Vec<(String, MavenCoordinate, String)>> {
-    let mut coordinates = vec![
-        (
-            "forge-sources".to_string(),
-            MavenCoordinate::parse(&format!(
-                "net.minecraftforge:forge:{minecraft_version}-{forge_version}:sources"
-            ))?,
-            "Forge source patch application".to_string(),
-        ),
-        (
-            "forge-universal".to_string(),
-            MavenCoordinate::parse(&format!(
-                "net.minecraftforge:forge:{minecraft_version}-{forge_version}:universal"
-            ))?,
-            "Forge userdev resource merge".to_string(),
-        ),
-    ];
+    let mut coordinates = Vec::new();
+
+    if let Some(sources) = userdev
+        .sources
+        .as_deref()
+        .or(loader_toolchain.sources_coordinate.as_deref())
+    {
+        let artifact_id = if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+            "neoforge-sources"
+        } else {
+            "forge-sources"
+        };
+        coordinates.push((
+            artifact_id.to_string(),
+            MavenCoordinate::parse(sources)?,
+            "Loader source patch application".to_string(),
+        ));
+    }
+
+    if let Some(universal) = userdev
+        .universal
+        .as_deref()
+        .or(loader_toolchain.universal_coordinate.as_deref())
+    {
+        let artifact_id = if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+            "neoforge-universal"
+        } else {
+            "forge-universal"
+        };
+        coordinates.push((
+            artifact_id.to_string(),
+            MavenCoordinate::parse(universal)?,
+            "Loader userdev resource merge".to_string(),
+        ));
+    }
+
+    let neoform_coordinate = userdev.neo_form.as_ref().or_else(|| {
+        (loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev)
+            .then_some(userdev.mcp.as_ref())
+            .flatten()
+    });
+    if let Some(neo_form) = neoform_coordinate {
+        coordinates.push((
+            "neoform-config".to_string(),
+            MavenCoordinate::parse(neo_form)?,
+            "NeoForm clean-slate Minecraft pipeline".to_string(),
+        ));
+    }
+
+    if mapping_channel == "parchment" {
+        coordinates.push((
+            "parchment-data".to_string(),
+            parchment_coordinate(mapping_version)?,
+            "Parchment names layered over official mappings".to_string(),
+        ));
+    }
+
+    if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        coordinates.push((
+            "tool-neoform-runtime".to_string(),
+            MavenCoordinate::parse(NEOFORM_RUNTIME_COORDINATE)?,
+            "NeoForm Runtime userdev execution".to_string(),
+        ));
+        add_project_tool_coordinates(&mut coordinates, dependencies)?;
+        return Ok(coordinates);
+    }
 
     if let Some(binpatcher) = &userdev.binpatcher {
         coordinates.push((
@@ -1176,63 +1314,41 @@ fn core_coordinates(
         ));
     }
 
-    for (id, coordinate, required_for) in [
-        (
-            "tool-installer-tools-1-2",
-            "net.minecraftforge:installertools:1.2.0:fatjar",
-            "MCPConfig MERGE_MAPPING function",
-        ),
-        (
-            "tool-installer-tools-1-3",
-            "net.minecraftforge:installertools:1.3.0:fatjar",
-            "MCPConfig server bundle extraction",
-        ),
-        (
-            "tool-forgeflower",
-            "net.minecraftforge:forgeflower:1.5.605.9",
-            "MCPConfig decompile function",
-        ),
-        (
-            "tool-mergetool-1-1-5",
-            "net.minecraftforge:mergetool:1.1.5:fatjar",
-            "MCPConfig client/server merge function",
-        ),
-        (
-            "tool-fart",
-            "net.minecraftforge:ForgeAutoRenamingTool:0.1.22:all",
-            "MCPConfig rename and jar remapping",
-        ),
-        (
-            "tool-diffpatch",
-            "net.minecraftforge:DiffPatch:2.0.12:all",
-            "MCPConfig and Forge source patch application",
-        ),
-        (
-            "tool-access-transformers",
-            "net.minecraftforge:accesstransformers:8.0.4:fatjar",
-            "Forge access transformer application",
-        ),
-        (
-            "tool-specialsource",
-            "net.md-5:SpecialSource:1.11.0:shaded",
-            "Forge-style jar reobfuscation",
-        ),
-    ] {
-        coordinates.push((
-            id.to_string(),
-            MavenCoordinate::parse(coordinate)?,
-            required_for.to_string(),
-        ));
+    add_mcp_tool_coordinates(&mut coordinates, mcp_config)?;
+
+    add_project_tool_coordinates(&mut coordinates, dependencies)?;
+
+    Ok(coordinates)
+}
+
+fn should_plan_project_dependency(
+    loader_toolchain: &LoaderToolchainPlan,
+    dependency: &ParsedDependency,
+) -> bool {
+    if loader_toolchain.kind != LoaderToolchainKind::NeoGradleUserdev {
+        return dependency.fg_deobf;
     }
 
-    if mapping_channel == "parchment" {
-        coordinates.push((
-            "parchment-data".to_string(),
-            parchment_coordinate(mapping_version)?,
-            "Parchment names layered over SRG/Mojang mappings".to_string(),
-        ));
+    if dependency.coordinate.to_string() == loader_toolchain.base_coordinate {
+        return false;
     }
 
+    matches!(
+        dependency.configuration.as_str(),
+        "implementation"
+            | "compileOnly"
+            | "runtimeOnly"
+            | "jarJar"
+            | "gametestImplementation"
+            | "gametestCompileOnly"
+            | "gametestRuntimeOnly"
+    )
+}
+
+fn add_project_tool_coordinates(
+    coordinates: &mut Vec<(String, MavenCoordinate, String)>,
+    dependencies: &[ParsedDependency],
+) -> eyre::Result<()> {
     for dependency in dependencies {
         if dependency.configuration == "annotationProcessor" {
             coordinates.push((
@@ -1241,24 +1357,216 @@ fn core_coordinates(
                 "Mixin refmap generation".to_string(),
             ));
         } else if dependency.configuration == "antlr" {
-            coordinates.push((
-                "antlr-tool".to_string(),
-                dependency.coordinate.clone(),
-                "ANTLR grammar generation".to_string(),
-            ));
+            for (index, coordinate) in antlr_classpath_coordinates(&dependency.coordinate.version)?
+                .into_iter()
+                .enumerate()
+            {
+                let artifact_id = if index == 0 {
+                    "antlr-tool".to_string()
+                } else {
+                    format!("antlr-tool-dependency-{index}")
+                };
+                coordinates.push((
+                    artifact_id,
+                    MavenCoordinate::parse(&coordinate)?,
+                    "ANTLR grammar generation".to_string(),
+                ));
+            }
         }
     }
+    Ok(())
+}
 
-    Ok(coordinates)
+fn add_mcp_tool_coordinates(
+    coordinates: &mut Vec<(String, MavenCoordinate, String)>,
+    mcp_config: Option<&McpConfigPlan>,
+) -> eyre::Result<()> {
+    for (id, function_name, fallback_coordinate, required_for) in [
+        (
+            "tool-installer-tools-1-2",
+            "mergeMappings",
+            "net.minecraftforge:installertools:1.2.0:fatjar",
+            "MCPConfig MERGE_MAPPING function",
+        ),
+        (
+            "tool-installer-tools-1-3",
+            "bundleExtractJar",
+            "net.minecraftforge:installertools:1.3.0:fatjar",
+            "MCPConfig server bundle extraction",
+        ),
+        (
+            "tool-forgeflower",
+            "decompile",
+            "net.minecraftforge:forgeflower:1.5.605.9",
+            "MCPConfig decompile function",
+        ),
+        (
+            "tool-mergetool-1-1-5",
+            "merge",
+            "net.minecraftforge:mergetool:1.1.5:fatjar",
+            "MCPConfig client/server merge function",
+        ),
+        (
+            "tool-fart",
+            "rename",
+            "net.minecraftforge:ForgeAutoRenamingTool:0.1.22:all",
+            "MCPConfig rename and jar remapping",
+        ),
+        (
+            "tool-diffpatch",
+            "patch",
+            "net.minecraftforge:DiffPatch:2.0.12:all",
+            "MCPConfig and Forge source patch application",
+        ),
+        (
+            "tool-access-transformers",
+            "accessTransformers",
+            "net.minecraftforge:accesstransformers:8.0.4:fatjar",
+            "Forge access transformer application",
+        ),
+        (
+            "tool-specialsource",
+            "reobfuscate",
+            "net.md-5:SpecialSource:1.11.0:shaded",
+            "Forge-style jar reobfuscation",
+        ),
+    ] {
+        coordinates.push((
+            id.to_string(),
+            MavenCoordinate::parse(&mcp_function_coordinate(
+                mcp_config,
+                function_name,
+                fallback_coordinate,
+            ))?,
+            required_for.to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
+fn mcp_function_coordinate(
+    mcp_config: Option<&McpConfigPlan>,
+    function_name: &str,
+    fallback_coordinate: &str,
+) -> String {
+    mcp_config
+        .and_then(|config| config.function_coordinates.get(function_name))
+        .cloned()
+        .unwrap_or_else(|| fallback_coordinate.to_string())
 }
 
 fn parchment_coordinate(mapping_version: &str) -> eyre::Result<MavenCoordinate> {
-    let Some((date, mc_version)) = mapping_version.split_once('-') else {
-        eyre::bail!("Unsupported parchment mapping_version: {mapping_version}");
+    let parts = mapping_version.split('-').collect::<Vec<_>>();
+    let (mc_version, date) = match parts.as_slice() {
+        [date, mc_version] if looks_like_parchment_date(date) => (*mc_version, *date),
+        [mc_version, date] if looks_like_parchment_date(date) => (*mc_version, *date),
+        [mc_version, date, _target_version] if looks_like_parchment_date(date) => {
+            (*mc_version, *date)
+        }
+        _ => {
+            eyre::bail!("Unsupported parchment mapping_version: {mapping_version}");
+        }
     };
     MavenCoordinate::parse(&format!(
         "org.parchmentmc.data:parchment-{mc_version}:{date}@zip"
     ))
+}
+
+fn looks_like_parchment_date(value: &str) -> bool {
+    let mut parts = value.split('.');
+    let Some(year) = parts.next() else {
+        return false;
+    };
+    year.len() == 4
+        && year.chars().all(|character| character.is_ascii_digit())
+        && parts.all(|part| {
+            !part.is_empty() && part.chars().all(|character| character.is_ascii_digit())
+        })
+}
+
+fn resolve_mapping_settings(
+    properties: &BTreeMap<String, String>,
+    minecraft_version: &str,
+) -> (String, String) {
+    if let (Some(channel), Some(version)) = (
+        properties.get("mapping_channel"),
+        properties.get("mapping_version"),
+    ) {
+        return (channel.clone(), version.clone());
+    }
+
+    if let (Some(parchment_minecraft), Some(parchment_version)) = (
+        properties.get("neogradle.subsystems.parchment.minecraftVersion"),
+        properties.get("neogradle.subsystems.parchment.mappingsVersion"),
+    ) {
+        return (
+            "parchment".to_string(),
+            format!("{parchment_version}-{parchment_minecraft}"),
+        );
+    }
+
+    ("official".to_string(), minecraft_version.to_string())
+}
+
+fn resolve_loader_toolchain(
+    dependencies: &[ParsedDependency],
+    minecraft_version: &str,
+    loader_version: &str,
+) -> eyre::Result<LoaderToolchainPlan> {
+    if let Some(dependency) = dependencies
+        .iter()
+        .find(|dependency| dependency.configuration == "minecraft")
+    {
+        let coordinate = dependency.coordinate.clone();
+        let kind = if coordinate.group == "net.minecraftforge" && coordinate.artifact == "forge" {
+            LoaderToolchainKind::ForgeGradleForge
+        } else if coordinate.group == "net.neoforged" && coordinate.artifact == "forge" {
+            LoaderToolchainKind::ForgeGradleNeoForgeGroup
+        } else {
+            eyre::bail!(
+                "Unsupported ForgeGradle minecraft dependency: {}",
+                coordinate
+            );
+        };
+
+        return Ok(loader_toolchain_plan(kind, &coordinate));
+    }
+
+    if let Some(dependency) = dependencies.iter().find(|dependency| {
+        dependency.coordinate.group == "net.neoforged"
+            && dependency.coordinate.artifact == "neoforge"
+    }) {
+        return Ok(loader_toolchain_plan(
+            LoaderToolchainKind::NeoGradleUserdev,
+            &dependency.coordinate,
+        ));
+    }
+
+    let fallback = MavenCoordinate::parse(&format!(
+        "net.minecraftforge:forge:{minecraft_version}-{loader_version}"
+    ))?;
+    Ok(loader_toolchain_plan(
+        LoaderToolchainKind::ForgeGradleForge,
+        &fallback,
+    ))
+}
+
+fn loader_toolchain_plan(
+    kind: LoaderToolchainKind,
+    base_coordinate: &MavenCoordinate,
+) -> LoaderToolchainPlan {
+    let userdev_coordinate = base_coordinate.with_classifier("userdev");
+    let sources_coordinate = base_coordinate.with_classifier("sources");
+    let universal_coordinate = base_coordinate.with_classifier("universal");
+
+    LoaderToolchainPlan {
+        kind,
+        base_coordinate: base_coordinate.to_string(),
+        userdev_coordinate: userdev_coordinate.to_string(),
+        sources_coordinate: Some(sources_coordinate.to_string()),
+        universal_coordinate: Some(universal_coordinate.to_string()),
+    }
 }
 
 fn resolve_minecraft_plan(
@@ -1299,8 +1607,14 @@ fn resolve_minecraft_plan(
         )?,
         client_jar_url: version_json.downloads.client.url,
         server_jar_url: version_json.downloads.server.url,
-        client_mappings_url: version_json.downloads.client_mappings.url,
-        server_mappings_url: version_json.downloads.server_mappings.url,
+        client_mappings_url: version_json
+            .downloads
+            .client_mappings
+            .map(|download| download.url),
+        server_mappings_url: version_json
+            .downloads
+            .server_mappings
+            .map(|download| download.url),
         libraries_count,
     })
 }
@@ -1329,14 +1643,15 @@ fn read_forge_userdev(artifact: &ArtifactPlan) -> eyre::Result<ForgeUserdevPlan>
         },
         spec: config.spec,
         mcp: config.mcp,
+        neo_form: config.neo_form,
         sources: config.sources,
         universal: config.universal,
         binpatcher,
         patches: config.patches,
         patches_original_prefix: config.patches_original_prefix,
         patches_modified_prefix: config.patches_modified_prefix,
-        access_transformers: config.ats,
-        side_strippers: config.sass,
+        access_transformers: config.ats.map_or_else(Vec::new, StringList::into_vec),
+        side_strippers: config.sass.map_or_else(Vec::new, StringList::into_vec),
         module_count,
         library_count,
         run_configs,
@@ -1371,6 +1686,16 @@ fn read_mcp_config(artifact: &ArtifactPlan) -> eyre::Result<McpConfigPlan> {
         .values()
         .filter(|function| function.has_declared_config())
         .count();
+    let function_coordinates = config
+        .functions
+        .iter()
+        .filter_map(|(name, function)| {
+            function
+                .version
+                .as_ref()
+                .map(|version| (name.clone(), version.clone()))
+        })
+        .collect();
 
     Ok(McpConfigPlan {
         artifact: ArtifactPlan {
@@ -1385,6 +1710,7 @@ fn read_mcp_config(artifact: &ArtifactPlan) -> eyre::Result<McpConfigPlan> {
             provenance: artifact.provenance.clone(),
         },
         joined_steps,
+        function_coordinates,
         function_count,
         data_keys,
         library_count: config.libraries.values().map(Vec::len).sum(),
@@ -1415,6 +1741,19 @@ fn parse_dependency_script(
             .trim_end_matches(';')
             .trim();
         if line.is_empty() || line == "dependencies {" || line == "}" {
+            continue;
+        }
+
+        if line.starts_with("jarJar(") {
+            let Some(notation) = extract_quoted(line) else {
+                continue;
+            };
+            let notation = interpolate_properties(&notation, properties);
+            dependencies.push(ParsedDependency {
+                configuration: "jarJar".to_string(),
+                coordinate: MavenCoordinate::parse(&notation)?,
+                fg_deobf: false,
+            });
             continue;
         }
 
@@ -1484,12 +1823,11 @@ fn interpolate_properties(input: &str, properties: &BTreeMap<String, String>) ->
 
 fn build_graph(
     minecraft_version: &str,
-    forge_version: &str,
-    mapping_version: &str,
     rust_output_jar: &Path,
     dependencies: &[DependencyPlan],
+    loader_toolchain: &LoaderToolchainPlan,
 ) -> Vec<GraphNode> {
-    vec![
+    let mut graph = vec![
         graph_ready(
             "resolve-project-config",
             vec!["gradle.properties", "versioned Gradle fragments"],
@@ -1504,7 +1842,17 @@ fn build_graph(
             ],
             vec!["build/sfm-toolchain/maven", "build/sfm-toolchain/minecraft"],
         ),
-        graph_planned(
+    ];
+
+    if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        graph.push(graph_planned(
+            "execute-neoform-userdev",
+            "NeoForm userdev inputs are detected; execution support still needs implementation",
+            vec![&loader_toolchain.userdev_coordinate],
+            vec!["build/sfm-toolchain/neoform"],
+        ));
+    } else {
+        graph.push(graph_planned(
             "execute-mcp-config-joined",
             "MCPConfig joined runtime inputs will be fingerprinted before execution",
             vec![
@@ -1512,18 +1860,19 @@ fn build_graph(
                 "MCPConfig config.json",
             ],
             vec!["build/sfm-toolchain/mcp/joined"],
-        ),
-        graph_planned(
+        ));
+        graph.push(graph_planned(
             "execute-forge-userdev",
             "Forge userdev inputs will be fingerprinted before execution",
             vec![
-                &format!("Forge {minecraft_version}-{forge_version} userdev"),
+                &loader_toolchain.userdev_coordinate,
                 "MCPConfig joined outputs",
             ],
-            vec![&format!(
-                "build/sfm-toolchain/forge/forge-{minecraft_version}-{forge_version}_mapped_parchment_{mapping_version}-recomp.jar"
-            )],
-        ),
+            vec!["build/sfm-toolchain/forge"],
+        ));
+    }
+
+    graph.extend([
         graph_planned(
             "deobfuscate-mod-dependencies",
             "fg.deobf dependency jars will be remapped into SFM-owned cache",
@@ -1550,7 +1899,9 @@ fn build_graph(
             vec!["compiled classes", "expanded resources", "MCP mappings"],
             vec![&rust_output_jar.display().to_string()],
         ),
-    ]
+    ]);
+
+    graph
 }
 
 fn graph_ready(id: &str, inputs: Vec<&str>, outputs: Vec<&str>) -> GraphNode {
@@ -1573,6 +1924,17 @@ fn graph_planned(id: &str, reason: &str, inputs: Vec<&str>, outputs: Vec<&str>) 
         outputs: outputs.into_iter().map(str::to_string).collect(),
         rebuild_reason: reason.to_string(),
     }
+}
+
+fn ensure_forge_gradle_execution_supported(plan: &BuildPlan) -> eyre::Result<()> {
+    if plan.forge_userdev.is_none() || plan.mcp_config.is_none() {
+        eyre::bail!(
+            "Minecraft {} did not resolve the ForgeGradle userdev plus MCPConfig inputs required by the current executor.",
+            plan.minecraft_version
+        );
+    }
+
+    Ok(())
 }
 
 fn execute_build(plan: &BuildPlan, explain_rebuild: bool) -> eyre::Result<()> {
@@ -1607,21 +1969,32 @@ fn execute_build(plan: &BuildPlan, explain_rebuild: bool) -> eyre::Result<()> {
         "complete",
     )?;
 
-    let started = Instant::now();
-    println!("Build node execute-mcp-config-joined: start");
-    execute_mcp_config_joined(&context)?;
-    println!(
-        "Build node execute-mcp-config-joined: done in {} ms",
-        started.elapsed().as_millis()
-    );
+    if plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        let started = Instant::now();
+        println!("Build node execute-neoform-userdev: start");
+        execute_neoform_userdev(&context)?;
+        println!(
+            "Build node execute-neoform-userdev: done in {} ms",
+            started.elapsed().as_millis()
+        );
+    } else {
+        ensure_forge_gradle_execution_supported(plan)?;
+        let started = Instant::now();
+        println!("Build node execute-mcp-config-joined: start");
+        execute_mcp_config_joined(&context)?;
+        println!(
+            "Build node execute-mcp-config-joined: done in {} ms",
+            started.elapsed().as_millis()
+        );
 
-    let started = Instant::now();
-    println!("Build node execute-forge-userdev: start");
-    execute_forge_userdev(&context)?;
-    println!(
-        "Build node execute-forge-userdev: done in {} ms",
-        started.elapsed().as_millis()
-    );
+        let started = Instant::now();
+        println!("Build node execute-forge-userdev: start");
+        execute_forge_userdev(&context)?;
+        println!(
+            "Build node execute-forge-userdev: done in {} ms",
+            started.elapsed().as_millis()
+        );
+    }
     let started = Instant::now();
     println!("Build node deobfuscate-mod-dependencies: start");
     execute_dependency_deobf(&context)?;
@@ -1730,6 +2103,7 @@ struct RunClasspath {
     reason = "Run launch orchestration intentionally mirrors Forge userdev config shape."
 )]
 fn execute_run(plan: &BuildPlan, kind: RunKind) -> eyre::Result<()> {
+    ensure_forge_gradle_execution_supported(plan)?;
     let context = ExecutionContext::new(plan)?;
     let run_config = read_forge_run_config(&context, kind)?;
     if run_config.main.is_empty() {
@@ -2455,6 +2829,13 @@ impl<'a> ExecutionContext<'a> {
             .ok_or_else(|| eyre::eyre!("Resolved plan did not include artifact id {id}"))
     }
 
+    fn maybe_artifact(&self, id: &str) -> Option<&ArtifactPlan> {
+        self.plan
+            .artifacts
+            .iter()
+            .find(|artifact| artifact.id == id)
+    }
+
     fn run_java_tool(
         &self,
         tool_id: &str,
@@ -2590,7 +2971,11 @@ fn execute_mcp_config_joined(context: &ExecutionContext<'_>) -> eyre::Result<()>
     )?;
     download_to_path(
         &client,
-        &context.plan.minecraft.client_mappings_url,
+        required_minecraft_mapping_url(
+            context,
+            context.plan.minecraft.client_mappings_url.as_deref(),
+            "client",
+        )?,
         &client_mappings,
     )?;
 
@@ -2835,12 +3220,20 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     let server_mappings = minecraft_root.join("server.txt");
     download_to_path(
         &client,
-        &context.plan.minecraft.client_mappings_url,
+        required_minecraft_mapping_url(
+            context,
+            context.plan.minecraft.client_mappings_url.as_deref(),
+            "client",
+        )?,
         &client_mappings,
     )?;
     download_to_path(
         &client,
-        &context.plan.minecraft.server_mappings_url,
+        required_minecraft_mapping_url(
+            context,
+            context.plan.minecraft.server_mappings_url.as_deref(),
+            "server",
+        )?,
         &server_mappings,
     )?;
     fs::create_dir_all(&mappings_root)?;
@@ -2987,6 +3380,191 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     )
 }
 
+fn execute_neoform_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
+    let neoform_root = context
+        .plan
+        .cache_dir
+        .join("neoform")
+        .join(&context.plan.minecraft_version);
+    let output_root = neoform_root.join("classes");
+    let nfrt_home = neoform_root.join("nfrt-home");
+    let nfrt_work = neoform_root.join("nfrt-work");
+    let artifact_manifest = neoform_root.join("artifact-manifest.properties");
+    let problem_report = neoform_root.join("problems.json");
+    let game_jar = neoform_dev_compile_jar(context);
+    let game_sources = output_root.join("gameSourcesWithNeoForge.jar");
+
+    if context.plan.refresh {
+        reset_cache_directory(&context.plan.cache_dir, &neoform_root)?;
+    }
+    fs::create_dir_all(&output_root)?;
+    fs::create_dir_all(&nfrt_home)?;
+    fs::create_dir_all(&nfrt_work)?;
+    write_neoform_artifact_manifest(context, &artifact_manifest)?;
+
+    if game_jar.is_file() && !context.plan.refresh {
+        context.write_node_state(
+            "execute-neoform-userdev",
+            &["NeoForge userdev", "NeoForm Runtime"],
+            &[game_jar],
+            "complete",
+        )?;
+        return Ok(());
+    }
+
+    let mut args = vec![
+        "--home-dir".to_string(),
+        nfrt_home.display().to_string(),
+        "--work-dir".to_string(),
+        nfrt_work.display().to_string(),
+        "--artifact-manifest".to_string(),
+        artifact_manifest.display().to_string(),
+        "--warn-on-artifact-manifest-miss".to_string(),
+        "--no-color".to_string(),
+        "--no-emojis".to_string(),
+    ];
+    for repository in &context.plan.repositories {
+        args.push(format!("--add-repository={}", repository.url));
+    }
+    args.extend([
+        "run".to_string(),
+        "--dist".to_string(),
+        "joined".to_string(),
+        "--neoforge".to_string(),
+        context.plan.loader_toolchain.userdev_coordinate.clone(),
+        "--write-result".to_string(),
+        format!("gameJarWithNeoForge:{}", game_jar.display()),
+        "--write-result".to_string(),
+        format!("gameSourcesWithNeoForge:{}", game_sources.display()),
+        "--problems-report".to_string(),
+        problem_report.display().to_string(),
+    ]);
+
+    if let Some(java_home) = &context.plan.java.home {
+        args.extend(["--java-home".to_string(), java_home.display().to_string()]);
+    }
+
+    if let Some(parchment) = context.maybe_artifact("parchment-data")
+        && let Some(coordinate) = &parchment.coordinate
+    {
+        args.extend([
+            "--parchment-data".to_string(),
+            coordinate.clone(),
+            "--parchment-conflict-prefix".to_string(),
+            "p_".to_string(),
+        ]);
+    }
+
+    let project_at = context
+        .plan
+        .minecraft_dir
+        .join("src")
+        .join("main")
+        .join("resources")
+        .join("META-INF")
+        .join("accesstransformer.cfg");
+    if project_at.is_file() {
+        context.assert_allowed_input(&project_at)?;
+        args.extend([
+            "--access-transformer".to_string(),
+            project_at.display().to_string(),
+        ]);
+    }
+
+    context.run_java_tool("tool-neoform-runtime", &[], &args, &neoform_root)?;
+    if !game_jar.is_file() {
+        eyre::bail!(
+            "NeoForm Runtime completed without producing {}",
+            game_jar.display()
+        );
+    }
+
+    context.write_node_state(
+        "execute-neoform-userdev",
+        &["NeoForge userdev", "NeoForm Runtime"],
+        &[game_jar, game_sources],
+        "complete",
+    )
+}
+
+fn neoform_dev_compile_jar(context: &ExecutionContext<'_>) -> PathBuf {
+    context
+        .plan
+        .cache_dir
+        .join("neoform")
+        .join(&context.plan.minecraft_version)
+        .join("classes")
+        .join("gameJarWithNeoForge.jar")
+}
+
+fn required_minecraft_mapping_url<'a>(
+    context: &ExecutionContext<'_>,
+    url: Option<&'a str>,
+    side: &str,
+) -> eyre::Result<&'a str> {
+    url.ok_or_else(|| {
+        eyre::eyre!(
+            "Minecraft {} version metadata does not include {side} mappings; this is only supported by the NeoGradle/NeoForm executor.",
+            context.plan.minecraft_version
+        )
+    })
+}
+
+fn loader_dev_compile_jar(context: &ExecutionContext<'_>) -> PathBuf {
+    if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        neoform_dev_compile_jar(context)
+    } else {
+        context
+            .plan
+            .cache_dir
+            .join("forge")
+            .join(&context.plan.minecraft_version)
+            .join("classes")
+            .join("dev-compile.jar")
+    }
+}
+
+fn write_neoform_artifact_manifest(
+    context: &ExecutionContext<'_>,
+    output: &Path,
+) -> eyre::Result<()> {
+    if let Some(parent) = output.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    let mut lines = Vec::new();
+    for artifact in &context.plan.artifacts {
+        let Some(coordinate) = &artifact.coordinate else {
+            continue;
+        };
+        context.assert_allowed_input(&artifact.cache_path)?;
+        lines.push(format!(
+            "{}={}",
+            java_properties_escape(coordinate),
+            java_properties_escape(&artifact.cache_path.display().to_string())
+        ));
+    }
+    lines.sort();
+    lines.dedup();
+    fs::write(output, lines.join("\n"))
+        .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+    Ok(())
+}
+
+fn java_properties_escape(input: &str) -> String {
+    let mut output = String::new();
+    for character in input.chars() {
+        match character {
+            '\\' => output.push_str("\\\\"),
+            ':' => output.push_str("\\:"),
+            '=' => output.push_str("\\="),
+            ' ' => output.push_str("\\ "),
+            _ => output.push(character),
+        }
+    }
+    output
+}
+
 fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     let output = context.plan.cache_dir.join("dependencies");
     if context.plan.refresh {
@@ -3002,6 +3580,11 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
         context.plan.allow_local_artifact_cache,
         context.plan.lockfile.clone(),
     )?;
+    if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        copy_neogradle_dependency_jars(context, &resolver, &output)?;
+        return Ok(());
+    }
+
     let mapping_path = context
         .plan
         .cache_dir
@@ -3080,6 +3663,43 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
     context.write_node_state(
         "deobfuscate-mod-dependencies",
         &["active fg.deobf dependency jars"],
+        &outputs,
+        "complete",
+    )?;
+    Ok(())
+}
+
+fn copy_neogradle_dependency_jars(
+    context: &ExecutionContext<'_>,
+    resolver: &Resolver,
+    output: &Path,
+) -> eyre::Result<()> {
+    let mut outputs = Vec::new();
+    for dependency in &context.plan.dependencies {
+        let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
+        let artifact = resolver.resolve_artifact(
+            &format!("dependency-{}", outputs.len()),
+            &coordinate,
+            &format!("{} dependency", dependency.configuration),
+        )?;
+        context.assert_allowed_input(&artifact.cache_path)?;
+        let copied = output.join(format!(
+            "{}-{}",
+            safe_path_segment(&dependency.configuration),
+            coordinate.file_name()
+        ));
+        fs::copy(&artifact.cache_path, &copied).wrap_err_with(|| {
+            format!(
+                "Failed to copy {} to {}",
+                artifact.cache_path.display(),
+                copied.display()
+            )
+        })?;
+        outputs.push(copied);
+    }
+    context.write_node_state(
+        "deobfuscate-mod-dependencies",
+        &["active NeoGradle dependency jars"],
         &outputs,
         "complete",
     )?;
@@ -3351,10 +3971,12 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         .join("teamdman")
         .join("langs");
     let classes_dir = project_root.join("classes");
+    let resources_dir = project_root.join("resources");
     let gametest_classes_dir = project_root.join("gametest").join("classes");
     let gametest_resources_dir = project_root.join("gametest").join("resources");
     fs::create_dir_all(&generated_sources)?;
     reset_cache_directory(&context.plan.cache_dir, &classes_dir)?;
+    reset_cache_directory(&context.plan.cache_dir, &resources_dir)?;
 
     let resolver = Resolver::new(
         context.plan.maven_cache_dir.clone(),
@@ -3363,7 +3985,12 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         context.plan.allow_local_artifact_cache,
         context.plan.lockfile.clone(),
     )?;
-    let antlr_classpath = resolve_antlr_classpath(&resolver)?;
+    write_minecraft_libraries_cfg(
+        context,
+        &resolver.client,
+        &project_root.join("minecraft-libraries.cfg"),
+    )?;
+    let antlr_classpath = resolve_antlr_classpath(context, &resolver)?;
     run_antlr(context, &antlr_classpath, &generated_sources)?;
 
     let classpath = resolve_project_compile_classpath(context, &resolver, &antlr_classpath)?;
@@ -3412,7 +4039,11 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         &gametest_resources_dir,
         &["README.md"],
     )?;
-    ensure_run_refmap_remapping_file(context)?;
+    if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        patch_neogradle_anonymous_constructor_debug_names(&classes_dir)?;
+    } else {
+        ensure_run_refmap_remapping_file(context)?;
+    }
 
     context.write_node_state(
         "compile-project",
@@ -3430,6 +4061,65 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         ],
         "complete",
     )?;
+    Ok(())
+}
+
+fn patch_neogradle_anonymous_constructor_debug_names(classes_dir: &Path) -> eyre::Result<()> {
+    let debug_name_patches: &[(&str, &[(&str, &str)])] = &[
+        (
+            "ca/teamdman/sfm/client/text_styling/ProgramSyntaxHighlightingHelper$1.class",
+            &[("arg0", "tokenSource")],
+        ),
+        (
+            "ca/teamdman/sfm/common/containermenu/ManagerContainerMenu$1.class",
+            &[
+                ("arg0", "container"),
+                ("arg1", "slot"),
+                ("arg2", "x"),
+                ("arg3", "y"),
+            ],
+        ),
+        (
+            "ca/teamdman/sfm/common/resourcetype/FluidResourceType$1.class",
+            &[("arg0", "size"), ("arg1", "capacity")],
+        ),
+        (
+            "ca/teamdman/sfm/common/resourcetype/ForgeEnergyResourceType$1.class",
+            &[("arg0", "capacity")],
+        ),
+        (
+            "ca/teamdman/sfm/common/resourcetype/ItemResourceType$1.class",
+            &[("arg0", "size")],
+        ),
+    ];
+
+    let mut total_replacements = 0usize;
+    for (class_name, replacements) in debug_name_patches {
+        let class_path = zip_name_to_path(classes_dir, class_name);
+        if !class_path.is_file() {
+            continue;
+        }
+        let mapping = replacements
+            .iter()
+            .map(|(from, to)| ((*from).to_string(), (*to).to_string()))
+            .collect::<BTreeMap<_, _>>();
+        let bytes = fs::read(&class_path)
+            .wrap_err_with(|| format!("Failed to read {}", class_path.display()))?;
+        let (patched_bytes, replacement_count) =
+            rewrite_class_srg_member_constants(&bytes, &mapping).wrap_err_with(|| {
+                format!("Failed to patch debug names in {}", class_path.display())
+            })?;
+        if replacement_count == 0 {
+            continue;
+        }
+        fs::write(&class_path, patched_bytes)
+            .wrap_err_with(|| format!("Failed to write {}", class_path.display()))?;
+        total_replacements += replacement_count;
+    }
+
+    if total_replacements > 0 {
+        println!("Patched {total_replacements} NeoGradle anonymous constructor debug names");
+    }
     Ok(())
 }
 
@@ -3463,7 +4153,14 @@ fn compile_optional_java_source_set(
             .collect(),
     );
     let argfile = project_root.join(format!("javac-{source_set}.args"));
-    write_javac_no_ap_argfile(&argfile, &classpath, &sources, classes_dir)?;
+    write_javac_no_ap_argfile(
+        &argfile,
+        &classpath,
+        &sources,
+        classes_dir,
+        context.plan.java_release,
+        context.plan.java.major_version,
+    )?;
 
     let started = Instant::now();
     println!(
@@ -3568,12 +4265,54 @@ fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Resu
             classes_dir.display()
         );
     }
-    if !javac_resources_dir.join("sfm.refmap.json").is_file() {
+    if context.plan.loader_toolchain.kind != LoaderToolchainKind::NeoGradleUserdev
+        && !javac_resources_dir.join("sfm.refmap.json").is_file()
+    {
         eyre::bail!(
             "Mixin annotation processor did not produce {}",
             javac_resources_dir.join("sfm.refmap.json").display()
         );
     }
+    stage_project_resources(context, &staged_resources_dir, &javac_resources_dir)?;
+    write_project_development_jar(
+        context,
+        &classes_dir,
+        &staged_resources_dir,
+        &development_jar,
+    )?;
+
+    if let Some(parent) = context.plan.rust_output_jar.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    if context.plan.rust_output_jar.exists() {
+        fs::remove_file(&context.plan.rust_output_jar).wrap_err_with(|| {
+            format!(
+                "Failed to remove previous Rust jar {}",
+                context.plan.rust_output_jar.display()
+            )
+        })?;
+    }
+    if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        fs::copy(&development_jar, &context.plan.rust_output_jar).wrap_err_with(|| {
+            format!(
+                "Failed to copy {} to {}",
+                development_jar.display(),
+                context.plan.rust_output_jar.display()
+            )
+        })?;
+        context.write_node_state(
+            "package-and-reobfuscate-jar",
+            &["compiled classes", "expanded resources"],
+            &[
+                staged_resources_dir,
+                development_jar,
+                context.plan.rust_output_jar.clone(),
+            ],
+            "complete",
+        )?;
+        return Ok(());
+    }
+
     if !reobf_mapping.is_file() {
         eyre::bail!(
             "Reobfuscation mapping is missing: {}",
@@ -3594,28 +4333,8 @@ fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Resu
         context.plan.allow_local_artifact_cache,
         context.plan.lockfile.clone(),
     )?;
-    let antlr_classpath = resolve_antlr_classpath(&resolver)?;
+    let antlr_classpath = resolve_antlr_classpath(context, &resolver)?;
     let reobf_classpath = resolve_project_compile_classpath(context, &resolver, &antlr_classpath)?;
-
-    stage_project_resources(context, &staged_resources_dir, &javac_resources_dir)?;
-    write_project_development_jar(
-        context,
-        &classes_dir,
-        &staged_resources_dir,
-        &development_jar,
-    )?;
-
-    if let Some(parent) = context.plan.rust_output_jar.parent() {
-        fs::create_dir_all(parent)?;
-    }
-    if context.plan.rust_output_jar.exists() {
-        fs::remove_file(&context.plan.rust_output_jar).wrap_err_with(|| {
-            format!(
-                "Failed to remove previous Rust jar {}",
-                context.plan.rust_output_jar.display()
-            )
-        })?;
-    }
     context.run_java_tool_with_classpath(
         "tool-specialsource",
         &[],
@@ -3668,13 +4387,13 @@ fn stage_project_resources(
             .plan
             .minecraft_dir
             .join("src")
-            .join("generated")
+            .join("main")
             .join("resources"),
         context
             .plan
             .minecraft_dir
             .join("src")
-            .join("main")
+            .join("generated")
             .join("resources"),
         javac_resources_dir.to_path_buf(),
     ] {
@@ -3707,7 +4426,10 @@ fn stage_resource_root(
             continue;
         }
 
-        let bytes = if matches!(name.as_str(), "META-INF/mods.toml" | "pack.mcmeta") {
+        let bytes = if matches!(
+            name.as_str(),
+            "META-INF/mods.toml" | "META-INF/neoforge.mods.toml" | "pack.mcmeta"
+        ) {
             let template_text = fs::read_to_string(&path)
                 .wrap_err_with(|| format!("Failed to read resource {}", path.display()))?;
             expand_gradle_resource_template(&template_text, &context.plan.properties)?.into_bytes()
@@ -3736,6 +4458,7 @@ fn write_project_development_jar(
     let mut entries = BTreeMap::new();
     add_directory_to_jar_entries(context, &mut entries, classes_dir)?;
     add_directory_to_jar_entries(context, &mut entries, resources_dir)?;
+    add_neogradle_jarjar_entries(context, &mut entries)?;
 
     if let Some(parent) = output.parent() {
         fs::create_dir_all(parent)?;
@@ -3767,6 +4490,57 @@ fn write_project_development_jar(
     writer
         .finish()
         .wrap_err_with(|| format!("Failed to finish {}", output.display()))?;
+    Ok(())
+}
+
+fn add_neogradle_jarjar_entries(
+    context: &ExecutionContext<'_>,
+    entries: &mut BTreeMap<String, Vec<u8>>,
+) -> eyre::Result<()> {
+    if context.plan.loader_toolchain.kind != LoaderToolchainKind::NeoGradleUserdev {
+        return Ok(());
+    }
+
+    let mut metadata_entries = Vec::new();
+    for dependency in context
+        .plan
+        .dependencies
+        .iter()
+        .filter(|dependency| dependency.configuration == "jarJar")
+    {
+        let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
+        context.assert_allowed_input(&dependency.cache_path)?;
+        let path = format!("META-INF/jarjar/{}", coordinate.file_name());
+        let bytes = fs::read(&dependency.cache_path)
+            .wrap_err_with(|| format!("Failed to read {}", dependency.cache_path.display()))?;
+        entries.insert(path.clone(), bytes);
+        metadata_entries.push(JarJarMetadataEntry {
+            identifier: JarJarIdentifier {
+                group: coordinate.group,
+                artifact: coordinate.artifact,
+            },
+            version: JarJarVersion {
+                range: format!("[{}]", coordinate.version),
+                artifact_version: coordinate.version,
+            },
+            path,
+            is_obfuscated: false,
+        });
+    }
+
+    if metadata_entries.is_empty() {
+        return Ok(());
+    }
+
+    let metadata = JarJarMetadata {
+        jars: metadata_entries,
+    };
+    let mut metadata_json = facet_json::to_string_pretty(&metadata)?.replace('\n', "\r\n");
+    metadata_json.push_str("\r\n");
+    entries.insert(
+        "META-INF/jarjar/metadata.json".to_string(),
+        metadata_json.into_bytes(),
+    );
     Ok(())
 }
 
@@ -3814,7 +4588,7 @@ fn build_project_manifest(context: &ExecutionContext<'_>) -> String {
     let mod_version = properties.get("mod_version").map_or("", String::as_str);
     let timestamp = Local::now().format("%Y-%m-%dT%H:%M:%S%z").to_string();
     let mut manifest = String::new();
-    for (key, value) in [
+    let attributes = [
         ("Manifest-Version", "1.0"),
         ("Specification-Title", mod_id),
         ("Specification-Vendor", mod_authors),
@@ -3823,9 +4597,12 @@ fn build_project_manifest(context: &ExecutionContext<'_>) -> String {
         ("Implementation-Version", mod_version),
         ("Implementation-Vendor", mod_authors),
         ("Implementation-Timestamp", timestamp.as_str()),
-        ("MixinConfigs", "sfm.mixins.json"),
-    ] {
+    ];
+    for (key, value) in attributes {
         append_manifest_attribute(&mut manifest, key, value);
+    }
+    if context.plan.loader_toolchain.kind != LoaderToolchainKind::NeoGradleUserdev {
+        append_manifest_attribute(&mut manifest, "MixinConfigs", "sfm.mixins.json");
     }
     manifest.push_str("\r\n");
     manifest
@@ -3947,19 +4724,47 @@ fn resolve_coordinates_for_classpath(
         .collect()
 }
 
-fn resolve_antlr_classpath(resolver: &Resolver) -> eyre::Result<Vec<PathBuf>> {
-    resolve_coordinates_for_classpath(
-        resolver,
-        &[
-            "org.antlr:antlr4:4.9.1",
-            "org.antlr:antlr-runtime:3.5.2",
-            "org.antlr:antlr4-runtime:4.9.1",
-            "org.antlr:ST4:4.3",
-            "org.abego.treelayout:org.abego.treelayout.core:1.0.3",
-            "org.glassfish:javax.json:1.0.4",
-        ],
-        "ANTLR grammar generation",
-    )
+fn resolve_antlr_classpath(
+    context: &ExecutionContext<'_>,
+    resolver: &Resolver,
+) -> eyre::Result<Vec<PathBuf>> {
+    let dependency_script = context
+        .plan
+        .minecraft_dir
+        .join("gradle")
+        .join("dependencies")
+        .join(&context.plan.minecraft_version)
+        .join("dependencies.gradle");
+    let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
+    let antlr_version = dependencies
+        .iter()
+        .find(|dependency| dependency.configuration == "antlr")
+        .map_or("4.9.1", |dependency| dependency.coordinate.version.as_str());
+    let coordinates = antlr_classpath_coordinates(antlr_version)?;
+    let coordinate_refs = coordinates.iter().map(String::as_str).collect::<Vec<_>>();
+    resolve_coordinates_for_classpath(resolver, &coordinate_refs, "ANTLR grammar generation")
+}
+
+fn antlr_classpath_coordinates(version: &str) -> eyre::Result<Vec<String>> {
+    match version {
+        "4.9.1" => Ok(vec![
+            "org.antlr:antlr4:4.9.1".to_string(),
+            "org.antlr:antlr-runtime:3.5.2".to_string(),
+            "org.antlr:antlr4-runtime:4.9.1".to_string(),
+            "org.antlr:ST4:4.3".to_string(),
+            "org.abego.treelayout:org.abego.treelayout.core:1.0.3".to_string(),
+            "org.glassfish:javax.json:1.0.4".to_string(),
+        ]),
+        "4.13.1" => Ok(vec![
+            "org.antlr:antlr4:4.13.1".to_string(),
+            "org.antlr:antlr4-runtime:4.13.1".to_string(),
+            "org.antlr:antlr-runtime:3.5.3".to_string(),
+            "org.antlr:ST4:4.3.4".to_string(),
+            "org.abego.treelayout:org.abego.treelayout.core:1.0.3".to_string(),
+            "com.ibm.icu:icu4j:72.1".to_string(),
+        ]),
+        _ => eyre::bail!("Unsupported ANTLR tool version: {version}"),
+    }
 }
 
 fn resolve_project_compile_classpath(
@@ -3968,15 +4773,7 @@ fn resolve_project_compile_classpath(
     antlr_classpath: &[PathBuf],
 ) -> eyre::Result<Vec<PathBuf>> {
     let mut classpath = Vec::new();
-    classpath.push(
-        context
-            .plan
-            .cache_dir
-            .join("forge")
-            .join(&context.plan.minecraft_version)
-            .join("classes")
-            .join("dev-compile.jar"),
-    );
+    classpath.push(loader_dev_compile_jar(context));
     classpath.extend(collect_jars(
         &context.plan.cache_dir.join("minecraft").join("libraries"),
     )?);
@@ -4129,6 +4926,8 @@ fn resolve_compile_dependencies(
                     dependency.configuration.as_str(),
                     "implementation" | "compileOnly" | "annotationProcessor"
                 )
+                && (context.plan.loader_toolchain.kind != LoaderToolchainKind::NeoGradleUserdev
+                    || dependency.configuration == "annotationProcessor")
         })
         .enumerate()
         .map(|(index, dependency)| {
@@ -4200,8 +4999,13 @@ fn is_excluded_source(relative: &str, excludes: &[String]) -> bool {
     excludes.iter().any(|exclude| {
         if let Some(prefix) = exclude.strip_suffix("/**") {
             relative.starts_with(prefix)
-        } else {
+        } else if Path::new(exclude)
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("java"))
+        {
             relative == exclude
+        } else {
+            relative == exclude || relative.starts_with(&format!("{exclude}/"))
         }
     })
 }
@@ -4277,23 +5081,33 @@ fn write_javac_argfile(
     args.extend([
         "-encoding".to_string(),
         "UTF-8".to_string(),
-        "--release".to_string(),
-        "17".to_string(),
         "-g".to_string(),
         "-Xmaxerrs".to_string(),
         "0".to_string(),
-        "-sourcepath".to_string(),
-        String::new(),
         "-d".to_string(),
         classes_dir.display().to_string(),
         "-classpath".to_string(),
         join_classpath(classpath),
         "-AoutRefMapFile=".to_string() + &refmap.display().to_string(),
-        "-AoutTsrgFile=".to_string() + &out_tsrg.display().to_string(),
-        "-AreobfTsrgFile=".to_string() + &reobf_tsrg.display().to_string(),
-        "-AmappingTypes=tsrg".to_string(),
-        "-AdefaultObfuscationEnv=searge".to_string(),
     ]);
+    append_javac_release_args(
+        &mut args,
+        context.plan.java_release,
+        context.plan.java.major_version,
+    );
+    if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        args.extend([
+            "-AdefaultObfuscationEnv=named".to_string(),
+            "-AdisableTargetValidator=true".to_string(),
+        ]);
+    } else {
+        args.extend([
+            "-AoutTsrgFile=".to_string() + &out_tsrg.display().to_string(),
+            "-AreobfTsrgFile=".to_string() + &reobf_tsrg.display().to_string(),
+            "-AmappingTypes=tsrg".to_string(),
+            "-AdefaultObfuscationEnv=searge".to_string(),
+        ]);
+    }
     args.extend(sources.iter().map(|source| source.display().to_string()));
 
     if let Some(parent) = argfile.parent() {
@@ -4315,24 +5129,23 @@ fn write_javac_no_ap_argfile(
     classpath: &[PathBuf],
     sources: &[PathBuf],
     classes_dir: &Path,
+    java_release: u32,
+    java_major_version: u32,
 ) -> eyre::Result<()> {
     let mut args = Vec::new();
     args.extend([
         "-encoding".to_string(),
         "UTF-8".to_string(),
-        "--release".to_string(),
-        "17".to_string(),
         "-g".to_string(),
         "-Xmaxerrs".to_string(),
         "0".to_string(),
         "-proc:none".to_string(),
-        "-sourcepath".to_string(),
-        String::new(),
         "-d".to_string(),
         classes_dir.display().to_string(),
         "-classpath".to_string(),
         join_classpath(classpath),
     ]);
+    append_javac_release_args(&mut args, java_release, java_major_version);
     args.extend(sources.iter().map(|source| source.display().to_string()));
 
     if let Some(parent) = argfile.parent() {
@@ -4347,6 +5160,12 @@ fn write_javac_no_ap_argfile(
     )
     .wrap_err_with(|| format!("Failed to write {}", argfile.display()))?;
     Ok(())
+}
+
+fn append_javac_release_args(args: &mut Vec<String>, java_release: u32, java_major_version: u32) {
+    if java_major_version != java_release {
+        args.extend(["--release".to_string(), java_release.to_string()]);
+    }
 }
 
 fn join_classpath(classpath: &[PathBuf]) -> String {
@@ -6203,13 +7022,23 @@ fn print_plan_summary(plan: &BuildPlan) {
     println!("Gradle jar:   {}", plan.gradle_output_jar.display());
     println!("Rust jar:     {}", plan.rust_output_jar.display());
     println!("Java:         {}", plan.java.executable.display());
+    println!("Java release: {}", plan.java_release);
+    println!(
+        "Toolchain:    {:?} ({})",
+        plan.loader_toolchain.kind, plan.loader_toolchain.userdev_coordinate
+    );
     println!(
         "State:        {}",
         plan.state_dir.join("last-plan.json").display()
     );
     println!("Lockfile:     {}", plan.lockfile_path.display());
     println!("Artifacts:    {}", plan.artifacts.len());
-    println!("fg.deobf deps: {}", plan.dependencies.len());
+    let dependency_label = if plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        "project deps"
+    } else {
+        "fg.deobf deps"
+    };
+    println!("{dependency_label}: {}", plan.dependencies.len());
     println!("Graph nodes:  {}", plan.graph.len());
 
     for warning in &plan.warnings {
@@ -6217,7 +7046,39 @@ fn print_plan_summary(plan: &BuildPlan) {
     }
 }
 
-fn resolve_java(java_home: Option<&Path>) -> eyre::Result<JavaPlan> {
+fn read_java_toolchain_release(minecraft_dir: &Path, minecraft_version: &str) -> eyre::Result<u32> {
+    let path = minecraft_dir
+        .join("gradle")
+        .join("java-toolchain")
+        .join(minecraft_version)
+        .join("java-toolchain.gradle");
+    let content =
+        fs::read_to_string(&path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
+    let start = content.find("JavaLanguageVersion.of(").ok_or_else(|| {
+        eyre::eyre!(
+            "Could not find JavaLanguageVersion.of(...) in {}",
+            path.display()
+        )
+    })? + "JavaLanguageVersion.of(".len();
+    let end = content[start..]
+        .find(')')
+        .ok_or_else(|| eyre::eyre!("Could not parse Java toolchain in {}", path.display()))?
+        + start;
+    content[start..end]
+        .trim()
+        .parse()
+        .wrap_err_with(|| format!("Could not parse Java release from {}", path.display()))
+}
+
+fn required_java_runtime_major(loader_toolchain: &LoaderToolchainPlan, java_release: u32) -> u32 {
+    if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        java_release.max(21)
+    } else {
+        java_release
+    }
+}
+
+fn resolve_java(java_home: Option<&Path>, required_major: u32) -> eyre::Result<JavaPlan> {
     let home = java_home
         .map(Path::to_path_buf)
         .or_else(|| std::env::var_os("JAVA_HOME").map(PathBuf::from));
@@ -6244,9 +7105,10 @@ fn resolve_java(java_home: Option<&Path>) -> eyre::Result<JavaPlan> {
     let version_output = String::from_utf8_lossy(&output.stderr).trim().to_string();
     let major_version = parse_java_major_version(&version_output)
         .ok_or_else(|| eyre::eyre!("Could not parse Java version from: {version_output}"))?;
-    if major_version != 17 {
+    if major_version < required_major {
         eyre::bail!(
-            "Java 17 is required for the 1.19.2 clean-slate build, but {} reports Java {}",
+            "Java {} or newer is required for this clean-slate build, but {} reports Java {}",
+            required_major,
             executable.display(),
             major_version
         );
@@ -6397,6 +7259,7 @@ fn required_property<'a>(
 fn repositories() -> Vec<Repository> {
     [
         ("Forge", "https://maven.minecraftforge.net"),
+        ("NeoForged", "https://maven.neoforged.net/releases"),
         ("Maven Central", "https://repo1.maven.org/maven2"),
         ("Parchment", "https://maven.parchmentmc.org"),
         (

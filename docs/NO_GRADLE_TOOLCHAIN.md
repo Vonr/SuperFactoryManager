@@ -778,15 +778,35 @@ platform/minecraft/build/libs/Super Factory Manager (SFM)-MC1.19.2-4.33.0-rust.j
 - The Java tool runner now writes Java argfiles before invocation, which avoids Windows command-line length failures when tools need the full compile classpath.
 - Parchment parameter data is layered onto MCPConfig TSRG parameter rows while generating SFM-owned mapping files. This is required for local variable table parity in classes that extend Minecraft/Forge types, and was the final difference before compare reached zero changed entries.
 
+Version-aware toolchain status:
+
+- `jar plan` now records a detected loader toolchain:
+  - `ForgeGradleForge` for `net.minecraftforge:forge:<mc>-<forge>:userdev`
+  - `ForgeGradleNeoForgeGroup` for transitional `net.neoforged:forge:<mc>-<forge>:userdev`
+  - `NeoGradleUserdev` for modern `net.neoforged:neoforge:<neo>:userdev`
+- `https://maven.neoforged.net/releases` is part of the resolver and `net.neoforged` artifacts prefer it.
+- Parchment coordinates support both `YYYY.MM.DD-MC` and `MC-YYYY.MM.DD-targetMC` property formats.
+- MCPConfig-declared Java tool versions are now honored. This matters for `1.19.4+`, where MCPConfig moves ForgeFlower from `1.5.605.9` to `2.0.627.2`.
+- ForgeGradle-compatible Rust jar builds have been verified for:
+  - `1.19.2`
+  - `1.19.4`
+  - `1.20`
+  - `1.20.1`
+- `1.20.1` is hosted under `net.neoforged:forge` but still executes through the ForgeGradle-style pipeline.
+- `1.20.2`, `1.20.3`, `1.20.4`, `1.21.0`, and `1.21.1` plan successfully as `NeoGradleUserdev`, resolve userdev/source/universal/NeoForm-adjacent artifacts, and then intentionally refuse `jar build`/`run` with a clear NeoForm executor missing message.
+- Branch `1.21.0` selects worktree `1.21.0`, but its `gradle.properties` uses `minecraft_version=1.21`; the planner now warns and uses the property value for artifact coordinates.
+- Source excludes now match both exact Java files and Gradle-style bare directory excludes, which is required for version branches that exclude Mekanism compat sources.
+
 Immediate next resume checklist:
 
-1. Fix or intentionally explain the remaining `StructureTemplateManagerMixin.onTryLoad` dev-run refmap warning.
-2. Smoke test the `-rust.jar` in a Forge 1.19.2 instance and confirm Minecraft reaches the main menu with SFM loaded.
-3. Add a strict provenance audit command that fails when any artifact has `source=local-*` or `source=existing-sfm-cache-unknown`.
-4. Add real input fingerprinting/up-to-date checks for expensive nodes, plus temp-file/atomic-rename writes for large generated outputs so Ctrl+C cannot leave convincing partial artifacts.
-5. Add integration coverage for the MCP joined executor, Forge userdev executor, run client launcher, and final compare report.
-6. Investigate inheritance-aware third-party dependency remapping only if smoke testing or future compares prove it is needed.
-7. Keep Gradle baseline compare as the regression oracle until smoke testing and repeated clean builds are boring.
+1. Implement the NeoGradle/NeoForm executor for `1.20.2+`.
+2. Parse and execute NeoForm config instead of MCPConfig for modern NeoForge branches.
+3. Wire NeoForge run classpaths/module paths from userdev `runs`, `modules`, `libraries`, and NeoForm outputs.
+4. Add a strict provenance audit command that fails when any artifact has `source=local-*` or `source=existing-sfm-cache-unknown`.
+5. Add real input fingerprinting/up-to-date checks for expensive nodes, plus temp-file/atomic-rename writes for large generated outputs so Ctrl+C cannot leave convincing partial artifacts.
+6. Smoke test the verified `-rust.jar` outputs in matching Forge instances and confirm Minecraft reaches the main menu with SFM loaded.
+7. Add integration coverage for the MCP joined executor, Forge userdev executor, NeoForm executor, run client launcher, and final compare report.
+8. Keep Gradle baseline compare as the regression oracle until smoke testing and repeated clean builds are boring.
 
 ## Likely Hard Parts
 
