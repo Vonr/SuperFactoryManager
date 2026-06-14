@@ -331,6 +331,7 @@ fn facet_json_serializes_plan_without_embedded_lockfile() {
             side_strippers: Vec::new(),
             module_count: 0,
             library_count: 0,
+            test_libraries: Vec::new(),
             run_configs: Vec::new(),
         }),
         mcp_config: Some(McpConfigPlan {

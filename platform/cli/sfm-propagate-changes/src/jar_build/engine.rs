@@ -18,12 +18,17 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::fs;
 use std::fs::File;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::io::Cursor;
 use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::process::ExitStatus;
+use std::process::Stdio;
+use std::thread;
 use std::time::Instant;
 use zip::CompressionMethod;
 use zip::ZipArchive;
@@ -249,6 +254,7 @@ struct ForgeUserdevPlan {
     side_strippers: Vec<String>,
     module_count: usize,
     library_count: usize,
+    test_libraries: Vec<String>,
     run_configs: Vec<String>,
 }
 
@@ -262,7 +268,7 @@ struct McpConfigPlan {
     library_count: usize,
 }
 
-#[derive(Debug, Facet)]
+#[derive(Clone, Debug, Facet)]
 struct DependencyPlan {
     configuration: String,
     notation: String,
@@ -484,6 +490,8 @@ struct ForgeUserdevConfig {
     modules: Vec<String>,
     #[facet(default)]
     libraries: Vec<String>,
+    #[facet(rename = "testLibraries", default)]
+    test_libraries: Vec<String>,
     #[facet(default)]
     runs: BTreeMap<String, ForgeRunConfig>,
 }
@@ -969,6 +977,29 @@ impl Resolver {
             coordinate.artifact
         )
     }
+
+    fn resolve_pom_runtime_dependencies(
+        &self,
+        coordinate: &MavenCoordinate,
+    ) -> Vec<MavenCoordinate> {
+        if coordinate.group == "curse.maven"
+            || coordinate.classifier.is_some()
+            || coordinate.extension != "jar"
+        {
+            return Vec::new();
+        }
+
+        let pom_coordinate = coordinate.with_extension("pom");
+        for repo in self.candidate_repositories(coordinate) {
+            let url = Self::artifact_url(repo, &pom_coordinate);
+            let Ok(pom) = download_text_optional(&self.client, &url) else {
+                continue;
+            };
+            return parse_maven_pom_runtime_dependencies(&pom, coordinate);
+        }
+
+        Vec::new()
+    }
 }
 
 impl MavenCoordinate {
@@ -1014,6 +1045,16 @@ impl MavenCoordinate {
             version: self.version.clone(),
             classifier: Some(classifier.to_string()),
             extension: self.extension.clone(),
+        }
+    }
+
+    fn with_extension(&self, extension: &str) -> Self {
+        Self {
+            group: self.group.clone(),
+            artifact: self.artifact.clone(),
+            version: self.version.clone(),
+            classifier: self.classifier.clone(),
+            extension: extension.to_string(),
         }
     }
 }
@@ -1190,6 +1231,11 @@ fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
             resolver.resolve_dependency(&dependency.configuration, &dependency.coordinate)
         })
         .collect::<eyre::Result<Vec<_>>>()?;
+    let dependency_plans = if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        add_transitive_runtime_dependency_plans(&resolver, dependency_plans)?
+    } else {
+        dependency_plans
+    };
 
     let graph = build_graph(
         minecraft_version,
@@ -1302,6 +1348,7 @@ fn core_coordinates(
             MavenCoordinate::parse(NEOFORM_RUNTIME_COORDINATE)?,
             "NeoForm Runtime userdev execution".to_string(),
         ));
+        add_userdev_test_library_coordinates(&mut coordinates, userdev)?;
         add_project_tool_coordinates(&mut coordinates, dependencies)?;
         return Ok(coordinates);
     }
@@ -1319,6 +1366,20 @@ fn core_coordinates(
     add_project_tool_coordinates(&mut coordinates, dependencies)?;
 
     Ok(coordinates)
+}
+
+fn add_userdev_test_library_coordinates(
+    coordinates: &mut Vec<(String, MavenCoordinate, String)>,
+    userdev: &ForgeUserdevPlan,
+) -> eyre::Result<()> {
+    for (index, coordinate) in userdev.test_libraries.iter().enumerate() {
+        coordinates.push((
+            format!("forge-userdev-test-library-{index}"),
+            MavenCoordinate::parse(coordinate)?,
+            "Forge userdev game-test runtime classpath".to_string(),
+        ));
+    }
+    Ok(())
 }
 
 fn should_plan_project_dependency(
@@ -1342,6 +1403,42 @@ fn should_plan_project_dependency(
             | "gametestImplementation"
             | "gametestCompileOnly"
             | "gametestRuntimeOnly"
+    )
+}
+
+fn add_transitive_runtime_dependency_plans(
+    resolver: &Resolver,
+    mut dependencies: Vec<DependencyPlan>,
+) -> eyre::Result<Vec<DependencyPlan>> {
+    let mut seen = dependencies
+        .iter()
+        .map(|dependency| dependency.resolved_notation.clone())
+        .collect::<BTreeSet<_>>();
+    let mut queue = dependencies
+        .iter()
+        .filter(|dependency| is_runtime_transitive_root(&dependency.configuration))
+        .filter_map(|dependency| MavenCoordinate::parse(&dependency.resolved_notation).ok())
+        .collect::<Vec<_>>();
+
+    while let Some(root) = queue.pop() {
+        for coordinate in resolver.resolve_pom_runtime_dependencies(&root) {
+            let key = coordinate.to_string();
+            if !seen.insert(key) {
+                continue;
+            }
+            let dependency = resolver.resolve_dependency("transitiveRuntime", &coordinate)?;
+            queue.push(MavenCoordinate::parse(&dependency.resolved_notation)?);
+            dependencies.push(dependency);
+        }
+    }
+
+    Ok(dependencies)
+}
+
+fn is_runtime_transitive_root(configuration: &str) -> bool {
+    matches!(
+        configuration,
+        "implementation" | "runtimeOnly" | "gametestImplementation" | "gametestRuntimeOnly"
     )
 }
 
@@ -1627,6 +1724,7 @@ fn read_forge_userdev(artifact: &ArtifactPlan) -> eyre::Result<ForgeUserdevPlan>
         .and_then(|binpatcher| binpatcher.version.clone());
     let module_count = config.modules.len();
     let library_count = config.libraries.len();
+    let test_libraries = config.test_libraries;
     let run_configs = config.runs.keys().cloned().collect();
 
     Ok(ForgeUserdevPlan {
@@ -1654,6 +1752,7 @@ fn read_forge_userdev(artifact: &ArtifactPlan) -> eyre::Result<ForgeUserdevPlan>
         side_strippers: config.sass.map_or_else(Vec::new, StringList::into_vec),
         module_count,
         library_count,
+        test_libraries,
         run_configs,
     })
 }
@@ -1777,6 +1876,140 @@ fn parse_dependency_script(
     }
 
     Ok(dependencies)
+}
+
+fn parse_maven_pom_runtime_dependencies(
+    pom: &str,
+    parent: &MavenCoordinate,
+) -> Vec<MavenCoordinate> {
+    let properties = parse_maven_pom_properties(pom, parent);
+    let search_start = pom
+        .find("</dependencyManagement>")
+        .map_or(0, |index| index + "</dependencyManagement>".len());
+    let Some(dependencies_xml) = extract_xml_section(&pom[search_start..], "dependencies") else {
+        return Vec::new();
+    };
+
+    let mut coordinates = Vec::new();
+    for block in dependencies_xml.split("<dependency").skip(1) {
+        let Some(start) = block.find('>') else {
+            continue;
+        };
+        let Some(end) = block[start + 1..].find("</dependency>") else {
+            continue;
+        };
+        let dependency_xml = &block[start + 1..start + 1 + end];
+        let scope = extract_xml_tag_text(dependency_xml, "scope").unwrap_or_default();
+        if !scope.is_empty() && scope != "compile" && scope != "runtime" {
+            continue;
+        }
+        if extract_xml_tag_text(dependency_xml, "optional")
+            .is_some_and(|optional| optional.eq_ignore_ascii_case("true"))
+        {
+            continue;
+        }
+        let dependency_type =
+            extract_xml_tag_text(dependency_xml, "type").unwrap_or_else(|| "jar".to_string());
+        if dependency_type != "jar" {
+            continue;
+        }
+
+        let Some(group) = extract_resolved_pom_tag(dependency_xml, "groupId", &properties) else {
+            continue;
+        };
+        let Some(artifact) = extract_resolved_pom_tag(dependency_xml, "artifactId", &properties)
+        else {
+            continue;
+        };
+        let Some(version) = extract_resolved_pom_tag(dependency_xml, "version", &properties) else {
+            continue;
+        };
+        if version.contains('[') || version.contains('(') {
+            continue;
+        }
+        let classifier = extract_resolved_pom_tag(dependency_xml, "classifier", &properties);
+        coordinates.push(MavenCoordinate {
+            group,
+            artifact,
+            version,
+            classifier,
+            extension: "jar".to_string(),
+        });
+    }
+
+    coordinates
+}
+
+fn parse_maven_pom_properties(pom: &str, parent: &MavenCoordinate) -> BTreeMap<String, String> {
+    let mut properties = BTreeMap::from([
+        ("project.groupId".to_string(), parent.group.clone()),
+        ("pom.groupId".to_string(), parent.group.clone()),
+        ("project.artifactId".to_string(), parent.artifact.clone()),
+        ("pom.artifactId".to_string(), parent.artifact.clone()),
+        ("project.version".to_string(), parent.version.clone()),
+        ("pom.version".to_string(), parent.version.clone()),
+        ("version".to_string(), parent.version.clone()),
+    ]);
+    if let Some(properties_xml) = extract_xml_section(pom, "properties") {
+        for block in properties_xml.split('<').skip(1) {
+            let Some((tag, rest)) = block.split_once('>') else {
+                continue;
+            };
+            if tag.starts_with('/') || tag.contains(char::is_whitespace) {
+                continue;
+            }
+            let end_tag = format!("</{tag}>");
+            let Some(end) = rest.find(&end_tag) else {
+                continue;
+            };
+            properties.insert(tag.to_string(), strip_xml_cdata(rest[..end].trim()));
+        }
+    }
+    properties
+}
+
+fn extract_resolved_pom_tag(
+    input: &str,
+    tag: &str,
+    properties: &BTreeMap<String, String>,
+) -> Option<String> {
+    let value = extract_xml_tag_text(input, tag)?;
+    let mut resolved = value;
+    for _ in 0..8 {
+        let Some(start) = resolved.find("${") else {
+            return Some(resolved);
+        };
+        let property_start = start + "${".len();
+        let end = resolved[property_start..].find('}')? + property_start;
+        let property_name = &resolved[property_start..end];
+        let replacement = properties.get(property_name)?;
+        resolved.replace_range(start..=end, replacement);
+    }
+    None
+}
+
+fn extract_xml_section(input: &str, tag: &str) -> Option<String> {
+    let start_tag = format!("<{tag}>");
+    let end_tag = format!("</{tag}>");
+    let start = input.find(&start_tag)? + start_tag.len();
+    let end = input[start..].find(&end_tag)? + start;
+    Some(input[start..end].to_string())
+}
+
+fn extract_xml_tag_text(input: &str, tag: &str) -> Option<String> {
+    let start_tag = format!("<{tag}>");
+    let end_tag = format!("</{tag}>");
+    let start = input.find(&start_tag)? + start_tag.len();
+    let end = input[start..].find(&end_tag)? + start;
+    Some(strip_xml_cdata(input[start..end].trim()))
+}
+
+fn strip_xml_cdata(input: &str) -> String {
+    input
+        .strip_prefix("<![CDATA[")
+        .and_then(|value| value.strip_suffix("]]>"))
+        .unwrap_or(input)
+        .to_string()
 }
 
 fn is_dependency_configuration(configuration: &str) -> bool {
@@ -2098,12 +2331,17 @@ struct RunClasspath {
     userdev_mods: Vec<PathBuf>,
 }
 
+#[derive(Debug)]
+struct LaunchOutput {
+    status: ExitStatus,
+    combined: String,
+}
+
 #[expect(
     clippy::too_many_lines,
     reason = "Run launch orchestration intentionally mirrors Forge userdev config shape."
 )]
 fn execute_run(plan: &BuildPlan, kind: RunKind) -> eyre::Result<()> {
-    ensure_forge_gradle_execution_supported(plan)?;
     let context = ExecutionContext::new(plan)?;
     let run_config = read_forge_run_config(&context, kind)?;
     if run_config.main.is_empty() {
@@ -2112,11 +2350,15 @@ fn execute_run(plan: &BuildPlan, kind: RunKind) -> eyre::Result<()> {
             kind.userdev_name()
         );
     }
+    let launch_main = run_config.main.clone();
 
     let run_state_dir = plan.cache_dir.join("run").join(kind.command_name());
     fs::create_dir_all(&run_state_dir)?;
     let working_dir = plan.minecraft_dir.join(kind.working_dir_name());
     fs::create_dir_all(&working_dir)?;
+    if matches!(kind, RunKind::GameTestServer) {
+        clean_gametest_server_world(&plan.minecraft_dir, &working_dir)?;
+    }
 
     let resolver = Resolver::new(
         plan.maven_cache_dir.clone(),
@@ -2137,11 +2379,7 @@ fn execute_run(plan: &BuildPlan, kind: RunKind) -> eyre::Result<()> {
     };
 
     let source_roots = run_source_roots(&context, kind)?;
-    let mcp_mappings = format!(
-        "{}_{}",
-        required_property(&plan.properties, "mapping_channel")?,
-        required_property(&plan.properties, "mapping_version")?
-    );
+    let mcp_mappings = run_mcp_mappings(plan);
     let module_path = join_classpath(&modules);
     let minecraft_classpath_file_text = minecraft_classpath_file.display().to_string();
     let assets_root = assets
@@ -2169,22 +2407,36 @@ fn execute_run(plan: &BuildPlan, kind: RunKind) -> eyre::Result<()> {
     );
     properties.insert(
         "forge.logging.console.level".to_string(),
-        "debug".to_string(),
+        "info".to_string(),
     );
     properties.insert("mixin.env.remapRefMap".to_string(), "true".to_string());
-    let refmap_remapping_file = ensure_run_refmap_remapping_file(&context)?;
-    properties.insert(
-        "mixin.env.refMapRemappingFile".to_string(),
-        refmap_remapping_file.display().to_string(),
-    );
-    properties.insert(
-        "net.minecraftforge.gradle.GradleStart.srg.srg-mcp".to_string(),
-        refmap_remapping_file.display().to_string(),
-    );
-    if kind.enables_game_tests() {
+    if plan.loader_toolchain.kind != LoaderToolchainKind::NeoGradleUserdev {
+        let refmap_remapping_file = ensure_run_refmap_remapping_file(&context)?;
         properties.insert(
-            "forge.enabledGameTestNamespaces".to_string(),
+            "mixin.env.refMapRemappingFile".to_string(),
+            refmap_remapping_file.display().to_string(),
+        );
+        properties.insert(
+            "net.minecraftforge.gradle.GradleStart.srg.srg-mcp".to_string(),
+            refmap_remapping_file.display().to_string(),
+        );
+    }
+    if kind.enables_game_tests() {
+        let game_test_property = game_test_namespace_property(&context)?;
+        properties.insert(
+            game_test_property,
             required_property(&plan.properties, "mod_id")?.to_string(),
+        );
+    }
+    if matches!(kind, RunKind::GameTestServer) {
+        let log4j_config = write_gametest_log4j_config(&run_state_dir)?;
+        properties.insert(
+            "sfm.gametest.maxProgramRunMillis".to_string(),
+            "150".to_string(),
+        );
+        properties.insert(
+            "log4j2.configurationFile".to_string(),
+            log4j_config.display().to_string(),
         );
     }
 
@@ -2218,19 +2470,21 @@ fn execute_run(plan: &BuildPlan, kind: RunKind) -> eyre::Result<()> {
     env.insert("MOD_CLASSES".to_string(), source_roots);
     env.insert("MCP_MAPPINGS".to_string(), mcp_mappings);
 
-    let java_classpath = dedup_paths_preserve_order(
-        launch_classpath
-            .legacy
-            .iter()
-            .cloned()
-            .chain(launch_classpath.userdev_mods.iter().cloned())
-            .chain(modules.iter().cloned())
-            .collect(),
-    );
+    let mut java_classpath_inputs = launch_classpath
+        .legacy
+        .iter()
+        .cloned()
+        .chain(launch_classpath.userdev_mods.iter().cloned())
+        .chain(modules.iter().cloned())
+        .collect::<Vec<_>>();
+    if launch_main.starts_with("net.neoforged.fml.startup.") {
+        java_classpath_inputs.extend(run_source_root_paths(&context, kind)?);
+    }
+    let java_classpath = dedup_paths_preserve_order(java_classpath_inputs);
     let mut java_args = Vec::new();
     java_args.extend(jvm_args);
     java_args.extend(["-cp".to_string(), join_classpath(&java_classpath)]);
-    java_args.push(run_config.main);
+    java_args.push(launch_main);
     java_args.extend(program_args);
 
     let argfile = run_state_dir.join("launch.java.args");
@@ -2259,11 +2513,27 @@ fn execute_run(plan: &BuildPlan, kind: RunKind) -> eyre::Result<()> {
         launch_classpath.userdev_mods.len()
     );
 
-    let status = Command::new(&plan.java.executable)
-        .arg(format!("@{}", argfile.display()))
-        .current_dir(&working_dir)
-        .envs(&env)
-        .status()
+    let launch_log = run_state_dir.join("console.log");
+    let echo_launch_output = !matches!(kind, RunKind::GameTestServer);
+    let max_launch_attempts = if matches!(kind, RunKind::GameTestServer) {
+        3
+    } else {
+        1
+    };
+    let mut launch_output = None;
+    for attempt in 1..=max_launch_attempts {
+        if matches!(kind, RunKind::GameTestServer) {
+            clean_gametest_server_world(&plan.minecraft_dir, &working_dir)?;
+            println!("Game-test server attempt {attempt}/{max_launch_attempts}");
+        }
+        let attempt_output = run_launch_command(
+            plan,
+            &argfile,
+            &working_dir,
+            &env,
+            &launch_log,
+            echo_launch_output,
+        )
         .wrap_err_with(|| {
             format!(
                 "Failed to launch {} using {}",
@@ -2271,22 +2541,234 @@ fn execute_run(plan: &BuildPlan, kind: RunKind) -> eyre::Result<()> {
                 plan.java.executable.display()
             )
         })?;
+        if attempt_output.status.success() || attempt == max_launch_attempts {
+            launch_output = Some(attempt_output);
+            break;
+        }
+        println!(
+            "{} attempt {attempt}/{max_launch_attempts} exited with {}; retrying. See {}",
+            kind.command_name(),
+            attempt_output.status,
+            launch_log.display()
+        );
+    }
+    let launch_output = launch_output.ok_or_else(|| {
+        eyre::eyre!(
+            "Failed to launch {} using {}",
+            kind.command_name(),
+            plan.java.executable.display()
+        )
+    })?;
 
     context.write_node_state(
         &format!("run-{}", kind.userdev_name()),
         &["Forge userdev run config", "Rust-owned build outputs"],
-        &[argfile, minecraft_classpath_file],
-        if status.success() {
+        &[argfile, minecraft_classpath_file, launch_log.clone()],
+        if launch_output.status.success() {
             "complete"
         } else {
             "failed"
         },
     )?;
 
-    if !status.success() {
-        eyre::bail!("{} exited with {}", kind.command_name(), status);
+    if !launch_output.status.success() {
+        eyre::bail!(
+            "{} exited with {}. See {}",
+            kind.command_name(),
+            launch_output.status,
+            launch_log.display()
+        );
+    }
+    if matches!(kind, RunKind::GameTestServer) {
+        let Some(pass_count) = extract_required_gametest_pass_count(&launch_output.combined) else {
+            let running_count = extract_running_gametest_count(&launch_output.combined)
+                .map_or_else(|| "unknown".to_string(), |count| count.to_string());
+            eyre::bail!(
+                "{} exited successfully but did not report a required game-test pass count (running count: {}). See {}",
+                kind.command_name(),
+                running_count,
+                launch_log.display()
+            );
+        };
+        if pass_count == 0 {
+            eyre::bail!(
+                "{} reported 0 required game tests passed. See {}",
+                kind.command_name(),
+                launch_log.display()
+            );
+        }
+        println!("Validated {pass_count} required game tests passed.");
     }
     Ok(())
+}
+
+fn run_mcp_mappings(plan: &BuildPlan) -> String {
+    if let (Some(channel), Some(version)) = (
+        plan.properties.get("mapping_channel"),
+        plan.properties.get("mapping_version"),
+    ) {
+        return format!("{channel}_{version}");
+    }
+    format!("official_{}", plan.minecraft_version)
+}
+
+fn game_test_namespace_property(context: &ExecutionContext<'_>) -> eyre::Result<String> {
+    let run_config = context
+        .plan
+        .minecraft_dir
+        .join("gradle")
+        .join("run-configurations")
+        .join(&context.plan.minecraft_version)
+        .join("run-configurations.gradle");
+    if run_config.is_file() {
+        let text = fs::read_to_string(&run_config)
+            .wrap_err_with(|| format!("Failed to read {}", run_config.display()))?;
+        if text.contains("neoforge.enabledGameTestNamespaces") {
+            return Ok("neoforge.enabledGameTestNamespaces".to_string());
+        }
+    }
+    Ok("forge.enabledGameTestNamespaces".to_string())
+}
+
+fn write_gametest_log4j_config(run_state_dir: &Path) -> eyre::Result<PathBuf> {
+    let path = run_state_dir.join("log4j2-gametest.properties");
+    let content = r"status = warn
+name = SFMGameTest
+
+appenders = console
+appender.console.type = Console
+appender.console.name = STDOUT
+appender.console.target = SYSTEM_OUT
+appender.console.layout.type = PatternLayout
+appender.console.layout.pattern = [%d{HH:mm:ss}] [%t/%level] [%logger]: %msg%n%throwable
+
+loggers = sfm
+logger.sfm.name = sfm
+logger.sfm.level = error
+logger.sfm.additivity = false
+logger.sfm.appenderRefs = stdout
+logger.sfm.appenderRef.stdout.ref = STDOUT
+
+rootLogger.level = info
+rootLogger.appenderRefs = stdout
+rootLogger.appenderRef.stdout.ref = STDOUT
+";
+    fs::write(&path, content).wrap_err_with(|| format!("Failed to write {}", path.display()))?;
+    Ok(path)
+}
+
+fn clean_gametest_server_world(minecraft_dir: &Path, working_dir: &Path) -> eyre::Result<()> {
+    if working_dir.file_name().and_then(|name| name.to_str()) != Some("runGameTest")
+        || !working_dir.starts_with(minecraft_dir)
+    {
+        eyre::bail!(
+            "Refusing to clean unexpected game-test working directory: {}",
+            working_dir.display()
+        );
+    }
+
+    let world_dir = working_dir.join("gametestserver");
+    if world_dir.exists() {
+        fs::remove_dir_all(&world_dir)
+            .wrap_err_with(|| format!("Failed to remove {}", world_dir.display()))?;
+    }
+    Ok(())
+}
+
+fn run_launch_command(
+    plan: &BuildPlan,
+    argfile: &Path,
+    working_dir: &Path,
+    env: &BTreeMap<String, String>,
+    log_path: &Path,
+    echo_output: bool,
+) -> eyre::Result<LaunchOutput> {
+    if let Some(parent) = log_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let mut child = Command::new(&plan.java.executable)
+        .arg(format!("@{}", argfile.display()))
+        .current_dir(working_dir)
+        .envs(env)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .wrap_err_with(|| format!("Failed to spawn {}", plan.java.executable.display()))?;
+
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| eyre::eyre!("Failed to capture launch stdout"))?;
+    let stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| eyre::eyre!("Failed to capture launch stderr"))?;
+    let stdout_thread = thread::spawn(move || read_launch_stream(stdout, false, echo_output));
+    let stderr_thread = thread::spawn(move || read_launch_stream(stderr, true, echo_output));
+    let status = child.wait().wrap_err("Failed to wait for launched JVM")?;
+    let stdout_text = join_launch_stream(stdout_thread, "stdout")?;
+    let stderr_text = join_launch_stream(stderr_thread, "stderr")?;
+    let combined = format!("{stdout_text}{stderr_text}");
+    let mut log = String::new();
+    writeln!(log, "status={status}")?;
+    writeln!(log, "argfile={}", argfile.display())?;
+    writeln!(log, "working_dir={}", working_dir.display())?;
+    writeln!(log)?;
+    log.push_str(&combined);
+    fs::write(log_path, log).wrap_err_with(|| format!("Failed to write {}", log_path.display()))?;
+    Ok(LaunchOutput { status, combined })
+}
+
+fn read_launch_stream<R>(stream: R, stderr: bool, echo_output: bool) -> std::io::Result<String>
+where
+    R: Read,
+{
+    let mut captured = String::new();
+    for line in BufReader::new(stream).lines() {
+        let line = line?;
+        if echo_output {
+            if stderr {
+                eprintln!("{line}");
+            } else {
+                println!("{line}");
+            }
+        }
+        captured.push_str(&line);
+        captured.push('\n');
+    }
+    Ok(captured)
+}
+
+fn join_launch_stream(
+    handle: thread::JoinHandle<std::io::Result<String>>,
+    name: &str,
+) -> eyre::Result<String> {
+    handle
+        .join()
+        .map_err(|_panic| eyre::eyre!("Launch {name} reader thread panicked"))?
+        .wrap_err_with(|| format!("Failed to read launch {name}"))
+}
+
+fn extract_required_gametest_pass_count(output: &str) -> Option<usize> {
+    extract_number_between(output, "All ", " required tests passed :)")
+}
+
+fn extract_running_gametest_count(output: &str) -> Option<usize> {
+    extract_number_between(output, "Running all ", " tests")
+}
+
+fn extract_number_between(output: &str, prefix: &str, suffix: &str) -> Option<usize> {
+    for (start, _) in output.match_indices(prefix) {
+        let after_prefix = &output[start + prefix.len()..];
+        let Some(end) = after_prefix.find(suffix) else {
+            continue;
+        };
+        let number = after_prefix[..end].trim();
+        if !number.is_empty() && number.chars().all(|character| character.is_ascii_digit()) {
+            return number.parse().ok();
+        }
+    }
+    None
 }
 
 fn read_forge_run_config(
@@ -2358,6 +2840,10 @@ fn resolve_run_classpath(
     resolver: &Resolver,
     kind: RunKind,
 ) -> eyre::Result<RunClasspath> {
+    if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        return resolve_neogradle_run_classpath(context, resolver, kind);
+    }
+
     let mut legacy = Vec::new();
     legacy.push(ensure_run_forge_dev_jar(context)?);
     legacy.push(ensure_client_extra_jar(context)?);
@@ -2373,6 +2859,107 @@ fn resolve_run_classpath(
         legacy: dedup_paths_preserve_order(legacy),
         userdev_mods: dedup_paths_preserve_order(userdev_mods),
     })
+}
+
+fn resolve_neogradle_run_classpath(
+    context: &ExecutionContext<'_>,
+    resolver: &Resolver,
+    kind: RunKind,
+) -> eyre::Result<RunClasspath> {
+    let mut legacy = Vec::new();
+    legacy.extend(collect_jars(
+        &context.plan.cache_dir.join("minecraft").join("libraries"),
+    )?);
+    legacy.extend(resolve_forge_userdev_libraries(context, resolver)?);
+    legacy.push(ensure_client_extra_jar(context)?);
+    legacy.extend(ensure_run_neoforge_dev_jars(context, kind)?);
+
+    let mut userdev_mods = Vec::new();
+    if matches!(kind, RunKind::GameTestServer) {
+        userdev_mods.extend(resolve_forge_userdev_test_libraries(context, resolver)?);
+    }
+    userdev_mods.extend(resolve_neogradle_run_dependencies(context, kind)?);
+
+    Ok(RunClasspath {
+        legacy: dedup_paths_preserve_order(legacy),
+        userdev_mods: dedup_paths_preserve_order(userdev_mods),
+    })
+}
+
+fn ensure_run_neoforge_dev_jars(
+    context: &ExecutionContext<'_>,
+    kind: RunKind,
+) -> eyre::Result<Vec<PathBuf>> {
+    let input = loader_dev_compile_jar(context);
+    if !input.is_file() {
+        eyre::bail!(
+            "{} requires the Rust-owned NeoForm dev jar first: {}",
+            kind.command_name(),
+            input.display()
+        );
+    }
+    context.assert_allowed_input(&input)?;
+    let neoforge_universal = context.artifact("neoforge-universal")?;
+    context.assert_allowed_input(&neoforge_universal.cache_path)?;
+    let neoforge_version = required_property(&context.plan.properties, "neo_version")?;
+    if neoforge_requires_split_runtime(&neoforge_universal.cache_path)? {
+        let minecraft_output = context
+            .plan
+            .cache_dir
+            .join("run")
+            .join(format!("minecraft-{neoforge_version}.jar"));
+        let minecraft_input_state = format!(
+            "{}\n{}\nsplit-minecraft-v2\n",
+            file_sha1(&input)?,
+            file_sha1(&neoforge_universal.cache_path)?
+        );
+        let minecraft_input_state_path = minecraft_output.with_extension("inputs.sha1");
+        let current_minecraft_input_state =
+            fs::read_to_string(&minecraft_input_state_path).unwrap_or_default();
+        if !minecraft_output.is_file()
+            || context.plan.refresh
+            || current_minecraft_input_state != minecraft_input_state
+        {
+            write_run_neoforge_minecraft_dev_jar(
+                &input,
+                &neoforge_universal.cache_path,
+                &minecraft_output,
+            )?;
+            fs::write(&minecraft_input_state_path, minecraft_input_state).wrap_err_with(|| {
+                format!(
+                    "Failed to write NeoForge Minecraft run jar input state {}",
+                    minecraft_input_state_path.display()
+                )
+            })?;
+        }
+        return Ok(vec![
+            minecraft_output,
+            neoforge_universal.cache_path.clone(),
+        ]);
+    }
+
+    let output = context
+        .plan
+        .cache_dir
+        .join("run")
+        .join(format!("neoforge-{neoforge_version}.jar"));
+    let input_state = format!(
+        "{}\n{}\n",
+        file_sha1(&input)?,
+        file_sha1(&neoforge_universal.cache_path)?
+    );
+    let input_state_path = output.with_extension("inputs.sha1");
+    let current_input_state = fs::read_to_string(&input_state_path).unwrap_or_default();
+    if !output.is_file() || context.plan.refresh || current_input_state != input_state {
+        write_run_neoforge_dev_jar(&input, &neoforge_universal.cache_path, &output)?;
+        fs::write(&input_state_path, input_state).wrap_err_with(|| {
+            format!(
+                "Failed to write NeoForge run jar input state {}",
+                input_state_path.display()
+            )
+        })?;
+    }
+    Ok(vec![output])
 }
 
 fn ensure_run_forge_dev_jar(context: &ExecutionContext<'_>) -> eyre::Result<PathBuf> {
@@ -2531,12 +3118,11 @@ fn resolve_run_deobf_dependencies(
     let configurations = run_dependency_configurations(kind);
     let mut output = Vec::new();
 
-    for dependency in context
-        .plan
-        .dependencies
-        .iter()
-        .filter(|dependency| configurations.contains(&dependency.configuration.as_str()))
-    {
+    for dependency in context.plan.dependencies.iter().filter(|dependency| {
+        configurations.contains(&dependency.configuration.as_str())
+            && MavenCoordinate::parse(&dependency.resolved_notation)
+                .is_ok_and(|coordinate| !is_api_classifier(&coordinate))
+    }) {
         let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
         let artifact = resolver.resolve_artifact(
             &format!("run-deobf-dependency-{}", output.len()),
@@ -2566,14 +3152,49 @@ fn resolve_run_deobf_dependencies(
     Ok(output)
 }
 
+fn resolve_neogradle_run_dependencies(
+    context: &ExecutionContext<'_>,
+    kind: RunKind,
+) -> eyre::Result<Vec<PathBuf>> {
+    let dependency_output = context.plan.cache_dir.join("dependencies");
+    let configurations = run_dependency_configurations(kind);
+    let mut output = Vec::new();
+
+    for dependency in context.plan.dependencies.iter().filter(|dependency| {
+        configurations.contains(&dependency.configuration.as_str())
+            && MavenCoordinate::parse(&dependency.resolved_notation)
+                .is_ok_and(|coordinate| !is_api_classifier(&coordinate))
+    }) {
+        let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
+        let copied = copied_neogradle_dependency_output_path(
+            &dependency_output,
+            &dependency.configuration,
+            &coordinate,
+        );
+        if !copied.is_file() {
+            eyre::bail!(
+                "{} requires copied NeoGradle dependency jar {}. Run jar build first.",
+                kind.command_name(),
+                copied.display()
+            );
+        }
+        context.assert_allowed_input(&copied)?;
+        output.push(copied);
+    }
+
+    Ok(output)
+}
+
 fn run_dependency_configurations(kind: RunKind) -> &'static [&'static str] {
     match kind {
-        RunKind::Data => &["implementation", "runtimeOnly"],
+        RunKind::Data => &["implementation", "runtimeOnly", "transitiveRuntime"],
         RunKind::Client | RunKind::Server | RunKind::GameTestServer => &[
             "implementation",
+            "jarJar",
             "runtimeOnly",
             "gametestImplementation",
             "gametestRuntimeOnly",
+            "transitiveRuntime",
         ],
     }
 }
@@ -2603,6 +3224,19 @@ fn write_classpath_file(path: &Path, classpath: &[PathBuf]) -> eyre::Result<()> 
 
 fn run_source_roots(context: &ExecutionContext<'_>, kind: RunKind) -> eyre::Result<String> {
     let mod_id = required_property(&context.plan.properties, "mod_id")?;
+    let existing_roots = run_source_root_paths(context, kind)?;
+    let separator = if cfg!(windows) { ";" } else { ":" };
+    Ok(existing_roots
+        .into_iter()
+        .map(|path| format!("{mod_id}%%{}", path.display()))
+        .collect::<Vec<_>>()
+        .join(separator))
+}
+
+fn run_source_root_paths(
+    context: &ExecutionContext<'_>,
+    kind: RunKind,
+) -> eyre::Result<Vec<PathBuf>> {
     let project_root = context.plan.cache_dir.join("project");
     let mut roots = vec![
         project_root.join("staged-resources"),
@@ -2620,12 +3254,7 @@ fn run_source_roots(context: &ExecutionContext<'_>, kind: RunKind) -> eyre::Resu
         eyre::bail!("No Rust-owned project class/resource roots are available for launch");
     }
 
-    let separator = if cfg!(windows) { ";" } else { ":" };
-    Ok(existing_roots
-        .into_iter()
-        .map(|path| format!("{mod_id}%%{}", path.display()))
-        .collect::<Vec<_>>()
-        .join(separator))
+    Ok(existing_roots)
 }
 
 fn kind_extra_program_args(plan: &BuildPlan, kind: RunKind) -> eyre::Result<Vec<String>> {
@@ -3683,11 +4312,8 @@ fn copy_neogradle_dependency_jars(
             &format!("{} dependency", dependency.configuration),
         )?;
         context.assert_allowed_input(&artifact.cache_path)?;
-        let copied = output.join(format!(
-            "{}-{}",
-            safe_path_segment(&dependency.configuration),
-            coordinate.file_name()
-        ));
+        let copied =
+            copied_neogradle_dependency_output_path(output, &dependency.configuration, &coordinate);
         fs::copy(&artifact.cache_path, &copied).wrap_err_with(|| {
             format!(
                 "Failed to copy {} to {}",
@@ -3704,6 +4330,18 @@ fn copy_neogradle_dependency_jars(
         "complete",
     )?;
     Ok(())
+}
+
+fn copied_neogradle_dependency_output_path(
+    output_dir: &Path,
+    configuration: &str,
+    coordinate: &MavenCoordinate,
+) -> PathBuf {
+    output_dir.join(format!(
+        "{}-{}",
+        safe_path_segment(configuration),
+        coordinate.file_name()
+    ))
 }
 
 fn remapped_dependency_output_path(
@@ -4906,6 +5544,32 @@ fn resolve_forge_userdev_libraries(
         .collect()
 }
 
+fn resolve_forge_userdev_test_libraries(
+    context: &ExecutionContext<'_>,
+    resolver: &Resolver,
+) -> eyre::Result<Vec<PathBuf>> {
+    let config: ForgeUserdevConfig = read_zip_json_entry(
+        &context.artifact("forge-userdev")?.cache_path,
+        "config.json",
+    )?;
+
+    config
+        .test_libraries
+        .iter()
+        .enumerate()
+        .map(|(index, coordinate)| {
+            let coordinate = MavenCoordinate::parse(coordinate)?;
+            resolver
+                .resolve_artifact(
+                    &format!("forge-userdev-test-library-{index}"),
+                    &coordinate,
+                    "Forge userdev game-test runtime classpath",
+                )
+                .map(|artifact| artifact.cache_path)
+        })
+        .collect()
+}
+
 fn resolve_compile_dependencies(
     context: &ExecutionContext<'_>,
     resolver: &Resolver,
@@ -5088,6 +5752,8 @@ fn write_javac_argfile(
         classes_dir.display().to_string(),
         "-classpath".to_string(),
         join_classpath(classpath),
+        "-sourcepath".to_string(),
+        String::new(),
         "-AoutRefMapFile=".to_string() + &refmap.display().to_string(),
     ]);
     append_javac_release_args(
@@ -5144,6 +5810,8 @@ fn write_javac_no_ap_argfile(
         classes_dir.display().to_string(),
         "-classpath".to_string(),
         join_classpath(classpath),
+        "-sourcepath".to_string(),
+        String::new(),
     ]);
     append_javac_release_args(&mut args, java_release, java_major_version);
     args.extend(sources.iter().map(|source| source.display().to_string()));
@@ -5507,23 +6175,55 @@ fn write_run_forge_dev_jar(
     forge_universal_jar: &Path,
     output: &Path,
 ) -> eyre::Result<()> {
+    let manifest = forge_runtime_manifest(forge_universal_jar)?;
+    write_run_loader_dev_jar(input, &manifest, output)?;
+    println!("Generated Forge userdev runtime jar: {}", output.display());
+    Ok(())
+}
+
+fn write_run_neoforge_dev_jar(
+    input: &Path,
+    neoforge_universal_jar: &Path,
+    output: &Path,
+) -> eyre::Result<()> {
+    let manifest = neoforge_runtime_manifest(neoforge_universal_jar)?;
+    write_run_loader_dev_jar(input, &manifest, output)?;
+    println!(
+        "Generated NeoForge userdev runtime jar: {}",
+        output.display()
+    );
+    Ok(())
+}
+
+fn write_run_neoforge_minecraft_dev_jar(
+    input: &Path,
+    neoforge_universal_jar: &Path,
+    output: &Path,
+) -> eyre::Result<()> {
     if let Some(parent) = output.parent() {
         fs::create_dir_all(parent)?;
     }
 
-    let manifest = forge_runtime_manifest(forge_universal_jar)?;
+    let manifest = minecraft_runtime_manifest(input)?;
+    let neoforge_entries = zip_entry_names(neoforge_universal_jar)?;
     let bytes = fs::read(input).wrap_err_with(|| format!("Failed to read {}", input.display()))?;
-    let mut archive = ZipArchive::new(Cursor::new(bytes))
-        .wrap_err_with(|| format!("Failed to open Forge runtime jar {}", input.display()))?;
+    let mut archive = ZipArchive::new(Cursor::new(bytes)).wrap_err_with(|| {
+        format!(
+            "Failed to open NeoForge Minecraft runtime jar {}",
+            input.display()
+        )
+    })?;
     let mut names = BTreeSet::new();
     for index in 0..archive.len() {
-        let entry = archive
-            .by_index(index)
-            .wrap_err_with(|| format!("Failed to read Forge runtime jar entry #{index}"))?;
+        let entry = archive.by_index(index).wrap_err_with(|| {
+            format!("Failed to read NeoForge Minecraft runtime jar entry #{index}")
+        })?;
         let name = entry.name().replace('\\', "/");
         if !name.ends_with('/')
             && !name.eq_ignore_ascii_case("META-INF/MANIFEST.MF")
             && !is_signature_file(&name)
+            && (!neoforge_entries.contains(&name) || is_neoforge_mod_marker(&name))
+            && !is_neoforge_specific_runtime_entry(&name)
         {
             names.insert(name);
         }
@@ -5541,13 +6241,13 @@ fn write_run_forge_dev_jar(
         .wrap_err_with(|| format!("Failed to write manifest to {}", output.display()))?;
 
     for name in names {
-        let mut entry = archive
-            .by_name(&name)
-            .wrap_err_with(|| format!("Failed to read Forge runtime jar entry {name}"))?;
+        let mut entry = archive.by_name(&name).wrap_err_with(|| {
+            format!("Failed to read NeoForge Minecraft runtime jar entry {name}")
+        })?;
         let mut bytes = Vec::new();
-        entry
-            .read_to_end(&mut bytes)
-            .wrap_err_with(|| format!("Failed to read Forge runtime jar entry {name}"))?;
+        entry.read_to_end(&mut bytes).wrap_err_with(|| {
+            format!("Failed to read NeoForge Minecraft runtime jar entry {name}")
+        })?;
         writer
             .start_file(name, options)
             .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
@@ -5559,8 +6259,83 @@ fn write_run_forge_dev_jar(
     writer
         .finish()
         .wrap_err_with(|| format!("Failed to finish {}", output.display()))?;
-    println!("Generated Forge userdev runtime jar: {}", output.display());
+    println!(
+        "Generated NeoForge Minecraft runtime jar: {}",
+        output.display()
+    );
     Ok(())
+}
+
+fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyre::Result<()> {
+    if let Some(parent) = output.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    let bytes = fs::read(input).wrap_err_with(|| format!("Failed to read {}", input.display()))?;
+    let mut archive = ZipArchive::new(Cursor::new(bytes))
+        .wrap_err_with(|| format!("Failed to open loader runtime jar {}", input.display()))?;
+    let mut names = BTreeSet::new();
+    for index in 0..archive.len() {
+        let entry = archive
+            .by_index(index)
+            .wrap_err_with(|| format!("Failed to read loader runtime jar entry #{index}"))?;
+        let name = entry.name().replace('\\', "/");
+        if !name.ends_with('/')
+            && !name.eq_ignore_ascii_case("META-INF/MANIFEST.MF")
+            && !is_signature_file(&name)
+        {
+            names.insert(name);
+        }
+    }
+
+    let output_file =
+        File::create(output).wrap_err_with(|| format!("Failed to create {}", output.display()))?;
+    let mut writer = ZipWriter::new(output_file);
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+    writer
+        .start_file("META-INF/MANIFEST.MF", options)
+        .wrap_err_with(|| format!("Failed to write manifest to {}", output.display()))?;
+    writer
+        .write_all(manifest)
+        .wrap_err_with(|| format!("Failed to write manifest to {}", output.display()))?;
+
+    for name in names {
+        let mut entry = archive
+            .by_name(&name)
+            .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
+        let mut bytes = Vec::new();
+        entry
+            .read_to_end(&mut bytes)
+            .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
+        writer
+            .start_file(name, options)
+            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+        writer
+            .write_all(&bytes)
+            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+    }
+
+    writer
+        .finish()
+        .wrap_err_with(|| format!("Failed to finish {}", output.display()))?;
+    Ok(())
+}
+
+fn zip_entry_names(path: &Path) -> eyre::Result<BTreeSet<String>> {
+    let bytes = fs::read(path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
+    let mut archive = ZipArchive::new(Cursor::new(bytes))
+        .wrap_err_with(|| format!("Failed to open jar {}", path.display()))?;
+    let mut names = BTreeSet::new();
+    for index in 0..archive.len() {
+        let entry = archive
+            .by_index(index)
+            .wrap_err_with(|| format!("Failed to read {} entry #{index}", path.display()))?;
+        let name = entry.name().replace('\\', "/");
+        if !name.ends_with('/') {
+            names.insert(name);
+        }
+    }
+    Ok(names)
 }
 
 fn forge_runtime_manifest(forge_universal_jar: &Path) -> eyre::Result<Vec<u8>> {
@@ -5601,6 +6376,64 @@ fn forge_runtime_manifest(forge_universal_jar: &Path) -> eyre::Result<Vec<u8>> {
     Ok(format!("{}\r\n\r\n", output_sections.join("\r\n\r\n")).into_bytes())
 }
 
+fn minecraft_runtime_manifest(input: &Path) -> eyre::Result<Vec<u8>> {
+    let manifest = match read_zip_entry(input, "META-INF/MANIFEST.MF") {
+        Ok(manifest) => String::from_utf8(manifest).wrap_err_with(|| {
+            format!(
+                "Minecraft runtime manifest was not UTF-8: {}",
+                input.display()
+            )
+        })?,
+        Err(_) => "Manifest-Version: 1.0\n".to_string(),
+    };
+    let normalized = manifest.replace("\r\n", "\n");
+    let sections = normalized
+        .split("\n\n")
+        .map(strip_manifest_digests)
+        .map(|section| strip_manifest_attribute(&section, "FML-System-Mods"))
+        .filter(|section| !section.trim().is_empty())
+        .collect::<Vec<_>>();
+    Ok(format!("{}\r\n\r\n", sections.join("\r\n\r\n")).into_bytes())
+}
+
+fn neoforge_runtime_manifest(neoforge_universal_jar: &Path) -> eyre::Result<Vec<u8>> {
+    let manifest = read_zip_entry(neoforge_universal_jar, "META-INF/MANIFEST.MF")?;
+    let manifest = String::from_utf8(manifest).wrap_err_with(|| {
+        format!(
+            "NeoForge universal manifest was not UTF-8: {}",
+            neoforge_universal_jar.display()
+        )
+    })?;
+    if manifest_attribute(&manifest, "FML-System-Mods").as_deref() != Some("neoforge") {
+        eyre::bail!(
+            "NeoForge universal manifest {} did not declare FML-System-Mods: neoforge",
+            neoforge_universal_jar.display()
+        );
+    }
+    let normalized = manifest.replace("\r\n", "\n");
+    let output_sections = normalized
+        .split("\n\n")
+        .map(strip_manifest_digests)
+        .filter(|section| !section.trim().is_empty())
+        .collect::<Vec<_>>();
+
+    Ok(format!("{}\r\n\r\n", output_sections.join("\r\n\r\n")).into_bytes())
+}
+
+fn neoforge_requires_split_runtime(neoforge_universal_jar: &Path) -> eyre::Result<bool> {
+    let manifest = read_zip_entry(neoforge_universal_jar, "META-INF/MANIFEST.MF")?;
+    let manifest = String::from_utf8(manifest).wrap_err_with(|| {
+        format!(
+            "NeoForge universal manifest was not UTF-8: {}",
+            neoforge_universal_jar.display()
+        )
+    })?;
+    Ok(
+        manifest_attribute(&manifest, "FML-System-Mods").as_deref() == Some("neoforge")
+            && !manifest.contains("\nName: net/neoforged/neoforge/versions/neoform/"),
+    )
+}
+
 fn manifest_section_name(section: &str) -> Option<&str> {
     section.lines().next()?.strip_prefix("Name: ")
 }
@@ -5621,6 +6454,38 @@ fn strip_manifest_digests(section: &str) -> String {
         }
     }
     output.join("\r\n")
+}
+
+fn strip_manifest_attribute(section: &str, attribute: &str) -> String {
+    let mut output = Vec::new();
+    let mut dropping_attribute = false;
+    let prefix = format!("{attribute}:");
+    for line in section.lines() {
+        if line.starts_with(' ') {
+            if !dropping_attribute {
+                output.push(line);
+            }
+            continue;
+        }
+        dropping_attribute = line.starts_with(&prefix);
+        if !dropping_attribute {
+            output.push(line);
+        }
+    }
+    output.join("\r\n")
+}
+
+fn is_neoforge_specific_runtime_entry(name: &str) -> bool {
+    name.starts_with("net/neoforged/neoforge/")
+        || name.starts_with("META-INF/services/")
+        || name.eq_ignore_ascii_case("META-INF/neoforged.mods.toml")
+        || name.eq_ignore_ascii_case("META-INF/mods.toml")
+        || name.starts_with("data/neoforge/")
+        || name.starts_with("assets/neoforge/")
+}
+
+fn is_neoforge_mod_marker(name: &str) -> bool {
+    name.eq_ignore_ascii_case("META-INF/neoforge.mods.toml")
 }
 
 fn write_client_extra_jar(client_jar: &Path, output: &Path) -> eyre::Result<()> {
