@@ -4,6 +4,8 @@ use super::CompareOptions;
 use super::RunKind;
 use super::json_path::JsonOptionalPath;
 use super::json_path::JsonPath;
+use crate::branch_targets::WorktreeTarget;
+use crate::branch_targets::select_required_worktree_targets;
 use crate::branch_targets::select_single_worktree_target;
 use chrono::Local;
 use eyre::Context;
@@ -51,22 +53,37 @@ pub(crate) fn invoke_build(options: &BuildOptions) -> eyre::Result<()> {
         allow_local_artifact_cache = options.allow_local_artifact_cache,
     )
     .entered();
-    let plan = create_plan(options)?;
-    write_plan_outputs(&plan, options.plan_json.as_deref())?;
-    print_plan_summary(&plan);
+    let targets = resolve_build_targets(options)?;
+    let mut plans = Vec::with_capacity(targets.len());
 
-    match options.mode {
-        BuildMode::Plan => write_artifact_lockfile(&plan),
-        BuildMode::Build if options.dry_run => {
-            println!("Jar build dry-run: resolved plan and lockfile; skipped build execution.");
-            tracing::info!("jar_build_dry_run_skip_execution");
-            write_artifact_lockfile(&plan)
+    for target in targets {
+        let _target_span = tracing::info_span!(
+            "sfm_jar_build_target",
+            branch = %target.branch,
+            worktree = %target.worktree_path.display(),
+        )
+        .entered();
+        let plan = create_plan_for_target(options, &target)?;
+        write_last_plan_output(&plan)?;
+        print_plan_summary(&plan);
+
+        match options.mode {
+            BuildMode::Plan => write_artifact_lockfile(&plan)?,
+            BuildMode::Build if options.dry_run => {
+                println!("Jar build dry-run: resolved plan and lockfile; skipped build execution.");
+                tracing::info!("jar_build_dry_run_skip_execution");
+                write_artifact_lockfile(&plan)?;
+            }
+            BuildMode::Build => {
+                execute_build(&plan, options.explain_rebuild, BuildTarget::Jar)?;
+                write_artifact_lockfile(&plan)?;
+            }
         }
-        BuildMode::Build => {
-            execute_build(&plan, options.explain_rebuild, BuildTarget::Jar)?;
-            write_artifact_lockfile(&plan)
-        }
+
+        plans.push(plan);
     }
+
+    write_requested_plan_outputs(&plans, options.plan_json.as_deref())
 }
 
 pub(crate) fn invoke_run(options: &BuildOptions, kind: RunKind) -> eyre::Result<()> {
@@ -80,12 +97,27 @@ pub(crate) fn invoke_run(options: &BuildOptions, kind: RunKind) -> eyre::Result<
         allow_local_artifact_cache = options.allow_local_artifact_cache,
     )
     .entered();
-    let plan = create_plan(options)?;
-    write_plan_outputs(&plan, options.plan_json.as_deref())?;
-    print_plan_summary(&plan);
-    execute_build(&plan, options.explain_rebuild, BuildTarget::Run)?;
-    write_artifact_lockfile(&plan)?;
-    execute_run(&plan, kind, options.dry_run)
+    let targets = resolve_build_targets(options)?;
+    let mut plans = Vec::with_capacity(targets.len());
+
+    for target in targets {
+        let _target_span = tracing::info_span!(
+            "sfm_run_target",
+            branch = %target.branch,
+            worktree = %target.worktree_path.display(),
+            kind = kind.command_name(),
+        )
+        .entered();
+        let plan = create_plan_for_target(options, &target)?;
+        write_last_plan_output(&plan)?;
+        print_plan_summary(&plan);
+        execute_build(&plan, options.explain_rebuild, BuildTarget::Run)?;
+        write_artifact_lockfile(&plan)?;
+        execute_run(&plan, kind, options.dry_run)?;
+        plans.push(plan);
+    }
+
+    write_requested_plan_outputs(&plans, options.plan_json.as_deref())
 }
 
 pub(crate) fn invoke_compare(options: &CompareOptions) -> eyre::Result<()> {
@@ -1191,20 +1223,27 @@ fn find_local_cached_artifact(coordinate: &MavenCoordinate) -> Option<LocalCache
     None
 }
 
+fn resolve_build_targets(options: &BuildOptions) -> eyre::Result<Vec<WorktreeTarget>> {
+    select_required_worktree_targets(&options.branch)
+}
+
 #[expect(
     clippy::too_many_lines,
     reason = "The planner is a single orchestration pass over project inputs."
 )]
-fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
+fn create_plan_for_target(
+    options: &BuildOptions,
+    target: &WorktreeTarget,
+) -> eyre::Result<BuildPlan> {
     let _span = tracing::info_span!(
         "create_build_plan",
         branch = %options.branch,
+        target = %target.branch,
         refresh = options.refresh,
         allow_local_artifact_cache = options.allow_local_artifact_cache,
     )
     .entered();
-    let target = select_single_worktree_target(&options.branch)?;
-    let worktree_path = target.worktree_path.0;
+    let worktree_path = target.worktree_path.as_path().to_path_buf();
     let minecraft_dir = worktree_path.join("platform").join("minecraft");
     let properties_path = minecraft_dir.join("gradle.properties");
     let properties = read_properties(&properties_path)?;
@@ -8524,20 +8563,34 @@ fn write_compare_report(
     Ok(())
 }
 
-fn write_plan_outputs(plan: &BuildPlan, requested_path: Option<&Path>) -> eyre::Result<()> {
+fn write_last_plan_output(plan: &BuildPlan) -> eyre::Result<()> {
     fs::create_dir_all(&plan.state_dir)?;
     let plan_json = facet_json::to_string_pretty(plan)?;
     let last_plan_path = plan.state_dir.join("last-plan.json");
     fs::write(&last_plan_path, &plan_json)
         .wrap_err_with(|| format!("Failed to write {}", last_plan_path.display()))?;
 
-    if let Some(path) = requested_path {
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        fs::write(path, &plan_json)
-            .wrap_err_with(|| format!("Failed to write {}", path.display()))?;
+    Ok(())
+}
+
+fn write_requested_plan_outputs(
+    plans: &[BuildPlan],
+    requested_path: Option<&Path>,
+) -> eyre::Result<()> {
+    let Some(path) = requested_path else {
+        return Ok(());
+    };
+
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
     }
+
+    let plan_json = if let [plan] = plans {
+        facet_json::to_string_pretty(plan)?
+    } else {
+        facet_json::to_string_pretty(&plans)?
+    };
+    fs::write(path, &plan_json).wrap_err_with(|| format!("Failed to write {}", path.display()))?;
 
     Ok(())
 }
