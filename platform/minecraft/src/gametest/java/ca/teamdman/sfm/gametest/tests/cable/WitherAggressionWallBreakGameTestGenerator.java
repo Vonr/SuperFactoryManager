@@ -154,7 +154,7 @@ public class WitherAggressionWallBreakGameTestGenerator extends SFMGameTestGener
             wither.setAlternativeTarget(0, sheep.getId());
             wither.setAlternativeTarget(1, sheep.getId());
             wither.setAlternativeTarget(2, sheep.getId());
-            triggerWitherDestroyBlocksTickViaHurt(wither);
+            triggerWitherDestroyBlocksTickViaHurt(helper, wither);
 
             if (scenario.expectedWallBreak) {
                 helper.failIfEver(() -> {
@@ -208,7 +208,7 @@ public class WitherAggressionWallBreakGameTestGenerator extends SFMGameTestGener
         }
 
         @MCVersionDependentBehaviour
-        private void triggerWitherDestroyBlocksTickViaHurt(WitherBoss wither) {
+        private void triggerWitherDestroyBlocksTickViaHurt(SFMGameTestHelper helper, WitherBoss wither) {
             // Intentionally route through WitherBoss#hurt to trigger:
             //   if (this.destroyBlocksTick <= 0) { this.destroyBlocksTick = 20; }
             wither.hurt(DamageSource.OUT_OF_WORLD, 1.0F);
