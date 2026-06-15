@@ -46,22 +46,23 @@ Status: `Done`
 - Do not run `install.ps1` as part of normal validation unless explicitly requested.
 - This plan doc should be committed before Rust implementation begins. Future implementation changes should stay unstaged/uncommitted for human review unless explicitly requested otherwise.
 - Discard the Log4j JSONL injection idea for this plan. Build the foundation around line-level subprocess capture and wide tracing events.
+- Prefer one primary Rust type per file for new orchestration/query/locking modules. Small helper functions may live beside the type they serve; broad mixed-type modules should be avoided.
+- Prefer ergonomic single-field newtypes for domain identifiers and paths: public tuple field plus `Deref` and `AsRef` implementations for the wrapped view type, such as `str` or `Path`.
 
 ## Core Concepts
 
 ### Worktree Target Identity
 
-Status: `Not Started`
+Status: `In Progress`
 
 Introduce a target model that represents a Git worktree independently from a Minecraft version:
 
 ```rust
 struct WorktreeTarget {
-    branch: String,
-    worktree_path: PathBuf,
+    branch: BranchName,
+    worktree_path: WorktreePath,
     core: bool,
-    mc_version: Option<String>,
-    display_id: String,
+    mc_version: Option<MinecraftVersion>,
 }
 ```
 
@@ -74,11 +75,11 @@ Rules:
 - Feature branches, such as `feat/1.19.2/draw`, infer `mc_version` from `gradle.properties`, but `core` must be `false`.
 - Publishing and release commands must default to core targets only.
 - Run/build/test commands may allow feature worktrees when explicitly selected.
-- Display and logging should use `display_id`, usually the branch name.
+- Display and logging should use `BranchName`.
 
 ### Branch Selector
 
-Status: `Not Started`
+Status: `In Progress`
 
 Replace `--mc` with `--branch`. Do not preserve `--mc` as a compatibility holdback.
 
@@ -129,8 +130,8 @@ struct BranchConjunction {
 enum BranchRule {
     All,
     Core,
-    ExactBranch(String),
-    BranchGlob(String),
+    ExactBranch(ExactBranch),
+    BranchGlob(BranchGlob),
     Version {
         scope: VersionScope,
         op: VersionOp,
@@ -151,6 +152,8 @@ enum VersionOp {
     Gt,
 }
 ```
+
+`BranchQuery` should implement `Display` using canonical operator text (`OR`, `AND`) so parsed selectors can be rendered in a stable form. Unit tests should verify that displayed queries parse back to the same typed representation. Generated arbitrary query tests should use constrained `ExactBranch` and `BranchGlob` newtypes so random values stay inside the accepted grammar.
 
 Migration:
 
@@ -413,8 +416,8 @@ Testing requirements:
 
 | Step | Status | Scope | Completion Criteria |
 | --- | --- | --- | --- |
-| 1 | `Not Started` | Add `WorktreeTarget` and classify core vs feature worktrees. | Unit tests cover core version branches, feature branches, and inferred MC versions. |
-| 2 | `Not Started` | Implement typed `BranchQuery`, DNF-style `BranchConjunction`, and `BranchRule` parser/evaluator. | Selector tests cover aliases, core, all, exact branch, feature glob, version comparisons, and `core>=1.20`. |
+| 1 | `In Progress` | Add `WorktreeTarget` and classify core vs feature worktrees. | Implemented in working tree; unit tests cover core version branches, feature branches, and inferred MC versions; pending human review/commit/propagation. |
+| 2 | `In Progress` | Implement typed `BranchQuery`, DNF-style `BranchConjunction`, and `BranchRule` parser/evaluator. | Implemented in working tree; selector tests cover aliases, core, all, exact branch, feature glob, version comparisons, and `core>=1.20`; pending human review/commit/propagation. |
 | 3 | `Not Started` | Replace `--mc` with `--branch` in run/build/plan/compare surfaces. | CLI tests show `--branch` parses, default is `core`, and `--mc` no longer parses. |
 | 4 | `Not Started` | Convert single-target run/build requests into multi-target scheduling. | `run ... --branch core --dry-run` visits each core worktree sequentially. |
 | 5 | `Not Started` | Add `--error-action continue\|bail` to multi-target commands. | Tests prove bail stops early and continue reports all failures. |

@@ -2385,6 +2385,7 @@ dependencies = [
 name = "sfm-propagate-changes"
 version = "0.1.1"
 dependencies = [
+ "arbitrary",
  "chrono",
  "color-eyre",
  "directories-next",
