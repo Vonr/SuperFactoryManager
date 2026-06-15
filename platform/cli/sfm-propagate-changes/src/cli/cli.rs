@@ -180,35 +180,70 @@ mod tests {
     use crate::cli::Command;
     use crate::cli::jar::JarCommand;
     use crate::cli::run::RunCommand;
+    use crate::jar_build::BuildMode;
 
     #[test]
     fn parses_top_level_run_commands() {
-        assert_run_command(&["run", "client", "--mc", "1.19.2"]);
-        assert_run_command(&["run", "client-smoke", "--mc", "1.19.2"]);
-        assert_run_command(&["run", "client-puppet", "--mc", "1.19.2"]);
-        assert_run_command(&["run", "server", "--mc", "1.19.2"]);
-        assert_run_command(&["run", "data", "--mc", "1.19.2"]);
-        assert_run_command(&["run", "game-test-server", "--mc", "1.19.2"]);
-        assert_run_command(&["run", "game-test-server", "--mc", "1.19.2", "--dry-run"]);
+        assert_run_command(&["run", "client"]);
+        assert_run_command(&["run", "client", "--branch", "1.19.2"]);
+        assert_run_command(&["run", "client-smoke", "--branch", "1.19.2"]);
+        assert_run_command(&["run", "client-puppet", "--branch", "1.19.2"]);
+        assert_run_command(&["run", "server", "--branch", "1.19.2"]);
+        assert_run_command(&["run", "data", "--branch", "1.19.2"]);
+        assert_run_command(&["run", "game-test-server", "--branch", "1.19.2"]);
+        assert_run_command(&["run", "game-test-server", "--branch", "1.19.2", "--dry-run"]);
     }
 
     #[test]
     fn parses_jar_build_dry_run() {
-        let cli = figue::from_slice::<Cli>(&["jar", "build", "--mc", "1.19.2", "--dry-run"])
+        let cli = figue::from_slice::<Cli>(&["jar", "build", "--branch", "1.19.2", "--dry-run"])
             .into_result()
             .expect("jar build dry-run should parse")
             .get_silent();
         match cli.command {
             Command::Jar {
                 command: JarCommand::Build { command },
-            } => assert!(command.dry_run),
+            } => {
+                let options = command
+                    .into_options(BuildMode::Build)
+                    .expect("branch query should parse");
+                assert!(options.dry_run);
+                assert_eq!(options.branch.to_string(), "1.19.2");
+            }
             command => panic!("expected jar build command, got {command:?}"),
         }
     }
 
     #[test]
+    fn omitted_branch_defaults_to_core() {
+        let cli = figue::from_slice::<Cli>(&["jar", "plan"])
+            .into_result()
+            .expect("jar plan should parse without explicit branch")
+            .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::Plan { command },
+            } => {
+                let options = command
+                    .into_options(BuildMode::Plan)
+                    .expect("default branch query should parse");
+                assert_eq!(options.branch.to_string(), "core");
+            }
+            command => panic!("expected jar plan command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn migrated_jar_and_run_commands_reject_mc() {
+        assert!(figue::from_slice::<Cli>(&["run", "client", "--mc", "1.19.2"]).is_err());
+        assert!(figue::from_slice::<Cli>(&["jar", "plan", "--mc", "1.19.2"]).is_err());
+        assert!(figue::from_slice::<Cli>(&["jar", "build", "--mc", "1.19.2"]).is_err());
+        assert!(figue::from_slice::<Cli>(&["jar", "compare", "--mc", "1.19.2"]).is_err());
+    }
+
+    #[test]
     fn jar_run_client_no_longer_parses() {
-        assert!(figue::from_slice::<Cli>(&["jar", "run-client", "--mc", "1.19.2"]).is_err());
+        assert!(figue::from_slice::<Cli>(&["jar", "run-client", "--branch", "1.19.2"]).is_err());
     }
 
     #[test]

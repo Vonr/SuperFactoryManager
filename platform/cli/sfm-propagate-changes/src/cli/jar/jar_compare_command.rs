@@ -1,3 +1,4 @@
+use crate::branch_targets::BranchQuery;
 use crate::jar_build::CompareCommand;
 use crate::jar_build::CompareOptions;
 use facet::Facet;
@@ -7,9 +8,9 @@ use std::path::PathBuf;
 /// Options for comparing Gradle and Rust-built jars.
 #[derive(Facet, Debug, Clone)]
 pub struct JarCompareCommand {
-    /// Minecraft version to compare, for example `1.19.2`.
-    #[facet(args::named)]
-    pub mc: String,
+    /// Branch selector to compare. Defaults to `core`.
+    #[facet(default, args::named)]
+    pub branch: Option<String>,
 
     /// Override the expected Gradle-built jar path.
     #[facet(rename = "gradle-jar", default, args::named)]
@@ -29,15 +30,15 @@ pub struct JarCompareCommand {
 }
 
 impl JarCompareCommand {
-    #[must_use]
-    fn into_options(self) -> CompareOptions {
-        CompareOptions {
-            mc: self.mc,
+    fn into_options(self) -> eyre::Result<CompareOptions> {
+        let branch = BranchQuery::parse(self.branch.as_deref().unwrap_or("core"))?;
+        Ok(CompareOptions {
+            branch,
             gradle_jar: self.gradle_jar,
             rust_jar: self.rust_jar,
             report_json: self.report_json,
             strict_manifest: self.strict_manifest,
-        }
+        })
     }
 }
 
@@ -47,5 +48,5 @@ impl JarCompareCommand {
 ///
 /// Returns an error if either jar is missing/unreadable or normalized differences are found.
 pub(super) fn invoke(command: JarCompareCommand) -> eyre::Result<()> {
-    CompareCommand::new(command.into_options()).invoke()
+    CompareCommand::new(command.into_options()?).invoke()
 }

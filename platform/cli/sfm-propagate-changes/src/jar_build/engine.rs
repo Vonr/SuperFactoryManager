@@ -4,7 +4,7 @@ use super::CompareOptions;
 use super::RunKind;
 use super::json_path::JsonOptionalPath;
 use super::json_path::JsonPath;
-use crate::worktree::get_sorted_worktrees;
+use crate::branch_targets::select_single_worktree_target;
 use chrono::Local;
 use eyre::Context;
 use facet::Facet;
@@ -43,7 +43,7 @@ const NEOFORM_RUNTIME_COORDINATE: &str = "net.neoforged:neoform-runtime:2.0.19:a
 pub(crate) fn invoke_build(options: &BuildOptions) -> eyre::Result<()> {
     let _span = tracing::info_span!(
         "sfm_jar_build_command",
-        mc = %options.mc,
+        branch = %options.branch,
         mode = ?options.mode,
         refresh = options.refresh,
         explain_rebuild = options.explain_rebuild,
@@ -72,7 +72,7 @@ pub(crate) fn invoke_build(options: &BuildOptions) -> eyre::Result<()> {
 pub(crate) fn invoke_run(options: &BuildOptions, kind: RunKind) -> eyre::Result<()> {
     let _span = tracing::info_span!(
         "sfm_run_command",
-        mc = %options.mc,
+        branch = %options.branch,
         kind = kind.command_name(),
         refresh = options.refresh,
         explain_rebuild = options.explain_rebuild,
@@ -91,7 +91,7 @@ pub(crate) fn invoke_run(options: &BuildOptions, kind: RunKind) -> eyre::Result<
 pub(crate) fn invoke_compare(options: &CompareOptions) -> eyre::Result<()> {
     let _span = tracing::info_span!(
         "sfm_jar_compare_command",
-        mc = %options.mc,
+        branch = %options.branch,
         strict_manifest = options.strict_manifest,
     )
     .entered();
@@ -766,7 +766,7 @@ impl Resolver {
             .find(|entry| entry.coordinate.as_deref() == Some(coordinate_text.as_str()))
         else {
             eyre::bail!(
-                "Artifact {} is not present in {}. Run jar build --mc {} --refresh to update the lockfile intentionally.",
+                "Artifact {} is not present in {}. Run jar build --branch {} --refresh to update the lockfile intentionally.",
                 coordinate_text,
                 "sfm-toolchain.lock.json",
                 lockfile.minecraft_version
@@ -935,7 +935,7 @@ impl Resolver {
                 .find(|dependency| dependency.notation == notation)
             else {
                 eyre::bail!(
-                    "Dynamic dependency {} is not present in sfm-toolchain.lock.json. Run jar build --mc {} --refresh to update the lockfile intentionally.",
+                    "Dynamic dependency {} is not present in sfm-toolchain.lock.json. Run jar build --branch {} --refresh to update the lockfile intentionally.",
                     notation,
                     lockfile.minecraft_version
                 );
@@ -1198,25 +1198,19 @@ fn find_local_cached_artifact(coordinate: &MavenCoordinate) -> Option<LocalCache
 fn create_plan(options: &BuildOptions) -> eyre::Result<BuildPlan> {
     let _span = tracing::info_span!(
         "create_build_plan",
-        mc = %options.mc,
+        branch = %options.branch,
         refresh = options.refresh,
         allow_local_artifact_cache = options.allow_local_artifact_cache,
     )
     .entered();
-    let worktree_path = find_worktree_path(&options.mc)?;
+    let target = select_single_worktree_target(&options.branch)?;
+    let worktree_path = target.worktree_path.0;
     let minecraft_dir = worktree_path.join("platform").join("minecraft");
     let properties_path = minecraft_dir.join("gradle.properties");
     let properties = read_properties(&properties_path)?;
 
     let minecraft_version = required_property(&properties, "minecraft_version")?;
-    let mut warnings = Vec::new();
-    if minecraft_version != options.mc {
-        warnings.push(format!(
-            "--mc {} selected {}, but gradle.properties says minecraft_version={minecraft_version}; using minecraft_version for artifact coordinates.",
-            options.mc,
-            worktree_path.display()
-        ));
-    }
+    let warnings = Vec::new();
 
     let loader_version = required_property(&properties, "neo_version")?;
     let (mapping_channel, mapping_version) =
@@ -8315,7 +8309,8 @@ fn type_descriptor(
 }
 
 fn resolve_compare_paths(options: &CompareOptions) -> eyre::Result<ComparePaths> {
-    let worktree_path = find_worktree_path(&options.mc)?;
+    let target = select_single_worktree_target(&options.branch)?;
+    let worktree_path = target.worktree_path.0;
     let minecraft_dir = worktree_path.join("platform").join("minecraft");
     let properties = read_properties(&minecraft_dir.join("gradle.properties"))?;
     let minecraft_version = required_property(&properties, "minecraft_version")?;
@@ -8830,36 +8825,6 @@ fn relative_zip_name(root: &Path, path: &Path) -> eyre::Result<String> {
         .strip_prefix(root)
         .wrap_err_with(|| format!("{} is not under {}", path.display(), root.display()))?;
     Ok(relative.to_string_lossy().replace('\\', "/"))
-}
-
-fn find_worktree_path(mc: &str) -> eyre::Result<PathBuf> {
-    if let Ok(worktrees) = get_sorted_worktrees()
-        && let Some(worktree) = worktrees.into_iter().find(|worktree| worktree.branch == mc)
-    {
-        return Ok(worktree.path);
-    }
-
-    let mut current = std::env::current_dir().wrap_err("Failed to get current directory")?;
-    loop {
-        let candidate = current.join("platform").join("minecraft");
-        if candidate.join("gradle.properties").is_file() {
-            let properties = read_properties(&candidate.join("gradle.properties"))?;
-            if properties
-                .get("minecraft_version")
-                .is_some_and(|version| version == mc)
-            {
-                return Ok(current);
-            }
-        }
-
-        if !current.pop() {
-            break;
-        }
-    }
-
-    eyre::bail!(
-        "Could not find worktree for Minecraft {mc}. Configure repo root or run from that worktree."
-    );
 }
 
 fn gradle_output_jar_path(

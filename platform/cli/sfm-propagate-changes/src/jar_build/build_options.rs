@@ -1,4 +1,5 @@
 use super::BuildMode;
+use crate::branch_targets::BranchQuery;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
@@ -7,7 +8,7 @@ use std::path::PathBuf;
     reason = "This type carries normalized CLI flags into the build engine."
 )]
 pub struct BuildOptions {
-    pub mc: String,
+    pub branch: BranchQuery,
     pub refresh: bool,
     pub explain_rebuild: bool,
     pub plan_json: Option<PathBuf>,
