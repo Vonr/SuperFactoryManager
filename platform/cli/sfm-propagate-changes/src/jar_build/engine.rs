@@ -51,10 +51,13 @@ pub(crate) fn invoke_build(options: &BuildOptions) -> eyre::Result<()> {
         explain_rebuild = options.explain_rebuild,
         dry_run = options.dry_run,
         allow_local_artifact_cache = options.allow_local_artifact_cache,
+        error_action = %options.error_action,
     )
     .entered();
     let targets = resolve_build_targets(options)?;
+    let target_count = targets.len();
     let mut plans = Vec::with_capacity(targets.len());
+    let mut failures = Vec::new();
 
     for target in targets {
         let _target_span = tracing::info_span!(
@@ -63,27 +66,23 @@ pub(crate) fn invoke_build(options: &BuildOptions) -> eyre::Result<()> {
             worktree = %target.worktree_path.display(),
         )
         .entered();
-        let plan = create_plan_for_target(options, &target)?;
-        write_last_plan_output(&plan)?;
-        print_plan_summary(&plan);
-
-        match options.mode {
-            BuildMode::Plan => write_artifact_lockfile(&plan)?,
-            BuildMode::Build if options.dry_run => {
-                println!("Jar build dry-run: resolved plan and lockfile; skipped build execution.");
-                tracing::info!("jar_build_dry_run_skip_execution");
-                write_artifact_lockfile(&plan)?;
+        match execute_build_target(options, &target) {
+            Ok(plan) => plans.push(plan),
+            Err(error) if options.error_action.should_continue() => {
+                tracing::error!(branch = %target.branch, error = %error, "jar_build_target_failed");
+                failures.push(TargetFailure::new(&target, &error));
             }
-            BuildMode::Build => {
-                execute_build(&plan, options.explain_rebuild, BuildTarget::Jar)?;
-                write_artifact_lockfile(&plan)?;
-            }
+            Err(error) => return Err(error),
         }
-
-        plans.push(plan);
     }
 
-    write_requested_plan_outputs(&plans, options.plan_json.as_deref())
+    write_requested_plan_outputs(&plans, options.plan_json.as_deref())?;
+    finish_target_summary(
+        build_action_name(options),
+        target_count,
+        plans.len(),
+        &failures,
+    )
 }
 
 pub(crate) fn invoke_run(options: &BuildOptions, kind: RunKind) -> eyre::Result<()> {
@@ -95,10 +94,13 @@ pub(crate) fn invoke_run(options: &BuildOptions, kind: RunKind) -> eyre::Result<
         explain_rebuild = options.explain_rebuild,
         dry_run = options.dry_run,
         allow_local_artifact_cache = options.allow_local_artifact_cache,
+        error_action = %options.error_action,
     )
     .entered();
     let targets = resolve_build_targets(options)?;
+    let target_count = targets.len();
     let mut plans = Vec::with_capacity(targets.len());
+    let mut failures = Vec::new();
 
     for target in targets {
         let _target_span = tracing::info_span!(
@@ -108,16 +110,95 @@ pub(crate) fn invoke_run(options: &BuildOptions, kind: RunKind) -> eyre::Result<
             kind = kind.command_name(),
         )
         .entered();
-        let plan = create_plan_for_target(options, &target)?;
-        write_last_plan_output(&plan)?;
-        print_plan_summary(&plan);
-        execute_build(&plan, options.explain_rebuild, BuildTarget::Run)?;
-        write_artifact_lockfile(&plan)?;
-        execute_run(&plan, kind, options.dry_run)?;
-        plans.push(plan);
+        match execute_run_target(options, kind, &target) {
+            Ok(plan) => plans.push(plan),
+            Err(error) if options.error_action.should_continue() => {
+                tracing::error!(branch = %target.branch, error = %error, "run_target_failed");
+                failures.push(TargetFailure::new(&target, &error));
+            }
+            Err(error) => return Err(error),
+        }
     }
 
-    write_requested_plan_outputs(&plans, options.plan_json.as_deref())
+    write_requested_plan_outputs(&plans, options.plan_json.as_deref())?;
+    finish_target_summary(kind.command_name(), target_count, plans.len(), &failures)
+}
+
+fn execute_build_target(
+    options: &BuildOptions,
+    target: &WorktreeTarget,
+) -> eyre::Result<BuildPlan> {
+    let plan = create_plan_for_target(options, target)?;
+    write_last_plan_output(&plan)?;
+    print_plan_summary(&plan);
+
+    match options.mode {
+        BuildMode::Plan => write_artifact_lockfile(&plan)?,
+        BuildMode::Build if options.dry_run => {
+            println!("Jar build dry-run: resolved plan and lockfile; skipped build execution.");
+            tracing::info!("jar_build_dry_run_skip_execution");
+            write_artifact_lockfile(&plan)?;
+        }
+        BuildMode::Build => {
+            execute_build(&plan, options.explain_rebuild, BuildTarget::Jar)?;
+            write_artifact_lockfile(&plan)?;
+        }
+    }
+
+    Ok(plan)
+}
+
+fn execute_run_target(
+    options: &BuildOptions,
+    kind: RunKind,
+    target: &WorktreeTarget,
+) -> eyre::Result<BuildPlan> {
+    let plan = create_plan_for_target(options, target)?;
+    write_last_plan_output(&plan)?;
+    print_plan_summary(&plan);
+    execute_build(&plan, options.explain_rebuild, BuildTarget::Run)?;
+    write_artifact_lockfile(&plan)?;
+    execute_run(&plan, kind, options.dry_run)?;
+    Ok(plan)
+}
+
+fn build_action_name(options: &BuildOptions) -> &'static str {
+    match options.mode {
+        BuildMode::Plan => "jar plan",
+        BuildMode::Build => "jar build",
+    }
+}
+
+fn finish_target_summary(
+    action_name: &str,
+    total: usize,
+    succeeded: usize,
+    failures: &[TargetFailure],
+) -> eyre::Result<()> {
+    if total > 1 || !failures.is_empty() {
+        println!(
+            "{action_name} target summary: {succeeded}/{total} succeeded, {} failed.",
+            failures.len()
+        );
+    }
+
+    if failures.is_empty() {
+        return Ok(());
+    }
+
+    for failure in failures {
+        println!(
+            "Failed target {} ({}): {}",
+            failure.branch,
+            failure.worktree_path.display(),
+            failure.error
+        );
+    }
+
+    eyre::bail!(
+        "{action_name} failed for {} of {total} target(s).",
+        failures.len()
+    );
 }
 
 pub(crate) fn invoke_compare(options: &CompareOptions) -> eyre::Result<()> {
@@ -144,6 +225,23 @@ pub(crate) fn invoke_compare(options: &CompareOptions) -> eyre::Result<()> {
 struct ComparePaths {
     gradle_jar: PathBuf,
     rust_jar: PathBuf,
+}
+
+#[derive(Debug)]
+struct TargetFailure {
+    branch: String,
+    worktree_path: PathBuf,
+    error: String,
+}
+
+impl TargetFailure {
+    fn new(target: &WorktreeTarget, error: &eyre::Report) -> Self {
+        Self {
+            branch: target.branch.to_string(),
+            worktree_path: target.worktree_path.as_path().to_path_buf(),
+            error: error.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Facet)]

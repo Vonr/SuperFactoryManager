@@ -181,6 +181,7 @@ Initial behavior:
 - Release/publish commands should reject non-core targets unless an explicit future flag says otherwise.
 - `--error-action bail`: stop after the first target failure.
 - `--error-action continue`: continue running remaining targets, then emit a target summary and return failure if any target failed.
+- Default error action is `bail`.
 
 Parallel behavior:
 
@@ -423,8 +424,8 @@ Testing requirements:
 | 1 | `Done` | Add `WorktreeTarget` and classify core vs feature worktrees. | Committed in `ee92ebd6f`; unit tests cover core version branches, feature branches, and inferred MC versions. |
 | 2 | `Done` | Implement typed `BranchQuery`, DNF-style `BranchConjunction`, and `BranchRule` parser/evaluator. | Committed in `ee92ebd6f`; selector tests cover aliases, core, all, exact branch, feature glob, version comparisons, display round-trips, arbitrary generated selectors, and `core>=1.20`. |
 | 3 | `Done` | Replace `--mc` with `--branch` in run/build/plan/compare surfaces. | Committed in `2d88a2b79`; CLI tests show `--branch` parses, default is `core`, and `--mc` no longer parses. |
-| 4 | `In Progress` | Convert single-target run/build requests into multi-target scheduling. | Implemented in working tree; `jar plan`, `jar build`, and `run ...` iterate matching targets sequentially; pending human review/commit/propagation. |
-| 5 | `Not Started` | Add `--error-action continue\|bail` to multi-target commands. | Tests prove bail stops early and continue reports all failures. |
+| 4 | `Done` | Convert single-target run/build requests into multi-target scheduling. | Committed in `a260d22ab`; `jar plan`, `jar build`, and `run ...` iterate matching targets sequentially. |
+| 5 | `In Progress` | Add `--error-action continue\|bail` to multi-target commands. | Implemented in working tree; default is `bail`, `continue` records per-target failures and returns failure after the target summary; pending human review/commit/propagation. |
 | 6 | `Not Started` | Add wide tracing fields for branch/source/stream/subprocess lines. | Rust, Java tool, and Minecraft subprocess lines carry branch/source fields in tracing. |
 | 7 | `Not Started` | Replace affected `println!`/`eprintln!` progress with tracing events. | New/modified run/build paths emit progress through tracing except Ctrl+C echo. |
 | 8 | `Not Started` | Add prefixed terminal rendering for line events. | Sequential multi-target output is readable with `[branch source]` prefixes. |

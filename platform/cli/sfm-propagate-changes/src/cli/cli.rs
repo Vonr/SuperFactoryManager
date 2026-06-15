@@ -181,6 +181,7 @@ mod tests {
     use crate::cli::jar::JarCommand;
     use crate::cli::run::RunCommand;
     use crate::jar_build::BuildMode;
+    use crate::jar_build::ErrorAction;
 
     #[test]
     fn parses_top_level_run_commands() {
@@ -192,6 +193,15 @@ mod tests {
         assert_run_command(&["run", "data", "--branch", "1.19.2"]);
         assert_run_command(&["run", "game-test-server", "--branch", "1.19.2"]);
         assert_run_command(&["run", "game-test-server", "--branch", "1.19.2", "--dry-run"]);
+        assert_run_command(&[
+            "run",
+            "game-test-server",
+            "--branch",
+            "core",
+            "--error-action",
+            "continue",
+            "--dry-run",
+        ]);
     }
 
     #[test]
@@ -209,6 +219,56 @@ mod tests {
                     .expect("branch query should parse");
                 assert!(options.dry_run);
                 assert_eq!(options.branch.to_string(), "1.19.2");
+                assert_eq!(options.error_action, ErrorAction::Bail);
+            }
+            command => panic!("expected jar build command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_error_action_continue() {
+        let cli = figue::from_slice::<Cli>(&[
+            "jar",
+            "build",
+            "--branch",
+            "core",
+            "--error-action",
+            "continue",
+        ])
+        .into_result()
+        .expect("jar build should parse")
+        .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::Build { command },
+            } => {
+                let options = command
+                    .into_options(BuildMode::Build)
+                    .expect("error action should parse");
+                assert_eq!(options.error_action, ErrorAction::Continue);
+            }
+            command => panic!("expected jar build command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn rejects_invalid_error_action() {
+        let cli = figue::from_slice::<Cli>(&[
+            "jar",
+            "build",
+            "--branch",
+            "core",
+            "--error-action",
+            "explode",
+        ])
+        .into_result()
+        .expect("raw CLI shape should parse")
+        .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::Build { command },
+            } => {
+                let _ = command.into_options(BuildMode::Build).unwrap_err();
             }
             command => panic!("expected jar build command, got {command:?}"),
         }

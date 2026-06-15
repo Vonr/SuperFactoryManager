@@ -1,4 +1,5 @@
 use super::BuildMode;
+use super::ErrorAction;
 use crate::branch_targets::BranchQuery;
 use std::path::PathBuf;
 
@@ -15,5 +16,6 @@ pub struct BuildOptions {
     pub java_home: Option<PathBuf>,
     pub dry_run: bool,
     pub allow_local_artifact_cache: bool,
+    pub error_action: ErrorAction,
     pub mode: BuildMode,
 }
