@@ -176,10 +176,11 @@ impl Command {
     }
 }
 
-#[cfg(test)]
+#[cfg(test)] // todo(2026-06-16) these tests have gotten long, can we create a cli_test.rs or something so they are still close to this file
 mod tests {
     use super::Cli;
     use crate::cli::Command;
+    use crate::cli::gradle::GradleCommand;
     use crate::cli::jar::JarCommand;
     use crate::cli::run::RunCommand;
     use crate::cli_arg_normalization::normalize_parallel_args;
@@ -211,10 +212,21 @@ mod tests {
 
     #[test]
     fn parses_jar_build_dry_run() {
-        let cli = figue::from_slice::<Cli>(&["jar", "build", "--branch", "1.19.2", "--dry-run"])
-            .into_result()
-            .expect("jar build dry-run should parse")
-            .get_silent();
+        let cli = figue::from_slice::<Cli>(&[
+            "jar",
+            "build",
+            "--branch",
+            "1.19.2",
+            "--dry-run",
+            "--artifact-source",
+            "G:/Programming/Repos/Mekanism",
+            "--artifact-source",
+            "G:/Programming/Repos/OtherMavenRepo",
+            "--require-portable-artifacts",
+        ])
+        .into_result()
+        .expect("jar build dry-run should parse")
+        .get_silent();
         match cli.command {
             Command::Jar {
                 command: JarCommand::Build { command },
@@ -225,6 +237,16 @@ mod tests {
                 assert!(options.dry_run);
                 assert_eq!(options.branch.to_string(), "1.19.2");
                 assert_eq!(options.error_action, ErrorAction::Bail);
+                assert_eq!(options.artifact_sources.len(), 2);
+                assert_eq!(
+                    options.artifact_sources[0],
+                    std::path::PathBuf::from("G:/Programming/Repos/Mekanism")
+                );
+                assert_eq!(
+                    options.artifact_sources[1],
+                    std::path::PathBuf::from("G:/Programming/Repos/OtherMavenRepo")
+                );
+                assert!(options.require_portable_artifacts);
             }
             command => panic!("expected jar build command, got {command:?}"),
         }
@@ -284,6 +306,119 @@ mod tests {
     }
 
     #[test]
+    fn parses_jar_compare_parallel_value() {
+        let cli = figue::from_slice::<Cli>(&[
+            "jar",
+            "compare",
+            "--branch",
+            "core",
+            "--parallel",
+            "3",
+            "--error-action",
+            "continue",
+        ])
+        .into_result()
+        .expect("jar compare parallel should parse")
+        .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::Compare { command },
+            } => {
+                let options = command
+                    .into_options()
+                    .expect("compare parallel value should parse");
+                assert_eq!(options.parallelism, Parallelism::Parallel { limit: 3 });
+                assert_eq!(options.error_action, ErrorAction::Continue);
+            }
+            command => panic!("expected jar compare command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_jar_artifact_audit_parallel_value() {
+        let cli = figue::from_slice::<Cli>(&[
+            "jar",
+            "audit-artifacts",
+            "--branch",
+            "core",
+            "--parallel",
+            "5",
+            "--error-action",
+            "continue",
+            "--require-portable-artifacts",
+        ])
+        .into_result()
+        .expect("jar audit-artifacts parallel should parse")
+        .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::AuditArtifacts { command },
+            } => {
+                let options = command
+                    .into_options()
+                    .expect("artifact audit options should parse");
+                assert_eq!(options.branch.to_string(), "core");
+                assert_eq!(options.parallelism, Parallelism::Parallel { limit: 5 });
+                assert_eq!(options.error_action, ErrorAction::Continue);
+                assert!(options.require_portable_artifacts);
+            }
+            command => panic!("expected jar audit-artifacts command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_jar_compare_bare_parallel_after_arg_normalization() {
+        let args = normalize_parallel_args(["jar", "compare", "--branch", "core", "--parallel"]);
+        let arg_refs = args.iter().map(String::as_str).collect::<Vec<_>>();
+        let cli = figue::from_slice::<Cli>(&arg_refs)
+            .into_result()
+            .expect("bare compare parallel should normalize and parse")
+            .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::Compare { command },
+            } => {
+                let options = command
+                    .into_options()
+                    .expect("normalized compare parallel should parse");
+                assert_eq!(
+                    options.parallelism,
+                    Parallelism::Parallel {
+                        limit: Parallelism::DEFAULT_LIMIT
+                    }
+                );
+            }
+            command => panic!("expected jar compare command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_jar_artifact_audit_bare_parallel_after_arg_normalization() {
+        let args = normalize_parallel_args(["jar", "audit-artifacts", "--parallel"]);
+        let arg_refs = args.iter().map(String::as_str).collect::<Vec<_>>();
+        let cli = figue::from_slice::<Cli>(&arg_refs)
+            .into_result()
+            .expect("bare artifact audit parallel should normalize and parse")
+            .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::AuditArtifacts { command },
+            } => {
+                let options = command
+                    .into_options()
+                    .expect("normalized artifact audit parallel should parse");
+                assert_eq!(
+                    options.parallelism,
+                    Parallelism::Parallel {
+                        limit: Parallelism::DEFAULT_LIMIT
+                    }
+                );
+            }
+            command => panic!("expected jar audit-artifacts command, got {command:?}"),
+        }
+    }
+
+    #[test]
     fn rejects_zero_parallelism() {
         let cli = figue::from_slice::<Cli>(&["jar", "build", "--parallel", "0"])
             .into_result()
@@ -329,6 +464,31 @@ mod tests {
     }
 
     #[test]
+    fn parses_jar_compare_error_action_continue() {
+        let cli = figue::from_slice::<Cli>(&[
+            "jar",
+            "compare",
+            "--branch",
+            "core",
+            "--error-action",
+            "continue",
+        ])
+        .into_result()
+        .expect("jar compare should parse")
+        .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::Compare { command },
+            } => {
+                let options = command.into_options().expect("branch query should parse");
+                assert_eq!(options.branch.to_string(), "core");
+                assert_eq!(options.error_action, ErrorAction::Continue);
+            }
+            command => panic!("expected jar compare command, got {command:?}"),
+        }
+    }
+
+    #[test]
     fn rejects_invalid_error_action() {
         assert!(
             figue::from_slice::<Cli>(&[
@@ -341,6 +501,29 @@ mod tests {
             ])
             .is_err()
         );
+    }
+
+    #[test]
+    fn parses_gradle_branch_selector() {
+        let cli =
+            figue::from_slice::<Cli>(&["gradle", "run", "runData", "--branch", "core>=1.21.0"])
+                .into_result()
+                .expect("gradle branch selector should parse")
+                .get_silent();
+        match cli.command {
+            Command::Gradle {
+                command: GradleCommand::Run { command },
+            } => {
+                let query = command
+                    .branch
+                    .expect("branch selector should be present")
+                    .into_query()
+                    .expect("branch query should parse");
+                assert_eq!(query.to_string(), "core>=1.21.0");
+                assert_eq!(command.tasks, ["runData"]);
+            }
+            command => panic!("expected gradle run command, got {command:?}"),
+        }
     }
 
     #[test]
@@ -368,6 +551,116 @@ mod tests {
         assert!(figue::from_slice::<Cli>(&["jar", "plan", "--mc", "1.19.2"]).is_err());
         assert!(figue::from_slice::<Cli>(&["jar", "build", "--mc", "1.19.2"]).is_err());
         assert!(figue::from_slice::<Cli>(&["jar", "compare", "--mc", "1.19.2"]).is_err());
+        assert!(figue::from_slice::<Cli>(&["gradle", "run", "runData", "--mc", "1.19.2"]).is_err());
+    }
+
+    #[test]
+    fn migrated_release_and_server_commands_parse_branch() {
+        let commands = [
+            &["server", "list", "--branch", "core"][..],
+            &["server", "launch", "--branch", "1.19.2"],
+            &[
+                "github",
+                "release",
+                "now",
+                "--branch",
+                "1.19.2",
+                "--dry-run",
+                "--yes",
+            ],
+            &[
+                "github",
+                "release",
+                "amend",
+                "--branch",
+                "1.19.2",
+                "--dry-run",
+                "--yes",
+            ],
+            &["modrinth", "release", "check", "--branch", "1.19.2"],
+            &["modrinth", "release", "validate", "--branch", "1.19.2"],
+            &[
+                "modrinth",
+                "release",
+                "now",
+                "--branch",
+                "1.19.2",
+                "--dry-run",
+            ],
+            &[
+                "modrinth",
+                "release",
+                "amend",
+                "--branch",
+                "1.19.2",
+                "--dry-run",
+            ],
+            &["curseforge", "release", "check", "--branch", "1.19.2"],
+            &["curseforge", "release", "validate", "--branch", "1.19.2"],
+            &[
+                "curseforge",
+                "release",
+                "now",
+                "--branch",
+                "1.19.2",
+                "--dry-run",
+            ],
+            &[
+                "curseforge",
+                "release",
+                "amend",
+                "--branch",
+                "1.19.2",
+                "--dry-run",
+            ],
+            &[
+                "curseforge",
+                "minecraft",
+                "version",
+                "list",
+                "--branch",
+                "core",
+            ],
+        ];
+
+        for command in commands {
+            figue::from_slice::<Cli>(command)
+                .into_result()
+                .unwrap_or_else(|error| panic!("expected {command:?} to parse: {error}"));
+        }
+    }
+
+    #[test]
+    fn migrated_release_and_server_commands_reject_mc() {
+        let commands = [
+            &["server", "list", "--mc", "1.19.2"][..],
+            &["server", "launch", "--mc", "1.19.2"],
+            &["github", "release", "now", "--mc", "1.19.2"],
+            &["github", "release", "amend", "--mc", "1.19.2"],
+            &["modrinth", "release", "check", "--mc", "1.19.2"],
+            &["modrinth", "release", "validate", "--mc", "1.19.2"],
+            &["modrinth", "release", "now", "--mc", "1.19.2"],
+            &["modrinth", "release", "amend", "--mc", "1.19.2"],
+            &["curseforge", "release", "check", "--mc", "1.19.2"],
+            &["curseforge", "release", "validate", "--mc", "1.19.2"],
+            &["curseforge", "release", "now", "--mc", "1.19.2"],
+            &["curseforge", "release", "amend", "--mc", "1.19.2"],
+            &[
+                "curseforge",
+                "minecraft",
+                "version",
+                "list",
+                "--mc",
+                "1.19.2",
+            ],
+        ];
+
+        for command in commands {
+            assert!(
+                figue::from_slice::<Cli>(command).is_err(),
+                "expected {command:?} to reject --mc"
+            );
+        }
     }
 
     #[test]

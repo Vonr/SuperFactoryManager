@@ -45,6 +45,14 @@ pub struct JarBuildCommand {
     #[facet(rename = "allow-local-artifact-cache", default = false, args::named)]
     pub allow_local_artifact_cache: bool,
 
+    /// Explicit local artifact sources, such as Maven repository roots, project roots, or build/libs directories.
+    #[facet(rename = "artifact-source", default, args::named)]
+    pub artifact_sources: Vec<PathBuf>,
+
+    /// Fail if any locked artifact depends on local-only or unknown provenance.
+    #[facet(rename = "require-portable-artifacts", default = false, args::named)]
+    pub require_portable_artifacts: bool,
+
     /// Failure behavior for multi-target selectors: `bail` or `continue`.
     #[facet(rename = "error-action", default, args::named)]
     pub error_action: ErrorAction,
@@ -64,13 +72,15 @@ impl JarBuildCommand {
             java_home: self.java_home,
             dry_run: self.dry_run,
             allow_local_artifact_cache: self.allow_local_artifact_cache,
+            artifact_sources: self.artifact_sources,
+            require_portable_artifacts: self.require_portable_artifacts,
             error_action: self.error_action,
             parallelism: Parallelism::from_cli(self.parallel)?,
             mode,
         })
     }
 }
-
+// todo(2026-06-16) cli args struct problems
 /// Run `jar plan`.
 ///
 /// # Errors

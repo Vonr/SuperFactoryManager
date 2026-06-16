@@ -1,20 +1,20 @@
 use super::ArtifactLockWaitPolicy;
+use super::artifact_lock::open_lock_file;
 use eyre::Context;
 use std::fs::File;
-use std::fs::OpenOptions;
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
 use std::time::Instant;
 
 #[derive(Debug)]
-pub struct ArtifactLock {
+pub struct ArtifactReadLock {
     file: File,
     path: PathBuf,
-    artifact: String,
+    artifact: String, // todo(2026-06-16) the meaning of this being a string is unclear. perhaps we need a newtype or a rename here to clarify what this represents? is this just the display name for the lock
 }
 
-impl ArtifactLock {
+impl ArtifactReadLock {
     /// # Errors
     ///
     /// Returns an error if the lock file cannot be opened or the OS lock operation fails.
@@ -39,13 +39,13 @@ impl ArtifactLock {
             .unwrap_or_else(Instant::now);
 
         loop {
-            if try_lock_file(&file, &lock_path)? {
+            if try_lock_shared_file(&file, &lock_path)? {
                 if started.elapsed() > policy.retry_interval {
                     tracing::info!(
                         artifact = %artifact,
                         lock = %lock_path.display(),
                         waited_ms = started.elapsed().as_millis(),
-                        "acquired artifact lock after waiting"
+                        "acquired artifact read lock after waiting"
                     );
                 }
                 return Ok(Self {
@@ -60,7 +60,7 @@ impl ArtifactLock {
                     artifact = %artifact,
                     lock = %lock_path.display(),
                     waited_ms = started.elapsed().as_millis(),
-                    "waiting for artifact lock"
+                    "waiting for artifact read lock"
                 );
                 last_log = Instant::now();
             }
@@ -78,7 +78,7 @@ impl ArtifactLock {
         let lock_path = lock_path.as_ref().to_path_buf();
         let artifact = artifact.into();
         let file = open_lock_file(&lock_path)?;
-        if try_lock_file(&file, &lock_path)? {
+        if try_lock_shared_file(&file, &lock_path)? {
             Ok(Some(Self {
                 file,
                 path: lock_path,
@@ -100,39 +100,28 @@ impl ArtifactLock {
     }
 }
 
-impl Drop for ArtifactLock {
+impl Drop for ArtifactReadLock {
     fn drop(&mut self) {
         if let Err(error) = self.file.unlock() {
             tracing::warn!(
                 artifact = %self.artifact,
                 lock = %self.path.display(),
                 error = %error,
-                "failed to unlock artifact lock"
+                "failed to unlock artifact read lock"
             );
         }
     }
 }
 
-pub(super) fn open_lock_file(lock_path: &Path) -> eyre::Result<File> {
-    if let Some(parent) = lock_path.parent() {
-        std::fs::create_dir_all(parent)
-            .wrap_err_with(|| format!("Failed to create {}", parent.display()))?;
-    }
-    OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(false)
-        .open(lock_path)
-        .wrap_err_with(|| format!("Failed to open artifact lock {}", lock_path.display()))
-}
-
-fn try_lock_file(file: &File, lock_path: &Path) -> eyre::Result<bool> {
-    match file.try_lock() {
+fn try_lock_shared_file(file: &File, lock_path: &Path) -> eyre::Result<bool> {
+    match file.try_lock_shared() {
         Ok(()) => Ok(true),
         Err(std::fs::TryLockError::WouldBlock) => Ok(false),
         Err(std::fs::TryLockError::Error(error)) => Err(error).wrap_err_with(|| {
-            format!("Failed to acquire artifact lock on {}", lock_path.display())
+            format!(
+                "Failed to acquire artifact read lock on {}",
+                lock_path.display()
+            )
         }),
     }
 }

@@ -19,7 +19,7 @@ impl TagCommand {
         let worktrees = get_sorted_worktrees()?;
 
         if worktrees.is_empty() {
-            println!("No worktrees found.");
+            info!("No worktrees found.");
             return Ok(());
         }
 
@@ -50,7 +50,7 @@ impl TagCommand {
                 );
             }
 
-            println!("Tagged {tag}");
+            info!("Tagged {tag}");
         }
 
         Ok(())

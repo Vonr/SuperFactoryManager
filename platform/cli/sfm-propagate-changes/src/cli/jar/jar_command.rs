@@ -1,3 +1,4 @@
+use super::jar_artifact_audit_command::JarArtifactAuditCommand;
 use super::jar_build_command::JarBuildCommand;
 use super::jar_compare_command::JarCompareCommand;
 use facet::Facet;
@@ -7,7 +8,7 @@ use std::path::PathBuf;
 /// Jar directory and release artifact related commands
 #[derive(Facet, Debug)]
 #[repr(u8)]
-pub enum JarCommand {
+pub enum JarCommand { // todo(2026-06-16) cli args struct problem
     /// Jar directory related commands
     Dir {
         /// Directory subcommand
@@ -31,6 +32,13 @@ pub enum JarCommand {
         /// Jar comparison options
         #[facet(flatten)]
         command: JarCompareCommand,
+    },
+    /// Verify locked artifact cache and source provenance
+    #[facet(rename = "audit-artifacts")]
+    AuditArtifacts {
+        /// Artifact audit options
+        #[facet(flatten)]
+        command: JarArtifactAuditCommand,
     },
     /// Collect jars from each MC version based on that version's `mod_version`
     Collect,
@@ -72,6 +80,9 @@ impl JarCommand {
             JarCommand::Plan { command } => super::jar_build_command::invoke_plan(command),
             JarCommand::Build { command } => super::jar_build_command::invoke_build(command),
             JarCommand::Compare { command } => super::jar_compare_command::invoke(command),
+            JarCommand::AuditArtifacts { command } => {
+                super::jar_artifact_audit_command::invoke(command)
+            }
             JarCommand::Collect => super::jar_collect_command::invoke(),
             JarCommand::List => super::jar_list_command::invoke(),
             JarCommand::UpdateClients => super::jar_update_clients_command::invoke(),

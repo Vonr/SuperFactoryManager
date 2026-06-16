@@ -1,4 +1,5 @@
 mod branch_selector;
+mod jar_artifact_audit_command;
 pub(crate) mod jar_build_command;
 mod jar_collect_command;
 mod jar_command;

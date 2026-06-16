@@ -1,3 +1,4 @@
+use crate::terminal_output::stdout_line;
 use facet::Facet;
 
 /// JDK discovery and selection commands
@@ -17,27 +18,27 @@ impl JdkCommand {
             JdkCommand::List => {
                 let jdks = crate::jdk::list_jdks();
                 if jdks.is_empty() {
-                    println!("No JDKs discovered.");
+                    stdout_line("No JDKs discovered.")?;
                     return Ok(());
                 }
 
-                println!(
+                stdout_line(format!(
                     "{:<6} {:<5} {:<12} {:<16} Home",
                     "Java", "JBR", "Source", "Javac"
-                );
+                ))?;
                 for jdk in jdks {
                     let home = jdk
                         .home
                         .as_ref()
                         .map_or_else(|| "<PATH>".to_string(), |home| home.display().to_string());
-                    println!(
+                    stdout_line(format!(
                         "{:<6} {:<5} {:<12} {:<16} {}",
                         jdk.major_version,
                         if jdk.is_jbr { "yes" } else { "no" },
                         jdk.source,
                         jdk.javac_executable.display(),
                         home
-                    );
+                    ))?;
                 }
                 Ok(())
             }

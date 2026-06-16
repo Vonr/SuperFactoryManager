@@ -1,10 +1,11 @@
 use crate::cli::server::load_server_targets;
+use tracing::info;
 use tracing::warn;
 
-pub(super) fn invoke() -> eyre::Result<()> {
+pub(super) fn invoke() -> eyre::Result<()> { // todo(2026-06-16) cli args struct
     let targets = load_server_targets()?;
     if targets.is_empty() {
-        println!("No tracked servers. Use `sfm-propagate-changes server add <glob>`.");
+        info!("No tracked servers. Use `sfm-propagate-changes server add <glob>`.");
         return Ok(());
     }
 
@@ -27,6 +28,6 @@ pub(super) fn invoke() -> eyre::Result<()> {
         updated += 1;
     }
 
-    println!("Updated {updated} server target(s), skipped {skipped}.");
+    info!("Updated {updated} server target(s), skipped {skipped}.");
     Ok(())
 }

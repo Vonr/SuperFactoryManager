@@ -4,9 +4,11 @@
 //! https://docs.modrinth.com/api/operations/createversion/
 //! https://modrinth.com/mod/super-factory-manager/versions Project ID - aecUorJQ
 
+use crate::branch_targets::select_required_minecraft_versions;
+use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
-use crate::mc_version_filter::McVersionFilter;
+use crate::terminal_output::stdout_prompt;
 use crate::worktree::parse_version;
 use eyre::Context;
 use facet::Facet;
@@ -22,12 +24,12 @@ use sha1::Sha1;
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::fmt::Write as _;
-use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
 use tracing::debug;
+use tracing::info;
 
 const MODRINTH_API_ROOT: &str = "https://api.modrinth.com/v2";
 const MODRINTH_DEFAULT_PROJECT_ID: &str = "aecUorJQ";
@@ -49,10 +51,7 @@ fn style(text: &str, ansi: &str) -> String {
 }
 
 fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
-    print!("{message} ");
-    std::io::stdout()
-        .flush()
-        .wrap_err("Failed to flush prompt to stdout")?;
+    stdout_prompt(format!("{message} "))?;
 
     let mut input = String::new();
     std::io::stdin()
@@ -85,27 +84,27 @@ pub enum ModrinthCommand {
 pub enum ModrinthReleaseCommand {
     /// Verify computed release metadata against historical project versions
     Check {
-        /// Minecraft version filter expression (examples: `=1.20.1`, `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// Modrinth project id/slug (defaults to Super Factory Manager)
         #[facet(default, args::named)]
         project: Option<String>,
     },
     /// Validate remote downloadable jars against local release jars by hash
     Validate {
-        /// Minecraft version filter expression (examples: `=1.20.1`, `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// Modrinth project id/slug (defaults to Super Factory Manager)
         #[facet(default, args::named)]
         project: Option<String>,
     },
     /// Create new Modrinth versions for each release jar
     Now {
-        /// Minecraft version filter expression (examples: `=1.20.1`, `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// Modrinth project id/slug (defaults to Super Factory Manager)
         #[facet(default, args::named)]
         project: Option<String>,
@@ -121,9 +120,9 @@ pub enum ModrinthReleaseCommand {
     },
     /// Amend changelog for latest version per MC in current release jars
     Amend {
-        /// Minecraft version filter expression (examples: `=1.20.1`, `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// Modrinth project id/slug (defaults to Super Factory Manager)
         #[facet(default, args::named)]
         project: Option<String>,
@@ -155,69 +154,58 @@ impl ModrinthReleaseCommand {
     ///
     /// This function will return an error if the subcommand fails.
     pub fn invoke(self) -> eyre::Result<()> {
+// todo(2026-06-16) cli args struct
         match self {
-            Self::Check { mc, project } => {
-                super::modrinth_check_command::invoke(mc.as_deref(), project)
+            Self::Check { branch, project } => {
+                super::modrinth_check_command::invoke(branch, project)
             }
-            Self::Validate { mc, project } => {
-                super::modrinth_validate_command::invoke(mc.as_deref(), project)
+            Self::Validate { branch, project } => {
+                super::modrinth_validate_command::invoke(branch, project)
             }
             Self::Now {
-                mc,
+                branch,
                 project,
                 token,
                 op_secret,
                 dry_run,
-            } => super::modrinth_now_command::invoke(
-                mc.as_deref(),
-                project,
-                token,
-                op_secret,
-                dry_run,
-            ),
+            } => super::modrinth_now_command::invoke(branch, project, token, op_secret, dry_run),
             Self::Amend {
-                mc,
+                branch,
                 project,
                 token,
                 op_secret,
                 dry_run,
-            } => super::modrinth_amend_command::invoke(
-                mc.as_deref(),
-                project,
-                token,
-                op_secret,
-                dry_run,
-            ),
+            } => super::modrinth_amend_command::invoke(branch, project, token, op_secret, dry_run),
         }
     }
 }
 
-pub(super) fn invoke_check(mc: Option<&str>, project: Option<String>) -> eyre::Result<()> {
-    check_release_metadata(mc, project)
+pub(super) fn invoke_check(branch: BranchSelector, project: Option<String>) -> eyre::Result<()> {
+    check_release_metadata(branch, project)
 }
 
-pub(super) fn invoke_validate(mc: Option<&str>, project: Option<String>) -> eyre::Result<()> {
-    validate_release_hashes(mc, project)
+pub(super) fn invoke_validate(branch: BranchSelector, project: Option<String>) -> eyre::Result<()> {
+    validate_release_hashes(branch, project)
 }
 
 pub(super) fn invoke_now(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
     dry_run: bool,
 ) -> eyre::Result<()> {
-    release_now(mc, project, token, op_secret, dry_run)
+    release_now(branch, project, token, op_secret, dry_run)
 }
 
 pub(super) fn invoke_amend(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
     dry_run: bool,
 ) -> eyre::Result<()> {
-    release_amend(mc, project, token, op_secret, dry_run)
+    release_amend(branch, project, token, op_secret, dry_run)
 }
 
 #[derive(Facet, Debug, Clone)]
@@ -382,7 +370,7 @@ fn build_http_client(token: Option<&str>) -> eyre::Result<Client> {
     clippy::too_many_lines,
     reason = "metadata diff is easiest to read linearly"
 )]
-fn check_release_metadata(mc: Option<&str>, project: Option<String>) -> eyre::Result<()> {
+fn check_release_metadata(branch: BranchSelector, project: Option<String>) -> eyre::Result<()> {
     let project_id = resolve_project_id(project)?;
 
     let repo_root = get_repo_root()?;
@@ -391,15 +379,16 @@ fn check_release_metadata(mc: Option<&str>, project: Option<String>) -> eyre::Re
 
     let mod_version = read_mod_version(&gradle_properties)?;
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc)?;
+    let branch_query = branch.into_query()?;
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
 
     let plans = build_release_plans(&jars, &mod_version)?;
     let client = build_http_client(None)?;
     let existing_versions = fetch_project_versions(&client, &project_id)?;
 
-    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    println!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), plans.len());
+    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), plans.len());
 
     for plan in plans {
         let historical =
@@ -478,7 +467,7 @@ fn check_release_metadata(mc: Option<&str>, project: Option<String>) -> eyre::Re
             );
         }
 
-        println!(
+        info!(
             "{} {} {} {} {}",
             style("✓", ANSI_BOLD_GREEN),
             style(&plan.mc_version, ANSI_BOLD_BLUE),
@@ -495,7 +484,7 @@ fn check_release_metadata(mc: Option<&str>, project: Option<String>) -> eyre::Re
         );
     }
 
-    println!(
+    info!(
         "{}",
         style(
             "Metadata check passed: computed metadata matches historical Modrinth versions.",
@@ -506,7 +495,7 @@ fn check_release_metadata(mc: Option<&str>, project: Option<String>) -> eyre::Re
     Ok(())
 }
 
-fn validate_release_hashes(mc: Option<&str>, project: Option<String>) -> eyre::Result<()> {
+fn validate_release_hashes(branch: BranchSelector, project: Option<String>) -> eyre::Result<()> {
     let project_id = resolve_project_id(project)?;
 
     let repo_root = get_repo_root()?;
@@ -515,14 +504,15 @@ fn validate_release_hashes(mc: Option<&str>, project: Option<String>) -> eyre::R
 
     let mod_version = read_mod_version(&gradle_properties)?;
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc)?;
+    let branch_query = branch.into_query()?;
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
 
     let client = build_http_client(None)?;
     let existing_versions = fetch_project_versions(&client, &project_id)?;
 
-    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    println!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
+    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
 
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(&jar)?;
@@ -589,7 +579,7 @@ fn validate_release_hashes(mc: Option<&str>, project: Option<String>) -> eyre::R
             );
         }
 
-        println!(
+        info!(
             "{} {} {} {} {}",
             style("✓", ANSI_BOLD_GREEN),
             style(&mc_version, ANSI_BOLD_BLUE),
@@ -599,7 +589,7 @@ fn validate_release_hashes(mc: Option<&str>, project: Option<String>) -> eyre::R
         );
     }
 
-    println!(
+    info!(
         "{}",
         style(
             "Hash validation passed: downloaded Modrinth files match local release jars.",
@@ -615,7 +605,7 @@ fn validate_release_hashes(mc: Option<&str>, project: Option<String>) -> eyre::R
     reason = "release flow is intentionally linear"
 )]
 fn release_now(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
@@ -630,29 +620,30 @@ fn release_now(
     let mod_version = read_mod_version(&gradle_properties)?;
     let changelog_section = compute_wrapped_release_changelog(&repo_root, &mod_version)?;
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc)?;
+    let branch_query = branch.into_query()?;
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
     let plans = build_release_plans(&jars, &mod_version)?;
 
-    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    println!(
+    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!(
         "{} {}",
         style("Jar dir:", ANSI_BOLD_CYAN),
         jar_dir.display()
     );
     if dry_run {
-        println!(
+        info!(
             "{} {}",
             style("Mode:", ANSI_BOLD_YELLOW),
             style("dry-run (no uploads)", ANSI_BOLD_YELLOW)
         );
     }
-    println!("{}", style("Changelog:", ANSI_BOLD_CYAN));
-    println!("{changelog_section}");
+    info!("{}", style("Changelog:", ANSI_BOLD_CYAN));
+    info!("{changelog_section}");
 
-    println!("{}", style("Metadata preflight:", ANSI_BOLD_CYAN));
+    info!("{}", style("Metadata preflight:", ANSI_BOLD_CYAN));
     for plan in &plans {
-        println!(
+        info!(
             "  {} {} {} {} {} {}",
             style("MC", ANSI_DIM),
             style(&plan.mc_version, ANSI_BOLD_BLUE),
@@ -679,8 +670,8 @@ fn release_now(
         style("? (y/N)", ANSI_BOLD_YELLOW)
     );
     if !prompt_yes_no(&prompt)? {
-        println!("{}", style("Aborted release-now.", ANSI_BOLD_YELLOW));
-        println!("{}", modrinth_versions_url(&project_id));
+        info!("{}", style("Aborted release-now.", ANSI_BOLD_YELLOW));
+        info!("{}", modrinth_versions_url(&project_id));
         return Ok(());
     }
 
@@ -699,7 +690,7 @@ fn release_now(
             .map(ToString::to_string)
             .ok_or_else(|| eyre::eyre!("Invalid jar filename: {}", plan.jar_path.display()))?;
 
-        println!(
+        info!(
             "{} {} {} {}",
             style("Uploading", ANSI_BOLD_WHITE),
             style(&jar_name, ANSI_BOLD_MAGENTA),
@@ -708,7 +699,7 @@ fn release_now(
         );
 
         if dry_run {
-            println!(
+            info!(
                 "  {} {}",
                 style("metadata:", ANSI_DIM),
                 style(
@@ -733,7 +724,7 @@ fn release_now(
             &changelog_section,
         )?;
 
-        println!(
+        info!(
             "  {} {}",
             style("created version id", ANSI_BOLD_GREEN),
             style(&upload_id, ANSI_BOLD_GREEN)
@@ -741,12 +732,12 @@ fn release_now(
     }
 
     if !dry_run {
-        println!(
+        info!(
             "{}",
             style("Modrinth release upload complete.", ANSI_BOLD_GREEN)
         );
     }
-    println!("{}", modrinth_versions_url(&project_id));
+    info!("{}", modrinth_versions_url(&project_id));
 
     Ok(())
 }
@@ -756,7 +747,7 @@ fn release_now(
     reason = "amend flow is clearer when kept in release-operation order"
 )]
 fn release_amend(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
@@ -779,7 +770,8 @@ fn release_amend(
     let client = build_http_client(token_value.as_deref())?;
 
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc)?;
+    let branch_query = branch.into_query()?;
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
     let mut target_versions: Vec<(String, String)> = Vec::new();
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(&jar)?;
@@ -819,18 +811,18 @@ fn release_amend(
         amend_targets.push((mc_version, version.id.clone(), jar_name));
     }
 
-    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
     if dry_run {
-        println!(
+        info!(
             "{} {}",
             style("Mode:", ANSI_BOLD_YELLOW),
             style("dry-run (no Modrinth mutations)", ANSI_BOLD_YELLOW)
         );
     }
-    println!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
+    info!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
     for (mc_version, version_id, jar_name) in &amend_targets {
-        println!(
+        info!(
             "  {} {} {} {} {} {}",
             style("MC", ANSI_DIM),
             style(mc_version, ANSI_BOLD_BLUE),
@@ -842,7 +834,7 @@ fn release_amend(
     }
 
     if dry_run {
-        println!(
+        info!(
             "{}",
             style(
                 "Dry-run complete: remote Modrinth targets resolved; no versions amended.",
@@ -861,12 +853,12 @@ fn release_amend(
         style("(y/N)", ANSI_BOLD_YELLOW)
     );
     if !prompt_yes_no(&prompt)? {
-        println!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
+        info!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
         return Ok(());
     }
 
     for (mc_version, version_id, jar_name) in &amend_targets {
-        println!(
+        info!(
             "{} {} {} {} {} {}",
             style("Amending version", ANSI_BOLD_WHITE),
             style(version_id, ANSI_BOLD_MAGENTA),
@@ -879,7 +871,7 @@ fn release_amend(
         amend_version_changelog(&client, version_id, &wrapped_changelog)?;
     }
 
-    println!(
+    info!(
         "{}",
         style(
             "Modrinth release changelog amend complete.",
@@ -1140,32 +1132,24 @@ fn build_release_plans(
     Ok(plans)
 }
 
-fn filter_release_jars_by_mc(
+fn filter_release_jars_by_branch(
     jars: Vec<PathBuf>,
-    mc_filter_text: Option<&str>,
+    branch_query: &crate::branch_targets::BranchQuery,
 ) -> eyre::Result<Vec<PathBuf>> {
-    let Some(filter_text) = mc_filter_text else {
-        return Ok(jars);
-    };
-
-    let filter = McVersionFilter::parse(filter_text)?;
+    let versions = select_required_minecraft_versions(branch_query)?;
     let mut filtered = Vec::new();
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(&jar)?;
-        let parsed = parse_version(&mc_version).ok_or_else(|| {
-            eyre::eyre!(
-                "Could not parse MC version '{}' from {}",
-                mc_version,
-                jar.display()
-            )
-        })?;
-        if filter.matches_parsed(parsed) {
+        if versions
+            .iter()
+            .any(|version| version.as_str() == mc_version)
+        {
             filtered.push(jar);
         }
     }
 
     if filtered.is_empty() {
-        eyre::bail!("No release jars matched --mc '{filter_text}'.");
+        eyre::bail!("No release jars matched --branch '{branch_query}'.");
     }
 
     Ok(filtered)

@@ -1,6 +1,8 @@
 use crate::cli::jar::BranchSelector;
 use crate::jar_build::CompareCommand;
 use crate::jar_build::CompareOptions;
+use crate::jar_build::ErrorAction;
+use crate::jar_build::Parallelism;
 use facet::Facet;
 use figue as args;
 use std::path::PathBuf;
@@ -27,20 +29,31 @@ pub struct JarCompareCommand {
     /// Compare manifest timestamp-style values instead of ignoring them.
     #[facet(rename = "strict-manifest", default = false, args::named)]
     pub strict_manifest: bool,
+
+    /// Failure behavior for multi-target selectors: `bail` or `continue`.
+    #[facet(rename = "error-action", default, args::named)]
+    pub error_action: ErrorAction,
+
+    /// Run matching targets in parallel. Bare `--parallel` defaults to 10 before parsing.
+    #[facet(default, args::named)]
+    pub parallel: Option<usize>,
 }
 
 impl JarCompareCommand {
-    fn into_options(self) -> eyre::Result<CompareOptions> {
+    pub(crate) fn into_options(self) -> eyre::Result<CompareOptions> {
         Ok(CompareOptions {
             branch: self.branch.into_query()?,
             gradle_jar: self.gradle_jar,
             rust_jar: self.rust_jar,
             report_json: self.report_json,
             strict_manifest: self.strict_manifest,
+            error_action: self.error_action,
+            parallelism: Parallelism::from_cli(self.parallel)?,
         })
     }
 }
 
+// todo(2026-06-16) should be instance method
 /// Run `jar compare`.
 ///
 /// # Errors

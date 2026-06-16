@@ -1,3 +1,6 @@
+use crate::terminal_output::stdout_blank_line;
+use crate::terminal_output::stdout_line;
+use crate::terminal_output::stdout_prompt;
 use crate::worktree::Worktree;
 use crate::worktree::get_sorted_worktrees;
 use color_eyre::owo_colors::OwoColorize;
@@ -5,9 +8,9 @@ use eyre::Context;
 use eyre::bail;
 use facet::Facet;
 use figue as args;
-use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
+use tracing::info;
 
 /// Get the git status for a worktree
 fn get_worktree_status(worktree: &Worktree, short: bool) -> eyre::Result<WorktreeStatus> {
@@ -133,7 +136,7 @@ pub(crate) fn assert_worktrees_clean_or_autocommit_generated(
             continue;
         }
 
-        status.display();
+        status.display()?;
 
         if status.only_generated_changes() {
             let committed = prompt_autocommit_generated(&status)?;
@@ -215,7 +218,7 @@ impl WorktreeStatus {
             && self.conflicts.is_empty()
     }
 
-    fn display(&self) {
+    fn display(&self) -> eyre::Result<()> {
         // Header with branch name
         let sync_info = match (self.ahead, self.behind) {
             (0, 0) => String::new(),
@@ -234,84 +237,98 @@ impl WorktreeStatus {
             String::new()
         };
 
-        println!(
-            "\n{} {} {}{}{}",
+        stdout_blank_line()?;
+        stdout_line(format!(
+            "{} {} {}{}{}",
             "━━━".dimmed(),
             self.branch.cyan().bold(),
             self.path.display().to_string().dimmed(),
             sync_info,
             status_indicator
-        );
+        ))?;
 
         if self.is_clean() && !self.is_merging {
             if !self.short {
-                println!("  {}", "Nothing to commit, working tree clean".dimmed());
+                stdout_line(format!(
+                    "  {}",
+                    "Nothing to commit, working tree clean".dimmed()
+                ))?;
             }
-            return;
+            return Ok(());
         }
 
         if self.is_merging {
-            println!("  {} {}", "⚠".yellow(), "Merge in progress".yellow());
+            stdout_line(format!(
+                "  {} {}",
+                "⚠".yellow(),
+                "Merge in progress".yellow()
+            ))?;
         }
 
         if !self.conflicts.is_empty() {
-            println!(
+            stdout_line(format!(
                 "  {} ({}):",
                 "Unmerged paths".red().bold(),
                 self.conflicts.len()
-            );
+            ))?;
             for file in &self.conflicts {
-                println!("    {} {}", "!!".red().bold(), file.red());
+                stdout_line(format!("    {} {}", "!!".red().bold(), file.red()))?;
             }
         }
 
         if !self.staged.is_empty() {
-            println!("  {} ({}):", "Staged".green().bold(), self.staged.len());
+            stdout_line(format!(
+                "  {} ({}):",
+                "Staged".green().bold(),
+                self.staged.len()
+            ))?;
             for change in &self.staged {
-                println!("    {} {}", "+".green(), change.green());
+                stdout_line(format!("    {} {}", "+".green(), change.green()))?;
             }
         }
 
         if !self.unstaged.is_empty() {
-            println!(
+            stdout_line(format!(
                 "  {} ({}):",
                 "Unstaged".yellow().bold(),
                 self.unstaged.len()
-            );
+            ))?;
             for change in &self.unstaged {
-                println!("    {} {}", "~".yellow(), change.yellow());
+                stdout_line(format!("    {} {}", "~".yellow(), change.yellow()))?;
             }
         }
 
         if !self.untracked.is_empty() {
             if self.short {
-                println!(
+                stdout_line(format!(
                     "  {}: {} file(s)",
                     "Untracked".dimmed(),
                     self.untracked.len()
-                );
+                ))?;
             } else {
-                println!("  {} ({}):", "Untracked".dimmed(), self.untracked.len());
+                stdout_line(format!(
+                    "  {} ({}):",
+                    "Untracked".dimmed(),
+                    self.untracked.len()
+                ))?;
                 for file in &self.untracked {
-                    println!("    {} {}", "?".dimmed(), file.dimmed());
+                    stdout_line(format!("    {} {}", "?".dimmed(), file.dimmed()))?;
                 }
             }
         }
+
+        Ok(())
     }
 }
 
 fn prompt_autocommit_generated(status: &WorktreeStatus) -> eyre::Result<bool> {
-    println!();
-    println!(
+    info!(
         "{}",
         "Only generated resources changed under platform/minecraft/src/generated."
             .yellow()
             .bold()
     );
-    print!("Would you like to auto-commit these changes? [Y/n] ");
-    std::io::stdout()
-        .flush()
-        .wrap_err("Failed to flush stdout")?;
+    stdout_prompt("Would you like to auto-commit these changes? [Y/n] ")?;
 
     let mut input = String::new();
     std::io::stdin()
@@ -390,7 +407,7 @@ impl StatusCommand {
         let worktrees = get_sorted_worktrees()?;
 
         if worktrees.is_empty() {
-            println!("No worktrees found.");
+            stdout_line("No worktrees found.")?;
             return Ok(());
         }
 
@@ -404,13 +421,13 @@ impl StatusCommand {
     }
 
     fn run_all(worktrees: &[Worktree], short: bool) -> eyre::Result<()> {
-        println!(
+        stdout_line(format!(
             "Status for {} worktree(s):",
             worktrees.len().to_string().cyan().bold()
-        );
+        ))?;
         for wt in worktrees {
             let status = get_worktree_status(wt, short)?;
-            status.display();
+            status.display()?;
             if !status.is_clean() && !status.is_merging && status.only_generated_changes() {
                 let _ = prompt_autocommit_generated(&status)?;
             }
@@ -431,19 +448,19 @@ impl StatusCommand {
         }
 
         if statuses.is_empty() {
-            println!(
+            stdout_line(format!(
                 "All {} worktree(s) are clean! {}",
                 worktrees.len().to_string().cyan().bold(),
                 "✓".green().bold()
-            );
+            ))?;
         } else {
-            println!(
+            stdout_line(format!(
                 "{} of {} worktree(s) have uncommitted changes:",
                 dirty_count.to_string().yellow().bold(),
                 worktrees.len().to_string().cyan().bold()
-            );
+            ))?;
             for status in statuses {
-                status.display();
+                status.display()?;
                 if !status.is_merging && status.only_generated_changes() {
                     let _ = prompt_autocommit_generated(&status)?;
                 }
@@ -503,7 +520,12 @@ impl StatusCommand {
                 info_parts.join(" ")
             };
 
-            println!("  {} {} {}", icon, status.branch.cyan().bold(), info);
+            stdout_line(format!(
+                "  {} {} {}",
+                icon,
+                status.branch.cyan().bold(),
+                info
+            ))?;
 
             // Count for totals
             if status.is_merging {
@@ -520,34 +542,34 @@ impl StatusCommand {
         }
 
         // Print totals
-        println!();
-        println!(
+        stdout_blank_line()?;
+        stdout_line(format!(
             "Totals ({} worktrees):",
             worktrees.len().to_string().cyan().bold()
-        );
-        println!(
+        ))?;
+        stdout_line(format!(
             "  {} Clean:      {}",
             "✓".green(),
             clean.to_string().green()
-        );
-        println!(
+        ))?;
+        stdout_line(format!(
             "  {} Dirty:      {}",
             "~".yellow(),
             dirty.to_string().yellow()
-        );
+        ))?;
         if merging > 0 {
-            println!(
+            stdout_line(format!(
                 "  {} Merging:    {}",
                 "⚠".yellow(),
                 merging.to_string().yellow().bold()
-            );
+            ))?;
         }
         if conflicts > 0 {
-            println!(
+            stdout_line(format!(
                 "  {} Conflicts:  {}",
                 "!!".red(),
                 conflicts.to_string().red().bold()
-            );
+            ))?;
         }
 
         Ok(())

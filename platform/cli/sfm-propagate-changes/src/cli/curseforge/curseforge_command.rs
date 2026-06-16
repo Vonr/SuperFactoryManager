@@ -4,10 +4,13 @@
 //! https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api
 //! https://www.curseforge.com/minecraft/mc-mods/super-factory-manager Project ID - 306935
 
+use crate::branch_targets::BranchQuery;
+use crate::branch_targets::select_required_minecraft_versions;
+use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
-use crate::mc_version_filter::McVersionFilter;
 use crate::paths::APP_HOME;
+use crate::terminal_output::stdout_prompt;
 use crate::worktree::parse_version;
 use chrono::DateTime;
 use chrono::Utc;
@@ -25,12 +28,12 @@ use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fmt::Write as _;
-use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
 use tracing::debug;
+use tracing::info;
 
 const CURSEFORGE_API_ROOT: &str = "https://minecraft.curseforge.com/api";
 const CURSEFORGE_CORE_API_ROOT: &str = "https://api.curseforge.com/v1";
@@ -60,10 +63,7 @@ fn style(text: &str, ansi: &str) -> String {
 }
 
 fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
-    print!("{message} ");
-    std::io::stdout()
-        .flush()
-        .wrap_err("Failed to flush prompt to stdout")?;
+    stdout_prompt(format!("{message} "))?;
 
     let mut input = String::new();
     std::io::stdin()
@@ -74,7 +74,7 @@ fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
     Ok(matches!(normalized.as_str(), "y" | "yes"))
 }
 
-fn colorize_metadata_name(name: &str, mc_version: &str) -> String {
+fn colorize_metadata_name(name: &str, mc_version: &str) -> String { // todo(2026-06-16) shouldn't we have an enum for the known variants with an Other(String) escape hatch where this fn would be an instance method?
     if name == mc_version {
         return style(name, ANSI_BOLD_BLUE);
     }
@@ -119,12 +119,12 @@ pub enum CurseforgeCommand {
 /// CurseForge release subcommands
 #[derive(Facet, Debug)]
 #[repr(u8)]
-pub enum CurseforgeReleaseCommand {
+pub enum CurseforgeReleaseCommand { // todo(2026-06-16) shouldn't these be separate subcommands with their own files
     /// Verify computed release metadata against historical project uploads
     Check {
-        /// Minecraft version filter expression (examples: `=1.20.1`, `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector expression. Defaults to core worktrees.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// CurseForge project ID (defaults to configured default project)
         #[facet(default, args::named)]
         project: Option<u64>,
@@ -140,9 +140,9 @@ pub enum CurseforgeReleaseCommand {
     },
     /// Validate remote downloadable files against local release jars by hash
     Validate {
-        /// Minecraft version filter expression (examples: `=1.20.1`, `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector expression. Defaults to core worktrees.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// CurseForge project ID (defaults to configured default project)
         #[facet(default, args::named)]
         project: Option<u64>,
@@ -158,9 +158,9 @@ pub enum CurseforgeReleaseCommand {
     },
     /// Upload each release jar to CurseForge according to release-process rules
     Now {
-        /// Minecraft version filter expression (examples: `=1.20.1`, `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector expression. Defaults to core worktrees.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// CurseForge project ID (defaults to configured default project)
         #[facet(default, args::named)]
         project: Option<u64>,
@@ -176,9 +176,9 @@ pub enum CurseforgeReleaseCommand {
     },
     /// Amend changelog for latest file per MC version in current release jars
     Amend {
-        /// Minecraft version filter expression (examples: `=1.20.1`, `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector expression. Defaults to core worktrees.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// CurseForge project ID (defaults to configured default project)
         #[facet(default, args::named)]
         project: Option<u64>,
@@ -271,9 +271,9 @@ pub enum CurseforgeMinecraftCommand {
 pub enum CurseforgeMinecraftVersionCommand {
     /// List Minecraft game versions from CurseForge
     List {
-        /// Minecraft version filter expression (examples: `>=1.19.2,<=1.21.1`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector expression. Defaults to core worktrees.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// CurseForge API token (optional for this endpoint)
         #[facet(default, args::named)]
         token: Option<String>,
@@ -303,46 +303,34 @@ impl CurseforgeReleaseCommand {
     pub fn invoke(self) -> eyre::Result<()> {
         match self {
             Self::Check {
-                mc,
+                branch,
                 project,
                 api_key,
                 token,
                 op_secret,
             } => super::curseforge_release_check_command::invoke(
-                mc.as_deref(),
-                project,
-                api_key,
-                token,
-                op_secret,
+                branch, project, api_key, token, op_secret,
             ),
             Self::Validate {
-                mc,
+                branch,
                 project,
                 api_key,
                 token,
                 op_secret,
             } => super::curseforge_release_validate_command::invoke(
-                mc.as_deref(),
-                project,
-                api_key,
-                token,
-                op_secret,
+                branch, project, api_key, token, op_secret,
             ),
             Self::Now {
-                mc,
+                branch,
                 project,
                 token,
                 op_secret,
                 dry_run,
             } => super::curseforge_release_now_command::invoke(
-                mc.as_deref(),
-                project,
-                token,
-                op_secret,
-                dry_run,
+                branch, project, token, op_secret, dry_run,
             ),
             Self::Amend {
-                mc,
+                branch,
                 project,
                 api_key,
                 token,
@@ -350,13 +338,7 @@ impl CurseforgeReleaseCommand {
                 safety_age,
                 dry_run,
             } => super::curseforge_release_amend_command::invoke(
-                mc.as_deref(),
-                project,
-                api_key,
-                token,
-                op_secret,
-                safety_age,
-                dry_run,
+                branch, project, api_key, token, op_secret, safety_age, dry_run,
             ),
         }
     }
@@ -484,7 +466,7 @@ fn set_default_project_id(project: u64) -> eyre::Result<()> {
     std::fs::write(&path, project.to_string())
         .wrap_err_with(|| format!("Failed to write default project file: {}", path.display()))?;
 
-    println!("Default CurseForge project set to {project}.");
+    info!("Default CurseForge project set to {project}.");
     Ok(())
 }
 
@@ -656,40 +638,44 @@ fn build_core_http_client(api_key: &str) -> eyre::Result<Client> {
 }
 
 fn list_minecraft_versions(
-    mc_filter_text: &str,
+    branch: BranchSelector,
     token: Option<String>,
     op_secret: Option<String>,
 ) -> eyre::Result<()> {
+    let branch_query = branch.into_query()?;
+    let selected_versions = select_required_minecraft_versions(&branch_query)?;
     let token_value = resolve_token(token, op_secret)?;
     let client = build_http_client(&token_value)?;
 
-    let filter = McVersionFilter::parse(mc_filter_text)?;
     let mut rows: Vec<CurseforgeVersionRow> = fetch_game_versions(&client)?
         .into_iter()
         .filter_map(|version| {
             let parsed = parse_version(&version.name)?;
-            filter.matches_parsed(parsed).then(|| {
-                (
-                    version.id,
-                    version.name,
-                    version.slug.unwrap_or_default(),
-                    parsed,
-                )
-            })
+            selected_versions
+                .iter()
+                .any(|selected| selected.as_str() == version.name)
+                .then(|| {
+                    (
+                        version.id,
+                        version.name,
+                        version.slug.unwrap_or_default(),
+                        parsed,
+                    )
+                })
         })
         .collect();
 
     rows.sort_by(|left, right| left.3.cmp(&right.3).then(left.1.cmp(&right.1)));
 
     if rows.is_empty() {
-        println!("No Minecraft game versions matched --mc '{mc_filter_text}'.");
+        info!("No Minecraft game versions matched --branch '{branch_query}'.");
         return Ok(());
     }
 
-    println!("CurseForge Minecraft versions matching --mc '{mc_filter_text}':");
-    println!("id\tname\tslug");
+    info!("CurseForge Minecraft versions matching --branch '{branch_query}':");
+    info!("id\tname\tslug");
     for (id, name, slug, _) in rows {
-        println!("{id}\t{name}\t{slug}");
+        info!("{id}\t{name}\t{slug}");
     }
 
     Ok(())
@@ -707,18 +693,18 @@ fn list_project_files(
     let files = fetch_project_files(&client, project_id, &credential_source)?;
 
     if files.is_empty() {
-        println!("No files found for project {project_id}.");
+        info!("No files found for project {project_id}.");
         return Ok(());
     }
 
-    println!("Project {project_id} files:");
-    println!("id\tfile_name\tdisplay_name\trelease_type\tfile_status\tgame_versions");
+    info!("Project {project_id} files:");
+    info!("id\tfile_name\tdisplay_name\trelease_type\tfile_status\tgame_versions");
     for file in files {
         let file_name = file
             .file_name
             .clone()
             .unwrap_or_else(|| "<unknown>".to_string());
-        let display = file
+        let display_name = file
             .display_name
             .as_deref()
             .or(Some(file_name.as_str()))
@@ -734,9 +720,9 @@ fn list_project_files(
         } else {
             file.game_versions.join(",")
         };
-        println!(
+        info!(
             "{}\t{}\t{}\t{}\t{}\t{}",
-            file.id, file_name, display, release_type, file_status, game_versions
+            file.id, file_name, display_name, release_type, file_status, game_versions
         );
     }
 
@@ -786,12 +772,13 @@ fn fetch_project_files(
     reason = "release flow is intentionally linear"
 )]
 fn release_now(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<u64>,
     token: Option<String>,
     op_secret: Option<String>,
     dry_run: bool,
 ) -> eyre::Result<()> {
+    let branch_query = branch.into_query()?;
     let project_id = resolve_project_id(project)?;
 
     let repo_root = get_repo_root()?;
@@ -804,7 +791,7 @@ fn release_now(
     let changelog_section = read_changelog_section(&changelog_path, &mod_version)?;
     let wrapped_changelog = format!("```\n{}\n```", changelog_section.trim());
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc)?;
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
 
     let game_version_index = if dry_run {
         None
@@ -814,23 +801,23 @@ fn release_now(
         let game_versions = fetch_game_versions(&client)?;
         Some((client, build_game_version_index(&game_versions)))
     };
-
-    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    println!(
+    // todo(2026-06-16) I need to test this to see how badly our tracing subscriber mangles the presentation of this compared to our println version. might want to adapt this to be a writer or something
+    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!(
         "{} {}",
         style("Jar dir:", ANSI_BOLD_CYAN),
         jar_dir.display()
     );
     if dry_run {
-        println!(
+        info!(
             "{} {}",
             style("Mode:", ANSI_BOLD_YELLOW),
             style("dry-run (no uploads)", ANSI_BOLD_YELLOW)
         );
     }
-    println!("{}", style("Changelog:", ANSI_BOLD_CYAN));
-    println!("{wrapped_changelog}");
+    info!("{}", style("Changelog:", ANSI_BOLD_CYAN));
+    info!("{wrapped_changelog}");
 
     let upload_plans = if dry_run {
         None
@@ -847,7 +834,7 @@ fn release_now(
     };
 
     if let Some(plans) = &upload_plans {
-        println!("{}", style("Metadata preflight:", ANSI_BOLD_CYAN));
+        info!("{}", style("Metadata preflight:", ANSI_BOLD_CYAN));
         for plan in plans {
             let metadata_pairs: Vec<String> = plan
                 .metadata_names
@@ -855,7 +842,7 @@ fn release_now(
                 .zip(plan.metadata.game_versions.iter())
                 .map(|(name, id)| format!("{name}:{id}"))
                 .collect();
-            println!(
+            info!(
                 "  {} {} {} {}",
                 style("MC", ANSI_DIM),
                 style(&plan.mc_version, ANSI_BOLD_BLUE),
@@ -877,8 +864,8 @@ fn release_now(
         style("? (y/N)", ANSI_BOLD_YELLOW)
     );
     if !prompt_yes_no(&prompt)? {
-        println!("{}", style("Aborted release-now.", ANSI_BOLD_YELLOW));
-        println!("{}", curseforge_files_url(project_id));
+        info!("{}", style("Aborted release-now.", ANSI_BOLD_YELLOW));
+        info!("{}", curseforge_files_url(project_id));
         return Ok(());
     }
 
@@ -891,7 +878,7 @@ fn release_now(
             .map(ToString::to_string)
             .ok_or_else(|| eyre::eyre!("Invalid jar filename: {}", jar.display()))?;
 
-        println!(
+        info!(
             "{} {} {} {}",
             style("Uploading", ANSI_BOLD_WHITE),
             style(&jar_name, ANSI_BOLD_MAGENTA),
@@ -904,7 +891,7 @@ fn release_now(
                 .iter()
                 .map(|name| colorize_metadata_name(name, &mc_version))
                 .collect();
-            println!(
+            info!(
                 "  {} {}",
                 style("metadata names:", ANSI_DIM),
                 colored_metadata_names.join(", ")
@@ -931,7 +918,7 @@ fn release_now(
             &plan.metadata.display_name,
             &plan.metadata.changelog,
         )?;
-        println!(
+        info!(
             "  {} {}",
             style("uploaded file id", ANSI_BOLD_GREEN),
             style(&uploaded_id.to_string(), ANSI_BOLD_GREEN)
@@ -939,12 +926,12 @@ fn release_now(
     }
 
     if !dry_run {
-        println!(
+        info!(
             "{}",
             style("CurseForge release upload complete.", ANSI_BOLD_GREEN)
         );
     }
-    println!("{}", curseforge_files_url(project_id));
+    info!("{}", curseforge_files_url(project_id));
 
     Ok(())
 }
@@ -1021,32 +1008,24 @@ fn build_upload_plans(
     Ok(plans)
 }
 
-fn filter_release_jars_by_mc(
+fn filter_release_jars_by_branch(
     jars: Vec<PathBuf>,
-    mc_filter_text: Option<&str>,
+    branch_query: &BranchQuery,
 ) -> eyre::Result<Vec<PathBuf>> {
-    let Some(filter_text) = mc_filter_text else {
-        return Ok(jars);
-    };
-
-    let filter = McVersionFilter::parse(filter_text)?;
+    let selected_versions = select_required_minecraft_versions(branch_query)?;
     let mut filtered = Vec::new();
     for jar in jars {
-        let mc_version = parse_mc_version_from_jar_name(&jar)?;
-        let parsed = parse_version(&mc_version).ok_or_else(|| {
-            eyre::eyre!(
-                "Could not parse MC version '{}' from {}",
-                mc_version,
-                jar.display()
-            )
-        })?;
-        if filter.matches_parsed(parsed) {
+        let mc_version = parse_mc_version_from_jar_name(&jar)?;// todo(2026-06-16) should we have a SfmJarName newtype?
+        if selected_versions
+            .iter()
+            .any(|selected| selected.as_str() == mc_version)
+        {
             filtered.push(jar);
         }
     }
 
     if filtered.is_empty() {
-        eyre::bail!("No release jars matched --mc '{filter_text}'.");
+        eyre::bail!("No release jars matched --branch '{branch_query}'.");
     }
 
     Ok(filtered)
@@ -1112,12 +1091,13 @@ fn historical_mod_version(file: &CurseforgeProjectFileItem) -> Option<String> {
 }
 
 fn check_minecraft_version_metadata(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<u64>,
     api_key: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
 ) -> eyre::Result<()> {
+    let branch_query = branch.into_query()?;
     let project_id = resolve_project_id(project)?;
 
     let repo_root = get_repo_root()?;
@@ -1126,7 +1106,7 @@ fn check_minecraft_version_metadata(
 
     let mod_version = read_mod_version(&gradle_properties)?;
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc)?;
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
 
     let token_value = resolve_token(token.clone(), op_secret.clone())?;
     let upload_client = build_http_client(&token_value)?;
@@ -1138,9 +1118,9 @@ fn check_minecraft_version_metadata(
     let core_client = build_core_http_client(&core_key)?;
     let project_files = fetch_project_files(&core_client, project_id, &credential_source)?;
 
-    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    println!(
+    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!(
         "{} {}",
         style("Jars checked:", ANSI_BOLD_CYAN),
         metadata_plans.len()
@@ -1197,7 +1177,7 @@ fn check_minecraft_version_metadata(
             .map(|(name, id)| format!("{name}:{id}"))
             .collect();
 
-        println!(
+        info!(
             "{} {} {} {} {}",
             style("✓", ANSI_BOLD_GREEN),
             style(&plan.mc_version, ANSI_BOLD_BLUE),
@@ -1207,7 +1187,7 @@ fn check_minecraft_version_metadata(
         );
     }
 
-    println!(
+    info!(
         "{}",
         style(
             "Metadata check passed: computed metadata matches historical uploads.",
@@ -1219,12 +1199,13 @@ fn check_minecraft_version_metadata(
 }
 
 fn validate_release_hashes(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<u64>,
     api_key: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
 ) -> eyre::Result<()> {
+    let branch_query = branch.into_query()?;
     let project_id = resolve_project_id(project)?;
 
     let repo_root = get_repo_root()?;
@@ -1233,15 +1214,15 @@ fn validate_release_hashes(
 
     let mod_version = read_mod_version(&gradle_properties)?;
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc)?;
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
 
     let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
     let core_client = build_core_http_client(&core_key)?;
     let project_files = fetch_project_files(&core_client, project_id, &credential_source)?;
 
-    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    println!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
+    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
 
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(&jar)?;
@@ -1309,7 +1290,7 @@ fn validate_release_hashes(
             .unwrap_or("<unknown>")
             .to_string();
 
-        println!(
+        info!(
             "{} {} {} {} {}",
             style("✓", ANSI_BOLD_GREEN),
             style(&mc_version, ANSI_BOLD_BLUE),
@@ -1319,7 +1300,7 @@ fn validate_release_hashes(
         );
     }
 
-    println!(
+    info!(
         "{}",
         style(
             "Hash validation passed: downloaded CurseForge files match local release jars.",
@@ -1390,7 +1371,7 @@ fn format_age(value: Duration) -> String {
 
 #[expect(clippy::too_many_lines, reason = "amend flow is intentionally linear")]
 fn release_amend(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<u64>,
     api_key: Option<String>,
     token: Option<String>,
@@ -1398,6 +1379,7 @@ fn release_amend(
     safety_age: Option<String>,
     dry_run: bool,
 ) -> eyre::Result<()> {
+    let branch_query = branch.into_query()?;
     let project_id = resolve_project_id(project)?;
 
     let repo_root = get_repo_root()?;
@@ -1418,7 +1400,7 @@ fn release_amend(
     };
 
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc)?;
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
     let mut target_versions: Vec<(String, String)> = Vec::new();
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(&jar)?;
@@ -1480,23 +1462,23 @@ fn release_amend(
         file_targets.push((mc_version, file.id, old_name, jar_name, file_age));
     }
 
-    println!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    println!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    println!(
+    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
+    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!(
         "{} {}",
         style("Safety age:", ANSI_BOLD_CYAN),
         style(&safety_age_text, ANSI_BOLD_CYAN)
     );
     if dry_run {
-        println!(
+        info!(
             "{} {}",
             style("Mode:", ANSI_BOLD_YELLOW),
             style("dry-run (no CurseForge mutations)", ANSI_BOLD_YELLOW)
         );
     }
-    println!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
+    info!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
     for (mc_version, file_id, old_name, jar_name, file_age) in &file_targets {
-        println!(
+        info!(
             "  {} {} {} {} {} {} {} {} {} {}",
             style("MC", ANSI_DIM),
             style(mc_version, ANSI_BOLD_BLUE),
@@ -1512,7 +1494,7 @@ fn release_amend(
     }
 
     if dry_run {
-        println!(
+        info!(
             "{}",
             style(
                 "Dry-run complete: remote CurseForge targets resolved; no files amended.",
@@ -1531,12 +1513,12 @@ fn release_amend(
         style("(y/N)", ANSI_BOLD_YELLOW)
     );
     if !prompt_yes_no(&prompt)? {
-        println!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
+        info!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
         return Ok(());
     }
 
     for (mc_version, file_id, old_name, jar_name, file_age) in &file_targets {
-        println!(
+        info!(
             "{} {} {} {} {} {} {} {} {} {}",
             style("Amending file", ANSI_BOLD_WHITE),
             style(&file_id.to_string(), ANSI_BOLD_MAGENTA),
@@ -1561,7 +1543,7 @@ fn release_amend(
         )?;
     }
 
-    println!(
+    info!(
         "{}",
         style(
             "CurseForge release changelog amend complete.",
@@ -2068,46 +2050,46 @@ impl CurseforgeMinecraftVersionCommand {
     pub fn invoke(self) -> eyre::Result<()> {
         match self {
             Self::List {
-                mc,
+                branch,
                 token,
                 op_secret,
-            } => super::curseforge_minecraft_version_command::invoke_list(mc, token, op_secret),
+            } => super::curseforge_minecraft_version_command::invoke_list(branch, token, op_secret),
         }
     }
 }
 
 pub(super) fn invoke_release_check(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<u64>,
     api_key: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
 ) -> eyre::Result<()> {
-    check_minecraft_version_metadata(mc, project, api_key, token, op_secret)
+    check_minecraft_version_metadata(branch, project, api_key, token, op_secret)
 }
 
 pub(super) fn invoke_release_validate(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<u64>,
     api_key: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
 ) -> eyre::Result<()> {
-    validate_release_hashes(mc, project, api_key, token, op_secret)
+    validate_release_hashes(branch, project, api_key, token, op_secret)
 }
 
 pub(super) fn invoke_release_now(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<u64>,
     token: Option<String>,
     op_secret: Option<String>,
     dry_run: bool,
 ) -> eyre::Result<()> {
-    release_now(mc, project, token, op_secret, dry_run)
+    release_now(branch, project, token, op_secret, dry_run)
 }
 
 pub(super) fn invoke_release_amend(
-    mc: Option<&str>,
+    branch: BranchSelector,
     project: Option<u64>,
     api_key: Option<String>,
     token: Option<String>,
@@ -2115,7 +2097,9 @@ pub(super) fn invoke_release_amend(
     safety_age: Option<String>,
     dry_run: bool,
 ) -> eyre::Result<()> {
-    release_amend(mc, project, api_key, token, op_secret, safety_age, dry_run)
+    release_amend(
+        branch, project, api_key, token, op_secret, safety_age, dry_run,
+    )
 }
 
 pub(super) fn invoke_project_default_set(project: u64) -> eyre::Result<()> {
@@ -2123,7 +2107,7 @@ pub(super) fn invoke_project_default_set(project: u64) -> eyre::Result<()> {
 }
 
 pub(super) fn invoke_project_default_show() -> eyre::Result<()> {
-    println!("{}", get_default_project_id()?);
+    info!("{}", get_default_project_id()?);
     Ok(())
 }
 
@@ -2137,12 +2121,11 @@ pub(super) fn invoke_project_file_list(
 }
 
 pub(super) fn invoke_minecraft_version_list(
-    mc: Option<String>,
+    branch: BranchSelector,
     token: Option<String>,
     op_secret: Option<String>,
 ) -> eyre::Result<()> {
-    let mc = mc.unwrap_or_else(|| ">=1.19.2,<=1.21.1".to_string());
-    list_minecraft_versions(&mc, token, op_secret)
+    list_minecraft_versions(branch, token, op_secret)
 }
 
 #[cfg(test)]

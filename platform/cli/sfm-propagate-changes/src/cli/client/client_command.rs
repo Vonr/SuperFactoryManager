@@ -1,4 +1,5 @@
 use crate::paths::APP_HOME;
+use crate::terminal_output::stdout_line;
 use crate::worktree::parse_version;
 use eyre::Context;
 use facet::Facet;
@@ -27,7 +28,7 @@ pub struct ClientTarget {
 /// Client instance tracking and management commands
 #[derive(Facet, Debug)]
 #[repr(u8)]
-pub enum ClientCommand {
+pub enum ClientCommand { // todo(2026-06-16) shouldn't these be split into their own files for like ClientAddArgs, ClientRemoveArgs, etc?
     /// Track client directories matching a glob pattern
     Add {
         /// Glob pattern for client directories
@@ -127,7 +128,7 @@ pub(super) fn add_clients(glob_pattern: &str) -> eyre::Result<()> {
     targets.sort_by(|a, b| a.path.cmp(&b.path));
     save_client_targets(&targets)?;
 
-    println!("Added {added} client target(s), skipped {skipped}.");
+    info!("Added {added} client target(s), skipped {skipped}.");
     Ok(())
 }
 
@@ -141,7 +142,7 @@ pub(super) fn remove_clients(glob_pattern: &str) -> eyre::Result<()> {
     let removed = before.saturating_sub(targets.len());
     save_client_targets(&targets)?;
 
-    println!("Removed {removed} client target(s).");
+    info!("Removed {removed} client target(s).");
     Ok(())
 }
 
@@ -155,12 +156,12 @@ pub(super) fn list_clients(glob_pattern: &str) -> eyre::Result<()> {
         .collect();
 
     if filtered.is_empty() {
-        println!("No tracked clients match {glob_pattern}.");
+        info!("No tracked clients match {glob_pattern}.");
         return Ok(());
     }
 
     for target in filtered {
-        println!("{}\t{}", target.mc_version, target.path.display());
+        info!("{}\t{}", target.mc_version, target.path.display());
     }
 
     Ok(())
@@ -202,8 +203,7 @@ pub(super) fn launch_client() -> eyre::Result<()> {
 
 pub(super) fn get_launcher() -> eyre::Result<()> {
     let launcher = get_launcher_path()?;
-    println!("{}", launcher.display());
-    Ok(())
+    stdout_line(launcher.display())
 }
 
 pub(super) fn get_launcher_path() -> eyre::Result<PathBuf> {

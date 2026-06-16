@@ -11,7 +11,7 @@ pub(super) fn invoke() -> eyre::Result<()> {
     let worktrees = get_sorted_worktrees()?;
 
     if worktrees.is_empty() {
-        println!("No worktrees found.");
+        info!("No worktrees found.");
         return Ok(());
     }
 
@@ -95,7 +95,7 @@ pub(super) fn invoke() -> eyre::Result<()> {
         copied += 1;
     }
 
-    println!(
+    info!(
         "Collected {copied} jar(s) into {} (skipped {skipped}).",
         jar_dir.display()
     );

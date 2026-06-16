@@ -1,17 +1,19 @@
 #![allow(clippy::doc_markdown)]
 
+use crate::branch_targets::select_required_minecraft_versions;
+use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
-use crate::mc_version_filter::McVersionFilter;
+use crate::terminal_output::stdout_prompt;
 use crate::worktree::parse_version;
 use eyre::Context;
 use facet::Facet;
 use figue as args;
 use std::ffi::OsStr;
-use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use tracing::info;
 
 const DEFAULT_REPO: &str = "TeamDman/SuperFactoryManager";
 
@@ -28,12 +30,12 @@ pub enum GithubCommand {
 
 #[derive(Facet, Debug)]
 #[repr(u8)]
-pub enum GithubReleaseCommand {
+pub enum GithubReleaseCommand { // todo(2026-06-16) this needs separate *Args structs with their own files and stuff
     /// Create or update a GitHub release from jars in the configured jar directory
     Now {
-        /// Minecraft version filter expression (examples: `26.1.2`, `>=1.20.2`, `=1.20.4 OR =26.1.2`).
+        /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// GitHub repository in owner/name form
         #[facet(default, args::named)]
         repo: Option<String>,
@@ -46,9 +48,9 @@ pub enum GithubReleaseCommand {
     },
     /// Update title and notes for an existing GitHub release without touching assets
     Amend {
-        /// Minecraft version filter expression (examples: `26.1.2`, `>=1.20.2`, `=1.20.4 OR =26.1.2`).
+        /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
         /// GitHub repository in owner/name form
         #[facet(default, args::named)]
         repo: Option<String>,
@@ -79,17 +81,17 @@ impl GithubReleaseCommand {
     pub fn invoke(self) -> eyre::Result<()> {
         match self {
             Self::Now {
-                mc,
+                branch,
                 repo,
                 dry_run,
                 yes,
-            } => release_now(mc.as_deref(), repo, dry_run, yes),
+            } => release_now(branch, repo, dry_run, yes),
             Self::Amend {
-                mc,
+                branch,
                 repo,
                 dry_run,
                 yes,
-            } => release_amend(mc.as_deref(), repo, dry_run, yes),
+            } => release_amend(branch, repo, dry_run, yes),
         }
     }
 }
@@ -110,7 +112,7 @@ struct ReleaseTag {
 }
 
 fn release_now(
-    mc_filter_text: Option<&str>,
+    branch: BranchSelector,
     repo: Option<String>,
     dry_run: bool,
     yes: bool,
@@ -125,29 +127,30 @@ fn release_now(
     let mod_version = read_mod_version(&gradle_properties)?;
     let release_title = format!("v{mod_version}");
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc_filter_text)?;
-    let release_tag = select_release_tag(&repo_root, &mod_version, &jars, mc_filter_text)?;
+    let branch_query = branch.into_query()?;
+    let branch_filter_text = branch_query.to_string();
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
+    let release_tag = select_release_tag(&repo_root, &mod_version, &jars, &branch_query)?;
     let notes = read_changelog_section(&changelog_path, &mod_version)?;
     let notes_file = write_notes_file(&mod_version, &notes)?;
 
-    println!("Repo:          {repo}");
-    println!("Mod version:   {mod_version}");
-    println!("Release title: {release_title}");
-    println!("Release tag:   {release_tag}");
-    println!("Jar dir:       {}", jar_dir.display());
-    if let Some(filter) = mc_filter_text {
-        println!("MC filter:     {filter}");
-    }
+    // todo(2026-06-16) see other todo note about tracing-subscriber possibly mangling our presentation here - this needs manual testing by me
+    info!("Repo:          {repo}");
+    info!("Mod version:   {mod_version}");
+    info!("Release title: {release_title}");
+    info!("Release tag:   {release_tag}");
+    info!("Jar dir:       {}", jar_dir.display());
+    info!("Branch filter: {branch_filter_text}");
     if dry_run {
-        println!("Mode:          dry-run (no GitHub calls)");
+        info!("Mode:          dry-run (no GitHub calls)");
     }
-    println!("Assets:");
+    info!("Assets:");
     for jar in &jars {
-        println!(" - {}", jar.filename);
+        info!(" - {}", jar.filename);
     }
 
     if dry_run {
-        println!("Notes file:    {}", notes_file.display());
+        info!("Notes file:    {}", notes_file.display());
         return Ok(());
     }
 
@@ -161,13 +164,13 @@ fn release_now(
     if !yes {
         let prompt = format!("Proceed to {action_description} for tag {release_tag}? (y/N)");
         if !prompt_yes_no(&prompt)? {
-            println!("Aborting GitHub release step.");
+            info!("Aborting GitHub release step.");
             return Ok(());
         }
     }
 
     if release_exists {
-        println!("Release for {release_tag} exists, updating title/notes and uploading assets...");
+        info!("Release for {release_tag} exists, updating title/notes and uploading assets...");
         run_gh([
             "release",
             "edit",
@@ -181,16 +184,16 @@ fn release_now(
         ])?;
         upload_release_assets(&repo, &release_tag, &jars)?;
     } else {
-        println!("Creating release for {release_tag}...");
+        info!("Creating release for {release_tag}...");
         create_release(&repo, &release_tag, &release_title, &notes_file, &jars)?;
     }
 
-    println!("GitHub release step complete.");
+    info!("GitHub release step complete.");
     Ok(())
 }
 
 fn release_amend(
-    mc_filter_text: Option<&str>,
+    branch: BranchSelector,
     repo: Option<String>,
     dry_run: bool,
     yes: bool,
@@ -205,25 +208,25 @@ fn release_amend(
     let mod_version = read_mod_version(&gradle_properties)?;
     let release_title = format!("v{mod_version}");
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_mc(all_jars, mc_filter_text)?;
-    let release_tag = select_release_tag(&repo_root, &mod_version, &jars, mc_filter_text)?;
+    let branch_query = branch.into_query()?;
+    let branch_filter_text = branch_query.to_string();
+    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
+    let release_tag = select_release_tag(&repo_root, &mod_version, &jars, &branch_query)?;
     let notes = read_changelog_section(&changelog_path, &mod_version)?;
     let notes_file = write_notes_file(&mod_version, &notes)?;
 
-    println!("Repo:          {repo}");
-    println!("Mod version:   {mod_version}");
-    println!("Release title: {release_title}");
-    println!("Release tag:   {release_tag}");
-    println!("Jar dir:       {}", jar_dir.display());
-    if let Some(filter) = mc_filter_text {
-        println!("MC filter:     {filter}");
-    }
+    info!("Repo:          {repo}");
+    info!("Mod version:   {mod_version}");
+    info!("Release title: {release_title}");
+    info!("Release tag:   {release_tag}");
+    info!("Jar dir:       {}", jar_dir.display());
+    info!("Branch filter: {branch_filter_text}");
     if dry_run {
-        println!("Mode:          dry-run (no GitHub mutations)");
+        info!("Mode:          dry-run (no GitHub mutations)");
     }
-    println!("Assets used for target selection:");
+    info!("Assets used for target selection:");
     for jar in &jars {
-        println!(" - {}", jar.filename);
+        info!(" - {}", jar.filename);
     }
 
     if !github_release_exists(&repo, &release_tag)? {
@@ -235,20 +238,20 @@ fn release_amend(
     }
 
     if dry_run {
-        println!("Notes file:    {}", notes_file.display());
-        println!("Dry-run complete: remote GitHub release exists; no release amended.");
+        info!("Notes file:    {}", notes_file.display());
+        info!("Dry-run complete: remote GitHub release exists; no release amended.");
         return Ok(());
     }
 
     if !yes {
         let prompt = format!("Proceed to amend title/notes for tag {release_tag}? (y/N)");
         if !prompt_yes_no(&prompt)? {
-            println!("Aborting GitHub release amend.");
+            info!("Aborting GitHub release amend.");
             return Ok(());
         }
     }
 
-    println!("Amending release title/notes for {release_tag}...");
+    info!("Amending release title/notes for {release_tag}...");
     run_gh([
         "release",
         "edit",
@@ -261,7 +264,7 @@ fn release_amend(
         &notes_file.to_string_lossy(),
     ])?;
 
-    println!("GitHub release amend complete.");
+    info!("GitHub release amend complete.");
     Ok(())
 }
 
@@ -403,22 +406,22 @@ fn get_ordered_release_jars(jar_dir: &Path, mod_version: &str) -> eyre::Result<V
     Ok(jars)
 }
 
-fn filter_release_jars_by_mc(
+fn filter_release_jars_by_branch(
     jars: Vec<ReleaseJar>,
-    mc_filter_text: Option<&str>,
+    branch_query: &crate::branch_targets::BranchQuery,
 ) -> eyre::Result<Vec<ReleaseJar>> {
-    let Some(filter_text) = mc_filter_text else {
-        return Ok(jars);
-    };
-
-    let filter = McVersionFilter::parse(filter_text)?;
+    let versions = select_required_minecraft_versions(branch_query)?;
     let filtered: Vec<ReleaseJar> = jars
         .into_iter()
-        .filter(|jar| filter.matches_parsed(jar.sort_key))
+        .filter(|jar| {
+            versions
+                .iter()
+                .any(|version| version.as_str() == jar.mc_version)
+        })
         .collect();
 
     if filtered.is_empty() {
-        eyre::bail!("No release jars matched --mc '{filter_text}'.");
+        eyre::bail!("No release jars matched --branch '{branch_query}'.");
     }
 
     Ok(filtered)
@@ -428,7 +431,7 @@ fn select_release_tag(
     repo_root: &Path,
     mod_version: &str,
     jars: &[ReleaseJar],
-    mc_filter_text: Option<&str>,
+    branch_query: &crate::branch_targets::BranchQuery,
 ) -> eyre::Result<String> {
     let tags = get_release_tags(repo_root, mod_version)?;
     let selected_mc_versions: Vec<&str> = jars.iter().map(|jar| jar.mc_version.as_str()).collect();
@@ -457,7 +460,7 @@ fn select_release_tag(
         .last()
         .ok_or_else(|| eyre::eyre!("internal error: empty release tag candidates"))?;
 
-    if mc_filter_text.is_some() && jars.len() == 1 {
+    if jars.len() == 1 && branch_query.to_string() != "core" {
         let exact_tag = format!("{mod_version}-{}", jars[0].mc_version);
         if selected.tag != exact_tag {
             eyre::bail!(
@@ -531,10 +534,7 @@ fn parse_mc_version_from_jar_name(filename: &str) -> eyre::Result<String> {
 }
 
 fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
-    print!("{message} ");
-    std::io::stdout()
-        .flush()
-        .wrap_err("Failed to flush prompt to stdout")?;
+    stdout_prompt(format!("{message} "))?;
 
     let mut input = String::new();
     std::io::stdin()
@@ -620,7 +620,7 @@ where
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     if !stdout.trim().is_empty() {
-        println!("{}", stdout.trim());
+        info!("{}", stdout.trim());
     }
 
     Ok(())

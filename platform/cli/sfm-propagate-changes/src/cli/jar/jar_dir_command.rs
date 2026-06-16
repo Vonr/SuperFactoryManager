@@ -1,5 +1,6 @@
 use super::JarDirCommand;
 use crate::paths::APP_HOME;
+use crate::terminal_output::stdout_line;
 use eyre::Context;
 use std::ffi::OsStr;
 use std::path::Path;
@@ -36,8 +37,7 @@ impl JarDirCommand {
             JarDirCommand::Clean => clean_jars(),
             JarDirCommand::Show => {
                 let path = get_jar_dir()?;
-                println!("{}", path.display());
-                Ok(())
+                stdout_line(path.display())
             }
             JarDirCommand::Open => {
                 let path = get_jar_dir()?;

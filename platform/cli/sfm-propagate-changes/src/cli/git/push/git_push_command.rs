@@ -23,7 +23,7 @@ impl PushCommand {
         let worktrees = get_sorted_worktrees()?;
 
         if worktrees.is_empty() {
-            println!("No worktrees found.");
+            info!("No worktrees found.");
             return Ok(());
         }
 
@@ -57,7 +57,7 @@ impl PushCommand {
         }
 
         if failures.is_empty() {
-            println!("All branches pushed successfully.");
+            info!("All branches pushed successfully.");
             Ok(())
         } else {
             let mut msg = String::new();

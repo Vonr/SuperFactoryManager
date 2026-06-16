@@ -1,4 +1,5 @@
-use crate::mc_version_filter::McVersionFilter;
+use crate::branch_targets::select_required_minecraft_versions;
+use crate::cli::jar::BranchSelector;
 use crate::paths::APP_HOME;
 use crate::worktree::parse_version;
 use eyre::Context;
@@ -22,6 +23,7 @@ pub struct ServerTarget {
 /// Server instance tracking and management commands
 #[derive(Facet, Debug)]
 #[repr(u8)]
+// todo(2026-06-16) cli args struct
 pub enum ServerCommand {
     /// Track server directories matching a glob pattern
     Add {
@@ -40,15 +42,15 @@ pub enum ServerCommand {
         /// Glob pattern for tracked server directories
         #[facet(default, args::positional)]
         glob: Option<String>,
-        /// Minecraft version filter expression for tracked servers (examples: `>=1.21.0`, `<1.20`, `=1.20.4`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector used to choose tracked server Minecraft versions. Defaults to `core`.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
     },
     /// Launch tracked servers by running each `run.bat` and waiting for successful exit
     Launch {
-        /// Minecraft version filter expression for tracked servers (examples: `>=1.21.0`, `<1.20`, `=1.20.4`, `=1.19.2 OR =1.21.1`).
+        /// Branch selector used to choose tracked server Minecraft versions. Defaults to `core`.
         #[facet(default, args::named)]
-        mc: Option<String>,
+        branch: BranchSelector,
     },
 }
 
@@ -60,10 +62,10 @@ impl ServerCommand {
         match self {
             ServerCommand::Add { glob } => super::server_add_command::invoke(&glob),
             ServerCommand::Remove { glob } => super::server_remove_command::invoke(&glob),
-            ServerCommand::List { glob, mc } => {
-                super::server_list_command::invoke(glob, mc.as_deref())
+            ServerCommand::List { glob, branch } => {
+                super::server_list_command::invoke(glob, branch)
             }
-            ServerCommand::Launch { mc } => super::server_launch_command::invoke(mc.as_deref()),
+            ServerCommand::Launch { branch } => super::server_launch_command::invoke(branch),
         }
     }
 }
@@ -117,7 +119,7 @@ pub(super) fn add_servers(glob_pattern: &str) -> eyre::Result<()> {
     targets.sort_by(|a, b| a.path.cmp(&b.path));
     save_server_targets(&targets)?;
 
-    println!("Added {added} server target(s), skipped {skipped}.");
+    info!("Added {added} server target(s), skipped {skipped}.");
     Ok(())
 }
 
@@ -131,15 +133,15 @@ pub(super) fn remove_servers(glob_pattern: &str) -> eyre::Result<()> {
     let removed = before.saturating_sub(targets.len());
     save_server_targets(&targets)?;
 
-    println!("Removed {removed} server target(s).");
+    info!("Removed {removed} server target(s).");
     Ok(())
 }
 
-pub(super) fn list_servers(glob_pattern: &str, mc_filter: Option<&str>) -> eyre::Result<()> {
+pub(super) fn list_servers(glob_pattern: &str, branch: BranchSelector) -> eyre::Result<()> {
     let mut targets = load_server_targets()?;
     let matcher = build_matcher(glob_pattern)?;
 
-    apply_mc_filter(&mut targets, mc_filter)?;
+    apply_branch_filter(&mut targets, branch)?;
 
     let filtered: Vec<ServerTarget> = targets
         .into_iter()
@@ -147,37 +149,29 @@ pub(super) fn list_servers(glob_pattern: &str, mc_filter: Option<&str>) -> eyre:
         .collect();
 
     if filtered.is_empty() {
-        if mc_filter.is_some() {
-            println!("No tracked servers match the requested filters.");
-        } else {
-            println!("No tracked servers match {glob_pattern}.");
-        }
+        info!("No tracked servers match {glob_pattern} and the selected branch filter.");
         return Ok(());
     }
 
     for target in filtered {
-        println!("{}\t{}", target.mc_version, target.path.display());
+        info!("{}\t{}", target.mc_version, target.path.display());
     }
 
     Ok(())
 }
 
-pub(super) fn launch_servers(mc_filter: Option<&str>) -> eyre::Result<()> {
+pub(super) fn launch_servers(branch: BranchSelector) -> eyre::Result<()> {
     let mut targets = load_server_targets()?;
 
     if targets.is_empty() {
-        println!("No tracked servers. Use `sfm-propagate-changes server add <glob>`.");
+        info!("No tracked servers. Use `sfm-propagate-changes server add <glob>`.");
         return Ok(());
     }
 
-    apply_mc_filter(&mut targets, mc_filter)?;
+    apply_branch_filter(&mut targets, branch)?;
 
     if targets.is_empty() {
-        if mc_filter.is_some() {
-            println!("No tracked servers match the requested --mc filter.");
-        } else {
-            println!("No tracked servers.");
-        }
+        info!("No tracked servers match the selected --branch filter.");
         return Ok(());
     }
 
@@ -228,27 +222,21 @@ pub(super) fn launch_servers(mc_filter: Option<&str>) -> eyre::Result<()> {
         }
     }
 
-    println!("All selected servers exited successfully.");
+    info!("All selected servers exited successfully.");
     Ok(())
 }
 
-fn apply_mc_filter(targets: &mut Vec<ServerTarget>, mc_filter: Option<&str>) -> eyre::Result<()> {
-    let parsed_filter = mc_filter.map(McVersionFilter::parse).transpose()?;
-
-    if let Some(filter) = parsed_filter {
-        targets.retain(|target| {
-            if let Some(matches) = filter.matches_version_text(&target.mc_version) {
-                matches
-            } else {
-                warn!(
-                    mc_version = %target.mc_version,
-                    path = %target.path.display(),
-                    "Skipping tracked server with non-version mc value for --mc filter"
-                );
-                false
-            }
-        });
-    }
+fn apply_branch_filter(
+    targets: &mut Vec<ServerTarget>,
+    branch: BranchSelector,
+) -> eyre::Result<()> {
+    let query = branch.into_query()?;
+    let versions = select_required_minecraft_versions(&query)?;
+    targets.retain(|target| {
+        versions
+            .iter()
+            .any(|version| version.as_str() == target.mc_version)
+    });
 
     Ok(())
 }

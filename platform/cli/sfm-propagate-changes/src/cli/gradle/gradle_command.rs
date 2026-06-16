@@ -1,7 +1,12 @@
+use crate::branch_targets::BranchQuery;
+use crate::branch_targets::discover_worktree_targets;
 use crate::cli::git::status::assert_worktrees_clean_or_autocommit_generated;
-use crate::mc_version_filter::McVersionFilter;
+use crate::cli::jar::BranchSelector;
 use crate::paths::CACHE_DIR;
-use crate::worktree::get_sorted_worktrees;
+use crate::terminal_output::stderr_text;
+use crate::terminal_output::stdout_blank_line;
+use crate::terminal_output::stdout_line;
+use crate::worktree::Worktree;
 use chrono::Local;
 use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
@@ -13,7 +18,6 @@ use humansize::format_size;
 use std::ffi::OsStr;
 use std::fmt::Write as _;
 use std::fs;
-use std::io::Write as _;
 use std::mem;
 use std::path::Path;
 use std::path::PathBuf;
@@ -252,21 +256,22 @@ fn extract_failed_gametest_reasons(output: &str) -> Vec<(String, String)> {
     reasons
 }
 
-fn print_gametest_failures(failures: &[BranchGameTestFailures]) {
+fn print_gametest_failures(failures: &[BranchGameTestFailures]) -> eyre::Result<()> {
     if failures.is_empty() {
-        return;
+        return Ok(());
     }
-    println!();
-    println!("{}", "FAILED GAME TESTS".red().bold());
+    stdout_blank_line()?;
+    stdout_line(format!("{}", "FAILED GAME TESTS".red().bold()))?;
     for (branch, tests) in failures {
         for (name, reason) in tests {
             let detail = reason
                 .as_deref()
                 .map(|x| format!(" — {x}"))
                 .unwrap_or_default();
-            println!("  {}", format!("{branch}: {name}{detail}").red());
+            stdout_line(format!("  {}", format!("{branch}: {name}{detail}").red()))?;
         }
     }
+    Ok(())
 }
 
 fn has_gametest_success(output: &str) -> bool {
@@ -370,17 +375,16 @@ fn build_branch_row(branch: &BranchRun, widths: &[usize]) -> String {
 }
 
 fn print_report_to_stderr(branches: &[BranchRun], tasks: &[GradleTask]) {
-    eprintln!();
-    eprintln!("{}", format_report(branches, tasks));
+    info!("{}", format_report(branches, tasks));
 }
 
-fn print_report_to_stdout(branches: &[BranchRun], tasks: &[GradleTask]) {
-    println!();
-    println!("{}", format_report(branches, tasks));
+fn print_report_to_stdout(branches: &[BranchRun], tasks: &[GradleTask]) -> eyre::Result<()> {
+    stdout_blank_line()?;
+    stdout_line(format_report(branches, tasks))
 }
 
 fn print_stream_path(label: &str, path: &Path) {
-    println!("{}", format!("  {label}: {}", path.display()).dimmed());
+    info!("{}", format!("  {label}: {}", path.display()).dimmed());
 }
 
 fn sanitize_for_path(input: &str) -> String {
@@ -1013,19 +1017,25 @@ fn read_log_stats(path: &Path) -> eyre::Result<(usize, u64)> {
 fn print_log_list(run_dir: &Path) -> eyre::Result<()> {
     let pairs = collect_log_pairs(run_dir)?;
     if pairs.is_empty() {
-        println!("No stdout/stderr log pairs found in {}", run_dir.display());
+        stdout_line(format!(
+            "No stdout/stderr log pairs found in {}",
+            run_dir.display()
+        ))?;
         return Ok(());
     }
 
-    println!(
+    stdout_line(format!(
         "{}",
         format!("Gradle logs in {}", run_dir.display())
             .cyan()
             .bold()
-    );
+    ))?;
 
     for pair in pairs {
-        println!("{}", pair.relative_task_dir.display().to_string().bold());
+        stdout_line(format!(
+            "{}",
+            pair.relative_task_dir.display().to_string().bold()
+        ))?;
 
         let (stdout_lines, stdout_bytes) = read_log_stats(&pair.stdout_log)?;
         let (stderr_lines, stderr_bytes) = read_log_stats(&pair.stderr_log)?;
@@ -1039,16 +1049,16 @@ fn print_log_list(run_dir: &Path) -> eyre::Result<()> {
             .strip_prefix(run_dir)
             .map_or_else(|_| pair.stderr_log.clone(), Path::to_path_buf);
 
-        println!(
+        stdout_line(format!(
             "  stdout: {} ({stdout_lines} lines, {})",
             stdout_rel.display(),
             format_size(stdout_bytes, DECIMAL)
-        );
-        println!(
+        ))?;
+        stdout_line(format!(
             "  stderr: {} ({stderr_lines} lines, {})",
             stderr_rel.display(),
             format_size(stderr_bytes, DECIMAL)
-        );
+        ))?;
     }
 
     Ok(())
@@ -1118,17 +1128,20 @@ fn truncate_tldr_summary(summary: &str) -> String {
 fn print_tldr_for_run(run_dir: &Path) -> eyre::Result<()> {
     let pairs = collect_log_pairs(run_dir)?;
     if pairs.is_empty() {
-        println!("No stdout/stderr log pairs found in {}", run_dir.display());
+        stdout_line(format!(
+            "No stdout/stderr log pairs found in {}",
+            run_dir.display()
+        ))?;
         return Ok(());
     }
 
-    println!();
-    println!(
+    stdout_blank_line()?;
+    stdout_line(format!(
         "{}",
         format!("TLDR (model-driven reduction) {}", run_dir.display())
             .cyan()
             .bold()
-    );
+    ))?;
 
     let mut printed_any = false;
 
@@ -1150,19 +1163,22 @@ fn print_tldr_for_run(run_dir: &Path) -> eyre::Result<()> {
 
         let headline = summarize_reduction(&pair, &combined);
         printed_any = true;
-        println!();
-        println!("{}", pair.relative_task_dir.display().to_string().bold());
-        println!("  {headline}");
+        stdout_blank_line()?;
+        stdout_line(format!(
+            "{}",
+            pair.relative_task_dir.display().to_string().bold()
+        ))?;
+        stdout_line(format!("  {headline}"))?;
 
         let important_lines = mem::take(&mut combined.important_lines);
         if !important_lines.is_empty() {
             let preview = truncate_tldr_summary(&important_lines.join("\n"));
-            println!("{preview}");
+            stdout_line(preview)?;
         }
     }
 
     if !printed_any {
-        println!("  {}", "No notable log output found".dimmed());
+        stdout_line(format!("  {}", "No notable log output found".dimmed()))?;
     }
 
     Ok(())
@@ -1209,8 +1225,7 @@ where
 
         let chunk = &buf[..bytes_read];
         if stream_logs_to_console {
-            eprint!("{}", String::from_utf8_lossy(chunk));
-            std::io::stderr().flush()?;
+            stderr_text(String::from_utf8_lossy(chunk))?; // todo(2026-06-16) we may want to plumb this through tracing
         }
 
         log_file.write_all(chunk).await?;
@@ -1242,7 +1257,7 @@ async fn run_gradle_task(
     );
 
     if show_logs {
-        eprintln!(
+        info!(
             "{}",
             format!("━━━ {} ({})", task.as_gradle_arg(), minecraft_dir.display())
                 .cyan()
@@ -1447,9 +1462,9 @@ pub struct GradleRunCommand {
     #[facet(args::positional)]
     pub tasks: Vec<String>,
 
-    /// Minecraft version filter expression for branch names (examples: `>=1.21.0`, `<1.20`, `=1.20.4`, `=1.19.2 OR =1.21.1`).
+    /// Branch selector for worktrees. Defaults to all worktrees for legacy Gradle orchestration.
     #[facet(default, args::named)]
-    pub mc: Option<String>,
+    pub branch: Option<BranchSelector>,
 
     /// If set, stream gradle stdout/stderr to the console while tasks run.
     ///
@@ -1483,38 +1498,46 @@ impl GradleRunCommand {
     )]
     async fn invoke_async(self) -> eyre::Result<()> {
         if self.tasks.is_empty() {
-            bail!("No tasks provided. Usage: sfm-propagate-changes gradle <task1> <task2> ...");
+            bail!("No tasks provided. Usage: sfm-propagate-changes gradle run <task1> <task2> ...");
         }
 
-        let mut worktrees = get_sorted_worktrees()?;
-        let all_worktree_branches: Vec<String> =
-            worktrees.iter().map(|wt| wt.branch.clone()).collect();
-        let total_worktrees = worktrees.len();
-        let mc_filter = self.mc.as_deref().map(McVersionFilter::parse).transpose()?;
-
+        let targets = discover_worktree_targets()?;
+        let all_worktree_branches: Vec<String> = targets
+            .iter()
+            .map(|target| target.branch.to_string())
+            .collect();
+        let total_worktrees = targets.len();
+        let branch_query = self
+            .branch
+            .clone()
+            .map(BranchSelector::into_query)
+            .transpose()?
+            .unwrap_or(BranchQuery::parse("*")?);
+        let branch_filter_text = self.branch.as_ref().map(ToString::to_string);
         let mut excluded_worktree_branches = Vec::new();
+        let mut worktrees = Vec::new();
 
-        if let Some(filter) = mc_filter {
-            worktrees.retain(|wt| match filter.matches_version_text(&wt.branch) {
-                Some(true) => true,
-                Some(false) => {
-                    excluded_worktree_branches.push(wt.branch.clone());
-                    debug!(branch = %wt.branch, filter = ?self.mc, "Skipping branch due to --mc filter");
-                    false
-                }
-                None => {
-                    excluded_worktree_branches.push(wt.branch.clone());
-                    warn!(branch = %wt.branch, filter = ?self.mc, "Skipping non-version branch for --mc filter");
-                    false
-                }
-            });
+        for target in targets {
+            if branch_query.matches(&target) {
+                worktrees.push(Worktree {
+                    path: target.worktree_path.as_path().to_path_buf(),
+                    branch: target.branch.to_string(),
+                });
+            } else {
+                excluded_worktree_branches.push(target.branch.to_string());
+                debug!(
+                    branch = %target.branch,
+                    filter = %branch_query,
+                    "Skipping branch due to --branch filter"
+                );
+            }
         }
 
         if worktrees.is_empty() {
-            if self.mc.is_some() {
-                println!("No worktrees match the requested --mc filter.");
+            if branch_filter_text.is_some() {
+                info!("No worktrees match the requested --branch filter.");
             } else {
-                println!("No worktrees found.");
+                info!("No worktrees found.");
             }
             return Ok(());
         }
@@ -1526,7 +1549,7 @@ impl GradleRunCommand {
             .collect();
 
         let run_log_dir = create_gradle_run_log_dir(&self.tasks)?;
-        println!("Gradle run logs: {}", run_log_dir.display());
+        info!("Gradle run logs: {}", run_log_dir.display());
 
         if tasks.iter().any(GradleTask::needs_generated_preflight) {
             assert_worktrees_clean_or_autocommit_generated(&worktrees)?;
@@ -1554,7 +1577,7 @@ impl GradleRunCommand {
 
         info!(
             tasks = ?self.tasks,
-            mc_filter = ?self.mc,
+            branch_filter = %branch_query,
             continue_on_error = self.continue_on_error,
             worktrees = ?all_worktree_branches,
             worktrees_included = ?included_worktree_branches,
@@ -1631,7 +1654,7 @@ impl GradleRunCommand {
                         )
                     })?;
 
-                    println!(
+                    info!(
                         "Running {} for {}",
                         current_task.as_gradle_arg().cyan().bold(),
                         wt.branch.cyan().bold()
@@ -1655,11 +1678,11 @@ impl GradleRunCommand {
                         branches[branch_idx].tasks[task_idx].state = TaskState::Success {
                             duration: output.duration,
                         };
-                        println!(
+                        info!(
                             "{}",
                             format_log_summary("stdout", &output.stdout, &output.stdout_log_path)
                         );
-                        println!(
+                        info!(
                             "{}",
                             format_log_summary("stderr", &output.stderr, &output.stderr_log_path)
                         );
@@ -1707,7 +1730,7 @@ impl GradleRunCommand {
                         }
 
                         if let Some(ref output) = err.output {
-                            println!(
+                            info!(
                                 "{}",
                                 format_log_summary(
                                     "stdout",
@@ -1715,7 +1738,7 @@ impl GradleRunCommand {
                                     &output.stdout_log_path
                                 )
                             );
-                            println!(
+                            info!(
                                 "{}",
                                 format_log_summary(
                                     "stderr",
@@ -1740,9 +1763,8 @@ impl GradleRunCommand {
                         ));
 
                         if err.interrupted {
-                            println!();
-                            println!("{}", "ABORTED BY CTRL+C".yellow().bold());
-                            println!(
+                            error!("{}", "ABORTED BY CTRL+C".yellow().bold());
+                            error!(
                                 "{}",
                                 format!(
                                     "branch: {}, task: {}",
@@ -1754,9 +1776,8 @@ impl GradleRunCommand {
                         }
 
                         if let Some(output) = err.output {
-                            println!();
-                            println!("{}", "FAILED COMMAND LOGS".red().bold());
-                            println!(
+                            error!("{}", "FAILED COMMAND LOGS".red().bold());
+                            error!(
                                 "{}",
                                 format!(
                                     "branch: {}, task: {}, exit: {:?}",
@@ -1778,8 +1799,8 @@ impl GradleRunCommand {
                                 task.state = TaskState::Skipped;
                             }
                         }
-                        print_gametest_failures(&gametest_failures);
-                        print_report_to_stdout(&branches, &tasks);
+                        print_gametest_failures(&gametest_failures)?;
+                        print_report_to_stdout(&branches, &tasks)?;
                         if let Err(tldr_err) = print_tldr_for_run(&run_log_dir) {
                             warn!(
                                 run_dir = %run_log_dir.display(),
@@ -1793,8 +1814,8 @@ impl GradleRunCommand {
             }
         }
 
-        print_gametest_failures(&gametest_failures);
-        print_report_to_stdout(&branches, &tasks);
+        print_gametest_failures(&gametest_failures)?;
+        print_report_to_stdout(&branches, &tasks)?;
         if let Err(tldr_err) = print_tldr_for_run(&run_log_dir) {
             warn!(
                 run_dir = %run_log_dir.display(),
@@ -1855,7 +1876,7 @@ pub(super) fn invoke_gradle_logs_list(latest: bool) -> eyre::Result<()> {
     }
 
     let run_dir = latest_gradle_run_dir()?;
-    println!("Listing latest gradle logs from {}", run_dir.display());
+    info!("Listing latest gradle logs from {}", run_dir.display());
     print_log_list(&run_dir)
 }
 
@@ -1878,6 +1899,6 @@ pub(super) fn invoke_gradle_logs_tldr(latest: bool, path: Option<PathBuf>) -> ey
         bail!("Run path is not a directory: {}", run_dir.display());
     }
 
-    println!("Summarizing gradle logs from {}", run_dir.display());
+    info!("Summarizing gradle logs from {}", run_dir.display());
     print_tldr_for_run(&run_dir)
 }
