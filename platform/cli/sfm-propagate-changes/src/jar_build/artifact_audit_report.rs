@@ -45,7 +45,7 @@ impl ArtifactAuditReport {
             issues: Vec::new(),
         }
     }
-// todo(2026-06-16) dubious helper
+    // todo(2026-06-16) dubious helper
     pub(super) fn push_error(
         &mut self,
         kind: ArtifactAuditIssueKind,
@@ -63,7 +63,7 @@ impl ArtifactAuditReport {
             message,
         );
     }
-// todo(2026-06-16) dubious helper
+    // todo(2026-06-16) dubious helper
 
     pub(super) fn push_warning(
         &mut self,
@@ -82,7 +82,7 @@ impl ArtifactAuditReport {
             message,
         );
     }
-// todo(2026-06-16) dubious helper
+    // todo(2026-06-16) dubious helper
 
     fn push_issue(
         &mut self,

@@ -9,7 +9,8 @@ use std::collections::BTreeSet;
 ///
 /// Returns an error if the branch query matches no worktrees or none of the matching worktrees
 /// have a readable `minecraft_version` value.
-pub fn select_required_minecraft_versions( // todo(2026-06-16) should this be an instance method
+pub fn select_required_minecraft_versions(
+    // todo(2026-06-16) should this be an instance method
     query: &BranchQuery,
 ) -> eyre::Result<BTreeSet<MinecraftVersion>> {
     let versions = select_required_worktree_targets(query)?
