@@ -1,3 +1,4 @@
+pub mod artifact_lock;
 pub mod branch_targets;
 pub mod cli;
 pub mod jar_build;

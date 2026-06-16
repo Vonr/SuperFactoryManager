@@ -1,8 +1,7 @@
 use crate::logging::logging_config::LoggingConfig;
 use crate::logging::terminal_event_layer::TerminalEventLayer;
 use std::fs::File;
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::fs::OpenOptions;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::Registry;
@@ -60,21 +59,22 @@ pub fn init_logging(config: &LoggingConfig) -> eyre::Result<()> {
             std::fs::create_dir_all(parent)?;
         }
 
-        let file = File::create(json_log_path)?;
-        let file = Arc::new(Mutex::new(file));
+        File::create(json_log_path)?;
         let json_writer = {
-            let file = Arc::clone(&file);
+            let json_log_path = json_log_path.clone();
             BoxMakeWriter::new(move || {
-                file.lock()
-                    .expect("failed to lock json log file")
-                    .try_clone()
-                    .expect("failed to clone json log file handle")
+                OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(&json_log_path)
+                    .expect("failed to open json log file for appending")
             })
         };
 
-        let json_format = tracing_subscriber::fmt::format().json();
         let json_layer = tracing_subscriber::fmt::layer()
-            .event_format(json_format)
+            .json()
+            .with_current_span(true)
+            .with_span_list(true)
             .with_file(true)
             .with_target(false)
             .with_line_number(true)
