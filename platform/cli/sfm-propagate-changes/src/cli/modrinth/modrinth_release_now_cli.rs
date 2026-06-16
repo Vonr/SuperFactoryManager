@@ -20,7 +20,7 @@ use tracing::info;
 
 /// Arguments for creating new Modrinth versions for each release jar.
 #[derive(Facet, Debug)]
-pub struct ModrinthNowArgs {
+pub struct ModrinthReleaseNowArgs {
     /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
     #[facet(default, args::named)]
     pub branch: BranchSelector,
@@ -42,7 +42,7 @@ pub struct ModrinthNowArgs {
     pub dry_run: bool,
 }
 
-impl ModrinthNowArgs {
+impl ModrinthReleaseNowArgs {
     /// # Errors
     ///
     /// Returns an error if release metadata cannot be computed or uploaded.

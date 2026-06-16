@@ -1,6 +1,6 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::get_default_project_id;
+use super::super::curseforge_cli::get_default_project_id;
 use facet::Facet;
 
 /// Arguments for showing the default CurseForge project ID.

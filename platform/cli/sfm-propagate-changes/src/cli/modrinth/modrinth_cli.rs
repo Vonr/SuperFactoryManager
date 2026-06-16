@@ -4,11 +4,6 @@
 //! https://docs.modrinth.com/api/operations/createversion/
 //! https://modrinth.com/mod/super-factory-manager/versions Project ID - aecUorJQ
 
-use super::ModrinthAmendArgs;
-use super::ModrinthCheckArgs;
-use super::ModrinthNowArgs;
-use super::ModrinthReleaseArgs;
-use super::ModrinthValidateArgs;
 use crate::branch_targets::select_required_minecraft_versions;
 use crate::modrinth::ModrinthAmendVersionPayload;
 use crate::modrinth::ModrinthCreateVersionPayload;
@@ -19,8 +14,6 @@ use crate::modrinth::ModrinthReleasePlan;
 use crate::terminal_output::stdout_prompt;
 use crate::worktree::parse_version;
 use eyre::Context;
-use facet::Facet;
-use figue as args;
 use reqwest::blocking::Client;
 use reqwest::blocking::multipart;
 use reqwest::header::AUTHORIZATION;
@@ -59,70 +52,6 @@ pub(super) fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
 
 pub(super) fn modrinth_versions_url(project_id: &str) -> String {
     format!("{MODRINTH_VERSIONS_URL_PREFIX}/{project_id}/versions")
-}
-
-/// Arguments for Modrinth release-related commands.
-#[derive(Facet, Debug)]
-pub struct ModrinthArgs {
-    /// Modrinth subcommand.
-    #[facet(args::subcommand)]
-    pub command: ModrinthCommand,
-}
-
-impl ModrinthArgs {
-    /// # Errors
-    ///
-    /// Returns an error if the selected Modrinth command fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        self.command.invoke()
-    }
-}
-
-/// Modrinth release-related commands.
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum ModrinthCommand {
-    /// Release metadata validation and upload operations
-    Release(ModrinthReleaseArgs),
-}
-
-/// Modrinth release subcommands.
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum ModrinthReleaseCommand {
-    /// Verify computed release metadata against historical project versions
-    Check(ModrinthCheckArgs),
-    /// Validate remote downloadable jars against local release jars by hash
-    Validate(ModrinthValidateArgs),
-    /// Create new Modrinth versions for each release jar
-    Now(ModrinthNowArgs),
-    /// Amend changelog for latest version per MC in current release jars
-    Amend(ModrinthAmendArgs),
-}
-
-impl ModrinthCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::Release(args) => args.invoke(),
-        }
-    }
-}
-
-impl ModrinthReleaseCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::Check(args) => args.invoke(),
-            Self::Validate(args) => args.invoke(),
-            Self::Now(args) => args.invoke(),
-            Self::Amend(args) => args.invoke(),
-        }
-    }
 }
 
 pub(super) fn resolve_project_id(project: Option<String>) -> eyre::Result<String> {

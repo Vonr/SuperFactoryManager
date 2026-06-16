@@ -1,9 +1,9 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::build_core_http_client;
-use super::curseforge_cli::fetch_project_files;
-use super::curseforge_cli::resolve_core_api_key;
-use super::curseforge_cli::resolve_project_id;
+use super::super::curseforge_cli::build_core_http_client;
+use super::super::curseforge_cli::fetch_project_files;
+use super::super::curseforge_cli::resolve_core_api_key;
+use super::super::curseforge_cli::resolve_project_id;
 use facet::Facet;
 use figue as args;
 use tracing::info;

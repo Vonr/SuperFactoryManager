@@ -1,21 +1,21 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::amend_file_changelog;
-use super::curseforge_cli::build_http_client;
-use super::curseforge_cli::build_upload_plans;
-use super::curseforge_cli::colorize_metadata_name;
-use super::curseforge_cli::curseforge_files_url;
-use super::curseforge_cli::fetch_game_versions;
-use super::curseforge_cli::filter_release_jars_by_branch;
-use super::curseforge_cli::game_version_names_for_release;
-use super::curseforge_cli::get_ordered_release_jars;
-use super::curseforge_cli::parse_mc_version_from_jar_name;
-use super::curseforge_cli::prompt_yes_no;
-use super::curseforge_cli::read_changelog_section;
-use super::curseforge_cli::read_mod_version;
-use super::curseforge_cli::resolve_project_id;
-use super::curseforge_cli::resolve_token;
-use super::curseforge_cli::upload_project_file;
+use super::super::curseforge_cli::amend_file_changelog;
+use super::super::curseforge_cli::build_http_client;
+use super::super::curseforge_cli::build_upload_plans;
+use super::super::curseforge_cli::colorize_metadata_name;
+use super::super::curseforge_cli::curseforge_files_url;
+use super::super::curseforge_cli::fetch_game_versions;
+use super::super::curseforge_cli::filter_release_jars_by_branch;
+use super::super::curseforge_cli::game_version_names_for_release;
+use super::super::curseforge_cli::get_ordered_release_jars;
+use super::super::curseforge_cli::parse_mc_version_from_jar_name;
+use super::super::curseforge_cli::prompt_yes_no;
+use super::super::curseforge_cli::read_changelog_section;
+use super::super::curseforge_cli::read_mod_version;
+use super::super::curseforge_cli::resolve_project_id;
+use super::super::curseforge_cli::resolve_token;
+use super::super::curseforge_cli::upload_project_file;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;

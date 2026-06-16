@@ -1,6 +1,6 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::CURSEFORGE_DEFAULT_PROJECT_FILE;
+use super::super::curseforge_cli::CURSEFORGE_DEFAULT_PROJECT_FILE;
 use crate::paths::APP_HOME;
 use eyre::Context;
 use facet::Facet;

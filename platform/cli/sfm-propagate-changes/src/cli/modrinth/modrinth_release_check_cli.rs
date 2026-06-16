@@ -17,7 +17,7 @@ use tracing::info;
 
 /// Arguments for checking computed Modrinth release metadata.
 #[derive(Facet, Debug)]
-pub struct ModrinthCheckArgs {
+pub struct ModrinthReleaseCheckArgs {
     /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
     #[facet(default, args::named)]
     pub branch: BranchSelector,
@@ -27,7 +27,7 @@ pub struct ModrinthCheckArgs {
     pub project: Option<String>,
 }
 
-impl ModrinthCheckArgs {
+impl ModrinthReleaseCheckArgs {
     /// # Errors
     ///
     /// Returns an error if release metadata does not match historical project versions.

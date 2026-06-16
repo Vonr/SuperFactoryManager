@@ -21,7 +21,7 @@ use tracing::info;
 
 /// Arguments for amending Modrinth changelogs for current release jars.
 #[derive(Facet, Debug)]
-pub struct ModrinthAmendArgs {
+pub struct ModrinthReleaseAmendArgs {
     /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
     #[facet(default, args::named)]
     pub branch: BranchSelector,
@@ -43,7 +43,7 @@ pub struct ModrinthAmendArgs {
     pub dry_run: bool,
 }
 
-impl ModrinthAmendArgs {
+impl ModrinthReleaseAmendArgs {
     /// # Errors
     ///
     /// Returns an error if the remote targets cannot be resolved or amended.
@@ -187,9 +187,7 @@ fn release_amend(
 
     info!(
         "{}",
-        "Modrinth release changelog amend complete."
-            .green()
-            .bold()
+        "Modrinth release changelog amend complete.".green().bold()
     );
 
     Ok(())

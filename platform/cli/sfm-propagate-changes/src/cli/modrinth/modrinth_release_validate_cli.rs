@@ -20,7 +20,7 @@ use tracing::info;
 
 /// Arguments for validating remote Modrinth jars against local release jars.
 #[derive(Facet, Debug)]
-pub struct ModrinthValidateArgs {
+pub struct ModrinthReleaseValidateArgs {
     /// Branch selector used to choose release jar Minecraft versions. Defaults to `core`.
     #[facet(default, args::named)]
     pub branch: BranchSelector,
@@ -30,7 +30,7 @@ pub struct ModrinthValidateArgs {
     pub project: Option<String>,
 }
 
-impl ModrinthValidateArgs {
+impl ModrinthReleaseValidateArgs {
     /// # Errors
     ///
     /// Returns an error if remote hashes do not match local release jars.

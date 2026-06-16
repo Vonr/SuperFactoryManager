@@ -4,20 +4,6 @@
 //! https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api
 //! https://www.curseforge.com/minecraft/mc-mods/super-factory-manager Project ID - 306935
 
-use super::CurseforgeMinecraftArgs;
-use super::CurseforgeMinecraftVersionArgs;
-use super::CurseforgeMinecraftVersionListArgs;
-use super::CurseforgeProjectArgs;
-use super::CurseforgeProjectDefaultArgs;
-use super::CurseforgeProjectDefaultSetArgs;
-use super::CurseforgeProjectDefaultShowArgs;
-use super::CurseforgeProjectFileArgs;
-use super::CurseforgeProjectFileListArgs;
-use super::CurseforgeReleaseAmendArgs;
-use super::CurseforgeReleaseArgs;
-use super::CurseforgeReleaseCheckArgs;
-use super::CurseforgeReleaseNowArgs;
-use super::CurseforgeReleaseValidateArgs;
 use crate::branch_targets::BranchQuery;
 use crate::branch_targets::select_required_minecraft_versions;
 use crate::curseforge::CurseforgeAmendFilePayload;
@@ -39,8 +25,6 @@ use chrono::DateTime;
 use chrono::Utc;
 use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
-use facet::Facet;
-use figue as args;
 use reqwest::blocking::Client;
 use reqwest::blocking::multipart;
 use reqwest::header::HeaderMap;
@@ -101,155 +85,6 @@ pub(super) fn colorize_metadata_name(name: &str, mc_version: &str) -> String {
 
 pub(super) fn curseforge_files_url(project_id: CurseforgeProjectId) -> String {
     format!("{CURSEFORGE_AUTHORS_FILES_URL_PREFIX}/{project_id}/files")
-}
-
-/// Arguments for CurseForge release and file related commands.
-#[derive(Facet, Debug)]
-pub struct CurseforgeArgs {
-    /// CurseForge subcommand.
-    #[facet(args::subcommand)]
-    pub command: CurseforgeCommand,
-}
-
-impl CurseforgeArgs {
-    /// # Errors
-    ///
-    /// Returns an error if the selected CurseForge command fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        self.command.invoke()
-    }
-}
-
-/// CurseForge release and file related commands
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum CurseforgeCommand {
-    /// Project-related operations
-    Project(CurseforgeProjectArgs),
-    /// Minecraft metadata operations
-    Minecraft(CurseforgeMinecraftArgs),
-    /// Release metadata validation and upload operations
-    Release(CurseforgeReleaseArgs),
-}
-
-/// CurseForge release subcommands
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum CurseforgeReleaseCommand {
-    /// Verify computed release metadata against historical project uploads
-    Check(CurseforgeReleaseCheckArgs),
-    /// Validate remote downloadable files against local release jars by hash
-    Validate(CurseforgeReleaseValidateArgs),
-    /// Upload each release jar to CurseForge according to release-process rules
-    Now(CurseforgeReleaseNowArgs),
-    /// Amend changelog for latest file per MC version in current release jars
-    Amend(CurseforgeReleaseAmendArgs),
-}
-
-/// CurseForge project subcommands
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum CurseforgeProjectCommand {
-    /// Project default configuration commands
-    Default(CurseforgeProjectDefaultArgs),
-    /// Project file operations
-    File(CurseforgeProjectFileArgs),
-}
-
-/// CurseForge project default subcommands
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum CurseforgeProjectDefaultCommand {
-    /// Set default project ID
-    Set(CurseforgeProjectDefaultSetArgs),
-    /// Show default project ID (falls back to built-in default)
-    Show(CurseforgeProjectDefaultShowArgs),
-}
-
-/// CurseForge project file subcommands
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum CurseforgeProjectFileCommand {
-    /// List files for a project
-    List(CurseforgeProjectFileListArgs),
-}
-
-/// CurseForge minecraft subcommands
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum CurseforgeMinecraftCommand {
-    /// Minecraft version operations
-    Version(CurseforgeMinecraftVersionArgs),
-}
-
-/// CurseForge minecraft version subcommands
-#[derive(Facet, Debug)]
-#[repr(u8)]
-pub enum CurseforgeMinecraftVersionCommand {
-    /// List Minecraft game versions from CurseForge
-    List(CurseforgeMinecraftVersionListArgs),
-}
-
-impl CurseforgeCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::Project(args) => args.invoke(),
-            Self::Minecraft(args) => args.invoke(),
-            Self::Release(args) => args.invoke(),
-        }
-    }
-}
-
-impl CurseforgeReleaseCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::Check(args) => args.invoke(),
-            Self::Validate(args) => args.invoke(),
-            Self::Now(args) => args.invoke(),
-            Self::Amend(args) => args.invoke(),
-        }
-    }
-}
-
-impl CurseforgeProjectCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::Default(args) => args.invoke(),
-            Self::File(args) => args.invoke(),
-        }
-    }
-}
-
-impl CurseforgeProjectDefaultCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::Set(args) => args.invoke(),
-            Self::Show(args) => args.invoke(),
-        }
-    }
-}
-
-impl CurseforgeProjectFileCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::List(args) => args.invoke(),
-        }
-    }
 }
 
 pub(super) fn get_default_project_id() -> eyre::Result<CurseforgeProjectId> {
@@ -994,28 +829,6 @@ pub(super) fn java_version_name_for(parsed: (u32, u32, u32)) -> &'static str {
         "Java 25"
     } else {
         "Java 21"
-    }
-}
-
-impl CurseforgeMinecraftCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::Version(args) => args.invoke(),
-        }
-    }
-}
-
-impl CurseforgeMinecraftVersionCommand {
-    /// # Errors
-    ///
-    /// This function will return an error if the subcommand fails.
-    pub fn invoke(self) -> eyre::Result<()> {
-        match self {
-            Self::List(args) => args.invoke(),
-        }
     }
 }
 

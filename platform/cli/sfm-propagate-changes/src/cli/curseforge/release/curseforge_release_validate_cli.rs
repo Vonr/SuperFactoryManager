@@ -1,18 +1,18 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::build_core_http_client;
-use super::curseforge_cli::download_sha1;
-use super::curseforge_cli::fetch_project_files;
-use super::curseforge_cli::filter_release_jars_by_branch;
-use super::curseforge_cli::find_latest_historical_file_for_mc;
-use super::curseforge_cli::find_sha1_hash;
-use super::curseforge_cli::get_ordered_release_jars;
-use super::curseforge_cli::historical_mod_version;
-use super::curseforge_cli::parse_mc_version_from_jar_name;
-use super::curseforge_cli::read_mod_version;
-use super::curseforge_cli::resolve_core_api_key;
-use super::curseforge_cli::resolve_project_id;
-use super::curseforge_cli::sha1_hex;
+use super::super::curseforge_cli::build_core_http_client;
+use super::super::curseforge_cli::download_sha1;
+use super::super::curseforge_cli::fetch_project_files;
+use super::super::curseforge_cli::filter_release_jars_by_branch;
+use super::super::curseforge_cli::find_latest_historical_file_for_mc;
+use super::super::curseforge_cli::find_sha1_hash;
+use super::super::curseforge_cli::get_ordered_release_jars;
+use super::super::curseforge_cli::historical_mod_version;
+use super::super::curseforge_cli::parse_mc_version_from_jar_name;
+use super::super::curseforge_cli::read_mod_version;
+use super::super::curseforge_cli::resolve_core_api_key;
+use super::super::curseforge_cli::resolve_project_id;
+use super::super::curseforge_cli::sha1_hex;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;

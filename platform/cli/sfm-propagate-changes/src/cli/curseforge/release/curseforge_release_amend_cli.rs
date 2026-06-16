@@ -1,24 +1,24 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::DEFAULT_AMEND_SAFETY_AGE;
-use super::curseforge_cli::amend_file_changelog;
-use super::curseforge_cli::build_core_http_client;
-use super::curseforge_cli::build_http_client;
-use super::curseforge_cli::fetch_project_files;
-use super::curseforge_cli::filter_release_jars_by_branch;
-use super::curseforge_cli::find_latest_historical_file_for_mc;
-use super::curseforge_cli::format_age;
-use super::curseforge_cli::get_ordered_release_jars;
-use super::curseforge_cli::historical_mod_version;
-use super::curseforge_cli::parse_file_age;
-use super::curseforge_cli::parse_mc_version_from_jar_name;
-use super::curseforge_cli::parse_safety_age;
-use super::curseforge_cli::prompt_yes_no;
-use super::curseforge_cli::read_changelog_section;
-use super::curseforge_cli::read_mod_version;
-use super::curseforge_cli::resolve_core_api_key;
-use super::curseforge_cli::resolve_project_id;
-use super::curseforge_cli::resolve_token;
+use super::super::curseforge_cli::DEFAULT_AMEND_SAFETY_AGE;
+use super::super::curseforge_cli::amend_file_changelog;
+use super::super::curseforge_cli::build_core_http_client;
+use super::super::curseforge_cli::build_http_client;
+use super::super::curseforge_cli::fetch_project_files;
+use super::super::curseforge_cli::filter_release_jars_by_branch;
+use super::super::curseforge_cli::find_latest_historical_file_for_mc;
+use super::super::curseforge_cli::format_age;
+use super::super::curseforge_cli::get_ordered_release_jars;
+use super::super::curseforge_cli::historical_mod_version;
+use super::super::curseforge_cli::parse_file_age;
+use super::super::curseforge_cli::parse_mc_version_from_jar_name;
+use super::super::curseforge_cli::parse_safety_age;
+use super::super::curseforge_cli::prompt_yes_no;
+use super::super::curseforge_cli::read_changelog_section;
+use super::super::curseforge_cli::read_mod_version;
+use super::super::curseforge_cli::resolve_core_api_key;
+use super::super::curseforge_cli::resolve_project_id;
+use super::super::curseforge_cli::resolve_token;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
@@ -217,9 +217,7 @@ fn release_amend(
 
     let prompt = format!(
         "{} {}",
-        "Proceed to amend changelog on these files?"
-            .yellow()
-            .bold(),
+        "Proceed to amend changelog on these files?".yellow().bold(),
         "(y/N)".yellow().bold()
     );
     if !prompt_yes_no(&prompt)? {
