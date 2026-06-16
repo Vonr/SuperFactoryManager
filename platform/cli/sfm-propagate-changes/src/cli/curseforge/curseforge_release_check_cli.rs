@@ -5,7 +5,6 @@ use super::curseforge_cli::ANSI_BOLD_CYAN;
 use super::curseforge_cli::ANSI_BOLD_GREEN;
 use super::curseforge_cli::ANSI_DIM;
 use super::curseforge_cli::build_core_http_client;
-use super::curseforge_cli::build_game_version_index;
 use super::curseforge_cli::build_http_client;
 use super::curseforge_cli::build_resolved_metadata_plans;
 use super::curseforge_cli::fetch_game_versions;
@@ -23,6 +22,7 @@ use super::curseforge_cli::to_comparison_name_set;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::curseforge::CurseforgeGameVersionId;
 use facet::Facet;
 use figue as args;
 use tracing::info;
@@ -87,7 +87,7 @@ fn check_minecraft_version_metadata(
     let token_value = resolve_token(token.clone(), op_secret.clone())?;
     let upload_client = build_http_client(&token_value)?;
     let game_versions = fetch_game_versions(&upload_client)?;
-    let game_version_index = build_game_version_index(&game_versions);
+    let game_version_index = CurseforgeGameVersionId::build_index(&game_versions);
     let metadata_plans = build_resolved_metadata_plans(&jars, &game_version_index)?;
 
     let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;

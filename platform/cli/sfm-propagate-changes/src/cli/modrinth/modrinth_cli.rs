@@ -10,6 +10,12 @@ use super::ModrinthNowArgs;
 use super::ModrinthReleaseArgs;
 use super::ModrinthValidateArgs;
 use crate::branch_targets::select_required_minecraft_versions;
+use crate::modrinth::ModrinthAmendVersionPayload;
+use crate::modrinth::ModrinthCreateVersionPayload;
+use crate::modrinth::ModrinthCreateVersionResponse;
+use crate::modrinth::ModrinthProjectVersion;
+use crate::modrinth::ModrinthProjectVersionFile;
+use crate::modrinth::ModrinthReleasePlan;
 use crate::terminal_output::stdout_prompt;
 use crate::worktree::parse_version;
 use eyre::Context;
@@ -132,85 +138,6 @@ impl ModrinthReleaseCommand {
     }
 }
 
-#[derive(Facet, Debug, Clone)]
-pub(super) struct ModrinthProjectVersion {
-    pub(super) id: String,
-    #[facet(default)]
-    pub(super) name: Option<String>,
-    #[facet(default, rename = "version_number")]
-    pub(super) version_number: Option<String>,
-    #[facet(default, rename = "game_versions")]
-    pub(super) game_versions: Vec<String>,
-    #[facet(default)]
-    pub(super) loaders: Vec<String>,
-    #[facet(default, rename = "date_published")]
-    pub(super) date_published: Option<String>,
-    #[facet(default)]
-    pub(super) files: Vec<ModrinthProjectVersionFile>,
-}
-
-#[derive(Facet, Debug, Clone)]
-pub(super) struct ModrinthProjectVersionFile {
-    pub(super) filename: String,
-    pub(super) url: String,
-    #[facet(default)]
-    pub(super) primary: Option<bool>,
-    #[facet(default)]
-    pub(super) hashes: ModrinthProjectVersionFileHashes,
-}
-
-#[derive(Facet, Debug, Clone, Default)]
-pub(super) struct ModrinthProjectVersionFileHashes {
-    #[facet(default)]
-    pub(super) sha1: Option<String>,
-}
-
-#[derive(Facet, Debug, Clone)]
-struct ModrinthCreateVersionPayload {
-    name: String,
-    #[facet(rename = "version_number")]
-    version_number: String,
-    changelog: String,
-    dependencies: Vec<ModrinthDependencyPayload>,
-    #[facet(rename = "game_versions")]
-    game_versions: Vec<String>,
-    #[facet(rename = "version_type")]
-    version_type: String,
-    loaders: Vec<String>,
-    featured: bool,
-    #[facet(rename = "project_id")]
-    project_id: String,
-    #[facet(rename = "file_parts")]
-    file_parts: Vec<String>,
-}
-
-#[derive(Facet, Debug, Clone)]
-struct ModrinthDependencyPayload {
-    #[facet(default, rename = "project_id")]
-    project_id: Option<String>,
-    #[facet(default, rename = "version_id")]
-    version_id: Option<String>,
-    #[facet(default, rename = "file_name")]
-    file_name: Option<String>,
-    #[facet(rename = "dependency_type")]
-    dependency_type: String,
-}
-
-#[derive(Facet, Debug, Clone)]
-struct ModrinthCreateVersionResponse {
-    id: String,
-}
-
-#[derive(Debug, Clone)]
-pub(super) struct ModrinthReleasePlan {
-    pub(super) jar_path: PathBuf,
-    pub(super) mc_version: String,
-    pub(super) display_name: String,
-    pub(super) version_number: String,
-    pub(super) game_versions: Vec<String>,
-    pub(super) loaders: Vec<String>,
-}
-
 pub(super) fn resolve_project_id(project: Option<String>) -> eyre::Result<String> {
     match project {
         Some(project_id) => {
@@ -291,11 +218,6 @@ pub(super) fn build_http_client(token: Option<&str>) -> eyre::Result<Client> {
         .timeout(Duration::from_mins(2))
         .build()
         .wrap_err("Failed to build Modrinth HTTP client")
-}
-
-#[derive(Facet, Debug, Clone)]
-struct ModrinthAmendVersionPayload {
-    changelog: String,
 }
 
 pub(super) fn amend_version_changelog(

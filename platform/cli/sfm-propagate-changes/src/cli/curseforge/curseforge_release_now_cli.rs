@@ -8,7 +8,6 @@ use super::curseforge_cli::ANSI_BOLD_WHITE;
 use super::curseforge_cli::ANSI_BOLD_YELLOW;
 use super::curseforge_cli::ANSI_DIM;
 use super::curseforge_cli::amend_file_changelog;
-use super::curseforge_cli::build_game_version_index;
 use super::curseforge_cli::build_http_client;
 use super::curseforge_cli::build_upload_plans;
 use super::curseforge_cli::colorize_metadata_name;
@@ -28,6 +27,7 @@ use super::curseforge_cli::upload_project_file;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::curseforge::CurseforgeGameVersionId;
 use facet::Facet;
 use figue as args;
 use std::ffi::OsStr;
@@ -104,7 +104,7 @@ fn release_now(
         let token_value = resolve_token(token, op_secret)?;
         let client = build_http_client(&token_value)?;
         let game_versions = fetch_game_versions(&client)?;
-        Some((client, build_game_version_index(&game_versions)))
+        Some((client, CurseforgeGameVersionId::build_index(&game_versions)))
     };
     // todo(2026-06-16) I need to test this to see how badly our tracing subscriber mangles the presentation of this compared to our println version. might want to adapt this to be a writer or something
     info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);

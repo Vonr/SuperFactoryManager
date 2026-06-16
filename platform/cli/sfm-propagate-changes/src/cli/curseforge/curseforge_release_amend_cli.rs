@@ -30,6 +30,7 @@ use super::curseforge_cli::style;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::curseforge::CurseforgeProjectFileId;
 use chrono::Utc;
 use facet::Facet;
 use figue as args;
@@ -142,7 +143,8 @@ fn release_amend(
     let max_file_age = parse_safety_age(&safety_age_text)?;
     let now = Utc::now();
 
-    let mut file_targets: Vec<(String, u64, String, String, Duration)> = Vec::new();
+    let mut file_targets: Vec<(String, CurseforgeProjectFileId, String, String, Duration)> =
+        Vec::new();
     for (mc_version, jar_name) in target_versions {
         let file = find_latest_historical_file_for_mc(&files, &mc_version)?;
         let historical_version = historical_mod_version(file).ok_or_else(|| {

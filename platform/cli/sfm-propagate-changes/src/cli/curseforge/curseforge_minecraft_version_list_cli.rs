@@ -1,11 +1,11 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::CurseforgeVersionRow;
 use super::curseforge_cli::build_http_client;
 use super::curseforge_cli::fetch_game_versions;
 use super::curseforge_cli::resolve_token;
 use crate::branch_targets::select_required_minecraft_versions;
 use crate::cli::jar::BranchSelector;
+use crate::curseforge::CurseforgeVersionRow;
 use crate::worktree::parse_version;
 use facet::Facet;
 use figue as args;

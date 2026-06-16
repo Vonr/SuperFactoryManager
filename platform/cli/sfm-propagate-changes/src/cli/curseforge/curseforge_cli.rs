@@ -20,6 +20,18 @@ use super::CurseforgeReleaseNowArgs;
 use super::CurseforgeReleaseValidateArgs;
 use crate::branch_targets::BranchQuery;
 use crate::branch_targets::select_required_minecraft_versions;
+use crate::curseforge::CurseforgeAmendFilePayload;
+use crate::curseforge::CurseforgeGameVersion;
+use crate::curseforge::CurseforgeGameVersionId;
+use crate::curseforge::CurseforgeProjectFileHash;
+use crate::curseforge::CurseforgeProjectFileId;
+use crate::curseforge::CurseforgeProjectFileItem;
+use crate::curseforge::CurseforgeProjectFileListEnvelope;
+use crate::curseforge::CurseforgeProjectId;
+use crate::curseforge::CurseforgeUploadResponse;
+use crate::curseforge::ResolvedMetadataPlan;
+use crate::curseforge::UploadMetadata;
+use crate::curseforge::UploadPlan;
 use crate::paths::APP_HOME;
 use crate::terminal_output::stdout_prompt;
 use crate::worktree::parse_version;
@@ -58,8 +70,6 @@ pub(super) const DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE: &str =
 pub(super) const DEFAULT_AMEND_SAFETY_AGE: &str = "30m";
 pub(super) const CURSEFORGE_AUTHORS_FILES_URL_PREFIX: &str =
     "https://authors.curseforge.com/#/projects";
-pub(super) type CurseforgeVersionRow = (u64, String, String, (u32, u32, u32));
-
 pub(super) const ANSI_RESET: &str = "\x1b[0m";
 pub(super) const ANSI_BOLD_CYAN: &str = "\x1b[1;36m";
 pub(super) const ANSI_BOLD_YELLOW: &str = "\x1b[1;33m";
@@ -101,7 +111,7 @@ pub(super) fn colorize_metadata_name(name: &str, mc_version: &str) -> String {
     }
 }
 
-pub(super) fn curseforge_files_url(project_id: u64) -> String {
+pub(super) fn curseforge_files_url(project_id: CurseforgeProjectId) -> String {
     format!("{CURSEFORGE_AUTHORS_FILES_URL_PREFIX}/{project_id}/files")
 }
 
@@ -254,84 +264,10 @@ impl CurseforgeProjectFileCommand {
     }
 }
 
-#[derive(Facet, Debug, Clone)]
-pub(super) struct CurseforgeProjectFileItem {
-    pub(super) id: u64,
-    #[facet(default, rename = "fileName")]
-    pub(super) file_name: Option<String>,
-    #[facet(default, rename = "displayName")]
-    pub(super) display_name: Option<String>,
-    #[facet(default, rename = "releaseType")]
-    pub(super) release_type: Option<u32>,
-    #[facet(default, rename = "fileStatus")]
-    pub(super) file_status: Option<u32>,
-    #[facet(default, rename = "gameVersions")]
-    pub(super) game_versions: Vec<String>,
-    #[facet(default, rename = "downloadUrl")]
-    pub(super) download_url: Option<String>,
-    #[facet(default, rename = "fileDate")]
-    pub(super) file_date: Option<String>,
-    #[facet(default)]
-    pub(super) hashes: Vec<CurseforgeProjectFileHash>,
-}
-
-#[derive(Facet, Debug, Clone)]
-pub(super) struct CurseforgeProjectFileHash {
-    #[facet(default)]
-    pub(super) algo: Option<u32>,
-    #[facet(default)]
-    pub(super) value: Option<String>,
-}
-
-#[derive(Facet, Debug, Clone)]
-pub(super) struct CurseforgeProjectFileListEnvelope {
-    #[facet(default)]
-    pub(super) data: Vec<CurseforgeProjectFileItem>,
-}
-
-#[derive(Facet, Debug, Clone)]
-pub(super) struct CurseforgeUploadResponse {
-    pub(super) id: u64,
-}
-
-#[derive(Facet, Debug, Clone)]
-pub(super) struct CurseforgeGameVersion {
-    pub(super) id: u64,
-    #[facet(default, rename = "gameVersionTypeID")]
-    pub(super) game_version_type_id: Option<u64>,
-    pub(super) name: String,
-    #[facet(default)]
-    pub(super) slug: Option<String>,
-}
-
-#[derive(Facet, Debug, Clone)]
-pub(super) struct UploadMetadata {
-    pub(super) changelog: String,
-    #[facet(rename = "changelogType")]
-    pub(super) changelog_type: String,
-    #[facet(rename = "displayName")]
-    pub(super) display_name: String,
-    #[facet(rename = "gameVersions")]
-    pub(super) game_versions: Vec<u64>,
-    #[facet(rename = "releaseType")]
-    pub(super) release_type: String,
-}
-
-#[derive(Facet, Debug, Clone)]
-pub(super) struct CurseforgeAmendFilePayload {
-    #[facet(rename = "fileID")]
-    pub(super) file_id: u64,
-    pub(super) changelog: String,
-    #[facet(rename = "changelogType")]
-    pub(super) changelog_type: String,
-    #[facet(rename = "displayName")]
-    pub(super) display_name: String,
-}
-
-pub(super) fn get_default_project_id() -> eyre::Result<u64> {
+pub(super) fn get_default_project_id() -> eyre::Result<CurseforgeProjectId> {
     let path = APP_HOME.file_path(CURSEFORGE_DEFAULT_PROJECT_FILE);
     if !path.exists() {
-        return Ok(CURSEFORGE_DEFAULT_PROJECT_ID);
+        return Ok(CurseforgeProjectId(CURSEFORGE_DEFAULT_PROJECT_ID));
     }
 
     let content = std::fs::read_to_string(&path)
@@ -339,17 +275,18 @@ pub(super) fn get_default_project_id() -> eyre::Result<u64> {
 
     let trimmed = content.trim();
     if trimmed.is_empty() {
-        return Ok(CURSEFORGE_DEFAULT_PROJECT_ID);
+        return Ok(CurseforgeProjectId(CURSEFORGE_DEFAULT_PROJECT_ID));
     }
 
     trimmed
         .parse::<u64>()
+        .map(CurseforgeProjectId)
         .wrap_err_with(|| format!("Invalid project id in default project file: '{trimmed}'"))
 }
 
-pub(super) fn resolve_project_id(project: Option<u64>) -> eyre::Result<u64> {
+pub(super) fn resolve_project_id(project: Option<u64>) -> eyre::Result<CurseforgeProjectId> {
     match project {
-        Some(project_id) => Ok(project_id),
+        Some(project_id) => Ok(CurseforgeProjectId(project_id)),
         None => get_default_project_id(),
     }
 }
@@ -503,7 +440,7 @@ pub(super) fn build_core_http_client(api_key: &str) -> eyre::Result<Client> {
 
 pub(super) fn fetch_project_files(
     client: &Client,
-    project_id: u64,
+    project_id: CurseforgeProjectId,
     credential_source: &str,
 ) -> eyre::Result<Vec<CurseforgeProjectFileItem>> {
     let url = format!("{CURSEFORGE_CORE_API_ROOT}/mods/{project_id}/files");
@@ -539,22 +476,6 @@ pub(super) fn fetch_project_files(
     Ok(envelope.data)
 }
 
-#[derive(Debug, Clone)]
-pub(super) struct UploadPlan {
-    pub(super) jar_path: PathBuf,
-    pub(super) mc_version: String,
-    pub(super) metadata_names: Vec<String>,
-    pub(super) metadata: UploadMetadata,
-}
-
-#[derive(Debug, Clone)]
-pub(super) struct ResolvedMetadataPlan {
-    pub(super) jar_path: PathBuf,
-    pub(super) mc_version: String,
-    pub(super) metadata_names: Vec<String>,
-    pub(super) game_version_ids: Vec<u64>,
-}
-
 pub(super) fn build_resolved_metadata_plans(
     jars: &[PathBuf],
     game_version_index: &HashMap<String, Vec<CurseforgeGameVersion>>,
@@ -564,7 +485,8 @@ pub(super) fn build_resolved_metadata_plans(
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(jar)?;
         let metadata_names = game_version_names_for_release(&mc_version)?;
-        let game_version_ids = resolve_game_version_ids(game_version_index, &metadata_names)?;
+        let game_version_ids =
+            CurseforgeGameVersionId::resolve_game_version_ids(game_version_index, &metadata_names)?;
 
         plans.push(ResolvedMetadataPlan {
             jar_path: jar.clone(),
@@ -756,8 +678,8 @@ pub(super) fn format_age(value: Duration) -> String {
 
 pub(super) fn amend_file_changelog(
     client: &Client,
-    project_id: u64,
-    file_id: u64,
+    project_id: CurseforgeProjectId,
+    file_id: CurseforgeProjectFileId,
     display_name: &str,
     changelog: &str,
 ) -> eyre::Result<()> {
@@ -799,10 +721,10 @@ pub(super) fn amend_file_changelog(
 
 pub(super) fn upload_project_file(
     client: &Client,
-    project_id: u64,
+    project_id: CurseforgeProjectId,
     jar_path: &Path,
     metadata: &UploadMetadata,
-) -> eyre::Result<u64> {
+) -> eyre::Result<CurseforgeProjectFileId> {
     let metadata_json =
         facet_json::to_string(metadata).wrap_err("Failed to encode upload metadata JSON")?;
 
@@ -1044,155 +966,6 @@ pub(super) fn sha1_hex(bytes: &[u8]) -> String {
         let _ = write!(output, "{byte:02x}");
     }
     output
-}
-
-pub(super) fn build_game_version_index(
-    game_versions: &[CurseforgeGameVersion],
-) -> HashMap<String, Vec<CurseforgeGameVersion>> {
-    let mut map: HashMap<String, Vec<CurseforgeGameVersion>> =
-        HashMap::with_capacity(game_versions.len());
-    for version in game_versions {
-        let name_key = normalize_version_key(&version.name);
-        map.entry(name_key).or_default().push(version.clone());
-    }
-    map
-}
-
-pub(super) fn format_candidates(candidates: &[CurseforgeGameVersion]) -> String {
-    candidates
-        .iter()
-        .map(|candidate| {
-            let type_id = candidate
-                .game_version_type_id
-                .map_or_else(|| "<none>".to_string(), |id| id.to_string());
-            format!(
-                "id={},type={},slug={}",
-                candidate.id,
-                type_id,
-                candidate.slug.clone().unwrap_or_default()
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("; ")
-}
-
-pub(super) fn resolve_exact_type_id(
-    game_version_index: &HashMap<String, Vec<CurseforgeGameVersion>>,
-    name: &str,
-    required_type_id: u64,
-) -> eyre::Result<u64> {
-    let key = normalize_version_key(name);
-    let candidates = game_version_index
-        .get(&key)
-        .ok_or_else(|| eyre::eyre!("Could not find required game version '{name}'"))?;
-
-    let matches: Vec<&CurseforgeGameVersion> = candidates
-        .iter()
-        .filter(|candidate| {
-            candidate.name == name && candidate.game_version_type_id == Some(required_type_id)
-        })
-        .collect();
-
-    match matches.as_slice() {
-        [single] => Ok(single.id),
-        [] => eyre::bail!(
-            "Could not resolve required game version '{}' with type id {}. Candidates: {}",
-            name,
-            required_type_id,
-            format_candidates(candidates)
-        ),
-        _ => {
-            let summary = matches
-                .iter()
-                .map(|candidate| candidate.id.to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            eyre::bail!(
-                "Ambiguous game version '{}' with type id {}. Matching IDs: {}",
-                name,
-                required_type_id,
-                summary
-            )
-        }
-    }
-}
-
-pub(super) fn resolve_minecraft_version_id(
-    game_version_index: &HashMap<String, Vec<CurseforgeGameVersion>>,
-    minecraft_version: &str,
-) -> eyre::Result<u64> {
-    let key = normalize_version_key(minecraft_version);
-    let candidates = game_version_index.get(&key).ok_or_else(|| {
-        eyre::eyre!("Could not find required Minecraft version '{minecraft_version}'")
-    })?;
-
-    let matches: Vec<&CurseforgeGameVersion> = candidates
-        .iter()
-        .filter(|candidate| {
-            candidate.name == minecraft_version
-                && candidate
-                    .game_version_type_id
-                    .is_some_and(|type_id| type_id != 1 && type_id != 615)
-                && parse_version(&candidate.name).is_some()
-        })
-        .collect();
-
-    match matches.as_slice() {
-        [single] => Ok(single.id),
-        [] => eyre::bail!(
-            "Could not resolve required Minecraft version '{}'. Candidates: {}",
-            minecraft_version,
-            format_candidates(candidates)
-        ),
-        _ => {
-            let summary = matches
-                .iter()
-                .map(|candidate| {
-                    let type_id = candidate
-                        .game_version_type_id
-                        .map_or_else(|| "<none>".to_string(), |id| id.to_string());
-                    format!("{}(type={})", candidate.id, type_id)
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-            eyre::bail!(
-                "Ambiguous Minecraft version '{}'. Matching IDs: {}",
-                minecraft_version,
-                summary
-            )
-        }
-    }
-}
-
-pub(super) fn resolve_game_version_ids(
-    game_version_index: &HashMap<String, Vec<CurseforgeGameVersion>>,
-    names: &[String],
-) -> eyre::Result<Vec<u64>> {
-    let mut output = Vec::with_capacity(names.len());
-    for name in names {
-        let id = match name.as_str() {
-            "Forge" => resolve_exact_type_id(game_version_index, "Forge", 68_441)?,
-            "NeoForge" => resolve_exact_type_id(game_version_index, "NeoForge", 68_441)?,
-            "Client" => resolve_exact_type_id(game_version_index, "Client", 75_208)?,
-            "Server" => resolve_exact_type_id(game_version_index, "Server", 75_208)?,
-            "Java 17" => resolve_exact_type_id(game_version_index, "Java 17", 2)?,
-            "Java 21" => resolve_exact_type_id(game_version_index, "Java 21", 2)?,
-            "Java 25" => resolve_exact_type_id(game_version_index, "Java 25", 2)?,
-            minecraft if parse_version(minecraft).is_some() => {
-                resolve_minecraft_version_id(game_version_index, minecraft)?
-            }
-            _ => eyre::bail!("Unsupported release metadata name '{name}'"),
-        };
-
-        if !output.contains(&id) {
-            output.push(id);
-        }
-    }
-    Ok(output)
-}
-
-pub(super) fn normalize_version_key(input: &str) -> String {
-    input.trim().to_ascii_lowercase().replace([' ', '_'], "-")
 }
 
 pub(super) fn game_version_names_for_release(mc_version: &str) -> eyre::Result<Vec<String>> {
