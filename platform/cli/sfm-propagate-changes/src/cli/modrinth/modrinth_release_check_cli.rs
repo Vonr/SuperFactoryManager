@@ -1,4 +1,3 @@
-use super::modrinth_cli::build_http_client;
 use super::modrinth_cli::build_release_plans;
 use super::modrinth_cli::fetch_project_versions;
 use super::modrinth_cli::filter_release_jars_by_branch;
@@ -10,6 +9,7 @@ use super::modrinth_cli::to_normalized_set;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::modrinth::ModrinthHttpClient;
 use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
 use figue as args;
@@ -53,7 +53,7 @@ fn check_release_metadata(branch: BranchSelector, project: Option<String>) -> ey
     let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
 
     let plans = build_release_plans(&jars, &mod_version)?;
-    let client = build_http_client(None)?;
+    let client = ModrinthHttpClient::new(None)?;
     let existing_versions = fetch_project_versions(&client, &project_id)?;
 
     info!("{} {}", "Project ID:".cyan().bold(), project_id);

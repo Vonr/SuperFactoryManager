@@ -27,9 +27,6 @@ use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
 use reqwest::blocking::Client;
 use reqwest::blocking::multipart;
-use reqwest::header::HeaderMap;
-use reqwest::header::HeaderValue;
-use reqwest::header::USER_AGENT;
 use sha1::Digest;
 use sha1::Sha1;
 use std::collections::BTreeSet;
@@ -165,24 +162,6 @@ pub(super) fn read_secret_from_1password(
     Ok(value)
 }
 
-pub(super) fn build_http_client(token: &str) -> eyre::Result<Client> {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        "X-Api-Token",
-        HeaderValue::from_str(token).wrap_err("Invalid API token for header")?,
-    );
-    headers.insert(
-        USER_AGENT,
-        HeaderValue::from_static("sfm-propagate-changes/curseforge"),
-    );
-
-    Client::builder()
-        .default_headers(headers)
-        .timeout(Duration::from_mins(2))
-        .build()
-        .wrap_err("Failed to build HTTP client")
-}
-
 pub(super) fn resolve_core_api_key(
     api_key: Option<String>,
     token: Option<String>,
@@ -241,24 +220,6 @@ pub(super) fn resolve_core_api_key(
          - {DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE}\n\
          - {DEFAULT_OP_SECRET_REFERENCE}"
     )
-}
-
-pub(super) fn build_core_http_client(api_key: &str) -> eyre::Result<Client> {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        "x-api-key",
-        HeaderValue::from_str(api_key).wrap_err("Invalid Core API key for header")?,
-    );
-    headers.insert(
-        USER_AGENT,
-        HeaderValue::from_static("sfm-propagate-changes/curseforge"),
-    );
-
-    Client::builder()
-        .default_headers(headers)
-        .timeout(Duration::from_mins(2))
-        .build()
-        .wrap_err("Failed to build Core API HTTP client")
 }
 
 pub(super) fn fetch_project_files(

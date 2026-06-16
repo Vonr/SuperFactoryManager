@@ -2,8 +2,6 @@
 
 use super::super::curseforge_cli::DEFAULT_AMEND_SAFETY_AGE;
 use super::super::curseforge_cli::amend_file_changelog;
-use super::super::curseforge_cli::build_core_http_client;
-use super::super::curseforge_cli::build_http_client;
 use super::super::curseforge_cli::fetch_project_files;
 use super::super::curseforge_cli::filter_release_jars_by_branch;
 use super::super::curseforge_cli::find_latest_historical_file_for_mc;
@@ -22,6 +20,7 @@ use super::super::curseforge_cli::resolve_token;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::curseforge::CurseforgeHttpClient;
 use crate::curseforge::CurseforgeProjectFileId;
 use chrono::Utc;
 use color_eyre::owo_colors::OwoColorize;
@@ -107,7 +106,7 @@ fn release_amend(
         None
     } else {
         let token_value = resolve_token(token.clone(), op_secret.clone())?;
-        Some(build_http_client(&token_value)?)
+        Some(CurseforgeHttpClient::new(&token_value)?)
     };
 
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
@@ -129,7 +128,7 @@ fn release_amend(
     }
 
     let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
-    let client = build_core_http_client(&core_key)?;
+    let client = CurseforgeHttpClient::new_core_api(&core_key)?;
     let files = fetch_project_files(&client, project_id, &credential_source)?;
 
     let safety_age_text = safety_age.unwrap_or_else(|| DEFAULT_AMEND_SAFETY_AGE.to_string());

@@ -1,4 +1,3 @@
-use super::modrinth_cli::build_http_client;
 use super::modrinth_cli::download_sha1;
 use super::modrinth_cli::fetch_project_versions;
 use super::modrinth_cli::filter_release_jars_by_branch;
@@ -12,6 +11,7 @@ use super::modrinth_cli::sha1_hex;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::modrinth::ModrinthHttpClient;
 use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
 use facet::Facet;
@@ -51,7 +51,7 @@ fn validate_release_hashes(branch: BranchSelector, project: Option<String>) -> e
     let branch_query = branch.into_query()?;
     let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
 
-    let client = build_http_client(None)?;
+    let client = ModrinthHttpClient::new(None)?;
     let existing_versions = fetch_project_versions(&client, &project_id)?;
 
     info!("{} {}", "Project ID:".cyan().bold(), project_id);

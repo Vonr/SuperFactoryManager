@@ -16,10 +16,6 @@ use crate::worktree::parse_version;
 use eyre::Context;
 use reqwest::blocking::Client;
 use reqwest::blocking::multipart;
-use reqwest::header::AUTHORIZATION;
-use reqwest::header::HeaderMap;
-use reqwest::header::HeaderValue;
-use reqwest::header::USER_AGENT;
 use sha1::Digest;
 use sha1::Sha1;
 use std::collections::BTreeSet;
@@ -28,7 +24,6 @@ use std::fmt::Write as _;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-use std::time::Duration;
 use tracing::debug;
 
 pub(super) const MODRINTH_API_ROOT: &str = "https://api.modrinth.com/v2";
@@ -113,27 +108,6 @@ fn read_secret_from_1password(secret_reference: &str, what: &str) -> eyre::Resul
     }
 
     Ok(value)
-}
-
-pub(super) fn build_http_client(token: Option<&str>) -> eyre::Result<Client> {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        USER_AGENT,
-        HeaderValue::from_static("sfm-propagate-changes/modrinth"),
-    );
-
-    if let Some(token_value) = token {
-        headers.insert(
-            AUTHORIZATION,
-            HeaderValue::from_str(token_value).wrap_err("Invalid Modrinth token for header")?,
-        );
-    }
-
-    Client::builder()
-        .default_headers(headers)
-        .timeout(Duration::from_mins(2))
-        .build()
-        .wrap_err("Failed to build Modrinth HTTP client")
 }
 
 pub(super) fn amend_version_changelog(

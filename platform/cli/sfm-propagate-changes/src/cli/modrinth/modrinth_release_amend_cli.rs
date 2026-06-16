@@ -1,5 +1,4 @@
 use super::modrinth_cli::amend_version_changelog;
-use super::modrinth_cli::build_http_client;
 use super::modrinth_cli::compute_wrapped_release_changelog;
 use super::modrinth_cli::fetch_project_versions;
 use super::modrinth_cli::filter_release_jars_by_branch;
@@ -13,6 +12,7 @@ use super::modrinth_cli::resolve_token;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::modrinth::ModrinthHttpClient;
 use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
 use figue as args;
@@ -83,7 +83,7 @@ fn release_amend(
     } else {
         Some(resolve_token(token, op_secret)?)
     };
-    let client = build_http_client(token_value.as_deref())?;
+    let client = ModrinthHttpClient::new(token_value.as_deref())?;
 
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
     let branch_query = branch.into_query()?;

@@ -1,6 +1,5 @@
 #![allow(clippy::doc_markdown)]
 
-use super::super::curseforge_cli::build_core_http_client;
 use super::super::curseforge_cli::download_sha1;
 use super::super::curseforge_cli::fetch_project_files;
 use super::super::curseforge_cli::filter_release_jars_by_branch;
@@ -16,6 +15,7 @@ use super::super::curseforge_cli::sha1_hex;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::curseforge::CurseforgeHttpClient;
 use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
 use facet::Facet;
@@ -80,7 +80,7 @@ fn validate_release_hashes(
     let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
 
     let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
-    let core_client = build_core_http_client(&core_key)?;
+    let core_client = CurseforgeHttpClient::new_core_api(&core_key)?;
     let project_files = fetch_project_files(&core_client, project_id, &credential_source)?;
 
     info!("{} {}", "Project ID:".cyan().bold(), project_id);

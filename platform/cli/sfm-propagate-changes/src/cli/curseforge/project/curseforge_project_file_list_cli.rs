@@ -1,9 +1,9 @@
 #![allow(clippy::doc_markdown)]
 
-use super::super::curseforge_cli::build_core_http_client;
 use super::super::curseforge_cli::fetch_project_files;
 use super::super::curseforge_cli::resolve_core_api_key;
 use super::super::curseforge_cli::resolve_project_id;
+use crate::curseforge::CurseforgeHttpClient;
 use facet::Facet;
 use figue as args;
 use tracing::info;
@@ -45,7 +45,7 @@ fn list_project_files(
 ) -> eyre::Result<()> {
     let project_id = resolve_project_id(project)?;
     let (key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
-    let client = build_core_http_client(&key)?;
+    let client = CurseforgeHttpClient::new_core_api(&key)?;
     let files = fetch_project_files(&client, project_id, &credential_source)?;
 
     if files.is_empty() {

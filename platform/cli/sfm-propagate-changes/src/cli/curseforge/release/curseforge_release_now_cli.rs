@@ -1,7 +1,6 @@
 #![allow(clippy::doc_markdown)]
 
 use super::super::curseforge_cli::amend_file_changelog;
-use super::super::curseforge_cli::build_http_client;
 use super::super::curseforge_cli::build_upload_plans;
 use super::super::curseforge_cli::colorize_metadata_name;
 use super::super::curseforge_cli::curseforge_files_url;
@@ -20,6 +19,7 @@ use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
 use crate::curseforge::CurseforgeGameVersionId;
+use crate::curseforge::CurseforgeHttpClient;
 use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
 use figue as args;
@@ -95,7 +95,7 @@ fn release_now(
         None
     } else {
         let token_value = resolve_token(token, op_secret)?;
-        let client = build_http_client(&token_value)?;
+        let client = CurseforgeHttpClient::new(&token_value)?;
         let game_versions = fetch_game_versions(&client)?;
         Some((client, CurseforgeGameVersionId::build_index(&game_versions)))
     };
