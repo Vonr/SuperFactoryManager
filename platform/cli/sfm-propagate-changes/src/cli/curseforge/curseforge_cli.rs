@@ -20,9 +20,6 @@ use super::CurseforgeReleaseNowArgs;
 use super::CurseforgeReleaseValidateArgs;
 use crate::branch_targets::BranchQuery;
 use crate::branch_targets::select_required_minecraft_versions;
-use crate::cli::jar::BranchSelector;
-use crate::cli::jar::get_jar_dir;
-use crate::cli::repo_root::get_repo_root;
 use crate::paths::APP_HOME;
 use crate::terminal_output::stdout_prompt;
 use crate::worktree::parse_version;
@@ -47,36 +44,37 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
 use tracing::debug;
-use tracing::info;
 
-const CURSEFORGE_API_ROOT: &str = "https://minecraft.curseforge.com/api";
-const CURSEFORGE_CORE_API_ROOT: &str = "https://api.curseforge.com/v1";
-const CURSEFORGE_DEFAULT_PROJECT_FILE: &str = "curseforge_project_id.txt";
-const CURSEFORGE_DEFAULT_PROJECT_ID: u64 = 306_935;
-const CURSEFORGE_TOKEN_ENV_VAR: &str = "CURSEFORGE_API_TOKEN";
-const CURSEFORGE_CORE_API_KEY_ENV_VAR: &str = "CURSEFORGE_CORE_API_KEY";
-const DEFAULT_OP_SECRET_REFERENCE: &str = "op://Private/CurseForge SFM Upload token/credential";
-const DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE: &str =
+pub(super) const CURSEFORGE_API_ROOT: &str = "https://minecraft.curseforge.com/api";
+pub(super) const CURSEFORGE_CORE_API_ROOT: &str = "https://api.curseforge.com/v1";
+pub(super) const CURSEFORGE_DEFAULT_PROJECT_FILE: &str = "curseforge_project_id.txt";
+pub(super) const CURSEFORGE_DEFAULT_PROJECT_ID: u64 = 306_935;
+pub(super) const CURSEFORGE_TOKEN_ENV_VAR: &str = "CURSEFORGE_API_TOKEN";
+pub(super) const CURSEFORGE_CORE_API_KEY_ENV_VAR: &str = "CURSEFORGE_CORE_API_KEY";
+pub(super) const DEFAULT_OP_SECRET_REFERENCE: &str =
+    "op://Private/CurseForge SFM Upload token/credential";
+pub(super) const DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE: &str =
     "op://Private/SFM CurseForge studios token/credential";
-const DEFAULT_AMEND_SAFETY_AGE: &str = "30m";
-const CURSEFORGE_AUTHORS_FILES_URL_PREFIX: &str = "https://authors.curseforge.com/#/projects";
-type CurseforgeVersionRow = (u64, String, String, (u32, u32, u32));
+pub(super) const DEFAULT_AMEND_SAFETY_AGE: &str = "30m";
+pub(super) const CURSEFORGE_AUTHORS_FILES_URL_PREFIX: &str =
+    "https://authors.curseforge.com/#/projects";
+pub(super) type CurseforgeVersionRow = (u64, String, String, (u32, u32, u32));
 
-const ANSI_RESET: &str = "\x1b[0m";
-const ANSI_BOLD_CYAN: &str = "\x1b[1;36m";
-const ANSI_BOLD_YELLOW: &str = "\x1b[1;33m";
-const ANSI_BOLD_GREEN: &str = "\x1b[1;32m";
-const ANSI_BOLD_BLUE: &str = "\x1b[1;34m";
-const ANSI_BOLD_MAGENTA: &str = "\x1b[1;35m";
-const ANSI_BOLD_RED: &str = "\x1b[1;31m";
-const ANSI_BOLD_WHITE: &str = "\x1b[1;37m";
-const ANSI_DIM: &str = "\x1b[2m";
+pub(super) const ANSI_RESET: &str = "\x1b[0m";
+pub(super) const ANSI_BOLD_CYAN: &str = "\x1b[1;36m";
+pub(super) const ANSI_BOLD_YELLOW: &str = "\x1b[1;33m";
+pub(super) const ANSI_BOLD_GREEN: &str = "\x1b[1;32m";
+pub(super) const ANSI_BOLD_BLUE: &str = "\x1b[1;34m";
+pub(super) const ANSI_BOLD_MAGENTA: &str = "\x1b[1;35m";
+pub(super) const ANSI_BOLD_RED: &str = "\x1b[1;31m";
+pub(super) const ANSI_BOLD_WHITE: &str = "\x1b[1;37m";
+pub(super) const ANSI_DIM: &str = "\x1b[2m";
 
-fn style(text: &str, ansi: &str) -> String {
+pub(super) fn style(text: &str, ansi: &str) -> String {
     format!("{ansi}{text}{ANSI_RESET}")
 }
 
-fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
+pub(super) fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
     stdout_prompt(format!("{message} "))?;
 
     let mut input = String::new();
@@ -88,7 +86,7 @@ fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
     Ok(matches!(normalized.as_str(), "y" | "yes"))
 }
 
-fn colorize_metadata_name(name: &str, mc_version: &str) -> String {
+pub(super) fn colorize_metadata_name(name: &str, mc_version: &str) -> String {
     // todo(2026-06-16) shouldn't we have an enum for the known variants with an Other(String) escape hatch where this fn would be an instance method?
     if name == mc_version {
         return style(name, ANSI_BOLD_BLUE);
@@ -103,7 +101,7 @@ fn colorize_metadata_name(name: &str, mc_version: &str) -> String {
     }
 }
 
-fn curseforge_files_url(project_id: u64) -> String {
+pub(super) fn curseforge_files_url(project_id: u64) -> String {
     format!("{CURSEFORGE_AUTHORS_FILES_URL_PREFIX}/{project_id}/files")
 }
 
@@ -257,87 +255,77 @@ impl CurseforgeProjectFileCommand {
 }
 
 #[derive(Facet, Debug, Clone)]
-struct CurseforgeProjectFileItem {
-    id: u64,
+pub(super) struct CurseforgeProjectFileItem {
+    pub(super) id: u64,
     #[facet(default, rename = "fileName")]
-    file_name: Option<String>,
+    pub(super) file_name: Option<String>,
     #[facet(default, rename = "displayName")]
-    display_name: Option<String>,
+    pub(super) display_name: Option<String>,
     #[facet(default, rename = "releaseType")]
-    release_type: Option<u32>,
+    pub(super) release_type: Option<u32>,
     #[facet(default, rename = "fileStatus")]
-    file_status: Option<u32>,
+    pub(super) file_status: Option<u32>,
     #[facet(default, rename = "gameVersions")]
-    game_versions: Vec<String>,
+    pub(super) game_versions: Vec<String>,
     #[facet(default, rename = "downloadUrl")]
-    download_url: Option<String>,
+    pub(super) download_url: Option<String>,
     #[facet(default, rename = "fileDate")]
-    file_date: Option<String>,
+    pub(super) file_date: Option<String>,
     #[facet(default)]
-    hashes: Vec<CurseforgeProjectFileHash>,
+    pub(super) hashes: Vec<CurseforgeProjectFileHash>,
 }
 
 #[derive(Facet, Debug, Clone)]
-struct CurseforgeProjectFileHash {
+pub(super) struct CurseforgeProjectFileHash {
     #[facet(default)]
-    algo: Option<u32>,
+    pub(super) algo: Option<u32>,
     #[facet(default)]
-    value: Option<String>,
+    pub(super) value: Option<String>,
 }
 
 #[derive(Facet, Debug, Clone)]
-struct CurseforgeProjectFileListEnvelope {
+pub(super) struct CurseforgeProjectFileListEnvelope {
     #[facet(default)]
-    data: Vec<CurseforgeProjectFileItem>,
+    pub(super) data: Vec<CurseforgeProjectFileItem>,
 }
 
 #[derive(Facet, Debug, Clone)]
-struct CurseforgeUploadResponse {
-    id: u64,
+pub(super) struct CurseforgeUploadResponse {
+    pub(super) id: u64,
 }
 
 #[derive(Facet, Debug, Clone)]
-struct CurseforgeGameVersion {
-    id: u64,
+pub(super) struct CurseforgeGameVersion {
+    pub(super) id: u64,
     #[facet(default, rename = "gameVersionTypeID")]
-    game_version_type_id: Option<u64>,
-    name: String,
+    pub(super) game_version_type_id: Option<u64>,
+    pub(super) name: String,
     #[facet(default)]
-    slug: Option<String>,
+    pub(super) slug: Option<String>,
 }
 
 #[derive(Facet, Debug, Clone)]
-struct UploadMetadata {
-    changelog: String,
+pub(super) struct UploadMetadata {
+    pub(super) changelog: String,
     #[facet(rename = "changelogType")]
-    changelog_type: String,
+    pub(super) changelog_type: String,
     #[facet(rename = "displayName")]
-    display_name: String,
+    pub(super) display_name: String,
     #[facet(rename = "gameVersions")]
-    game_versions: Vec<u64>,
+    pub(super) game_versions: Vec<u64>,
     #[facet(rename = "releaseType")]
-    release_type: String,
+    pub(super) release_type: String,
 }
 
 #[derive(Facet, Debug, Clone)]
-struct CurseforgeAmendFilePayload {
+pub(super) struct CurseforgeAmendFilePayload {
     #[facet(rename = "fileID")]
-    file_id: u64,
-    changelog: String,
+    pub(super) file_id: u64,
+    pub(super) changelog: String,
     #[facet(rename = "changelogType")]
-    changelog_type: String,
+    pub(super) changelog_type: String,
     #[facet(rename = "displayName")]
-    display_name: String,
-}
-
-pub(super) fn set_default_project_id(project: u64) -> eyre::Result<()> {
-    APP_HOME.ensure_dir()?;
-    let path = APP_HOME.file_path(CURSEFORGE_DEFAULT_PROJECT_FILE);
-    std::fs::write(&path, project.to_string())
-        .wrap_err_with(|| format!("Failed to write default project file: {}", path.display()))?;
-
-    info!("Default CurseForge project set to {project}.");
-    Ok(())
+    pub(super) display_name: String,
 }
 
 pub(super) fn get_default_project_id() -> eyre::Result<u64> {
@@ -359,14 +347,17 @@ pub(super) fn get_default_project_id() -> eyre::Result<u64> {
         .wrap_err_with(|| format!("Invalid project id in default project file: '{trimmed}'"))
 }
 
-fn resolve_project_id(project: Option<u64>) -> eyre::Result<u64> {
+pub(super) fn resolve_project_id(project: Option<u64>) -> eyre::Result<u64> {
     match project {
         Some(project_id) => Ok(project_id),
         None => get_default_project_id(),
     }
 }
 
-fn resolve_token(token: Option<String>, op_secret: Option<String>) -> eyre::Result<String> {
+pub(super) fn resolve_token(
+    token: Option<String>,
+    op_secret: Option<String>,
+) -> eyre::Result<String> {
     if let Some(value) = token {
         let trimmed = value.trim().to_string();
         if trimmed.is_empty() {
@@ -386,7 +377,10 @@ fn resolve_token(token: Option<String>, op_secret: Option<String>) -> eyre::Resu
     read_secret_from_1password(&secret_reference, "token")
 }
 
-fn read_secret_from_1password(secret_reference: &str, what: &str) -> eyre::Result<String> {
+pub(super) fn read_secret_from_1password(
+    secret_reference: &str,
+    what: &str,
+) -> eyre::Result<String> {
     let output = Command::new("op")
         .args(["read", secret_reference, "--no-newline"])
         .output()
@@ -411,7 +405,7 @@ fn read_secret_from_1password(secret_reference: &str, what: &str) -> eyre::Resul
     Ok(value)
 }
 
-fn build_http_client(token: &str) -> eyre::Result<Client> {
+pub(super) fn build_http_client(token: &str) -> eyre::Result<Client> {
     let mut headers = HeaderMap::new();
     headers.insert(
         "X-Api-Token",
@@ -429,7 +423,7 @@ fn build_http_client(token: &str) -> eyre::Result<Client> {
         .wrap_err("Failed to build HTTP client")
 }
 
-fn resolve_core_api_key(
+pub(super) fn resolve_core_api_key(
     api_key: Option<String>,
     token: Option<String>,
     op_secret: Option<String>,
@@ -489,7 +483,7 @@ fn resolve_core_api_key(
     )
 }
 
-fn build_core_http_client(api_key: &str) -> eyre::Result<Client> {
+pub(super) fn build_core_http_client(api_key: &str) -> eyre::Result<Client> {
     let mut headers = HeaderMap::new();
     headers.insert(
         "x-api-key",
@@ -507,99 +501,7 @@ fn build_core_http_client(api_key: &str) -> eyre::Result<Client> {
         .wrap_err("Failed to build Core API HTTP client")
 }
 
-pub(super) fn list_minecraft_versions(
-    branch: BranchSelector,
-    token: Option<String>,
-    op_secret: Option<String>,
-) -> eyre::Result<()> {
-    let branch_query = branch.into_query()?;
-    let selected_versions = select_required_minecraft_versions(&branch_query)?;
-    let token_value = resolve_token(token, op_secret)?;
-    let client = build_http_client(&token_value)?;
-
-    let mut rows: Vec<CurseforgeVersionRow> = fetch_game_versions(&client)?
-        .into_iter()
-        .filter_map(|version| {
-            let parsed = parse_version(&version.name)?;
-            selected_versions
-                .iter()
-                .any(|selected| selected.as_str() == version.name)
-                .then(|| {
-                    (
-                        version.id,
-                        version.name,
-                        version.slug.unwrap_or_default(),
-                        parsed,
-                    )
-                })
-        })
-        .collect();
-
-    rows.sort_by(|left, right| left.3.cmp(&right.3).then(left.1.cmp(&right.1)));
-
-    if rows.is_empty() {
-        info!("No Minecraft game versions matched --branch '{branch_query}'.");
-        return Ok(());
-    }
-
-    info!("CurseForge Minecraft versions matching --branch '{branch_query}':");
-    info!("id\tname\tslug");
-    for (id, name, slug, _) in rows {
-        info!("{id}\t{name}\t{slug}");
-    }
-
-    Ok(())
-}
-
-pub(super) fn list_project_files(
-    project: Option<u64>,
-    api_key: Option<String>,
-    token: Option<String>,
-    op_secret: Option<String>,
-) -> eyre::Result<()> {
-    let project_id = resolve_project_id(project)?;
-    let (key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
-    let client = build_core_http_client(&key)?;
-    let files = fetch_project_files(&client, project_id, &credential_source)?;
-
-    if files.is_empty() {
-        info!("No files found for project {project_id}.");
-        return Ok(());
-    }
-
-    info!("Project {project_id} files:");
-    info!("id\tfile_name\tdisplay_name\trelease_type\tfile_status\tgame_versions");
-    for file in files {
-        let file_name = file
-            .file_name
-            .clone()
-            .unwrap_or_else(|| "<unknown>".to_string());
-        let display_name = file
-            .display_name
-            .as_deref()
-            .or(Some(file_name.as_str()))
-            .unwrap_or("<unnamed>");
-        let release_type = file
-            .release_type
-            .map_or_else(|| "<unknown>".to_string(), |value| value.to_string());
-        let file_status = file
-            .file_status
-            .map_or_else(|| "<unknown>".to_string(), |value| value.to_string());
-        let game_versions = if file.game_versions.is_empty() {
-            "<none>".to_string()
-        } else {
-            file.game_versions.join(",")
-        };
-        info!(
-            "{}\t{}\t{}\t{}\t{}\t{}",
-            file.id, file_name, display_name, release_type, file_status, game_versions
-        );
-    }
-
-    Ok(())
-}
-
-fn fetch_project_files(
+pub(super) fn fetch_project_files(
     client: &Client,
     project_id: u64,
     credential_source: &str,
@@ -637,192 +539,23 @@ fn fetch_project_files(
     Ok(envelope.data)
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "release flow is intentionally linear"
-)]
-pub(super) fn release_now(
-    branch: BranchSelector,
-    project: Option<u64>,
-    token: Option<String>,
-    op_secret: Option<String>,
-    dry_run: bool,
-) -> eyre::Result<()> {
-    let branch_query = branch.into_query()?;
-    let project_id = resolve_project_id(project)?;
-
-    let repo_root = get_repo_root()?;
-    let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
-    let changelog_path = repo_root
-        .join("platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml");
-    let jar_dir = get_jar_dir()?;
-
-    let mod_version = read_mod_version(&gradle_properties)?;
-    let changelog_section = read_changelog_section(&changelog_path, &mod_version)?;
-    let wrapped_changelog = format!("```\n{}\n```", changelog_section.trim());
-    let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
-
-    let game_version_index = if dry_run {
-        None
-    } else {
-        let token_value = resolve_token(token, op_secret)?;
-        let client = build_http_client(&token_value)?;
-        let game_versions = fetch_game_versions(&client)?;
-        Some((client, build_game_version_index(&game_versions)))
-    };
-    // todo(2026-06-16) I need to test this to see how badly our tracing subscriber mangles the presentation of this compared to our println version. might want to adapt this to be a writer or something
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!(
-        "{} {}",
-        style("Jar dir:", ANSI_BOLD_CYAN),
-        jar_dir.display()
-    );
-    if dry_run {
-        info!(
-            "{} {}",
-            style("Mode:", ANSI_BOLD_YELLOW),
-            style("dry-run (no uploads)", ANSI_BOLD_YELLOW)
-        );
-    }
-    info!("{}", style("Changelog:", ANSI_BOLD_CYAN));
-    info!("{wrapped_changelog}");
-
-    let upload_plans = if dry_run {
-        None
-    } else {
-        let (_, index) = game_version_index
-            .as_ref()
-            .ok_or_else(|| eyre::eyre!("internal error: missing game version index"))?;
-        Some(build_upload_plans(
-            &jars,
-            &mod_version,
-            &wrapped_changelog,
-            index,
-        )?)
-    };
-
-    if let Some(plans) = &upload_plans {
-        info!("{}", style("Metadata preflight:", ANSI_BOLD_CYAN));
-        for plan in plans {
-            let metadata_pairs: Vec<String> = plan
-                .metadata_names
-                .iter()
-                .zip(plan.metadata.game_versions.iter())
-                .map(|(name, id)| format!("{name}:{id}"))
-                .collect();
-            info!(
-                "  {} {} {} {}",
-                style("MC", ANSI_DIM),
-                style(&plan.mc_version, ANSI_BOLD_BLUE),
-                style("=>", ANSI_DIM),
-                metadata_pairs.join(", ")
-            );
-        }
-    }
-
-    let action = if dry_run {
-        "run the dry-run release preview"
-    } else {
-        "upload files to CurseForge"
-    };
-    let prompt = format!(
-        "{} {} {}",
-        style("Proceed to", ANSI_BOLD_YELLOW),
-        style(action, ANSI_BOLD_YELLOW),
-        style("? (y/N)", ANSI_BOLD_YELLOW)
-    );
-    if !prompt_yes_no(&prompt)? {
-        info!("{}", style("Aborted release-now.", ANSI_BOLD_YELLOW));
-        info!("{}", curseforge_files_url(project_id));
-        return Ok(());
-    }
-
-    for jar in jars {
-        let mc_version = parse_mc_version_from_jar_name(&jar)?;
-
-        let jar_name = jar
-            .file_name()
-            .and_then(OsStr::to_str)
-            .map(ToString::to_string)
-            .ok_or_else(|| eyre::eyre!("Invalid jar filename: {}", jar.display()))?;
-
-        info!(
-            "{} {} {} {}",
-            style("Uploading", ANSI_BOLD_WHITE),
-            style(&jar_name, ANSI_BOLD_MAGENTA),
-            style("for MC", ANSI_DIM),
-            style(&mc_version, ANSI_BOLD_BLUE)
-        );
-        if dry_run {
-            let game_version_names = game_version_names_for_release(&mc_version)?;
-            let colored_metadata_names: Vec<String> = game_version_names
-                .iter()
-                .map(|name| colorize_metadata_name(name, &mc_version))
-                .collect();
-            info!(
-                "  {} {}",
-                style("metadata names:", ANSI_DIM),
-                colored_metadata_names.join(", ")
-            );
-            continue;
-        }
-
-        let plan = upload_plans
-            .as_ref()
-            .and_then(|plans| plans.iter().find(|plan| plan.jar_path == jar))
-            .ok_or_else(|| {
-                eyre::eyre!("internal error: missing upload plan for {}", jar.display())
-            })?;
-
-        let (client, _) = game_version_index.as_ref().ok_or_else(|| {
-            eyre::eyre!("internal error: missing CurseForge client for non-dry-run upload")
-        })?;
-
-        let uploaded_id = upload_project_file(client, project_id, &jar, &plan.metadata)?;
-        amend_file_changelog(
-            client,
-            project_id,
-            uploaded_id,
-            &plan.metadata.display_name,
-            &plan.metadata.changelog,
-        )?;
-        info!(
-            "  {} {}",
-            style("uploaded file id", ANSI_BOLD_GREEN),
-            style(&uploaded_id.to_string(), ANSI_BOLD_GREEN)
-        );
-    }
-
-    if !dry_run {
-        info!(
-            "{}",
-            style("CurseForge release upload complete.", ANSI_BOLD_GREEN)
-        );
-    }
-    info!("{}", curseforge_files_url(project_id));
-
-    Ok(())
+#[derive(Debug, Clone)]
+pub(super) struct UploadPlan {
+    pub(super) jar_path: PathBuf,
+    pub(super) mc_version: String,
+    pub(super) metadata_names: Vec<String>,
+    pub(super) metadata: UploadMetadata,
 }
 
 #[derive(Debug, Clone)]
-struct UploadPlan {
-    jar_path: PathBuf,
-    mc_version: String,
-    metadata_names: Vec<String>,
-    metadata: UploadMetadata,
+pub(super) struct ResolvedMetadataPlan {
+    pub(super) jar_path: PathBuf,
+    pub(super) mc_version: String,
+    pub(super) metadata_names: Vec<String>,
+    pub(super) game_version_ids: Vec<u64>,
 }
 
-#[derive(Debug, Clone)]
-struct ResolvedMetadataPlan {
-    jar_path: PathBuf,
-    mc_version: String,
-    metadata_names: Vec<String>,
-    game_version_ids: Vec<u64>,
-}
-
-fn build_resolved_metadata_plans(
+pub(super) fn build_resolved_metadata_plans(
     jars: &[PathBuf],
     game_version_index: &HashMap<String, Vec<CurseforgeGameVersion>>,
 ) -> eyre::Result<Vec<ResolvedMetadataPlan>> {
@@ -844,7 +577,7 @@ fn build_resolved_metadata_plans(
     Ok(plans)
 }
 
-fn build_upload_plans(
+pub(super) fn build_upload_plans(
     jars: &[PathBuf],
     mod_version: &str,
     changelog_section: &str,
@@ -878,7 +611,7 @@ fn build_upload_plans(
     Ok(plans)
 }
 
-fn filter_release_jars_by_branch(
+pub(super) fn filter_release_jars_by_branch(
     jars: Vec<PathBuf>,
     branch_query: &BranchQuery,
 ) -> eyre::Result<Vec<PathBuf>> {
@@ -901,11 +634,11 @@ fn filter_release_jars_by_branch(
     Ok(filtered)
 }
 
-fn is_java_metadata_name(value: &str) -> bool {
+pub(super) fn is_java_metadata_name(value: &str) -> bool {
     value.starts_with("Java ")
 }
 
-fn to_comparison_name_set(values: &[String]) -> BTreeSet<String> {
+pub(super) fn to_comparison_name_set(values: &[String]) -> BTreeSet<String> {
     values
         .iter()
         .filter(|value| !is_java_metadata_name(value))
@@ -913,7 +646,7 @@ fn to_comparison_name_set(values: &[String]) -> BTreeSet<String> {
         .collect()
 }
 
-fn find_latest_historical_file_for_mc<'a>(
+pub(super) fn find_latest_historical_file_for_mc<'a>(
     files: &'a [CurseforgeProjectFileItem],
     mc_version: &str,
 ) -> eyre::Result<&'a CurseforgeProjectFileItem> {
@@ -924,7 +657,7 @@ fn find_latest_historical_file_for_mc<'a>(
         .ok_or_else(|| eyre::eyre!("No historical project file found for MC {}", mc_version))
 }
 
-fn parse_mod_version_from_release_name(name: &str) -> Option<String> {
+pub(super) fn parse_mod_version_from_release_name(name: &str) -> Option<String> {
     let trimmed = name.trim();
     if let Some(without_jar) = trimmed.strip_suffix(".jar") {
         let version = without_jar.rsplit('-').next()?;
@@ -949,7 +682,7 @@ fn parse_mod_version_from_release_name(name: &str) -> Option<String> {
     None
 }
 
-fn historical_mod_version(file: &CurseforgeProjectFileItem) -> Option<String> {
+pub(super) fn historical_mod_version(file: &CurseforgeProjectFileItem) -> Option<String> {
     file.file_name
         .as_deref()
         .and_then(parse_mod_version_from_release_name)
@@ -960,228 +693,7 @@ fn historical_mod_version(file: &CurseforgeProjectFileItem) -> Option<String> {
         })
 }
 
-pub(super) fn check_minecraft_version_metadata(
-    branch: BranchSelector,
-    project: Option<u64>,
-    api_key: Option<String>,
-    token: Option<String>,
-    op_secret: Option<String>,
-) -> eyre::Result<()> {
-    let branch_query = branch.into_query()?;
-    let project_id = resolve_project_id(project)?;
-
-    let repo_root = get_repo_root()?;
-    let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
-    let jar_dir = get_jar_dir()?;
-
-    let mod_version = read_mod_version(&gradle_properties)?;
-    let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
-
-    let token_value = resolve_token(token.clone(), op_secret.clone())?;
-    let upload_client = build_http_client(&token_value)?;
-    let game_versions = fetch_game_versions(&upload_client)?;
-    let game_version_index = build_game_version_index(&game_versions);
-    let metadata_plans = build_resolved_metadata_plans(&jars, &game_version_index)?;
-
-    let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
-    let core_client = build_core_http_client(&core_key)?;
-    let project_files = fetch_project_files(&core_client, project_id, &credential_source)?;
-
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!(
-        "{} {}",
-        style("Jars checked:", ANSI_BOLD_CYAN),
-        metadata_plans.len()
-    );
-
-    for plan in metadata_plans {
-        let historical = find_latest_historical_file_for_mc(&project_files, &plan.mc_version)?;
-        let historical_version = historical_mod_version(historical).ok_or_else(|| {
-            eyre::eyre!(
-                "Could not parse mod version from latest historical file {} for MC {}",
-                historical.id,
-                plan.mc_version
-            )
-        })?;
-
-        if historical_version == mod_version {
-            eyre::bail!(
-                "Latest historical file already matches current mod version for MC {} (file id {}, version {}).\nThis release appears to already be published.",
-                plan.mc_version,
-                historical.id,
-                mod_version
-            );
-        }
-
-        let expected = to_comparison_name_set(&plan.metadata_names);
-        let historical_set = to_comparison_name_set(&historical.game_versions);
-
-        if expected != historical_set {
-            let missing: Vec<String> = expected.difference(&historical_set).cloned().collect();
-            let unexpected: Vec<String> = historical_set.difference(&expected).cloned().collect();
-            eyre::bail!(
-                "Historical metadata mismatch for MC {} (file id {}).\nexpected: {}\nhistorical: {}\nmissing: {}\nunexpected: {}",
-                plan.mc_version,
-                historical.id,
-                plan.metadata_names.join(", "),
-                historical.game_versions.join(", "),
-                if missing.is_empty() {
-                    "<none>".to_string()
-                } else {
-                    missing.join(", ")
-                },
-                if unexpected.is_empty() {
-                    "<none>".to_string()
-                } else {
-                    unexpected.join(", ")
-                }
-            );
-        }
-
-        let id_pairs: Vec<String> = plan
-            .metadata_names
-            .iter()
-            .zip(plan.game_version_ids.iter())
-            .map(|(name, id)| format!("{name}:{id}"))
-            .collect();
-
-        info!(
-            "{} {} {} {} {}",
-            style("✓", ANSI_BOLD_GREEN),
-            style(&plan.mc_version, ANSI_BOLD_BLUE),
-            style("matches historical file", ANSI_DIM),
-            historical.id,
-            style(&format!("({})", id_pairs.join(", ")), ANSI_DIM)
-        );
-    }
-
-    info!(
-        "{}",
-        style(
-            "Metadata check passed: computed metadata matches historical uploads.",
-            ANSI_BOLD_GREEN
-        )
-    );
-
-    Ok(())
-}
-
-pub(super) fn validate_release_hashes(
-    branch: BranchSelector,
-    project: Option<u64>,
-    api_key: Option<String>,
-    token: Option<String>,
-    op_secret: Option<String>,
-) -> eyre::Result<()> {
-    let branch_query = branch.into_query()?;
-    let project_id = resolve_project_id(project)?;
-
-    let repo_root = get_repo_root()?;
-    let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
-    let jar_dir = get_jar_dir()?;
-
-    let mod_version = read_mod_version(&gradle_properties)?;
-    let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
-
-    let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
-    let core_client = build_core_http_client(&core_key)?;
-    let project_files = fetch_project_files(&core_client, project_id, &credential_source)?;
-
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
-
-    for jar in jars {
-        let mc_version = parse_mc_version_from_jar_name(&jar)?;
-        let local_bytes = std::fs::read(&jar)
-            .wrap_err_with(|| format!("Failed to read local jar for hashing: {}", jar.display()))?;
-        let local_sha1 = sha1_hex(&local_bytes);
-
-        let historical = find_latest_historical_file_for_mc(&project_files, &mc_version)?;
-        let historical_version = historical_mod_version(historical).ok_or_else(|| {
-            eyre::eyre!(
-                "Could not parse mod version from latest historical file {} for MC {}",
-                historical.id,
-                mc_version
-            )
-        })?;
-
-        if historical_version != mod_version {
-            eyre::bail!(
-                "Latest historical CurseForge file for MC {} was {}, expected {} (file id {}).",
-                mc_version,
-                historical_version,
-                mod_version,
-                historical.id
-            );
-        }
-
-        let remote_sha1 = find_sha1_hash(&historical.hashes).ok_or_else(|| {
-            eyre::eyre!(
-                "CurseForge file {} did not include a sha1 hash in metadata",
-                historical.id
-            )
-        })?;
-
-        if local_sha1 != remote_sha1 {
-            eyre::bail!(
-                "Hash mismatch (local vs remote metadata) for MC {} (file id {}).\nlocal sha1: {}\nremote sha1: {}",
-                mc_version,
-                historical.id,
-                local_sha1,
-                remote_sha1
-            );
-        }
-
-        let download_url = historical.download_url.as_deref().ok_or_else(|| {
-            eyre::eyre!(
-                "CurseForge file {} did not include a download URL",
-                historical.id
-            )
-        })?;
-
-        let downloaded_sha1 = download_sha1(&core_client, download_url)?;
-        if downloaded_sha1 != local_sha1 {
-            eyre::bail!(
-                "Hash mismatch (local vs downloaded) for MC {} (file id {}).\nlocal sha1: {}\ndownloaded sha1: {}",
-                mc_version,
-                historical.id,
-                local_sha1,
-                downloaded_sha1
-            );
-        }
-
-        let file_label = historical
-            .file_name
-            .as_deref()
-            .unwrap_or("<unknown>")
-            .to_string();
-
-        info!(
-            "{} {} {} {} {}",
-            style("✓", ANSI_BOLD_GREEN),
-            style(&mc_version, ANSI_BOLD_BLUE),
-            style("hash validated", ANSI_DIM),
-            historical.id,
-            style(&format!("({file_label})"), ANSI_DIM)
-        );
-    }
-
-    info!(
-        "{}",
-        style(
-            "Hash validation passed: downloaded CurseForge files match local release jars.",
-            ANSI_BOLD_GREEN
-        )
-    );
-
-    Ok(())
-}
-
-fn parse_safety_age(value: &str) -> eyre::Result<Duration> {
+pub(super) fn parse_safety_age(value: &str) -> eyre::Result<Duration> {
     let trimmed = value.trim();
     if trimmed.is_empty() {
         eyre::bail!("--safety-age cannot be empty");
@@ -1213,7 +725,10 @@ fn parse_safety_age(value: &str) -> eyre::Result<Duration> {
     Ok(Duration::from_secs(seconds))
 }
 
-fn parse_file_age(file_date: Option<&str>, now: DateTime<Utc>) -> eyre::Result<Duration> {
+pub(super) fn parse_file_age(
+    file_date: Option<&str>,
+    now: DateTime<Utc>,
+) -> eyre::Result<Duration> {
     let Some(file_date) = file_date else {
         eyre::bail!("Cannot determine age for historical file: missing fileDate");
     };
@@ -1228,7 +743,7 @@ fn parse_file_age(file_date: Option<&str>, now: DateTime<Utc>) -> eyre::Result<D
         .wrap_err_with(|| format!("Invalid age computed from fileDate: {file_date}"))
 }
 
-fn format_age(value: Duration) -> String {
+pub(super) fn format_age(value: Duration) -> String {
     let seconds = value.as_secs();
     if seconds >= 3600 {
         format!("{}h{}m", seconds / 3600, (seconds % 3600) / 60)
@@ -1239,192 +754,7 @@ fn format_age(value: Duration) -> String {
     }
 }
 
-#[expect(clippy::too_many_lines, reason = "amend flow is intentionally linear")]
-pub(super) fn release_amend(
-    branch: BranchSelector,
-    project: Option<u64>,
-    api_key: Option<String>,
-    token: Option<String>,
-    op_secret: Option<String>,
-    safety_age: Option<String>,
-    dry_run: bool,
-) -> eyre::Result<()> {
-    let branch_query = branch.into_query()?;
-    let project_id = resolve_project_id(project)?;
-
-    let repo_root = get_repo_root()?;
-    let gradle_properties = repo_root.join("platform/minecraft/gradle.properties");
-    let changelog_path = repo_root
-        .join("platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml");
-    let jar_dir = get_jar_dir()?;
-
-    let mod_version = read_mod_version(&gradle_properties)?;
-    let changelog_section = read_changelog_section(&changelog_path, &mod_version)?;
-    let wrapped_changelog = format!("```\n{}\n```", changelog_section.trim());
-
-    let upload_client = if dry_run {
-        None
-    } else {
-        let token_value = resolve_token(token.clone(), op_secret.clone())?;
-        Some(build_http_client(&token_value)?)
-    };
-
-    let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
-    let jars = filter_release_jars_by_branch(all_jars, &branch_query)?;
-    let mut target_versions: Vec<(String, String)> = Vec::new();
-    for jar in jars {
-        let mc_version = parse_mc_version_from_jar_name(&jar)?;
-        let jar_name = jar
-            .file_name()
-            .and_then(OsStr::to_str)
-            .map(ToString::to_string)
-            .ok_or_else(|| eyre::eyre!("Invalid jar filename: {}", jar.display()))?;
-        if target_versions
-            .iter()
-            .all(|(existing_mc, _)| existing_mc != &mc_version)
-        {
-            target_versions.push((mc_version, jar_name));
-        }
-    }
-
-    let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
-    let client = build_core_http_client(&core_key)?;
-    let files = fetch_project_files(&client, project_id, &credential_source)?;
-
-    let safety_age_text = safety_age.unwrap_or_else(|| DEFAULT_AMEND_SAFETY_AGE.to_string());
-    let max_file_age = parse_safety_age(&safety_age_text)?;
-    let now = Utc::now();
-
-    let mut file_targets: Vec<(String, u64, String, String, Duration)> = Vec::new();
-    for (mc_version, jar_name) in target_versions {
-        let file = find_latest_historical_file_for_mc(&files, &mc_version)?;
-        let historical_version = historical_mod_version(file).ok_or_else(|| {
-            eyre::eyre!(
-                "Could not parse mod version from latest historical file {} for MC {}",
-                file.id,
-                mc_version
-            )
-        })?;
-        if historical_version != mod_version {
-            eyre::bail!(
-                "Refusing to amend CurseForge file for MC {} because the latest remote version was {}, expected {} (file id {}).",
-                mc_version,
-                historical_version,
-                mod_version,
-                file.id
-            );
-        }
-        let old_name = file
-            .display_name
-            .clone()
-            .or_else(|| file.file_name.clone())
-            .unwrap_or_else(|| "<unknown>".to_string());
-        let file_age = parse_file_age(file.file_date.as_deref(), now)?;
-        if file_age > max_file_age {
-            eyre::bail!(
-                "Refusing to amend file {} for MC {} because it is {} old (safety-age is {}).",
-                file.id,
-                mc_version,
-                format_age(file_age),
-                safety_age_text
-            );
-        }
-        file_targets.push((mc_version, file.id, old_name, jar_name, file_age));
-    }
-
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!(
-        "{} {}",
-        style("Safety age:", ANSI_BOLD_CYAN),
-        style(&safety_age_text, ANSI_BOLD_CYAN)
-    );
-    if dry_run {
-        info!(
-            "{} {}",
-            style("Mode:", ANSI_BOLD_YELLOW),
-            style("dry-run (no CurseForge mutations)", ANSI_BOLD_YELLOW)
-        );
-    }
-    info!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
-    for (mc_version, file_id, old_name, jar_name, file_age) in &file_targets {
-        info!(
-            "  {} {} {} {} {} {} {} {} {} {}",
-            style("MC", ANSI_DIM),
-            style(mc_version, ANSI_BOLD_BLUE),
-            style("file id", ANSI_DIM),
-            file_id,
-            style("age", ANSI_DIM),
-            style(&format_age(*file_age), ANSI_BOLD_YELLOW),
-            style("old", ANSI_DIM),
-            old_name,
-            style("new", ANSI_DIM),
-            jar_name
-        );
-    }
-
-    if dry_run {
-        info!(
-            "{}",
-            style(
-                "Dry-run complete: remote CurseForge targets resolved; no files amended.",
-                ANSI_BOLD_GREEN
-            )
-        );
-        return Ok(());
-    }
-
-    let prompt = format!(
-        "{} {}",
-        style(
-            "Proceed to amend changelog on these files?",
-            ANSI_BOLD_YELLOW
-        ),
-        style("(y/N)", ANSI_BOLD_YELLOW)
-    );
-    if !prompt_yes_no(&prompt)? {
-        info!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
-        return Ok(());
-    }
-
-    for (mc_version, file_id, old_name, jar_name, file_age) in &file_targets {
-        info!(
-            "{} {} {} {} {} {} {} {} {} {}",
-            style("Amending file", ANSI_BOLD_WHITE),
-            style(&file_id.to_string(), ANSI_BOLD_MAGENTA),
-            style("for MC", ANSI_DIM),
-            style(mc_version, ANSI_BOLD_BLUE),
-            style("age", ANSI_DIM),
-            style(&format_age(*file_age), ANSI_BOLD_YELLOW),
-            style("old", ANSI_DIM),
-            old_name,
-            style("new", ANSI_DIM),
-            jar_name
-        );
-        let upload_client = upload_client.as_ref().ok_or_else(|| {
-            eyre::eyre!("internal error: missing CurseForge upload client for amend")
-        })?;
-        amend_file_changelog(
-            upload_client,
-            project_id,
-            *file_id,
-            jar_name,
-            &wrapped_changelog,
-        )?;
-    }
-
-    info!(
-        "{}",
-        style(
-            "CurseForge release changelog amend complete.",
-            ANSI_BOLD_GREEN
-        )
-    );
-
-    Ok(())
-}
-
-fn amend_file_changelog(
+pub(super) fn amend_file_changelog(
     client: &Client,
     project_id: u64,
     file_id: u64,
@@ -1467,7 +797,7 @@ fn amend_file_changelog(
     Ok(())
 }
 
-fn upload_project_file(
+pub(super) fn upload_project_file(
     client: &Client,
     project_id: u64,
     jar_path: &Path,
@@ -1509,7 +839,7 @@ fn upload_project_file(
     Ok(parsed.id)
 }
 
-fn read_mod_version(gradle_properties: &Path) -> eyre::Result<String> {
+pub(super) fn read_mod_version(gradle_properties: &Path) -> eyre::Result<String> {
     let content = std::fs::read_to_string(gradle_properties)
         .wrap_err_with(|| format!("Failed to read {}", gradle_properties.display()))?;
 
@@ -1528,7 +858,10 @@ fn read_mod_version(gradle_properties: &Path) -> eyre::Result<String> {
     Ok(mod_version.to_string())
 }
 
-fn read_changelog_section(changelog_path: &Path, mod_version: &str) -> eyre::Result<String> {
+pub(super) fn read_changelog_section(
+    changelog_path: &Path,
+    mod_version: &str,
+) -> eyre::Result<String> {
     let lines: Vec<String> = std::fs::read_to_string(changelog_path)
         .wrap_err_with(|| format!("Failed to read changelog: {}", changelog_path.display()))?
         .lines()
@@ -1569,7 +902,10 @@ fn read_changelog_section(changelog_path: &Path, mod_version: &str) -> eyre::Res
     Ok(lines[0..end_index].join("\n").trim().to_string())
 }
 
-fn get_ordered_release_jars(jar_dir: &Path, mod_version: &str) -> eyre::Result<Vec<PathBuf>> {
+pub(super) fn get_ordered_release_jars(
+    jar_dir: &Path,
+    mod_version: &str,
+) -> eyre::Result<Vec<PathBuf>> {
     if !jar_dir.is_dir() {
         eyre::bail!("Jar directory does not exist: {}", jar_dir.display());
     }
@@ -1619,7 +955,7 @@ fn get_ordered_release_jars(jar_dir: &Path, mod_version: &str) -> eyre::Result<V
     Ok(entries.into_iter().map(|entry| entry.0).collect())
 }
 
-fn parse_mc_version_from_jar_name(jar_path: &Path) -> eyre::Result<String> {
+pub(super) fn parse_mc_version_from_jar_name(jar_path: &Path) -> eyre::Result<String> {
     let file_name = jar_path
         .file_name()
         .and_then(OsStr::to_str)
@@ -1643,7 +979,7 @@ fn parse_mc_version_from_jar_name(jar_path: &Path) -> eyre::Result<String> {
     Ok(version.to_string())
 }
 
-fn fetch_game_versions(client: &Client) -> eyre::Result<Vec<CurseforgeGameVersion>> {
+pub(super) fn fetch_game_versions(client: &Client) -> eyre::Result<Vec<CurseforgeGameVersion>> {
     let url = format!("{CURSEFORGE_API_ROOT}/game/versions");
     let response = client
         .get(&url)
@@ -1664,7 +1000,7 @@ fn fetch_game_versions(client: &Client) -> eyre::Result<Vec<CurseforgeGameVersio
     facet_json::from_str(&body).wrap_err("Failed to parse game versions response JSON")
 }
 
-fn find_sha1_hash(hashes: &[CurseforgeProjectFileHash]) -> Option<String> {
+pub(super) fn find_sha1_hash(hashes: &[CurseforgeProjectFileHash]) -> Option<String> {
     hashes.iter().find_map(|hash| {
         let is_sha1 = hash.algo == Some(1);
         if !is_sha1 {
@@ -1679,7 +1015,7 @@ fn find_sha1_hash(hashes: &[CurseforgeProjectFileHash]) -> Option<String> {
     })
 }
 
-fn download_sha1(client: &Client, url: &str) -> eyre::Result<String> {
+pub(super) fn download_sha1(client: &Client, url: &str) -> eyre::Result<String> {
     let response = client
         .get(url)
         .send()
@@ -1699,7 +1035,7 @@ fn download_sha1(client: &Client, url: &str) -> eyre::Result<String> {
     Ok(sha1_hex(bytes.as_ref()))
 }
 
-fn sha1_hex(bytes: &[u8]) -> String {
+pub(super) fn sha1_hex(bytes: &[u8]) -> String {
     let mut hasher = Sha1::new();
     hasher.update(bytes);
     let digest = hasher.finalize();
@@ -1710,7 +1046,7 @@ fn sha1_hex(bytes: &[u8]) -> String {
     output
 }
 
-fn build_game_version_index(
+pub(super) fn build_game_version_index(
     game_versions: &[CurseforgeGameVersion],
 ) -> HashMap<String, Vec<CurseforgeGameVersion>> {
     let mut map: HashMap<String, Vec<CurseforgeGameVersion>> =
@@ -1722,7 +1058,7 @@ fn build_game_version_index(
     map
 }
 
-fn format_candidates(candidates: &[CurseforgeGameVersion]) -> String {
+pub(super) fn format_candidates(candidates: &[CurseforgeGameVersion]) -> String {
     candidates
         .iter()
         .map(|candidate| {
@@ -1740,7 +1076,7 @@ fn format_candidates(candidates: &[CurseforgeGameVersion]) -> String {
         .join("; ")
 }
 
-fn resolve_exact_type_id(
+pub(super) fn resolve_exact_type_id(
     game_version_index: &HashMap<String, Vec<CurseforgeGameVersion>>,
     name: &str,
     required_type_id: u64,
@@ -1781,7 +1117,7 @@ fn resolve_exact_type_id(
     }
 }
 
-fn resolve_minecraft_version_id(
+pub(super) fn resolve_minecraft_version_id(
     game_version_index: &HashMap<String, Vec<CurseforgeGameVersion>>,
     minecraft_version: &str,
 ) -> eyre::Result<u64> {
@@ -1828,7 +1164,7 @@ fn resolve_minecraft_version_id(
     }
 }
 
-fn resolve_game_version_ids(
+pub(super) fn resolve_game_version_ids(
     game_version_index: &HashMap<String, Vec<CurseforgeGameVersion>>,
     names: &[String],
 ) -> eyre::Result<Vec<u64>> {
@@ -1855,11 +1191,11 @@ fn resolve_game_version_ids(
     Ok(output)
 }
 
-fn normalize_version_key(input: &str) -> String {
+pub(super) fn normalize_version_key(input: &str) -> String {
     input.trim().to_ascii_lowercase().replace([' ', '_'], "-")
 }
 
-fn game_version_names_for_release(mc_version: &str) -> eyre::Result<Vec<String>> {
+pub(super) fn game_version_names_for_release(mc_version: &str) -> eyre::Result<Vec<String>> {
     let parsed = parse_version(mc_version)
         .ok_or_else(|| eyre::eyre!("Could not parse MC version '{mc_version}'"))?;
 
@@ -1873,7 +1209,7 @@ fn game_version_names_for_release(mc_version: &str) -> eyre::Result<Vec<String>>
     Ok(names)
 }
 
-fn loader_names_for(parsed: (u32, u32, u32)) -> Vec<&'static str> {
+pub(super) fn loader_names_for(parsed: (u32, u32, u32)) -> Vec<&'static str> {
     let v_1_20_0 = (1, 20, 0);
     let v_1_20_1 = (1, 20, 1);
 
@@ -1888,7 +1224,7 @@ fn loader_names_for(parsed: (u32, u32, u32)) -> Vec<&'static str> {
     vec!["NeoForge"]
 }
 
-fn java_version_name_for(parsed: (u32, u32, u32)) -> &'static str {
+pub(super) fn java_version_name_for(parsed: (u32, u32, u32)) -> &'static str {
     let v_1_20_4 = (1, 20, 4);
     let v_26_0_0 = (26, 0, 0);
     if parsed <= v_1_20_4 {

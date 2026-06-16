@@ -1,7 +1,12 @@
 #![allow(clippy::doc_markdown)]
 
+use super::curseforge_cli::build_core_http_client;
+use super::curseforge_cli::fetch_project_files;
+use super::curseforge_cli::resolve_core_api_key;
+use super::curseforge_cli::resolve_project_id;
 use facet::Facet;
 use figue as args;
+use tracing::info;
 
 /// Arguments for listing CurseForge project files.
 #[derive(Facet, Debug)]
@@ -28,11 +33,54 @@ impl CurseforgeProjectFileListArgs {
     ///
     /// Returns an error if CurseForge project files cannot be queried.
     pub fn invoke(self) -> eyre::Result<()> {
-        super::curseforge_cli::list_project_files(
-            self.project,
-            self.api_key,
-            self.token,
-            self.op_secret,
-        )
+        list_project_files(self.project, self.api_key, self.token, self.op_secret)
     }
+}
+
+fn list_project_files(
+    project: Option<u64>,
+    api_key: Option<String>,
+    token: Option<String>,
+    op_secret: Option<String>,
+) -> eyre::Result<()> {
+    let project_id = resolve_project_id(project)?;
+    let (key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
+    let client = build_core_http_client(&key)?;
+    let files = fetch_project_files(&client, project_id, &credential_source)?;
+
+    if files.is_empty() {
+        info!("No files found for project {project_id}.");
+        return Ok(());
+    }
+
+    info!("Project {project_id} files:");
+    info!("id\tfile_name\tdisplay_name\trelease_type\tfile_status\tgame_versions");
+    for file in files {
+        let file_name = file
+            .file_name
+            .clone()
+            .unwrap_or_else(|| "<unknown>".to_string());
+        let display_name = file
+            .display_name
+            .as_deref()
+            .or(Some(file_name.as_str()))
+            .unwrap_or("<unnamed>");
+        let release_type = file
+            .release_type
+            .map_or_else(|| "<unknown>".to_string(), |value| value.to_string());
+        let file_status = file
+            .file_status
+            .map_or_else(|| "<unknown>".to_string(), |value| value.to_string());
+        let game_versions = if file.game_versions.is_empty() {
+            "<none>".to_string()
+        } else {
+            file.game_versions.join(",")
+        };
+        info!(
+            "{}\t{}\t{}\t{}\t{}\t{}",
+            file.id, file_name, display_name, release_type, file_status, game_versions
+        );
+    }
+
+    Ok(())
 }

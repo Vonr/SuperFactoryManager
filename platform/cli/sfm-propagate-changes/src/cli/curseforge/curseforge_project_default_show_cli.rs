@@ -1,5 +1,6 @@
 #![allow(clippy::doc_markdown)]
 
+use super::curseforge_cli::get_default_project_id;
 use facet::Facet;
 
 /// Arguments for showing the default CurseForge project ID.
@@ -11,7 +12,7 @@ impl CurseforgeProjectDefaultShowArgs {
     ///
     /// Returns an error if the default project ID cannot be read.
     pub fn invoke(self) -> eyre::Result<()> {
-        let project = super::curseforge_cli::get_default_project_id()?;
+        let project = get_default_project_id()?;
         tracing::info!("{project}");
         Ok(())
     }
