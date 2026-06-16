@@ -272,7 +272,7 @@ Explicitly rejected for this plan:
 
 ### Process-Safe Artifact Locking
 
-Status: `Not Started`
+Status: `In Progress`
 
 Shared cache writes must be safe across:
 
@@ -443,8 +443,8 @@ Testing requirements:
 | 7 | `Done` | Replace affected `println!`/`eprintln!` progress with tracing events. | Jar build/run plan summary, target summaries, build node timing, launch setup/validation, Java tool, javac, ANTLR, and subprocess echo paths use tracing events; compare/report output and older helper output remain direct for later slices. |
 | 8 | `Done` | Add prefixed terminal rendering for line events. | Terminal tracing layer renders branch/source/process/stream-aware prefixes; explicit `--log-filter`/`--debug` override `RUST_LOG`; validated with `jar plan --branch 1.19.2`. |
 | 9 | `Done` | Keep JSONL logging opt-in via `--log-file` and ensure raw subprocess lines are represented. | Working tree makes JSONL append all events and include current span/span list context; validated with `jar plan --branch 1.19.2 --log-file`. |
-| 10 | `In Progress` | Implement std-based artifact lock guard. | Working tree adds `ArtifactLock`, wait policy, non-blocking try-acquire, blocking wait loop with tracing, and contention/stale-file tests; pending validation/review. |
-| 11 | `Not Started` | Wrap artifact downloads/cache writes with lock + temp + checksum + atomic replace. | Parallel SFM processes cannot corrupt shared artifact cache. |
+| 10 | `Done` | Implement std-based artifact lock guard. | Committed in `433a01e98`; `ArtifactLock` uses std file locking with wait policy, non-blocking try-acquire, blocking wait loop with tracing, and contention/stale-file tests. |
+| 11 | `In Progress` | Wrap artifact downloads/cache writes with lock + temp + checksum + atomic replace. | Working tree protects Maven artifact cache reads/writes, local artifact fallback copies, generic downloads, and known-SHA Minecraft asset downloads with artifact locks, unique temp files, checksum validation, and `.bad` quarantine. |
 | 12 | `Not Started` | Move eligible immutable artifacts into the common SFM cache. | Shared cache layout is documented in state/plan output and worktree-local caches hold only source-dependent outputs. |
 | 13 | `Not Started` | Add `--parallel [N]` for dry-run/resolution-heavy commands, defaulting to 10. | Parallel dry-run works across core targets and logs lock waits clearly. |
 | 14 | `Not Started` | Add Ctrl+C graceful/force shutdown behavior. | One Ctrl+C cancels gracefully; two within one second force exit; active children are handled. |

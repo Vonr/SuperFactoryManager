@@ -6,6 +6,7 @@ use super::json_branch_name::JsonBranchName;
 use super::json_minecraft_version::JsonMinecraftVersion;
 use super::json_path::JsonOptionalPath;
 use super::json_path::JsonPath;
+use crate::artifact_lock::ArtifactLock;
 use crate::branch_targets::BranchName;
 use crate::branch_targets::MinecraftVersion;
 use crate::branch_targets::WorktreeTarget;
@@ -24,6 +25,7 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::fs;
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Cursor;
@@ -37,6 +39,8 @@ use std::process::Stdio;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 use zip::CompressionMethod;
 use zip::ZipArchive;
 use zip::ZipWriter;
@@ -45,6 +49,7 @@ use zip::write::SimpleFileOptions;
 const VERSION_MANIFEST_URL: &str =
     "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 const NEOFORM_RUNTIME_COORDINATE: &str = "net.neoforged:neoform-runtime:2.0.19:all";
+const DOWNLOAD_RETRY_ATTEMPTS: usize = 3;
 
 pub(crate) fn invoke_build(options: &BuildOptions) -> eyre::Result<()> {
     let _span = tracing::info_span!(
@@ -812,6 +817,11 @@ impl Resolver {
         .entered();
         let coordinate = self.resolve_dynamic_coordinate(coordinate)?;
         let cache_path = self.cache_path_for(&coordinate);
+        let expected_sha1 = self
+            .locked_artifact_sha1(&coordinate)
+            .map(ToOwned::to_owned);
+        let _cache_lock = acquire_artifact_path_lock(&cache_path)?;
+        prepare_existing_artifact_for_reuse(&cache_path, expected_sha1.as_deref())?;
 
         if cache_path.is_file() && !self.refresh {
             let artifact = Self::cached_artifact_plan(id, &coordinate, cache_path, required_for)?;
@@ -836,12 +846,24 @@ impl Resolver {
                 "checking artifact remote"
             );
             let download_result = if coordinate.group == "curse.maven" {
-                download_to_path_overwrite(&self.client, &url, &cache_path, self.refresh)
+                download_to_path_overwrite_locked(
+                    &self.client,
+                    &url,
+                    &cache_path,
+                    self.refresh,
+                    expected_sha1.as_deref(),
+                )
             } else {
                 if !remote_exists(&self.client, &url)? {
                     continue;
                 }
-                download_to_path_overwrite(&self.client, &url, &cache_path, self.refresh)
+                download_to_path_overwrite_locked(
+                    &self.client,
+                    &url,
+                    &cache_path,
+                    self.refresh,
+                    expected_sha1.as_deref(),
+                )
             };
 
             if let Err(error) = download_result {
@@ -871,6 +893,7 @@ impl Resolver {
                 local_artifact,
                 cache_path,
                 required_for,
+                expected_sha1.as_deref(),
             )?;
             self.verify_locked_artifact(&coordinate, &artifact)?;
             tracing::info!(
@@ -888,6 +911,16 @@ impl Resolver {
             coordinate,
             attempted.join("\n")
         );
+    }
+
+    fn locked_artifact_sha1(&self, coordinate: &MavenCoordinate) -> Option<&str> {
+        let coordinate_text = coordinate.to_string();
+        self.lockfile
+            .as_ref()?
+            .artifacts
+            .iter()
+            .find(|entry| entry.coordinate.as_deref() == Some(coordinate_text.as_str()))
+            .map(|entry| entry.sha1.as_str())
     }
 
     fn verify_locked_artifact(
@@ -995,17 +1028,9 @@ impl Resolver {
         local_artifact: LocalCachedArtifact,
         cache_path: PathBuf,
         required_for: &str,
+        expected_sha1: Option<&str>,
     ) -> eyre::Result<ArtifactPlan> {
-        if let Some(parent) = cache_path.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        fs::copy(&local_artifact.path, &cache_path).wrap_err_with(|| {
-            format!(
-                "Failed to copy local cached artifact {} to {}",
-                local_artifact.path.display(),
-                cache_path.display()
-            )
-        })?;
+        copy_file_to_path_checked(&local_artifact.path, &cache_path, expected_sha1)?;
         let sha1 = file_sha1(&cache_path)?;
         let provenance = artifact_provenance(
             local_artifact.source,
@@ -3893,7 +3918,13 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
             continue;
         }
         let object_url = format!("https://resources.download.minecraft.net/{prefix}/{hash}");
-        download_to_path_overwrite(&client, &object_url, &object_path, true)?;
+        download_to_path_overwrite_with_expected_sha1(
+            &client,
+            &object_url,
+            &object_path,
+            true,
+            hash,
+        )?;
         let actual_hash = file_sha1(&object_path)?;
         if actual_hash != hash {
             eyre::bail!(
@@ -9247,11 +9278,33 @@ fn download_to_path(client: &Client, url: &str, path: &Path) -> eyre::Result<()>
     download_to_path_overwrite(client, url, path, false)
 }
 
+fn download_to_path_overwrite_with_expected_sha1(
+    client: &Client,
+    url: &str,
+    path: &Path,
+    overwrite: bool,
+    expected_sha1: &str,
+) -> eyre::Result<()> {
+    let _lock = acquire_artifact_path_lock(path)?;
+    download_to_path_overwrite_locked(client, url, path, overwrite, Some(expected_sha1))
+}
+
 fn download_to_path_overwrite(
     client: &Client,
     url: &str,
     path: &Path,
     overwrite: bool,
+) -> eyre::Result<()> {
+    let _lock = acquire_artifact_path_lock(path)?;
+    download_to_path_overwrite_locked(client, url, path, overwrite, None)
+}
+
+fn download_to_path_overwrite_locked(
+    client: &Client,
+    url: &str,
+    path: &Path,
+    overwrite: bool,
+    expected_sha1: Option<&str>,
 ) -> eyre::Result<()> {
     #[cfg(feature = "tracing_detailed")]
     let _span = tracing::debug_span!(
@@ -9259,13 +9312,27 @@ fn download_to_path_overwrite(
         url,
         path = %path.display(),
         overwrite,
+        expected_sha1,
     )
     .entered();
+    prepare_existing_artifact_for_reuse(path, expected_sha1)?;
+
     if path.is_file() && !overwrite {
         tracing::debug!(
             path = %path.display(),
             url,
             "download cache hit"
+        );
+        return Ok(());
+    }
+    if path.is_file()
+        && expected_sha1
+            .is_some_and(|expected| existing_file_matches_sha1(path, expected).unwrap_or(false))
+    {
+        tracing::debug!(
+            path = %path.display(),
+            url,
+            "download cache hit after lock wait"
         );
         return Ok(());
     }
@@ -9276,6 +9343,35 @@ fn download_to_path_overwrite(
         overwrite,
         "download cache miss"
     );
+    let mut last_error = None;
+    for attempt in 1..=DOWNLOAD_RETRY_ATTEMPTS {
+        match download_to_path_once(client, url, path, expected_sha1) {
+            Ok(()) => {
+                remove_bad_artifacts_for(path)?;
+                return Ok(());
+            }
+            Err(error) => {
+                tracing::warn!(
+                    path = %path.display(),
+                    url,
+                    attempt,
+                    attempts = DOWNLOAD_RETRY_ATTEMPTS,
+                    error = %error,
+                    "download attempt failed"
+                );
+                last_error = Some(error);
+            }
+        }
+    }
+    Err(last_error.unwrap_or_else(|| eyre::eyre!("Download failed for {url}")))
+}
+
+fn download_to_path_once(
+    client: &Client,
+    url: &str,
+    path: &Path,
+    expected_sha1: Option<&str>,
+) -> eyre::Result<()> {
     let parent = path
         .parent()
         .ok_or_else(|| eyre::eyre!("Path has no parent: {}", path.display()))?;
@@ -9290,17 +9386,170 @@ fn download_to_path_overwrite(
     let bytes = response
         .bytes()
         .wrap_err_with(|| format!("Failed to read response body for {url}"))?;
-    let file_name = path
-        .file_name()
-        .and_then(std::ffi::OsStr::to_str)
-        .ok_or_else(|| eyre::eyre!("Path has no filename: {}", path.display()))?;
-    let temporary_path = path.with_file_name(format!("{file_name}.download"));
-    fs::write(&temporary_path, bytes)
-        .wrap_err_with(|| format!("Failed to write {}", temporary_path.display()))?;
+    let temporary_path = write_unique_temp_file(path, bytes.as_ref())?;
+    if let Some(expected_sha1) = expected_sha1 {
+        let actual_sha1 = file_sha1(&temporary_path)?;
+        if actual_sha1 != expected_sha1 {
+            let _ = fs::remove_file(&temporary_path);
+            eyre::bail!(
+                "Downloaded {} with SHA-1 {}, expected {}",
+                path.display(),
+                actual_sha1,
+                expected_sha1
+            );
+        }
+    }
+    replace_artifact_file(&temporary_path, path)
+}
+
+fn copy_file_to_path_checked(
+    source: &Path,
+    path: &Path,
+    expected_sha1: Option<&str>,
+) -> eyre::Result<()> {
+    prepare_existing_artifact_for_reuse(path, expected_sha1)?;
+    if path.is_file()
+        && expected_sha1
+            .is_some_and(|expected| existing_file_matches_sha1(path, expected).unwrap_or(false))
+    {
+        return Ok(());
+    }
+
+    let bytes =
+        fs::read(source).wrap_err_with(|| format!("Failed to read {}", source.display()))?;
+    let temporary_path = write_unique_temp_file(path, &bytes)?;
+    if let Some(expected_sha1) = expected_sha1 {
+        let actual_sha1 = file_sha1(&temporary_path)?;
+        if actual_sha1 != expected_sha1 {
+            let _ = fs::remove_file(&temporary_path);
+            eyre::bail!(
+                "Copied local artifact {} with SHA-1 {}, expected {}",
+                source.display(),
+                actual_sha1,
+                expected_sha1
+            );
+        }
+    }
+    replace_artifact_file(&temporary_path, path)?;
+    remove_bad_artifacts_for(path)?;
+    Ok(())
+}
+
+fn acquire_artifact_path_lock(path: &Path) -> eyre::Result<ArtifactLock> {
+    ArtifactLock::acquire(artifact_lock_path(path)?, path.display().to_string())
+}
+
+fn artifact_lock_path(path: &Path) -> eyre::Result<PathBuf> {
+    let file_name = artifact_file_name(path)?;
+    Ok(path.with_file_name(format!("{file_name}.lock")))
+}
+
+fn prepare_existing_artifact_for_reuse(
+    path: &Path,
+    expected_sha1: Option<&str>,
+) -> eyre::Result<()> {
+    let Some(expected_sha1) = expected_sha1 else {
+        return Ok(());
+    };
+    if !path.is_file() {
+        return Ok(());
+    }
+    let actual_sha1 = file_sha1(path)?;
+    if actual_sha1 == expected_sha1 {
+        return Ok(());
+    }
+    quarantine_bad_artifact(path, &actual_sha1, expected_sha1)
+}
+
+fn existing_file_matches_sha1(path: &Path, expected_sha1: &str) -> eyre::Result<bool> {
+    Ok(path.is_file() && file_sha1(path)? == expected_sha1)
+}
+
+fn quarantine_bad_artifact(
+    path: &Path,
+    actual_sha1: &str,
+    expected_sha1: &str,
+) -> eyre::Result<()> {
+    let bad_path = unique_sibling_path(path, &format!("bad.{actual_sha1}"))?;
+    tracing::warn!(
+        path = %path.display(),
+        bad_path = %bad_path.display(),
+        actual_sha1,
+        expected_sha1,
+        "quarantining corrupt artifact"
+    );
+    fs::rename(path, &bad_path).wrap_err_with(|| {
+        format!(
+            "Failed to quarantine corrupt artifact {} as {}",
+            path.display(),
+            bad_path.display()
+        )
+    })
+}
+
+fn remove_bad_artifacts_for(path: &Path) -> eyre::Result<()> {
+    let Some(parent) = path.parent() else {
+        return Ok(());
+    };
+    if !parent.is_dir() {
+        return Ok(());
+    }
+    let file_name = artifact_file_name(path)?;
+    let bad_prefix = format!("{file_name}.bad.");
+    for entry in
+        fs::read_dir(parent).wrap_err_with(|| format!("Failed to read {}", parent.display()))?
+    {
+        let entry = entry?;
+        let entry_path = entry.path();
+        let is_bad_artifact = entry_path
+            .file_name()
+            .and_then(std::ffi::OsStr::to_str)
+            .is_some_and(|name| name.starts_with(&bad_prefix));
+        if is_bad_artifact {
+            fs::remove_file(&entry_path)
+                .wrap_err_with(|| format!("Failed to remove {}", entry_path.display()))?;
+        }
+    }
+    Ok(())
+}
+
+fn write_unique_temp_file(path: &Path, bytes: &[u8]) -> eyre::Result<PathBuf> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| eyre::eyre!("Path has no parent: {}", path.display()))?;
+    fs::create_dir_all(parent)?;
+    for _ in 0..100 {
+        let temporary_path = unique_sibling_path(path, "tmp")?;
+        match OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary_path)
+        {
+            Ok(mut file) => {
+                file.write_all(bytes)
+                    .wrap_err_with(|| format!("Failed to write {}", temporary_path.display()))?;
+                file.sync_all()
+                    .wrap_err_with(|| format!("Failed to sync {}", temporary_path.display()))?;
+                return Ok(temporary_path);
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) => {
+                return Err(error)
+                    .wrap_err_with(|| format!("Failed to create {}", temporary_path.display()));
+            }
+        }
+    }
+    eyre::bail!(
+        "Could not allocate a unique temporary file for {}",
+        path.display()
+    )
+}
+
+fn replace_artifact_file(temporary_path: &Path, path: &Path) -> eyre::Result<()> {
     if path.exists() {
         fs::remove_file(path).wrap_err_with(|| format!("Failed to replace {}", path.display()))?;
     }
-    fs::rename(&temporary_path, path).wrap_err_with(|| {
+    fs::rename(temporary_path, path).wrap_err_with(|| {
         format!(
             "Failed to move downloaded file {} to {}",
             temporary_path.display(),
@@ -9308,6 +9557,28 @@ fn download_to_path_overwrite(
         )
     })?;
     Ok(())
+}
+
+fn unique_sibling_path(path: &Path, kind: &str) -> eyre::Result<PathBuf> {
+    let file_name = artifact_file_name(path)?;
+    Ok(path.with_file_name(format!(
+        "{file_name}.{kind}.{}.{}",
+        std::process::id(),
+        unique_file_nonce()
+    )))
+}
+
+fn unique_file_nonce() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos()
+}
+
+fn artifact_file_name(path: &Path) -> eyre::Result<&str> {
+    path.file_name()
+        .and_then(std::ffi::OsStr::to_str)
+        .ok_or_else(|| eyre::eyre!("Path has no filename: {}", path.display()))
 }
 
 fn download_text_optional(client: &Client, url: &str) -> eyre::Result<String> {

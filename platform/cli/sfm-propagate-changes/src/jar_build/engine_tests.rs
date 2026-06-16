@@ -25,23 +25,33 @@ use super::NodeStatus;
 use super::ParchmentData;
 use super::Repository;
 use super::compare_version_text;
+use super::copy_file_to_path_checked;
 use super::extract_quoted;
+use super::file_sha1;
 use super::interpolate_properties;
 use super::is_excluded_source;
 use super::normalize_manifest_bytes;
 use super::parchment_coordinate;
 use super::parse_maven_versions;
+use super::prepare_existing_artifact_for_reuse;
 use super::resolve_loader_toolchain;
 use super::rust_output_jar_path;
 use super::set_minecraft_option;
+use super::sha1_bytes;
 use super::should_keep_split_minecraft_runtime_entry;
+use super::write_unique_temp_file;
 use crate::branch_targets::BranchName;
 use crate::branch_targets::MinecraftVersion;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering as AtomicOrdering;
+
+static TEST_DIR_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[test]
 fn parses_classifier_coordinate() {
@@ -313,6 +323,105 @@ fn facet_json_roundtrips_artifact_lockfile_and_provenance() {
 }
 
 #[test]
+fn prepare_existing_artifact_quarantines_wrong_sha1() {
+    let test_dir = TestDir::new("prepare-existing-artifact");
+    let artifact = test_dir.path.join("artifact.jar");
+    fs::write(&artifact, b"bad").expect("artifact should be written");
+
+    let expected_sha1 = sha1_bytes(b"good");
+    prepare_existing_artifact_for_reuse(&artifact, Some(&expected_sha1))
+        .expect("corrupt artifact should be quarantined");
+
+    assert!(!artifact.exists());
+    let bad_entries = matching_siblings(&artifact, "bad");
+    assert_eq!(bad_entries.len(), 1);
+    assert_eq!(
+        fs::read(&bad_entries[0]).expect("bad artifact should remain readable"),
+        b"bad"
+    );
+}
+
+#[test]
+fn copy_file_to_path_checked_skips_existing_valid_artifact() {
+    let test_dir = TestDir::new("copy-file-skips-existing-valid");
+    let source = test_dir.path.join("source.jar");
+    let destination = test_dir.path.join("artifact.jar");
+    fs::write(&source, b"bad").expect("source should be written");
+    fs::write(&destination, b"good").expect("destination should be written");
+
+    let expected_sha1 = sha1_bytes(b"good");
+    copy_file_to_path_checked(&source, &destination, Some(&expected_sha1))
+        .expect("valid destination should skip copying the bad source");
+
+    assert_eq!(
+        fs::read(&destination).expect("destination should remain readable"),
+        b"good"
+    );
+    assert_eq!(
+        file_sha1(&destination).expect("destination should hash"),
+        expected_sha1
+    );
+    assert!(matching_siblings(&destination, "tmp").is_empty());
+}
+
+#[test]
+fn copy_file_to_path_checked_rejects_temp_sha1_failure() {
+    let test_dir = TestDir::new("copy-file-temp-sha1-failure");
+    let source = test_dir.path.join("source.jar");
+    let destination = test_dir.path.join("artifact.jar");
+    fs::write(&source, b"bad").expect("source should be written");
+
+    let expected_sha1 = sha1_bytes(b"good");
+    let error = copy_file_to_path_checked(&source, &destination, Some(&expected_sha1))
+        .expect_err("bad source should fail expected SHA-1 validation");
+
+    assert!(
+        error.to_string().contains("Copied local artifact"),
+        "{error:?}"
+    );
+    assert!(!destination.exists());
+    assert!(matching_siblings(&destination, "tmp").is_empty());
+}
+
+#[test]
+fn copy_file_to_path_checked_replaces_bad_final_artifact_and_cleans_bad_file() {
+    let test_dir = TestDir::new("copy-file-replaces-bad-final");
+    let source = test_dir.path.join("source.jar");
+    let destination = test_dir.path.join("artifact.jar");
+    fs::write(&source, b"good").expect("source should be written");
+    fs::write(&destination, b"bad").expect("destination should be written");
+
+    let expected_sha1 = sha1_bytes(b"good");
+    copy_file_to_path_checked(&source, &destination, Some(&expected_sha1))
+        .expect("good source should replace corrupt artifact");
+
+    assert_eq!(
+        fs::read(&destination).expect("destination should remain readable"),
+        b"good"
+    );
+    assert!(matching_siblings(&destination, "bad").is_empty());
+}
+
+#[test]
+fn write_unique_temp_file_uses_artifact_sibling() {
+    let test_dir = TestDir::new("write-unique-temp-file");
+    let artifact = test_dir.path.join("artifact.jar");
+
+    let first = write_unique_temp_file(&artifact, b"first").expect("first temp should be written");
+    let second =
+        write_unique_temp_file(&artifact, b"second").expect("second temp should be written");
+
+    assert_ne!(first, second);
+    assert_eq!(first.parent(), artifact.parent());
+    assert_eq!(second.parent(), artifact.parent());
+    assert_eq!(fs::read(first).expect("first temp should read"), b"first");
+    assert_eq!(
+        fs::read(second).expect("second temp should read"),
+        b"second"
+    );
+}
+
+#[test]
 #[expect(
     clippy::too_many_lines,
     reason = "BuildPlan JSON fixture is intentionally explicit"
@@ -571,5 +680,53 @@ fn minimal_provenance() -> ArtifactProvenance {
         url: Some("https://example.test/a.jar".to_string()),
         original_path: None,
         sha1: "abc123".to_string(),
+    }
+}
+
+fn matching_siblings(path: &Path, kind: &str) -> Vec<PathBuf> {
+    let parent = path.parent().expect("path should have parent");
+    let file_name = path
+        .file_name()
+        .and_then(std::ffi::OsStr::to_str)
+        .expect("path should have filename");
+    let prefix = format!("{file_name}.{kind}.");
+    let mut paths = fs::read_dir(parent)
+        .expect("parent should read")
+        .map(|entry| entry.expect("entry should read").path())
+        .filter(|entry_path| {
+            entry_path
+                .file_name()
+                .and_then(std::ffi::OsStr::to_str)
+                .is_some_and(|name| name.starts_with(&prefix))
+        })
+        .collect::<Vec<_>>();
+    paths.sort();
+    paths
+}
+
+struct TestDir {
+    path: PathBuf,
+}
+
+impl TestDir {
+    fn new(name: &str) -> Self {
+        let id = TEST_DIR_COUNTER.fetch_add(1, AtomicOrdering::SeqCst);
+        let path = std::env::temp_dir().join(format!(
+            "sfm-jar-build-engine-tests-{name}-{}-{id}",
+            std::process::id()
+        ));
+        if path.exists() {
+            fs::remove_dir_all(&path).expect("stale test dir should be removable");
+        }
+        fs::create_dir_all(&path).expect("test dir should be created");
+        Self { path }
+    }
+}
+
+impl Drop for TestDir {
+    fn drop(&mut self) {
+        if self.path.exists() {
+            fs::remove_dir_all(&self.path).expect("test dir should be removable");
+        }
     }
 }
