@@ -1,4 +1,4 @@
-use crate::branch_targets::BranchQuery;
+use crate::cli::jar::BranchSelector;
 use crate::jar_build::CompareCommand;
 use crate::jar_build::CompareOptions;
 use facet::Facet;
@@ -10,7 +10,7 @@ use std::path::PathBuf;
 pub struct JarCompareCommand {
     /// Branch selector to compare. Defaults to `core`.
     #[facet(default, args::named)]
-    pub branch: Option<String>,
+    pub branch: BranchSelector,
 
     /// Override the expected Gradle-built jar path.
     #[facet(rename = "gradle-jar", default, args::named)]
@@ -31,9 +31,8 @@ pub struct JarCompareCommand {
 
 impl JarCompareCommand {
     fn into_options(self) -> eyre::Result<CompareOptions> {
-        let branch = BranchQuery::parse(self.branch.as_deref().unwrap_or("core"))?;
         Ok(CompareOptions {
-            branch,
+            branch: self.branch.into_query()?,
             gradle_jar: self.gradle_jar,
             rust_jar: self.rust_jar,
             report_json: self.report_json,

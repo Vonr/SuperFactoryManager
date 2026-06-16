@@ -311,11 +311,16 @@ fn facet_json_roundtrips_artifact_lockfile_and_provenance() {
 }
 
 #[test]
+#[expect(
+    clippy::too_many_lines,
+    reason = "BuildPlan JSON fixture is intentionally explicit"
+)]
 fn facet_json_serializes_plan_without_embedded_lockfile() {
     let artifact = minimal_artifact();
     let plan = BuildPlan {
         schema_version: 1,
         mode: "plan".to_string(),
+        branch_name: "1.19.2".to_string(),
         minecraft_version: "1.19.2".to_string(),
         worktree_path: PathBuf::from("D:/Repos/Minecraft/SFM/repos2/1.19.2"),
         minecraft_dir: PathBuf::from("platform/minecraft"),

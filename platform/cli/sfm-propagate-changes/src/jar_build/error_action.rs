@@ -1,7 +1,10 @@
+use facet::Facet;
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Facet, PartialEq)]
+#[facet(rename_all = "kebab-case")]
+#[repr(u8)]
 pub enum ErrorAction {
     #[default]
     Bail,

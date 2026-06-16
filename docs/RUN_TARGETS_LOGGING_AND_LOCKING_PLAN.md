@@ -21,7 +21,7 @@ Status values used below:
 - `Done`: implemented, committed, propagated, and validated.
 - `Blocked`: cannot proceed without a decision or external change.
 
-Overall status: `Not Started`
+Overall status: `In Progress`
 
 ## Decisions Locked In
 
@@ -48,12 +48,13 @@ Status: `Done`
 - Discard the Log4j JSONL injection idea for this plan. Build the foundation around line-level subprocess capture and wide tracing events.
 - Prefer one primary Rust type per file for new orchestration/query/locking modules. Small helper functions may live beside the type they serve; broad mixed-type modules should be avoided.
 - Prefer ergonomic single-field newtypes for domain identifiers and paths: public tuple field plus `Deref` and `AsRef` implementations for the wrapped view type, such as `str` or `Path`.
+- CLI structs should hold typed values where `figue` can deserialize them directly. Prefer Facet enums for closed option sets and transparent typed newtypes for string-backed CLI grammars; convert those wrappers into domain request objects at the CLI boundary. Avoid raw `String` fields when the field has domain meaning.
 
 ## Core Concepts
 
 ### Worktree Target Identity
 
-Status: `In Progress`
+Status: `Done`
 
 Introduce a target model that represents a Git worktree independently from a Minecraft version:
 
@@ -79,7 +80,7 @@ Rules:
 
 ### Branch Selector
 
-Status: `In Progress`
+Status: `Done`
 
 Replace `--mc` with `--branch`. Do not preserve `--mc` as a compatibility holdback.
 
@@ -165,7 +166,7 @@ Migration:
 
 ### Multi-Target Scheduling
 
-Status: `In Progress`
+Status: `Done`
 
 Commands that resolve more than one target should run sequentially by default.
 
@@ -195,7 +196,7 @@ Parallel behavior:
 
 ### Wide Tracing Events
 
-Status: `Not Started`
+Status: `In Progress`
 
 All orchestration and subprocess output should be represented as structured tracing events with enough fields for subscribers to render useful output.
 
@@ -207,6 +208,7 @@ tracing::info!(
     mc_version = target.mc_version.as_deref().unwrap_or(""),
     core = target.core,
     source = "minecraft",
+    process = "minecraft",
     stream = "stderr",
     line = %line,
     "subprocess output"
@@ -219,6 +221,8 @@ Source values:
 - `java-tool`: Java tools invoked by the build pipeline.
 - `minecraft`: launched Minecraft client/server/game-test process output.
 
+`process` should carry the more specific child/tool identity, such as `minecraft`, `javac-main`, `antlr`, or a Forge tool id.
+
 Stream rules:
 
 - Track `stdout` and `stderr` internally.
@@ -228,9 +232,15 @@ Stream rules:
 - Existing direct `println!`/`eprintln!` progress output should be replaced with tracing events as affected code is touched.
 - The tracing subscriber is responsible for rendering prefixes such as `[rust]`, `[1.19.2 mc]`, or `[feat/1.19.2/draw mc stderr]`.
 
+Current implementation notes:
+
+- Build plans now carry `branch_name` so subprocess events do not have to infer their target from Minecraft version.
+- Captured Java tool, `javac`, ANTLR, and launched Minecraft stdout/stderr lines are emitted as structured tracing events with `branch`, `source`, `process`, `stream`, and `line`.
+- Terminal prefix rendering remains a later step.
+
 ### Per-Line Subprocess Logging
 
-Status: `Not Started`
+Status: `In Progress`
 
 First pass should not parse Minecraft Log4j lines. Treat each stdout/stderr line as content.
 
@@ -425,8 +435,8 @@ Testing requirements:
 | 2 | `Done` | Implement typed `BranchQuery`, DNF-style `BranchConjunction`, and `BranchRule` parser/evaluator. | Committed in `ee92ebd6f`; selector tests cover aliases, core, all, exact branch, feature glob, version comparisons, display round-trips, arbitrary generated selectors, and `core>=1.20`. |
 | 3 | `Done` | Replace `--mc` with `--branch` in run/build/plan/compare surfaces. | Committed in `2d88a2b79`; CLI tests show `--branch` parses, default is `core`, and `--mc` no longer parses. |
 | 4 | `Done` | Convert single-target run/build requests into multi-target scheduling. | Committed in `a260d22ab`; `jar plan`, `jar build`, and `run ...` iterate matching targets sequentially. |
-| 5 | `In Progress` | Add `--error-action continue\|bail` to multi-target commands. | Implemented in working tree; default is `bail`, `continue` records per-target failures and returns failure after the target summary; pending human review/commit/propagation. |
-| 6 | `Not Started` | Add wide tracing fields for branch/source/stream/subprocess lines. | Rust, Java tool, and Minecraft subprocess lines carry branch/source fields in tracing. |
+| 5 | `Done` | Add `--error-action continue\|bail` to multi-target commands. | Committed in `cf0925311`; default is `bail`, `continue` records per-target failures and returns failure after the target summary. |
+| 6 | `In Progress` | Add wide tracing fields for branch/source/stream/subprocess lines. | Implemented in working tree for Java tools, `javac`, ANTLR, and Minecraft launch stdout/stderr; pending validation/review. |
 | 7 | `Not Started` | Replace affected `println!`/`eprintln!` progress with tracing events. | New/modified run/build paths emit progress through tracing except Ctrl+C echo. |
 | 8 | `Not Started` | Add prefixed terminal rendering for line events. | Sequential multi-target output is readable with `[branch source]` prefixes. |
 | 9 | `Not Started` | Keep JSONL logging opt-in via `--log-file` and ensure raw subprocess lines are represented. | `--log-file` output includes branch/source/stream/line fields. |

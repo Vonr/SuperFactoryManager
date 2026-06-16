@@ -1,4 +1,4 @@
-use crate::branch_targets::BranchQuery;
+use crate::cli::jar::BranchSelector;
 use crate::jar_build::BuildCommand;
 use crate::jar_build::BuildMode;
 use crate::jar_build::BuildOptions;
@@ -18,7 +18,7 @@ use std::path::PathBuf;
 pub struct JarBuildCommand {
     /// Branch selector to build. Defaults to `core`.
     #[facet(default, args::named)]
-    pub branch: Option<String>,
+    pub branch: BranchSelector,
 
     /// Ignore reusable SFM-owned cache state and recompute resolved metadata.
     #[facet(default = false, args::named)]
@@ -46,27 +46,20 @@ pub struct JarBuildCommand {
 
     /// Failure behavior for multi-target selectors: `bail` or `continue`.
     #[facet(rename = "error-action", default, args::named)]
-    pub error_action: Option<String>,
+    pub error_action: ErrorAction,
 }
 
 impl JarBuildCommand {
     pub(crate) fn into_options(self, mode: BuildMode) -> eyre::Result<BuildOptions> {
-        let branch = BranchQuery::parse(self.branch.as_deref().unwrap_or("core"))?;
-        let error_action: ErrorAction = self
-            .error_action
-            .as_deref()
-            .map(str::parse)
-            .transpose()?
-            .unwrap_or_default();
         Ok(BuildOptions {
-            branch,
+            branch: self.branch.into_query()?,
             refresh: self.refresh,
             explain_rebuild: self.explain_rebuild,
             plan_json: self.plan_json,
             java_home: self.java_home,
             dry_run: self.dry_run,
             allow_local_artifact_cache: self.allow_local_artifact_cache,
-            error_action,
+            error_action: self.error_action,
             mode,
         })
     }

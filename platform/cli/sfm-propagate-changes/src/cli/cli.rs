@@ -253,25 +253,17 @@ mod tests {
 
     #[test]
     fn rejects_invalid_error_action() {
-        let cli = figue::from_slice::<Cli>(&[
-            "jar",
-            "build",
-            "--branch",
-            "core",
-            "--error-action",
-            "explode",
-        ])
-        .into_result()
-        .expect("raw CLI shape should parse")
-        .get_silent();
-        match cli.command {
-            Command::Jar {
-                command: JarCommand::Build { command },
-            } => {
-                let _ = command.into_options(BuildMode::Build).unwrap_err();
-            }
-            command => panic!("expected jar build command, got {command:?}"),
-        }
+        assert!(
+            figue::from_slice::<Cli>(&[
+                "jar",
+                "build",
+                "--branch",
+                "core",
+                "--error-action",
+                "explode",
+            ])
+            .is_err()
+        );
     }
 
     #[test]

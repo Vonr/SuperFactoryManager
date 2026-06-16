@@ -248,6 +248,7 @@ impl TargetFailure {
 struct BuildPlan {
     schema_version: u32,
     mode: String,
+    branch_name: String,
     minecraft_version: String,
     #[facet(proxy = JsonPath)]
     worktree_path: PathBuf,
@@ -1462,6 +1463,7 @@ fn create_plan_for_target(
             BuildMode::Plan => "plan".to_string(),
             BuildMode::Build => "build".to_string(),
         },
+        branch_name: target.branch.to_string(),
         minecraft_version: minecraft_version.to_string(),
         worktree_path,
         minecraft_dir,
@@ -3155,8 +3157,28 @@ fn run_launch_command(
         .stderr
         .take()
         .ok_or_else(|| eyre::eyre!("Failed to capture launch stderr"))?;
-    let stdout_thread = thread::spawn(move || read_launch_stream(stdout, false, echo_output));
-    let stderr_thread = thread::spawn(move || read_launch_stream(stderr, true, echo_output));
+    let stdout_branch = plan.branch_name.clone();
+    let stderr_branch = plan.branch_name.clone();
+    let stdout_thread = thread::spawn(move || {
+        read_launch_stream(
+            stdout,
+            &stdout_branch,
+            "minecraft",
+            "minecraft",
+            "stdout",
+            echo_output,
+        )
+    });
+    let stderr_thread = thread::spawn(move || {
+        read_launch_stream(
+            stderr,
+            &stderr_branch,
+            "minecraft",
+            "minecraft",
+            "stderr",
+            echo_output,
+        )
+    });
     let started = Instant::now();
     let mut timed_out = false;
     let status = loop {
@@ -3194,15 +3216,23 @@ fn run_launch_command(
     })
 }
 
-fn read_launch_stream<R>(stream: R, stderr: bool, echo_output: bool) -> std::io::Result<String>
+fn read_launch_stream<R>(
+    stream: R,
+    branch: &str,
+    source: &'static str,
+    process: &str,
+    stream_name: &'static str,
+    echo_output: bool,
+) -> std::io::Result<String>
 where
     R: Read,
 {
     let mut captured = String::new();
     for line in BufReader::new(stream).lines() {
         let line = line?;
+        trace_subprocess_line(branch, source, process, stream_name, &line);
         if echo_output {
-            if stderr {
+            if stream_name == "stderr" {
                 eprintln!("{line}");
             } else {
                 println!("{line}");
@@ -3222,6 +3252,36 @@ fn join_launch_stream(
         .join()
         .map_err(|_panic| eyre::eyre!("Launch {name} reader thread panicked"))?
         .wrap_err_with(|| format!("Failed to read launch {name}"))
+}
+
+fn trace_subprocess_bytes(
+    plan: &BuildPlan,
+    source: &'static str,
+    process: &str,
+    stream: &'static str,
+    bytes: &[u8],
+) {
+    let content = String::from_utf8_lossy(bytes);
+    for line in content.lines() {
+        trace_subprocess_line(&plan.branch_name, source, process, stream, line);
+    }
+}
+
+fn trace_subprocess_line(
+    branch: &str,
+    source: &'static str,
+    process: &str,
+    stream: &'static str,
+    line: &str,
+) {
+    tracing::info!(
+        branch = %branch,
+        source,
+        process = %process,
+        stream,
+        line = %line,
+        "subprocess_line"
+    );
 }
 
 fn extract_required_gametest_pass_count(output: &str) -> Option<usize> {
@@ -4058,6 +4118,8 @@ impl<'a> ExecutionContext<'a> {
                     self.plan.java.executable.display()
                 )
             })?;
+        trace_subprocess_bytes(self.plan, "java-tool", tool_id, "stdout", &output.stdout);
+        trace_subprocess_bytes(self.plan, "java-tool", tool_id, "stderr", &output.stderr);
 
         let mut log = Vec::new();
         let duration_ms = started.elapsed().as_millis();
@@ -5310,6 +5372,20 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
             .arg(format!("@{}", argfile.display()))
             .output()
             .wrap_err("Failed to run javac")?;
+        trace_subprocess_bytes(
+            context.plan,
+            "java-tool",
+            "javac-main",
+            "stdout",
+            &output.stdout,
+        );
+        trace_subprocess_bytes(
+            context.plan,
+            "java-tool",
+            "javac-main",
+            "stderr",
+            &output.stderr,
+        );
         let log_path = project_root.join("javac-main.log");
         let mut log = Vec::new();
         log.extend_from_slice(b"--- stdout ---\n");
@@ -5504,6 +5580,9 @@ fn compile_optional_java_source_set(
         .arg(format!("@{}", argfile.display()))
         .output()
         .wrap_err_with(|| format!("Failed to run javac for {source_set}"))?;
+    let source = format!("javac-{source_set}");
+    trace_subprocess_bytes(context.plan, "java-tool", &source, "stdout", &output.stdout);
+    trace_subprocess_bytes(context.plan, "java-tool", &source, "stderr", &output.stderr);
     let log_path = project_root.join(format!("javac-{source_set}.log"));
     let mut log = Vec::new();
     log.extend_from_slice(b"--- stdout ---\n");
@@ -6426,6 +6505,8 @@ fn run_antlr(
         .args(grammars)
         .output()
         .wrap_err("Failed to run ANTLR")?;
+    trace_subprocess_bytes(context.plan, "java-tool", "antlr", "stdout", &output.stdout);
+    trace_subprocess_bytes(context.plan, "java-tool", "antlr", "stderr", &output.stderr);
     let log_path = output_dir.parent().unwrap_or(output_dir).join("antlr.log");
     let mut log = Vec::new();
     log.extend_from_slice(b"--- stdout ---\n");
