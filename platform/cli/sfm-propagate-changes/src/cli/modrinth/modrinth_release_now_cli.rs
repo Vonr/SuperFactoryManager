@@ -7,10 +7,10 @@ use super::modrinth_cli::modrinth_versions_url;
 use super::modrinth_cli::prompt_yes_no;
 use super::modrinth_cli::read_mod_version;
 use super::modrinth_cli::resolve_project_id;
-use super::modrinth_cli::resolve_token;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::modrinth::ModrinthApiSecret;
 use crate::modrinth::ModrinthHttpClient;
 use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
@@ -128,7 +128,7 @@ fn release_now(
     let client = if dry_run {
         None
     } else {
-        let token_value = resolve_token(token, op_secret)?;
+        let token_value = ModrinthApiSecret::resolve(token, op_secret)?;
         Some(ModrinthHttpClient::new(Some(&token_value))?)
     };
 

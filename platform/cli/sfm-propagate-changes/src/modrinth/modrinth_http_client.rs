@@ -1,3 +1,4 @@
+use crate::modrinth::ModrinthApiSecret;
 use eyre::Context;
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
@@ -15,14 +16,15 @@ const MODRINTH_USER_AGENT: &str = "sfm-propagate-changes/modrinth";
 pub struct ModrinthHttpClient(pub Client);
 
 impl ModrinthHttpClient {
-    pub fn new(token: Option<&str>) -> eyre::Result<Self> {
+    pub fn new(token: Option<&ModrinthApiSecret>) -> eyre::Result<Self> {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static(MODRINTH_USER_AGENT));
 
         if let Some(token_value) = token {
             headers.insert(
                 AUTHORIZATION,
-                HeaderValue::from_str(token_value).wrap_err("Invalid Modrinth token for header")?,
+                HeaderValue::from_str(token_value.as_str())
+                    .wrap_err("Invalid Modrinth token for header")?,
             );
         }
 

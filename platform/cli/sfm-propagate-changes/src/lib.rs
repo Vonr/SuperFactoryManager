@@ -8,6 +8,7 @@ pub mod jar_build;
 pub mod jdk;
 pub mod logging;
 pub mod modrinth;
+pub mod one_password;
 pub mod paths;
 pub mod propagate;
 pub mod sfm_path;

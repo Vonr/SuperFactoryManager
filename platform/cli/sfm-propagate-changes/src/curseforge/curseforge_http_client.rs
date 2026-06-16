@@ -1,3 +1,4 @@
+use crate::curseforge::CurseforgeApiSecret;
 use eyre::Context;
 use reqwest::blocking::Client;
 use reqwest::header::HeaderMap;
@@ -14,19 +15,19 @@ const CURSEFORGE_USER_AGENT: &str = "sfm-propagate-changes/curseforge";
 pub struct CurseforgeHttpClient(pub Client);
 
 impl CurseforgeHttpClient {
-    pub fn new(token: &str) -> eyre::Result<Self> {
+    pub fn new(token: &CurseforgeApiSecret) -> eyre::Result<Self> {
         Self::build(
             "X-Api-Token",
-            token,
+            token.as_str(),
             "Invalid API token for header",
             "Failed to build CurseForge HTTP client",
         )
     }
 
-    pub fn new_core_api(api_key: &str) -> eyre::Result<Self> {
+    pub fn new_core_api(api_key: &CurseforgeApiSecret) -> eyre::Result<Self> {
         Self::build(
             "x-api-key",
-            api_key,
+            api_key.as_str(),
             "Invalid Core API key for header",
             "Failed to build CurseForge Core API HTTP client",
         )

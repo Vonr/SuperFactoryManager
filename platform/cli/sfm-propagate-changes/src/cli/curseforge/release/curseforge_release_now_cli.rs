@@ -13,11 +13,11 @@ use super::super::curseforge_cli::prompt_yes_no;
 use super::super::curseforge_cli::read_changelog_section;
 use super::super::curseforge_cli::read_mod_version;
 use super::super::curseforge_cli::resolve_project_id;
-use super::super::curseforge_cli::resolve_token;
 use super::super::curseforge_cli::upload_project_file;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::curseforge::CurseforgeApiSecret;
 use crate::curseforge::CurseforgeGameVersionId;
 use crate::curseforge::CurseforgeHttpClient;
 use color_eyre::owo_colors::OwoColorize;
@@ -94,7 +94,7 @@ fn release_now(
     let game_version_index = if dry_run {
         None
     } else {
-        let token_value = resolve_token(token, op_secret)?;
+        let token_value = CurseforgeApiSecret::resolve(token, op_secret)?;
         let client = CurseforgeHttpClient::new(&token_value)?;
         let game_versions = fetch_game_versions(&client)?;
         Some((client, CurseforgeGameVersionId::build_index(&game_versions)))

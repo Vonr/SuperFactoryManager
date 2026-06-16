@@ -8,10 +8,10 @@ use super::modrinth_cli::parse_mc_version_from_jar_name;
 use super::modrinth_cli::prompt_yes_no;
 use super::modrinth_cli::read_mod_version;
 use super::modrinth_cli::resolve_project_id;
-use super::modrinth_cli::resolve_token;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::modrinth::ModrinthApiSecret;
 use crate::modrinth::ModrinthHttpClient;
 use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
@@ -81,9 +81,9 @@ fn release_amend(
     let token_value = if dry_run {
         None
     } else {
-        Some(resolve_token(token, op_secret)?)
+        Some(ModrinthApiSecret::resolve(token, op_secret)?)
     };
-    let client = ModrinthHttpClient::new(token_value.as_deref())?;
+    let client = ModrinthHttpClient::new(token_value.as_ref())?;
 
     let all_jars = get_ordered_release_jars(&jar_dir, &mod_version)?;
     let branch_query = branch.into_query()?;

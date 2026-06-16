@@ -35,7 +35,6 @@ use std::ffi::OsStr;
 use std::fmt::Write as _;
 use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
 use std::time::Duration;
 use tracing::debug;
 
@@ -43,12 +42,6 @@ pub(super) const CURSEFORGE_API_ROOT: &str = "https://minecraft.curseforge.com/a
 pub(super) const CURSEFORGE_CORE_API_ROOT: &str = "https://api.curseforge.com/v1";
 pub(super) const CURSEFORGE_DEFAULT_PROJECT_FILE: &str = "curseforge_project_id.txt";
 pub(super) const CURSEFORGE_DEFAULT_PROJECT_ID: u64 = 306_935;
-pub(super) const CURSEFORGE_TOKEN_ENV_VAR: &str = "CURSEFORGE_API_TOKEN";
-pub(super) const CURSEFORGE_CORE_API_KEY_ENV_VAR: &str = "CURSEFORGE_CORE_API_KEY";
-pub(super) const DEFAULT_OP_SECRET_REFERENCE: &str =
-    "op://Private/CurseForge SFM Upload token/credential";
-pub(super) const DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE: &str =
-    "op://Private/SFM CurseForge studios token/credential";
 pub(super) const DEFAULT_AMEND_SAFETY_AGE: &str = "30m";
 pub(super) const CURSEFORGE_AUTHORS_FILES_URL_PREFIX: &str =
     "https://authors.curseforge.com/#/projects";
@@ -109,117 +102,6 @@ pub(super) fn resolve_project_id(project: Option<u64>) -> eyre::Result<Curseforg
         Some(project_id) => Ok(CurseforgeProjectId(project_id)),
         None => get_default_project_id(),
     }
-}
-
-pub(super) fn resolve_token(
-    token: Option<String>,
-    op_secret: Option<String>,
-) -> eyre::Result<String> {
-    if let Some(value) = token {
-        let trimmed = value.trim().to_string();
-        if trimmed.is_empty() {
-            eyre::bail!("Provided --token was empty");
-        }
-        return Ok(trimmed);
-    }
-
-    if let Ok(env_token) = std::env::var(CURSEFORGE_TOKEN_ENV_VAR) {
-        let trimmed = env_token.trim().to_string();
-        if !trimmed.is_empty() {
-            return Ok(trimmed);
-        }
-    }
-
-    let secret_reference = op_secret.unwrap_or_else(|| DEFAULT_OP_SECRET_REFERENCE.to_string());
-    read_secret_from_1password(&secret_reference, "token")
-}
-
-pub(super) fn read_secret_from_1password(
-    secret_reference: &str,
-    what: &str,
-) -> eyre::Result<String> {
-    let output = Command::new("op")
-        .args(["read", secret_reference, "--no-newline"])
-        .output()
-        .wrap_err("Failed to run 1Password CLI (`op`)")?;
-
-    if !output.status.success() {
-        eyre::bail!(
-            "Failed to read {what} from 1Password secret '{}': {}",
-            secret_reference,
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-
-    let value = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if value.is_empty() {
-        eyre::bail!(
-            "1Password returned an empty {what} for secret '{}'",
-            secret_reference
-        );
-    }
-
-    Ok(value)
-}
-
-pub(super) fn resolve_core_api_key(
-    api_key: Option<String>,
-    token: Option<String>,
-    op_secret: Option<String>,
-) -> eyre::Result<(String, String)> {
-    if let Some(value) = api_key {
-        let trimmed = value.trim().to_string();
-        if trimmed.is_empty() {
-            eyre::bail!("Provided --api-key was empty");
-        }
-        return Ok((trimmed, "--api-key".to_string()));
-    }
-
-    if let Ok(env_key) = std::env::var(CURSEFORGE_CORE_API_KEY_ENV_VAR) {
-        let trimmed = env_key.trim().to_string();
-        if !trimmed.is_empty() {
-            return Ok((trimmed, CURSEFORGE_CORE_API_KEY_ENV_VAR.to_string()));
-        }
-    }
-
-    if let Some(secret_reference) = op_secret {
-        return read_secret_from_1password(&secret_reference, "Core API key")
-            .map(|value| (value, format!("1Password ({secret_reference})")));
-    }
-
-    if let Ok(value) =
-        read_secret_from_1password(DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE, "Core API key")
-    {
-        return Ok((
-            value,
-            format!("1Password ({DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE})"),
-        ));
-    }
-
-    if let Ok(value) = read_secret_from_1password(DEFAULT_OP_SECRET_REFERENCE, "Core API key") {
-        return Ok((value, format!("1Password ({DEFAULT_OP_SECRET_REFERENCE})")));
-    }
-
-    if let Some(value) = token {
-        let trimmed = value.trim().to_string();
-        if trimmed.is_empty() {
-            eyre::bail!("Provided --token was empty");
-        }
-        return Ok((trimmed, "--token".to_string()));
-    }
-
-    if let Ok(env_token) = std::env::var(CURSEFORGE_TOKEN_ENV_VAR) {
-        let trimmed = env_token.trim().to_string();
-        if !trimmed.is_empty() {
-            return Ok((trimmed, CURSEFORGE_TOKEN_ENV_VAR.to_string()));
-        }
-    }
-
-    eyre::bail!(
-        "Could not resolve CurseForge Core API key. Tried --api-key, {CURSEFORGE_CORE_API_KEY_ENV_VAR}, and 1Password defaults:\n\
-         - {DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE}\n\
-         - {DEFAULT_OP_SECRET_REFERENCE}"
-    )
 }
 
 pub(super) fn fetch_project_files(

@@ -14,12 +14,11 @@ use super::super::curseforge_cli::parse_safety_age;
 use super::super::curseforge_cli::prompt_yes_no;
 use super::super::curseforge_cli::read_changelog_section;
 use super::super::curseforge_cli::read_mod_version;
-use super::super::curseforge_cli::resolve_core_api_key;
 use super::super::curseforge_cli::resolve_project_id;
-use super::super::curseforge_cli::resolve_token;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use crate::curseforge::CurseforgeApiSecret;
 use crate::curseforge::CurseforgeHttpClient;
 use crate::curseforge::CurseforgeProjectFileId;
 use chrono::Utc;
@@ -105,7 +104,7 @@ fn release_amend(
     let upload_client = if dry_run {
         None
     } else {
-        let token_value = resolve_token(token.clone(), op_secret.clone())?;
+        let token_value = CurseforgeApiSecret::resolve(token.clone(), op_secret.clone())?;
         Some(CurseforgeHttpClient::new(&token_value)?)
     };
 
@@ -127,7 +126,8 @@ fn release_amend(
         }
     }
 
-    let (core_key, credential_source) = resolve_core_api_key(api_key, token, op_secret)?;
+    let (core_key, credential_source) =
+        CurseforgeApiSecret::resolve_core(api_key, token, op_secret)?;
     let client = CurseforgeHttpClient::new_core_api(&core_key)?;
     let files = fetch_project_files(&client, project_id, &credential_source)?;
 

@@ -23,14 +23,10 @@ use std::ffi::OsStr;
 use std::fmt::Write as _;
 use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
 use tracing::debug;
 
 pub(super) const MODRINTH_API_ROOT: &str = "https://api.modrinth.com/v2";
 pub(super) const MODRINTH_DEFAULT_PROJECT_ID: &str = "aecUorJQ";
-pub(super) const MODRINTH_TOKEN_ENV_VAR: &str = "MODRINTH_TOKEN";
-pub(super) const DEFAULT_OP_SECRET_REFERENCE: &str =
-    "op://Private/Modrinth SFM API token/credential";
 pub(super) const MODRINTH_VERSIONS_URL_PREFIX: &str = "https://modrinth.com/mod";
 
 pub(super) fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
@@ -60,54 +56,6 @@ pub(super) fn resolve_project_id(project: Option<String>) -> eyre::Result<String
         }
         None => Ok(MODRINTH_DEFAULT_PROJECT_ID.to_string()),
     }
-}
-
-pub(super) fn resolve_token(
-    token: Option<String>,
-    op_secret: Option<String>,
-) -> eyre::Result<String> {
-    if let Some(value) = token {
-        let trimmed = value.trim().to_string();
-        if trimmed.is_empty() {
-            eyre::bail!("Provided --token was empty");
-        }
-        return Ok(trimmed);
-    }
-
-    if let Ok(env_token) = std::env::var(MODRINTH_TOKEN_ENV_VAR) {
-        let trimmed = env_token.trim().to_string();
-        if !trimmed.is_empty() {
-            return Ok(trimmed);
-        }
-    }
-
-    let secret_reference = op_secret.unwrap_or_else(|| DEFAULT_OP_SECRET_REFERENCE.to_string());
-    read_secret_from_1password(&secret_reference, "token")
-}
-
-fn read_secret_from_1password(secret_reference: &str, what: &str) -> eyre::Result<String> {
-    let output = Command::new("op")
-        .args(["read", secret_reference, "--no-newline"])
-        .output()
-        .wrap_err("Failed to run 1Password CLI (`op`)")?;
-
-    if !output.status.success() {
-        eyre::bail!(
-            "Failed to read {what} from 1Password secret '{}': {}",
-            secret_reference,
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-
-    let value = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if value.is_empty() {
-        eyre::bail!(
-            "1Password returned an empty {what} for secret '{}'",
-            secret_reference
-        );
-    }
-
-    Ok(value)
 }
 
 pub(super) fn amend_version_changelog(

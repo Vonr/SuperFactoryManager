@@ -1,9 +1,9 @@
 #![allow(clippy::doc_markdown)]
 
 use super::curseforge_cli::fetch_game_versions;
-use super::curseforge_cli::resolve_token;
 use crate::branch_targets::select_required_minecraft_versions;
 use crate::cli::jar::BranchSelector;
+use crate::curseforge::CurseforgeApiSecret;
 use crate::curseforge::CurseforgeHttpClient;
 use crate::curseforge::CurseforgeVersionRow;
 use crate::worktree::parse_version;
@@ -43,7 +43,7 @@ fn list_minecraft_versions(
 ) -> eyre::Result<()> {
     let branch_query = branch.into_query()?;
     let selected_versions = select_required_minecraft_versions(&branch_query)?;
-    let token_value = resolve_token(token, op_secret)?;
+    let token_value = CurseforgeApiSecret::resolve(token, op_secret)?;
     let client = CurseforgeHttpClient::new(&token_value)?;
 
     let mut rows: Vec<CurseforgeVersionRow> = fetch_game_versions(&client)?
