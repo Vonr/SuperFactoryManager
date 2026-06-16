@@ -1,12 +1,5 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::ANSI_BOLD_BLUE;
-use super::curseforge_cli::ANSI_BOLD_CYAN;
-use super::curseforge_cli::ANSI_BOLD_GREEN;
-use super::curseforge_cli::ANSI_BOLD_MAGENTA;
-use super::curseforge_cli::ANSI_BOLD_WHITE;
-use super::curseforge_cli::ANSI_BOLD_YELLOW;
-use super::curseforge_cli::ANSI_DIM;
 use super::curseforge_cli::DEFAULT_AMEND_SAFETY_AGE;
 use super::curseforge_cli::amend_file_changelog;
 use super::curseforge_cli::build_core_http_client;
@@ -26,12 +19,12 @@ use super::curseforge_cli::read_mod_version;
 use super::curseforge_cli::resolve_core_api_key;
 use super::curseforge_cli::resolve_project_id;
 use super::curseforge_cli::resolve_token;
-use super::curseforge_cli::style;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
 use crate::curseforge::CurseforgeProjectFileId;
 use chrono::Utc;
+use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
 use figue as args;
 use std::ffi::OsStr;
@@ -181,33 +174,33 @@ fn release_amend(
         file_targets.push((mc_version, file.id, old_name, jar_name, file_age));
     }
 
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!("{} {}", "Project ID:".cyan().bold(), project_id);
+    info!("{} {}", "Mod version:".cyan().bold(), mod_version);
     info!(
         "{} {}",
-        style("Safety age:", ANSI_BOLD_CYAN),
-        style(&safety_age_text, ANSI_BOLD_CYAN)
+        "Safety age:".cyan().bold(),
+        safety_age_text.cyan().bold()
     );
     if dry_run {
         info!(
             "{} {}",
-            style("Mode:", ANSI_BOLD_YELLOW),
-            style("dry-run (no CurseForge mutations)", ANSI_BOLD_YELLOW)
+            "Mode:".yellow().bold(),
+            "dry-run (no CurseForge mutations)".yellow().bold()
         );
     }
-    info!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
+    info!("{}", "Amend targets:".cyan().bold());
     for (mc_version, file_id, old_name, jar_name, file_age) in &file_targets {
         info!(
             "  {} {} {} {} {} {} {} {} {} {}",
-            style("MC", ANSI_DIM),
-            style(mc_version, ANSI_BOLD_BLUE),
-            style("file id", ANSI_DIM),
+            "MC".dimmed(),
+            mc_version.blue().bold(),
+            "file id".dimmed(),
             file_id,
-            style("age", ANSI_DIM),
-            style(&format_age(*file_age), ANSI_BOLD_YELLOW),
-            style("old", ANSI_DIM),
+            "age".dimmed(),
+            format_age(*file_age).yellow().bold(),
+            "old".dimmed(),
             old_name,
-            style("new", ANSI_DIM),
+            "new".dimmed(),
             jar_name
         );
     }
@@ -215,39 +208,37 @@ fn release_amend(
     if dry_run {
         info!(
             "{}",
-            style(
-                "Dry-run complete: remote CurseForge targets resolved; no files amended.",
-                ANSI_BOLD_GREEN
-            )
+            "Dry-run complete: remote CurseForge targets resolved; no files amended."
+                .green()
+                .bold()
         );
         return Ok(());
     }
 
     let prompt = format!(
         "{} {}",
-        style(
-            "Proceed to amend changelog on these files?",
-            ANSI_BOLD_YELLOW
-        ),
-        style("(y/N)", ANSI_BOLD_YELLOW)
+        "Proceed to amend changelog on these files?"
+            .yellow()
+            .bold(),
+        "(y/N)".yellow().bold()
     );
     if !prompt_yes_no(&prompt)? {
-        info!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
+        info!("{}", "Aborted release amend.".yellow().bold());
         return Ok(());
     }
 
     for (mc_version, file_id, old_name, jar_name, file_age) in &file_targets {
         info!(
             "{} {} {} {} {} {} {} {} {} {}",
-            style("Amending file", ANSI_BOLD_WHITE),
-            style(&file_id.to_string(), ANSI_BOLD_MAGENTA),
-            style("for MC", ANSI_DIM),
-            style(mc_version, ANSI_BOLD_BLUE),
-            style("age", ANSI_DIM),
-            style(&format_age(*file_age), ANSI_BOLD_YELLOW),
-            style("old", ANSI_DIM),
+            "Amending file".white().bold(),
+            file_id.to_string().magenta().bold(),
+            "for MC".dimmed(),
+            mc_version.blue().bold(),
+            "age".dimmed(),
+            format_age(*file_age).yellow().bold(),
+            "old".dimmed(),
             old_name,
-            style("new", ANSI_DIM),
+            "new".dimmed(),
             jar_name
         );
         let upload_client = upload_client.as_ref().ok_or_else(|| {
@@ -264,10 +255,9 @@ fn release_amend(
 
     info!(
         "{}",
-        style(
-            "CurseForge release changelog amend complete.",
-            ANSI_BOLD_GREEN
-        )
+        "CurseForge release changelog amend complete."
+            .green()
+            .bold()
     );
 
     Ok(())

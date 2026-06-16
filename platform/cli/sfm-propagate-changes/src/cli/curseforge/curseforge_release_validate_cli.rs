@@ -1,9 +1,5 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::ANSI_BOLD_BLUE;
-use super::curseforge_cli::ANSI_BOLD_CYAN;
-use super::curseforge_cli::ANSI_BOLD_GREEN;
-use super::curseforge_cli::ANSI_DIM;
 use super::curseforge_cli::build_core_http_client;
 use super::curseforge_cli::download_sha1;
 use super::curseforge_cli::fetch_project_files;
@@ -17,10 +13,10 @@ use super::curseforge_cli::read_mod_version;
 use super::curseforge_cli::resolve_core_api_key;
 use super::curseforge_cli::resolve_project_id;
 use super::curseforge_cli::sha1_hex;
-use super::curseforge_cli::style;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
 use facet::Facet;
 use figue as args;
@@ -87,9 +83,9 @@ fn validate_release_hashes(
     let core_client = build_core_http_client(&core_key)?;
     let project_files = fetch_project_files(&core_client, project_id, &credential_source)?;
 
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
+    info!("{} {}", "Project ID:".cyan().bold(), project_id);
+    info!("{} {}", "Mod version:".cyan().bold(), mod_version);
+    info!("{} {}", "Jars checked:".cyan().bold(), jars.len());
 
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(&jar)?;
@@ -159,20 +155,19 @@ fn validate_release_hashes(
 
         info!(
             "{} {} {} {} {}",
-            style("✓", ANSI_BOLD_GREEN),
-            style(&mc_version, ANSI_BOLD_BLUE),
-            style("hash validated", ANSI_DIM),
+            "✓".green().bold(),
+            mc_version.blue().bold(),
+            "hash validated".dimmed(),
             historical.id,
-            style(&format!("({file_label})"), ANSI_DIM)
+            format!("({file_label})").dimmed()
         );
     }
 
     info!(
         "{}",
-        style(
-            "Hash validation passed: downloaded CurseForge files match local release jars.",
-            ANSI_BOLD_GREEN
-        )
+        "Hash validation passed: downloaded CurseForge files match local release jars."
+            .green()
+            .bold()
     );
 
     Ok(())

@@ -45,19 +45,6 @@ pub(super) const DEFAULT_OP_SECRET_REFERENCE: &str =
     "op://Private/Modrinth SFM API token/credential";
 pub(super) const MODRINTH_VERSIONS_URL_PREFIX: &str = "https://modrinth.com/mod";
 
-pub(super) const ANSI_RESET: &str = "\x1b[0m";
-pub(super) const ANSI_BOLD_CYAN: &str = "\x1b[1;36m";
-pub(super) const ANSI_BOLD_YELLOW: &str = "\x1b[1;33m";
-pub(super) const ANSI_BOLD_GREEN: &str = "\x1b[1;32m";
-pub(super) const ANSI_BOLD_BLUE: &str = "\x1b[1;34m";
-pub(super) const ANSI_BOLD_MAGENTA: &str = "\x1b[1;35m";
-pub(super) const ANSI_BOLD_WHITE: &str = "\x1b[1;37m";
-pub(super) const ANSI_DIM: &str = "\x1b[2m";
-
-pub(super) fn style(text: &str, ansi: &str) -> String {
-    format!("{ansi}{text}{ANSI_RESET}")
-}
-
 pub(super) fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
     stdout_prompt(format!("{message} "))?;
 

@@ -1,7 +1,3 @@
-use super::modrinth_cli::ANSI_BOLD_BLUE;
-use super::modrinth_cli::ANSI_BOLD_CYAN;
-use super::modrinth_cli::ANSI_BOLD_GREEN;
-use super::modrinth_cli::ANSI_DIM;
 use super::modrinth_cli::build_http_client;
 use super::modrinth_cli::build_release_plans;
 use super::modrinth_cli::fetch_project_versions;
@@ -10,11 +6,11 @@ use super::modrinth_cli::find_latest_historical_version_for_mc;
 use super::modrinth_cli::get_ordered_release_jars;
 use super::modrinth_cli::read_mod_version;
 use super::modrinth_cli::resolve_project_id;
-use super::modrinth_cli::style;
 use super::modrinth_cli::to_normalized_set;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
 use figue as args;
 use tracing::info;
@@ -60,9 +56,9 @@ fn check_release_metadata(branch: BranchSelector, project: Option<String>) -> ey
     let client = build_http_client(None)?;
     let existing_versions = fetch_project_versions(&client, &project_id)?;
 
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), plans.len());
+    info!("{} {}", "Project ID:".cyan().bold(), project_id);
+    info!("{} {}", "Mod version:".cyan().bold(), mod_version);
+    info!("{} {}", "Jars checked:".cyan().bold(), plans.len());
 
     for plan in plans {
         let historical =
@@ -143,27 +139,24 @@ fn check_release_metadata(branch: BranchSelector, project: Option<String>) -> ey
 
         info!(
             "{} {} {} {} {}",
-            style("✓", ANSI_BOLD_GREEN),
-            style(&plan.mc_version, ANSI_BOLD_BLUE),
-            style("matches historical version", ANSI_DIM),
+            "✓".green().bold(),
+            plan.mc_version.blue().bold(),
+            "matches historical version".dimmed(),
             &historical.id,
-            style(
-                &format!(
-                    "(loaders: {}; game versions: {})",
-                    plan.loaders.join(", "),
-                    plan.game_versions.join(", ")
-                ),
-                ANSI_DIM
+            format!(
+                "(loaders: {}; game versions: {})",
+                plan.loaders.join(", "),
+                plan.game_versions.join(", ")
             )
+            .dimmed()
         );
     }
 
     info!(
         "{}",
-        style(
-            "Metadata check passed: computed metadata matches historical Modrinth versions.",
-            ANSI_BOLD_GREEN
-        )
+        "Metadata check passed: computed metadata matches historical Modrinth versions."
+            .green()
+            .bold()
     );
 
     Ok(())

@@ -1,10 +1,3 @@
-use super::modrinth_cli::ANSI_BOLD_BLUE;
-use super::modrinth_cli::ANSI_BOLD_CYAN;
-use super::modrinth_cli::ANSI_BOLD_GREEN;
-use super::modrinth_cli::ANSI_BOLD_MAGENTA;
-use super::modrinth_cli::ANSI_BOLD_WHITE;
-use super::modrinth_cli::ANSI_BOLD_YELLOW;
-use super::modrinth_cli::ANSI_DIM;
 use super::modrinth_cli::amend_version_changelog;
 use super::modrinth_cli::build_http_client;
 use super::modrinth_cli::compute_wrapped_release_changelog;
@@ -17,10 +10,10 @@ use super::modrinth_cli::prompt_yes_no;
 use super::modrinth_cli::read_mod_version;
 use super::modrinth_cli::resolve_project_id;
 use super::modrinth_cli::resolve_token;
-use super::modrinth_cli::style;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
 use figue as args;
 use std::ffi::OsStr;
@@ -134,24 +127,24 @@ fn release_amend(
         amend_targets.push((mc_version, version.id.clone(), jar_name));
     }
 
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
+    info!("{} {}", "Project ID:".cyan().bold(), project_id);
+    info!("{} {}", "Mod version:".cyan().bold(), mod_version);
     if dry_run {
         info!(
             "{} {}",
-            style("Mode:", ANSI_BOLD_YELLOW),
-            style("dry-run (no Modrinth mutations)", ANSI_BOLD_YELLOW)
+            "Mode:".yellow().bold(),
+            "dry-run (no Modrinth mutations)".yellow().bold()
         );
     }
-    info!("{}", style("Amend targets:", ANSI_BOLD_CYAN));
+    info!("{}", "Amend targets:".cyan().bold());
     for (mc_version, version_id, jar_name) in &amend_targets {
         info!(
             "  {} {} {} {} {} {}",
-            style("MC", ANSI_DIM),
-            style(mc_version, ANSI_BOLD_BLUE),
-            style("version id", ANSI_DIM),
+            "MC".dimmed(),
+            mc_version.blue().bold(),
+            "version id".dimmed(),
             version_id,
-            style("name", ANSI_DIM),
+            "name".dimmed(),
             jar_name
         );
     }
@@ -159,35 +152,33 @@ fn release_amend(
     if dry_run {
         info!(
             "{}",
-            style(
-                "Dry-run complete: remote Modrinth targets resolved; no versions amended.",
-                ANSI_BOLD_GREEN
-            )
+            "Dry-run complete: remote Modrinth targets resolved; no versions amended."
+                .green()
+                .bold()
         );
         return Ok(());
     }
 
     let prompt = format!(
         "{} {}",
-        style(
-            "Proceed to amend changelog on these versions?",
-            ANSI_BOLD_YELLOW
-        ),
-        style("(y/N)", ANSI_BOLD_YELLOW)
+        "Proceed to amend changelog on these versions?"
+            .yellow()
+            .bold(),
+        "(y/N)".yellow().bold()
     );
     if !prompt_yes_no(&prompt)? {
-        info!("{}", style("Aborted release amend.", ANSI_BOLD_YELLOW));
+        info!("{}", "Aborted release amend.".yellow().bold());
         return Ok(());
     }
 
     for (mc_version, version_id, jar_name) in &amend_targets {
         info!(
             "{} {} {} {} {} {}",
-            style("Amending version", ANSI_BOLD_WHITE),
-            style(version_id, ANSI_BOLD_MAGENTA),
-            style("for MC", ANSI_DIM),
-            style(mc_version, ANSI_BOLD_BLUE),
-            style("as", ANSI_DIM),
+            "Amending version".white().bold(),
+            version_id.magenta().bold(),
+            "for MC".dimmed(),
+            mc_version.blue().bold(),
+            "as".dimmed(),
             jar_name
         );
 
@@ -196,10 +187,9 @@ fn release_amend(
 
     info!(
         "{}",
-        style(
-            "Modrinth release changelog amend complete.",
-            ANSI_BOLD_GREEN
-        )
+        "Modrinth release changelog amend complete."
+            .green()
+            .bold()
     );
 
     Ok(())

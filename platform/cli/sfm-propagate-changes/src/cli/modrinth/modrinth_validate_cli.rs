@@ -1,7 +1,3 @@
-use super::modrinth_cli::ANSI_BOLD_BLUE;
-use super::modrinth_cli::ANSI_BOLD_CYAN;
-use super::modrinth_cli::ANSI_BOLD_GREEN;
-use super::modrinth_cli::ANSI_DIM;
 use super::modrinth_cli::build_http_client;
 use super::modrinth_cli::download_sha1;
 use super::modrinth_cli::fetch_project_versions;
@@ -13,10 +9,10 @@ use super::modrinth_cli::read_mod_version;
 use super::modrinth_cli::resolve_project_id;
 use super::modrinth_cli::select_download_file;
 use super::modrinth_cli::sha1_hex;
-use super::modrinth_cli::style;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
+use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
 use facet::Facet;
 use figue as args;
@@ -58,9 +54,9 @@ fn validate_release_hashes(branch: BranchSelector, project: Option<String>) -> e
     let client = build_http_client(None)?;
     let existing_versions = fetch_project_versions(&client, &project_id)?;
 
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!("{} {}", style("Jars checked:", ANSI_BOLD_CYAN), jars.len());
+    info!("{} {}", "Project ID:".cyan().bold(), project_id);
+    info!("{} {}", "Mod version:".cyan().bold(), mod_version);
+    info!("{} {}", "Jars checked:".cyan().bold(), jars.len());
 
     for jar in jars {
         let mc_version = parse_mc_version_from_jar_name(&jar)?;
@@ -129,20 +125,19 @@ fn validate_release_hashes(branch: BranchSelector, project: Option<String>) -> e
 
         info!(
             "{} {} {} {} {}",
-            style("✓", ANSI_BOLD_GREEN),
-            style(&mc_version, ANSI_BOLD_BLUE),
-            style("hash validated", ANSI_DIM),
+            "✓".green().bold(),
+            mc_version.blue().bold(),
+            "hash validated".dimmed(),
             historical.id,
-            style(&format!("({})", remote_file.filename), ANSI_DIM)
+            format!("({})", remote_file.filename).dimmed()
         );
     }
 
     info!(
         "{}",
-        style(
-            "Hash validation passed: downloaded Modrinth files match local release jars.",
-            ANSI_BOLD_GREEN
-        )
+        "Hash validation passed: downloaded Modrinth files match local release jars."
+            .green()
+            .bold()
     );
 
     Ok(())

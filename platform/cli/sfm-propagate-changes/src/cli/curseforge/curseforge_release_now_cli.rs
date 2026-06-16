@@ -1,12 +1,5 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::ANSI_BOLD_BLUE;
-use super::curseforge_cli::ANSI_BOLD_CYAN;
-use super::curseforge_cli::ANSI_BOLD_GREEN;
-use super::curseforge_cli::ANSI_BOLD_MAGENTA;
-use super::curseforge_cli::ANSI_BOLD_WHITE;
-use super::curseforge_cli::ANSI_BOLD_YELLOW;
-use super::curseforge_cli::ANSI_DIM;
 use super::curseforge_cli::amend_file_changelog;
 use super::curseforge_cli::build_http_client;
 use super::curseforge_cli::build_upload_plans;
@@ -22,12 +15,12 @@ use super::curseforge_cli::read_changelog_section;
 use super::curseforge_cli::read_mod_version;
 use super::curseforge_cli::resolve_project_id;
 use super::curseforge_cli::resolve_token;
-use super::curseforge_cli::style;
 use super::curseforge_cli::upload_project_file;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
 use crate::curseforge::CurseforgeGameVersionId;
+use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
 use figue as args;
 use std::ffi::OsStr;
@@ -107,21 +100,17 @@ fn release_now(
         Some((client, CurseforgeGameVersionId::build_index(&game_versions)))
     };
     // todo(2026-06-16) I need to test this to see how badly our tracing subscriber mangles the presentation of this compared to our println version. might want to adapt this to be a writer or something
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!(
-        "{} {}",
-        style("Jar dir:", ANSI_BOLD_CYAN),
-        jar_dir.display()
-    );
+    info!("{} {}", "Project ID:".cyan().bold(), project_id);
+    info!("{} {}", "Mod version:".cyan().bold(), mod_version);
+    info!("{} {}", "Jar dir:".cyan().bold(), jar_dir.display());
     if dry_run {
         info!(
             "{} {}",
-            style("Mode:", ANSI_BOLD_YELLOW),
-            style("dry-run (no uploads)", ANSI_BOLD_YELLOW)
+            "Mode:".yellow().bold(),
+            "dry-run (no uploads)".yellow().bold()
         );
     }
-    info!("{}", style("Changelog:", ANSI_BOLD_CYAN));
+    info!("{}", "Changelog:".cyan().bold());
     info!("{wrapped_changelog}");
 
     let upload_plans = if dry_run {
@@ -139,7 +128,7 @@ fn release_now(
     };
 
     if let Some(plans) = &upload_plans {
-        info!("{}", style("Metadata preflight:", ANSI_BOLD_CYAN));
+        info!("{}", "Metadata preflight:".cyan().bold());
         for plan in plans {
             let metadata_pairs: Vec<String> = plan
                 .metadata_names
@@ -149,9 +138,9 @@ fn release_now(
                 .collect();
             info!(
                 "  {} {} {} {}",
-                style("MC", ANSI_DIM),
-                style(&plan.mc_version, ANSI_BOLD_BLUE),
-                style("=>", ANSI_DIM),
+                "MC".dimmed(),
+                plan.mc_version.blue().bold(),
+                "=>".dimmed(),
                 metadata_pairs.join(", ")
             );
         }
@@ -164,12 +153,12 @@ fn release_now(
     };
     let prompt = format!(
         "{} {} {}",
-        style("Proceed to", ANSI_BOLD_YELLOW),
-        style(action, ANSI_BOLD_YELLOW),
-        style("? (y/N)", ANSI_BOLD_YELLOW)
+        "Proceed to".yellow().bold(),
+        action.yellow().bold(),
+        "? (y/N)".yellow().bold()
     );
     if !prompt_yes_no(&prompt)? {
-        info!("{}", style("Aborted release-now.", ANSI_BOLD_YELLOW));
+        info!("{}", "Aborted release-now.".yellow().bold());
         info!("{}", curseforge_files_url(project_id));
         return Ok(());
     }
@@ -185,10 +174,10 @@ fn release_now(
 
         info!(
             "{} {} {} {}",
-            style("Uploading", ANSI_BOLD_WHITE),
-            style(&jar_name, ANSI_BOLD_MAGENTA),
-            style("for MC", ANSI_DIM),
-            style(&mc_version, ANSI_BOLD_BLUE)
+            "Uploading".white().bold(),
+            jar_name.magenta().bold(),
+            "for MC".dimmed(),
+            mc_version.blue().bold()
         );
         if dry_run {
             let game_version_names = game_version_names_for_release(&mc_version)?;
@@ -198,7 +187,7 @@ fn release_now(
                 .collect();
             info!(
                 "  {} {}",
-                style("metadata names:", ANSI_DIM),
+                "metadata names:".dimmed(),
                 colored_metadata_names.join(", ")
             );
             continue;
@@ -225,16 +214,13 @@ fn release_now(
         )?;
         info!(
             "  {} {}",
-            style("uploaded file id", ANSI_BOLD_GREEN),
-            style(&uploaded_id.to_string(), ANSI_BOLD_GREEN)
+            "uploaded file id".green().bold(),
+            uploaded_id.to_string().green().bold()
         );
     }
 
     if !dry_run {
-        info!(
-            "{}",
-            style("CurseForge release upload complete.", ANSI_BOLD_GREEN)
-        );
+        info!("{}", "CurseForge release upload complete.".green().bold());
     }
     info!("{}", curseforge_files_url(project_id));
 

@@ -37,6 +37,7 @@ use crate::terminal_output::stdout_prompt;
 use crate::worktree::parse_version;
 use chrono::DateTime;
 use chrono::Utc;
+use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
 use facet::Facet;
 use figue as args;
@@ -70,19 +71,6 @@ pub(super) const DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE: &str =
 pub(super) const DEFAULT_AMEND_SAFETY_AGE: &str = "30m";
 pub(super) const CURSEFORGE_AUTHORS_FILES_URL_PREFIX: &str =
     "https://authors.curseforge.com/#/projects";
-pub(super) const ANSI_RESET: &str = "\x1b[0m";
-pub(super) const ANSI_BOLD_CYAN: &str = "\x1b[1;36m";
-pub(super) const ANSI_BOLD_YELLOW: &str = "\x1b[1;33m";
-pub(super) const ANSI_BOLD_GREEN: &str = "\x1b[1;32m";
-pub(super) const ANSI_BOLD_BLUE: &str = "\x1b[1;34m";
-pub(super) const ANSI_BOLD_MAGENTA: &str = "\x1b[1;35m";
-pub(super) const ANSI_BOLD_RED: &str = "\x1b[1;31m";
-pub(super) const ANSI_BOLD_WHITE: &str = "\x1b[1;37m";
-pub(super) const ANSI_DIM: &str = "\x1b[2m";
-
-pub(super) fn style(text: &str, ansi: &str) -> String {
-    format!("{ansi}{text}{ANSI_RESET}")
-}
 
 pub(super) fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
     stdout_prompt(format!("{message} "))?;
@@ -99,14 +87,14 @@ pub(super) fn prompt_yes_no(message: &str) -> eyre::Result<bool> {
 pub(super) fn colorize_metadata_name(name: &str, mc_version: &str) -> String {
     // todo(2026-06-16) shouldn't we have an enum for the known variants with an Other(String) escape hatch where this fn would be an instance method?
     if name == mc_version {
-        return style(name, ANSI_BOLD_BLUE);
+        return name.blue().bold().to_string();
     }
 
     match name {
-        "NeoForge" => style(name, ANSI_BOLD_RED),
-        "Forge" => style(name, ANSI_BOLD_YELLOW),
-        "Java 17" => style(name, ANSI_BOLD_GREEN),
-        "Java 21" | "Java 25" => style(name, ANSI_BOLD_CYAN),
+        "NeoForge" => name.red().bold().to_string(),
+        "Forge" => name.yellow().bold().to_string(),
+        "Java 17" => name.green().bold().to_string(),
+        "Java 21" | "Java 25" => name.cyan().bold().to_string(),
         _ => name.to_string(),
     }
 }

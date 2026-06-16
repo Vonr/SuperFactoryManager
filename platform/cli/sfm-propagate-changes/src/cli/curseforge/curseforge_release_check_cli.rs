@@ -1,9 +1,5 @@
 #![allow(clippy::doc_markdown)]
 
-use super::curseforge_cli::ANSI_BOLD_BLUE;
-use super::curseforge_cli::ANSI_BOLD_CYAN;
-use super::curseforge_cli::ANSI_BOLD_GREEN;
-use super::curseforge_cli::ANSI_DIM;
 use super::curseforge_cli::build_core_http_client;
 use super::curseforge_cli::build_http_client;
 use super::curseforge_cli::build_resolved_metadata_plans;
@@ -17,12 +13,12 @@ use super::curseforge_cli::read_mod_version;
 use super::curseforge_cli::resolve_core_api_key;
 use super::curseforge_cli::resolve_project_id;
 use super::curseforge_cli::resolve_token;
-use super::curseforge_cli::style;
 use super::curseforge_cli::to_comparison_name_set;
 use crate::cli::jar::BranchSelector;
 use crate::cli::jar::get_jar_dir;
 use crate::cli::repo_root::get_repo_root;
 use crate::curseforge::CurseforgeGameVersionId;
+use color_eyre::owo_colors::OwoColorize;
 use facet::Facet;
 use figue as args;
 use tracing::info;
@@ -94,13 +90,9 @@ fn check_minecraft_version_metadata(
     let core_client = build_core_http_client(&core_key)?;
     let project_files = fetch_project_files(&core_client, project_id, &credential_source)?;
 
-    info!("{} {}", style("Project ID:", ANSI_BOLD_CYAN), project_id);
-    info!("{} {}", style("Mod version:", ANSI_BOLD_CYAN), mod_version);
-    info!(
-        "{} {}",
-        style("Jars checked:", ANSI_BOLD_CYAN),
-        metadata_plans.len()
-    );
+    info!("{} {}", "Project ID:".cyan().bold(), project_id);
+    info!("{} {}", "Mod version:".cyan().bold(), mod_version);
+    info!("{} {}", "Jars checked:".cyan().bold(), metadata_plans.len());
 
     for plan in metadata_plans {
         let historical = find_latest_historical_file_for_mc(&project_files, &plan.mc_version)?;
@@ -155,20 +147,19 @@ fn check_minecraft_version_metadata(
 
         info!(
             "{} {} {} {} {}",
-            style("✓", ANSI_BOLD_GREEN),
-            style(&plan.mc_version, ANSI_BOLD_BLUE),
-            style("matches historical file", ANSI_DIM),
+            "✓".green().bold(),
+            plan.mc_version.blue().bold(),
+            "matches historical file".dimmed(),
             historical.id,
-            style(&format!("({})", id_pairs.join(", ")), ANSI_DIM)
+            format!("({})", id_pairs.join(", ")).dimmed()
         );
     }
 
     info!(
         "{}",
-        style(
-            "Metadata check passed: computed metadata matches historical uploads.",
-            ANSI_BOLD_GREEN
-        )
+        "Metadata check passed: computed metadata matches historical uploads."
+            .green()
+            .bold()
     );
 
     Ok(())
