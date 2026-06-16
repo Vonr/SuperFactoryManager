@@ -361,7 +361,7 @@ Windows atomicity:
 
 ### Shared Cache Layout
 
-Status: `Not Started`
+Status: `In Progress`
 
 The common cache should live under `sfm-propagate-changes.exe cache path`, grouped by purpose. Worktree-local build products stay under each worktree's `platform/minecraft/build/sfm-toolchain`.
 
@@ -398,7 +398,7 @@ Rule of thumb:
 
 ### Ctrl+C Handling
 
-Status: `Not Started`
+Status: `In Progress`
 
 Interactive and multi-target commands should handle cancellation predictably:
 
@@ -407,6 +407,13 @@ Interactive and multi-target commands should handle cancellation predictably:
 - Every Ctrl+C immediately writes a red `^C` to stderr using the `owo-colors` re-export from `color-eyre`.
 - Graceful shutdown should try to terminate launched Minecraft/JVM child processes before returning.
 - Parallel implementation must share one cancellation signal across target tasks.
+
+Current implementation notes:
+
+- The working tree installs a process-wide Ctrl+C handler from the CLI entrypoint.
+- First Ctrl+C sets a shared cancellation flag, emits a red `^C`, prevents new parallel targets from starting, and asks active Java/Minecraft child processes to stop.
+- A second Ctrl+C within one second emits another red `^C` and force-exits with status 130.
+- Java tool, `javac`, ANTLR, and launched Minecraft JVM waits poll the cancellation flag and kill the active child before returning a cancellation error.
 
 ### Locking Testability
 
@@ -444,12 +451,12 @@ Testing requirements:
 | 8 | `Done` | Add prefixed terminal rendering for line events. | Terminal tracing layer renders branch/source/process/stream-aware prefixes; explicit `--log-filter`/`--debug` override `RUST_LOG`; validated with `jar plan --branch 1.19.2`. |
 | 9 | `Done` | Keep JSONL logging opt-in via `--log-file` and ensure raw subprocess lines are represented. | Working tree makes JSONL append all events and include current span/span list context; validated with `jar plan --branch 1.19.2 --log-file`. |
 | 10 | `Done` | Implement std-based artifact lock guard. | Committed in `433a01e98`; `ArtifactLock` uses std file locking with wait policy, non-blocking try-acquire, blocking wait loop with tracing, and contention/stale-file tests. |
-| 11 | `In Progress` | Wrap artifact downloads/cache writes with lock + temp + checksum + atomic replace. | Working tree protects Maven artifact cache reads/writes, local artifact fallback copies, generic downloads, and known-SHA Minecraft asset downloads with artifact locks, unique temp files, checksum validation, and `.bad` quarantine. |
-| 12 | `Not Started` | Move eligible immutable artifacts into the common SFM cache. | Shared cache layout is documented in state/plan output and worktree-local caches hold only source-dependent outputs. |
-| 13 | `Not Started` | Add `--parallel [N]` for dry-run/resolution-heavy commands, defaulting to 10. | Parallel dry-run works across core targets and logs lock waits clearly. |
-| 14 | `Not Started` | Add Ctrl+C graceful/force shutdown behavior. | One Ctrl+C cancels gracefully; two within one second force exit; active children are handled. |
-| 15 | `Not Started` | Expand parallel support to `run game-test-server` if logs and locks hold up. | All core game-test-server runs can be launched/observed without unreadable logs. |
-| 16 | `Not Started` | Expand parallel support to graphical `run client`. | Multiple clients can run concurrently with readable prefixed logs and predictable Ctrl+C behavior. |
+| 11 | `Done` | Wrap artifact downloads/cache writes with lock + temp + checksum + atomic replace. | Committed in `0618896cc`; Maven artifact cache reads/writes, local artifact fallback copies, generic downloads, and known-SHA Minecraft asset downloads use artifact locks, unique temp files, checksum validation, and `.bad` quarantine. |
+| 12 | `In Progress` | Move eligible immutable artifacts into the common SFM cache. | Working tree adds explicit common-cache plan paths and routes Maven artifacts, Mojang manifests/version metadata, Minecraft jars/mappings, libraries, and assets through the CLI cache path while keeping project outputs worktree-local. |
+| 13 | `In Progress` | Add `--parallel [N]` for dry-run/resolution-heavy commands, defaulting to 10. | Working tree adds typed `Parallelism`, argv normalization for bare `--parallel`, and a worker-pool dispatcher for multi-target jar/build/run execution. Parallel results are re-ordered back into target order before summaries and plan JSON are written. |
+| 14 | `In Progress` | Add Ctrl+C graceful/force shutdown behavior. | Working tree installs a Ctrl+C handler, echoes red `^C`, stops new target starts, kills active Java tool, `javac`, ANTLR, and Minecraft JVM children on graceful cancellation, and force-exits on a second Ctrl+C within one second. |
+| 15 | `In Progress` | Expand parallel support to `run game-test-server` if logs and locks hold up. | Working tree allows live `run game-test-server --parallel`; runtime validation across core targets is still pending. |
+| 16 | `In Progress` | Expand parallel support to graphical `run client`. | Working tree allows live graphical `run client --parallel`; runtime validation with multiple client windows is still pending. |
 
 ## Validation Plan
 

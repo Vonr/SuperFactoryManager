@@ -8,6 +8,7 @@ mod error_action;
 mod json_branch_name;
 mod json_minecraft_version;
 mod json_path;
+mod parallelism;
 mod run_command;
 mod run_kind;
 
@@ -17,5 +18,6 @@ pub use build_options::BuildOptions;
 pub use compare_command::CompareCommand;
 pub use compare_options::CompareOptions;
 pub use error_action::ErrorAction;
+pub use parallelism::Parallelism;
 pub use run_command::RunCommand;
 pub use run_kind::RunKind;

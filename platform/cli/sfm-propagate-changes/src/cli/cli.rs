@@ -182,8 +182,10 @@ mod tests {
     use crate::cli::Command;
     use crate::cli::jar::JarCommand;
     use crate::cli::run::RunCommand;
+    use crate::cli_arg_normalization::normalize_parallel_args;
     use crate::jar_build::BuildMode;
     use crate::jar_build::ErrorAction;
+    use crate::jar_build::Parallelism;
     use tracing::level_filters::LevelFilter;
 
     #[test]
@@ -223,6 +225,78 @@ mod tests {
                 assert!(options.dry_run);
                 assert_eq!(options.branch.to_string(), "1.19.2");
                 assert_eq!(options.error_action, ErrorAction::Bail);
+            }
+            command => panic!("expected jar build command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_jar_build_parallel_value() {
+        let cli = figue::from_slice::<Cli>(&[
+            "jar",
+            "build",
+            "--branch",
+            "core",
+            "--parallel",
+            "4",
+            "--dry-run",
+        ])
+        .into_result()
+        .expect("jar build parallel should parse")
+        .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::Build { command },
+            } => {
+                let options = command
+                    .into_options(BuildMode::Build)
+                    .expect("parallel value should parse");
+                assert_eq!(options.parallelism, Parallelism::Parallel { limit: 4 });
+            }
+            command => panic!("expected jar build command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_bare_parallel_after_arg_normalization() {
+        let args = normalize_parallel_args(["run", "game-test-server", "--parallel", "--dry-run"]);
+        let arg_refs = args.iter().map(String::as_str).collect::<Vec<_>>();
+        let cli = figue::from_slice::<Cli>(&arg_refs)
+            .into_result()
+            .expect("bare parallel should normalize and parse")
+            .get_silent();
+        match cli.command {
+            Command::Run {
+                command: RunCommand::GameTestServer { command },
+            } => {
+                let options = command
+                    .into_options(BuildMode::Build)
+                    .expect("normalized parallel should parse");
+                assert_eq!(
+                    options.parallelism,
+                    Parallelism::Parallel {
+                        limit: Parallelism::DEFAULT_LIMIT
+                    }
+                );
+            }
+            command => panic!("expected game-test-server run command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn rejects_zero_parallelism() {
+        let cli = figue::from_slice::<Cli>(&["jar", "build", "--parallel", "0"])
+            .into_result()
+            .expect("zero parallel syntax should parse before domain validation")
+            .get_silent();
+        match cli.command {
+            Command::Jar {
+                command: JarCommand::Build { command },
+            } => {
+                let error = command
+                    .into_options(BuildMode::Build)
+                    .expect_err("zero parallelism should be rejected");
+                assert!(error.to_string().contains("--parallel"));
             }
             command => panic!("expected jar build command, got {command:?}"),
         }

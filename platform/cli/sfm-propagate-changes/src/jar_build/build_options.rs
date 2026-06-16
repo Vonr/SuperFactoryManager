@@ -1,5 +1,6 @@
 use super::BuildMode;
 use super::ErrorAction;
+use super::Parallelism;
 use crate::branch_targets::BranchQuery;
 use std::path::PathBuf;
 
@@ -17,5 +18,6 @@ pub struct BuildOptions {
     pub dry_run: bool,
     pub allow_local_artifact_cache: bool,
     pub error_action: ErrorAction,
+    pub parallelism: Parallelism,
     pub mode: BuildMode,
 }

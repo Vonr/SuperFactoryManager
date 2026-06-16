@@ -13,6 +13,7 @@ categories = ["command-line-utilities", "development-tools"]
 [dependencies]
 chrono = "0.4.43"
 color-eyre = "0.6.5"
+ctrlc = "3.5.1"
 directories-next = "2.0.0"
 dunce = "1.0.5"
 eyre = "0.6.12"

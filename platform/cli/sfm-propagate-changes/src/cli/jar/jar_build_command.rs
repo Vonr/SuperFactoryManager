@@ -3,6 +3,7 @@ use crate::jar_build::BuildCommand;
 use crate::jar_build::BuildMode;
 use crate::jar_build::BuildOptions;
 use crate::jar_build::ErrorAction;
+use crate::jar_build::Parallelism;
 use crate::jar_build::RunCommand;
 use crate::jar_build::RunKind;
 use facet::Facet;
@@ -47,6 +48,10 @@ pub struct JarBuildCommand {
     /// Failure behavior for multi-target selectors: `bail` or `continue`.
     #[facet(rename = "error-action", default, args::named)]
     pub error_action: ErrorAction,
+
+    /// Run matching targets in parallel. Bare `--parallel` defaults to 10 before parsing.
+    #[facet(default, args::named)]
+    pub parallel: Option<usize>,
 }
 
 impl JarBuildCommand {
@@ -60,6 +65,7 @@ impl JarBuildCommand {
             dry_run: self.dry_run,
             allow_local_artifact_cache: self.allow_local_artifact_cache,
             error_action: self.error_action,
+            parallelism: Parallelism::from_cli(self.parallel)?,
             mode,
         })
     }

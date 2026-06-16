@@ -3,6 +3,8 @@ use super::ArtifactLockfile;
 use super::ArtifactPlan;
 use super::ArtifactProvenance;
 use super::ArtifactSource;
+use super::BuildMode;
+use super::BuildOptions;
 use super::BuildPlan;
 use super::ChangedEntry;
 use super::DependencyLockEntry;
@@ -26,6 +28,7 @@ use super::ParchmentData;
 use super::Repository;
 use super::compare_version_text;
 use super::copy_file_to_path_checked;
+use super::execute_targets_parallel;
 use super::extract_quoted;
 use super::file_sha1;
 use super::interpolate_properties;
@@ -33,6 +36,7 @@ use super::is_excluded_source;
 use super::normalize_manifest_bytes;
 use super::parchment_coordinate;
 use super::parse_maven_versions;
+use super::portable_cache_path;
 use super::prepare_existing_artifact_for_reuse;
 use super::resolve_loader_toolchain;
 use super::rust_output_jar_path;
@@ -41,7 +45,12 @@ use super::sha1_bytes;
 use super::should_keep_split_minecraft_runtime_entry;
 use super::write_unique_temp_file;
 use crate::branch_targets::BranchName;
+use crate::branch_targets::BranchQuery;
 use crate::branch_targets::MinecraftVersion;
+use crate::branch_targets::WorktreePath;
+use crate::branch_targets::WorktreeTarget;
+use crate::jar_build::ErrorAction;
+use crate::jar_build::Parallelism;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -50,6 +59,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering as AtomicOrdering;
+use std::thread;
+use std::time::Duration;
 
 static TEST_DIR_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
@@ -422,6 +433,38 @@ fn write_unique_temp_file_uses_artifact_sibling() {
 }
 
 #[test]
+fn parallel_targets_return_plans_in_input_order() {
+    let options = test_build_options(Parallelism::Parallel { limit: 2 });
+    let targets = vec![
+        test_worktree_target("1.19.2", "D:/tmp/1.19.2"),
+        test_worktree_target("1.20.1", "D:/tmp/1.20.1"),
+    ];
+
+    let summary = execute_targets_parallel(
+        &options,
+        targets,
+        "test_parallel_targets",
+        2,
+        |_options, target| {
+            if target.branch.as_ref() == "1.19.2" {
+                thread::sleep(Duration::from_millis(25));
+            }
+            let mut plan = minimal_plan_for_paths();
+            plan.branch_name = target.branch.clone();
+            Ok(plan)
+        },
+    )
+    .expect("parallel execution should succeed");
+
+    let branches = summary
+        .plans
+        .iter()
+        .map(|plan| plan.branch_name.as_ref())
+        .collect::<Vec<_>>();
+    assert_eq!(branches, vec!["1.19.2", "1.20.1"]);
+}
+
+#[test]
 #[expect(
     clippy::too_many_lines,
     reason = "BuildPlan JSON fixture is intentionally explicit"
@@ -438,8 +481,15 @@ fn facet_json_serializes_plan_without_embedded_lockfile() {
         gradle_output_jar: PathBuf::from("build/libs/sfm.jar"),
         rust_output_jar: PathBuf::from("build/libs/sfm-rust.jar"),
         cache_dir: PathBuf::from("build/sfm-toolchain"),
+        common_cache_dir: PathBuf::from("sfm-cache/minecraft-toolchain"),
         state_dir: PathBuf::from("build/sfm-toolchain/state"),
-        maven_cache_dir: PathBuf::from("build/sfm-toolchain/maven"),
+        maven_cache_dir: PathBuf::from("sfm-cache/minecraft-toolchain/maven"),
+        minecraft_cache_dir: PathBuf::from("sfm-cache/minecraft-toolchain/minecraft"),
+        minecraft_version_cache_dir: PathBuf::from(
+            "sfm-cache/minecraft-toolchain/minecraft/versions/1.19.2",
+        ),
+        minecraft_assets_dir: PathBuf::from("sfm-cache/minecraft-toolchain/minecraft/assets"),
+        minecraft_libraries_dir: PathBuf::from("sfm-cache/minecraft-toolchain/minecraft/libraries"),
         lockfile_path: PathBuf::from("sfm-toolchain.lock.json"),
         lockfile: Some(ArtifactLockfile {
             schema_version: 1,
@@ -528,7 +578,26 @@ fn facet_json_serializes_plan_without_embedded_lockfile() {
 
     let json = facet_json::to_string_pretty(&plan).expect("plan should serialize");
     assert!(json.contains("rust_output_jar"));
+    assert!(json.contains("common_cache_dir"));
     assert!(!json.contains("\"lockfile\""));
+}
+
+#[test]
+fn portable_cache_path_uses_sfm_cache_prefix_for_common_cache() {
+    let plan = minimal_plan_for_paths();
+    let common_artifact = PathBuf::from("D:/sfm-cache/minecraft-toolchain/maven/g/a/1/a.jar");
+    let local_artifact = PathBuf::from(
+        "D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft/build/sfm-toolchain/project/a.jar",
+    );
+
+    assert_eq!(
+        portable_cache_path(&plan, &common_artifact),
+        PathBuf::from("$sfm-cache/maven/g/a/1/a.jar")
+    );
+    assert_eq!(
+        portable_cache_path(&plan, &local_artifact),
+        PathBuf::from("build/sfm-toolchain/project/a.jar")
+    );
 }
 
 #[test]
@@ -680,6 +749,93 @@ fn minimal_provenance() -> ArtifactProvenance {
         url: Some("https://example.test/a.jar".to_string()),
         original_path: None,
         sha1: "abc123".to_string(),
+    }
+}
+
+fn minimal_plan_for_paths() -> BuildPlan {
+    let artifact = minimal_artifact();
+    BuildPlan {
+        schema_version: 1,
+        mode: "plan".to_string(),
+        branch_name: BranchName::from("1.19.2"),
+        minecraft_version: MinecraftVersion::parse("1.19.2").expect("version should parse"),
+        worktree_path: PathBuf::from("D:/Repos/Minecraft/SFM/repos2/1.19.2"),
+        minecraft_dir: PathBuf::from("D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft"),
+        gradle_output_jar: PathBuf::from("build/libs/sfm.jar"),
+        rust_output_jar: PathBuf::from("build/libs/sfm-rust.jar"),
+        cache_dir: PathBuf::from(
+            "D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft/build/sfm-toolchain",
+        ),
+        common_cache_dir: PathBuf::from("D:/sfm-cache/minecraft-toolchain"),
+        state_dir: PathBuf::from("build/sfm-toolchain/state"),
+        maven_cache_dir: PathBuf::from("D:/sfm-cache/minecraft-toolchain/maven"),
+        minecraft_cache_dir: PathBuf::from("D:/sfm-cache/minecraft-toolchain/minecraft"),
+        minecraft_version_cache_dir: PathBuf::from(
+            "D:/sfm-cache/minecraft-toolchain/minecraft/versions/1.19.2",
+        ),
+        minecraft_assets_dir: PathBuf::from("D:/sfm-cache/minecraft-toolchain/minecraft/assets"),
+        minecraft_libraries_dir: PathBuf::from(
+            "D:/sfm-cache/minecraft-toolchain/minecraft/libraries",
+        ),
+        lockfile_path: PathBuf::from("sfm-toolchain.lock.json"),
+        lockfile: None,
+        java: JavaPlan {
+            executable: PathBuf::from("java"),
+            home: None,
+            version_output: "openjdk version \"17\"".to_string(),
+            major_version: 17,
+        },
+        java_release: 17,
+        refresh: false,
+        allow_local_artifact_cache: false,
+        properties: BTreeMap::new(),
+        repositories: Vec::new(),
+        loader_toolchain: LoaderToolchainPlan {
+            kind: LoaderToolchainKind::ForgeGradleForge,
+            base_coordinate: "net.minecraftforge:forge:1.19.2-43.4.0".to_string(),
+            userdev_coordinate: "net.minecraftforge:forge:1.19.2-43.4.0:userdev".to_string(),
+            sources_coordinate: None,
+            universal_coordinate: None,
+        },
+        artifacts: vec![artifact.clone()],
+        minecraft: MinecraftPlan {
+            version_manifest: artifact.clone(),
+            version_json: artifact,
+            client_jar_url: "https://example.test/client.jar".to_string(),
+            server_jar_url: "https://example.test/server.jar".to_string(),
+            client_mappings_url: None,
+            server_mappings_url: None,
+            libraries_count: 0,
+        },
+        forge_userdev: None,
+        mcp_config: None,
+        dependencies: Vec::new(),
+        graph: Vec::new(),
+        warnings: Vec::new(),
+    }
+}
+
+fn test_build_options(parallelism: Parallelism) -> BuildOptions {
+    BuildOptions {
+        branch: BranchQuery::default(),
+        refresh: false,
+        explain_rebuild: false,
+        plan_json: None,
+        java_home: None,
+        dry_run: true,
+        allow_local_artifact_cache: false,
+        error_action: ErrorAction::Bail,
+        parallelism,
+        mode: BuildMode::Plan,
+    }
+}
+
+fn test_worktree_target(branch: &str, path: &str) -> WorktreeTarget {
+    WorktreeTarget {
+        branch: BranchName::from(branch),
+        worktree_path: WorktreePath::from(PathBuf::from(path)),
+        core: true,
+        mc_version: Some(MinecraftVersion::parse(branch).expect("test branch should be version")),
     }
 }
 
