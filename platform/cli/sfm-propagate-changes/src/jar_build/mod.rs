@@ -5,6 +5,8 @@ mod compare_command;
 mod compare_options;
 mod engine;
 mod error_action;
+mod json_branch_name;
+mod json_minecraft_version;
 mod json_path;
 mod run_command;
 mod run_kind;

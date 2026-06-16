@@ -1,8 +1,10 @@
+use facet::Facet;
 use std::cmp::Ordering;
 use std::fmt;
+use std::ops::Deref;
 use std::str::FromStr;
 
-#[derive(Clone, Debug, Eq)]
+#[derive(Clone, Debug, Eq, Facet)]
 pub struct MinecraftVersion {
     parts: Vec<u32>,
     text: String,
@@ -76,6 +78,20 @@ impl MinecraftVersion {
 impl fmt::Display for MinecraftVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.text)
+    }
+}
+
+impl AsRef<str> for MinecraftVersion {
+    fn as_ref(&self) -> &str {
+        &self.text
+    }
+}
+
+impl Deref for MinecraftVersion {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.text
     }
 }
 

@@ -49,6 +49,7 @@ Status: `Done`
 - Prefer one primary Rust type per file for new orchestration/query/locking modules. Small helper functions may live beside the type they serve; broad mixed-type modules should be avoided.
 - Prefer ergonomic single-field newtypes for domain identifiers and paths: public tuple field plus `Deref` and `AsRef` implementations for the wrapped view type, such as `str` or `Path`.
 - CLI structs should hold typed values where `figue` can deserialize them directly. Prefer Facet enums for closed option sets and transparent typed newtypes for string-backed CLI grammars; convert those wrappers into domain request objects at the CLI boundary. Avoid raw `String` fields when the field has domain meaning.
+- Build/run plan structs should use branch/version domain types internally. JSON output may use explicit Facet proxy wrappers to preserve stable string-shaped wire formats.
 
 ## Core Concepts
 
@@ -196,7 +197,7 @@ Parallel behavior:
 
 ### Wide Tracing Events
 
-Status: `In Progress`
+Status: `Done`
 
 All orchestration and subprocess output should be represented as structured tracing events with enough fields for subscribers to render useful output.
 
@@ -235,12 +236,14 @@ Stream rules:
 Current implementation notes:
 
 - Build plans now carry `branch_name` so subprocess events do not have to infer their target from Minecraft version.
-- Captured Java tool, `javac`, ANTLR, and launched Minecraft stdout/stderr lines are emitted as structured tracing events with `branch`, `source`, `process`, `stream`, and `line`.
+- Branch context is carried by tracing spans around target/build/run/launch/lockfile work instead of repeating `branch` on every Rust event.
+- Rust-origin orchestration events use the actual log text as the tracing event message and omit `source`, `process`, and `stream`; the subscriber can infer `source=rust`, `process=sfm`, and `stream=stdout` defaults when those fields are absent.
+- Captured Java tool, `javac`, ANTLR, and launched Minecraft stdout/stderr lines are emitted as structured tracing events with explicit `source`, `process`, and `stream` fields. Their branch context comes from the surrounding span, including dedicated stream-reader spans for launched Minecraft output threads.
 - Terminal prefix rendering remains a later step.
 
 ### Per-Line Subprocess Logging
 
-Status: `In Progress`
+Status: `Done`
 
 First pass should not parse Minecraft Log4j lines. Treat each stdout/stderr line as content.
 
@@ -436,8 +439,8 @@ Testing requirements:
 | 3 | `Done` | Replace `--mc` with `--branch` in run/build/plan/compare surfaces. | Committed in `2d88a2b79`; CLI tests show `--branch` parses, default is `core`, and `--mc` no longer parses. |
 | 4 | `Done` | Convert single-target run/build requests into multi-target scheduling. | Committed in `a260d22ab`; `jar plan`, `jar build`, and `run ...` iterate matching targets sequentially. |
 | 5 | `Done` | Add `--error-action continue\|bail` to multi-target commands. | Committed in `cf0925311`; default is `bail`, `continue` records per-target failures and returns failure after the target summary. |
-| 6 | `In Progress` | Add wide tracing fields for branch/source/stream/subprocess lines. | Implemented in working tree for Java tools, `javac`, ANTLR, and Minecraft launch stdout/stderr; pending validation/review. |
-| 7 | `Not Started` | Replace affected `println!`/`eprintln!` progress with tracing events. | New/modified run/build paths emit progress through tracing except Ctrl+C echo. |
+| 6 | `Done` | Add wide tracing fields for branch/source/stream/subprocess lines. | Build/run/launch/lockfile spans carry branch context; forwarded Java tool, `javac`, ANTLR, and Minecraft lines carry explicit source/process/stream fields. |
+| 7 | `Done` | Replace affected `println!`/`eprintln!` progress with tracing events. | Jar build/run plan summary, target summaries, build node timing, launch setup/validation, Java tool, javac, ANTLR, and subprocess echo paths use tracing events; compare/report output and older helper output remain direct for later slices. |
 | 8 | `Not Started` | Add prefixed terminal rendering for line events. | Sequential multi-target output is readable with `[branch source]` prefixes. |
 | 9 | `Not Started` | Keep JSONL logging opt-in via `--log-file` and ensure raw subprocess lines are represented. | `--log-file` output includes branch/source/stream/line fields. |
 | 10 | `Not Started` | Implement std-based artifact lock guard. | Unit tests cover waiting/skip behavior; code uses OS lock, not lock-file existence. |

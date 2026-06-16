@@ -35,6 +35,8 @@ use super::resolve_loader_toolchain;
 use super::rust_output_jar_path;
 use super::set_minecraft_option;
 use super::should_keep_split_minecraft_runtime_entry;
+use crate::branch_targets::BranchName;
+use crate::branch_targets::MinecraftVersion;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -320,8 +322,8 @@ fn facet_json_serializes_plan_without_embedded_lockfile() {
     let plan = BuildPlan {
         schema_version: 1,
         mode: "plan".to_string(),
-        branch_name: "1.19.2".to_string(),
-        minecraft_version: "1.19.2".to_string(),
+        branch_name: BranchName::from("1.19.2"),
+        minecraft_version: MinecraftVersion::parse("1.19.2").expect("version should parse"),
         worktree_path: PathBuf::from("D:/Repos/Minecraft/SFM/repos2/1.19.2"),
         minecraft_dir: PathBuf::from("platform/minecraft"),
         gradle_output_jar: PathBuf::from("build/libs/sfm.jar"),

@@ -1,8 +1,10 @@
 use super::MinecraftVersion;
+use facet::Facet;
 use std::fmt;
 use std::ops::Deref;
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Facet, Hash, Ord, PartialEq, PartialOrd)]
+#[facet(transparent)]
 pub struct BranchName(pub String);
 
 impl BranchName {

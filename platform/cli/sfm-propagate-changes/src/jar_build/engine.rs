@@ -2,8 +2,12 @@ use super::BuildMode;
 use super::BuildOptions;
 use super::CompareOptions;
 use super::RunKind;
+use super::json_branch_name::JsonBranchName;
+use super::json_minecraft_version::JsonMinecraftVersion;
 use super::json_path::JsonOptionalPath;
 use super::json_path::JsonPath;
+use crate::branch_targets::BranchName;
+use crate::branch_targets::MinecraftVersion;
 use crate::branch_targets::WorktreeTarget;
 use crate::branch_targets::select_required_worktree_targets;
 use crate::branch_targets::select_single_worktree_target;
@@ -69,7 +73,7 @@ pub(crate) fn invoke_build(options: &BuildOptions) -> eyre::Result<()> {
         match execute_build_target(options, &target) {
             Ok(plan) => plans.push(plan),
             Err(error) if options.error_action.should_continue() => {
-                tracing::error!(branch = %target.branch, error = %error, "jar_build_target_failed");
+                tracing::error!(error = %error, "jar_build_target_failed");
                 failures.push(TargetFailure::new(&target, &error));
             }
             Err(error) => return Err(error),
@@ -113,7 +117,7 @@ pub(crate) fn invoke_run(options: &BuildOptions, kind: RunKind) -> eyre::Result<
         match execute_run_target(options, kind, &target) {
             Ok(plan) => plans.push(plan),
             Err(error) if options.error_action.should_continue() => {
-                tracing::error!(branch = %target.branch, error = %error, "run_target_failed");
+                tracing::error!(error = %error, "run_target_failed");
                 failures.push(TargetFailure::new(&target, &error));
             }
             Err(error) => return Err(error),
@@ -135,7 +139,9 @@ fn execute_build_target(
     match options.mode {
         BuildMode::Plan => write_artifact_lockfile(&plan)?,
         BuildMode::Build if options.dry_run => {
-            println!("Jar build dry-run: resolved plan and lockfile; skipped build execution.");
+            tracing::info!(
+                "Jar build dry-run: resolved plan and lockfile; skipped build execution."
+            );
             tracing::info!("jar_build_dry_run_skip_execution");
             write_artifact_lockfile(&plan)?;
         }
@@ -176,7 +182,7 @@ fn finish_target_summary(
     failures: &[TargetFailure],
 ) -> eyre::Result<()> {
     if total > 1 || !failures.is_empty() {
-        println!(
+        tracing::info!(
             "{action_name} target summary: {succeeded}/{total} succeeded, {} failed.",
             failures.len()
         );
@@ -187,7 +193,7 @@ fn finish_target_summary(
     }
 
     for failure in failures {
-        println!(
+        tracing::info!(
             "Failed target {} ({}): {}",
             failure.branch,
             failure.worktree_path.display(),
@@ -229,7 +235,7 @@ struct ComparePaths {
 
 #[derive(Debug)]
 struct TargetFailure {
-    branch: String,
+    branch: BranchName,
     worktree_path: PathBuf,
     error: String,
 }
@@ -237,7 +243,7 @@ struct TargetFailure {
 impl TargetFailure {
     fn new(target: &WorktreeTarget, error: &eyre::Report) -> Self {
         Self {
-            branch: target.branch.to_string(),
+            branch: target.branch.clone(),
             worktree_path: target.worktree_path.as_path().to_path_buf(),
             error: error.to_string(),
         }
@@ -248,8 +254,10 @@ impl TargetFailure {
 struct BuildPlan {
     schema_version: u32,
     mode: String,
-    branch_name: String,
-    minecraft_version: String,
+    #[facet(proxy = JsonBranchName)]
+    branch_name: BranchName,
+    #[facet(proxy = JsonMinecraftVersion)]
+    minecraft_version: MinecraftVersion,
     #[facet(proxy = JsonPath)]
     worktree_path: PathBuf,
     #[facet(proxy = JsonPath)]
@@ -1463,8 +1471,8 @@ fn create_plan_for_target(
             BuildMode::Plan => "plan".to_string(),
             BuildMode::Build => "build".to_string(),
         },
-        branch_name: target.branch.to_string(),
-        minecraft_version: minecraft_version.to_string(),
+        branch_name: target.branch.clone(),
+        minecraft_version: MinecraftVersion::parse(minecraft_version)?,
         worktree_path,
         minecraft_dir,
         gradle_output_jar,
@@ -2397,6 +2405,7 @@ enum BuildTarget {
 fn execute_build(plan: &BuildPlan, explain_rebuild: bool, target: BuildTarget) -> eyre::Result<()> {
     let _span = tracing::info_span!(
         "execute_rust_owned_build",
+        branch = %plan.branch_name,
         mc = %plan.minecraft_version,
         loader = ?plan.loader_toolchain.kind,
         graph_nodes = plan.graph.len(),
@@ -2409,18 +2418,18 @@ fn execute_build(plan: &BuildPlan, explain_rebuild: bool, target: BuildTarget) -
 
     if explain_rebuild {
         for node in &plan.graph {
-            println!("{}: {}", node.id, node.rebuild_reason);
+            tracing::info!("{}: {}", node.id, node.rebuild_reason);
         }
     }
 
-    println!("Build node resolve-project-config: recording plan state");
+    tracing::info!("Build node resolve-project-config: recording plan state");
     context.write_node_state(
         "resolve-project-config",
         &["gradle.properties", "versioned Gradle fragments"],
         &[plan.state_dir.join("last-plan.json")],
         "complete",
     )?;
-    println!("Build node resolve-maven-and-minecraft-inputs: recording resolved artifacts");
+    tracing::info!("Build node resolve-maven-and-minecraft-inputs: recording resolved artifacts");
     context.write_node_state(
         "resolve-maven-and-minecraft-inputs",
         &[
@@ -2437,49 +2446,49 @@ fn execute_build(plan: &BuildPlan, explain_rebuild: bool, target: BuildTarget) -
 
     if plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
         let started = Instant::now();
-        println!("Build node execute-neoform-userdev: start");
+        tracing::info!("Build node execute-neoform-userdev: start");
         execute_neoform_userdev(&context)?;
-        println!(
+        tracing::info!(
             "Build node execute-neoform-userdev: done in {} ms",
             started.elapsed().as_millis()
         );
     } else {
         ensure_forge_gradle_execution_supported(plan)?;
         let started = Instant::now();
-        println!("Build node execute-mcp-config-joined: start");
+        tracing::info!("Build node execute-mcp-config-joined: start");
         execute_mcp_config_joined(&context)?;
-        println!(
+        tracing::info!(
             "Build node execute-mcp-config-joined: done in {} ms",
             started.elapsed().as_millis()
         );
 
         let started = Instant::now();
-        println!("Build node execute-forge-userdev: start");
+        tracing::info!("Build node execute-forge-userdev: start");
         execute_forge_userdev(&context)?;
-        println!(
+        tracing::info!(
             "Build node execute-forge-userdev: done in {} ms",
             started.elapsed().as_millis()
         );
     }
     let started = Instant::now();
-    println!("Build node deobfuscate-mod-dependencies: start");
+    tracing::info!("Build node deobfuscate-mod-dependencies: start");
     execute_dependency_deobf(&context)?;
-    println!(
+    tracing::info!(
         "Build node deobfuscate-mod-dependencies: done in {} ms",
         started.elapsed().as_millis()
     );
     let started = Instant::now();
-    println!("Build node compile-project: start");
+    tracing::info!("Build node compile-project: start");
     execute_project_compile(&context)?;
-    println!(
+    tracing::info!(
         "Build node compile-project: done in {} ms",
         started.elapsed().as_millis()
     );
     if target == BuildTarget::Jar {
         let started = Instant::now();
-        println!("Build node package-and-reobfuscate-jar: start");
+        tracing::info!("Build node package-and-reobfuscate-jar: start");
         execute_package_and_reobfuscate(&context)?;
-        println!(
+        tracing::info!(
             "Build node package-and-reobfuscate-jar: done in {} ms",
             started.elapsed().as_millis()
         );
@@ -2491,12 +2500,12 @@ fn execute_build(plan: &BuildPlan, explain_rebuild: bool, target: BuildTarget) -
             );
         }
 
-        println!(
+        tracing::info!(
             "Rust jar build completed in {} ms",
             total_started.elapsed().as_millis()
         );
     } else {
-        println!(
+        tracing::info!(
             "Rust run build outputs prepared in {} ms",
             total_started.elapsed().as_millis()
         );
@@ -2617,6 +2626,7 @@ struct LaunchOutput {
 fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<()> {
     let _span = tracing::info_span!(
         "execute_run_setup",
+        branch = %plan.branch_name,
         mc = %plan.minecraft_version,
         kind = kind.command_name(),
         loader = ?plan.loader_toolchain.kind,
@@ -2794,17 +2804,17 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
     )
     .wrap_err_with(|| format!("Failed to write {}", argfile.display()))?;
 
-    println!(
+    tracing::info!(
         "Launching {} from {}",
         kind.command_name(),
         working_dir.display()
     );
-    println!("Launch args: {}", argfile.display());
-    println!(
+    tracing::info!("Launch args: {}", argfile.display());
+    tracing::info!(
         "MOD_CLASSES={}",
         env.get("MOD_CLASSES").map_or("", String::as_str)
     );
-    println!(
+    tracing::info!(
         "Userdev mod jars on launch classpath: {}",
         launch_classpath.userdev_mods.len()
     );
@@ -2828,7 +2838,7 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
             &run_outputs,
             "dry-run",
         )?;
-        println!(
+        tracing::info!(
             "Dry run prepared {} launch setup and skipped Minecraft JVM launch.",
             kind.command_name()
         );
@@ -2839,7 +2849,6 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
         );
         return Ok(());
     }
-    let echo_launch_output = !matches!(kind, RunKind::GameTestServer);
     let max_launch_attempts = if matches!(kind, RunKind::GameTestServer) {
         3
     } else {
@@ -2849,7 +2858,7 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
     for attempt in 1..=max_launch_attempts {
         if matches!(kind, RunKind::GameTestServer) {
             clean_gametest_server_world(&plan.minecraft_dir, &working_dir)?;
-            println!("Game-test server attempt {attempt}/{max_launch_attempts}");
+            tracing::info!("Game-test server attempt {attempt}/{max_launch_attempts}");
         }
         if matches!(kind, RunKind::ClientPuppet) {
             clean_client_puppet_world(&plan.minecraft_dir, &working_dir)?;
@@ -2860,7 +2869,6 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
             &working_dir,
             &env,
             &launch_log,
-            echo_launch_output,
             kind.launch_timeout(),
         )
         .wrap_err_with(|| {
@@ -2874,7 +2882,7 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
             launch_output = Some(attempt_output);
             break;
         }
-        println!(
+        tracing::info!(
             "{} attempt {attempt}/{max_launch_attempts} exited with {}; retrying. See {}",
             kind.command_name(),
             attempt_output.status,
@@ -2942,7 +2950,7 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
                 launch_log.display()
             );
         }
-        println!("Validated {pass_count} required game tests passed.");
+        tracing::info!("Validated {pass_count} required game tests passed.");
     }
     if matches!(kind, RunKind::ClientSmoke) {
         if !launch_output.combined.contains("SFM_CLIENT_SMOKE_READY") {
@@ -2952,7 +2960,7 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
                 launch_log.display()
             );
         }
-        println!("Validated client reached the title screen.");
+        tracing::info!("Validated client reached the title screen.");
     }
     if matches!(kind, RunKind::ClientPuppet) {
         let Some(pass_count) = extract_client_puppet_pass_count(&launch_output.combined) else {
@@ -2969,7 +2977,7 @@ fn execute_run(plan: &BuildPlan, kind: RunKind, dry_run: bool) -> eyre::Result<(
                 launch_log.display()
             );
         }
-        println!("Validated client puppet completed {pass_count} required game tests.");
+        tracing::info!("Validated client puppet completed {pass_count} required game tests.");
     }
     Ok(())
 }
@@ -2990,7 +2998,7 @@ fn game_test_namespace_property(context: &ExecutionContext<'_>) -> eyre::Result<
         .minecraft_dir
         .join("gradle")
         .join("run-configurations")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("run-configurations.gradle");
     if run_config.is_file() {
         let text = fs::read_to_string(&run_config)
@@ -3122,17 +3130,16 @@ fn run_launch_command(
     working_dir: &Path,
     env: &BTreeMap<String, String>,
     log_path: &Path,
-    echo_output: bool,
     timeout: Option<Duration>,
 ) -> eyre::Result<LaunchOutput> {
     let _span = tracing::info_span!(
         "launch_minecraft_jvm",
+        branch = %plan.branch_name,
         mc = %plan.minecraft_version,
         java = %plan.java.executable.display(),
         argfile = %argfile.display(),
         working_dir = %working_dir.display(),
         env_vars = env.len(),
-        echo_output,
         timeout_seconds = timeout.map_or(0, |timeout| timeout.as_secs()),
     )
     .entered();
@@ -3160,24 +3167,10 @@ fn run_launch_command(
     let stdout_branch = plan.branch_name.clone();
     let stderr_branch = plan.branch_name.clone();
     let stdout_thread = thread::spawn(move || {
-        read_launch_stream(
-            stdout,
-            &stdout_branch,
-            "minecraft",
-            "minecraft",
-            "stdout",
-            echo_output,
-        )
+        read_launch_stream(stdout, &stdout_branch, "minecraft", "minecraft", "stdout")
     });
     let stderr_thread = thread::spawn(move || {
-        read_launch_stream(
-            stderr,
-            &stderr_branch,
-            "minecraft",
-            "minecraft",
-            "stderr",
-            echo_output,
-        )
+        read_launch_stream(stderr, &stderr_branch, "minecraft", "minecraft", "stderr")
     });
     let started = Instant::now();
     let mut timed_out = false;
@@ -3222,22 +3215,15 @@ fn read_launch_stream<R>(
     source: &'static str,
     process: &str,
     stream_name: &'static str,
-    echo_output: bool,
 ) -> std::io::Result<String>
 where
     R: Read,
 {
+    let _span = tracing::info_span!("forward_subprocess_stream", branch = %branch).entered();
     let mut captured = String::new();
     for line in BufReader::new(stream).lines() {
         let line = line?;
-        trace_subprocess_line(branch, source, process, stream_name, &line);
-        if echo_output {
-            if stream_name == "stderr" {
-                eprintln!("{line}");
-            } else {
-                println!("{line}");
-            }
-        }
+        trace_subprocess_line(source, process, stream_name, &line);
         captured.push_str(&line);
         captured.push('\n');
     }
@@ -3261,26 +3247,42 @@ fn trace_subprocess_bytes(
     stream: &'static str,
     bytes: &[u8],
 ) {
+    let _span =
+        tracing::info_span!("forward_subprocess_bytes", branch = %plan.branch_name).entered();
     let content = String::from_utf8_lossy(bytes);
     for line in content.lines() {
-        trace_subprocess_line(&plan.branch_name, source, process, stream, line);
+        trace_subprocess_line(source, process, stream, line);
     }
 }
 
-fn trace_subprocess_line(
-    branch: &str,
-    source: &'static str,
-    process: &str,
-    stream: &'static str,
-    line: &str,
-) {
+fn write_java_tool_console_log(
+    log_path: &Path,
+    tool_id: &str,
+    main_class: &str,
+    duration_ms: u128,
+    classpath_arg: &str,
+    args: &[String],
+    output: &std::process::Output,
+) -> eyre::Result<()> {
+    let mut log = Vec::new();
+    writeln!(
+        log,
+        "tool={tool_id}\nmain={main_class}\nstatus={}\nduration_ms={}\nclasspath={}\nargs={:?}\n",
+        output.status, duration_ms, classpath_arg, args
+    )?;
+    log.extend_from_slice(b"\n--- stdout ---\n");
+    log.extend_from_slice(&output.stdout);
+    log.extend_from_slice(b"\n--- stderr ---\n");
+    log.extend_from_slice(&output.stderr);
+    fs::write(log_path, log).wrap_err_with(|| format!("Failed to write {}", log_path.display()))
+}
+
+fn trace_subprocess_line(source: &'static str, process: &str, stream: &'static str, line: &str) {
     tracing::info!(
-        branch = %branch,
         source,
         process = %process,
         stream,
-        line = %line,
-        "subprocess_line"
+        "{line}"
     );
 }
 
@@ -3531,7 +3533,7 @@ fn ensure_run_forge_dev_jar(context: &ExecutionContext<'_>) -> eyre::Result<Path
         .plan
         .cache_dir
         .join("forge")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("classes")
         .join("dev-compile.jar");
     if !input.is_file() {
@@ -3578,7 +3580,7 @@ fn ensure_runtime_mcp_csv_mappings(context: &ExecutionContext<'_>) -> eyre::Resu
         .plan
         .cache_dir
         .join("forge")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("mappings")
         .join("srg_to_official.tsrg");
     if !input.is_file() {
@@ -3599,7 +3601,7 @@ fn ensure_run_refmap_remapping_file(context: &ExecutionContext<'_>) -> eyre::Res
         .plan
         .cache_dir
         .join("forge")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("mappings")
         .join("srg_to_official.tsrg");
     if !input.is_file() {
@@ -3629,7 +3631,7 @@ fn resolve_run_plain_dependencies(
         .minecraft_dir
         .join("gradle")
         .join("dependencies")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("dependencies.gradle");
     let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
     let configurations = run_dependency_configurations(kind);
@@ -3667,7 +3669,7 @@ fn resolve_run_deobf_dependencies(
         .plan
         .cache_dir
         .join("forge")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("mappings")
         .join("srg_to_official.tsrg");
     if !mapping_path.is_file() {
@@ -3904,14 +3906,14 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
         downloaded += 1;
         checked += 1;
         if downloaded.is_multiple_of(100) {
-            println!(
+            tracing::info!(
                 "Downloaded {downloaded} missing Minecraft assets ({checked}/{})",
                 objects.len()
             );
         }
     }
     if downloaded > 0 {
-        println!(
+        tracing::info!(
             "Downloaded {downloaded} Minecraft assets into {}",
             assets_root.display()
         );
@@ -4103,7 +4105,7 @@ impl<'a> ExecutionContext<'a> {
         .wrap_err_with(|| format!("Failed to write {}", java_argfile.display()))?;
         let started = Instant::now();
         let log_path = work_dir.join("console.log");
-        println!(
+        tracing::info!(
             "Java tool {tool_id}: start main={main_class} argfile={} log={}",
             java_argfile.display(),
             log_path.display()
@@ -4121,19 +4123,16 @@ impl<'a> ExecutionContext<'a> {
         trace_subprocess_bytes(self.plan, "java-tool", tool_id, "stdout", &output.stdout);
         trace_subprocess_bytes(self.plan, "java-tool", tool_id, "stderr", &output.stderr);
 
-        let mut log = Vec::new();
         let duration_ms = started.elapsed().as_millis();
-        writeln!(
-            log,
-            "tool={tool_id}\nmain={main_class}\nstatus={}\nduration_ms={}\nclasspath={}\nargs={:?}\n",
-            output.status, duration_ms, classpath_arg, args
+        write_java_tool_console_log(
+            &log_path,
+            tool_id,
+            &main_class,
+            duration_ms,
+            &classpath_arg,
+            args,
+            &output,
         )?;
-        log.extend_from_slice(b"\n--- stdout ---\n");
-        log.extend_from_slice(&output.stdout);
-        log.extend_from_slice(b"\n--- stderr ---\n");
-        log.extend_from_slice(&output.stderr);
-        fs::write(&log_path, log)
-            .wrap_err_with(|| format!("Failed to write {}", log_path.display()))?;
 
         if !output.status.success() {
             tracing::warn!(
@@ -4155,7 +4154,7 @@ impl<'a> ExecutionContext<'a> {
             log_path = %log_path.display(),
             "java_tool_completed"
         );
-        println!("Java tool {tool_id}: done in {duration_ms} ms");
+        tracing::info!("Java tool {tool_id}: done in {duration_ms} ms");
         Ok(())
     }
 }
@@ -4178,7 +4177,7 @@ fn execute_mcp_config_joined(context: &ExecutionContext<'_>) -> eyre::Result<()>
         .plan
         .cache_dir
         .join("mcp")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("joined");
     fs::create_dir_all(&mcp_root)?;
     let output = mcp_root.join("patch").join("joined-patched-sources.jar");
@@ -4187,7 +4186,7 @@ fn execute_mcp_config_joined(context: &ExecutionContext<'_>) -> eyre::Result<()>
             output = %output.display(),
             "mcp_config_joined cache hit"
         );
-        println!(
+        tracing::info!(
             "Build node execute-mcp-config-joined: reusing {}",
             output.display()
         );
@@ -4289,7 +4288,7 @@ fn execute_mcp_config_joined(context: &ExecutionContext<'_>) -> eyre::Result<()>
             "--server".to_string(),
             stripped_server.display().to_string(),
             "--ann".to_string(),
-            context.plan.minecraft_version.clone(),
+            context.plan.minecraft_version.to_string(),
             "--output".to_string(),
             merged_jar.display().to_string(),
             "--inject".to_string(),
@@ -4385,7 +4384,7 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         .plan
         .cache_dir
         .join("forge")
-        .join(&context.plan.minecraft_version);
+        .join(context.plan.minecraft_version.as_str());
     fs::create_dir_all(&forge_root)?;
     let mappings_root = forge_root.join("mappings");
     let srg_to_official = mappings_root.join("srg_to_official.tsrg");
@@ -4400,7 +4399,7 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
             output = %output.display(),
             "forge_userdev cache hit"
         );
-        println!(
+        tracing::info!(
             "Build node execute-forge-userdev: reusing {}",
             output.display()
         );
@@ -4422,7 +4421,7 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         .plan
         .cache_dir
         .join("mcp")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("joined");
     let mcp_sources = mcp_root.join("patch").join("joined-patched-sources.jar");
     if !mcp_sources.is_file() {
@@ -4655,7 +4654,7 @@ fn execute_neoform_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         .plan
         .cache_dir
         .join("neoform")
-        .join(&context.plan.minecraft_version);
+        .join(context.plan.minecraft_version.as_str());
     let output_root = neoform_root.join("classes");
     let nfrt_home = neoform_root.join("nfrt-home");
     let nfrt_work = neoform_root.join("nfrt-work");
@@ -4772,7 +4771,7 @@ fn neoform_dev_compile_jar(context: &ExecutionContext<'_>) -> PathBuf {
         .plan
         .cache_dir
         .join("neoform")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("classes")
         .join("gameJarWithNeoForge.jar")
 }
@@ -4798,7 +4797,7 @@ fn loader_dev_compile_jar(context: &ExecutionContext<'_>) -> PathBuf {
             .plan
             .cache_dir
             .join("forge")
-            .join(&context.plan.minecraft_version)
+            .join(context.plan.minecraft_version.as_str())
             .join("classes")
             .join("dev-compile.jar")
     }
@@ -4879,7 +4878,7 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
         .plan
         .cache_dir
         .join("forge")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("mappings")
         .join("srg_to_official.tsrg");
     if !mapping_path.is_file() {
@@ -5332,7 +5331,7 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     write_javac_argfile(context, &argfile, &classpath, &sources, &classes_dir)?;
 
     let started = Instant::now();
-    println!(
+    tracing::info!(
         "javac main: start sources={} argfile={}",
         sources.len(),
         argfile.display()
@@ -5361,7 +5360,7 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         == LoaderToolchainKind::NeoGradleUserdev
         || main_refmap.is_file());
     if main_cache_hit {
-        println!(
+        tracing::info!(
             "javac main: reused cached outputs in {} ms",
             started.elapsed().as_millis()
         );
@@ -5402,7 +5401,7 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
             );
         }
         write_cache_state(&main_state_path, &main_fingerprint)?;
-        println!("javac main: done in {} ms", started.elapsed().as_millis());
+        tracing::info!("javac main: done in {} ms", started.elapsed().as_millis());
     }
 
     compile_optional_java_source_set(
@@ -5548,7 +5547,7 @@ fn compile_optional_java_source_set(
     )?;
 
     let started = Instant::now();
-    println!(
+    tracing::info!(
         "javac {source_set}: start sources={} argfile={}",
         sources.len(),
         argfile.display()
@@ -5568,7 +5567,7 @@ fn compile_optional_java_source_set(
     )?;
     let state_path = project_root.join(format!("javac-{source_set}.inputs.sha1"));
     if cache_state_matches(context, &state_path, &fingerprint, &[classes_dir])? {
-        println!(
+        tracing::info!(
             "javac {source_set}: reused cached outputs in {} ms",
             started.elapsed().as_millis()
         );
@@ -5599,7 +5598,7 @@ fn compile_optional_java_source_set(
         );
     }
     write_cache_state(&state_path, &fingerprint)?;
-    println!(
+    tracing::info!(
         "javac {source_set}: done in {} ms",
         started.elapsed().as_millis()
     );
@@ -5673,7 +5672,7 @@ fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Resu
         .plan
         .cache_dir
         .join("forge")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("mappings")
         .join("official_to_srg.tsrg");
     tracing::info!(
@@ -5720,7 +5719,7 @@ fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Resu
     )?;
     let package_state_path = project_root.join("package-and-reobfuscate.inputs.sha1");
     let started = Instant::now();
-    println!(
+    tracing::info!(
         "package-and-reobfuscate-jar: start output={}",
         context.plan.rust_output_jar.display()
     );
@@ -5731,7 +5730,7 @@ fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Resu
         &[],
         &[&context.plan.rust_output_jar],
     )? {
-        println!(
+        tracing::info!(
             "package-and-reobfuscate-jar: reused cached Rust jar in {} ms",
             started.elapsed().as_millis()
         );
@@ -5785,7 +5784,7 @@ fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Resu
             "complete",
         )?;
         write_cache_state(&package_state_path, &package_fingerprint)?;
-        println!(
+        tracing::info!(
             "package-and-reobfuscate-jar: done in {} ms",
             started.elapsed().as_millis()
         );
@@ -5839,7 +5838,7 @@ fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Resu
     }
 
     write_cache_state(&package_state_path, &package_fingerprint)?;
-    println!(
+    tracing::info!(
         "package-and-reobfuscate-jar: done in {} ms",
         started.elapsed().as_millis()
     );
@@ -6360,7 +6359,7 @@ fn resolve_antlr_classpath(
         .minecraft_dir
         .join("gradle")
         .join("dependencies")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("dependencies.gradle");
     let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
     let antlr_version = dependencies
@@ -6480,13 +6479,13 @@ fn run_antlr(
     )?;
     let state_path = output_dir.with_extension("inputs.sha1");
     let started = Instant::now();
-    println!(
+    tracing::info!(
         "ANTLR main: start grammars={} output={}",
         grammars.len(),
         output_dir.display()
     );
     if cache_state_matches(context, &state_path, &fingerprint, &[output_dir])? {
-        println!(
+        tracing::info!(
             "ANTLR main: reused cached outputs in {} ms",
             started.elapsed().as_millis()
         );
@@ -6523,7 +6522,7 @@ fn run_antlr(
         );
     }
     write_cache_state(&state_path, &fingerprint)?;
-    println!("ANTLR main: done in {} ms", started.elapsed().as_millis());
+    tracing::info!("ANTLR main: done in {} ms", started.elapsed().as_millis());
     Ok(())
 }
 
@@ -6592,7 +6591,7 @@ fn resolve_compile_dependencies(
         .minecraft_dir
         .join("gradle")
         .join("dependencies")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("dependencies.gradle");
     let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
     dependencies
@@ -6660,7 +6659,7 @@ fn read_source_excludes(
         .minecraft_dir
         .join("gradle")
         .join("source-excludes")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join(format!("{source_set}-java.txt"));
     let excludes_text =
         fs::read_to_string(&path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
@@ -6747,7 +6746,7 @@ fn write_javac_argfile(
         .plan
         .cache_dir
         .join("forge")
-        .join(&context.plan.minecraft_version)
+        .join(context.plan.minecraft_version.as_str())
         .join("mappings")
         .join("official_to_srg.tsrg");
     if let Some(parent) = refmap.parent() {
@@ -8003,12 +8002,12 @@ fn generate_mojang_tsrg_mappings(
 }
 
 fn write_runtime_mcp_csv_mappings(srg_to_named: &Path, output: &Path) -> eyre::Result<()> {
-    let content = fs::read_to_string(srg_to_named)
+    let mapping_text = fs::read_to_string(srg_to_named)
         .wrap_err_with(|| format!("Failed to read {}", srg_to_named.display()))?;
     let mut fields = String::from("searge,name,desc\n");
     let mut methods = String::from("searge,name,desc\n");
 
-    for line in content.lines() {
+    for line in mapping_text.lines() {
         if line.trim().is_empty() || line.starts_with("tsrg") {
             continue;
         }
@@ -8040,7 +8039,7 @@ fn write_runtime_mcp_csv_mappings(srg_to_named: &Path, output: &Path) -> eyre::R
         .wrap_err_with(|| format!("Failed to write {}", fields_path.display()))?;
     fs::write(&methods_path, methods)
         .wrap_err_with(|| format!("Failed to write {}", methods_path.display()))?;
-    println!(
+    tracing::info!(
         "Generated Forge runtime MCP CSV mappings: {}",
         output.display()
     );
@@ -8777,6 +8776,7 @@ fn write_requested_plan_outputs(
 fn write_artifact_lockfile(plan: &BuildPlan) -> eyre::Result<()> {
     let _span = tracing::info_span!(
         "write_artifact_lockfile",
+        branch = %plan.branch_name,
         mc = %plan.minecraft_version,
         artifacts = plan.artifacts.len(),
         dependencies = plan.dependencies.len(),
@@ -8857,7 +8857,7 @@ fn build_artifact_lockfile(plan: &BuildPlan) -> eyre::Result<ArtifactLockfile> {
 
     Ok(ArtifactLockfile {
         schema_version: 1,
-        minecraft_version: plan.minecraft_version.clone(),
+        minecraft_version: plan.minecraft_version.to_string(),
         maven_cache_dir: relative_path(&plan.minecraft_dir, &plan.maven_cache_dir),
         allow_local_artifact_cache: plan.allow_local_artifact_cache,
         repositories: plan.repositories.clone(),
@@ -8943,33 +8943,38 @@ fn relative_path(base: &Path, path: &Path) -> PathBuf {
 }
 
 fn print_plan_summary(plan: &BuildPlan) {
-    println!("Clean-slate jar build plan resolved.");
-    println!("Minecraft:    {}", plan.minecraft_version);
-    println!("Worktree:     {}", plan.worktree_path.display());
-    println!("Gradle jar:   {}", plan.gradle_output_jar.display());
-    println!("Rust jar:     {}", plan.rust_output_jar.display());
-    println!("Java:         {}", plan.java.executable.display());
-    println!("Java release: {}", plan.java_release);
-    println!(
-        "Toolchain:    {:?} ({})",
-        plan.loader_toolchain.kind, plan.loader_toolchain.userdev_coordinate
-    );
-    println!(
-        "State:        {}",
-        plan.state_dir.join("last-plan.json").display()
-    );
-    println!("Lockfile:     {}", plan.lockfile_path.display());
-    println!("Artifacts:    {}", plan.artifacts.len());
     let dependency_label = if plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
         "project deps"
     } else {
         "fg.deobf deps"
     };
-    println!("{dependency_label}: {}", plan.dependencies.len());
-    println!("Graph nodes:  {}", plan.graph.len());
+    let lines = [
+        "Clean-slate jar build plan resolved.".to_string(),
+        format!("Minecraft:    {}", plan.minecraft_version),
+        format!("Worktree:     {}", plan.worktree_path.display()),
+        format!("Gradle jar:   {}", plan.gradle_output_jar.display()),
+        format!("Rust jar:     {}", plan.rust_output_jar.display()),
+        format!("Java:         {}", plan.java.executable.display()),
+        format!("Java release: {}", plan.java_release),
+        format!(
+            "Toolchain:    {:?} ({})",
+            plan.loader_toolchain.kind, plan.loader_toolchain.userdev_coordinate
+        ),
+        format!(
+            "State:        {}",
+            plan.state_dir.join("last-plan.json").display()
+        ),
+        format!("Lockfile:     {}", plan.lockfile_path.display()),
+        format!("Artifacts:    {}", plan.artifacts.len()),
+        format!("{dependency_label}: {}", plan.dependencies.len()),
+        format!("Graph nodes:  {}", plan.graph.len()),
+    ];
+    for line in lines {
+        tracing::info!("{line}");
+    }
 
     for warning in &plan.warnings {
-        println!("Warning: {warning}");
+        tracing::warn!("Warning: {warning}");
     }
 }
 
