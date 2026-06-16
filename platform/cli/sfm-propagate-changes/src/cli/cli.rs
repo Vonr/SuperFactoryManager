@@ -40,6 +40,7 @@ impl Cli {
     ///
     /// This function will return an error if the log filter string is invalid.
     pub fn logging_config(&self) -> eyre::Result<LoggingConfig> {
+        let explicit_filter = self.debug || self.log_filter.is_some();
         Ok(LoggingConfig {
             default_directive: match (self.debug, &self.log_filter) {
                 (true, _) => LevelFilter::DEBUG,
@@ -47,6 +48,7 @@ impl Cli {
                 (false, None) => LevelFilter::INFO,
             }
             .into(),
+            read_env_filter: !explicit_filter,
             json_log_path: match &self.log_file {
                 None => None,
                 Some(path) if path.is_dir() => {
@@ -182,6 +184,7 @@ mod tests {
     use crate::cli::run::RunCommand;
     use crate::jar_build::BuildMode;
     use crate::jar_build::ErrorAction;
+    use tracing::level_filters::LevelFilter;
 
     #[test]
     fn parses_top_level_run_commands() {
@@ -305,6 +308,38 @@ mod tests {
             .expect("jdk list should parse")
             .get_silent();
         assert!(matches!(cli.command, Command::Jdk { .. }));
+    }
+
+    #[test]
+    fn default_logging_config_reads_env_filter() {
+        let cli = figue::from_slice::<Cli>(&["jdk", "list"])
+            .into_result()
+            .expect("jdk list should parse")
+            .get_silent();
+        let logging = cli.logging_config().expect("logging config should build");
+        assert!(logging.read_env_filter);
+    }
+
+    #[test]
+    fn explicit_logging_config_ignores_env_filter() {
+        let cli = figue::from_slice::<Cli>(&["--log-filter", "info", "jdk", "list"])
+            .into_result()
+            .expect("jdk list should parse")
+            .get_silent();
+        let logging = cli.logging_config().expect("logging config should build");
+        assert!(!logging.read_env_filter);
+        assert_eq!(logging.default_directive, LevelFilter::INFO.into());
+    }
+
+    #[test]
+    fn debug_logging_config_ignores_env_filter() {
+        let cli = figue::from_slice::<Cli>(&["--debug", "jdk", "list"])
+            .into_result()
+            .expect("jdk list should parse")
+            .get_silent();
+        let logging = cli.logging_config().expect("logging config should build");
+        assert!(!logging.read_env_filter);
+        assert_eq!(logging.default_directive, LevelFilter::DEBUG.into());
     }
 
     fn assert_run_command(args: &[&str]) {

@@ -239,7 +239,7 @@ Current implementation notes:
 - Branch context is carried by tracing spans around target/build/run/launch/lockfile work instead of repeating `branch` on every Rust event.
 - Rust-origin orchestration events use the actual log text as the tracing event message and omit `source`, `process`, and `stream`; the subscriber can infer `source=rust`, `process=sfm`, and `stream=stdout` defaults when those fields are absent.
 - Captured Java tool, `javac`, ANTLR, and launched Minecraft stdout/stderr lines are emitted as structured tracing events with explicit `source`, `process`, and `stream` fields. Their branch context comes from the surrounding span, including dedicated stream-reader spans for launched Minecraft output threads.
-- Terminal prefix rendering remains a later step.
+- Terminal prefix rendering is implemented for normal terminal output.
 
 ### Per-Line Subprocess Logging
 
@@ -441,8 +441,8 @@ Testing requirements:
 | 5 | `Done` | Add `--error-action continue\|bail` to multi-target commands. | Committed in `cf0925311`; default is `bail`, `continue` records per-target failures and returns failure after the target summary. |
 | 6 | `Done` | Add wide tracing fields for branch/source/stream/subprocess lines. | Build/run/launch/lockfile spans carry branch context; forwarded Java tool, `javac`, ANTLR, and Minecraft lines carry explicit source/process/stream fields. |
 | 7 | `Done` | Replace affected `println!`/`eprintln!` progress with tracing events. | Jar build/run plan summary, target summaries, build node timing, launch setup/validation, Java tool, javac, ANTLR, and subprocess echo paths use tracing events; compare/report output and older helper output remain direct for later slices. |
-| 8 | `Not Started` | Add prefixed terminal rendering for line events. | Sequential multi-target output is readable with `[branch source]` prefixes. |
-| 9 | `Not Started` | Keep JSONL logging opt-in via `--log-file` and ensure raw subprocess lines are represented. | `--log-file` output includes branch/source/stream/line fields. |
+| 8 | `Done` | Add prefixed terminal rendering for line events. | Terminal tracing layer renders branch/source/process/stream-aware prefixes; explicit `--log-filter`/`--debug` override `RUST_LOG`; validated with `jar plan --branch 1.19.2`. |
+| 9 | `Not Started` | Keep JSONL logging opt-in via `--log-file` and ensure raw subprocess lines are represented. | `--log-file` output includes branch/source/stream/message fields. |
 | 10 | `Not Started` | Implement std-based artifact lock guard. | Unit tests cover waiting/skip behavior; code uses OS lock, not lock-file existence. |
 | 11 | `Not Started` | Wrap artifact downloads/cache writes with lock + temp + checksum + atomic replace. | Parallel SFM processes cannot corrupt shared artifact cache. |
 | 12 | `Not Started` | Move eligible immutable artifacts into the common SFM cache. | Shared cache layout is documented in state/plan output and worktree-local caches hold only source-dependent outputs. |

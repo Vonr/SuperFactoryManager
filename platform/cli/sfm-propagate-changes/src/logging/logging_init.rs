@@ -1,4 +1,5 @@
 use crate::logging::logging_config::LoggingConfig;
+use crate::logging::terminal_event_layer::TerminalEventLayer;
 use std::fs::File;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -13,9 +14,12 @@ use tracing_subscriber::util::SubscriberInitExt;
 const SFM_ENABLE_TRACY_LAYER_ENV: &str = "SFM_ENABLE_TRACY_LAYER";
 
 fn build_env_filter(config: &LoggingConfig) -> EnvFilter {
-    EnvFilter::builder()
-        .with_default_directive(config.default_directive.clone())
-        .from_env_lossy()
+    let builder = EnvFilter::builder().with_default_directive(config.default_directive.clone());
+    if config.read_env_filter {
+        builder.from_env_lossy()
+    } else {
+        EnvFilter::default().add_directive(config.default_directive.clone())
+    }
 }
 
 #[cfg(all(feature = "tracy", not(test)))]
@@ -47,15 +51,8 @@ fn tracy_layer_requested() -> bool {
 pub fn init_logging(config: &LoggingConfig) -> eyre::Result<()> {
     let subscriber = Registry::default();
 
-    let stderr_layer = tracing_subscriber::fmt::layer()
-        .with_file(cfg!(debug_assertions))
-        .with_target(true)
-        .with_line_number(cfg!(debug_assertions))
-        .with_writer(std::io::stderr)
-        .pretty()
-        .without_time()
-        .with_filter(build_env_filter(config));
-    let subscriber = subscriber.with(stderr_layer);
+    let terminal_layer = TerminalEventLayer.with_filter(build_env_filter(config));
+    let subscriber = subscriber.with(terminal_layer);
 
     let json_layer = if let Some(json_log_path) = config.json_log_path.as_ref() {
         // Create parent directories if they don't exist

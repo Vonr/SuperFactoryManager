@@ -8791,7 +8791,7 @@ fn write_artifact_lockfile(plan: &BuildPlan) -> eyre::Result<()> {
         facet_json::to_string_pretty(&lockfile)?,
     )
     .wrap_err_with(|| format!("Failed to write {}", plan.lockfile_path.display()))?;
-    println!(
+    tracing::info!(
         "Artifact lockfile: {} ({} artifacts)",
         plan.lockfile_path.display(),
         lockfile.artifacts.len()
