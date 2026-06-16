@@ -452,11 +452,19 @@ Testing requirements:
 | 9 | `Done` | Keep JSONL logging opt-in via `--log-file` and ensure raw subprocess lines are represented. | Working tree makes JSONL append all events and include current span/span list context; validated with `jar plan --branch 1.19.2 --log-file`. |
 | 10 | `Done` | Implement std-based artifact lock guard. | Committed in `433a01e98`; `ArtifactLock` uses std file locking with wait policy, non-blocking try-acquire, blocking wait loop with tracing, and contention/stale-file tests. |
 | 11 | `Done` | Wrap artifact downloads/cache writes with lock + temp + checksum + atomic replace. | Committed in `0618896cc`; Maven artifact cache reads/writes, local artifact fallback copies, generic downloads, and known-SHA Minecraft asset downloads use artifact locks, unique temp files, checksum validation, and `.bad` quarantine. |
-| 12 | `In Progress` | Move eligible immutable artifacts into the common SFM cache. | Working tree adds explicit common-cache plan paths and routes Maven artifacts, Mojang manifests/version metadata, Minecraft jars/mappings, libraries, and assets through the CLI cache path while keeping project outputs worktree-local. |
-| 13 | `In Progress` | Add `--parallel [N]` for dry-run/resolution-heavy commands, defaulting to 10. | Working tree adds typed `Parallelism`, argv normalization for bare `--parallel`, and a worker-pool dispatcher for multi-target jar/build/run execution. Parallel results are re-ordered back into target order before summaries and plan JSON are written. |
+| 12 | `In Progress` | Move eligible immutable artifacts into the common SFM cache. | Working tree adds explicit common-cache plan paths and routes Maven artifacts, Mojang manifests/version metadata, Minecraft jars/mappings, libraries, and assets through the CLI cache path while keeping project outputs worktree-local. Lockfile generation now preserves the existing artifact lock graph while migrating matching entries to `$sfm-cache` paths. |
+| 13 | `In Progress` | Add `--parallel [N]` for dry-run/resolution-heavy commands, defaulting to 10. | Working tree adds typed `Parallelism`, argv normalization for bare `--parallel`, and a worker-pool dispatcher for multi-target jar/build/run execution. Parallel results are re-ordered back into target order before summaries and plan JSON are written. `jar build --branch "core>=1.21.0" --dry-run --parallel --error-action continue` passes after explicitly bootstrapping the local-only 26.1.2 Mekanism artifacts into SFM's common cache. |
 | 14 | `In Progress` | Add Ctrl+C graceful/force shutdown behavior. | Working tree installs a Ctrl+C handler, echoes red `^C`, stops new target starts, kills active Java tool, `javac`, ANTLR, and Minecraft JVM children on graceful cancellation, and force-exits on a second Ctrl+C within one second. |
 | 15 | `In Progress` | Expand parallel support to `run game-test-server` if logs and locks hold up. | Working tree allows live `run game-test-server --parallel`; runtime validation across core targets is still pending. |
 | 16 | `In Progress` | Expand parallel support to graphical `run client`. | Working tree allows live graphical `run client --parallel`; runtime validation with multiple client windows is still pending. |
+
+Current 26.1.2 artifact note:
+
+- Direct checks against the configured Maven repositories return 404 for `mekanism:Mekanism:26.1.2-10.8.0.86` and its `api` classifier.
+- The artifact exists in the user's local `.m2` repository under `C:\Users\Teamy\.m2\repository\mekanism\Mekanism\26.1.2-10.8.0.86`; metadata shows it was locally published with Gradle 9.5.0 from a Mekanism 26.1 source tree.
+- `jar build --branch "26.1.2" --dry-run --allow-local-artifact-cache` imports those artifacts into SFM's common cache and records `local-m2-cache` provenance plus original paths in `platform/minecraft/sfm-toolchain.lock.json`.
+- A subsequent `jar build --branch "26.1.2" --dry-run` passes without local fallback because the artifacts are then SFM-cache-backed.
+- A truly fresh environment still needs one of: publish/host that Mekanism build in a repository SFM controls, switch the 26.1.2 dependency to a public coordinate, or make a reproducible source-build/import command for `G:\Programming\Repos\Mekanism`.
 
 ## Validation Plan
 

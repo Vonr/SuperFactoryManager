@@ -1231,19 +1231,19 @@ impl Resolver {
         } else {
             DependencySource::Maven
         };
-        let cache_path = self.cache_path_for(&resolved);
-        let url = self
-            .candidate_repositories(&resolved)
-            .first()
-            .map(|repo| Self::artifact_url(repo, &resolved));
+        let artifact = self.resolve_artifact(
+            &format!("dependency:{configuration}:{resolved}"),
+            &resolved,
+            configuration,
+        )?;
 
         Ok(DependencyPlan {
             configuration: configuration.to_string(),
             notation: coordinate.to_string(),
             resolved_notation: resolved.to_string(),
             source,
-            cache_path,
-            url,
+            cache_path: artifact.cache_path,
+            url: artifact.url,
             dynamic_version,
         })
     }
@@ -1354,11 +1354,7 @@ impl Resolver {
     }
 
     fn cache_path_for(&self, coordinate: &MavenCoordinate) -> PathBuf {
-        self.cache_dir
-            .join(coordinate.group.replace('.', "/"))
-            .join(&coordinate.artifact)
-            .join(&coordinate.version)
-            .join(coordinate.file_name())
+        maven_cache_path_for(&self.cache_dir, coordinate)
     }
 
     fn artifact_url(repo: &Repository, coordinate: &MavenCoordinate) -> String {
@@ -1403,6 +1399,16 @@ impl Resolver {
 
         Vec::new()
     }
+}
+
+fn maven_cache_path_for(cache_dir: &Path, coordinate: &MavenCoordinate) -> PathBuf {
+    let mut path = cache_dir.to_path_buf();
+    for segment in coordinate.group.split('.') {
+        path.push(segment);
+    }
+    path.join(&coordinate.artifact)
+        .join(&coordinate.version)
+        .join(coordinate.file_name())
 }
 
 impl MavenCoordinate {
@@ -9100,46 +9106,27 @@ fn write_artifact_lockfile(plan: &BuildPlan) -> eyre::Result<()> {
 }
 
 fn build_artifact_lockfile(plan: &BuildPlan) -> eyre::Result<ArtifactLockfile> {
-    let mut provenance_paths = Vec::new();
-    collect_provenance_paths(&plan.maven_cache_dir, &mut provenance_paths)?;
-    provenance_paths.sort();
-
-    let mut artifacts = Vec::with_capacity(provenance_paths.len());
-    for provenance_path in provenance_paths {
-        let artifact_path = artifact_path_from_provenance_path(&provenance_path)?;
-        if !artifact_path.is_file() {
-            continue;
-        }
-        let provenance = read_required_artifact_provenance(&provenance_path)?;
-        let actual_sha1 = file_sha1(&artifact_path)?;
-        if actual_sha1 != provenance.sha1 {
-            eyre::bail!(
-                "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
-                artifact_path.display(),
-                provenance.sha1,
-                actual_sha1
-            );
-        }
-        artifacts.push(ArtifactLockEntry {
-            coordinate: provenance.coordinate,
-            source: provenance.source,
-            repository: provenance.repository,
-            url: provenance.url,
-            cache_path: portable_cache_path(plan, &artifact_path),
-            original_path: provenance.original_path,
-            sha1: actual_sha1,
-        });
-    }
-
+    let mut artifacts = Vec::new();
     if let Some(existing_lockfile) = &plan.lockfile {
         for locked in &existing_lockfile.artifacts {
-            let already_present = artifacts.iter().any(|artifact| {
-                artifact.coordinate == locked.coordinate && artifact.cache_path == locked.cache_path
-            });
-            if !already_present {
-                artifacts.push(locked.clone());
-            }
+            push_artifact_lock_entry(&mut artifacts, migrate_locked_artifact(plan, locked)?);
         }
+    }
+    for artifact in &plan.artifacts {
+        push_artifact_lock_entry(
+            &mut artifacts,
+            artifact_lock_entry_from_plan_artifact(plan, artifact)?,
+        );
+    }
+    for dependency in &plan.dependencies {
+        push_artifact_lock_entry(
+            &mut artifacts,
+            artifact_lock_entry_from_cache_path(
+                plan,
+                &dependency.cache_path,
+                Some(&dependency.resolved_notation),
+            )?,
+        );
     }
 
     artifacts.sort_by(|left, right| {
@@ -9177,6 +9164,151 @@ fn build_artifact_lockfile(plan: &BuildPlan) -> eyre::Result<ArtifactLockfile> {
     })
 }
 
+fn migrate_locked_artifact(
+    plan: &BuildPlan,
+    locked: &ArtifactLockEntry,
+) -> eyre::Result<ArtifactLockEntry> {
+    let Some(coordinate_text) = locked.coordinate.as_deref() else {
+        return Ok(locked.clone());
+    };
+    let Ok(coordinate) = MavenCoordinate::parse(coordinate_text) else {
+        return Ok(locked.clone());
+    };
+    let cache_path = maven_cache_path_for(&plan.maven_cache_dir, &coordinate);
+    if !cache_path.is_file() {
+        return Ok(locked.clone());
+    }
+    let actual_sha1 = file_sha1(&cache_path)?;
+    if actual_sha1 != locked.sha1 {
+        return Ok(locked.clone());
+    }
+    let provenance = read_artifact_provenance(&cache_path)?.unwrap_or_else(|| {
+        artifact_provenance(
+            locked.source.clone(),
+            locked.coordinate.clone(),
+            locked.repository.clone(),
+            locked.url.clone(),
+            locked.original_path.clone(),
+            actual_sha1.clone(),
+        )
+    });
+    Ok(ArtifactLockEntry {
+        coordinate: provenance.coordinate.or_else(|| locked.coordinate.clone()),
+        source: provenance.source,
+        repository: provenance.repository.or_else(|| locked.repository.clone()),
+        url: provenance.url.or_else(|| locked.url.clone()),
+        cache_path: portable_cache_path(plan, &cache_path),
+        original_path: provenance
+            .original_path
+            .or_else(|| locked.original_path.clone()),
+        sha1: actual_sha1,
+    })
+}
+
+fn artifact_lock_entry_from_plan_artifact(
+    plan: &BuildPlan,
+    artifact: &ArtifactPlan,
+) -> eyre::Result<ArtifactLockEntry> {
+    let actual_sha1 = artifact_actual_sha1(&artifact.cache_path, artifact.sha1.as_deref())?;
+    if actual_sha1 != artifact.provenance.sha1 {
+        eyre::bail!(
+            "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
+            artifact.cache_path.display(),
+            artifact.provenance.sha1,
+            actual_sha1
+        );
+    }
+    Ok(ArtifactLockEntry {
+        coordinate: artifact
+            .provenance
+            .coordinate
+            .clone()
+            .or_else(|| artifact.coordinate.clone()),
+        source: artifact.provenance.source.clone(),
+        repository: artifact.provenance.repository.clone(),
+        url: artifact.provenance.url.clone(),
+        cache_path: portable_cache_path(plan, &artifact.cache_path),
+        original_path: artifact.provenance.original_path.clone(),
+        sha1: actual_sha1,
+    })
+}
+
+fn artifact_lock_entry_from_cache_path(
+    plan: &BuildPlan,
+    path: &Path,
+    fallback_coordinate: Option<&str>,
+) -> eyre::Result<ArtifactLockEntry> {
+    let actual_sha1 = file_sha1(path)?;
+    let provenance = read_artifact_provenance(path)?.unwrap_or_else(|| {
+        artifact_provenance(
+            ArtifactSource::ExistingSfmCacheUnknown,
+            fallback_coordinate.map(str::to_string),
+            None,
+            None,
+            None,
+            actual_sha1.clone(),
+        )
+    });
+    if actual_sha1 != provenance.sha1 {
+        eyre::bail!(
+            "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
+            path.display(),
+            provenance.sha1,
+            actual_sha1
+        );
+    }
+    Ok(ArtifactLockEntry {
+        coordinate: provenance.coordinate,
+        source: provenance.source,
+        repository: provenance.repository,
+        url: provenance.url,
+        cache_path: portable_cache_path(plan, path),
+        original_path: provenance.original_path,
+        sha1: actual_sha1,
+    })
+}
+
+fn artifact_actual_sha1(path: &Path, planned_sha1: Option<&str>) -> eyre::Result<String> {
+    if path.is_file() {
+        let actual_sha1 = file_sha1(path)?;
+        if let Some(planned_sha1) = planned_sha1
+            && actual_sha1 != planned_sha1
+        {
+            eyre::bail!(
+                "Artifact {} resolved with SHA-1 {}, but the plan recorded {}",
+                path.display(),
+                actual_sha1,
+                planned_sha1
+            );
+        }
+        return Ok(actual_sha1);
+    }
+    planned_sha1
+        .map(str::to_string)
+        .ok_or_else(|| eyre::eyre!("Artifact is missing and has no SHA-1: {}", path.display()))
+}
+
+fn push_artifact_lock_entry(artifacts: &mut Vec<ArtifactLockEntry>, entry: ArtifactLockEntry) {
+    if let Some(existing) = artifacts
+        .iter()
+        .position(|artifact| artifact.same_locked_artifact(&entry))
+    {
+        artifacts[existing] = entry;
+        return;
+    }
+    artifacts.push(entry);
+}
+
+impl ArtifactLockEntry {
+    fn same_locked_artifact(&self, other: &Self) -> bool {
+        self.coordinate == other.coordinate
+            && self.source == other.source
+            && self.repository == other.repository
+            && self.url == other.url
+            && self.sha1 == other.sha1
+    }
+}
+
 fn portable_cache_path(plan: &BuildPlan, path: &Path) -> PathBuf {
     if let Ok(relative) = path.strip_prefix(&plan.common_cache_dir) {
         return PathBuf::from("$sfm-cache").join(relative);
@@ -9204,44 +9336,6 @@ fn read_optional_artifact_lockfile(
         );
     }
     Ok(Some(lockfile))
-}
-
-fn collect_provenance_paths(root: &Path, output: &mut Vec<PathBuf>) -> eyre::Result<()> {
-    if !root.is_dir() {
-        return Ok(());
-    }
-    for entry in
-        fs::read_dir(root).wrap_err_with(|| format!("Failed to read {}", root.display()))?
-    {
-        let path = entry?.path();
-        if path.is_dir() {
-            collect_provenance_paths(&path, output)?;
-        } else if path
-            .file_name()
-            .and_then(std::ffi::OsStr::to_str)
-            .is_some_and(|name| name.ends_with(".sfm-provenance.json"))
-        {
-            output.push(path);
-        }
-    }
-    Ok(())
-}
-
-fn artifact_path_from_provenance_path(path: &Path) -> eyre::Result<PathBuf> {
-    let file_name = path
-        .file_name()
-        .and_then(std::ffi::OsStr::to_str)
-        .ok_or_else(|| eyre::eyre!("Path has no filename: {}", path.display()))?;
-    let artifact_name = file_name
-        .strip_suffix(".sfm-provenance.json")
-        .ok_or_else(|| eyre::eyre!("Not an artifact provenance path: {}", path.display()))?;
-    Ok(path.with_file_name(artifact_name))
-}
-
-fn read_required_artifact_provenance(path: &Path) -> eyre::Result<ArtifactProvenance> {
-    let content =
-        fs::read_to_string(path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
-    facet_json::from_str(&content).wrap_err_with(|| format!("Failed to parse {}", path.display()))
 }
 
 fn relative_path(base: &Path, path: &Path) -> PathBuf {

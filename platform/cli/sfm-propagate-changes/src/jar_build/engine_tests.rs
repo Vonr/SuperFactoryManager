@@ -26,6 +26,7 @@ use super::MojangVersionManifest;
 use super::NodeStatus;
 use super::ParchmentData;
 use super::Repository;
+use super::build_artifact_lockfile;
 use super::compare_version_text;
 use super::copy_file_to_path_checked;
 use super::execute_targets_parallel;
@@ -331,6 +332,77 @@ fn facet_json_roundtrips_artifact_lockfile_and_provenance() {
     assert!(json.contains("remote-maven"));
     let parsed: ArtifactLockfile = facet_json::from_str(&json).expect("lockfile should parse");
     assert_eq!(parsed.artifacts[0].source, ArtifactSource::RemoteMaven);
+}
+
+#[test]
+fn migrated_common_cache_lockfile_does_not_duplicate_old_cache_entries() {
+    let test_dir = TestDir::new("common-cache-lockfile-dedupe");
+    let common_cache = test_dir.path.join("sfm-cache").join("minecraft-toolchain");
+    let maven_cache = common_cache.join("maven");
+    let artifact_path = maven_cache.join("g").join("a").join("1").join("a-1.jar");
+    fs::create_dir_all(artifact_path.parent().expect("artifact should have parent"))
+        .expect("artifact parent should be created");
+    fs::write(&artifact_path, b"artifact").expect("artifact should be written");
+
+    let sha1 = sha1_bytes(b"artifact");
+    let provenance = ArtifactProvenance {
+        schema_version: 1,
+        source: ArtifactSource::RemoteMaven,
+        coordinate: Some("g:a:1".to_string()),
+        repository: Some("Forge".to_string()),
+        url: Some("https://example.test/a-1.jar".to_string()),
+        original_path: None,
+        sha1: sha1.clone(),
+    };
+    fs::write(
+        artifact_path.with_file_name("a-1.jar.sfm-provenance.json"),
+        facet_json::to_string_pretty(&provenance).expect("provenance should serialize"),
+    )
+    .expect("provenance should be written");
+
+    let mut plan = minimal_plan_for_paths();
+    plan.common_cache_dir = common_cache;
+    plan.maven_cache_dir = maven_cache.clone();
+    plan.artifacts = Vec::new();
+    plan.dependencies = vec![DependencyPlan {
+        configuration: "implementation".to_string(),
+        notation: "g:a:1".to_string(),
+        resolved_notation: "g:a:1".to_string(),
+        source: DependencySource::Maven,
+        cache_path: artifact_path,
+        url: Some("https://example.test/a-1.jar".to_string()),
+        dynamic_version: false,
+    }];
+    plan.lockfile = Some(ArtifactLockfile {
+        schema_version: 1,
+        minecraft_version: plan.minecraft_version.to_string(),
+        maven_cache_dir: PathBuf::from("build/sfm-toolchain/maven"),
+        allow_local_artifact_cache: false,
+        repositories: Vec::new(),
+        dependencies: Vec::new(),
+        artifacts: vec![ArtifactLockEntry {
+            coordinate: Some("g:a:1".to_string()),
+            source: ArtifactSource::RemoteMaven,
+            repository: Some("Forge".to_string()),
+            url: Some("https://example.test/a-1.jar".to_string()),
+            cache_path: PathBuf::from("build/sfm-toolchain/maven/g/a/1/a-1.jar"),
+            original_path: None,
+            sha1,
+        }],
+    });
+
+    let lockfile = build_artifact_lockfile(&plan).expect("lockfile should build");
+    let matching_entries = lockfile
+        .artifacts
+        .iter()
+        .filter(|artifact| artifact.coordinate.as_deref() == Some("g:a:1"))
+        .collect::<Vec<_>>();
+
+    assert_eq!(matching_entries.len(), 1);
+    assert_eq!(
+        matching_entries[0].cache_path,
+        PathBuf::from("$sfm-cache/maven/g/a/1/a-1.jar")
+    );
 }
 
 #[test]
