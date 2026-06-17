@@ -1,3 +1,4 @@
+use crate::colour::stable_color;
 use crate::logging::captured_fields::CapturedFields;
 use crate::logging::terminal_hyperlink::TerminalTextExt;
 use crate::logging::terminal_span_fields::TerminalSpanFields;
@@ -88,7 +89,11 @@ fn render_prefix<S: Subscriber + for<'lookup> LookupSpan<'lookup>, W: Write>(
         // BRANCH
         let branch = fields.branch.as_deref().or(span_fields.branch.as_deref());
         if let Some(branch) = branch {
-            f.write_fmt(format_args!("{branch}"))?;
+            if decorate {
+                f.write_fmt(format_args!("{}", branch.color(stable_color(branch))))?;
+            } else {
+                f.write_fmt(format_args!("{branch}"))?;
+            }
             f.write(" ".as_bytes())?;
         }
 
@@ -106,19 +111,21 @@ fn render_prefix<S: Subscriber + for<'lookup> LookupSpan<'lookup>, W: Write>(
                 other => other,
             }
         };
+        let linked_label = event
+            .metadata()
+            .file()
+            .zip(event.metadata().line())
+            .map_or_else(
+                || label.to_string(),
+                |(file, line)| {
+                    let uri = vscode_file_uri(file, line);
+                    label.hyperlink(&uri)
+                },
+            );
         if label == "rust" && decorate {
-            let linked_label = event
-                .metadata()
-                .file()
-                .zip(event.metadata().line())
-                .map_or_else(
-                    || label.to_string(),
-                    |(file, line)| {
-                        let uri = vscode_file_uri(file, line);
-                        label.hyperlink(&uri)
-                    },
-                );
             f.write_fmt(format_args!("{}", linked_label.truecolor(255, 165, 0)))?;
+        } else if label == "mc" && decorate {
+            f.write_fmt(format_args!("{}", linked_label.truecolor(154, 205, 50)))?;
         } else {
             f.write_fmt(format_args!("{label}"))?;
         }
