@@ -1,14 +1,15 @@
 use crate::one_password::OnePasswordSecretReference;
 use crate::one_password::OnePasswordSecretValue;
+use facet::Facet;
 use std::fmt;
 use std::ops::Deref;
 
 pub const MODRINTH_TOKEN_ENV_VAR: &str = "MODRINTH_TOKEN";
 pub const DEFAULT_OP_SECRET_REFERENCE: &str = "op://Private/Modrinth SFM API token/credential";
 
-#[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Facet, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
-pub struct ModrinthApiSecret(String);
+pub struct ModrinthApiSecret(#[facet(sensitive)] String);
 
 impl ModrinthApiSecret {
     pub fn new(value: impl AsRef<str>) -> eyre::Result<Self> {

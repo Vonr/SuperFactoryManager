@@ -1,5 +1,6 @@
 use crate::one_password::OnePasswordSecretReference;
 use crate::one_password::OnePasswordSecretValue;
+use facet::Facet;
 use std::fmt;
 use std::ops::Deref;
 
@@ -9,9 +10,9 @@ pub const DEFAULT_OP_SECRET_REFERENCE: &str = "op://Private/CurseForge SFM Uploa
 pub const DEFAULT_OP_CORE_API_KEY_SECRET_REFERENCE: &str =
     "op://Private/SFM CurseForge studios token/credential";
 
-#[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Facet, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
-pub struct CurseforgeApiSecret(String);
+pub struct CurseforgeApiSecret(#[facet(sensitive)] String);
 
 impl CurseforgeApiSecret {
     pub fn new(value: impl AsRef<str>) -> eyre::Result<Self> {
