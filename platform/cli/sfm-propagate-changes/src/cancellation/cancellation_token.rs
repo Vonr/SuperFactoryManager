@@ -29,6 +29,7 @@ impl CancellationToken {
     /// # Errors
     ///
     /// Returns an error after cancellation has been requested.
+    #[track_caller]
     pub fn bail_if_cancelled(&self) -> eyre::Result<()> {
         if self.is_cancelled() {
             eyre::bail!("Operation cancelled by Ctrl+C");
