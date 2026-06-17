@@ -1,8 +1,8 @@
-use tracing::{Event, Subscriber};
+use crate::logging::captured_fields::CapturedFields;
+use tracing::Event;
+use tracing::Subscriber;
 use tracing_subscriber::layer::Context;
 use tracing_subscriber::registry::LookupSpan;
-
-use crate::logging::captured_fields::CapturedFields;
 
 #[derive(Debug, Default, Clone)]
 pub struct TerminalSpanFields {

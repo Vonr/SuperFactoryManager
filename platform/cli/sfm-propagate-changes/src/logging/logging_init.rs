@@ -52,7 +52,7 @@ pub fn init_logging(config: &LoggingConfig) -> eyre::Result<()> {
 
     {
         // this is what we used to have, for reference.
-        let _old_stderr_layer = tracing_subscriber::fmt::layer()
+        let old_stderr_layer = tracing_subscriber::fmt::layer()
             .with_file(cfg!(debug_assertions))
             .with_target(true)
             .with_line_number(cfg!(debug_assertions))
@@ -61,7 +61,7 @@ pub fn init_logging(config: &LoggingConfig) -> eyre::Result<()> {
             .without_time()
             .with_filter(build_env_filter(config));
         if false {
-            subscriber.with(_old_stderr_layer);
+            subscriber.with(old_stderr_layer);
             panic!()
         }
     }

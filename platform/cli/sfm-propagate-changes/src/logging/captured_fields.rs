@@ -1,5 +1,6 @@
 use std::fmt::Debug;
-use tracing::field::{Field, Visit};
+use tracing::field::Field;
+use tracing::field::Visit;
 
 #[derive(Debug, Default)]
 pub struct CapturedFields {

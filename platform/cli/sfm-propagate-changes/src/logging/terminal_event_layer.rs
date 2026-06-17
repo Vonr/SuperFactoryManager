@@ -84,7 +84,7 @@ fn render_prefix<S: Subscriber + for<'lookup> LookupSpan<'lookup>, W: Write>(
     decorate: bool,
 ) -> impl FnOnce(&mut W) -> std::io::Result<()> {
     move |f| {
-        let span_fields = TerminalSpanFields::from_scope(&ctx, event);
+        let span_fields = TerminalSpanFields::from_scope(ctx, event);
 
         // BRANCH
         let branch = fields.branch.as_deref().or(span_fields.branch.as_deref());
@@ -94,7 +94,7 @@ fn render_prefix<S: Subscriber + for<'lookup> LookupSpan<'lookup>, W: Write>(
             } else {
                 f.write_fmt(format_args!("{branch}"))?;
             }
-            f.write(" ".as_bytes())?;
+            f.write_all(b" ")?;
         }
 
         // SOURCE (JAVA, RUST, ETC)
@@ -104,7 +104,6 @@ fn render_prefix<S: Subscriber + for<'lookup> LookupSpan<'lookup>, W: Write>(
             .or(span_fields.source.as_deref())
             .unwrap_or("rust");
         let label = {
-            let source: &str = &source;
             match source {
                 "minecraft" => "mc",
                 "java-tool" => "java",
@@ -143,8 +142,7 @@ fn render_prefix<S: Subscriber + for<'lookup> LookupSpan<'lookup>, W: Write>(
                 ("rust", "cli") | ("minecraft", "minecraft")
             );
         if should_show_process {
-            f.write(" ".as_bytes())?;
-            f.write_fmt(format_args!("{}", (process.to_string())))?;
+            f.write_fmt(format_args!(" {process}"))?;
         }
 
         // STREAM (STDOUT, STDERR, ETC)
@@ -154,31 +152,26 @@ fn render_prefix<S: Subscriber + for<'lookup> LookupSpan<'lookup>, W: Write>(
             .or(span_fields.stream.as_deref())
             .unwrap_or("stdout");
         if stream == "stderr" {
-            f.write(" ".as_bytes())?;
-            f.write_fmt(format_args!("{}", ("stderr".to_string())))?;
+            f.write_fmt(format_args!(" stderr"))?;
         }
 
         // LEVEL (INFO, DEBUG, ETC)
         let level = event.metadata().level();
         match *level {
             Level::TRACE => {
-                f.write(" ".as_bytes())?;
-                f.write_fmt(format_args!("{}", (level.as_str().purple().to_string())))?
+                f.write_fmt(format_args!(" {}", level.as_str().purple()))?;
             }
             Level::DEBUG => {
-                f.write(" ".as_bytes())?;
-                f.write_fmt(format_args!("{}", (level.as_str().blue().to_string())))?
+                f.write_fmt(format_args!(" {}", level.as_str().blue()))?;
             }
             Level::INFO => {}
             Level::WARN => {
-                f.write(" ".as_bytes())?;
-                f.write_fmt(format_args!("{}", (level.as_str().yellow().to_string())))?
+                f.write_fmt(format_args!(" {}", level.as_str().yellow()))?;
             }
             Level::ERROR => {
-                f.write(" ".as_bytes())?;
-                f.write_fmt(format_args!("{}", (level.as_str().red().to_string())))?
+                f.write_fmt(format_args!(" {}", level.as_str().red()))?;
             }
-        };
+        }
         Ok(())
     }
 }
@@ -199,7 +192,7 @@ fn percent_encode_uri_path(path: &str) -> String {
     for byte in path.bytes() {
         match byte {
             b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'/' | b':' | b'-' | b'_' | b'.' | b'~' => {
-                output.push(char::from(byte))
+                output.push(char::from(byte));
             }
             byte => {
                 const HEX: &[u8; 16] = b"0123456789ABCDEF";
@@ -210,4 +203,26 @@ fn percent_encode_uri_path(path: &str) -> String {
         }
     }
     output
+}
+
+#[cfg(test)]
+mod tests {
+    use super::percent_encode_uri_path;
+    use super::vscode_file_uri;
+
+    #[test]
+    fn vscode_file_uri_targets_line_and_column() {
+        let uri = vscode_file_uri("src/cli/git/status/git_status_cli.rs", 249);
+
+        assert!(uri.starts_with("vscode://file/"));
+        assert!(uri.ends_with("/src/cli/git/status/git_status_cli.rs:249:1"));
+    }
+
+    #[test]
+    fn percent_encode_uri_path_escapes_reserved_path_bytes() {
+        assert_eq!(
+            percent_encode_uri_path("D:/repo with spaces/src/#file.rs"),
+            "D:/repo%20with%20spaces/src/%23file.rs"
+        );
+    }
 }
