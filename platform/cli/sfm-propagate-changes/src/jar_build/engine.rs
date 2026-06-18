@@ -75,12 +75,10 @@ const PROJECT_COMPILE_ANNOTATION_COORDINATES: [(&str, &str); 2] = [
 ];
 const DOWNLOAD_RETRY_ATTEMPTS: usize = 3;
 
-pub(crate) fn invoke_build(
-    options: &BuildOptions,
-    cancellation_token: &CancellationToken,
-) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "sfm_jar_build_command",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         branch = %options.branch,
         mode = ?options.mode,
         refresh = options.refresh,
@@ -91,7 +89,11 @@ pub(crate) fn invoke_build(
         error_action = %options.error_action,
         parallelism = %options.parallelism,
     )
-    .entered();
+)]
+pub(crate) fn invoke_build(
+    options: &BuildOptions,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     let targets = resolve_build_targets(options)?;
     cancellation_token.bail_if_cancelled()?;
@@ -109,13 +111,10 @@ pub(crate) fn invoke_build(
     )
 }
 
-pub(crate) fn invoke_run(
-    options: &BuildOptions,
-    kind: RunKind,
-    cancellation_token: &CancellationToken,
-) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "sfm_run_command",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         branch = %options.branch,
         kind = kind.command_name(),
         refresh = options.refresh,
@@ -126,7 +125,12 @@ pub(crate) fn invoke_run(
         error_action = %options.error_action,
         parallelism = %options.parallelism,
     )
-    .entered();
+)]
+pub(crate) fn invoke_run(
+    options: &BuildOptions,
+    kind: RunKind,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     let targets = resolve_build_targets(options)?;
     cancellation_token.bail_if_cancelled()?;
@@ -449,18 +453,20 @@ fn finish_target_summary(
     );
 }
 
-pub(crate) fn invoke_compare(
-    options: &CompareOptions,
-    cancellation_token: &CancellationToken,
-) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "sfm_jar_compare_command",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         branch = %options.branch,
         strict_manifest = options.strict_manifest,
         error_action = %options.error_action,
         parallelism = %options.parallelism,
     )
-    .entered();
+)]
+pub(crate) fn invoke_compare(
+    options: &CompareOptions,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     let targets = select_required_worktree_targets(&options.branch)?;
     cancellation_token.bail_if_cancelled()?;
@@ -639,17 +645,19 @@ fn record_compare_result(
     }
 }
 
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
+        branch = %target.branch,
+        worktree = %target.worktree_path.display(),
+    )
+)]
 fn invoke_single_target_compare(
     options: &CompareOptions,
     target: &WorktreeTarget,
     cancellation_token: &CancellationToken,
 ) -> eyre::Result<()> {
-    let _target_span = tracing::info_span!(
-        "sfm_jar_compare_target",
-        branch = %target.branch,
-        worktree = %target.worktree_path.display(),
-    )
-    .entered();
     cancellation_token.bail_if_cancelled()?;
     let report = compare_target(options, target)?;
     cancellation_token.bail_if_cancelled()?;
@@ -713,18 +721,20 @@ fn finish_compare_summary(
     );
 }
 
-pub(crate) fn invoke_artifact_audit(
-    options: &ArtifactAuditOptions,
-    cancellation_token: &CancellationToken,
-) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "sfm_jar_artifact_audit_command",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         branch = %options.branch,
         require_portable_artifacts = options.require_portable_artifacts,
         error_action = %options.error_action,
         parallelism = %options.parallelism,
     )
-    .entered();
+)]
+pub(crate) fn invoke_artifact_audit(
+    options: &ArtifactAuditOptions,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     let targets = select_required_worktree_targets(&options.branch)?;
     cancellation_token.bail_if_cancelled()?;
@@ -2083,6 +2093,18 @@ impl Resolver {
         clippy::too_many_arguments,
         reason = "Resolver construction mirrors the normalized planner state it owns."
     )]
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(
+            cache_dir = %cache_dir.display(),
+            repository_count = repositories.len(),
+            refresh,
+            allow_local_artifact_cache,
+            artifact_source_count = artifact_sources.len(),
+            has_lockfile = lockfile.is_some(),
+        )
+    )]
     fn new(
         cache_dir: PathBuf,
         repositories: Vec<Repository>,
@@ -2093,16 +2115,6 @@ impl Resolver {
         materialization_lockfile: Option<ArtifactLockfile>,
         cancellation_token: CancellationToken,
     ) -> eyre::Result<Self> {
-        let _span = tracing::debug_span!(
-            "create_maven_resolver",
-            cache_dir = %cache_dir.display(),
-            repository_count = repositories.len(),
-            refresh,
-            allow_local_artifact_cache,
-            artifact_source_count = artifact_sources.len(),
-            has_lockfile = lockfile.is_some(),
-        )
-        .entered();
         cancellation_token.bail_if_cancelled()?;
         let client = Client::builder()
             .user_agent("sfm-propagate-changes/no-gradle-toolchain")
@@ -3029,20 +3041,22 @@ fn common_toolchain_cache_dir() -> PathBuf {
     clippy::too_many_lines,
     reason = "The planner is a single orchestration pass over project inputs."
 )]
-fn create_plan_for_target(
-    options: &BuildOptions,
-    target: &WorktreeTarget,
-    cancellation_token: &CancellationToken,
-) -> eyre::Result<BuildPlan> {
-    let _span = tracing::info_span!(
-        "create_build_plan",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         branch = %options.branch,
         target = %target.branch,
         refresh = options.refresh,
         allow_local_artifact_cache = options.allow_local_artifact_cache,
         require_portable_artifacts = options.require_portable_artifacts,
     )
-    .entered();
+)]
+fn create_plan_for_target(
+    options: &BuildOptions,
+    target: &WorktreeTarget,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<BuildPlan> {
     cancellation_token.bail_if_cancelled()?;
     let worktree_path = target.worktree_path.as_path().to_path_buf();
     let minecraft_dir = worktree_path.join("platform").join("minecraft");
@@ -4378,14 +4392,10 @@ enum BuildTarget {
     clippy::too_many_lines,
     reason = "build orchestration keeps the node order and timing output visible."
 )]
-fn execute_build(
-    plan: &BuildPlan,
-    explain_rebuild: bool,
-    target: BuildTarget,
-    cancellation_token: &CancellationToken,
-) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "execute_rust_owned_build",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         branch = %plan.branch_name,
         mc = %plan.minecraft_version,
         loader = ?plan.loader_toolchain.kind,
@@ -4393,7 +4403,13 @@ fn execute_build(
         explain_rebuild,
         target = ?target,
     )
-    .entered();
+)]
+fn execute_build(
+    plan: &BuildPlan,
+    explain_rebuild: bool,
+    target: BuildTarget,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     let context = ExecutionContext::new(plan, cancellation_token.clone())?;
     let total_started = Instant::now();
@@ -4637,21 +4653,23 @@ struct CancellableOutput {
     clippy::too_many_lines,
     reason = "Run launch orchestration intentionally mirrors Forge userdev config shape."
 )]
-fn execute_run(
-    plan: &BuildPlan,
-    kind: RunKind,
-    dry_run: bool,
-    cancellation_token: &CancellationToken,
-) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "execute_run_setup",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         branch = %plan.branch_name,
         mc = %plan.minecraft_version,
         kind = kind.command_name(),
         loader = ?plan.loader_toolchain.kind,
         dry_run,
     )
-    .entered();
+)]
+fn execute_run(
+    plan: &BuildPlan,
+    kind: RunKind,
+    dry_run: bool,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     let context = ExecutionContext::new(plan, cancellation_token.clone())?;
     let run_config = read_forge_run_config(&context, kind)?;
@@ -5162,6 +5180,19 @@ fn set_minecraft_option(content: &str, key: &str, value: &str) -> String {
     output
 }
 
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
+        branch = %plan.branch_name,
+        mc = %plan.minecraft_version,
+        java = %plan.java.executable.display(),
+        argfile = %argfile.display(),
+        working_dir = %working_dir.display(),
+        env_vars = env.len(),
+        timeout_seconds = timeout.map_or(0, |timeout| timeout.as_secs()),
+    )
+)]
 fn run_launch_command(
     cancellation_token: &CancellationToken,
     plan: &BuildPlan,
@@ -5171,17 +5202,6 @@ fn run_launch_command(
     log_path: &Path,
     timeout: Option<Duration>,
 ) -> eyre::Result<LaunchOutput> {
-    let _span = tracing::info_span!(
-        "launch_minecraft_jvm",
-        branch = %plan.branch_name,
-        mc = %plan.minecraft_version,
-        java = %plan.java.executable.display(),
-        argfile = %argfile.display(),
-        working_dir = %working_dir.display(),
-        env_vars = env.len(),
-        timeout_seconds = timeout.map_or(0, |timeout| timeout.as_secs()),
-    )
-    .entered();
     cancellation_token.bail_if_cancelled()?;
     if let Some(parent) = log_path.parent() {
         fs::create_dir_all(parent)?;
@@ -5260,6 +5280,11 @@ fn run_launch_command(
     })
 }
 
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(branch = %branch)
+)]
 fn read_launch_stream<R>(
     stream: R,
     branch: &str,
@@ -5270,7 +5295,6 @@ fn read_launch_stream<R>(
 where
     R: Read,
 {
-    let _span = tracing::info_span!("forward_subprocess_stream", branch = %branch).entered();
     let mut captured = String::new();
     for line in BufReader::new(stream).lines() {
         let line = line?;
@@ -5571,17 +5595,19 @@ fn resolve_forge_userdev_modules(
         .collect()
 }
 
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
+        mc = %context.plan.minecraft_version,
+        kind = kind.command_name(),
+    )
+)]
 fn resolve_run_classpath(
     context: &ExecutionContext<'_>,
     resolver: &Resolver,
     kind: RunKind,
 ) -> eyre::Result<RunClasspath> {
-    let _span = tracing::info_span!(
-        "resolve_run_classpath",
-        mc = %context.plan.minecraft_version,
-        kind = kind.command_name(),
-    )
-    .entered();
     if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
         return resolve_neogradle_run_classpath(context, resolver, kind);
     }
@@ -6048,12 +6074,12 @@ fn kind_extra_program_args(plan: &BuildPlan, kind: RunKind) -> eyre::Result<Vec<
     ])
 }
 
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(mc = %context.plan.minecraft_version)
+)]
 fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<MinecraftAssets> {
-    let _span = tracing::info_span!(
-        "prepare_minecraft_assets",
-        mc = %context.plan.minecraft_version,
-    )
-    .entered();
     context.bail_if_cancelled()?;
     let client = Client::builder()
         .user_agent("sfm-propagate-changes/no-gradle-toolchain")
@@ -6273,6 +6299,17 @@ impl<'a> ExecutionContext<'a> {
         self.run_java_tool_with_classpath(tool_id, jvm_args, &[], args, work_dir)
     }
 
+    #[tracing::instrument(
+        level = "info",
+        skip_all,
+        fields(
+            tool_id,
+            work_dir = %work_dir.display(),
+            jvm_args = jvm_args.len(),
+            extra_classpath_entries = extra_classpath.len(),
+            args = args.len(),
+        )
+    )]
     fn run_java_tool_with_classpath(
         &self,
         tool_id: &str,
@@ -6281,15 +6318,6 @@ impl<'a> ExecutionContext<'a> {
         args: &[String],
         work_dir: &Path,
     ) -> eyre::Result<()> {
-        let _span = tracing::info_span!(
-            "run_java_tool",
-            tool_id,
-            work_dir = %work_dir.display(),
-            jvm_args = jvm_args.len(),
-            extra_classpath_entries = extra_classpath.len(),
-            args = args.len(),
-        )
-        .entered();
         let tool = self.artifact(tool_id)?;
         self.assert_allowed_input(&tool.cache_path)?;
         for path in extra_classpath {
@@ -6386,12 +6414,12 @@ impl<'a> ExecutionContext<'a> {
     clippy::too_many_lines,
     reason = "clean-slate MCP executor is being split incrementally"
 )]
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(mc = %context.plan.minecraft_version)
+)]
 fn execute_mcp_config_joined(context: &ExecutionContext<'_>) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "execute_mcp_config_joined",
-        mc = %context.plan.minecraft_version,
-    )
-    .entered();
     let client = Client::builder()
         .user_agent("sfm-propagate-changes/no-gradle-toolchain")
         .build()
@@ -6606,12 +6634,12 @@ fn execute_mcp_config_joined(context: &ExecutionContext<'_>) -> eyre::Result<()>
     clippy::too_many_lines,
     reason = "clean-slate Forge userdev executor is being split incrementally"
 )]
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(mc = %context.plan.minecraft_version)
+)]
 fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "execute_forge_userdev",
-        mc = %context.plan.minecraft_version,
-    )
-    .entered();
     let client = Client::builder()
         .user_agent("sfm-propagate-changes/no-gradle-toolchain")
         .build()
@@ -6885,12 +6913,12 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     clippy::too_many_lines,
     reason = "NeoForm userdev orchestration keeps cache checks, arguments, and state writes visible."
 )]
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(mc = %context.plan.minecraft_version)
+)]
 fn execute_neoform_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "execute_neoform_userdev",
-        mc = %context.plan.minecraft_version,
-    )
-    .entered();
     let neoform_root = context
         .plan
         .cache_dir
@@ -7089,13 +7117,15 @@ fn java_properties_escape(input: &str) -> String {
     clippy::too_many_lines,
     reason = "dependency deobf orchestration keeps per-dependency cache and remap behavior visible."
 )]
-fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "execute_dependency_deobf",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         mc = %context.plan.minecraft_version,
         dependencies = context.plan.dependencies.len(),
     )
-    .entered();
+)]
+fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     let output = context.plan.cache_dir.join("dependencies");
     if context.plan.refresh {
         reset_cache_directory(&context.plan.cache_dir, &output)?;
@@ -7526,12 +7556,12 @@ fn remove_stale_dependency_outputs(output: &Path) -> eyre::Result<()> {
     clippy::too_many_lines,
     reason = "project compile orchestration keeps generated sources, resources, and javac inputs visible."
 )]
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(mc = %context.plan.minecraft_version)
+)]
 fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "execute_project_compile",
-        mc = %context.plan.minecraft_version,
-    )
-    .entered();
     context.bail_if_cancelled()?;
     let project_root = context.plan.cache_dir.join("project");
     let generated_sources = project_root
@@ -7944,13 +7974,15 @@ fn stage_optional_resource_source_set(
     clippy::too_many_lines,
     reason = "packaging executor keeps orchestration visible while toolchain is incomplete"
 )]
-fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "execute_package_and_reobfuscate",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         mc = %context.plan.minecraft_version,
         output = %context.plan.rust_output_jar.display(),
     )
-    .entered();
+)]
+fn execute_package_and_reobfuscate(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     if context.plan.rust_output_jar == context.plan.gradle_output_jar {
         eyre::bail!(
             "Refusing to write Rust jar over Gradle jar: {}",
@@ -11262,19 +11294,21 @@ fn write_artifact_lockfile(plan: &BuildPlan) -> eyre::Result<()> {
     write_artifact_lockfile_with_extra_cache_paths(plan, &[])
 }
 
-fn write_artifact_lockfile_with_extra_cache_paths(
-    plan: &BuildPlan,
-    extra_cache_paths: &[PathBuf],
-) -> eyre::Result<()> {
-    let _span = tracing::info_span!(
-        "write_artifact_lockfile",
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
         branch = %plan.branch_name,
         mc = %plan.minecraft_version,
         artifacts = plan.artifacts.len(),
         dependencies = plan.dependencies.len(),
         extra_cache_paths = extra_cache_paths.len(),
     )
-    .entered();
+)]
+fn write_artifact_lockfile_with_extra_cache_paths(
+    plan: &BuildPlan,
+    extra_cache_paths: &[PathBuf],
+) -> eyre::Result<()> {
     let lockfile = build_artifact_lockfile(plan, extra_cache_paths)?;
     if let Some(parent) = plan.lockfile_path.parent() {
         fs::create_dir_all(parent)?;
