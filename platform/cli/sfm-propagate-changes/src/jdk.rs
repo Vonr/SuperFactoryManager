@@ -338,7 +338,9 @@ fn canonicalize_existing(path: &Path) -> eyre::Result<PathBuf> {
 mod tests {
     use super::JdkInstallation;
     use super::parse_java_major_version;
+    use super::push_child_directories;
     use super::select_jdk;
+    use std::fs;
     use std::path::PathBuf;
 
     #[test]
@@ -367,6 +369,27 @@ mod tests {
         assert_eq!(select_jdk(&jdks, 17).unwrap().major_version, 21);
         assert_eq!(select_jdk(&jdks, 25).unwrap().major_version, 25);
         assert!(select_jdk(&jdks, 26).is_none());
+    }
+
+    #[test]
+    fn child_discovery_ignores_directories_without_java_and_javac() {
+        let root = tempfile::Builder::new()
+            .prefix("jdk-discovery-test")
+            .tempdir()
+            .unwrap();
+        let root_path = root.path();
+        let jdk_home = root_path.join("temurin-17");
+        let edge_home = root_path.join("Edge");
+        fs::create_dir_all(jdk_home.join("bin")).unwrap();
+        fs::create_dir_all(edge_home.join("bin")).unwrap();
+        fs::write(super::java_executable_for_home(&jdk_home), "").unwrap();
+        fs::write(super::javac_executable_for_home(&jdk_home), "").unwrap();
+        fs::write(super::java_executable_for_home(&edge_home), "").unwrap();
+
+        let mut output = Vec::new();
+        push_child_directories(&mut output, root_path, "test root");
+
+        assert_eq!(output, vec![(jdk_home, "test root".to_string())]);
     }
 
     fn fake_jdk(name: &str, major_version: u32, is_jbr: bool) -> JdkInstallation {
