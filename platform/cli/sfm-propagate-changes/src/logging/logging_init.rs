@@ -12,7 +12,7 @@ use tracing_subscriber::fmt::writer::BoxMakeWriter;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::util::SubscriberInitExt;
 
-#[cfg(all(feature = "tracy", not(test)))]
+#[cfg(feature = "tracy")]
 const SFM_ENABLE_TRACY_LAYER_ENV: &str = "SFM_ENABLE_TRACY_LAYER";
 
 fn build_env_filter(config: &LoggingConfig) -> EnvFilter {
@@ -24,7 +24,7 @@ fn build_env_filter(config: &LoggingConfig) -> EnvFilter {
     }
 }
 
-#[cfg(all(feature = "tracy", not(test)))]
+#[cfg(feature = "tracy")]
 fn env_flag_enabled(value: Option<&str>) -> bool {
     let Some(value) = value else {
         return false;
@@ -36,7 +36,7 @@ fn env_flag_enabled(value: Option<&str>) -> bool {
     )
 }
 
-#[cfg(all(feature = "tracy", not(test)))]
+#[cfg(feature = "tracy")]
 fn tracy_layer_requested() -> bool {
     env_flag_enabled(std::env::var(SFM_ENABLE_TRACY_LAYER_ENV).ok().as_deref())
 }
@@ -115,9 +115,9 @@ pub fn init_logging(
     };
     let subscriber = subscriber.with(json_layer);
 
-    #[cfg(all(feature = "tracy", not(test)))]
+    #[cfg(feature = "tracy")]
     let tracy_layer_requested = tracy_layer_requested();
-    #[cfg(all(feature = "tracy", not(test)))]
+    #[cfg(feature = "tracy")]
     let subscriber =
         subscriber.with(tracy_layer_requested.then(tracing_tracy::TracyLayer::default));
 
@@ -132,7 +132,7 @@ pub fn init_logging(
         info!(?json_log_path, "JSON log output initialized");
     }
 
-    #[cfg(all(feature = "tracy", not(test)))]
+    #[cfg(feature = "tracy")]
     if tracy_layer_requested {
         info!(
             env_var = SFM_ENABLE_TRACY_LAYER_ENV,

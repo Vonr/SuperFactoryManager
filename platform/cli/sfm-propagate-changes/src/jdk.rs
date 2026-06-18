@@ -4,6 +4,11 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::thread;
+use tracing::instrument;
+use tracing::warn;
+
+use crate::logging::set_tracy_thread_name;
 
 #[derive(Clone, Debug)]
 pub(crate) struct JdkInstallation {
@@ -13,6 +18,7 @@ pub(crate) struct JdkInstallation {
     pub(crate) version_output: String,
     pub(crate) major_version: u32,
     pub(crate) source: String,
+    /// JetBrains Runtime (JBR) is preferred for development builds of SFM, so we track whether each discovered JDK is a JBR distribution.
     pub(crate) is_jbr: bool,
 }
 
@@ -24,6 +30,43 @@ pub(crate) struct ResolvedJava {
     pub(crate) major_version: u32,
 }
 
+#[instrument]
+pub(crate) fn list_jdks() -> eyre::Result<Vec<JdkInstallation>> {
+    let mut handles = Vec::new();
+    for (index, jdk) in discover_jdk_homes().into_iter().enumerate() {
+        let (home, source) = jdk;
+        let thread_name = format!("Java Discovery Worker {index} ({source})");
+        handles.push(
+            thread::Builder::new()
+                .name(thread_name.clone())
+                .spawn(move || {
+                    set_tracy_thread_name(&thread_name);
+                    JdkInstallation::from_home(&home, source)
+                })?,
+        );
+    }
+    let thread_name = "Java Discovery Worker PATH".to_string();
+    handles.push(
+        thread::Builder::new()
+            .name(thread_name.clone())
+            .spawn(move || {
+                set_tracy_thread_name(&thread_name);
+                JdkInstallation::from_path()
+            })?,
+    );
+
+    let mut jdks = Vec::with_capacity(handles.len());
+    for handle in handles {
+        match handle.join().map_err(|panic| {
+            eyre::eyre!("JDK discovery worker panicked: {}", panic_message(&panic))
+        })? {
+            Ok(x) => jdks.push(x),
+            Err(e) => warn!("Failed to read JDK: {e:?}"),
+        }
+    }
+
+    Ok(dedup_jdks(jdks))
+}
 
 #[instrument]
 pub(crate) fn resolve_java(
@@ -36,7 +79,7 @@ pub(crate) fn resolve_java(
         return Ok(jdk.into_resolved_java());
     }
 
-    let jdks = list_jdks();
+    let jdks = list_jdks()?;
     if let Some(jdk) = select_jdk(&jdks, required_major) {
         return Ok(jdk.clone().into_resolved_java());
     }
@@ -169,15 +212,32 @@ fn push_child_directories(output: &mut Vec<(PathBuf, String)>, root: &Path, sour
             continue;
         };
         if file_type.is_dir() || file_type.is_symlink() {
-            output.push((entry.path(), source.to_string()));
+            let path = entry.path();
+            if jdk_home_has_executables(&path) {
+                output.push((path, source.to_string()));
+            }
         }
     }
+}
+
+fn jdk_home_has_executables(home: &Path) -> bool {
+    java_executable_for_home(home).is_file() && javac_executable_for_home(home).is_file()
 }
 
 fn env_path(name: &str) -> Option<PathBuf> {
     std::env::var_os(name)
         .filter(|value| !value.as_os_str().is_empty())
         .map(PathBuf::from)
+}
+
+fn panic_message(panic: &(dyn std::any::Any + Send)) -> String {
+    if let Some(message) = panic.downcast_ref::<&str>() {
+        return (*message).to_string();
+    }
+    if let Some(message) = panic.downcast_ref::<String>() {
+        return message.clone();
+    }
+    "<non-string panic payload>".to_string()
 }
 
 impl JdkInstallation {

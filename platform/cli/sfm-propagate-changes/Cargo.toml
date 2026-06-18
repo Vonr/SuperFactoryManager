@@ -33,7 +33,7 @@ tracing = "0.1.44"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json"] }
 tracing-tracy = { version = "0.11.4", optional = true }
-tracy-client = { version = "0.18.4", optional = true }
+tracy-client = { version = "0.18.4", optional = true, default-features = false }
 zip = { version = "2.4.2", default-features = false, features = ["deflate"] }
 
 [target.'cfg(windows)'.dependencies]
@@ -44,9 +44,9 @@ arbitrary = { version = "1.4.2", features = ["derive"] }
 
 [features]
 default = []
-tracy = ["dep:tracing-tracy"]
+tracy = ["dep:tracing-tracy", "dep:tracy-client"]
 tracing_detailed = []
-tracy_memory = ["tracy", "dep:tracy-client"]
+tracy_memory = ["tracy"]
 
 [build-dependencies]
 embed-resource = "3.0.6"
