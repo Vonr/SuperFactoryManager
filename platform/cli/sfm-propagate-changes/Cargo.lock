@@ -2466,6 +2466,7 @@ dependencies = [
  "teamy-windows",
  "tokio",
  "tracing",
+ "tracing-error",
  "tracing-subscriber",
  "tracing-tracy",
  "tracy-client",

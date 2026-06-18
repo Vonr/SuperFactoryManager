@@ -5,6 +5,7 @@ use crate::logging::terminal_event_layer::TerminalEventLayer;
 use std::fs::File;
 use std::fs::OpenOptions;
 use tracing::info;
+use tracing_error::ErrorLayer;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::Registry;
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
@@ -72,7 +73,7 @@ pub fn init_logging(
     }
 
     let terminal_layer = TerminalEventLayer.with_filter(build_env_filter(config));
-    let subscriber = subscriber.with(terminal_layer);
+    let subscriber = subscriber.with(ErrorLayer::default()).with(terminal_layer);
     let subscriber = subscriber.with(
         config
             .stop_after
