@@ -55,6 +55,7 @@ use std::time::Duration;
 use std::time::Instant;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
+use tracing::instrument;
 use zip::CompressionMethod;
 use zip::ZipArchive;
 use zip::ZipWriter;
@@ -1788,6 +1789,7 @@ struct GraphNode {
 
 #[derive(Debug, Facet)]
 struct JavaPlan {
+    // todo(2026-06-17) this can probably be removed in favour of jdk.rs#ResolvedJava
     #[facet(proxy = JsonPath)]
     executable: PathBuf,
     #[facet(proxy = JsonOptionalPath)]
@@ -2094,6 +2096,7 @@ impl Resolver {
         reason = "Resolver construction mirrors the normalized planner state it owns."
     )]
     #[tracing::instrument(
+        name = "resolver_new",
         level = "debug",
         skip_all,
         fields(
@@ -3289,7 +3292,16 @@ fn create_plan_for_target(
         .entered();
         let java_release = read_java_toolchain_release(&minecraft_dir, minecraft_version)?;
         let required_java = required_java_runtime_major(&loader_toolchain, java_release);
-        let java = resolve_java(options.java_home.as_deref(), required_java)?;
+
+        let java = {
+            let resolved = crate::jdk::resolve_java(options.java_home.as_deref(), required_java)?;
+            JavaPlan {
+                executable: resolved.executable,
+                home: resolved.home,
+                version_output: resolved.version_output,
+                major_version: resolved.major_version,
+            }
+        };
         (java_release, java)
     };
 
@@ -11876,6 +11888,7 @@ fn print_plan_summary(plan: &BuildPlan) {
     }
 }
 
+#[instrument(level = "info", skip_all, fields(minecraft_version = %minecraft_version))]
 fn read_java_toolchain_release(minecraft_dir: &Path, minecraft_version: &str) -> eyre::Result<u32> {
     let path = minecraft_dir
         .join("gradle")
@@ -11900,22 +11913,13 @@ fn read_java_toolchain_release(minecraft_dir: &Path, minecraft_version: &str) ->
         .wrap_err_with(|| format!("Could not parse Java release from {}", path.display()))
 }
 
+#[instrument(level = "info", skip_all, fields(loader_toolchain = ?loader_toolchain.kind, java_release = %java_release))]
 fn required_java_runtime_major(loader_toolchain: &LoaderToolchainPlan, java_release: u32) -> u32 {
     if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
         java_release.max(21)
     } else {
         java_release
     }
-}
-
-fn resolve_java(java_home: Option<&Path>, required_major: u32) -> eyre::Result<JavaPlan> {
-    let resolved = crate::jdk::resolve_java(java_home, required_major)?;
-    Ok(JavaPlan {
-        executable: resolved.executable,
-        home: resolved.home,
-        version_output: resolved.version_output,
-        major_version: resolved.major_version,
-    })
 }
 
 fn javac_executable(java: &JavaPlan) -> PathBuf {

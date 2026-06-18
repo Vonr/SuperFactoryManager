@@ -24,19 +24,8 @@ pub(crate) struct ResolvedJava {
     pub(crate) major_version: u32,
 }
 
-pub(crate) fn list_jdks() -> Vec<JdkInstallation> {
-    let mut jdks = discovered_jdk_homes()
-        .into_iter()
-        .filter_map(|(home, source)| JdkInstallation::from_home(&home, source).ok())
-        .collect::<Vec<_>>();
 
-    if let Ok(path_jdk) = JdkInstallation::from_path() {
-        jdks.push(path_jdk);
-    }
-
-    dedup_jdks(jdks)
-}
-
+#[instrument]
 pub(crate) fn resolve_java(
     explicit_java_home: Option<&Path>,
     required_major: u32,
@@ -82,6 +71,7 @@ pub(crate) fn parse_java_major_version(version_output: &str) -> Option<u32> {
     }
 }
 
+#[instrument(level = "debug", skip_all, fields(jdks_count = jdks.len(), required_major))]
 fn select_jdk(jdks: &[JdkInstallation], required_major: u32) -> Option<&JdkInstallation> {
     jdks.iter()
         .filter(|jdk| jdk.major_version >= required_major)
@@ -141,7 +131,8 @@ fn dedup_jdks(jdks: Vec<JdkInstallation>) -> Vec<JdkInstallation> {
     output
 }
 
-fn discovered_jdk_homes() -> Vec<(PathBuf, String)> {
+#[instrument]
+fn discover_jdk_homes() -> Vec<(PathBuf, String)> {
     let mut homes = Vec::new();
     if let Some(user_profile) = env_path("USERPROFILE").or_else(|| env_path("HOME")) {
         push_child_directories(&mut homes, &user_profile.join(".jdks"), "user .jdks");
@@ -190,6 +181,7 @@ fn env_path(name: &str) -> Option<PathBuf> {
 }
 
 impl JdkInstallation {
+    #[instrument]
     fn from_home(home: &Path, source: String) -> eyre::Result<Self> {
         let runtime_executable = java_executable_for_home(home);
         let compiler_executable = javac_executable_for_home(home);
@@ -207,6 +199,7 @@ impl JdkInstallation {
         )
     }
 
+    #[instrument(level = "debug")]
     fn from_path() -> eyre::Result<Self> {
         Self::from_parts(
             None,
@@ -216,6 +209,7 @@ impl JdkInstallation {
         )
     }
 
+    #[instrument]
     fn from_parts(
         home: Option<PathBuf>,
         runtime_executable: PathBuf,
