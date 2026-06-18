@@ -102,7 +102,6 @@ mod tests {
     use crate::cli::gradle::GradleCommand;
     use crate::cli::jar::JarCommand;
     use crate::cli::run::RunCommand;
-    use crate::cli_arg_normalization::normalize_parallel_args;
     use crate::jar_build::BuildMode;
     use crate::jar_build::ErrorAction;
     use crate::jar_build::Parallelism;
@@ -201,12 +200,10 @@ mod tests {
     }
 
     #[test]
-    fn parses_bare_parallel_after_arg_normalization() {
-        let args = normalize_parallel_args(["run", "game-test-server", "--parallel", "--dry-run"]);
-        let arg_refs = args.iter().map(String::as_str).collect::<Vec<_>>();
-        let cli = figue::from_slice::<Cli>(&arg_refs)
+    fn parses_bare_parallel() {
+        let cli = figue::from_slice::<Cli>(&["run", "game-test-server", "--parallel", "--dry-run"])
             .into_result()
-            .expect("bare parallel should normalize and parse")
+            .expect("bare parallel should parse")
             .get_silent();
         match cli.command {
             Command::Run(crate::cli::run::RunArgs {
@@ -214,7 +211,7 @@ mod tests {
             }) => {
                 let options = command
                     .into_options(BuildMode::Build)
-                    .expect("normalized parallel should parse");
+                    .expect("bare parallel should parse");
                 assert_eq!(
                     options.parallelism,
                     Parallelism::Parallel {
@@ -288,12 +285,10 @@ mod tests {
     }
 
     #[test]
-    fn parses_jar_compare_bare_parallel_after_arg_normalization() {
-        let args = normalize_parallel_args(["jar", "compare", "--branch", "core", "--parallel"]);
-        let arg_refs = args.iter().map(String::as_str).collect::<Vec<_>>();
-        let cli = figue::from_slice::<Cli>(&arg_refs)
+    fn parses_jar_compare_bare_parallel() {
+        let cli = figue::from_slice::<Cli>(&["jar", "compare", "--branch", "core", "--parallel"])
             .into_result()
-            .expect("bare compare parallel should normalize and parse")
+            .expect("bare compare parallel should parse")
             .get_silent();
         match cli.command {
             Command::Jar(crate::cli::jar::JarArgs {
@@ -301,7 +296,7 @@ mod tests {
             }) => {
                 let options = command
                     .into_options()
-                    .expect("normalized compare parallel should parse");
+                    .expect("bare compare parallel should parse");
                 assert_eq!(
                     options.parallelism,
                     Parallelism::Parallel {
@@ -314,12 +309,10 @@ mod tests {
     }
 
     #[test]
-    fn parses_jar_artifact_audit_bare_parallel_after_arg_normalization() {
-        let args = normalize_parallel_args(["jar", "audit-artifacts", "--parallel"]);
-        let arg_refs = args.iter().map(String::as_str).collect::<Vec<_>>();
-        let cli = figue::from_slice::<Cli>(&arg_refs)
+    fn parses_jar_artifact_audit_bare_parallel() {
+        let cli = figue::from_slice::<Cli>(&["jar", "audit-artifacts", "--parallel"])
             .into_result()
-            .expect("bare artifact audit parallel should normalize and parse")
+            .expect("bare artifact audit parallel should parse")
             .get_silent();
         match cli.command {
             Command::Jar(crate::cli::jar::JarArgs {
@@ -327,7 +320,7 @@ mod tests {
             }) => {
                 let options = command
                     .into_options()
-                    .expect("normalized artifact audit parallel should parse");
+                    .expect("bare artifact audit parallel should parse");
                 assert_eq!(
                     options.parallelism,
                     Parallelism::Parallel {
@@ -666,7 +659,7 @@ mod tests {
     }
 
     #[test]
-    fn figue_nested_option_does_not_model_bare_value_flags() {
+    fn figue_nested_option_models_optional_value_flags() {
         #[expect(
             clippy::option_option,
             reason = "This test intentionally checks whether figue can model absent, bare, and valued flags."
@@ -693,7 +686,14 @@ mod tests {
                 .maybe,
             Some(Some(12))
         );
-        assert!(figue::from_slice::<Args>(&["--maybe"]).is_err());
+        assert_eq!(
+            figue::from_slice::<Args>(&["--maybe"])
+                .into_result()
+                .expect("bare flag should parse")
+                .get_silent()
+                .maybe,
+            Some(None)
+        );
     }
 
     fn assert_run_cli(args: &[&str]) {

@@ -2,7 +2,6 @@ pub mod artifact_lock;
 pub mod branch_targets;
 pub mod cancellation;
 pub mod cli;
-pub mod cli_arg_normalization;
 pub mod colour;
 pub mod curseforge;
 pub mod jar_build;
@@ -68,11 +67,10 @@ pub fn main() -> eyre::Result<()> {
 
     // Parse command line arguments using figue
     // unwrap() handles --help, --version, completions, and errors with proper exit codes
-    let args = cli_arg_normalization::normalize_parallel_args(std::env::args().skip(1));
     let cli: Cli = figue::Driver::new(
         figue::builder::<Cli>()
             .expect("schema should be valid")
-            .cli(|c| c.args(args))
+            .cli(|c| c.args(std::env::args().skip(1)))
             .help(|h| h.version(version))
             .build(),
     )
