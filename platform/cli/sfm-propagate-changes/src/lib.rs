@@ -62,7 +62,7 @@ fn version() -> String {
 pub fn main() -> eyre::Result<()> {
     // Install color_eyre for better error reports
     color_eyre::install()?;
-    cancellation::install_ctrlc_handler()?;
+    let cancellation_token = cancellation::install_ctrlc_handler()?;
 
     let version = version();
 
@@ -80,7 +80,7 @@ pub fn main() -> eyre::Result<()> {
     .unwrap();
 
     // Initialize logging
-    logging::init_logging(&cli.logging_config()?)?;
+    logging::init_logging(&cli.logging_config()?, &cancellation_token)?;
 
     #[cfg(windows)]
     {
@@ -94,5 +94,5 @@ pub fn main() -> eyre::Result<()> {
     };
 
     // Invoke whatever command was requested
-    cli.invoke(cancellation::CancellationToken::process())
+    cli.invoke(cancellation_token)
 }

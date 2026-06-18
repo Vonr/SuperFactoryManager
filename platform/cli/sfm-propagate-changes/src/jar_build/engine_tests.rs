@@ -88,7 +88,6 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::thread;
@@ -1211,12 +1210,9 @@ fn parallel_targets_stop_starting_after_cancellation() {
         test_worktree_target("1.19.2", "D:/tmp/1.19.2"),
         test_worktree_target("1.20.1", "D:/tmp/1.20.1"),
     ];
-    let cancelled = Arc::new(AtomicBool::new(false));
     let started = Arc::new(AtomicUsize::new(0));
-    let token_cancelled = Arc::clone(&cancelled);
-    let cancellation_token =
-        CancellationToken::new(move || token_cancelled.load(AtomicOrdering::Acquire));
-    let execute_cancelled = Arc::clone(&cancelled);
+    let cancellation_token = CancellationToken::new();
+    let execute_cancellation_token = cancellation_token.clone();
     let execute_started = Arc::clone(&started);
 
     let error = execute_targets_parallel_with_cancellation(
@@ -1228,7 +1224,7 @@ fn parallel_targets_stop_starting_after_cancellation() {
             execute_started.fetch_add(1, AtomicOrdering::Relaxed);
             let mut plan = minimal_plan_for_paths();
             plan.branch_name = target.branch.clone();
-            execute_cancelled.store(true, AtomicOrdering::Release);
+            execute_cancellation_token.request_cancel("Operation cancelled by Ctrl+C");
             Ok(plan)
         },
         &cancellation_token,
@@ -2087,7 +2083,7 @@ fn matching_siblings(path: &Path, kind: &str) -> Vec<PathBuf> {
 }
 
 fn test_cancellation_token() -> CancellationToken {
-    CancellationToken::new(|| false)
+    CancellationToken::new()
 }
 
 fn run_git<const N: usize>(repo: &Path, args: [&str; N]) {

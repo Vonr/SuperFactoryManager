@@ -1,4 +1,6 @@
+use crate::cancellation::CancellationToken;
 use crate::logging::logging_config::LoggingConfig;
+use crate::logging::stop_after_layer::StopAfterLayer;
 use crate::logging::terminal_event_layer::TerminalEventLayer;
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -47,7 +49,10 @@ fn tracy_layer_requested() -> bool {
 /// # Panics
 ///
 /// This function may panic if locking or cloning the log file handle fails.
-pub fn init_logging(config: &LoggingConfig) -> eyre::Result<()> {
+pub fn init_logging(
+    config: &LoggingConfig,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
     let subscriber = Registry::default();
 
     {
@@ -68,6 +73,12 @@ pub fn init_logging(config: &LoggingConfig) -> eyre::Result<()> {
 
     let terminal_layer = TerminalEventLayer.with_filter(build_env_filter(config));
     let subscriber = subscriber.with(terminal_layer);
+    let subscriber = subscriber.with(
+        config
+            .stop_after
+            .as_ref()
+            .map(|stop_after| StopAfterLayer::new(stop_after, cancellation_token.clone())),
+    );
 
     let json_layer = if let Some(json_log_path) = config.json_log_path.as_ref() {
         // Create parent directories if they don't exist
