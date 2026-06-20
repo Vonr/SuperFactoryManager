@@ -6446,74 +6446,111 @@ fn java_properties_escape(input: &str) -> String {
 )]
 fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     let output = context.plan.cache_dir.join("dependencies");
-    if context.plan.refresh {
-        reset_cache_directory(&context.plan.cache_dir, &output)?;
-    } else {
-        fs::create_dir_all(&output)?;
-        remove_stale_dependency_outputs(&output)?;
+    {
+        let _span = tracing::debug_span!(
+            "dependency_deobf_prepare_output_dir",
+            refresh = context.plan.refresh,
+            output = %output.display(),
+        )
+        .entered();
+        if context.plan.refresh {
+            reset_cache_directory(&context.plan.cache_dir, &output)?;
+        } else {
+            fs::create_dir_all(&output)?;
+            remove_stale_dependency_outputs(&output)?;
+        }
     }
-    let resolver = Resolver::new(
-        context.plan.maven_cache_dir.clone(),
-        context.plan.repositories.clone(),
-        context.plan.refresh,
-        context.plan.allow_local_artifact_cache,
-        context.plan.artifact_sources.clone(),
-        context.plan.lockfile.clone(),
-        context.plan.lockfile.clone(),
-        context.cancellation_token.clone(),
-    )?;
+    let resolver = {
+        let _span = tracing::debug_span!("dependency_deobf_create_resolver").entered();
+        Resolver::new(
+            context.plan.maven_cache_dir.clone(),
+            context.plan.repositories.clone(),
+            context.plan.refresh,
+            context.plan.allow_local_artifact_cache,
+            context.plan.artifact_sources.clone(),
+            context.plan.lockfile.clone(),
+            context.plan.lockfile.clone(),
+            context.cancellation_token.clone(),
+        )?
+    };
     if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        let _span = tracing::debug_span!("dependency_deobf_copy_neogradle_jars").entered();
         copy_neogradle_dependency_jars(context, &resolver, &output)?;
         return Ok(());
     }
 
-    let mapping_path = context
-        .plan
-        .cache_dir
-        .join("forge")
-        .join(context.plan.minecraft_version.as_str())
-        .join("mappings")
-        .join("srg_to_official.tsrg");
-    if !mapping_path.is_file() {
-        eyre::bail!(
-            "Dependency deobf requires generated mapping first: {}",
-            mapping_path.display()
-        );
-    }
-    let mapping_hash = ContentHash::from_path(&mapping_path, ContentHashAlgorithm::Blake3)?;
-    let member_mappings = read_unique_srg_member_mappings(&mapping_path)?;
+    let (mapping_path, mapping_hash, member_mappings) = {
+        let _span = tracing::debug_span!("dependency_deobf_load_mappings").entered();
+        let mapping_path = context
+            .plan
+            .cache_dir
+            .join("forge")
+            .join(context.plan.minecraft_version.as_str())
+            .join("mappings")
+            .join("srg_to_official.tsrg");
+        if !mapping_path.is_file() {
+            eyre::bail!(
+                "Dependency deobf requires generated mapping first: {}",
+                mapping_path.display()
+            );
+        }
+        let mapping_hash = {
+            let _span = tracing::debug_span!(
+                "dependency_deobf_hash_mapping",
+                mapping = %mapping_path.display()
+            )
+            .entered();
+            ContentHash::from_path(&mapping_path, ContentHashAlgorithm::Blake3)?
+        };
+        let member_mappings = {
+            let _span = tracing::debug_span!(
+                "dependency_deobf_read_member_mappings",
+                mapping = %mapping_path.display()
+            )
+            .entered();
+            read_unique_srg_member_mappings(&mapping_path)?
+        };
+        (mapping_path, mapping_hash, member_mappings)
+    };
     let outputs = thread::scope(|scope| -> eyre::Result<Vec<PathBuf>> {
         let mut handles = Vec::new();
-        for (dependency_index, dependency) in context.plan.dependencies.iter().enumerate() {
-            let thread_name = format!(
-                "dependency-deobf-{dependency_index}-{}",
-                dependency.resolved_notation
-            );
-            handles.push(
-                thread::Builder::new()
-                    .name(thread_name.clone())
-                    .spawn_scoped(scope, {
-                        let resolver = resolver.clone();
-                        let output = output.as_path();
-                        let mapping_path = mapping_path.as_path();
-                        let member_mappings = &member_mappings;
-                        move || {
-                            set_tracy_thread_name(&thread_name);
-                            context.bail_if_cancelled()?;
-                            execute_dependency_deobf_dependency(
-                                context,
-                                &resolver,
-                                dependency_index,
-                                dependency,
-                                output,
-                                mapping_path,
-                                mapping_hash,
-                                member_mappings,
-                            )
-                        }
-                    })?,
-            );
-            context.bail_if_cancelled()?;
+        {
+            let _span = tracing::debug_span!(
+                "dependency_deobf_spawn_workers",
+                dependency_count = context.plan.dependencies.len()
+            )
+            .entered();
+            for (dependency_index, dependency) in context.plan.dependencies.iter().enumerate() {
+                let thread_name = format!(
+                    "dependency-deobf-{dependency_index}-{}",
+                    dependency.resolved_notation
+                );
+                handles.push(
+                    thread::Builder::new()
+                        .name(thread_name.clone())
+                        .spawn_scoped(scope, {
+                            let resolver = resolver.clone();
+                            let output = output.as_path();
+                            let mapping_path = mapping_path.as_path();
+                            let member_mappings = &member_mappings;
+                            move || {
+                                set_tracy_thread_name(&thread_name);
+                                context.bail_if_cancelled()?;
+                                execute_dependency_deobf_dependency(
+                                    context,
+                                    &resolver,
+                                    dependency_index,
+                                    dependency,
+                                    output,
+                                    mapping_path,
+                                    mapping_hash,
+                                    member_mappings,
+                                )
+                            }
+                        })?,
+                );
+                context.bail_if_cancelled()?;
+            }
         }
 
         let mut outputs = Vec::with_capacity(handles.len());
@@ -6530,16 +6567,24 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
                 Err(error) => Err(error).wrap_err("Failed to deobfuscate dependency")?,
             }
         }
-        outputs.sort_by_key(|(dependency_index, _)| *dependency_index);
+        {
+            let _span = tracing::debug_span!("dependency_deobf_sort_outputs").entered();
+            outputs.sort_by_key(|(dependency_index, _)| *dependency_index);
+        }
         Ok(outputs.into_iter().map(|(_, output)| output).collect())
     })?;
 
-    context.write_node_state(
-        "deobfuscate-mod-dependencies",
-        &["active fg.deobf dependency jars"],
-        &outputs,
-        "complete",
-    )?;
+    {
+        let _span =
+            tracing::debug_span!("dependency_deobf_write_node_state", outputs = outputs.len())
+                .entered();
+        context.write_node_state(
+            "deobfuscate-mod-dependencies",
+            &["active fg.deobf dependency jars"],
+            &outputs,
+            "complete",
+        )?;
+    }
     Ok(())
 }
 
@@ -6554,33 +6599,70 @@ fn execute_dependency_deobf_dependency(
     member_mappings: &BTreeMap<String, String>,
 ) -> eyre::Result<(usize, PathBuf)> {
     let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
-    #[cfg(feature = "tracing_detailed")]
     let _dependency_span = tracing::debug_span!(
-        "prepare_dependency",
-        configuration = dependency.configuration.as_str(),
+        "dependency_deobf_dependency",
+        index = dependency_index,
+        configuration = %dependency.configuration,
         coordinate = %coordinate,
         source = ?dependency.source,
     )
     .entered();
-    let artifact = resolver.resolve_artifact(
-        ArtifactId::from(format!("dependency-{dependency_index}")),
-        &coordinate,
-        ArtifactPurpose::from(format!("{} dependency", dependency.configuration)),
-    )?;
-    context.assert_allowed_input(&artifact.cache_path)?;
-    let artifact_hash = resolved_artifact_hash(&artifact)?;
-    let remapped =
-        remapped_dependency_output_path(output, &artifact_hash, &mapping_hash, &coordinate);
-    let specialsource_output =
-        specialsource_dependency_output_path(output, &artifact_hash, &mapping_hash, &coordinate);
-    if remapped.is_file() {
+    let artifact = {
+        let _span = tracing::debug_span!("dependency_deobf_resolve_artifact").entered();
+        resolver.resolve_artifact(
+            ArtifactId::from(format!("dependency-{dependency_index}")),
+            &coordinate,
+            ArtifactPurpose::from(format!("{} dependency", dependency.configuration)),
+        )?
+    };
+    {
+        let _span = tracing::debug_span!(
+            "dependency_deobf_validate_input",
+            artifact = %artifact.cache_path.display()
+        )
+        .entered();
+        context.assert_allowed_input(&artifact.cache_path)?;
+    }
+    let (remapped, specialsource_output) = {
+        let _span = tracing::debug_span!(
+            "dependency_deobf_compute_output_paths",
+            artifact = %artifact.cache_path.display()
+        )
+        .entered();
+        let artifact_hash = resolved_artifact_hash(&artifact)?;
+        (
+            remapped_dependency_output_path(output, &artifact_hash, &mapping_hash, &coordinate),
+            specialsource_dependency_output_path(
+                output,
+                &artifact_hash,
+                &mapping_hash,
+                &coordinate,
+            ),
+        )
+    };
+    let cache_hit = {
+        let _span = tracing::debug_span!(
+            "dependency_deobf_check_remapped_cache",
+            output = %remapped.display()
+        )
+        .entered();
+        remapped.is_file()
+    };
+    if cache_hit {
         tracing::debug!(
             coordinate = %coordinate,
             output = %remapped.display(),
             "dependency_deobf cache hit"
         );
     } else {
-        let _output_lock = acquire_artifact_path_lock(&remapped)?;
+        let _output_lock = {
+            let _span = tracing::debug_span!(
+                "dependency_deobf_acquire_output_lock",
+                output = %remapped.display()
+            )
+            .entered();
+            acquire_artifact_path_lock(&remapped)?
+        };
         if remapped.is_file() {
             tracing::debug!(
                 coordinate = %coordinate,
@@ -6594,36 +6676,82 @@ fn execute_dependency_deobf_dependency(
                 output = %remapped.display(),
             )
             .entered();
-            if !specialsource_output.is_file() {
+            let specialsource_cache_hit = {
+                let _span = tracing::debug_span!(
+                    "dependency_deobf_check_specialsource_cache",
+                    output = %specialsource_output.display()
+                )
+                .entered();
+                specialsource_output.is_file()
+            };
+            if !specialsource_cache_hit {
                 if let Some(parent) = specialsource_output.parent() {
+                    let _span = tracing::debug_span!(
+                        "dependency_deobf_create_specialsource_output_dir",
+                        output = %specialsource_output.display()
+                    )
+                    .entered();
                     fs::create_dir_all(parent)?;
                 }
-                context.run_java_tool_with_classpath(
-                    "tool-specialsource",
-                    &[],
-                    &[],
-                    &[
-                        "--in-jar".to_string(),
-                        artifact.cache_path.display().to_string(),
-                        "--out-jar".to_string(),
-                        specialsource_output.display().to_string(),
-                        "--srg-in".to_string(),
-                        mapping_path.display().to_string(),
-                        "--live".to_string(),
-                    ],
-                    &output
-                        .join("remap-work")
-                        .join(safe_path_segment(&coordinate.file_name())),
+                {
+                    let _span = tracing::debug_span!(
+                        "dependency_deobf_run_specialsource",
+                        input = %artifact.cache_path.display(),
+                        output = %specialsource_output.display(),
+                    )
+                    .entered();
+                    context.run_java_tool_with_classpath(
+                        "tool-specialsource",
+                        &[],
+                        &[],
+                        &[
+                            "--in-jar".to_string(),
+                            artifact.cache_path.display().to_string(),
+                            "--out-jar".to_string(),
+                            specialsource_output.display().to_string(),
+                            "--srg-in".to_string(),
+                            mapping_path.display().to_string(),
+                            "--live".to_string(),
+                        ],
+                        &output
+                            .join("remap-work")
+                            .join(safe_path_segment(&coordinate.file_name())),
+                    )?;
+                }
+            } else {
+                tracing::debug!(
+                    coordinate = %coordinate,
+                    output = %specialsource_output.display(),
+                    "dependency_deobf specialsource cache hit"
+                );
+            }
+            {
+                let _span = tracing::debug_span!(
+                    "dependency_deobf_rewrite_member_constants",
+                    input = %specialsource_output.display(),
+                    output = %remapped.display(),
+                )
+                .entered();
+                rewrite_srg_member_constants_in_jar(
+                    &specialsource_output,
+                    &remapped,
+                    member_mappings,
                 )?;
             }
-            rewrite_srg_member_constants_in_jar(&specialsource_output, &remapped, member_mappings)?;
         }
     }
-    if !remapped.is_file() {
-        eyre::bail!(
-            "SpecialSource completed without producing remapped dependency jar {}",
-            remapped.display()
-        );
+    {
+        let _span = tracing::debug_span!(
+            "dependency_deobf_verify_remapped_output",
+            output = %remapped.display()
+        )
+        .entered();
+        if !remapped.is_file() {
+            eyre::bail!(
+                "SpecialSource completed without producing remapped dependency jar {}",
+                remapped.display()
+            );
+        }
     }
     Ok((dependency_index, remapped))
 }
@@ -6947,57 +7075,156 @@ fn remove_stale_dependency_outputs(output: &Path) -> eyre::Result<()> {
 )]
 fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     context.bail_if_cancelled()?;
-    let project_root = context.plan.cache_dir.join("project");
-    let generated_sources = project_root
-        .join("generated-src")
-        .join("antlr")
-        .join("main")
-        .join("ca")
-        .join("teamdman")
-        .join("langs");
-    let classes_dir = project_root.join("classes");
-    let resources_dir = project_root.join("resources");
-    let staged_resources_dir = project_root.join("staged-resources");
-    let gametest_classes_dir = project_root.join("gametest").join("classes");
-    let gametest_resources_dir = project_root.join("gametest").join("resources");
+    let (
+        project_root,
+        generated_sources,
+        classes_dir,
+        resources_dir,
+        staged_resources_dir,
+        gametest_classes_dir,
+        gametest_resources_dir,
+    ) = {
+        let _span = tracing::debug_span!("project_compile_resolve_paths").entered();
+        let project_root = context.plan.cache_dir.join("project");
+        let generated_sources = project_root
+            .join("generated-src")
+            .join("antlr")
+            .join("main")
+            .join("ca")
+            .join("teamdman")
+            .join("langs");
+        let classes_dir = project_root.join("classes");
+        let resources_dir = project_root.join("resources");
+        let staged_resources_dir = project_root.join("staged-resources");
+        let gametest_classes_dir = project_root.join("gametest").join("classes");
+        let gametest_resources_dir = project_root.join("gametest").join("resources");
+        (
+            project_root,
+            generated_sources,
+            classes_dir,
+            resources_dir,
+            staged_resources_dir,
+            gametest_classes_dir,
+            gametest_resources_dir,
+        )
+    };
     tracing::info!(
         classes_dir = %classes_dir.display(),
         resources_dir = %resources_dir.display(),
         gametest_classes_dir = %gametest_classes_dir.display(),
         "project_compile_outputs_will_be_recreated"
     );
-    fs::create_dir_all(&generated_sources)?;
+    {
+        let _span = tracing::debug_span!(
+            "project_compile_prepare_generated_sources",
+            output = %generated_sources.display()
+        )
+        .entered();
+        fs::create_dir_all(&generated_sources)?;
+    }
     context.bail_if_cancelled()?;
 
-    let resolver = Resolver::new(
-        context.plan.maven_cache_dir.clone(),
-        context.plan.repositories.clone(),
-        context.plan.refresh,
-        context.plan.allow_local_artifact_cache,
-        context.plan.artifact_sources.clone(),
-        context.plan.lockfile.clone(),
-        context.plan.lockfile.clone(),
-        context.cancellation_token.clone(),
-    )?;
+    let resolver = {
+        let _span = tracing::debug_span!("project_compile_create_resolver").entered();
+        Resolver::new(
+            context.plan.maven_cache_dir.clone(),
+            context.plan.repositories.clone(),
+            context.plan.refresh,
+            context.plan.allow_local_artifact_cache,
+            context.plan.artifact_sources.clone(),
+            context.plan.lockfile.clone(),
+            context.plan.lockfile.clone(),
+            context.cancellation_token.clone(),
+        )?
+    };
     context.bail_if_cancelled()?;
-    write_minecraft_libraries_cfg(
-        context,
-        &resolver.client,
-        &project_root.join("minecraft-libraries.cfg"),
-    )?;
+    {
+        let _span = tracing::debug_span!("project_compile_write_minecraft_libraries_cfg").entered();
+        write_minecraft_libraries_cfg(
+            context,
+            &resolver.client,
+            &project_root.join("minecraft-libraries.cfg"),
+        )?;
+    }
     context.bail_if_cancelled()?;
-    let antlr_classpath = resolve_antlr_classpath(context, &resolver)?;
+    let antlr_classpath = {
+        let _span = tracing::debug_span!("project_compile_resolve_antlr_classpath").entered();
+        resolve_antlr_classpath(context, &resolver)?
+    };
     context.bail_if_cancelled()?;
-    run_antlr(context, &antlr_classpath, &generated_sources)?;
+    {
+        let _span = tracing::debug_span!(
+            "project_compile_run_antlr",
+            generated_sources = %generated_sources.display()
+        )
+        .entered();
+        run_antlr(context, &antlr_classpath, &generated_sources)?;
+    }
     context.bail_if_cancelled()?;
 
-    let classpath = resolve_project_compile_classpath(context, &resolver, &antlr_classpath)?;
-    context.bail_if_cancelled()?;
+    let (classpath, sources) =
+        thread::scope(|scope| -> eyre::Result<(Vec<PathBuf>, Vec<PathBuf>)> {
+            let classpath_handle = thread::Builder::new()
+                .name("project-compile-classpath".to_string())
+                .spawn_scoped(scope, {
+                    let resolver = resolver.clone();
+                    let antlr_classpath = &antlr_classpath;
+                    move || {
+                        set_tracy_thread_name("project-compile-classpath");
+                        let _span = tracing::debug_span!("project_compile_resolve_main_classpath")
+                            .entered();
+                        context.bail_if_cancelled()?;
+                        resolve_project_compile_classpath(context, &resolver, antlr_classpath)
+                    }
+                })?;
+            let sources_handle = thread::Builder::new()
+                .name("project-compile-sources".to_string())
+                .spawn_scoped(scope, {
+                    let generated_sources = generated_sources.as_path();
+                    move || {
+                        set_tracy_thread_name("project-compile-sources");
+                        let _span = tracing::debug_span!(
+                            "project_compile_collect_main_sources",
+                            generated_sources = %generated_sources.display()
+                        )
+                        .entered();
+                        context.bail_if_cancelled()?;
+                        collect_project_java_sources(context, generated_sources)
+                    }
+                })?;
 
-    let sources = collect_project_java_sources(context, &generated_sources)?;
+            let classpath = classpath_handle
+                .join()
+                .map_err(|panic| {
+                    eyre::eyre!(
+                        "Project compile classpath worker panicked: {}",
+                        panic_message(&panic)
+                    )
+                })?
+                .wrap_err("Failed to resolve project compile classpath")?;
+            let sources = sources_handle
+                .join()
+                .map_err(|panic| {
+                    eyre::eyre!(
+                        "Project compile source scan worker panicked: {}",
+                        panic_message(&panic)
+                    )
+                })?
+                .wrap_err("Failed to collect project Java sources")?;
+            Ok((classpath, sources))
+        })?;
     context.bail_if_cancelled()?;
     let argfile = project_root.join("javac-main.args");
-    write_javac_argfile(context, &argfile, &classpath, &sources, &classes_dir)?;
+    {
+        let _span = tracing::debug_span!(
+            "project_compile_write_main_argfile",
+            argfile = %argfile.display(),
+            sources = sources.len(),
+            classpath = classpath.len(),
+        )
+        .entered();
+        write_javac_argfile(context, &argfile, &classpath, &sources, &classes_dir)?;
+    }
     context.bail_if_cancelled()?;
 
     let started = Instant::now();
@@ -7010,27 +7237,42 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     main_fingerprint_paths.extend(sources.iter().cloned());
     main_fingerprint_paths.push(argfile.clone());
     context.bail_if_cancelled()?;
-    let main_fingerprint = input_fingerprint(
-        context,
-        "javac-main",
-        &main_fingerprint_paths,
-        &[
-            context.plan.java.version_output.clone(),
-            context.plan.java_release.to_string(),
-            format!("{:?}", context.plan.loader_toolchain.kind),
-        ],
-    )?;
+    let main_fingerprint = {
+        let _span = tracing::debug_span!(
+            "project_compile_fingerprint_main",
+            inputs = main_fingerprint_paths.len()
+        )
+        .entered();
+        input_fingerprint(
+            context,
+            "javac-main",
+            &main_fingerprint_paths,
+            &[
+                context.plan.java.version_output.clone(),
+                context.plan.java_release.to_string(),
+                format!("{:?}", context.plan.loader_toolchain.kind),
+            ],
+        )?
+    };
     context.bail_if_cancelled()?;
     let main_state_path = project_root.join("javac-main.inputs.sha1");
     let main_refmap = resources_dir.join("sfm.refmap.json");
-    let main_cache_hit = cache_state_matches(
-        context,
-        &main_state_path,
-        &main_fingerprint,
-        &[&classes_dir],
-    )? && (context.plan.loader_toolchain.kind
-        == LoaderToolchainKind::NeoGradleUserdev
-        || main_refmap.is_file());
+    let main_cache_hit = {
+        let _span = tracing::debug_span!(
+            "project_compile_check_main_cache",
+            state = %main_state_path.display(),
+            classes = %classes_dir.display(),
+            refmap = %main_refmap.display(),
+        )
+        .entered();
+        cache_state_matches(
+            context,
+            &main_state_path,
+            &main_fingerprint,
+            &[&classes_dir],
+        )? && (context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev
+            || main_refmap.is_file())
+    };
     context.bail_if_cancelled()?;
     if main_cache_hit {
         tracing::info!(
@@ -7039,39 +7281,73 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         );
     } else {
         context.bail_if_cancelled()?;
-        reset_cache_directory(&context.plan.cache_dir, &classes_dir)?;
+        {
+            let _span = tracing::debug_span!(
+                "project_compile_reset_main_classes",
+                output = %classes_dir.display()
+            )
+            .entered();
+            reset_cache_directory(&context.plan.cache_dir, &classes_dir)?;
+        }
         context.bail_if_cancelled()?;
-        reset_cache_directory(&context.plan.cache_dir, &resources_dir)?;
+        {
+            let _span = tracing::debug_span!(
+                "project_compile_reset_javac_resources",
+                output = %resources_dir.display()
+            )
+            .entered();
+            reset_cache_directory(&context.plan.cache_dir, &resources_dir)?;
+        }
         context.bail_if_cancelled()?;
         let mut command = Command::new(javac_executable(&context.plan.java));
         command.arg(format!("@{}", argfile.display()));
         context.bail_if_cancelled()?;
-        let output =
+        let output = {
+            let _span = tracing::debug_span!(
+                "project_compile_run_javac_main",
+                sources = sources.len(),
+                argfile = %argfile.display()
+            )
+            .entered();
             run_command_capture_output(&context.cancellation_token, &mut command, "javac-main")
-                .wrap_err("Failed to run javac")?;
-        trace_subprocess_bytes(
-            context.plan,
-            "java-tool",
-            "javac-main",
-            "stdout",
-            &output.stdout,
-        );
+                .wrap_err("Failed to run javac")?
+        };
+        {
+            let _span = tracing::debug_span!("project_compile_trace_javac_main_output").entered();
+            trace_subprocess_bytes(
+                context.plan,
+                "java-tool",
+                "javac-main",
+                "stdout",
+                &output.stdout,
+            );
+        }
         context.bail_if_cancelled()?;
-        trace_subprocess_bytes(
-            context.plan,
-            "java-tool",
-            "javac-main",
-            "stderr",
-            &output.stderr,
-        );
+        {
+            let _span = tracing::debug_span!("project_compile_trace_javac_main_error").entered();
+            trace_subprocess_bytes(
+                context.plan,
+                "java-tool",
+                "javac-main",
+                "stderr",
+                &output.stderr,
+            );
+        }
         let log_path = project_root.join("javac-main.log");
-        let mut log = Vec::new();
-        log.extend_from_slice(b"--- stdout ---\n");
-        log.extend_from_slice(&output.stdout);
-        log.extend_from_slice(b"\n--- stderr ---\n");
-        log.extend_from_slice(&output.stderr);
-        fs::write(&log_path, log)
-            .wrap_err_with(|| format!("Failed to write {}", log_path.display()))?;
+        {
+            let _span = tracing::debug_span!(
+                "project_compile_write_javac_main_log",
+                log = %log_path.display()
+            )
+            .entered();
+            let mut log = Vec::new();
+            log.extend_from_slice(b"--- stdout ---\n");
+            log.extend_from_slice(&output.stdout);
+            log.extend_from_slice(b"\n--- stderr ---\n");
+            log.extend_from_slice(&output.stderr);
+            fs::write(&log_path, log)
+                .wrap_err_with(|| format!("Failed to write {}", log_path.display()))?;
+        }
         context.bail_if_cancelled()?;
         if output.cancelled {
             eyre::bail!("javac was cancelled by Ctrl+C. See {}", log_path.display());
@@ -7083,55 +7359,117 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
                 log_path.display()
             );
         }
-        write_cache_state(&main_state_path, &main_fingerprint)?;
+        {
+            let _span = tracing::debug_span!(
+                "project_compile_write_main_cache_state",
+                state = %main_state_path.display()
+            )
+            .entered();
+            write_cache_state(&main_state_path, &main_fingerprint)?;
+        }
         context.bail_if_cancelled()?;
         tracing::info!("javac main: done in {} ms", started.elapsed().as_millis());
     }
 
     context.bail_if_cancelled()?;
-    compile_optional_java_source_set(
-        context,
-        "gametest",
-        &classpath,
-        &classes_dir,
-        &gametest_classes_dir,
-        &main_fingerprint,
-    )?;
-    context.bail_if_cancelled()?;
-    stage_optional_resource_source_set(
-        context,
-        "gametest",
-        &gametest_resources_dir,
-        &["README.md"],
-    )?;
+    thread::scope(|scope| -> eyre::Result<()> {
+        let gametest_compile = thread::Builder::new()
+            .name("project-compile-gametest".to_string())
+            .spawn_scoped(scope, {
+                let classpath = &classpath;
+                let classes_dir = classes_dir.as_path();
+                let gametest_classes_dir = gametest_classes_dir.as_path();
+                let main_fingerprint = main_fingerprint.as_str();
+                move || {
+                    set_tracy_thread_name("project-compile-gametest");
+                    let _span = tracing::debug_span!("project_compile_gametest_javac").entered();
+                    compile_optional_java_source_set(
+                        context,
+                        "gametest",
+                        classpath,
+                        classes_dir,
+                        gametest_classes_dir,
+                        main_fingerprint,
+                    )
+                }
+            })?;
+        let gametest_resources = thread::Builder::new()
+            .name("project-compile-gametest-resources".to_string())
+            .spawn_scoped(scope, {
+                let gametest_resources_dir = gametest_resources_dir.as_path();
+                move || {
+                    set_tracy_thread_name("project-compile-gametest-resources");
+                    let _span =
+                        tracing::debug_span!("project_compile_gametest_resources").entered();
+                    stage_optional_resource_source_set(
+                        context,
+                        "gametest",
+                        gametest_resources_dir,
+                        &["README.md"],
+                    )
+                }
+            })?;
+
+        gametest_compile
+            .join()
+            .map_err(|panic| {
+                eyre::eyre!(
+                    "Project gametest compile worker panicked: {}",
+                    panic_message(&panic)
+                )
+            })?
+            .wrap_err("Failed to compile gametest source set")?;
+        gametest_resources
+            .join()
+            .map_err(|panic| {
+                eyre::eyre!(
+                    "Project gametest resource worker panicked: {}",
+                    panic_message(&panic)
+                )
+            })?
+            .wrap_err("Failed to stage gametest resources")?;
+        Ok(())
+    })?;
     context.bail_if_cancelled()?;
     if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        let _span = tracing::debug_span!("project_compile_patch_neogradle_debug_names").entered();
         patch_neogradle_anonymous_constructor_debug_names(context, &classes_dir)?;
     } else {
+        let _span = tracing::debug_span!("project_compile_ensure_run_refmap_remap").entered();
         ensure_run_refmap_remapping_file(context)?;
     }
     context.bail_if_cancelled()?;
-    stage_project_resources(context, &staged_resources_dir, &resources_dir)?;
+    {
+        let _span = tracing::debug_span!(
+            "project_compile_stage_main_resources",
+            output = %staged_resources_dir.display()
+        )
+        .entered();
+        stage_project_resources(context, &staged_resources_dir, &resources_dir)?;
+    }
     context.bail_if_cancelled()?;
 
-    context.write_node_state(
-        "compile-project",
-        &[
-            "src/main/java",
-            "src/main/antlr",
-            "src/gametest/java",
-            "mapped Forge/Minecraft jar",
-        ],
-        &[
-            classes_dir,
-            resources_dir,
-            staged_resources_dir,
-            gametest_classes_dir,
-            gametest_resources_dir,
-            project_root.join("run-refmap-remap.srg"),
-        ],
-        "complete",
-    )?;
+    {
+        let _span = tracing::debug_span!("project_compile_write_node_state").entered();
+        context.write_node_state(
+            "compile-project",
+            &[
+                "src/main/java",
+                "src/main/antlr",
+                "src/gametest/java",
+                "mapped Forge/Minecraft jar",
+            ],
+            &[
+                classes_dir,
+                resources_dir,
+                staged_resources_dir,
+                gametest_classes_dir,
+                gametest_resources_dir,
+                project_root.join("run-refmap-remap.srg"),
+            ],
+            "complete",
+        )?;
+    }
     Ok(())
 }
 
@@ -7208,6 +7546,8 @@ fn compile_optional_java_source_set(
     classes_dir: &Path,
     upstream_fingerprint: &str,
 ) -> eyre::Result<()> {
+    let _source_set_span =
+        tracing::debug_span!("compile_optional_java_source_set", source_set).entered();
     context.bail_if_cancelled()?;
     let project_root = context.plan.cache_dir.join("project");
     let source_root = context
@@ -7221,20 +7561,46 @@ fn compile_optional_java_source_set(
         return Ok(());
     }
 
-    let sources = collect_source_set_java_sources(context, source_set)?;
+    let sources = {
+        let _span = tracing::debug_span!(
+            "compile_optional_collect_sources",
+            source_set,
+            root = %source_root.display()
+        )
+        .entered();
+        collect_source_set_java_sources(context, source_set)?
+    };
     context.bail_if_cancelled()?;
     if sources.is_empty() {
         reset_cache_directory(&context.plan.cache_dir, classes_dir)?;
         return Ok(());
     }
 
-    let classpath = dedup_paths_preserve_order(
-        std::iter::once(main_classes_dir.to_path_buf())
-            .chain(base_classpath.iter().cloned())
-            .collect(),
-    );
+    let classpath = {
+        let _span = tracing::debug_span!(
+            "compile_optional_build_classpath",
+            source_set,
+            base_entries = base_classpath.len()
+        )
+        .entered();
+        dedup_paths_preserve_order(
+            std::iter::once(main_classes_dir.to_path_buf())
+                .chain(base_classpath.iter().cloned())
+                .collect(),
+        )
+    };
     let argfile = project_root.join(format!("javac-{source_set}.args"));
-    write_javac_no_ap_argfile(context, &argfile, &classpath, &sources, classes_dir)?;
+    {
+        let _span = tracing::debug_span!(
+            "compile_optional_write_argfile",
+            source_set,
+            argfile = %argfile.display(),
+            sources = sources.len(),
+            classpath = classpath.len()
+        )
+        .entered();
+        write_javac_no_ap_argfile(context, &argfile, &classpath, &sources, classes_dir)?;
+    }
     context.bail_if_cancelled()?;
 
     let started = Instant::now();
@@ -7246,20 +7612,38 @@ fn compile_optional_java_source_set(
     let mut fingerprint_paths = sources.clone();
     fingerprint_paths.push(argfile.clone());
     context.bail_if_cancelled()?;
-    let fingerprint = input_fingerprint(
-        context,
-        &format!("javac-{source_set}"),
-        &fingerprint_paths,
-        &[
-            context.plan.java.version_output.clone(),
-            context.plan.java_release.to_string(),
-            source_set.to_string(),
-            upstream_fingerprint.to_string(),
-        ],
-    )?;
+    let fingerprint = {
+        let _span = tracing::debug_span!(
+            "compile_optional_fingerprint",
+            source_set,
+            inputs = fingerprint_paths.len()
+        )
+        .entered();
+        input_fingerprint(
+            context,
+            &format!("javac-{source_set}"),
+            &fingerprint_paths,
+            &[
+                context.plan.java.version_output.clone(),
+                context.plan.java_release.to_string(),
+                source_set.to_string(),
+                upstream_fingerprint.to_string(),
+            ],
+        )?
+    };
     context.bail_if_cancelled()?;
     let state_path = project_root.join(format!("javac-{source_set}.inputs.sha1"));
-    if cache_state_matches(context, &state_path, &fingerprint, &[classes_dir])? {
+    let cache_hit = {
+        let _span = tracing::debug_span!(
+            "compile_optional_check_cache",
+            source_set,
+            state = %state_path.display(),
+            output = %classes_dir.display()
+        )
+        .entered();
+        cache_state_matches(context, &state_path, &fingerprint, &[classes_dir])?
+    };
+    if cache_hit {
         tracing::info!(
             "javac {source_set}: reused cached outputs in {} ms",
             started.elapsed().as_millis()
@@ -7268,26 +7652,55 @@ fn compile_optional_java_source_set(
     }
 
     context.bail_if_cancelled()?;
-    reset_cache_directory(&context.plan.cache_dir, classes_dir)?;
+    {
+        let _span = tracing::debug_span!(
+            "compile_optional_reset_classes",
+            source_set,
+            output = %classes_dir.display()
+        )
+        .entered();
+        reset_cache_directory(&context.plan.cache_dir, classes_dir)?;
+    }
     context.bail_if_cancelled()?;
     let mut command = Command::new(javac_executable(&context.plan.java));
     command.arg(format!("@{}", argfile.display()));
     let source = format!("javac-{source_set}");
     context.bail_if_cancelled()?;
-    let output = run_command_capture_output(&context.cancellation_token, &mut command, &source)
-        .wrap_err_with(|| format!("Failed to run javac for {source_set}"))?;
+    let output = {
+        let _span = tracing::debug_span!(
+            "compile_optional_run_javac",
+            source_set,
+            sources = sources.len(),
+            argfile = %argfile.display()
+        )
+        .entered();
+        run_command_capture_output(&context.cancellation_token, &mut command, &source)
+            .wrap_err_with(|| format!("Failed to run javac for {source_set}"))?
+    };
     context.bail_if_cancelled()?;
-    trace_subprocess_bytes(context.plan, "java-tool", &source, "stdout", &output.stdout);
-    trace_subprocess_bytes(context.plan, "java-tool", &source, "stderr", &output.stderr);
+    {
+        let _span =
+            tracing::debug_span!("compile_optional_trace_javac_output", source_set).entered();
+        trace_subprocess_bytes(context.plan, "java-tool", &source, "stdout", &output.stdout);
+        trace_subprocess_bytes(context.plan, "java-tool", &source, "stderr", &output.stderr);
+    }
     context.bail_if_cancelled()?;
     let log_path = project_root.join(format!("javac-{source_set}.log"));
-    let mut log = Vec::new();
-    log.extend_from_slice(b"--- stdout ---\n");
-    log.extend_from_slice(&output.stdout);
-    log.extend_from_slice(b"\n--- stderr ---\n");
-    log.extend_from_slice(&output.stderr);
-    fs::write(&log_path, log)
-        .wrap_err_with(|| format!("Failed to write {}", log_path.display()))?;
+    {
+        let _span = tracing::debug_span!(
+            "compile_optional_write_javac_log",
+            source_set,
+            log = %log_path.display()
+        )
+        .entered();
+        let mut log = Vec::new();
+        log.extend_from_slice(b"--- stdout ---\n");
+        log.extend_from_slice(&output.stdout);
+        log.extend_from_slice(b"\n--- stderr ---\n");
+        log.extend_from_slice(&output.stderr);
+        fs::write(&log_path, log)
+            .wrap_err_with(|| format!("Failed to write {}", log_path.display()))?;
+    }
     context.bail_if_cancelled()?;
     if output.cancelled {
         eyre::bail!(
@@ -7302,7 +7715,15 @@ fn compile_optional_java_source_set(
             log_path.display()
         );
     }
-    write_cache_state(&state_path, &fingerprint)?;
+    {
+        let _span = tracing::debug_span!(
+            "compile_optional_write_cache_state",
+            source_set,
+            state = %state_path.display()
+        )
+        .entered();
+        write_cache_state(&state_path, &fingerprint)?;
+    }
     context.bail_if_cancelled()?;
     tracing::info!(
         "javac {source_set}: done in {} ms",
@@ -7317,8 +7738,17 @@ fn stage_optional_resource_source_set(
     output: &Path,
     excludes: &[&str],
 ) -> eyre::Result<()> {
+    let _source_set_span = tracing::debug_span!(
+        "stage_optional_resource_source_set",
+        source_set,
+        output = %output.display()
+    )
+    .entered();
     context.bail_if_cancelled()?;
-    reset_cache_directory(&context.plan.cache_dir, output)?;
+    {
+        let _span = tracing::debug_span!("stage_optional_resources_reset_output").entered();
+        reset_cache_directory(&context.plan.cache_dir, output)?;
+    }
     context.bail_if_cancelled()?;
     let root = context
         .plan
@@ -7331,7 +7761,15 @@ fn stage_optional_resource_source_set(
     }
     context.assert_allowed_input(&root)?;
 
-    for path in collect_files_under_cancellable(context, &root)? {
+    let files = {
+        let _span = tracing::debug_span!(
+            "stage_optional_resources_collect_files",
+            root = %root.display()
+        )
+        .entered();
+        collect_files_under_cancellable(context, &root)?
+    };
+    for path in files {
         context.bail_if_cancelled()?;
         context.assert_allowed_input(&path)?;
         let name = relative_zip_name(&root, &path)?;
@@ -7612,8 +8050,17 @@ fn stage_project_resources(
     staging_dir: &Path,
     javac_resources_dir: &Path,
 ) -> eyre::Result<()> {
+    let _stage_span = tracing::debug_span!(
+        "stage_project_resources",
+        output = %staging_dir.display(),
+        javac_resources = %javac_resources_dir.display()
+    )
+    .entered();
     context.bail_if_cancelled()?;
-    reset_cache_directory(&context.plan.cache_dir, staging_dir)?;
+    {
+        let _span = tracing::debug_span!("stage_project_resources_reset_output").entered();
+        reset_cache_directory(&context.plan.cache_dir, staging_dir)?;
+    }
     let mut written = BTreeSet::new();
     for root in [
         context
@@ -7631,6 +8078,12 @@ fn stage_project_resources(
         javac_resources_dir.to_path_buf(),
     ] {
         context.bail_if_cancelled()?;
+        let _span = tracing::debug_span!(
+            "stage_project_resource_root",
+            root = %root.display(),
+            output = %staging_dir.display()
+        )
+        .entered();
         stage_resource_root(context, &root, staging_dir, &mut written)?;
     }
     Ok(())
@@ -7648,7 +8101,15 @@ fn stage_resource_root(
     }
     context.assert_allowed_input(root)?;
 
-    for path in collect_files_under_cancellable(context, root)? {
+    let files = {
+        let _span = tracing::debug_span!(
+            "stage_resource_root_collect_files",
+            root = %root.display()
+        )
+        .entered();
+        collect_files_under_cancellable(context, root)?
+    };
+    for path in files {
         context.bail_if_cancelled()?;
         if path
             .components()
@@ -8104,21 +8565,27 @@ fn resolve_coordinates_for_classpath(
     coordinates: &[&str],
     required_for: ArtifactPurpose,
 ) -> eyre::Result<Vec<PathBuf>> {
-    let mut paths = Vec::new();
-    for (index, coordinate) in coordinates.iter().enumerate() {
+    let mut artifacts = Vec::new();
+    for (index, coordinate) in coordinates.iter().copied().enumerate() {
         context.bail_if_cancelled()?;
         let coordinate = MavenCoordinate::parse(coordinate)?;
-        paths.push(
-            resolver
-                .resolve_artifact(
-                    ArtifactId::from(format!("classpath-{index}")),
-                    &coordinate,
-                    required_for.clone(),
-                )?
-                .cache_path,
-        );
+        artifacts.push((
+            ArtifactId::from(format!("classpath-{index}")),
+            coordinate,
+            required_for.clone(),
+        ));
     }
-    Ok(paths)
+    let _span = tracing::debug_span!(
+        "resolve_coordinates_for_classpath",
+        coordinates = artifacts.len(),
+        required_for = %required_for,
+    )
+    .entered();
+    Ok(resolver
+        .resolve_artifacts(artifacts)?
+        .into_iter()
+        .map(|artifact| artifact.cache_path)
+        .collect())
 }
 
 fn resolve_antlr_classpath(
@@ -8176,37 +8643,71 @@ fn resolve_project_compile_classpath(
     resolver: &Resolver,
     antlr_classpath: &[PathBuf],
 ) -> eyre::Result<Vec<PathBuf>> {
+    let _classpath_span = tracing::debug_span!("resolve_project_compile_classpath").entered();
     context.bail_if_cancelled()?;
     let mut classpath = Vec::new();
-    classpath.push(loader_dev_compile_jar(context));
+    {
+        let _span = tracing::debug_span!("resolve_project_compile_loader_jar").entered();
+        classpath.push(loader_dev_compile_jar(context));
+    }
     context.bail_if_cancelled()?;
-    classpath.extend(resolve_current_minecraft_libraries(
-        context,
-        &resolver.client,
-    )?);
+    {
+        let _span = tracing::debug_span!("resolve_project_compile_minecraft_libraries").entered();
+        classpath.extend(resolve_current_minecraft_libraries(
+            context,
+            &resolver.client,
+        )?);
+    }
     context.bail_if_cancelled()?;
-    classpath.extend(resolve_forge_userdev_libraries(context, resolver)?);
+    {
+        let _span =
+            tracing::debug_span!("resolve_project_compile_forge_userdev_libraries").entered();
+        classpath.extend(resolve_forge_userdev_libraries(context, resolver)?);
+    }
     context.bail_if_cancelled()?;
-    classpath.extend(resolve_compile_dependencies(context, resolver)?);
+    {
+        let _span = tracing::debug_span!("resolve_project_compile_declared_dependencies").entered();
+        classpath.extend(resolve_compile_dependencies(context, resolver)?);
+    }
     context.bail_if_cancelled()?;
-    classpath.extend(collect_jars(
-        context,
-        &context.plan.cache_dir.join("dependencies"),
-    )?);
+    {
+        let dependency_deobf_dir = context.plan.cache_dir.join("dependencies");
+        let _span = tracing::debug_span!(
+            "resolve_project_compile_deobf_dependency_jars",
+            root = %dependency_deobf_dir.display()
+        )
+        .entered();
+        classpath.extend(collect_jars(context, &dependency_deobf_dir)?);
+    }
     context.bail_if_cancelled()?;
     let annotation_coordinates = PROJECT_COMPILE_ANNOTATION_COORDINATES
         .iter()
         .map(|(_, coordinate)| *coordinate)
         .collect::<Vec<_>>();
-    classpath.extend(resolve_coordinates_for_classpath(
-        context,
-        resolver,
-        &annotation_coordinates,
-        ArtifactPurpose::from("Project compile annotations"),
-    )?);
+    {
+        let _span = tracing::debug_span!("resolve_project_compile_annotations").entered();
+        classpath.extend(resolve_coordinates_for_classpath(
+            context,
+            resolver,
+            &annotation_coordinates,
+            ArtifactPurpose::from("Project compile annotations"),
+        )?);
+    }
     context.bail_if_cancelled()?;
-    classpath.extend(antlr_classpath.iter().cloned());
-    Ok(dedup_paths_preserve_order(classpath))
+    {
+        let _span =
+            tracing::debug_span!("resolve_project_compile_append_antlr_classpath").entered();
+        classpath.extend(antlr_classpath.iter().cloned());
+    }
+    let classpath = {
+        let _span = tracing::debug_span!(
+            "resolve_project_compile_dedup_classpath",
+            entries = classpath.len()
+        )
+        .entered();
+        dedup_paths_preserve_order(classpath)
+    };
+    Ok(classpath)
 }
 
 fn dedup_paths_preserve_order(paths: Vec<PathBuf>) -> Vec<PathBuf> {
@@ -8350,21 +8851,25 @@ fn resolve_forge_userdev_libraries(
     coordinates.sort();
     coordinates.dedup();
 
-    let mut paths = Vec::new();
-    for (index, coordinate) in coordinates.iter().enumerate() {
+    let mut artifacts = Vec::new();
+    for (index, coordinate) in coordinates.into_iter().enumerate() {
         context.bail_if_cancelled()?;
-        let coordinate = MavenCoordinate::parse(coordinate)?;
-        paths.push(
-            resolver
-                .resolve_artifact(
-                    ArtifactId::from(format!("forge-userdev-library-{index}")),
-                    &coordinate,
-                    ArtifactPurpose::from("Forge userdev compile classpath"),
-                )?
-                .cache_path,
-        );
+        artifacts.push((
+            ArtifactId::from(format!("forge-userdev-library-{index}")),
+            MavenCoordinate::parse(&coordinate)?,
+            ArtifactPurpose::from("Forge userdev compile classpath"),
+        ));
     }
-    Ok(paths)
+    let _span = tracing::debug_span!(
+        "resolve_forge_userdev_libraries",
+        libraries = artifacts.len()
+    )
+    .entered();
+    Ok(resolver
+        .resolve_artifacts(artifacts)?
+        .into_iter()
+        .map(|artifact| artifact.cache_path)
+        .collect())
 }
 
 fn resolve_forge_userdev_test_libraries(
@@ -8411,28 +8916,38 @@ fn resolve_compile_dependencies(
         .join("dependencies.gradle");
     let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
     context.bail_if_cancelled()?;
-    let mut paths = Vec::new();
-    for dependency in dependencies.iter().filter(|dependency| {
-        !dependency.fg_deobf
-            && matches!(
-                dependency.configuration.as_str(),
-                "implementation" | "compileOnly" | "annotationProcessor"
-            )
-            && (context.plan.loader_toolchain.kind != LoaderToolchainKind::NeoGradleUserdev
-                || dependency.configuration == "annotationProcessor")
-    }) {
+    let mut artifacts = Vec::new();
+    for dependency in dependencies
+        .iter()
+        .filter(|dependency| {
+            !dependency.fg_deobf
+                && matches!(
+                    dependency.configuration.as_str(),
+                    "implementation" | "compileOnly" | "annotationProcessor"
+                )
+                && (context.plan.loader_toolchain.kind != LoaderToolchainKind::NeoGradleUserdev
+                    || dependency.configuration == "annotationProcessor")
+        })
+        .enumerate()
+    {
         context.bail_if_cancelled()?;
-        paths.push(
-            resolver
-                .resolve_artifact(
-                    ArtifactId::from(format!("compile-dependency-{}", paths.len())),
-                    &dependency.coordinate,
-                    ArtifactPurpose::from("Project compile classpath"),
-                )?
-                .cache_path,
-        );
+        let (index, dependency) = dependency;
+        artifacts.push((
+            ArtifactId::from(format!("compile-dependency-{index}")),
+            dependency.coordinate.clone(),
+            ArtifactPurpose::from("Project compile classpath"),
+        ));
     }
-    Ok(paths)
+    let _span = tracing::debug_span!(
+        "resolve_compile_dependencies",
+        dependencies = artifacts.len()
+    )
+    .entered();
+    Ok(resolver
+        .resolve_artifacts(artifacts)?
+        .into_iter()
+        .map(|artifact| artifact.cache_path)
+        .collect())
 }
 
 fn collect_project_java_sources(
