@@ -51,6 +51,7 @@ use std::process::Stdio;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicBool;
+use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::mpsc;
 use std::thread;
@@ -4895,28 +4896,35 @@ fn resolve_forge_userdev_modules(
     context: &ExecutionContext<'_>,
     resolver: &Resolver,
 ) -> eyre::Result<Vec<PathBuf>> {
-    let config: ForgeUserdevConfig = read_zip_json_entry(
-        &context
-            .artifact(ArtifactId::from("forge-userdev"))?
-            .cache_path,
-        "config.json",
-    )?;
-    let coordinates = config.modules;
-
-    coordinates
-        .iter()
-        .enumerate()
-        .map(|(index, coordinate)| {
-            let coordinate = MavenCoordinate::parse(coordinate)?;
-            resolver
-                .resolve_artifact(
-                    ArtifactId::from(format!("forge-userdev-module-{index}")),
-                    &coordinate,
-                    ArtifactPurpose::from("Forge userdev module path"),
-                )
-                .map(|artifact| artifact.cache_path)
-        })
-        .collect()
+    let _span = tracing::debug_span!("resolve_forge_userdev_modules").entered();
+    let config: ForgeUserdevConfig = {
+        let _span = tracing::debug_span!("resolve_forge_userdev_modules_read_config").entered();
+        read_zip_json_entry(
+            &context
+                .artifact(ArtifactId::from("forge-userdev"))?
+                .cache_path,
+            "config.json",
+        )?
+    };
+    let mut artifacts = Vec::new();
+    for (index, coordinate) in config.modules.into_iter().enumerate() {
+        context.bail_if_cancelled()?;
+        artifacts.push((
+            ArtifactId::from(format!("forge-userdev-module-{index}")),
+            MavenCoordinate::parse(&coordinate)?,
+            ArtifactPurpose::from("Forge userdev module path"),
+        ));
+    }
+    let _span = tracing::debug_span!(
+        "resolve_forge_userdev_modules_resolve_artifacts",
+        modules = artifacts.len()
+    )
+    .entered();
+    Ok(resolver
+        .resolve_artifacts(artifacts)?
+        .into_iter()
+        .map(|artifact| artifact.cache_path)
+        .collect())
 }
 
 #[tracing::instrument(
@@ -4933,23 +4941,57 @@ fn resolve_run_classpath(
     kind: RunKind,
 ) -> eyre::Result<RunClasspath> {
     if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
+        let _span = tracing::debug_span!("resolve_run_classpath_neogradle").entered();
         return resolve_neogradle_run_classpath(context, resolver, kind);
     }
 
     let mut legacy = Vec::new();
-    legacy.push(ensure_run_forge_dev_jar(context)?);
-    legacy.push(ensure_client_extra_jar(context)?);
-    legacy.push(ensure_runtime_mcp_csv_mappings(context)?);
-    legacy.extend(resolve_current_minecraft_libraries(
-        context,
-        &resolver.client,
-    )?);
-    legacy.extend(resolve_forge_userdev_libraries(context, resolver)?);
-    legacy.extend(resolve_run_plain_dependencies(context, resolver, kind)?);
+    {
+        let _span = tracing::debug_span!("resolve_run_classpath_ensure_forge_dev_jar").entered();
+        legacy.push(ensure_run_forge_dev_jar(context)?);
+    }
+    {
+        let _span = tracing::debug_span!("resolve_run_classpath_ensure_client_extra_jar").entered();
+        legacy.push(ensure_client_extra_jar(context)?);
+    }
+    {
+        let _span = tracing::debug_span!("resolve_run_classpath_ensure_mcp_csv_mappings").entered();
+        legacy.push(ensure_runtime_mcp_csv_mappings(context)?);
+    }
+    {
+        let _span = tracing::debug_span!("resolve_run_classpath_minecraft_libraries").entered();
+        legacy.extend(resolve_current_minecraft_libraries(
+            context,
+            &resolver.client,
+        )?);
+    }
+    {
+        let _span = tracing::debug_span!("resolve_run_classpath_forge_userdev_libraries").entered();
+        legacy.extend(resolve_forge_userdev_libraries(context, resolver)?);
+    }
+    {
+        let _span = tracing::debug_span!("resolve_run_classpath_plain_dependencies").entered();
+        legacy.extend(resolve_run_plain_dependencies(context, resolver, kind)?);
+    }
 
-    let userdev_mods = resolve_run_deobf_dependencies(context, resolver, kind)?;
-    let legacy = dedup_paths_preserve_order(legacy);
-    let userdev_mods = dedup_paths_preserve_order(userdev_mods);
+    let userdev_mods = {
+        let _span = tracing::debug_span!("resolve_run_classpath_deobf_dependencies").entered();
+        resolve_run_deobf_dependencies(context, resolver, kind)?
+    };
+    let legacy = {
+        let _span =
+            tracing::debug_span!("resolve_run_classpath_dedup_legacy", entries = legacy.len())
+                .entered();
+        dedup_paths_preserve_order(legacy)
+    };
+    let userdev_mods = {
+        let _span = tracing::debug_span!(
+            "resolve_run_classpath_dedup_userdev_mods",
+            entries = userdev_mods.len()
+        )
+        .entered();
+        dedup_paths_preserve_order(userdev_mods)
+    };
     tracing::info!(
         legacy_entries = legacy.len(),
         userdev_mods = userdev_mods.len(),
@@ -4967,22 +5009,59 @@ fn resolve_neogradle_run_classpath(
     kind: RunKind,
 ) -> eyre::Result<RunClasspath> {
     let mut legacy = Vec::new();
-    legacy.extend(resolve_current_minecraft_libraries(
-        context,
-        &resolver.client,
-    )?);
-    legacy.extend(resolve_forge_userdev_libraries(context, resolver)?);
-    legacy.push(ensure_client_extra_jar(context)?);
-    legacy.extend(ensure_run_neoforge_dev_jars(context, kind)?);
+    {
+        let _span =
+            tracing::debug_span!("resolve_neogradle_run_classpath_minecraft_libraries").entered();
+        legacy.extend(resolve_current_minecraft_libraries(
+            context,
+            &resolver.client,
+        )?);
+    }
+    {
+        let _span =
+            tracing::debug_span!("resolve_neogradle_run_classpath_userdev_libraries").entered();
+        legacy.extend(resolve_forge_userdev_libraries(context, resolver)?);
+    }
+    {
+        let _span =
+            tracing::debug_span!("resolve_neogradle_run_classpath_client_extra_jar").entered();
+        legacy.push(ensure_client_extra_jar(context)?);
+    }
+    {
+        let _span =
+            tracing::debug_span!("resolve_neogradle_run_classpath_dev_jars", kind = %kind.command_name())
+                .entered();
+        legacy.extend(ensure_run_neoforge_dev_jars(context, kind)?);
+    }
 
     let mut userdev_mods = Vec::new();
     if matches!(kind, RunKind::GameTestServer) {
+        let _span =
+            tracing::debug_span!("resolve_neogradle_run_classpath_test_libraries").entered();
         userdev_mods.extend(resolve_forge_userdev_test_libraries(context, resolver)?);
     }
-    userdev_mods.extend(resolve_neogradle_run_dependencies(context, kind)?);
+    {
+        let _span =
+            tracing::debug_span!("resolve_neogradle_run_classpath_run_dependencies").entered();
+        userdev_mods.extend(resolve_neogradle_run_dependencies(context, kind)?);
+    }
 
-    let legacy = dedup_paths_preserve_order(legacy);
-    let userdev_mods = dedup_paths_preserve_order(userdev_mods);
+    let legacy = {
+        let _span = tracing::debug_span!(
+            "resolve_neogradle_run_classpath_dedup_legacy",
+            entries = legacy.len()
+        )
+        .entered();
+        dedup_paths_preserve_order(legacy)
+    };
+    let userdev_mods = {
+        let _span = tracing::debug_span!(
+            "resolve_neogradle_run_classpath_dedup_userdev_mods",
+            entries = userdev_mods.len()
+        )
+        .entered();
+        dedup_paths_preserve_order(userdev_mods)
+    };
     tracing::info!(
         legacy_entries = legacy.len(),
         userdev_mods = userdev_mods.len(),
@@ -4998,6 +5077,8 @@ fn ensure_run_neoforge_dev_jars(
     context: &ExecutionContext<'_>,
     kind: RunKind,
 ) -> eyre::Result<Vec<PathBuf>> {
+    let _span =
+        tracing::debug_span!("ensure_run_neoforge_dev_jars", kind = %kind.command_name()).entered();
     let input = loader_dev_compile_jar(context);
     if !input.is_file() {
         eyre::bail!(
@@ -5010,17 +5091,36 @@ fn ensure_run_neoforge_dev_jars(
     let neoforge_universal = context.artifact(ArtifactId::from("neoforge-universal"))?;
     context.assert_allowed_input(&neoforge_universal.cache_path)?;
     let neoforge_version = required_property(&context.plan.properties, "neo_version")?;
-    if neoforge_requires_split_runtime(&neoforge_universal.cache_path)? {
+    let requires_split_runtime = {
+        let _span = tracing::debug_span!(
+            "ensure_run_neoforge_check_split_runtime",
+            universal = %neoforge_universal.cache_path.display()
+        )
+        .entered();
+        neoforge_requires_split_runtime(&neoforge_universal.cache_path)?
+    };
+    if requires_split_runtime {
         let minecraft_output = context
             .plan
             .cache_dir
             .join("run")
             .join(format!("minecraft-{neoforge_version}.jar"));
-        let minecraft_input_state = format!(
-            "{}\n{}\nsplit-minecraft-v3\n",
-            ContentHash::from_path(&input, ContentHashAlgorithm::Blake3)?,
-            ContentHash::from_path(&neoforge_universal.cache_path, ContentHashAlgorithm::Blake3)?
-        );
+        let minecraft_input_state = {
+            let _span = tracing::debug_span!(
+                "ensure_run_neoforge_hash_split_runtime_inputs",
+                input = %input.display(),
+                universal = %neoforge_universal.cache_path.display()
+            )
+            .entered();
+            format!(
+                "{}\n{}\nsplit-minecraft-v3\n",
+                ContentHash::from_path(&input, ContentHashAlgorithm::Blake3)?,
+                ContentHash::from_path(
+                    &neoforge_universal.cache_path,
+                    ContentHashAlgorithm::Blake3
+                )?
+            )
+        };
         let minecraft_input_state_path = minecraft_output.with_extension("inputs.sha1");
         let current_minecraft_input_state =
             fs::read_to_string(&minecraft_input_state_path).unwrap_or_default();
@@ -5028,6 +5128,11 @@ fn ensure_run_neoforge_dev_jars(
             || context.plan.refresh
             || current_minecraft_input_state != minecraft_input_state
         {
+            let _span = tracing::debug_span!(
+                "ensure_run_neoforge_write_split_minecraft_jar",
+                output = %minecraft_output.display()
+            )
+            .entered();
             write_run_neoforge_minecraft_dev_jar(
                 &input,
                 &neoforge_universal.cache_path,
@@ -5051,14 +5156,27 @@ fn ensure_run_neoforge_dev_jars(
         .cache_dir
         .join("run")
         .join(format!("neoforge-{neoforge_version}.jar"));
-    let input_state = format!(
-        "{}\n{}\n",
-        ContentHash::from_path(&input, ContentHashAlgorithm::Blake3)?,
-        ContentHash::from_path(&neoforge_universal.cache_path, ContentHashAlgorithm::Blake3)?
-    );
+    let input_state = {
+        let _span = tracing::debug_span!(
+            "ensure_run_neoforge_hash_runtime_inputs",
+            input = %input.display(),
+            universal = %neoforge_universal.cache_path.display()
+        )
+        .entered();
+        format!(
+            "{}\n{}\n",
+            ContentHash::from_path(&input, ContentHashAlgorithm::Blake3)?,
+            ContentHash::from_path(&neoforge_universal.cache_path, ContentHashAlgorithm::Blake3)?
+        )
+    };
     let input_state_path = output.with_extension("inputs.sha1");
     let current_input_state = fs::read_to_string(&input_state_path).unwrap_or_default();
     if !output.is_file() || context.plan.refresh || current_input_state != input_state {
+        let _span = tracing::debug_span!(
+            "ensure_run_neoforge_write_runtime_jar",
+            output = %output.display()
+        )
+        .entered();
         write_run_neoforge_dev_jar(&input, &neoforge_universal.cache_path, &output)?;
         fs::write(&input_state_path, input_state).wrap_err_with(|| {
             format!(
@@ -5071,6 +5189,7 @@ fn ensure_run_neoforge_dev_jars(
 }
 
 fn ensure_run_forge_dev_jar(context: &ExecutionContext<'_>) -> eyre::Result<PathBuf> {
+    let _span = tracing::debug_span!("ensure_run_forge_dev_jar").entered();
     let forge_version = required_property(&context.plan.properties, "neo_version")?;
     let input = context
         .plan
@@ -5093,13 +5212,25 @@ fn ensure_run_forge_dev_jar(context: &ExecutionContext<'_>) -> eyre::Result<Path
         "forge-{}-{}-dev-compile.jar",
         context.plan.minecraft_version, forge_version
     ));
+    let _span = tracing::debug_span!(
+        "ensure_run_forge_write_dev_jar",
+        input = %input.display(),
+        output = %output.display()
+    )
+    .entered();
     write_run_forge_dev_jar(&input, &forge_universal.cache_path, &output)?;
     Ok(output)
 }
 
 fn ensure_client_extra_jar(context: &ExecutionContext<'_>) -> eyre::Result<PathBuf> {
+    let _span = tracing::debug_span!("ensure_client_extra_jar").entered();
     let client_jar = context.plan.minecraft_version_cache_dir.join("client.jar");
     if !client_jar.is_file() {
+        let _span = tracing::debug_span!(
+            "ensure_client_extra_download_client_jar",
+            output = %client_jar.display()
+        )
+        .entered();
         let client = Client::builder()
             .user_agent("sfm-propagate-changes/no-gradle-toolchain")
             .build()
@@ -5118,11 +5249,18 @@ fn ensure_client_extra_jar(context: &ExecutionContext<'_>) -> eyre::Result<PathB
         return Ok(output);
     }
 
+    let _span = tracing::debug_span!(
+        "ensure_client_extra_write_jar",
+        input = %client_jar.display(),
+        output = %output.display()
+    )
+    .entered();
     write_client_extra_jar(&client_jar, &output)?;
     Ok(output)
 }
 
 fn ensure_runtime_mcp_csv_mappings(context: &ExecutionContext<'_>) -> eyre::Result<PathBuf> {
+    let _span = tracing::debug_span!("ensure_runtime_mcp_csv_mappings").entered();
     let input = context
         .plan
         .cache_dir
@@ -5139,6 +5277,12 @@ fn ensure_runtime_mcp_csv_mappings(context: &ExecutionContext<'_>) -> eyre::Resu
     context.assert_allowed_input(&input)?;
 
     let output = context.plan.cache_dir.join("run").join("mcp-mappings");
+    let _span = tracing::debug_span!(
+        "ensure_runtime_mcp_write_csv_mappings",
+        input = %input.display(),
+        output = %output.display()
+    )
+    .entered();
     write_runtime_mcp_csv_mappings(&input, &output)?;
     Ok(output)
 }
@@ -5173,6 +5317,8 @@ fn resolve_run_plain_dependencies(
     resolver: &Resolver,
     kind: RunKind,
 ) -> eyre::Result<Vec<PathBuf>> {
+    let _span = tracing::debug_span!("resolve_run_plain_dependencies", kind = %kind.command_name())
+        .entered();
     let dependency_script = context
         .plan
         .minecraft_dir
@@ -5180,9 +5326,17 @@ fn resolve_run_plain_dependencies(
         .join("dependencies")
         .join(context.plan.minecraft_version.as_str())
         .join("dependencies.gradle");
-    let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
+    let dependencies = {
+        let _span = tracing::debug_span!(
+            "resolve_run_plain_dependencies_parse_script",
+            script = %dependency_script.display()
+        )
+        .entered();
+        parse_dependency_script(&dependency_script, &context.plan.properties)?
+    };
     let configurations = run_dependency_configurations(kind);
-    dependencies
+    let mut artifacts = Vec::new();
+    for (index, dependency) in dependencies
         .iter()
         .filter(|dependency| {
             !dependency.fg_deobf
@@ -5190,16 +5344,23 @@ fn resolve_run_plain_dependencies(
                 && !is_api_classifier(&dependency.coordinate)
         })
         .enumerate()
-        .map(|(index, dependency)| {
-            resolver
-                .resolve_artifact(
-                    ArtifactId::from(format!("run-plain-dependency-{index}")),
-                    &dependency.coordinate,
-                    ArtifactPurpose::from("Forge userdev run classpath"),
-                )
-                .map(|artifact| artifact.cache_path)
-        })
-        .collect()
+    {
+        artifacts.push((
+            ArtifactId::from(format!("run-plain-dependency-{index}")),
+            dependency.coordinate.clone(),
+            ArtifactPurpose::from("Forge userdev run classpath"),
+        ));
+    }
+    let _span = tracing::debug_span!(
+        "resolve_run_plain_dependencies_resolve_artifacts",
+        dependencies = artifacts.len()
+    )
+    .entered();
+    Ok(resolver
+        .resolve_artifacts(artifacts)?
+        .into_iter()
+        .map(|artifact| artifact.cache_path)
+        .collect())
 }
 
 fn is_api_classifier(coordinate: &MavenCoordinate) -> bool {
@@ -5211,6 +5372,8 @@ fn resolve_run_deobf_dependencies(
     resolver: &Resolver,
     kind: RunKind,
 ) -> eyre::Result<Vec<PathBuf>> {
+    let _span = tracing::debug_span!("resolve_run_deobf_dependencies", kind = %kind.command_name())
+        .entered();
     let dependency_output = context.plan.cache_dir.join("dependencies");
     let mapping_path = context
         .plan
@@ -5226,21 +5389,55 @@ fn resolve_run_deobf_dependencies(
             mapping_path.display()
         );
     }
-    let mapping_hash = ContentHash::from_path(&mapping_path, ContentHashAlgorithm::Blake3)?;
+    let mapping_hash = {
+        let _span = tracing::debug_span!(
+            "resolve_run_deobf_dependencies_hash_mapping",
+            mapping = %mapping_path.display()
+        )
+        .entered();
+        ContentHash::from_path(&mapping_path, ContentHashAlgorithm::Blake3)?
+    };
     let configurations = run_dependency_configurations(kind);
-    let mut output = Vec::new();
-
-    for dependency in context.plan.dependencies.iter().filter(|dependency| {
-        configurations.contains(&dependency.configuration.as_str())
-            && MavenCoordinate::parse(&dependency.resolved_notation)
-                .is_ok_and(|coordinate| !is_api_classifier(&coordinate))
-    }) {
+    let mut selected = Vec::new();
+    for dependency in context
+        .plan
+        .dependencies
+        .iter()
+        .filter(|dependency| configurations.contains(&dependency.configuration.as_str()))
+    {
         let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
-        let artifact = resolver.resolve_artifact(
-            ArtifactId::from(format!("run-deobf-dependency-{}", output.len())),
-            &coordinate,
-            ArtifactPurpose::from(format!("{} runtime dependency", dependency.configuration)),
-        )?;
+        if is_api_classifier(&coordinate) {
+            continue;
+        }
+        let index = selected.len();
+        selected.push((dependency, coordinate, index));
+    }
+    let artifacts = selected
+        .iter()
+        .map(|(dependency, coordinate, index)| {
+            (
+                ArtifactId::from(format!("run-deobf-dependency-{index}")),
+                coordinate.clone(),
+                ArtifactPurpose::from(format!("{} runtime dependency", dependency.configuration)),
+            )
+        })
+        .collect::<Vec<_>>();
+    let resolved = {
+        let _span = tracing::debug_span!(
+            "resolve_run_deobf_dependencies_resolve_artifacts",
+            dependencies = artifacts.len()
+        )
+        .entered();
+        resolver.resolve_artifacts(artifacts)?
+    };
+    let mut output = Vec::new();
+    for ((_, coordinate, _), artifact) in selected.into_iter().zip(resolved) {
+        let _span = tracing::debug_span!(
+            "resolve_run_deobf_dependency_output",
+            coordinate = %coordinate,
+            artifact = %artifact.cache_path.display()
+        )
+        .entered();
         context.assert_allowed_input(&artifact.cache_path)?;
         let artifact_hash = resolved_artifact_hash(&artifact)?;
         let remapped = remapped_dependency_output_path(
@@ -5269,6 +5466,9 @@ fn resolve_neogradle_run_dependencies(
     context: &ExecutionContext<'_>,
     kind: RunKind,
 ) -> eyre::Result<Vec<PathBuf>> {
+    let _span =
+        tracing::debug_span!("resolve_neogradle_run_dependencies", kind = %kind.command_name())
+            .entered();
     let dependency_output = context.plan.cache_dir.join("dependencies");
     let configurations = run_dependency_configurations(kind);
     let mut output = Vec::new();
@@ -5279,6 +5479,12 @@ fn resolve_neogradle_run_dependencies(
                 .is_ok_and(|coordinate| !is_api_classifier(&coordinate))
     }) {
         let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
+        let _span = tracing::debug_span!(
+            "resolve_neogradle_run_dependency_output",
+            coordinate = %coordinate,
+            configuration = %dependency.configuration
+        )
+        .entered();
         let copied = copied_neogradle_dependency_output_path(
             &dependency_output,
             &dependency.configuration,
@@ -5410,8 +5616,14 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
         .user_agent("sfm-propagate-changes/no-gradle-toolchain")
         .build()
         .wrap_err("Failed to create HTTP client")?;
-    let version_json: MinecraftVersionJson =
-        read_json_file(&context.plan.minecraft.version_json.cache_path)?;
+    let version_json: MinecraftVersionJson = {
+        let _span = tracing::debug_span!(
+            "prepare_minecraft_assets_read_version_json",
+            path = %context.plan.minecraft.version_json.cache_path.display()
+        )
+        .entered();
+        read_json_file(&context.plan.minecraft.version_json.cache_path)?
+    };
     let asset_index = version_json
         .asset_index
         .ok_or_else(|| eyre::eyre!("Minecraft version JSON missing assetIndex"))?;
@@ -5421,57 +5633,109 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
     } = asset_index;
     let assets_root = context.plan.minecraft_assets_dir.clone();
     let index_path = assets_root.join("indexes").join(format!("{index_id}.json"));
-    download_to_path(
-        &context.cancellation_token,
-        &client,
-        &index_url,
-        &index_path,
-    )?;
-    context.bail_if_cancelled()?;
-
-    let index_json: MinecraftAssetIndexJson = read_json_file(&index_path)?;
-    let objects = index_json.objects;
-    let mut downloaded = 0usize;
-    let mut checked = 0usize;
-    for object in objects.values() {
-        context.bail_if_cancelled()?;
-        let hash = object.hash;
-        let hash_hex = hash.hex();
-        let prefix = hash_hex
-            .get(..2)
-            .ok_or_else(|| eyre::eyre!("Minecraft asset hash is too short: {hash}"))?;
-        let object_path = assets_root.join("objects").join(prefix).join(&hash_hex);
-        if object_path.is_file() && ContentHash::from_path(&object_path, hash.algorithm)? == hash {
-            checked += 1;
-            continue;
-        }
-        let object_url = format!("https://resources.download.minecraft.net/{prefix}/{hash_hex}");
-        download_to_path_overwrite_with_expected_hash(
+    {
+        let _span = tracing::debug_span!(
+            "prepare_minecraft_assets_download_index",
+            index_id = index_id.as_str(),
+            path = %index_path.display()
+        )
+        .entered();
+        download_to_path(
             &context.cancellation_token,
             &client,
-            &object_url,
-            &object_path,
-            true,
-            &hash,
+            &index_url,
+            &index_path,
         )?;
-        let actual_hash = ContentHash::from_path(&object_path, hash.algorithm)?;
-        if actual_hash != hash {
-            eyre::bail!(
-                "Downloaded asset {} with content hash {}, expected {}",
-                object_path.display(),
-                actual_hash,
-                hash
-            );
-        }
-        downloaded += 1;
-        checked += 1;
-        if downloaded.is_multiple_of(100) {
-            tracing::info!(
-                "Downloaded {downloaded} missing Minecraft assets ({checked}/{})",
-                objects.len()
-            );
-        }
     }
+    context.bail_if_cancelled()?;
+
+    let index_json: MinecraftAssetIndexJson = {
+        let _span = tracing::debug_span!(
+            "prepare_minecraft_assets_read_index",
+            path = %index_path.display()
+        )
+        .entered();
+        read_json_file(&index_path)?
+    };
+    let objects = index_json.objects;
+    let total_assets = objects.len();
+    let assets = {
+        let _span = tracing::debug_span!(
+            "prepare_minecraft_assets_collect_unique",
+            total = total_assets
+        )
+        .entered();
+        minecraft_asset_downloads(&assets_root, &objects)?
+    };
+    let unique_assets = assets.len();
+    let worker_count = thread::available_parallelism()
+        .map_or(4, usize::from)
+        .max(1)
+        .min(unique_assets);
+    let stats = if worker_count == 0 {
+        MinecraftAssetPrepareStats::default()
+    } else {
+        let queue = Mutex::new(assets.into_iter().collect::<VecDeque<_>>());
+        let checked = AtomicUsize::new(0);
+        let downloaded = AtomicUsize::new(0);
+        thread::scope(|scope| -> eyre::Result<MinecraftAssetPrepareStats> {
+            let mut handles = Vec::new();
+            {
+                let _span = tracing::debug_span!(
+                    "prepare_minecraft_assets_spawn_workers",
+                    workers = worker_count,
+                    unique_assets
+                )
+                .entered();
+                for worker_index in 0..worker_count {
+                    let thread_name = format!("minecraft-asset-{worker_index}");
+                    handles.push(
+                        thread::Builder::new()
+                            .name(thread_name.clone())
+                            .spawn_scoped(scope, {
+                                let client = client.clone();
+                                let queue = &queue;
+                                let checked = &checked;
+                                let downloaded = &downloaded;
+                                move || {
+                                    set_tracy_thread_name(&thread_name);
+                                    let _span = tracing::debug_span!(
+                                        "prepare_minecraft_assets_worker",
+                                        worker_index
+                                    )
+                                    .entered();
+                                    prepare_minecraft_asset_worker(
+                                        context,
+                                        &client,
+                                        queue,
+                                        checked,
+                                        downloaded,
+                                        unique_assets,
+                                    )
+                                }
+                            })?,
+                    );
+                    context.bail_if_cancelled()?;
+                }
+            }
+
+            let mut stats = MinecraftAssetPrepareStats::default();
+            let _span = tracing::debug_span!(
+                "prepare_minecraft_assets_join_workers",
+                workers = handles.len()
+            )
+            .entered();
+            for handle in handles {
+                let worker_stats = handle.join().map_err(|panic| {
+                    eyre::eyre!("Minecraft asset worker panicked: {}", panic_message(&panic))
+                })??;
+                stats.checked += worker_stats.checked;
+                stats.downloaded += worker_stats.downloaded;
+            }
+            Ok(stats)
+        })?
+    };
+    let downloaded = stats.downloaded;
     if downloaded > 0 {
         tracing::info!(
             "Downloaded {downloaded} Minecraft assets into {}",
@@ -5480,9 +5744,11 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
     }
     tracing::info!(
         asset_index = index_id.as_str(),
-        checked,
+        checked = stats.checked,
         downloaded,
-        total = objects.len(),
+        total = total_assets,
+        unique_assets,
+        workers = worker_count,
         assets_root = %assets_root.display(),
         "minecraft_assets_prepared"
     );
@@ -5491,6 +5757,108 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
         root: assets_root,
         index_id,
     })
+}
+
+#[derive(Debug)]
+struct MinecraftAssetDownload {
+    hash: ContentHash,
+    path: PathBuf,
+    url: String,
+}
+
+#[derive(Debug, Default)]
+struct MinecraftAssetPrepareStats {
+    checked: usize,
+    downloaded: usize,
+}
+
+fn minecraft_asset_downloads(
+    assets_root: &Path,
+    objects: &BTreeMap<String, MinecraftAssetObject>,
+) -> eyre::Result<Vec<MinecraftAssetDownload>> {
+    let mut assets = BTreeMap::new();
+    for object in objects.values() {
+        let hash = object.hash;
+        let hash_hex = hash.hex();
+        let prefix = hash_hex
+            .get(..2)
+            .ok_or_else(|| eyre::eyre!("Minecraft asset hash is too short: {hash}"))?;
+        let key = hash.to_string();
+        if assets.contains_key(&key) {
+            continue;
+        }
+        assets.insert(
+            key,
+            MinecraftAssetDownload {
+                hash,
+                path: assets_root.join("objects").join(prefix).join(&hash_hex),
+                url: format!("https://resources.download.minecraft.net/{prefix}/{hash_hex}"),
+            },
+        );
+    }
+    Ok(assets.into_values().collect())
+}
+
+fn prepare_minecraft_asset_worker(
+    context: &ExecutionContext<'_>,
+    client: &Client,
+    queue: &Mutex<VecDeque<MinecraftAssetDownload>>,
+    checked: &AtomicUsize,
+    downloaded: &AtomicUsize,
+    unique_assets: usize,
+) -> eyre::Result<MinecraftAssetPrepareStats> {
+    let mut stats = MinecraftAssetPrepareStats::default();
+    loop {
+        context.bail_if_cancelled()?;
+        let Some(asset) = ({
+            let mut queue = queue
+                .lock()
+                .map_err(|_| eyre::eyre!("Minecraft asset worker queue lock poisoned"))?;
+            queue.pop_front()
+        }) else {
+            return Ok(stats);
+        };
+        let asset_downloaded = prepare_minecraft_asset(context, client, &asset)?;
+        stats.checked += 1;
+        let checked = checked.fetch_add(1, AtomicOrdering::Relaxed) + 1;
+        if asset_downloaded {
+            stats.downloaded += 1;
+            let downloaded = downloaded.fetch_add(1, AtomicOrdering::Relaxed) + 1;
+            if downloaded.is_multiple_of(100) {
+                tracing::info!(
+                    "Downloaded {downloaded} missing Minecraft assets ({checked}/{unique_assets})"
+                );
+            }
+        }
+    }
+}
+
+fn prepare_minecraft_asset(
+    context: &ExecutionContext<'_>,
+    client: &Client,
+    asset: &MinecraftAssetDownload,
+) -> eyre::Result<bool> {
+    let _span = tracing::debug_span!(
+        "prepare_minecraft_asset",
+        hash = %asset.hash,
+        path = %asset.path.display()
+    )
+    .entered();
+    context.bail_if_cancelled()?;
+    if existing_file_matches_hash(&asset.path, &asset.hash)? {
+        context.assert_allowed_input(&asset.path)?;
+        return Ok(false);
+    }
+    download_to_path_overwrite_with_expected_hash(
+        &context.cancellation_token,
+        client,
+        &asset.url,
+        &asset.path,
+        true,
+        &asset.hash,
+    )?;
+    context.assert_allowed_input(&asset.path)?;
+    Ok(true)
 }
 
 #[derive(Debug)]
@@ -8838,12 +9206,15 @@ fn resolve_forge_userdev_libraries(
     resolver: &Resolver,
 ) -> eyre::Result<Vec<PathBuf>> {
     context.bail_if_cancelled()?;
-    let config: ForgeUserdevConfig = read_zip_json_entry(
-        &context
-            .artifact(ArtifactId::from("forge-userdev"))?
-            .cache_path,
-        "config.json",
-    )?;
+    let config: ForgeUserdevConfig = {
+        let _span = tracing::debug_span!("resolve_forge_userdev_libraries_read_config").entered();
+        read_zip_json_entry(
+            &context
+                .artifact(ArtifactId::from("forge-userdev"))?
+                .cache_path,
+            "config.json",
+        )?
+    };
     context.bail_if_cancelled()?;
     let mut coordinates = Vec::new();
     coordinates.extend(config.libraries);
@@ -8877,29 +9248,37 @@ fn resolve_forge_userdev_test_libraries(
     resolver: &Resolver,
 ) -> eyre::Result<Vec<PathBuf>> {
     context.bail_if_cancelled()?;
-    let config: ForgeUserdevConfig = read_zip_json_entry(
-        &context
-            .artifact(ArtifactId::from("forge-userdev"))?
-            .cache_path,
-        "config.json",
-    )?;
+    let config: ForgeUserdevConfig = {
+        let _span =
+            tracing::debug_span!("resolve_forge_userdev_test_libraries_read_config").entered();
+        read_zip_json_entry(
+            &context
+                .artifact(ArtifactId::from("forge-userdev"))?
+                .cache_path,
+            "config.json",
+        )?
+    };
     context.bail_if_cancelled()?;
 
-    let mut paths = Vec::new();
-    for (index, coordinate) in config.test_libraries.iter().enumerate() {
+    let mut artifacts = Vec::new();
+    for (index, coordinate) in config.test_libraries.into_iter().enumerate() {
         context.bail_if_cancelled()?;
-        let coordinate = MavenCoordinate::parse(coordinate)?;
-        paths.push(
-            resolver
-                .resolve_artifact(
-                    ArtifactId::from(format!("forge-userdev-test-library-{index}")),
-                    &coordinate,
-                    ArtifactPurpose::from("Forge userdev game-test runtime classpath"),
-                )?
-                .cache_path,
-        );
+        artifacts.push((
+            ArtifactId::from(format!("forge-userdev-test-library-{index}")),
+            MavenCoordinate::parse(&coordinate)?,
+            ArtifactPurpose::from("Forge userdev game-test runtime classpath"),
+        ));
     }
-    Ok(paths)
+    let _span = tracing::debug_span!(
+        "resolve_forge_userdev_test_libraries_resolve_artifacts",
+        libraries = artifacts.len()
+    )
+    .entered();
+    Ok(resolver
+        .resolve_artifacts(artifacts)?
+        .into_iter()
+        .map(|artifact| artifact.cache_path)
+        .collect())
 }
 
 fn resolve_compile_dependencies(
@@ -9383,20 +9762,40 @@ fn write_minecraft_libraries_cfg(
     Ok(())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(mc = %context.plan.minecraft_version)
+)]
 fn resolve_current_minecraft_libraries(
     context: &ExecutionContext<'_>,
     client: &Client,
 ) -> eyre::Result<Vec<PathBuf>> {
     context.bail_if_cancelled()?;
-    let version_json: MinecraftVersionJson =
-        read_json_file(&context.plan.minecraft.version_json.cache_path)?;
-    let libraries = minecraft_library_jars_from_version_json(
-        &context.plan.minecraft_libraries_dir,
-        &version_json,
-    );
+    let version_json: MinecraftVersionJson = {
+        let _span = tracing::debug_span!(
+            "resolve_current_minecraft_libraries_read_version_json",
+            path = %context.plan.minecraft.version_json.cache_path.display()
+        )
+        .entered();
+        read_json_file(&context.plan.minecraft.version_json.cache_path)?
+    };
+    let libraries = {
+        let _span = tracing::debug_span!("resolve_current_minecraft_libraries_select").entered();
+        minecraft_library_jars_from_version_json(
+            &context.plan.minecraft_libraries_dir,
+            &version_json,
+        )
+    };
 
     for library in &libraries {
         context.bail_if_cancelled()?;
+        let _span = tracing::debug_span!(
+            "resolve_current_minecraft_library",
+            path = %library.path.display(),
+            has_expected_hash = library.sha1.is_some()
+        )
+        .entered();
         if let Some(expected_hash) = library.sha1.as_ref() {
             download_to_path_overwrite_with_expected_hash(
                 &context.cancellation_token,
@@ -9417,6 +9816,11 @@ fn resolve_current_minecraft_libraries(
         context.assert_allowed_input(&library.path)?;
     }
 
+    let _span = tracing::debug_span!(
+        "resolve_current_minecraft_libraries_dedup",
+        libraries = libraries.len()
+    )
+    .entered();
     Ok(dedup_paths_preserve_order(
         libraries.into_iter().map(|library| library.path).collect(),
     ))
@@ -9603,6 +10007,15 @@ fn merge_zip_archives(inputs: &[PathBuf], output: &Path) -> eyre::Result<()> {
     Ok(())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(
+        input = %input.display(),
+        universal = %forge_universal_jar.display(),
+        output = %output.display(),
+    )
+)]
 fn write_run_forge_dev_jar(
     input: &Path,
     forge_universal_jar: &Path,
@@ -9614,6 +10027,15 @@ fn write_run_forge_dev_jar(
     Ok(())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(
+        input = %input.display(),
+        universal = %neoforge_universal_jar.display(),
+        output = %output.display(),
+    )
+)]
 fn write_run_neoforge_dev_jar(
     input: &Path,
     neoforge_universal_jar: &Path,
@@ -9628,6 +10050,15 @@ fn write_run_neoforge_dev_jar(
     Ok(())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(
+        input = %input.display(),
+        universal = %neoforge_universal_jar.display(),
+        output = %output.display(),
+    )
+)]
 fn write_run_neoforge_minecraft_dev_jar(
     input: &Path,
     neoforge_universal_jar: &Path,
@@ -9647,13 +10078,20 @@ fn write_run_neoforge_minecraft_dev_jar(
         )
     })?;
     let mut names = BTreeSet::new();
-    for index in 0..archive.len() {
-        let entry = archive.by_index(index).wrap_err_with(|| {
-            format!("Failed to read NeoForge Minecraft runtime jar entry #{index}")
-        })?;
-        let name = entry.name().replace('\\', "/");
-        if should_keep_split_minecraft_runtime_entry(&name, &neoforge_entries) {
-            names.insert(name);
+    {
+        let _span = tracing::debug_span!(
+            "write_run_neoforge_minecraft_dev_jar_scan_entries",
+            archive_entries = archive.len()
+        )
+        .entered();
+        for index in 0..archive.len() {
+            let entry = archive.by_index(index).wrap_err_with(|| {
+                format!("Failed to read NeoForge Minecraft runtime jar entry #{index}")
+            })?;
+            let name = entry.name().replace('\\', "/");
+            if should_keep_split_minecraft_runtime_entry(&name, &neoforge_entries) {
+                names.insert(name);
+            }
         }
     }
 
@@ -9668,20 +10106,27 @@ fn write_run_neoforge_minecraft_dev_jar(
         .write_all(&manifest)
         .wrap_err_with(|| format!("Failed to write manifest to {}", output.display()))?;
 
-    for name in names {
-        let mut entry = archive.by_name(&name).wrap_err_with(|| {
-            format!("Failed to read NeoForge Minecraft runtime jar entry {name}")
-        })?;
-        let mut bytes = Vec::new();
-        entry.read_to_end(&mut bytes).wrap_err_with(|| {
-            format!("Failed to read NeoForge Minecraft runtime jar entry {name}")
-        })?;
-        writer
-            .start_file(name, options)
-            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
-        writer
-            .write_all(&bytes)
-            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+    {
+        let _span = tracing::debug_span!(
+            "write_run_neoforge_minecraft_dev_jar_write_entries",
+            entries = names.len()
+        )
+        .entered();
+        for name in names {
+            let mut entry = archive.by_name(&name).wrap_err_with(|| {
+                format!("Failed to read NeoForge Minecraft runtime jar entry {name}")
+            })?;
+            let mut bytes = Vec::new();
+            entry.read_to_end(&mut bytes).wrap_err_with(|| {
+                format!("Failed to read NeoForge Minecraft runtime jar entry {name}")
+            })?;
+            writer
+                .start_file(name, options)
+                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+            writer
+                .write_all(&bytes)
+                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+        }
     }
 
     writer
@@ -9717,6 +10162,11 @@ fn should_keep_split_minecraft_runtime_entry(
     true
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(input = %input.display(), output = %output.display())
+)]
 fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyre::Result<()> {
     if let Some(parent) = output.parent() {
         fs::create_dir_all(parent)?;
@@ -9726,16 +10176,23 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
     let mut archive = ZipArchive::new(Cursor::new(bytes))
         .wrap_err_with(|| format!("Failed to open loader runtime jar {}", input.display()))?;
     let mut names = BTreeSet::new();
-    for index in 0..archive.len() {
-        let entry = archive
-            .by_index(index)
-            .wrap_err_with(|| format!("Failed to read loader runtime jar entry #{index}"))?;
-        let name = entry.name().replace('\\', "/");
-        if !name.ends_with('/')
-            && !name.eq_ignore_ascii_case("META-INF/MANIFEST.MF")
-            && !is_signature_file(&name)
-        {
-            names.insert(name);
+    {
+        let _span = tracing::debug_span!(
+            "write_run_loader_dev_jar_scan_entries",
+            archive_entries = archive.len()
+        )
+        .entered();
+        for index in 0..archive.len() {
+            let entry = archive
+                .by_index(index)
+                .wrap_err_with(|| format!("Failed to read loader runtime jar entry #{index}"))?;
+            let name = entry.name().replace('\\', "/");
+            if !name.ends_with('/')
+                && !name.eq_ignore_ascii_case("META-INF/MANIFEST.MF")
+                && !is_signature_file(&name)
+            {
+                names.insert(name);
+            }
         }
     }
 
@@ -9750,20 +10207,27 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
         .write_all(manifest)
         .wrap_err_with(|| format!("Failed to write manifest to {}", output.display()))?;
 
-    for name in names {
-        let mut entry = archive
-            .by_name(&name)
-            .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
-        let mut bytes = Vec::new();
-        entry
-            .read_to_end(&mut bytes)
-            .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
-        writer
-            .start_file(name, options)
-            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
-        writer
-            .write_all(&bytes)
-            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+    {
+        let _span = tracing::debug_span!(
+            "write_run_loader_dev_jar_write_entries",
+            entries = names.len()
+        )
+        .entered();
+        for name in names {
+            let mut entry = archive
+                .by_name(&name)
+                .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
+            let mut bytes = Vec::new();
+            entry
+                .read_to_end(&mut bytes)
+                .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
+            writer
+                .start_file(name, options)
+                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+            writer
+                .write_all(&bytes)
+                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+        }
     }
 
     writer
@@ -9772,23 +10236,33 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
     Ok(())
 }
 
+#[instrument(level = "debug", skip_all, fields(path = %path.display()))]
 fn zip_entry_names(path: &Path) -> eyre::Result<BTreeSet<String>> {
     let bytes = fs::read(path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
     let mut archive = ZipArchive::new(Cursor::new(bytes))
         .wrap_err_with(|| format!("Failed to open jar {}", path.display()))?;
     let mut names = BTreeSet::new();
-    for index in 0..archive.len() {
-        let entry = archive
-            .by_index(index)
-            .wrap_err_with(|| format!("Failed to read {} entry #{index}", path.display()))?;
-        let name = entry.name().replace('\\', "/");
-        if !name.ends_with('/') {
-            names.insert(name);
+    {
+        let _span =
+            tracing::debug_span!("zip_entry_names_scan", archive_entries = archive.len()).entered();
+        for index in 0..archive.len() {
+            let entry = archive
+                .by_index(index)
+                .wrap_err_with(|| format!("Failed to read {} entry #{index}", path.display()))?;
+            let name = entry.name().replace('\\', "/");
+            if !name.ends_with('/') {
+                names.insert(name);
+            }
         }
     }
     Ok(names)
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(universal = %forge_universal_jar.display())
+)]
 fn forge_runtime_manifest(forge_universal_jar: &Path) -> eyre::Result<Vec<u8>> {
     let manifest = read_zip_entry(forge_universal_jar, "META-INF/MANIFEST.MF")?;
     let manifest = String::from_utf8(manifest).wrap_err_with(|| {
@@ -9836,6 +10310,7 @@ fn forge_runtime_manifest(forge_universal_jar: &Path) -> eyre::Result<Vec<u8>> {
     Ok(format!("{}\r\n\r\n", output_sections.join("\r\n\r\n")).into_bytes())
 }
 
+#[instrument(level = "debug", skip_all, fields(input = %input.display()))]
 fn minecraft_runtime_manifest(input: &Path) -> eyre::Result<Vec<u8>> {
     let manifest = match read_zip_entry(input, "META-INF/MANIFEST.MF") {
         Ok(manifest) => String::from_utf8(manifest).wrap_err_with(|| {
@@ -9856,6 +10331,11 @@ fn minecraft_runtime_manifest(input: &Path) -> eyre::Result<Vec<u8>> {
     Ok(format!("{}\r\n\r\n", sections.join("\r\n\r\n")).into_bytes())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(universal = %neoforge_universal_jar.display())
+)]
 fn neoforge_runtime_manifest(neoforge_universal_jar: &Path) -> eyre::Result<Vec<u8>> {
     let manifest = read_zip_entry(neoforge_universal_jar, "META-INF/MANIFEST.MF")?;
     let manifest = String::from_utf8(manifest).wrap_err_with(|| {
@@ -9880,6 +10360,11 @@ fn neoforge_runtime_manifest(neoforge_universal_jar: &Path) -> eyre::Result<Vec<
     Ok(format!("{}\r\n\r\n", output_sections.join("\r\n\r\n")).into_bytes())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(universal = %neoforge_universal_jar.display())
+)]
 fn neoforge_requires_split_runtime(neoforge_universal_jar: &Path) -> eyre::Result<bool> {
     let manifest = read_zip_entry(neoforge_universal_jar, "META-INF/MANIFEST.MF")?;
     let manifest = String::from_utf8(manifest).wrap_err_with(|| {
@@ -9948,6 +10433,11 @@ fn is_neoforge_mod_marker(name: &str) -> bool {
     name.eq_ignore_ascii_case("META-INF/neoforge.mods.toml")
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(client_jar = %client_jar.display(), output = %output.display())
+)]
 fn write_client_extra_jar(client_jar: &Path, output: &Path) -> eyre::Result<()> {
     if let Some(parent) = output.parent() {
         fs::create_dir_all(parent)?;
@@ -9958,13 +10448,20 @@ fn write_client_extra_jar(client_jar: &Path, output: &Path) -> eyre::Result<()> 
     let mut archive = ZipArchive::new(Cursor::new(bytes))
         .wrap_err_with(|| format!("Failed to open client jar {}", client_jar.display()))?;
     let mut names = BTreeSet::new();
-    for index in 0..archive.len() {
-        let entry = archive
-            .by_index(index)
-            .wrap_err_with(|| format!("Failed to read client jar entry #{index}"))?;
-        let name = entry.name().replace('\\', "/");
-        if is_client_extra_entry(&name) {
-            names.insert(name);
+    {
+        let _span = tracing::debug_span!(
+            "write_client_extra_jar_scan_entries",
+            archive_entries = archive.len()
+        )
+        .entered();
+        for index in 0..archive.len() {
+            let entry = archive
+                .by_index(index)
+                .wrap_err_with(|| format!("Failed to read client jar entry #{index}"))?;
+            let name = entry.name().replace('\\', "/");
+            if is_client_extra_entry(&name) {
+                names.insert(name);
+            }
         }
     }
 
@@ -9979,20 +10476,27 @@ fn write_client_extra_jar(client_jar: &Path, output: &Path) -> eyre::Result<()> 
         .write_all(b"Manifest-Version: 1.0\r\nMinecraft-Dists: server client\r\n\r\n")
         .wrap_err_with(|| format!("Failed to write manifest to {}", output.display()))?;
 
-    for name in names {
-        let mut entry = archive
-            .by_name(&name)
-            .wrap_err_with(|| format!("Failed to read client jar entry {name}"))?;
-        let mut bytes = Vec::new();
-        entry
-            .read_to_end(&mut bytes)
-            .wrap_err_with(|| format!("Failed to read client jar entry {name}"))?;
-        writer
-            .start_file(name, options)
-            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
-        writer
-            .write_all(&bytes)
-            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+    {
+        let _span = tracing::debug_span!(
+            "write_client_extra_jar_write_entries",
+            entries = names.len()
+        )
+        .entered();
+        for name in names {
+            let mut entry = archive
+                .by_name(&name)
+                .wrap_err_with(|| format!("Failed to read client jar entry {name}"))?;
+            let mut bytes = Vec::new();
+            entry
+                .read_to_end(&mut bytes)
+                .wrap_err_with(|| format!("Failed to read client jar entry {name}"))?;
+            writer
+                .start_file(name, options)
+                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+            writer
+                .write_all(&bytes)
+                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+        }
     }
 
     writer
@@ -10422,44 +10926,59 @@ fn generate_mojang_tsrg_mappings(
     Ok(())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(input = %srg_to_named.display(), output = %output.display())
+)]
 fn write_runtime_mcp_csv_mappings(srg_to_named: &Path, output: &Path) -> eyre::Result<()> {
     let mapping_text = fs::read_to_string(srg_to_named)
         .wrap_err_with(|| format!("Failed to read {}", srg_to_named.display()))?;
     let mut fields = String::from("searge,name,desc\n");
     let mut methods = String::from("searge,name,desc\n");
 
-    for line in mapping_text.lines() {
-        if line.trim().is_empty() || line.starts_with("tsrg") {
-            continue;
-        }
-        if !line.starts_with('\t') && !line.starts_with(' ') {
-            continue;
-        }
-        if line.starts_with("\t\t") || line.starts_with("  ") {
-            continue;
-        }
+    {
+        let _span = tracing::debug_span!(
+            "write_runtime_mcp_csv_mappings_parse",
+            bytes = mapping_text.len()
+        )
+        .entered();
+        for line in mapping_text.lines() {
+            if line.trim().is_empty() || line.starts_with("tsrg") {
+                continue;
+            }
+            if !line.starts_with('\t') && !line.starts_with(' ') {
+                continue;
+            }
+            if line.starts_with("\t\t") || line.starts_with("  ") {
+                continue;
+            }
 
-        let parts = line.split_whitespace().collect::<Vec<_>>();
-        match parts.as_slice() {
-            [srg, named] => {
-                if srg.starts_with("f_") && *srg != *named {
-                    writeln!(fields, "{srg},{named},")?;
+            let parts = line.split_whitespace().collect::<Vec<_>>();
+            match parts.as_slice() {
+                [srg, named] => {
+                    if srg.starts_with("f_") && *srg != *named {
+                        writeln!(fields, "{srg},{named},")?;
+                    }
                 }
+                [srg, _descriptor, named] if srg.starts_with("m_") && *srg != *named => {
+                    writeln!(methods, "{srg},{named},")?;
+                }
+                _ => {}
             }
-            [srg, _descriptor, named] if srg.starts_with("m_") && *srg != *named => {
-                writeln!(methods, "{srg},{named},")?;
-            }
-            _ => {}
         }
     }
 
-    fs::create_dir_all(output)?;
-    let fields_path = output.join("fields.csv");
-    let methods_path = output.join("methods.csv");
-    fs::write(&fields_path, fields)
-        .wrap_err_with(|| format!("Failed to write {}", fields_path.display()))?;
-    fs::write(&methods_path, methods)
-        .wrap_err_with(|| format!("Failed to write {}", methods_path.display()))?;
+    {
+        let _span = tracing::debug_span!("write_runtime_mcp_csv_mappings_write").entered();
+        fs::create_dir_all(output)?;
+        let fields_path = output.join("fields.csv");
+        let methods_path = output.join("methods.csv");
+        fs::write(&fields_path, fields)
+            .wrap_err_with(|| format!("Failed to write {}", fields_path.display()))?;
+        fs::write(&methods_path, methods)
+            .wrap_err_with(|| format!("Failed to write {}", methods_path.display()))?;
+    }
     tracing::info!(
         "Generated Forge runtime MCP CSV mappings: {}",
         output.display()
@@ -10467,63 +10986,85 @@ fn write_runtime_mcp_csv_mappings(srg_to_named: &Path, output: &Path) -> eyre::R
     Ok(())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(input = %srg_to_named.display(), output = %output.display())
+)]
 fn write_srg_to_named_mapping_file(srg_to_named: &Path, output: &Path) -> eyre::Result<()> {
     let content = fs::read_to_string(srg_to_named)
         .wrap_err_with(|| format!("Failed to read {}", srg_to_named.display()))?;
     let mut class_mappings = BTreeMap::new();
 
-    for line in content.lines() {
-        if line.trim().is_empty() || line.starts_with("tsrg") || line.starts_with('\t') {
-            continue;
-        }
-        let parts = line.split_whitespace().collect::<Vec<_>>();
-        if let [srg_class, named_class] = parts.as_slice() {
-            class_mappings.insert((*srg_class).to_string(), (*named_class).to_string());
+    {
+        let _span = tracing::debug_span!(
+            "write_srg_to_named_mapping_file_collect_classes",
+            bytes = content.len()
+        )
+        .entered();
+        for line in content.lines() {
+            if line.trim().is_empty() || line.starts_with("tsrg") || line.starts_with('\t') {
+                continue;
+            }
+            let parts = line.split_whitespace().collect::<Vec<_>>();
+            if let [srg_class, named_class] = parts.as_slice() {
+                class_mappings.insert((*srg_class).to_string(), (*named_class).to_string());
+            }
         }
     }
 
     let mut output_text = String::new();
     let mut current_class: Option<(String, String)> = None;
-    for line in content.lines() {
-        if line.trim().is_empty() || line.starts_with("tsrg") {
-            continue;
-        }
-        if !line.starts_with('\t') && !line.starts_with(' ') {
+    {
+        let _span = tracing::debug_span!(
+            "write_srg_to_named_mapping_file_render",
+            classes = class_mappings.len()
+        )
+        .entered();
+        for line in content.lines() {
+            if line.trim().is_empty() || line.starts_with("tsrg") {
+                continue;
+            }
+            if !line.starts_with('\t') && !line.starts_with(' ') {
+                let parts = line.split_whitespace().collect::<Vec<_>>();
+                if let [srg_class, named_class] = parts.as_slice() {
+                    writeln!(output_text, "CL: {srg_class} {named_class}")?;
+                    current_class = Some(((*srg_class).to_string(), (*named_class).to_string()));
+                }
+                continue;
+            }
+            if line.starts_with("\t\t") || line.starts_with("  ") {
+                continue;
+            }
+
+            let Some((srg_class, named_class)) = current_class.as_ref() else {
+                continue;
+            };
             let parts = line.split_whitespace().collect::<Vec<_>>();
-            if let [srg_class, named_class] = parts.as_slice() {
-                writeln!(output_text, "CL: {srg_class} {named_class}")?;
-                current_class = Some(((*srg_class).to_string(), (*named_class).to_string()));
+            match parts.as_slice() {
+                [srg, named] => {
+                    writeln!(output_text, "FD: {srg_class}/{srg} {named_class}/{named}")?;
+                }
+                [srg, descriptor, named] => {
+                    let named_descriptor = remap_descriptor_classes(descriptor, &class_mappings);
+                    writeln!(
+                        output_text,
+                        "MD: {srg_class}/{srg} {descriptor} {named_class}/{named} {named_descriptor}"
+                    )?;
+                }
+                _ => {}
             }
-            continue;
-        }
-        if line.starts_with("\t\t") || line.starts_with("  ") {
-            continue;
-        }
-
-        let Some((srg_class, named_class)) = current_class.as_ref() else {
-            continue;
-        };
-        let parts = line.split_whitespace().collect::<Vec<_>>();
-        match parts.as_slice() {
-            [srg, named] => {
-                writeln!(output_text, "FD: {srg_class}/{srg} {named_class}/{named}")?;
-            }
-            [srg, descriptor, named] => {
-                let named_descriptor = remap_descriptor_classes(descriptor, &class_mappings);
-                writeln!(
-                    output_text,
-                    "MD: {srg_class}/{srg} {descriptor} {named_class}/{named} {named_descriptor}"
-                )?;
-            }
-            _ => {}
         }
     }
 
-    if let Some(parent) = output.parent() {
-        fs::create_dir_all(parent)?;
+    {
+        let _span = tracing::debug_span!("write_srg_to_named_mapping_file_write").entered();
+        if let Some(parent) = output.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(output, output_text)
+            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
     }
-    fs::write(output, output_text)
-        .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
     tracing::info!("Generated Mixin refmap remap file: {}", output.display());
     Ok(())
 }
