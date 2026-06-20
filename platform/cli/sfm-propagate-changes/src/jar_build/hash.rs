@@ -5,7 +5,7 @@ use sha1::digest::{DynDigest, Update};
 use sha1::{Digest, Sha1 as Sha1Hasher};
 use std::fmt::Write as _;
 use std::path::Path;
-use tracing::instrument;
+use tracing::{debug_span, instrument};
 
 #[derive(Copy, Clone, Debug, Facet, PartialEq, Eq, Hash)]
 #[repr(u8)]
@@ -109,8 +109,9 @@ impl ContentHash {
         algorithm: ContentHashAlgorithm,
     ) -> eyre::Result<Self> {
         let path = path.as_ref();
-        let bytes =
-            std::fs::read(path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
+        let bytes = debug_span!("read_file_for_hash").in_scope(|| {
+            std::fs::read(path).wrap_err_with(|| format!("Failed to read {}", path.display()))
+        })?;
         Ok(Self::from_bytes(&bytes, algorithm))
     }
 }
