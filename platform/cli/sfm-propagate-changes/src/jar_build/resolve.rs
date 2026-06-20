@@ -351,7 +351,7 @@ impl Resolver {
                 remote_url: Some(remote_url.to_string()),
             }),
             source_build: Some(source_build.clone()),
-            sha1: hash,
+            hash,
         };
         write_artifact_provenance(&cache_path, &provenance)?;
         let artifact = ArtifactPlan {
@@ -602,7 +602,7 @@ impl Resolver {
             .artifacts
             .iter()
             .find(|entry| entry.coordinate.as_deref() == Some(coordinate_text.as_str()))
-            .map(|entry| &entry.sha1)
+            .map(|entry| &entry.hash)
     }
 
     fn verify_locked_artifact(
@@ -636,15 +636,15 @@ impl Resolver {
             );
         };
         let actual_hash = match actual_hash {
-            Some(actual_hash) if actual_hash.algorithm == locked.sha1.algorithm => actual_hash,
-            _ => ContentHash::from_path(&artifact.cache_path, locked.sha1.algorithm)?,
+            Some(actual_hash) if actual_hash.algorithm == locked.hash.algorithm => actual_hash,
+            _ => ContentHash::from_path(&artifact.cache_path, locked.hash.algorithm)?,
         };
-        if actual_hash != locked.sha1 {
+        if actual_hash != locked.hash {
             eyre::bail!(
                 "Artifact {} resolved with content hash {}, but sfm-toolchain.lock.json requires {}",
                 coordinate_text,
                 actual_hash,
-                locked.sha1
+                locked.hash
             );
         }
         Ok(())

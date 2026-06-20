@@ -22,6 +22,8 @@ use crate::branch_targets::MinecraftVersion;
 use crate::branch_targets::WorktreeTarget;
 use crate::branch_targets::select_required_worktree_targets;
 use crate::cancellation::CancellationToken;
+use crate::logging::set_tracy_thread_name;
+use crate::panic::panic_message;
 use crate::paths::CACHE_DIR;
 use chrono::Local;
 use eyre::Context;
@@ -56,6 +58,7 @@ use std::time::Duration;
 use std::time::Instant;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
+use tracing::info_span;
 use tracing::instrument;
 use zip::CompressionMethod;
 use zip::ZipArchive;
@@ -1042,8 +1045,8 @@ fn audit_locked_artifact(
     }
 
     let _cache_read_lock = acquire_artifact_path_read_lock(&cache_path)?;
-    let actual_hash = ContentHash::from_path(&cache_path, artifact.sha1.algorithm)?;
-    if actual_hash != artifact.sha1 {
+    let actual_hash = ContentHash::from_path(&cache_path, artifact.hash.algorithm)?;
+    if actual_hash != artifact.hash {
         report.push_error(
             ArtifactAuditIssueKind::ArtifactHashMismatch,
             artifact.coordinate.clone(),
@@ -1053,7 +1056,7 @@ fn audit_locked_artifact(
                 "Locked artifact {} has content hash {}, but lockfile requires {}",
                 cache_path.display(),
                 actual_hash,
-                artifact.sha1
+                artifact.hash
             ),
         );
         return Ok(());
@@ -1074,7 +1077,7 @@ fn audit_artifact_provenance_sidecar(
     cache_path: &Path,
     provenance: &ArtifactProvenance,
 ) {
-    if provenance.sha1 != artifact.sha1 {
+    if provenance.hash != artifact.hash {
         report.push_error(
             ArtifactAuditIssueKind::ProvenanceHashMismatch,
             artifact.coordinate.clone(),
@@ -1083,8 +1086,8 @@ fn audit_artifact_provenance_sidecar(
             format!(
                 "Artifact provenance sidecar for {} records SHA-1 {}, but lockfile requires {}",
                 cache_path.display(),
-                provenance.sha1,
-                artifact.sha1
+                provenance.hash,
+                artifact.hash
             ),
         );
     }
@@ -1200,8 +1203,8 @@ fn audit_original_source_artifact(
         return Ok(());
     }
 
-    let source_hash = ContentHash::from_path(original_path, artifact.sha1.algorithm)?;
-    if source_hash != artifact.sha1 {
+    let source_hash = ContentHash::from_path(original_path, artifact.hash.algorithm)?;
+    if source_hash != artifact.hash {
         report.push_error(
             ArtifactAuditIssueKind::OriginalSourceHashMismatch,
             artifact.coordinate.clone(),
@@ -1211,7 +1214,7 @@ fn audit_original_source_artifact(
                 "Explicit-source artifact {} original source has content hash {}, but lockfile requires {}",
                 artifact_label(artifact),
                 source_hash,
-                artifact.sha1
+                artifact.hash
             ),
         );
     }
@@ -1563,7 +1566,8 @@ struct ArtifactProvenance {
     source_git: Option<SourceGitProvenance>,
     #[facet(default)]
     source_build: Option<SourceBuildProvenance>,
-    sha1: ContentHash,
+    #[facet(alias = "sha1")]
+    hash: ContentHash,
 }
 
 #[derive(Clone, Debug, Facet)]
@@ -1606,7 +1610,8 @@ struct ArtifactLockEntry {
     source_git: Option<SourceGitProvenance>,
     #[facet(default)]
     source_build: Option<SourceBuildProvenance>,
-    sha1: ContentHash,
+    #[facet(alias = "sha1")]
+    hash: ContentHash,
 }
 
 #[derive(Clone, Debug, Eq, Facet, PartialEq)]
@@ -1825,8 +1830,10 @@ struct JarCompareReport {
 #[derive(Debug, Facet)]
 struct ChangedEntry {
     path: String,
-    gradle_sha1: ContentHash,
-    rust_sha1: ContentHash,
+    #[facet(alias = "gradle_sha1")]
+    gradle_hash: ContentHash,
+    #[facet(alias = "rust_sha1")]
+    rust_hash: ContentHash,
 }
 
 #[derive(Debug, Facet)]
@@ -2566,20 +2573,38 @@ fn artifact_portability_audit(plan: &BuildPlan) -> eyre::Result<ArtifactPortabil
             },
         );
     }
+    let mut handles = Vec::new();
     for dependency in &plan.dependencies {
-        let actual_hash =
-            ContentHash::from_path(&dependency.cache_path, ContentHashAlgorithm::Blake3)?;
-        let provenance = read_artifact_provenance(&dependency.cache_path)?.unwrap_or_else(|| {
-            artifact_provenance(
-                ArtifactSource::ExistingSfmCacheUnknown,
-                Some(dependency.resolved_notation.clone()),
-                None,
-                None,
-                None,
-                None,
-                actual_hash,
-            )
-        });
+        let thread_name = format!("artifact-portability-hash-{}", dependency.resolved_notation);
+        handles.push((
+            dependency,
+            thread::Builder::new().name(thread_name.clone()).spawn({
+                let cache_path = dependency.cache_path.clone();
+                let coordinate = dependency.resolved_notation.clone();
+                move || {
+                    set_tracy_thread_name(&thread_name);
+                    let actual_hash =
+                        ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
+                    let provenance = read_artifact_provenance(&cache_path)?.unwrap_or_else(|| {
+                        artifact_provenance(
+                            ArtifactSource::ExistingSfmCacheUnknown,
+                            Some(coordinate.clone()),
+                            None,
+                            None,
+                            None,
+                            None,
+                            actual_hash,
+                        )
+                    });
+
+                    eyre::Ok((actual_hash, provenance))
+                }
+            })?,
+        ));
+    }
+
+    for (dependency, handle) in handles {
+        let (_actual_hash, provenance) = handle.join().unwrap()?;
         push_artifact_portability_input(
             plan,
             &mut inputs,
@@ -5602,17 +5627,7 @@ impl<'a> ExecutionContext<'a> {
         self.run_java_tool_with_classpath(tool_id, jvm_args, &[], args, work_dir)
     }
 
-    #[tracing::instrument(
-        level = "info",
-        skip_all,
-        fields(
-            tool_id,
-            work_dir = %work_dir.display(),
-            jvm_args = jvm_args.len(),
-            extra_classpath_entries = extra_classpath.len(),
-            args = args.len(),
-        )
-    )]
+    #[tracing::instrument(level = "info", skip_all, fields(tool_id))]
     fn run_java_tool_with_classpath(
         &self,
         tool_id: &str,
@@ -6466,36 +6481,108 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
     }
     let mapping_hash = ContentHash::from_path(&mapping_path, ContentHashAlgorithm::Blake3)?;
     let member_mappings = read_unique_srg_member_mappings(&mapping_path)?;
-    let mut outputs = Vec::new();
+    let outputs = thread::scope(|scope| -> eyre::Result<Vec<PathBuf>> {
+        let mut handles = Vec::new();
+        for (dependency_index, dependency) in context.plan.dependencies.iter().enumerate() {
+            let thread_name = format!(
+                "dependency-deobf-{dependency_index}-{}",
+                dependency.resolved_notation
+            );
+            handles.push(
+                thread::Builder::new()
+                    .name(thread_name.clone())
+                    .spawn_scoped(scope, {
+                        let resolver = resolver.clone();
+                        let output = output.as_path();
+                        let mapping_path = mapping_path.as_path();
+                        let member_mappings = &member_mappings;
+                        move || {
+                            set_tracy_thread_name(&thread_name);
+                            context.bail_if_cancelled()?;
+                            execute_dependency_deobf_dependency(
+                                context,
+                                &resolver,
+                                dependency_index,
+                                dependency,
+                                output,
+                                mapping_path,
+                                mapping_hash,
+                                member_mappings,
+                            )
+                        }
+                    })?,
+            );
+            context.bail_if_cancelled()?;
+        }
 
-    for dependency in &context.plan.dependencies {
-        let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
-        #[cfg(feature = "tracing_detailed")]
-        let _dependency_span = tracing::debug_span!(
-            "prepare_dependency",
-            configuration = dependency.configuration.as_str(),
+        let mut outputs = Vec::with_capacity(handles.len());
+        let _span = tracing::debug_span!("dependency_deobf_join", dependency_count = handles.len())
+            .entered();
+        for handle in handles {
+            match handle.join().map_err(|panic| {
+                eyre::eyre!(
+                    "Dependency deobf worker panicked: {}",
+                    panic_message(&panic)
+                )
+            })? {
+                Ok(output) => outputs.push(output),
+                Err(error) => Err(error).wrap_err("Failed to deobfuscate dependency")?,
+            }
+        }
+        outputs.sort_by_key(|(dependency_index, _)| *dependency_index);
+        Ok(outputs.into_iter().map(|(_, output)| output).collect())
+    })?;
+
+    context.write_node_state(
+        "deobfuscate-mod-dependencies",
+        &["active fg.deobf dependency jars"],
+        &outputs,
+        "complete",
+    )?;
+    Ok(())
+}
+
+fn execute_dependency_deobf_dependency(
+    context: &ExecutionContext<'_>,
+    resolver: &Resolver,
+    dependency_index: usize,
+    dependency: &DependencyPlan,
+    output: &Path,
+    mapping_path: &Path,
+    mapping_hash: ContentHash,
+    member_mappings: &BTreeMap<String, String>,
+) -> eyre::Result<(usize, PathBuf)> {
+    let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
+    #[cfg(feature = "tracing_detailed")]
+    let _dependency_span = tracing::debug_span!(
+        "prepare_dependency",
+        configuration = dependency.configuration.as_str(),
+        coordinate = %coordinate,
+        source = ?dependency.source,
+    )
+    .entered();
+    let artifact = resolver.resolve_artifact(
+        ArtifactId::from(format!("dependency-{dependency_index}")),
+        &coordinate,
+        ArtifactPurpose::from(format!("{} dependency", dependency.configuration)),
+    )?;
+    context.assert_allowed_input(&artifact.cache_path)?;
+    let remapped =
+        remapped_dependency_output_path(output, &artifact.cache_path, &mapping_hash, &coordinate)?;
+    let specialsource_output = specialsource_dependency_output_path(
+        output,
+        &artifact.cache_path,
+        &mapping_hash,
+        &coordinate,
+    )?;
+    if remapped.is_file() {
+        tracing::debug!(
             coordinate = %coordinate,
-            source = ?dependency.source,
-        )
-        .entered();
-        let artifact = resolver.resolve_artifact(
-            ArtifactId::from(format!("dependency-{}", outputs.len())),
-            &coordinate,
-            ArtifactPurpose::from(format!("{} dependency", dependency.configuration)),
-        )?;
-        context.assert_allowed_input(&artifact.cache_path)?;
-        let remapped = remapped_dependency_output_path(
-            &output,
-            &artifact.cache_path,
-            &mapping_hash,
-            &coordinate,
-        )?;
-        let specialsource_output = specialsource_dependency_output_path(
-            &output,
-            &artifact.cache_path,
-            &mapping_hash,
-            &coordinate,
-        )?;
+            output = %remapped.display(),
+            "dependency_deobf cache hit"
+        );
+    } else {
+        let _output_lock = acquire_artifact_path_lock(&remapped)?;
         if remapped.is_file() {
             tracing::debug!(
                 coordinate = %coordinate,
@@ -6503,11 +6590,12 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
                 "dependency_deobf cache hit"
             );
         } else {
-            tracing::info!(
-                coordinate = %coordinate,
+            let _span = info_span!(
+                "dependency_deobf cache miss",
+                %coordinate,
                 output = %remapped.display(),
-                "dependency_deobf cache miss"
-            );
+            )
+            .entered();
             if !specialsource_output.is_file() {
                 if let Some(parent) = specialsource_output.parent() {
                     fs::create_dir_all(parent)?;
@@ -6530,28 +6618,16 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
                         .join(safe_path_segment(&coordinate.file_name())),
                 )?;
             }
-            rewrite_srg_member_constants_in_jar(
-                &specialsource_output,
-                &remapped,
-                &member_mappings,
-            )?;
+            rewrite_srg_member_constants_in_jar(&specialsource_output, &remapped, member_mappings)?;
         }
-        if !remapped.is_file() {
-            eyre::bail!(
-                "SpecialSource completed without producing remapped dependency jar {}",
-                remapped.display()
-            );
-        }
-        outputs.push(remapped);
     }
-
-    context.write_node_state(
-        "deobfuscate-mod-dependencies",
-        &["active fg.deobf dependency jars"],
-        &outputs,
-        "complete",
-    )?;
-    Ok(())
+    if !remapped.is_file() {
+        eyre::bail!(
+            "SpecialSource completed without producing remapped dependency jar {}",
+            remapped.display()
+        );
+    }
+    Ok((dependency_index, remapped))
 }
 
 fn copy_neogradle_dependency_jars(
@@ -10396,8 +10472,8 @@ fn compare_jars(
             let rust_sha1 = rust.entries.get(path)?;
             (gradle_sha1 != rust_sha1).then(|| ChangedEntry {
                 path: path.clone(),
-                gradle_sha1: gradle_sha1.clone(),
-                rust_sha1: rust_sha1.clone(),
+                gradle_hash: gradle_sha1.clone(),
+                rust_hash: rust_sha1.clone(),
             })
         })
         .collect::<Vec<_>>();
@@ -10554,8 +10630,8 @@ fn emit_changed_entries(entries: &[ChangedEntry]) {
         tracing::info!(
             " - {} (gradle {}, rust {})",
             entry.path,
-            entry.gradle_sha1,
-            entry.rust_sha1
+            entry.gradle_hash,
+            entry.rust_hash
         );
     }
     if entries.len() > 20 {
@@ -10741,8 +10817,8 @@ fn migrate_locked_artifact(
     if !cache_path.is_file() {
         return Ok(locked.clone());
     }
-    let legacy_actual_hash = ContentHash::from_path(&cache_path, locked.sha1.algorithm)?;
-    if legacy_actual_hash != locked.sha1 {
+    let legacy_actual_hash = ContentHash::from_path(&cache_path, locked.hash.algorithm)?;
+    if legacy_actual_hash != locked.hash {
         return Ok(locked.clone());
     }
     let actual_hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
@@ -10773,7 +10849,7 @@ fn migrate_locked_artifact(
         source_build: provenance
             .source_build
             .or_else(|| locked.source_build.clone()),
-        sha1: actual_hash,
+        hash: actual_hash,
     })
 }
 
@@ -10783,12 +10859,12 @@ fn artifact_lock_entry_from_plan_artifact(
 ) -> eyre::Result<ArtifactLockEntry> {
     let actual_hash = artifact_actual_hash(&artifact.cache_path, artifact.sha1.as_ref())?;
     let provenance_actual_hash =
-        ContentHash::from_path(&artifact.cache_path, artifact.provenance.sha1.algorithm)?;
-    if provenance_actual_hash != artifact.provenance.sha1 {
+        ContentHash::from_path(&artifact.cache_path, artifact.provenance.hash.algorithm)?;
+    if provenance_actual_hash != artifact.provenance.hash {
         eyre::bail!(
             "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
             artifact.cache_path.display(),
-            artifact.provenance.sha1,
+            artifact.provenance.hash,
             provenance_actual_hash
         );
     }
@@ -10806,7 +10882,7 @@ fn artifact_lock_entry_from_plan_artifact(
         source_relative_path: artifact.provenance.source_relative_path.clone(),
         source_git: artifact.provenance.source_git.clone(),
         source_build: artifact.provenance.source_build.clone(),
-        sha1: actual_hash,
+        hash: actual_hash,
     })
 }
 
@@ -10827,12 +10903,12 @@ fn artifact_lock_entry_from_cache_path(
             actual_hash,
         )
     });
-    let provenance_actual_hash = ContentHash::from_path(path, provenance.sha1.algorithm)?;
-    if provenance_actual_hash != provenance.sha1 {
+    let provenance_actual_hash = ContentHash::from_path(path, provenance.hash.algorithm)?;
+    if provenance_actual_hash != provenance.hash {
         eyre::bail!(
             "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
             path.display(),
-            provenance.sha1,
+            provenance.hash,
             provenance_actual_hash
         );
     }
@@ -10846,7 +10922,7 @@ fn artifact_lock_entry_from_cache_path(
         source_relative_path: provenance.source_relative_path,
         source_git: provenance.source_git,
         source_build: provenance.source_build,
-        sha1: actual_hash,
+        hash: actual_hash,
     })
 }
 
@@ -11201,7 +11277,7 @@ fn artifact_provenance(
     url: Option<String>,
     original_path: Option<PathBuf>,
     source_git: Option<SourceGitProvenance>,
-    sha1: ContentHash,
+    hash: ContentHash,
 ) -> ArtifactProvenance {
     let source_relative_path = source_relative_path(original_path.as_deref(), source_git.as_ref());
     let source_build = source_build_provenance(
@@ -11220,7 +11296,7 @@ fn artifact_provenance(
         source_relative_path,
         source_git,
         source_build,
-        sha1,
+        hash,
     }
 }
 

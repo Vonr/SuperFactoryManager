@@ -454,7 +454,7 @@ fn facet_json_roundtrips_artifact_lockfile_and_provenance() {
     assert!(provenance_json.contains("remote-maven"));
     let parsed_provenance: ArtifactProvenance =
         facet_json::from_str(&provenance_json).expect("provenance should parse");
-    assert_eq!(parsed_provenance.sha1, provenance.sha1);
+    assert_eq!(parsed_provenance.hash, provenance.hash);
 
     let lockfile = ArtifactLockfile {
         schema_version: 1,
@@ -483,7 +483,7 @@ fn facet_json_roundtrips_artifact_lockfile_and_provenance() {
             source_relative_path: None,
             source_git: None,
             source_build: None,
-            sha1: provenance.sha1,
+            hash: provenance.hash,
         }],
     };
     let json = facet_json::to_string_pretty(&lockfile).expect("lockfile should serialize");
@@ -513,7 +513,7 @@ fn migrated_common_cache_lockfile_does_not_duplicate_old_cache_entries() {
         source_relative_path: None,
         source_git: None,
         source_build: None,
-        sha1: legacy_sha1,
+        hash: legacy_sha1,
     };
     fs::write(
         artifact_path.with_file_name("a-1.jar.sfm-provenance.json"),
@@ -551,7 +551,7 @@ fn migrated_common_cache_lockfile_does_not_duplicate_old_cache_entries() {
             source_relative_path: None,
             source_git: None,
             source_build: None,
-            sha1: legacy_sha1,
+            hash: legacy_sha1,
         }],
     });
 
@@ -598,7 +598,7 @@ fn run_extra_cache_artifacts_are_written_to_lockfile() {
         source_relative_path: None,
         source_git: None,
         source_build: None,
-        sha1: hash,
+        hash,
     };
     fs::write(
         artifact_path.with_file_name("core-3.8.3.jar.sfm-provenance.json"),
@@ -633,7 +633,7 @@ fn run_extra_cache_artifacts_are_written_to_lockfile() {
         lockfile.artifacts[0].cache_path,
         PathBuf::from("$sfm-cache/maven/com/electronwill/night-config/core/3.8.3/core-3.8.3.jar")
     );
-    assert_eq!(lockfile.artifacts[0].sha1, hash);
+    assert_eq!(lockfile.artifacts[0].hash, hash);
 }
 
 #[test]
@@ -981,7 +981,7 @@ fn resolver_materializes_locked_artifact_from_source_build() {
                 remote_url: Some(remote_url.clone()),
             }),
             source_build: Some(source_build),
-            sha1: ContentHash::from_bytes(
+            hash: ContentHash::from_bytes(
                 b"not-used-when-refreshing",
                 ContentHashAlgorithm::Blake3,
             ),
@@ -1486,7 +1486,7 @@ fn artifact_portability_audit_reads_dependency_provenance() {
         source_relative_path: None,
         source_git: None,
         source_build: None,
-        sha1: ContentHash::from_bytes(b"local only", ContentHashAlgorithm::Blake3),
+        hash: ContentHash::from_bytes(b"local only", ContentHashAlgorithm::Blake3),
     };
     fs::write(
         artifact_path.with_file_name("local-only.jar.sfm-provenance.json"),
@@ -1556,7 +1556,7 @@ fn artifact_audit_verifies_sfm_cache_lockfile_artifact() {
             source_relative_path: None,
             source_git: None,
             source_build: None,
-            sha1: hash,
+            hash: hash,
         }],
         Vec::new(),
     );
@@ -1622,7 +1622,7 @@ fn artifact_audit_warns_or_fails_for_explicit_sources() {
             source_relative_path: None,
             source_git: None,
             source_build: None,
-            sha1: hash,
+            hash: hash,
         }],
         Vec::new(),
     );
@@ -1918,7 +1918,7 @@ fn minimal_provenance() -> ArtifactProvenance {
         source_relative_path: None,
         source_git: None,
         source_build: None,
-        sha1: ContentHash::from_bytes(b"abc123", ContentHashAlgorithm::Blake3),
+        hash: ContentHash::from_bytes(b"abc123", ContentHashAlgorithm::Blake3),
     }
 }
 
@@ -2033,8 +2033,8 @@ fn compare_report_fixture(matches: bool) -> JarCompareReport {
         } else {
             vec![ChangedEntry {
                 path: "b.class".to_string(),
-                gradle_sha1: ContentHash::from_bytes(b"1", ContentHashAlgorithm::Blake3),
-                rust_sha1: ContentHash::from_bytes(b"2", ContentHashAlgorithm::Blake3),
+                gradle_hash: ContentHash::from_bytes(b"1", ContentHashAlgorithm::Blake3),
+                rust_hash: ContentHash::from_bytes(b"2", ContentHashAlgorithm::Blake3),
             }]
         },
         manifest: ManifestCompare {
