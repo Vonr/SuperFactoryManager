@@ -752,6 +752,48 @@ impl Resolver {
         })
     }
 
+    pub(super) fn resolve_dependencies(
+        &self,
+        items: impl IntoIterator<Item = (String, MavenCoordinate)>,
+    ) -> eyre::Result<Vec<DependencyPlan>> {
+        let mut handles = Vec::new();
+        for (configuration, coordinate) in items {
+            let thread_name = format!("resolve-dependency-core-{}:{}", configuration, coordinate);
+            handles.push(
+                std::thread::Builder::new()
+                    .name(thread_name.clone())
+                    .spawn({
+                        let resolver = self.clone();
+                        let cancellation_token = self.cancellation_token.clone();
+                        move || {
+                            set_tracy_thread_name(&thread_name);
+                            cancellation_token.bail_if_cancelled()?;
+                            resolver.resolve_dependency(&configuration, &coordinate)
+                        }
+                    })?,
+            );
+            self.cancellation_token.bail_if_cancelled()?;
+        }
+        let mut rtn = Vec::with_capacity(handles.len());
+        let _span = tracing::debug_span!(
+            "resolve_dependencies_join",
+            dependency_count = handles.len()
+        )
+        .entered();
+        for handle in handles {
+            match handle.join().map_err(|panic| {
+                eyre::eyre!(
+                    "Dependency resolution worker panicked: {}",
+                    panic_message(&panic)
+                )
+            })? {
+                Ok(x) => rtn.push(x),
+                Err(e) => Err(e).wrap_err("Failed to resolve dependency")?,
+            }
+        }
+        Ok(rtn)
+    }
+
     pub(super) fn resolve_dependency(
         &self,
         configuration: &str,

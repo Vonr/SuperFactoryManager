@@ -2429,13 +2429,17 @@ fn create_plan_for_target(
             loader_kind = ?loader_toolchain.kind,
         )
         .entered();
-        let dependency_plans = dependencies
-            .iter()
-            .filter(|dependency| should_plan_project_dependency(&loader_toolchain, dependency))
-            .map(|dependency| {
-                resolver.resolve_dependency(&dependency.configuration, &dependency.coordinate)
-            })
-            .collect::<eyre::Result<Vec<_>>>()?;
+        let dependency_plans = resolver.resolve_dependencies(
+            dependencies
+                .iter()
+                .filter(|dependency| should_plan_project_dependency(&loader_toolchain, dependency))
+                .map(|dependency| {
+                    (
+                        dependency.configuration.clone(),
+                        dependency.coordinate.clone(),
+                    )
+                }),
+        )?;
         if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
             let _span = tracing::debug_span!(
                 "plan_resolve_transitive_runtime_dependencies",
