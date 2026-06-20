@@ -1,10 +1,12 @@
 use super::ArtifactAuditIssueKind;
 use super::ArtifactAuditSeverity;
+use super::ArtifactId;
 use super::ArtifactLockEntry;
 use super::ArtifactLockfile;
 use super::ArtifactPlan;
 use super::ArtifactPortabilityAudit;
 use super::ArtifactProvenance;
+use super::ArtifactPurpose;
 use super::ArtifactSource;
 use super::BuildMode;
 use super::BuildOptions;
@@ -742,7 +744,11 @@ fn resolver_cache_hit_waits_for_writer_lock_before_reading() {
 
     let started = Instant::now();
     let waiter = thread::spawn(move || {
-        resolver.resolve_artifact("cached-artifact", &coordinate, "resolver test")
+        resolver.resolve_artifact(
+            ArtifactId::from("cached-artifact"),
+            &coordinate,
+            ArtifactPurpose::from("resolver test"),
+        )
     });
 
     thread::sleep(Duration::from_millis(50));
@@ -800,7 +806,11 @@ fn resolver_imports_from_explicit_project_artifact_source() {
     )
     .expect("resolver should build");
     let artifact = resolver
-        .resolve_artifact("explicit-source", &coordinate, "explicit source test")
+        .resolve_artifact(
+            ArtifactId::from("explicit-source"),
+            &coordinate,
+            ArtifactPurpose::from("explicit source test"),
+        )
         .expect("artifact should import from explicit source");
 
     assert_eq!(
@@ -880,10 +890,18 @@ fn explicit_source_mekanism_artifacts_record_source_build_commands() {
     )
     .expect("resolver should build");
     let main_artifact = resolver
-        .resolve_artifact("mekanism-main", &main_coordinate, "mekanism main")
+        .resolve_artifact(
+            ArtifactId::from("mekanism-main"),
+            &main_coordinate,
+            ArtifactPurpose::from("mekanism main"),
+        )
         .expect("main artifact should import from explicit source");
     let api_artifact = resolver
-        .resolve_artifact("mekanism-api", &api_coordinate, "mekanism api")
+        .resolve_artifact(
+            ArtifactId::from("mekanism-api"),
+            &api_coordinate,
+            ArtifactPurpose::from("mekanism api"),
+        )
         .expect("api artifact should import from explicit source");
 
     assert_source_build(
@@ -971,7 +989,11 @@ fn resolver_materializes_locked_artifact_from_source_build() {
     )
     .expect("resolver should build");
     let artifact = resolver
-        .resolve_artifact("source-build", &coordinate, "source build test")
+        .resolve_artifact(
+            ArtifactId::from("source-build"),
+            &coordinate,
+            ArtifactPurpose::from("source build test"),
+        )
         .expect("artifact should materialize from source build");
 
     assert_eq!(artifact.provenance.source, ArtifactSource::SourceBuild);
@@ -1853,14 +1875,14 @@ fn minecraft_library_selection_uses_only_current_version_json() {
 
 fn minimal_artifact() -> ArtifactPlan {
     ArtifactPlan {
-        id: "artifact".to_string(),
+        id: ArtifactId::from("artifact"),
         coordinate: Some("g:a:1".to_string()),
         repository: Some("Forge".to_string()),
         url: Some("https://example.test/a.jar".to_string()),
         cache_path: PathBuf::from("a.jar"),
         sha1: Some("abc123".to_string()),
         downloaded: true,
-        required_for: "test".to_string(),
+        required_for: ArtifactPurpose::from("test"),
         provenance: minimal_provenance(),
     }
 }

@@ -4,6 +4,8 @@ mod artifact_audit_issue_kind;
 mod artifact_audit_options;
 mod artifact_audit_report;
 mod artifact_audit_severity;
+mod artifact_id;
+mod artifact_purpose;
 mod build_command;
 mod build_mode;
 mod build_options;
@@ -21,6 +23,8 @@ mod target_artifact_audit_report;
 
 pub use artifact_audit_command::ArtifactAuditCommand;
 pub use artifact_audit_options::ArtifactAuditOptions;
+pub(super) use artifact_id::ArtifactId;
+pub(super) use artifact_purpose::ArtifactPurpose;
 pub use build_command::BuildCommand;
 pub use build_mode::BuildMode;
 pub use build_options::BuildOptions;

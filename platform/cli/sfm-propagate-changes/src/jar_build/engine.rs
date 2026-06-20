@@ -1,5 +1,7 @@
 // todo(2026-06-16) file very large
 use super::ArtifactAuditOptions;
+use super::ArtifactId;
+use super::ArtifactPurpose;
 use super::BuildMode;
 use super::BuildOptions;
 use super::CompareOptions;
@@ -19,8 +21,6 @@ use crate::branch_targets::MinecraftVersion;
 use crate::branch_targets::WorktreeTarget;
 use crate::branch_targets::select_required_worktree_targets;
 use crate::cancellation::CancellationToken;
-use crate::logging::set_tracy_thread_name;
-use crate::panic::panic_message;
 use crate::paths::CACHE_DIR;
 use chrono::Local;
 use eyre::Context;
@@ -1536,7 +1536,7 @@ struct MavenCoordinate {
 
 #[derive(Clone, Debug, Facet)]
 struct ArtifactPlan {
-    id: String,
+    id: ArtifactId,
     coordinate: Option<String>,
     repository: Option<String>,
     url: Option<String>,
@@ -1544,7 +1544,7 @@ struct ArtifactPlan {
     cache_path: PathBuf,
     sha1: Option<String>,
     downloaded: bool,
-    required_for: String,
+    required_for: ArtifactPurpose,
     provenance: ArtifactProvenance,
 }
 
@@ -2355,9 +2355,9 @@ fn create_plan_for_target(
         let forge_userdev_coordinate =
             MavenCoordinate::parse(&loader_toolchain.userdev_coordinate)?;
         let forge_userdev_artifact = resolver.resolve_artifact(
-            "forge-userdev",
+            ArtifactId::from("forge-userdev"),
             &forge_userdev_coordinate,
-            "Loader userdev configuration and patches",
+            ArtifactPurpose::from("Loader userdev configuration and patches"),
         )?;
         cancellation_token.bail_if_cancelled()?;
         let forge_userdev = read_forge_userdev(&forge_userdev_artifact)?;
@@ -2367,9 +2367,9 @@ fn create_plan_for_target(
         } else if let Some(mcp) = &forge_userdev.mcp {
             let mcp_coordinate = MavenCoordinate::parse(mcp)?;
             let mcp_artifact = resolver.resolve_artifact(
-                "mcp-config",
+                ArtifactId::from("mcp-config"),
                 &mcp_coordinate,
-                "MCPConfig clean-slate Minecraft pipeline",
+                ArtifactPurpose::from("MCPConfig clean-slate Minecraft pipeline"),
             )?;
             cancellation_token.bail_if_cancelled()?;
             Some(read_mcp_config(&mcp_artifact)?)
@@ -2726,7 +2726,7 @@ fn core_coordinates(
     userdev: &ForgeUserdevPlan,
     mcp_config: Option<&McpConfigPlan>,
     dependencies: &[ParsedDependency],
-) -> eyre::Result<Vec<(String, MavenCoordinate, String)>> {
+) -> eyre::Result<Vec<(ArtifactId, MavenCoordinate, ArtifactPurpose)>> {
     let mut coordinates = Vec::new();
 
     if let Some(sources) = userdev
@@ -2740,9 +2740,9 @@ fn core_coordinates(
             "forge-sources"
         };
         coordinates.push((
-            artifact_id.to_string(),
+            ArtifactId::from(artifact_id),
             MavenCoordinate::parse(sources)?,
-            "Loader source patch application".to_string(),
+            ArtifactPurpose::from("Loader source patch application"),
         ));
     }
 
@@ -2757,9 +2757,9 @@ fn core_coordinates(
             "forge-universal"
         };
         coordinates.push((
-            artifact_id.to_string(),
+            ArtifactId::from(artifact_id),
             MavenCoordinate::parse(universal)?,
-            "Loader userdev resource merge".to_string(),
+            ArtifactPurpose::from("Loader userdev resource merge"),
         ));
     }
 
@@ -2770,17 +2770,17 @@ fn core_coordinates(
     });
     if let Some(neo_form) = neoform_coordinate {
         coordinates.push((
-            "neoform-config".to_string(),
+            ArtifactId::from("neoform-config"),
             MavenCoordinate::parse(neo_form)?,
-            "NeoForm clean-slate Minecraft pipeline".to_string(),
+            ArtifactPurpose::from("NeoForm clean-slate Minecraft pipeline"),
         ));
     }
 
     if mapping_channel == "parchment" {
         coordinates.push((
-            "parchment-data".to_string(),
+            ArtifactId::from("parchment-data"),
             parchment_coordinate(mapping_version)?,
-            "Parchment names layered over official mappings".to_string(),
+            ArtifactPurpose::from("Parchment names layered over official mappings"),
         ));
     }
 
@@ -2788,9 +2788,9 @@ fn core_coordinates(
 
     if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
         coordinates.push((
-            "tool-neoform-runtime".to_string(),
+            ArtifactId::from("tool-neoform-runtime"),
             MavenCoordinate::parse(NEOFORM_RUNTIME_COORDINATE)?,
-            "NeoForm Runtime userdev execution".to_string(),
+            ArtifactPurpose::from("NeoForm Runtime userdev execution"),
         ));
         add_userdev_test_library_coordinates(&mut coordinates, userdev)?;
         add_project_tool_coordinates(&mut coordinates, dependencies)?;
@@ -2799,9 +2799,9 @@ fn core_coordinates(
 
     if let Some(binpatcher) = &userdev.binpatcher {
         coordinates.push((
-            "forge-binarypatcher".to_string(),
+            ArtifactId::from("forge-binarypatcher"),
             MavenCoordinate::parse(binpatcher)?,
-            "Forge binary patch application".to_string(),
+            ArtifactPurpose::from("Forge binary patch application"),
         ));
     }
 
@@ -2813,7 +2813,7 @@ fn core_coordinates(
 }
 
 fn add_userdev_library_coordinates(
-    coordinates: &mut Vec<(String, MavenCoordinate, String)>,
+    coordinates: &mut Vec<(ArtifactId, MavenCoordinate, ArtifactPurpose)>,
     userdev: &ForgeUserdevPlan,
 ) -> eyre::Result<()> {
     let mut userdev_coordinates = userdev
@@ -2827,23 +2827,23 @@ fn add_userdev_library_coordinates(
 
     for (index, coordinate) in userdev_coordinates.iter().enumerate() {
         coordinates.push((
-            format!("forge-userdev-library-{index}"),
+            ArtifactId::from(format!("forge-userdev-library-{index}")),
             MavenCoordinate::parse(coordinate)?,
-            "Forge userdev compile classpath".to_string(),
+            ArtifactPurpose::from("Forge userdev compile classpath"),
         ));
     }
     Ok(())
 }
 
 fn add_userdev_test_library_coordinates(
-    coordinates: &mut Vec<(String, MavenCoordinate, String)>,
+    coordinates: &mut Vec<(ArtifactId, MavenCoordinate, ArtifactPurpose)>,
     userdev: &ForgeUserdevPlan,
 ) -> eyre::Result<()> {
     for (index, coordinate) in userdev.test_libraries.iter().enumerate() {
         coordinates.push((
-            format!("forge-userdev-test-library-{index}"),
+            ArtifactId::from(format!("forge-userdev-test-library-{index}")),
             MavenCoordinate::parse(coordinate)?,
-            "Forge userdev game-test runtime classpath".to_string(),
+            ArtifactPurpose::from("Forge userdev game-test runtime classpath"),
         ));
     }
     Ok(())
@@ -2916,16 +2916,16 @@ fn is_runtime_transitive_root(configuration: &str) -> bool {
 }
 
 fn add_project_tool_coordinates(
-    coordinates: &mut Vec<(String, MavenCoordinate, String)>,
+    coordinates: &mut Vec<(ArtifactId, MavenCoordinate, ArtifactPurpose)>,
     dependencies: &[ParsedDependency],
 ) -> eyre::Result<()> {
     add_project_compile_annotation_coordinates(coordinates)?;
     for dependency in dependencies {
         if dependency.configuration == "annotationProcessor" {
             coordinates.push((
-                "mixin-annotation-processor".to_string(),
+                ArtifactId::from("mixin-annotation-processor"),
                 dependency.coordinate.clone(),
-                "Mixin refmap generation".to_string(),
+                ArtifactPurpose::from("Mixin refmap generation"),
             ));
         } else if dependency.configuration == "antlr" {
             for (index, coordinate) in antlr_classpath_coordinates(&dependency.coordinate.version)?
@@ -2938,9 +2938,9 @@ fn add_project_tool_coordinates(
                     format!("antlr-tool-dependency-{index}")
                 };
                 coordinates.push((
-                    artifact_id,
+                    ArtifactId::from(artifact_id),
                     MavenCoordinate::parse(&coordinate)?,
-                    "ANTLR grammar generation".to_string(),
+                    ArtifactPurpose::from("ANTLR grammar generation"),
                 ));
             }
         }
@@ -2949,20 +2949,20 @@ fn add_project_tool_coordinates(
 }
 
 fn add_project_compile_annotation_coordinates(
-    coordinates: &mut Vec<(String, MavenCoordinate, String)>,
+    coordinates: &mut Vec<(ArtifactId, MavenCoordinate, ArtifactPurpose)>,
 ) -> eyre::Result<()> {
     for (artifact_id, coordinate) in PROJECT_COMPILE_ANNOTATION_COORDINATES {
         coordinates.push((
-            artifact_id.to_string(),
+            ArtifactId::from(artifact_id),
             MavenCoordinate::parse(coordinate)?,
-            "Project compile annotations".to_string(),
+            ArtifactPurpose::from("Project compile annotations"),
         ));
     }
     Ok(())
 }
 
 fn add_mcp_tool_coordinates(
-    coordinates: &mut Vec<(String, MavenCoordinate, String)>,
+    coordinates: &mut Vec<(ArtifactId, MavenCoordinate, ArtifactPurpose)>,
     mcp_config: Option<&McpConfigPlan>,
 ) -> eyre::Result<()> {
     for (id, function_name, fallback_coordinate, required_for) in [
@@ -3016,13 +3016,13 @@ fn add_mcp_tool_coordinates(
         ),
     ] {
         coordinates.push((
-            id.to_string(),
+            ArtifactId::from(id),
             MavenCoordinate::parse(&mcp_function_coordinate(
                 mcp_config,
                 function_name,
                 fallback_coordinate,
             ))?,
-            required_for.to_string(),
+            ArtifactPurpose::from(required_for),
         ));
     }
 
@@ -3190,16 +3190,16 @@ fn resolve_minecraft_plan(
 
     Ok(MinecraftPlan {
         version_manifest: plain_artifact(
-            "minecraft-version-manifest",
+            ArtifactId::from("minecraft-version-manifest"),
             VERSION_MANIFEST_URL,
             manifest_path,
-            "Minecraft version discovery",
+            ArtifactPurpose::from("Minecraft version discovery"),
         )?,
         version_json: plain_artifact(
-            "minecraft-version-json",
+            ArtifactId::from("minecraft-version-json"),
             version_url,
             version_json_path,
-            "Minecraft libraries and downloads",
+            ArtifactPurpose::from("Minecraft libraries and downloads"),
         )?,
         client_jar_url: version_json.downloads.client.url,
         server_jar_url: version_json.downloads.server.url,
@@ -4827,7 +4827,9 @@ fn read_forge_run_config(
     kind: RunKind,
 ) -> eyre::Result<ForgeRunConfig> {
     let config: ForgeUserdevConfig = read_zip_json_entry(
-        &context.artifact("forge-userdev")?.cache_path,
+        &context
+            .artifact(ArtifactId::from("forge-userdev"))?
+            .cache_path,
         "config.json",
     )?;
     config
@@ -4865,7 +4867,9 @@ fn resolve_forge_userdev_modules(
     resolver: &Resolver,
 ) -> eyre::Result<Vec<PathBuf>> {
     let config: ForgeUserdevConfig = read_zip_json_entry(
-        &context.artifact("forge-userdev")?.cache_path,
+        &context
+            .artifact(ArtifactId::from("forge-userdev"))?
+            .cache_path,
         "config.json",
     )?;
     let coordinates = config.modules;
@@ -4877,9 +4881,9 @@ fn resolve_forge_userdev_modules(
             let coordinate = MavenCoordinate::parse(coordinate)?;
             resolver
                 .resolve_artifact(
-                    &format!("forge-userdev-module-{index}"),
+                    ArtifactId::from(format!("forge-userdev-module-{index}")),
                     &coordinate,
-                    "Forge userdev module path",
+                    ArtifactPurpose::from("Forge userdev module path"),
                 )
                 .map(|artifact| artifact.cache_path)
         })
@@ -4974,7 +4978,7 @@ fn ensure_run_neoforge_dev_jars(
         );
     }
     context.assert_allowed_input(&input)?;
-    let neoforge_universal = context.artifact("neoforge-universal")?;
+    let neoforge_universal = context.artifact(ArtifactId::from("neoforge-universal"))?;
     context.assert_allowed_input(&neoforge_universal.cache_path)?;
     let neoforge_version = required_property(&context.plan.properties, "neo_version")?;
     if neoforge_requires_split_runtime(&neoforge_universal.cache_path)? {
@@ -5053,7 +5057,7 @@ fn ensure_run_forge_dev_jar(context: &ExecutionContext<'_>) -> eyre::Result<Path
         );
     }
     context.assert_allowed_input(&input)?;
-    let forge_universal = context.artifact("forge-universal")?;
+    let forge_universal = context.artifact(ArtifactId::from("forge-universal"))?;
     context.assert_allowed_input(&forge_universal.cache_path)?;
 
     let output = context.plan.cache_dir.join("run").join(format!(
@@ -5160,9 +5164,9 @@ fn resolve_run_plain_dependencies(
         .map(|(index, dependency)| {
             resolver
                 .resolve_artifact(
-                    &format!("run-plain-dependency-{index}"),
+                    ArtifactId::from(format!("run-plain-dependency-{index}")),
                     &dependency.coordinate,
-                    "Forge userdev run classpath",
+                    ArtifactPurpose::from("Forge userdev run classpath"),
                 )
                 .map(|artifact| artifact.cache_path)
         })
@@ -5204,9 +5208,9 @@ fn resolve_run_deobf_dependencies(
     }) {
         let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
         let artifact = resolver.resolve_artifact(
-            &format!("run-deobf-dependency-{}", output.len()),
+            ArtifactId::from(format!("run-deobf-dependency-{}", output.len())),
             &coordinate,
-            &format!("{} runtime dependency", dependency.configuration),
+            ArtifactPurpose::from(format!("{} runtime dependency", dependency.configuration)),
         )?;
         context.assert_allowed_input(&artifact.cache_path)?;
         let remapped = remapped_dependency_output_path(
@@ -5565,7 +5569,7 @@ impl<'a> ExecutionContext<'a> {
         Ok(())
     }
 
-    fn artifact(&self, id: &str) -> eyre::Result<&ArtifactPlan> {
+    fn artifact(&self, id: ArtifactId) -> eyre::Result<&ArtifactPlan> {
         self.plan
             .artifacts
             .iter()
@@ -5573,7 +5577,7 @@ impl<'a> ExecutionContext<'a> {
             .ok_or_else(|| eyre::eyre!("Resolved plan did not include artifact id {id}"))
     }
 
-    fn maybe_artifact(&self, id: &str) -> Option<&ArtifactPlan> {
+    fn maybe_artifact(&self, id: ArtifactId) -> Option<&ArtifactPlan> {
         self.plan
             .artifacts
             .iter()
@@ -5609,7 +5613,7 @@ impl<'a> ExecutionContext<'a> {
         args: &[String],
         work_dir: &Path,
     ) -> eyre::Result<()> {
-        let tool = self.artifact(tool_id)?;
+        let tool = self.artifact(ArtifactId::from(tool_id))?;
         self.assert_allowed_input(&tool.cache_path)?;
         for path in extra_classpath {
             self.assert_allowed_input(path)?;
@@ -5783,7 +5787,7 @@ fn execute_mcp_config_joined(context: &ExecutionContext<'_>) -> eyre::Result<()>
     context.assert_allowed_input(&server_bundle)?;
     context.assert_allowed_input(&client_mappings)?;
 
-    let mcp_config = context.artifact("mcp-config")?;
+    let mcp_config = context.artifact(ArtifactId::from("mcp-config"))?;
     context.assert_allowed_input(&mcp_config.cache_path)?;
     let data_dir = mcp_root.join("data");
     fs::create_dir_all(&data_dir)?;
@@ -5986,9 +5990,9 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         );
     }
 
-    let userdev = context.artifact("forge-userdev")?;
-    let forge_sources = context.artifact("forge-sources")?;
-    let forge_universal = context.artifact("forge-universal")?;
+    let userdev = context.artifact(ArtifactId::from("forge-userdev"))?;
+    let forge_sources = context.artifact(ArtifactId::from("forge-sources"))?;
+    let forge_universal = context.artifact(ArtifactId::from("forge-universal"))?;
     context.assert_allowed_input(&userdev.cache_path)?;
     context.assert_allowed_input(&forge_sources.cache_path)?;
     context.assert_allowed_input(&forge_universal.cache_path)?;
@@ -6058,7 +6062,7 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     fs::create_dir_all(&mappings_root)?;
     let obf_to_official = mappings_root.join("obf_to_official.tsrg");
     let parchment_parameters = context
-        .artifact("parchment-data")
+        .artifact(ArtifactId::from("parchment-data"))
         .ok()
         .map(|artifact| read_parchment_parameters(&artifact.cache_path))
         .transpose()?;
@@ -6283,7 +6287,7 @@ fn execute_neoform_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         args.extend(["--java-home".to_string(), java_home.display().to_string()]);
     }
 
-    if let Some(parchment) = context.maybe_artifact("parchment-data")
+    if let Some(parchment) = context.maybe_artifact(ArtifactId::from("parchment-data"))
         && let Some(coordinate) = &parchment.coordinate
     {
         args.extend([
@@ -6467,9 +6471,9 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
         )
         .entered();
         let artifact = resolver.resolve_artifact(
-            &format!("dependency-{}", outputs.len()),
+            ArtifactId::from(format!("dependency-{}", outputs.len())),
             &coordinate,
-            &format!("{} dependency", dependency.configuration),
+            ArtifactPurpose::from(format!("{} dependency", dependency.configuration)),
         )?;
         context.assert_allowed_input(&artifact.cache_path)?;
         let remapped = remapped_dependency_output_path(
@@ -6551,9 +6555,9 @@ fn copy_neogradle_dependency_jars(
     for dependency in &context.plan.dependencies {
         let coordinate = MavenCoordinate::parse(&dependency.resolved_notation)?;
         let artifact = resolver.resolve_artifact(
-            &format!("dependency-{}", outputs.len()),
+            ArtifactId::from(format!("dependency-{}", outputs.len())),
             &coordinate,
-            &format!("{} dependency", dependency.configuration),
+            ArtifactPurpose::from(format!("{} dependency", dependency.configuration)),
         )?;
         context.assert_allowed_input(&artifact.cache_path)?;
         let copied =
@@ -8001,7 +8005,7 @@ fn resolve_coordinates_for_classpath(
     context: &ExecutionContext<'_>,
     resolver: &Resolver,
     coordinates: &[&str],
-    required_for: &str,
+    required_for: ArtifactPurpose,
 ) -> eyre::Result<Vec<PathBuf>> {
     let mut paths = Vec::new();
     for (index, coordinate) in coordinates.iter().enumerate() {
@@ -8009,7 +8013,11 @@ fn resolve_coordinates_for_classpath(
         let coordinate = MavenCoordinate::parse(coordinate)?;
         paths.push(
             resolver
-                .resolve_artifact(&format!("classpath-{index}"), &coordinate, required_for)?
+                .resolve_artifact(
+                    ArtifactId::from(format!("classpath-{index}")),
+                    &coordinate,
+                    required_for.clone(),
+                )?
                 .cache_path,
         );
     }
@@ -8040,7 +8048,7 @@ fn resolve_antlr_classpath(
         context,
         resolver,
         &coordinate_refs,
-        "ANTLR grammar generation",
+        ArtifactPurpose::from("ANTLR grammar generation"),
     )
 }
 
@@ -8097,7 +8105,7 @@ fn resolve_project_compile_classpath(
         context,
         resolver,
         &annotation_coordinates,
-        "Project compile annotations",
+        ArtifactPurpose::from("Project compile annotations"),
     )?);
     context.bail_if_cancelled()?;
     classpath.extend(antlr_classpath.iter().cloned());
@@ -8233,7 +8241,9 @@ fn resolve_forge_userdev_libraries(
 ) -> eyre::Result<Vec<PathBuf>> {
     context.bail_if_cancelled()?;
     let config: ForgeUserdevConfig = read_zip_json_entry(
-        &context.artifact("forge-userdev")?.cache_path,
+        &context
+            .artifact(ArtifactId::from("forge-userdev"))?
+            .cache_path,
         "config.json",
     )?;
     context.bail_if_cancelled()?;
@@ -8250,9 +8260,9 @@ fn resolve_forge_userdev_libraries(
         paths.push(
             resolver
                 .resolve_artifact(
-                    &format!("forge-userdev-library-{index}"),
+                    ArtifactId::from(format!("forge-userdev-library-{index}")),
                     &coordinate,
-                    "Forge userdev compile classpath",
+                    ArtifactPurpose::from("Forge userdev compile classpath"),
                 )?
                 .cache_path,
         );
@@ -8266,7 +8276,9 @@ fn resolve_forge_userdev_test_libraries(
 ) -> eyre::Result<Vec<PathBuf>> {
     context.bail_if_cancelled()?;
     let config: ForgeUserdevConfig = read_zip_json_entry(
-        &context.artifact("forge-userdev")?.cache_path,
+        &context
+            .artifact(ArtifactId::from("forge-userdev"))?
+            .cache_path,
         "config.json",
     )?;
     context.bail_if_cancelled()?;
@@ -8278,9 +8290,9 @@ fn resolve_forge_userdev_test_libraries(
         paths.push(
             resolver
                 .resolve_artifact(
-                    &format!("forge-userdev-test-library-{index}"),
+                    ArtifactId::from(format!("forge-userdev-test-library-{index}")),
                     &coordinate,
-                    "Forge userdev game-test runtime classpath",
+                    ArtifactPurpose::from("Forge userdev game-test runtime classpath"),
                 )?
                 .cache_path,
         );
@@ -8316,9 +8328,9 @@ fn resolve_compile_dependencies(
         paths.push(
             resolver
                 .resolve_artifact(
-                    &format!("compile-dependency-{}", paths.len()),
+                    ArtifactId::from(format!("compile-dependency-{}", paths.len())),
                     &dependency.coordinate,
-                    "Project compile classpath",
+                    ArtifactPurpose::from("Project compile classpath"),
                 )?
                 .cache_path,
         );
@@ -11080,21 +11092,21 @@ fn repositories() -> Vec<Repository> {
 }
 
 fn plain_artifact(
-    id: &str,
+    id: ArtifactId,
     url: &str,
     cache_path: PathBuf,
-    required_for: &str,
+    required_for: ArtifactPurpose,
 ) -> eyre::Result<ArtifactPlan> {
     let sha1 = file_sha1(&cache_path)?;
     Ok(ArtifactPlan {
-        id: id.to_string(),
+        id,
         coordinate: None,
         repository: None,
         url: Some(url.to_string()),
         sha1: Some(sha1.clone()),
         cache_path,
         downloaded: true,
-        required_for: required_for.to_string(),
+        required_for,
         provenance: artifact_provenance(
             ArtifactSource::RemoteHttp,
             None,
