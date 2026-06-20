@@ -9,6 +9,7 @@ use tracing::instrument;
 use tracing::warn;
 
 use crate::logging::set_tracy_thread_name;
+use crate::panic::panic_message;
 
 #[derive(Clone, Debug)]
 pub(crate) struct JdkInstallation {
@@ -228,16 +229,6 @@ fn env_path(name: &str) -> Option<PathBuf> {
     std::env::var_os(name)
         .filter(|value| !value.as_os_str().is_empty())
         .map(PathBuf::from)
-}
-
-fn panic_message(panic: &(dyn std::any::Any + Send)) -> String {
-    if let Some(message) = panic.downcast_ref::<&str>() {
-        return (*message).to_string();
-    }
-    if let Some(message) = panic.downcast_ref::<String>() {
-        return message.clone();
-    }
-    "<non-string panic payload>".to_string()
 }
 
 impl JdkInstallation {
