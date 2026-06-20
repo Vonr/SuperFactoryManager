@@ -10727,39 +10727,99 @@ fn write_artifact_lockfile_with_extra_cache_paths(
     Ok(())
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(
+        branch = %plan.branch_name,
+        mc = %plan.minecraft_version
+    )
+)]
 fn build_artifact_lockfile(
     plan: &BuildPlan,
     extra_cache_paths: &[PathBuf],
 ) -> eyre::Result<ArtifactLockfile> {
     let mut artifacts = Vec::new();
-    if let Some(existing_lockfile) = &plan.lockfile {
-        for locked in &existing_lockfile.artifacts {
-            push_artifact_lock_entry(&mut artifacts, migrate_locked_artifact(plan, locked)?);
+    let entries = thread::scope(|scope| -> eyre::Result<Vec<Option<ArtifactLockEntry>>> {
+        let mut handles = Vec::new();
+        if let Some(existing_lockfile) = &plan.lockfile {
+            for (index, locked) in existing_lockfile.artifacts.iter().enumerate() {
+                let thread_name = format!("artifact-lock-migrate-{index}");
+                handles.push(
+                    thread::Builder::new()
+                        .name(thread_name.clone())
+                        .spawn_scoped(scope, move || {
+                            set_tracy_thread_name(&thread_name);
+                            migrate_locked_artifact(plan, locked).map(Some)
+                        })?,
+                );
+            }
         }
-    }
-    for artifact in &plan.artifacts {
-        push_artifact_lock_entry(
-            &mut artifacts,
-            artifact_lock_entry_from_plan_artifact(plan, artifact)?,
-        );
-    }
-    for dependency in &plan.dependencies {
-        push_artifact_lock_entry(
-            &mut artifacts,
-            artifact_lock_entry_from_cache_path(
-                plan,
-                &dependency.cache_path,
-                Some(&dependency.resolved_notation),
-            )?,
-        );
-    }
-    for path in extra_cache_paths {
-        if should_record_extra_cache_artifact(plan, path)? {
-            push_artifact_lock_entry(
-                &mut artifacts,
-                artifact_lock_entry_from_cache_path(plan, path, None)?,
+        for (index, artifact) in plan.artifacts.iter().enumerate() {
+            let thread_name = format!("artifact-lock-plan-{index}-{}", artifact.id);
+            handles.push(
+                thread::Builder::new()
+                    .name(thread_name.clone())
+                    .spawn_scoped(scope, move || {
+                        set_tracy_thread_name(&thread_name);
+                        artifact_lock_entry_from_plan_artifact(plan, artifact).map(Some)
+                    })?,
             );
         }
+        for (index, dependency) in plan.dependencies.iter().enumerate() {
+            let thread_name = format!(
+                "artifact-lock-dependency-{index}-{}",
+                dependency.resolved_notation
+            );
+            handles.push(
+                thread::Builder::new()
+                    .name(thread_name.clone())
+                    .spawn_scoped(scope, move || {
+                        set_tracy_thread_name(&thread_name);
+                        artifact_lock_entry_from_cache_path(
+                            plan,
+                            &dependency.cache_path,
+                            Some(&dependency.resolved_notation),
+                        )
+                        .map(Some)
+                    })?,
+            );
+        }
+        for (index, path) in extra_cache_paths.iter().enumerate() {
+            let thread_name = format!("artifact-lock-extra-{index}-{}", path.display());
+            handles.push(
+                thread::Builder::new()
+                    .name(thread_name.clone())
+                    .spawn_scoped(scope, move || {
+                        set_tracy_thread_name(&thread_name);
+                        if should_record_extra_cache_artifact(plan, path)? {
+                            artifact_lock_entry_from_cache_path(plan, path, None).map(Some)
+                        } else {
+                            Ok(None)
+                        }
+                    })?,
+            );
+        }
+
+        let mut entries = Vec::with_capacity(handles.len());
+        let _span =
+            tracing::debug_span!("artifact_lock_entries_join", entries = handles.len()).entered();
+        for handle in handles {
+            match handle.join().map_err(|panic| {
+                eyre::eyre!(
+                    "Artifact lockfile worker panicked: {}",
+                    panic_message(&panic)
+                )
+            })? {
+                Ok(entry) => entries.push(entry),
+                Err(error) => Err(error).wrap_err("Failed to build artifact lock entry")?,
+            }
+        }
+        Ok(entries)
+    })?;
+
+    for entry in entries.into_iter().flatten() {
+        push_artifact_lock_entry(&mut artifacts, entry);
     }
 
     artifacts.sort_by(|left, right| {
