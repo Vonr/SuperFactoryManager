@@ -22,8 +22,6 @@ use crate::branch_targets::MinecraftVersion;
 use crate::branch_targets::WorktreeTarget;
 use crate::branch_targets::select_required_worktree_targets;
 use crate::cancellation::CancellationToken;
-use crate::logging::set_tracy_thread_name;
-use crate::panic::panic_message;
 use crate::paths::CACHE_DIR;
 use chrono::Local;
 use eyre::Context;
@@ -43,6 +41,7 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Cursor;
 use std::io::Read;
+use std::io::Seek;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -2575,22 +2574,28 @@ fn artifact_portability_audit(plan: &BuildPlan) -> eyre::Result<ArtifactPortabil
             },
         );
     }
-    let mut handles = Vec::new();
-    for dependency in &plan.dependencies {
-        let thread_name = format!("artifact-portability-hash-{}", dependency.resolved_notation);
-        handles.push((
-            dependency,
-            thread::Builder::new().name(thread_name.clone()).spawn({
-                let cache_path = dependency.cache_path.clone();
-                let coordinate = dependency.resolved_notation.clone();
-                move || {
-                    set_tracy_thread_name(&thread_name);
-                    let actual_hash =
-                        ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
-                    let provenance = read_artifact_provenance(&cache_path)?.unwrap_or_else(|| {
+    let dependency_provenance = {
+        let _span = tracing::debug_span!(
+            "artifact_portability_dependency_inputs",
+            dependencies = plan.dependencies.len()
+        )
+        .entered();
+        plan.dependencies
+            .par_iter()
+            .map(|dependency| {
+                let _span = tracing::debug_span!(
+                    "artifact_portability_dependency_input",
+                    coordinate = %dependency.resolved_notation,
+                    cache_path = %dependency.cache_path.display()
+                )
+                .entered();
+                let actual_hash =
+                    ContentHash::from_path(&dependency.cache_path, ContentHashAlgorithm::Blake3)?;
+                let provenance =
+                    read_artifact_provenance(&dependency.cache_path)?.unwrap_or_else(|| {
                         artifact_provenance(
                             ArtifactSource::ExistingSfmCacheUnknown,
-                            Some(coordinate.clone()),
+                            Some(dependency.resolved_notation.clone()),
                             None,
                             None,
                             None,
@@ -2599,14 +2604,14 @@ fn artifact_portability_audit(plan: &BuildPlan) -> eyre::Result<ArtifactPortabil
                         )
                     });
 
-                    eyre::Ok((actual_hash, provenance))
-                }
-            })?,
-        ));
-    }
+                eyre::Ok((dependency, provenance))
+            })
+            .collect::<Vec<eyre::Result<_>>>()
+            .into_iter()
+            .collect::<eyre::Result<Vec<_>>>()?
+    };
 
-    for (dependency, handle) in handles {
-        let (_actual_hash, provenance) = handle.join().unwrap()?;
+    for (dependency, provenance) in dependency_provenance {
         push_artifact_portability_input(
             plan,
             &mut inputs,
@@ -5669,72 +5674,43 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
         minecraft_asset_downloads(&assets_root, &objects)?
     };
     let unique_assets = assets.len();
-    let worker_count = thread::available_parallelism()
-        .map_or(4, usize::from)
-        .max(1)
-        .min(unique_assets);
-    let stats = if worker_count == 0 {
-        MinecraftAssetPrepareStats::default()
-    } else {
-        let queue = Mutex::new(assets.into_iter().collect::<VecDeque<_>>());
+    let stats = {
+        let _span = tracing::debug_span!(
+            "prepare_minecraft_assets_download_objects",
+            unique_assets,
+            workers = rayon::current_num_threads()
+        )
+        .entered();
         let checked = AtomicUsize::new(0);
         let downloaded = AtomicUsize::new(0);
-        thread::scope(|scope| -> eyre::Result<MinecraftAssetPrepareStats> {
-            let mut handles = Vec::new();
-            {
-                let _span = tracing::debug_span!(
-                    "prepare_minecraft_assets_spawn_workers",
-                    workers = worker_count,
-                    unique_assets
-                )
-                .entered();
-                for worker_index in 0..worker_count {
-                    let thread_name = format!("minecraft-asset-{worker_index}");
-                    handles.push(
-                        thread::Builder::new()
-                            .name(thread_name.clone())
-                            .spawn_scoped(scope, {
-                                let client = client.clone();
-                                let queue = &queue;
-                                let checked = &checked;
-                                let downloaded = &downloaded;
-                                move || {
-                                    set_tracy_thread_name(&thread_name);
-                                    let _span = tracing::debug_span!(
-                                        "prepare_minecraft_assets_worker",
-                                        worker_index
-                                    )
-                                    .entered();
-                                    prepare_minecraft_asset_worker(
-                                        context,
-                                        &client,
-                                        queue,
-                                        checked,
-                                        downloaded,
-                                        unique_assets,
-                                    )
-                                }
-                            })?,
-                    );
-                    context.bail_if_cancelled()?;
+        let stats = assets
+            .par_iter()
+            .map(|asset| {
+                let asset_downloaded = prepare_minecraft_asset(context, &client, asset)?;
+                let checked = checked.fetch_add(1, AtomicOrdering::Relaxed) + 1;
+                if asset_downloaded {
+                    let downloaded = downloaded.fetch_add(1, AtomicOrdering::Relaxed) + 1;
+                    if downloaded.is_multiple_of(100) {
+                        tracing::info!(
+                            "Downloaded {downloaded} missing Minecraft assets ({checked}/{unique_assets})"
+                        );
+                    }
                 }
-            }
-
-            let mut stats = MinecraftAssetPrepareStats::default();
-            let _span = tracing::debug_span!(
-                "prepare_minecraft_assets_join_workers",
-                workers = handles.len()
-            )
-            .entered();
-            for handle in handles {
-                let worker_stats = handle.join().map_err(|panic| {
-                    eyre::eyre!("Minecraft asset worker panicked: {}", panic_message(&panic))
-                })??;
-                stats.checked += worker_stats.checked;
-                stats.downloaded += worker_stats.downloaded;
-            }
-            Ok(stats)
-        })?
+                Ok(MinecraftAssetPrepareStats {
+                    checked: 1,
+                    downloaded: usize::from(asset_downloaded),
+                })
+            })
+            .collect::<Vec<eyre::Result<_>>>()
+            .into_iter()
+            .collect::<eyre::Result<Vec<_>>>()?;
+        stats
+            .into_iter()
+            .fold(MinecraftAssetPrepareStats::default(), |mut total, stats| {
+                total.checked += stats.checked;
+                total.downloaded += stats.downloaded;
+                total
+            })
     };
     let downloaded = stats.downloaded;
     if downloaded > 0 {
@@ -5749,7 +5725,7 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
         downloaded,
         total = total_assets,
         unique_assets,
-        workers = worker_count,
+        workers = rayon::current_num_threads(),
         assets_root = %assets_root.display(),
         "minecraft_assets_prepared"
     );
@@ -5798,40 +5774,6 @@ fn minecraft_asset_downloads(
         );
     }
     Ok(assets.into_values().collect())
-}
-
-fn prepare_minecraft_asset_worker(
-    context: &ExecutionContext<'_>,
-    client: &Client,
-    queue: &Mutex<VecDeque<MinecraftAssetDownload>>,
-    checked: &AtomicUsize,
-    downloaded: &AtomicUsize,
-    unique_assets: usize,
-) -> eyre::Result<MinecraftAssetPrepareStats> {
-    let mut stats = MinecraftAssetPrepareStats::default();
-    loop {
-        context.bail_if_cancelled()?;
-        let Some(asset) = ({
-            let mut queue = queue
-                .lock()
-                .map_err(|_| eyre::eyre!("Minecraft asset worker queue lock poisoned"))?;
-            queue.pop_front()
-        }) else {
-            return Ok(stats);
-        };
-        let asset_downloaded = prepare_minecraft_asset(context, client, &asset)?;
-        stats.checked += 1;
-        let checked = checked.fetch_add(1, AtomicOrdering::Relaxed) + 1;
-        if asset_downloaded {
-            stats.downloaded += 1;
-            let downloaded = downloaded.fetch_add(1, AtomicOrdering::Relaxed) + 1;
-            if downloaded.is_multiple_of(100) {
-                tracing::info!(
-                    "Downloaded {downloaded} missing Minecraft assets ({checked}/{unique_assets})"
-                );
-            }
-        }
-    }
 }
 
 fn prepare_minecraft_asset(
@@ -6933,67 +6875,42 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
         };
         (mapping_path, mapping_hash, member_mappings)
     };
-    let outputs = thread::scope(|scope| -> eyre::Result<Vec<PathBuf>> {
-        let mut handles = Vec::new();
-        {
-            let _span = tracing::debug_span!(
-                "dependency_deobf_spawn_workers",
-                dependency_count = context.plan.dependencies.len()
-            )
-            .entered();
-            for (dependency_index, dependency) in context.plan.dependencies.iter().enumerate() {
-                let thread_name = format!(
-                    "dependency-deobf-{dependency_index}-{}",
-                    dependency.resolved_notation
-                );
-                handles.push(
-                    thread::Builder::new()
-                        .name(thread_name.clone())
-                        .spawn_scoped(scope, {
-                            let resolver = resolver.clone();
-                            let output = output.as_path();
-                            let mapping_path = mapping_path.as_path();
-                            let member_mappings = &member_mappings;
-                            move || {
-                                set_tracy_thread_name(&thread_name);
-                                context.bail_if_cancelled()?;
-                                execute_dependency_deobf_dependency(
-                                    context,
-                                    &resolver,
-                                    dependency_index,
-                                    dependency,
-                                    output,
-                                    mapping_path,
-                                    mapping_hash,
-                                    member_mappings,
-                                )
-                            }
-                        })?,
-                );
+    let outputs: Vec<PathBuf> = {
+        let _span = tracing::debug_span!(
+            "dependency_deobf_process_dependencies",
+            dependency_count = context.plan.dependencies.len(),
+            workers = rayon::current_num_threads()
+        )
+        .entered();
+        let mut outputs = context
+            .plan
+            .dependencies
+            .par_iter()
+            .enumerate()
+            .map(|(dependency_index, dependency)| {
                 context.bail_if_cancelled()?;
-            }
-        }
-
-        let mut outputs = Vec::with_capacity(handles.len());
-        let _span = tracing::debug_span!("dependency_deobf_join", dependency_count = handles.len())
-            .entered();
-        for handle in handles {
-            match handle.join().map_err(|panic| {
-                eyre::eyre!(
-                    "Dependency deobf worker panicked: {}",
-                    panic_message(&panic)
+                let resolver = resolver.clone();
+                execute_dependency_deobf_dependency(
+                    context,
+                    &resolver,
+                    dependency_index,
+                    dependency,
+                    &output,
+                    &mapping_path,
+                    mapping_hash,
+                    &member_mappings,
                 )
-            })? {
-                Ok(output) => outputs.push(output),
-                Err(error) => Err(error).wrap_err("Failed to deobfuscate dependency")?,
-            }
-        }
+            })
+            .collect::<Vec<eyre::Result<_>>>()
+            .into_iter()
+            .collect::<eyre::Result<Vec<_>>>()
+            .wrap_err("Failed to deobfuscate dependency")?;
         {
             let _span = tracing::debug_span!("dependency_deobf_sort_outputs").entered();
             outputs.sort_by_key(|(dependency_index, _)| *dependency_index);
         }
-        Ok(outputs.into_iter().map(|(_, output)| output).collect())
-    })?;
+        outputs.into_iter().map(|(_, output)| output).collect()
+    };
 
     {
         let _span =
@@ -7372,17 +7289,20 @@ fn rewrite_srg_member_constants_in_jar(
         if name.ends_with('/') || is_signature_file(&name) {
             continue;
         }
+        if !zip_entry_has_extension(&name, "class") {
+            writer
+                .raw_copy_file_rename(entry, name)
+                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+            continue;
+        }
         let mut bytes = Vec::new();
         entry
             .read_to_end(&mut bytes)
             .wrap_err_with(|| format!("Failed to read entry {name} from {}", input.display()))?;
-        if zip_entry_has_extension(&name, "class") {
-            let (patched, patched_count) =
-                rewrite_class_srg_member_constants(&bytes, member_mappings)
-                    .wrap_err_with(|| format!("Failed to patch class entry {name}"))?;
-            bytes = patched;
-            replacements += patched_count;
-        }
+        let (patched, patched_count) = rewrite_class_srg_member_constants(&bytes, member_mappings)
+            .wrap_err_with(|| format!("Failed to patch class entry {name}"))?;
+        bytes = patched;
+        replacements += patched_count;
         writer
             .start_file(name, options)
             .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
@@ -7615,57 +7535,30 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     }
     context.bail_if_cancelled()?;
 
-    let (classpath, sources) =
-        thread::scope(|scope| -> eyre::Result<(Vec<PathBuf>, Vec<PathBuf>)> {
-            let classpath_handle = thread::Builder::new()
-                .name("project-compile-classpath".to_string())
-                .spawn_scoped(scope, {
-                    let resolver = resolver.clone();
-                    let antlr_classpath = &antlr_classpath;
-                    move || {
-                        set_tracy_thread_name("project-compile-classpath");
-                        let _span = tracing::debug_span!("project_compile_resolve_main_classpath")
-                            .entered();
-                        context.bail_if_cancelled()?;
-                        resolve_project_compile_classpath(context, &resolver, antlr_classpath)
-                    }
-                })?;
-            let sources_handle = thread::Builder::new()
-                .name("project-compile-sources".to_string())
-                .spawn_scoped(scope, {
-                    let generated_sources = generated_sources.as_path();
-                    move || {
-                        set_tracy_thread_name("project-compile-sources");
-                        let _span = tracing::debug_span!(
-                            "project_compile_collect_main_sources",
-                            generated_sources = %generated_sources.display()
-                        )
-                        .entered();
-                        context.bail_if_cancelled()?;
-                        collect_project_java_sources(context, generated_sources)
-                    }
-                })?;
-
-            let classpath = classpath_handle
-                .join()
-                .map_err(|panic| {
-                    eyre::eyre!(
-                        "Project compile classpath worker panicked: {}",
-                        panic_message(&panic)
-                    )
-                })?
-                .wrap_err("Failed to resolve project compile classpath")?;
-            let sources = sources_handle
-                .join()
-                .map_err(|panic| {
-                    eyre::eyre!(
-                        "Project compile source scan worker panicked: {}",
-                        panic_message(&panic)
-                    )
-                })?
-                .wrap_err("Failed to collect project Java sources")?;
-            Ok((classpath, sources))
-        })?;
+    let (classpath, sources) = {
+        let resolver = resolver.clone();
+        let generated_sources = generated_sources.as_path();
+        let (classpath, sources) = rayon::join(
+            || {
+                let _span =
+                    tracing::debug_span!("project_compile_resolve_main_classpath").entered();
+                context.bail_if_cancelled()?;
+                resolve_project_compile_classpath(context, &resolver, &antlr_classpath)
+                    .wrap_err("Failed to resolve project compile classpath")
+            },
+            || {
+                let _span = tracing::debug_span!(
+                    "project_compile_collect_main_sources",
+                    generated_sources = %generated_sources.display()
+                )
+                .entered();
+                context.bail_if_cancelled()?;
+                collect_project_java_sources(context, generated_sources)
+                    .wrap_err("Failed to collect project Java sources")
+            },
+        );
+        (classpath?, sources?)
+    };
     context.bail_if_cancelled()?;
     let argfile = project_root.join("javac-main.args");
     {
@@ -7825,64 +7718,38 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     }
 
     context.bail_if_cancelled()?;
-    thread::scope(|scope| -> eyre::Result<()> {
-        let gametest_compile = thread::Builder::new()
-            .name("project-compile-gametest".to_string())
-            .spawn_scoped(scope, {
-                let classpath = &classpath;
-                let classes_dir = classes_dir.as_path();
-                let gametest_classes_dir = gametest_classes_dir.as_path();
-                let main_fingerprint = main_fingerprint.as_str();
-                move || {
-                    set_tracy_thread_name("project-compile-gametest");
-                    let _span = tracing::debug_span!("project_compile_gametest_javac").entered();
-                    compile_optional_java_source_set(
-                        context,
-                        "gametest",
-                        classpath,
-                        classes_dir,
-                        gametest_classes_dir,
-                        main_fingerprint,
-                    )
-                }
-            })?;
-        let gametest_resources = thread::Builder::new()
-            .name("project-compile-gametest-resources".to_string())
-            .spawn_scoped(scope, {
-                let gametest_resources_dir = gametest_resources_dir.as_path();
-                move || {
-                    set_tracy_thread_name("project-compile-gametest-resources");
-                    let _span =
-                        tracing::debug_span!("project_compile_gametest_resources").entered();
-                    stage_optional_resource_source_set(
-                        context,
-                        "gametest",
-                        gametest_resources_dir,
-                        &["README.md"],
-                    )
-                }
-            })?;
-
-        gametest_compile
-            .join()
-            .map_err(|panic| {
-                eyre::eyre!(
-                    "Project gametest compile worker panicked: {}",
-                    panic_message(&panic)
+    {
+        let classes_dir = classes_dir.as_path();
+        let gametest_classes_dir = gametest_classes_dir.as_path();
+        let gametest_resources_dir = gametest_resources_dir.as_path();
+        let main_fingerprint = main_fingerprint.as_str();
+        let (gametest_compile, gametest_resources) = rayon::join(
+            || {
+                let _span = tracing::debug_span!("project_compile_gametest_javac").entered();
+                compile_optional_java_source_set(
+                    context,
+                    "gametest",
+                    &classpath,
+                    classes_dir,
+                    gametest_classes_dir,
+                    main_fingerprint,
                 )
-            })?
-            .wrap_err("Failed to compile gametest source set")?;
-        gametest_resources
-            .join()
-            .map_err(|panic| {
-                eyre::eyre!(
-                    "Project gametest resource worker panicked: {}",
-                    panic_message(&panic)
+                .wrap_err("Failed to compile gametest source set")
+            },
+            || {
+                let _span = tracing::debug_span!("project_compile_gametest_resources").entered();
+                stage_optional_resource_source_set(
+                    context,
+                    "gametest",
+                    gametest_resources_dir,
+                    &["README.md"],
                 )
-            })?
-            .wrap_err("Failed to stage gametest resources")?;
-        Ok(())
-    })?;
+                .wrap_err("Failed to stage gametest resources")
+            },
+        );
+        gametest_compile?;
+        gametest_resources?;
+    }
     context.bail_if_cancelled()?;
     if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
         let _span = tracing::debug_span!("project_compile_patch_neogradle_debug_names").entered();
@@ -9826,31 +9693,43 @@ fn copy_filtered_jar(
     let file =
         File::create(output).wrap_err_with(|| format!("Failed to create {}", output.display()))?;
     let mut writer = ZipWriter::new(file);
-    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
 
     for index in 0..archive.len() {
-        let mut entry = archive
+        let entry = archive
             .by_index(index)
             .wrap_err_with(|| format!("Failed to read jar entry #{index}"))?;
         let name = entry.name().replace('\\', "/");
         if !allowed_entries.contains(&name) {
             continue;
         }
-        let mut bytes = Vec::new();
-        entry
-            .read_to_end(&mut bytes)
-            .wrap_err_with(|| format!("Failed to read jar entry {name}"))?;
         writer
-            .start_file(name, options)
-            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
-        writer
-            .write_all(&bytes)
+            .raw_copy_file_rename(entry, name)
             .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
     }
 
     writer
         .finish()
         .wrap_err_with(|| format!("Failed to finish {}", output.display()))?;
+    Ok(())
+}
+
+fn raw_copy_zip_entry_rename<R, W>(
+    archive: &mut ZipArchive<R>,
+    writer: &mut ZipWriter<W>,
+    source_name: &str,
+    output_name: &str,
+    output: &Path,
+) -> eyre::Result<()>
+where
+    R: Read + Seek,
+    W: Write + Seek,
+{
+    let entry = archive
+        .by_name(source_name)
+        .wrap_err_with(|| format!("Failed to read zip entry {source_name}"))?;
+    writer
+        .raw_copy_file_rename(entry, output_name)
+        .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
     Ok(())
 }
 
@@ -10033,23 +9912,19 @@ fn inject_mcp_sources(mcp_zip: &Path, source_jar: &Path, output: &Path) -> eyre:
     let output_file =
         File::create(output).wrap_err_with(|| format!("Failed to create {}", output.display()))?;
     let mut writer = ZipWriter::new(output_file);
-    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
     let mut written = BTreeSet::new();
 
     for index in 0..source_archive.len() {
-        let mut entry = source_archive
+        let entry = source_archive
             .by_index(index)
             .wrap_err_with(|| format!("Failed to read source entry #{index}"))?;
         let name = entry.name().replace('\\', "/");
         if name.ends_with('/') {
             continue;
         }
-        let mut bytes = Vec::new();
-        entry
-            .read_to_end(&mut bytes)
-            .wrap_err_with(|| format!("Failed to read source entry {name}"))?;
-        writer.start_file(&name, options)?;
-        writer.write_all(&bytes)?;
+        writer
+            .raw_copy_file_rename(entry, &name)
+            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
         written.insert(name);
     }
 
@@ -10058,7 +9933,7 @@ fn inject_mcp_sources(mcp_zip: &Path, source_jar: &Path, output: &Path) -> eyre:
     let mut mcp_archive = ZipArchive::new(Cursor::new(mcp_bytes))
         .wrap_err_with(|| format!("Failed to open {}", mcp_zip.display()))?;
     for index in 0..mcp_archive.len() {
-        let mut entry = mcp_archive
+        let entry = mcp_archive
             .by_index(index)
             .wrap_err_with(|| format!("Failed to read MCP entry #{index}"))?;
         let name = entry.name().replace('\\', "/");
@@ -10068,12 +9943,9 @@ fn inject_mcp_sources(mcp_zip: &Path, source_jar: &Path, output: &Path) -> eyre:
         if output_name.is_empty() || output_name.ends_with('/') || written.contains(output_name) {
             continue;
         }
-        let mut bytes = Vec::new();
-        entry
-            .read_to_end(&mut bytes)
-            .wrap_err_with(|| format!("Failed to read MCP inject entry {name}"))?;
-        writer.start_file(output_name, options)?;
-        writer.write_all(&bytes)?;
+        writer
+            .raw_copy_file_rename(entry, output_name)
+            .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
         written.insert(output_name.to_string());
     }
 
@@ -10127,7 +9999,6 @@ fn merge_zip_archives(inputs: &[PathBuf], output: &Path) -> eyre::Result<()> {
     let output_file =
         File::create(output).wrap_err_with(|| format!("Failed to create {}", output.display()))?;
     let mut writer = ZipWriter::new(output_file);
-    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
     let mut written = BTreeSet::new();
 
     for input in inputs {
@@ -10136,7 +10007,7 @@ fn merge_zip_archives(inputs: &[PathBuf], output: &Path) -> eyre::Result<()> {
         let mut archive = ZipArchive::new(Cursor::new(bytes))
             .wrap_err_with(|| format!("Failed to open {}", input.display()))?;
         for index in 0..archive.len() {
-            let mut entry = archive
+            let entry = archive
                 .by_index(index)
                 .wrap_err_with(|| format!("Failed to read {} entry #{index}", input.display()))?;
             let name = entry.name().replace('\\', "/");
@@ -10148,15 +10019,8 @@ fn merge_zip_archives(inputs: &[PathBuf], output: &Path) -> eyre::Result<()> {
             {
                 continue;
             }
-            let mut bytes = Vec::new();
-            entry.read_to_end(&mut bytes).wrap_err_with(|| {
-                format!("Failed to read entry {name} from {}", input.display())
-            })?;
             writer
-                .start_file(name, options)
-                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
-            writer
-                .write_all(&bytes)
+                .raw_copy_file_rename(entry, name)
                 .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
         }
     }
@@ -10269,23 +10133,12 @@ fn write_run_neoforge_minecraft_dev_jar(
     {
         let _span = tracing::debug_span!(
             "write_run_neoforge_minecraft_dev_jar_write_entries",
-            entries = names.len()
+            entries = names.len(),
+            method = "raw_copy"
         )
         .entered();
         for name in names {
-            let mut entry = archive.by_name(&name).wrap_err_with(|| {
-                format!("Failed to read NeoForge Minecraft runtime jar entry {name}")
-            })?;
-            let mut bytes = Vec::new();
-            entry.read_to_end(&mut bytes).wrap_err_with(|| {
-                format!("Failed to read NeoForge Minecraft runtime jar entry {name}")
-            })?;
-            writer
-                .start_file(name, options)
-                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
-            writer
-                .write_all(&bytes)
-                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+            raw_copy_zip_entry_rename(&mut archive, &mut writer, &name, &name, output)?;
         }
     }
 
@@ -10634,23 +10487,12 @@ fn write_client_extra_jar(client_jar: &Path, output: &Path) -> eyre::Result<()> 
     {
         let _span = tracing::debug_span!(
             "write_client_extra_jar_write_entries",
-            entries = names.len()
+            entries = names.len(),
+            method = "raw_copy"
         )
         .entered();
         for name in names {
-            let mut entry = archive
-                .by_name(&name)
-                .wrap_err_with(|| format!("Failed to read client jar entry {name}"))?;
-            let mut bytes = Vec::new();
-            entry
-                .read_to_end(&mut bytes)
-                .wrap_err_with(|| format!("Failed to read client jar entry {name}"))?;
-            writer
-                .start_file(name, options)
-                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
-            writer
-                .write_all(&bytes)
-                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+            raw_copy_zip_entry_rename(&mut archive, &mut writer, &name, &name, output)?;
         }
     }
 
@@ -10701,14 +10543,18 @@ fn patch_inner_class_access_in_jar(
         if name.ends_with('/') {
             continue;
         }
+        if !zip_entry_has_extension(&name, "class") {
+            writer
+                .raw_copy_file_rename(entry, name)
+                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
+            continue;
+        }
         let mut entry_bytes = Vec::new();
         entry
             .read_to_end(&mut entry_bytes)
             .wrap_err_with(|| format!("Failed to read entry {name} from {}", input.display()))?;
-        if zip_entry_has_extension(&name, "class") {
-            patch_inner_class_access_in_class_file(&mut entry_bytes, outer_class, inner_class)
-                .wrap_err_with(|| format!("Failed to patch class access in {name}"))?;
-        }
+        patch_inner_class_access_in_class_file(&mut entry_bytes, outer_class, inner_class)
+            .wrap_err_with(|| format!("Failed to patch class access in {name}"))?;
         writer
             .start_file(name, options)
             .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
@@ -12016,83 +11862,83 @@ fn build_artifact_lockfile(
     extra_cache_paths: &[PathBuf],
 ) -> eyre::Result<ArtifactLockfile> {
     let mut artifacts = Vec::new();
-    let entries = thread::scope(|scope| -> eyre::Result<Vec<Option<ArtifactLockEntry>>> {
-        let mut handles = Vec::new();
-        if let Some(existing_lockfile) = &plan.lockfile {
-            for (index, locked) in existing_lockfile.artifacts.iter().enumerate() {
-                let thread_name = format!("artifact-lock-migrate-{index}");
-                handles.push(
-                    thread::Builder::new()
-                        .name(thread_name.clone())
-                        .spawn_scoped(scope, move || {
-                            set_tracy_thread_name(&thread_name);
-                            migrate_locked_artifact(plan, locked).map(Some)
-                        })?,
-                );
-            }
-        }
-        for (index, artifact) in plan.artifacts.iter().enumerate() {
-            let thread_name = format!("artifact-lock-plan-{index}-{}", artifact.id);
-            handles.push(
-                thread::Builder::new()
-                    .name(thread_name.clone())
-                    .spawn_scoped(scope, move || {
-                        set_tracy_thread_name(&thread_name);
-                        artifact_lock_entry_from_plan_artifact(plan, artifact).map(Some)
-                    })?,
-            );
-        }
-        for (index, dependency) in plan.dependencies.iter().enumerate() {
-            let thread_name = format!(
-                "artifact-lock-dependency-{index}-{}",
-                dependency.resolved_notation
-            );
-            handles.push(
-                thread::Builder::new()
-                    .name(thread_name.clone())
-                    .spawn_scoped(scope, move || {
-                        set_tracy_thread_name(&thread_name);
-                        artifact_lock_entry_from_cache_path(
-                            plan,
-                            &dependency.cache_path,
-                            Some(&dependency.resolved_notation),
-                        )
-                        .map(Some)
-                    })?,
-            );
-        }
-        for (index, path) in extra_cache_paths.iter().enumerate() {
-            let thread_name = format!("artifact-lock-extra-{index}-{}", path.display());
-            handles.push(
-                thread::Builder::new()
-                    .name(thread_name.clone())
-                    .spawn_scoped(scope, move || {
-                        set_tracy_thread_name(&thread_name);
-                        if should_record_extra_cache_artifact(plan, path)? {
-                            artifact_lock_entry_from_cache_path(plan, path, None).map(Some)
-                        } else {
-                            Ok(None)
-                        }
-                    })?,
-            );
-        }
-
-        let mut entries = Vec::with_capacity(handles.len());
+    let mut entries = Vec::new();
+    if let Some(existing_lockfile) = &plan.lockfile {
+        let _span = tracing::debug_span!(
+            "artifact_lock_migrate_entries",
+            entries = existing_lockfile.artifacts.len()
+        )
+        .entered();
+        entries.extend(
+            existing_lockfile
+                .artifacts
+                .par_iter()
+                .map(|locked| migrate_locked_artifact(plan, locked).map(Some))
+                .collect::<Vec<eyre::Result<_>>>()
+                .into_iter()
+                .collect::<eyre::Result<Vec<_>>>()
+                .wrap_err("Failed to migrate artifact lock entry")?,
+        );
+    }
+    {
         let _span =
-            tracing::debug_span!("artifact_lock_entries_join", entries = handles.len()).entered();
-        for handle in handles {
-            match handle.join().map_err(|panic| {
-                eyre::eyre!(
-                    "Artifact lockfile worker panicked: {}",
-                    panic_message(&panic)
-                )
-            })? {
-                Ok(entry) => entries.push(entry),
-                Err(error) => Err(error).wrap_err("Failed to build artifact lock entry")?,
-            }
-        }
-        Ok(entries)
-    })?;
+            tracing::debug_span!("artifact_lock_plan_entries", entries = plan.artifacts.len())
+                .entered();
+        entries.extend(
+            plan.artifacts
+                .par_iter()
+                .map(|artifact| artifact_lock_entry_from_plan_artifact(plan, artifact).map(Some))
+                .collect::<Vec<eyre::Result<_>>>()
+                .into_iter()
+                .collect::<eyre::Result<Vec<_>>>()
+                .wrap_err("Failed to build planned artifact lock entry")?,
+        );
+    }
+    {
+        let _span = tracing::debug_span!(
+            "artifact_lock_dependency_entries",
+            entries = plan.dependencies.len()
+        )
+        .entered();
+        entries.extend(
+            plan.dependencies
+                .par_iter()
+                .map(|dependency| {
+                    artifact_lock_entry_from_cache_path(
+                        plan,
+                        &dependency.cache_path,
+                        Some(&dependency.resolved_notation),
+                    )
+                    .map(Some)
+                })
+                .collect::<Vec<eyre::Result<_>>>()
+                .into_iter()
+                .collect::<eyre::Result<Vec<_>>>()
+                .wrap_err("Failed to build dependency artifact lock entry")?,
+        );
+    }
+    {
+        let _span = tracing::debug_span!(
+            "artifact_lock_extra_entries",
+            entries = extra_cache_paths.len()
+        )
+        .entered();
+        entries.extend(
+            extra_cache_paths
+                .par_iter()
+                .map(|path| {
+                    if should_record_extra_cache_artifact(plan, path)? {
+                        artifact_lock_entry_from_cache_path(plan, path, None).map(Some)
+                    } else {
+                        Ok(None)
+                    }
+                })
+                .collect::<Vec<eyre::Result<_>>>()
+                .into_iter()
+                .collect::<eyre::Result<Vec<_>>>()
+                .wrap_err("Failed to build extra artifact lock entry")?,
+        );
+    }
 
     for entry in entries.into_iter().flatten() {
         push_artifact_lock_entry(&mut artifacts, entry);

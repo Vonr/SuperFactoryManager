@@ -10,9 +10,8 @@ use super::{
 };
 use crate::cancellation::CancellationToken;
 use crate::jar_build::hash::{ContentHash, ContentHashAlgorithm};
-use crate::logging::set_tracy_thread_name;
-use crate::panic::panic_message;
 use eyre::Context;
+use rayon::prelude::*;
 use reqwest::blocking::Client;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -84,39 +83,23 @@ impl Resolver {
         &self,
         values: impl IntoIterator<Item = (ArtifactId, MavenCoordinate, ArtifactPurpose)>,
     ) -> eyre::Result<Vec<ArtifactPlan>> {
-        let mut handles = Vec::new();
-        for (id, coordinate, required_for) in values {
-            let thread_name = format!("resolve-core-{}", id);
-            handles.push(
-                std::thread::Builder::new()
-                    .name(thread_name.clone())
-                    .spawn({
-                        let resolver = self.clone();
-                        let cancellation_token = self.cancellation_token.clone();
-                        move || {
-                            set_tracy_thread_name(&thread_name);
-                            cancellation_token.bail_if_cancelled()?;
-                            resolver.resolve_artifact(id, &coordinate, required_for)
-                        }
-                    })?,
-            );
-            self.cancellation_token.bail_if_cancelled()?;
-        }
-        let mut rtn = Vec::with_capacity(handles.len());
-        let _span = tracing::debug_span!("resolve_artifacts_join", artifact_count = handles.len())
-            .entered();
-        for handle in handles {
-            match handle.join().map_err(|panic| {
-                eyre::eyre!(
-                    "Artifact resolution worker panicked: {}",
-                    panic_message(&panic)
-                )
-            })? {
-                Ok(x) => rtn.push(x),
-                Err(e) => Err(e).wrap_err("Failed to resolve core artifact")?,
-            }
-        }
-        Ok(rtn)
+        let values = values.into_iter().collect::<Vec<_>>();
+        let _span = tracing::debug_span!(
+            "resolve_artifacts_parallel",
+            artifact_count = values.len(),
+            workers = rayon::current_num_threads()
+        )
+        .entered();
+        values
+            .par_iter()
+            .map(|(id, coordinate, required_for)| {
+                self.cancellation_token.bail_if_cancelled()?;
+                self.resolve_artifact(id.clone(), coordinate, required_for.clone())
+            })
+            .collect::<Vec<eyre::Result<_>>>()
+            .into_iter()
+            .collect::<eyre::Result<Vec<_>>>()
+            .wrap_err("Failed to resolve core artifact")
     }
 
     pub(super) fn resolve_artifact(
@@ -756,42 +739,23 @@ impl Resolver {
         &self,
         items: impl IntoIterator<Item = (String, MavenCoordinate)>,
     ) -> eyre::Result<Vec<DependencyPlan>> {
-        let mut handles = Vec::new();
-        for (configuration, coordinate) in items {
-            let thread_name = format!("resolve-dependency-core-{}:{}", configuration, coordinate);
-            handles.push(
-                std::thread::Builder::new()
-                    .name(thread_name.clone())
-                    .spawn({
-                        let resolver = self.clone();
-                        let cancellation_token = self.cancellation_token.clone();
-                        move || {
-                            set_tracy_thread_name(&thread_name);
-                            cancellation_token.bail_if_cancelled()?;
-                            resolver.resolve_dependency(&configuration, &coordinate)
-                        }
-                    })?,
-            );
-            self.cancellation_token.bail_if_cancelled()?;
-        }
-        let mut rtn = Vec::with_capacity(handles.len());
+        let items = items.into_iter().collect::<Vec<_>>();
         let _span = tracing::debug_span!(
-            "resolve_dependencies_join",
-            dependency_count = handles.len()
+            "resolve_dependencies_parallel",
+            dependency_count = items.len(),
+            workers = rayon::current_num_threads()
         )
         .entered();
-        for handle in handles {
-            match handle.join().map_err(|panic| {
-                eyre::eyre!(
-                    "Dependency resolution worker panicked: {}",
-                    panic_message(&panic)
-                )
-            })? {
-                Ok(x) => rtn.push(x),
-                Err(e) => Err(e).wrap_err("Failed to resolve dependency")?,
-            }
-        }
-        Ok(rtn)
+        items
+            .par_iter()
+            .map(|(configuration, coordinate)| {
+                self.cancellation_token.bail_if_cancelled()?;
+                self.resolve_dependency(configuration, coordinate)
+            })
+            .collect::<Vec<eyre::Result<_>>>()
+            .into_iter()
+            .collect::<eyre::Result<Vec<_>>>()
+            .wrap_err("Failed to resolve dependency")
     }
 
     pub(super) fn resolve_dependency(
