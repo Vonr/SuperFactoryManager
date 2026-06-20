@@ -11,6 +11,7 @@ keywords = ["cli", "git", "minecraft", "worktree"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
+blake3 = "1.8.5"
 chrono = "0.4.43"
 color-eyre = "0.6.5"
 ctrlc = "3.5.1"
@@ -54,7 +55,7 @@ embed-resource = "3.0.6"
 
 [lints.rust]
 ambiguous_negative_literals = "warn"
-missing_debug_implementations = "warn"
+# missing_debug_implementations = "warn"
 redundant_imports = "warn"
 redundant_lifetimes = "warn"
 trivial_numeric_casts = "warn"

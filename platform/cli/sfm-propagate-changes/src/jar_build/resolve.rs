@@ -16,6 +16,7 @@ use reqwest::blocking::Client;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use tracing::instrument;
 
 #[derive(Clone, Debug)]
 pub(super) struct Resolver {
@@ -77,6 +78,7 @@ impl Resolver {
         })
     }
 
+    #[instrument(skip_all)]
     pub(super) fn resolve_artifacts(
         &self,
         values: impl IntoIterator<Item = (ArtifactId, MavenCoordinate, ArtifactPurpose)>,
@@ -100,6 +102,8 @@ impl Resolver {
             self.cancellation_token.bail_if_cancelled()?;
         }
         let mut rtn = Vec::with_capacity(handles.len());
+        let _span = tracing::debug_span!("resolve_artifacts_join", artifact_count = handles.len())
+            .entered();
         for handle in handles {
             match handle.join().map_err(|panic| {
                 eyre::eyre!(
@@ -624,6 +628,7 @@ impl Resolver {
         Ok(())
     }
 
+    #[instrument(level = "debug", skip_all)]
     fn cached_artifact_plan(
         id: &ArtifactId,
         coordinate: &MavenCoordinate,

@@ -11149,6 +11149,7 @@ fn git_stdout<const N: usize>(working_dir: &Path, args: [&str; N]) -> Option<Str
     Some(stdout.trim().to_string())
 }
 
+#[instrument(level = "debug", skip_all, fields(source = ?source, coordinate, repository, url, original_path = ?original_path, source_git = ?source_git))]
 fn artifact_provenance(
     source: ArtifactSource,
     coordinate: Option<String>,
@@ -11437,6 +11438,7 @@ fn artifact_provenance_path(path: &Path) -> eyre::Result<PathBuf> {
     Ok(path.with_file_name(format!("{file_name}.sfm-provenance.json")))
 }
 
+#[instrument(level = "debug", skip_all, fields(path = %path.display()))]
 fn read_artifact_provenance(path: &Path) -> eyre::Result<Option<ArtifactProvenance>> {
     let provenance_path = artifact_provenance_path(path)?;
     if !provenance_path.is_file() {
@@ -11715,6 +11717,7 @@ fn prepare_existing_artifact_for_reuse(
     quarantine_bad_artifact(path, &actual_sha1, expected_sha1)
 }
 
+#[instrument(level = "debug", skip_all)]
 fn existing_file_matches_sha1(path: &Path, expected_sha1: &str) -> eyre::Result<bool> {
     Ok(path.is_file() && file_sha1(path)? == expected_sha1)
 }
@@ -11882,6 +11885,7 @@ fn remote_exists(
     Ok(response.status().is_success())
 }
 
+#[instrument(level = "debug", skip_all)]
 fn file_sha1(path: &Path) -> eyre::Result<String> {
     let bytes = fs::read(path).wrap_err_with(|| format!("Failed to hash {}", path.display()))?;
     Ok(sha1_bytes(&bytes))

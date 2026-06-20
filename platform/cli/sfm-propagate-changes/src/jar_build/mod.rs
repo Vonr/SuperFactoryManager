@@ -20,6 +20,7 @@ mod parallelism;
 mod run_command;
 mod run_kind;
 mod target_artifact_audit_report;
+pub mod hash;
 
 pub use artifact_audit_command::ArtifactAuditCommand;
 pub use artifact_audit_options::ArtifactAuditOptions;
