@@ -28,6 +28,7 @@ use crate::paths::CACHE_DIR;
 use chrono::Local;
 use eyre::Context;
 use facet::Facet;
+use rayon::prelude::*;
 use reqwest::StatusCode;
 use reqwest::blocking::Client;
 use std::cmp::Ordering;
@@ -5866,6 +5867,7 @@ struct ExecutionContext<'a> {
     plan: &'a BuildPlan,
     forbidden_input_roots: Vec<PathBuf>,
     cancellation_token: CancellationToken,
+    minecraft_libraries_cache: Mutex<Option<Vec<PathBuf>>>,
 }
 
 #[derive(Debug, Facet)]
@@ -5908,6 +5910,7 @@ impl<'a> ExecutionContext<'a> {
             plan,
             forbidden_input_roots,
             cancellation_token,
+            minecraft_libraries_cache: Mutex::new(None),
         })
     }
 
@@ -5924,37 +5927,87 @@ impl<'a> ExecutionContext<'a> {
     ) -> eyre::Result<()> {
         self.bail_if_cancelled()?;
         let started = Instant::now();
-        let state = NodeState {
-            schema_version: 1,
-            id: id.to_string(),
-            status: status.to_string(),
-            started_at_unix_ms: std::time::SystemTime::now()
+        let _span = tracing::debug_span!(
+            "write_node_state",
+            id,
+            status,
+            inputs = inputs.len(),
+            outputs = outputs.len()
+        )
+        .entered();
+        let started_at_unix_ms = {
+            let _span = tracing::debug_span!("write_node_state_timestamp").entered();
+            std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |duration| duration.as_millis()),
-            duration_ms: started.elapsed().as_millis(),
-            java_executable: self.plan.java.executable.clone(),
-            java_version: self.plan.java.version_output.clone(),
-            inputs: inputs.iter().map(|input| (*input).to_string()).collect(),
-            outputs: outputs
-                .iter()
+                .map_or(0, |duration| duration.as_millis())
+        };
+        let output_states = {
+            let _span =
+                tracing::debug_span!("write_node_state_output_states", outputs = outputs.len())
+                    .entered();
+            let cancellation_token = self.cancellation_token.clone();
+            outputs
+                .par_iter()
                 .map(|path| {
+                    cancellation_token.bail_if_cancelled()?;
+                    let _span = tracing::debug_span!(
+                        "write_node_state_output_state",
+                        path = %path.display()
+                    )
+                    .entered();
+                    let exists = path.exists();
                     let sha1 = path
                         .is_file()
                         .then(|| ContentHash::from_path(path, ContentHashAlgorithm::Blake3))
                         .transpose()?;
                     Ok(NodeOutputState {
                         path: path.clone(),
-                        exists: path.exists(),
+                        exists,
                         sha1,
                     })
                 })
-                .collect::<eyre::Result<Vec<_>>>()?,
+                .collect::<Vec<eyre::Result<_>>>()
+                .into_iter()
+                .collect::<eyre::Result<Vec<_>>>()?
+        };
+        self.bail_if_cancelled()?;
+        let state = {
+            let _span = tracing::debug_span!("write_node_state_build").entered();
+            NodeState {
+                schema_version: 1,
+                id: id.to_string(),
+                status: status.to_string(),
+                started_at_unix_ms,
+                duration_ms: started.elapsed().as_millis(),
+                java_executable: self.plan.java.executable.clone(),
+                java_version: self.plan.java.version_output.clone(),
+                inputs: inputs.iter().map(|input| (*input).to_string()).collect(),
+                outputs: output_states,
+            }
         };
 
-        fs::create_dir_all(&self.plan.state_dir)?;
+        {
+            let _span = tracing::debug_span!(
+                "write_node_state_create_dir",
+                dir = %self.plan.state_dir.display()
+            )
+            .entered();
+            fs::create_dir_all(&self.plan.state_dir)?;
+        }
         let state_path = self.plan.state_dir.join(format!("{id}.json"));
-        fs::write(&state_path, facet_json::to_string_pretty(&state)?)
-            .wrap_err_with(|| format!("Failed to write {}", state_path.display()))?;
+        let state_json = {
+            let _span =
+                tracing::debug_span!("write_node_state_encode", path = %state_path.display())
+                    .entered();
+            facet_json::to_string_pretty(&state)?
+        };
+        {
+            let _span =
+                tracing::debug_span!("write_node_state_write", path = %state_path.display())
+                    .entered();
+            fs::write(&state_path, state_json)
+                .wrap_err_with(|| format!("Failed to write {}", state_path.display()))?;
+        }
         Ok(())
     }
 
@@ -7207,34 +7260,49 @@ fn resolved_artifact_hash(artifact: &ArtifactPlan) -> eyre::Result<ContentHash> 
     })
 }
 
+#[instrument(
+    level = "debug",
+    skip_all,
+    fields(mapping = %mapping_path.display())
+)]
 fn read_unique_srg_member_mappings(mapping_path: &Path) -> eyre::Result<BTreeMap<String, String>> {
     let content = fs::read_to_string(mapping_path)
         .wrap_err_with(|| format!("Failed to read {}", mapping_path.display()))?;
-    let mut candidates: BTreeMap<String, Option<String>> = BTreeMap::new();
-
-    for line in content.lines() {
-        if !line.starts_with('\t') && !line.starts_with(' ') {
-            continue;
-        }
-        if line.starts_with("\t\t") || line.starts_with("  ") {
-            continue;
-        }
-        let parts = line.split_whitespace().collect::<Vec<_>>();
-        match parts.as_slice() {
-            [srg, named] if is_srg_member_name(srg) => {
+    let candidates = {
+        let _span = tracing::debug_span!(
+            "read_unique_srg_member_mappings_parse",
+            bytes = content.len()
+        )
+        .entered();
+        content
+            .par_lines()
+            .filter_map(parse_srg_member_mapping_line)
+            .fold(BTreeMap::new, |mut candidates, (srg, named)| {
                 insert_unique_member_mapping(&mut candidates, srg, named);
-            }
-            [srg, _descriptor, named] if is_srg_member_name(srg) => {
-                insert_unique_member_mapping(&mut candidates, srg, named);
-            }
-            _ => {}
-        }
-    }
+                candidates
+            })
+            .reduce(BTreeMap::new, merge_unique_member_mapping_candidates)
+    };
 
     Ok(candidates
         .into_iter()
         .filter_map(|(srg, named)| named.map(|named| (srg, named)))
         .collect())
+}
+
+fn parse_srg_member_mapping_line(line: &str) -> Option<(&str, &str)> {
+    if !line.starts_with('\t') && !line.starts_with(' ') {
+        return None;
+    }
+    if line.starts_with("\t\t") || line.starts_with("  ") {
+        return None;
+    }
+    let parts = line.split_whitespace().collect::<Vec<_>>();
+    match parts.as_slice() {
+        [srg, named] if is_srg_member_name(srg) => Some((*srg, *named)),
+        [srg, _descriptor, named] if is_srg_member_name(srg) => Some((*srg, *named)),
+        _ => None,
+    }
 }
 
 fn insert_unique_member_mapping(
@@ -7249,6 +7317,23 @@ fn insert_unique_member_mapping(
             candidates.insert(srg.to_string(), Some(named.to_string()));
         }
     }
+}
+
+fn merge_unique_member_mapping_candidates(
+    mut left: BTreeMap<String, Option<String>>,
+    right: BTreeMap<String, Option<String>>,
+) -> BTreeMap<String, Option<String>> {
+    for (srg, right_named) in right {
+        match (left.get_mut(&srg), right_named) {
+            (None, named) => {
+                left.insert(srg, named);
+            }
+            (Some(left_named), Some(right_named))
+                if left_named.as_deref() == Some(right_named.as_str()) => {}
+            (Some(left_named), _) => *left_named = None,
+        }
+    }
+    left
 }
 
 fn is_srg_member_name(name: &str) -> bool {
@@ -8807,27 +8892,35 @@ fn input_fingerprint(
         input.extend_from_slice(extra.as_bytes());
         input.extend_from_slice(b"\n");
     }
-    for path in paths {
-        context.bail_if_cancelled()?;
-        hash_path_input(context, &mut input, path)?;
+    let path_inputs = {
+        let _span =
+            tracing::debug_span!("input_fingerprint_paths", label, paths = paths.len()).entered();
+        paths
+            .par_iter()
+            .map(|path| hash_path_input(context, path))
+            .collect::<Vec<eyre::Result<_>>>()
+            .into_iter()
+            .collect::<eyre::Result<Vec<_>>>()?
+    };
+    for path_input in path_inputs {
+        input.extend_from_slice(&path_input);
     }
     Ok(ContentHash::from_bytes(&input, ContentHashAlgorithm::Blake3).to_string())
 }
 
-fn hash_path_input(
-    context: &ExecutionContext<'_>,
-    input: &mut Vec<u8>,
-    path: &Path,
-) -> eyre::Result<()> {
+fn hash_path_input(context: &ExecutionContext<'_>, path: &Path) -> eyre::Result<Vec<u8>> {
     context.bail_if_cancelled()?;
+    let _span = tracing::debug_span!("hash_path_input", path = %path.display()).entered();
     context.assert_allowed_input(path)?;
     let normalized = path.to_string_lossy().replace('\\', "/");
+    let mut input = Vec::new();
     input.extend_from_slice(b"path:");
     input.extend_from_slice(normalized.as_bytes());
     input.extend_from_slice(b"\n");
 
     if path.is_file() {
         context.bail_if_cancelled()?;
+        let _span = tracing::debug_span!("hash_path_input_file").entered();
         input.extend_from_slice(b"file:");
         input.extend_from_slice(
             ContentHash::from_path(path, ContentHashAlgorithm::Blake3)?
@@ -8835,30 +8928,53 @@ fn hash_path_input(
                 .as_bytes(),
         );
         input.extend_from_slice(b"\n");
-        return Ok(());
+        return Ok(input);
     }
 
     if path.is_dir() {
+        let files = {
+            let _span = tracing::debug_span!("hash_path_input_dir_collect").entered();
+            collect_files_under_cancellable(context, path)?
+        };
         input.extend_from_slice(b"dir\n");
-        for file in collect_files_under_cancellable(context, path)? {
-            context.bail_if_cancelled()?;
-            context.assert_allowed_input(&file)?;
-            let relative = relative_zip_name(path, &file)?;
-            input.extend_from_slice(b"entry:");
-            input.extend_from_slice(relative.as_bytes());
-            input.extend_from_slice(b":");
-            input.extend_from_slice(
-                ContentHash::from_path(&file, ContentHashAlgorithm::Blake3)?
-                    .to_string()
-                    .as_bytes(),
-            );
-            input.extend_from_slice(b"\n");
+        let entry_inputs = {
+            let _span =
+                tracing::debug_span!("hash_path_input_dir_entries", files = files.len()).entered();
+            files
+                .par_iter()
+                .map(|file| hash_directory_entry_input(context, path, file))
+                .collect::<Vec<eyre::Result<_>>>()
+                .into_iter()
+                .collect::<eyre::Result<Vec<_>>>()?
+        };
+        for entry_input in entry_inputs {
+            input.extend_from_slice(&entry_input);
         }
-        return Ok(());
+        return Ok(input);
     }
 
     input.extend_from_slice(b"missing\n");
-    Ok(())
+    Ok(input)
+}
+
+fn hash_directory_entry_input(
+    context: &ExecutionContext<'_>,
+    root: &Path,
+    file: &Path,
+) -> eyre::Result<Vec<u8>> {
+    context.bail_if_cancelled()?;
+    let _span =
+        tracing::debug_span!("hash_directory_entry_input", file = %file.display()).entered();
+    context.assert_allowed_input(file)?;
+    let relative = relative_zip_name(root, file)?;
+    let hash = ContentHash::from_path(file, ContentHashAlgorithm::Blake3)?;
+    let mut input = Vec::new();
+    input.extend_from_slice(b"entry:");
+    input.extend_from_slice(relative.as_bytes());
+    input.extend_from_slice(b":");
+    input.extend_from_slice(hash.to_string().as_bytes());
+    input.extend_from_slice(b"\n");
+    Ok(input)
 }
 
 fn write_cache_state(path: &Path, state: &str) -> eyre::Result<()> {
@@ -9772,6 +9888,22 @@ fn resolve_current_minecraft_libraries(
     client: &Client,
 ) -> eyre::Result<Vec<PathBuf>> {
     context.bail_if_cancelled()?;
+    let mut cached_libraries = {
+        let _span =
+            tracing::debug_span!("resolve_current_minecraft_libraries_cache_lock").entered();
+        context
+            .minecraft_libraries_cache
+            .lock()
+            .map_err(|_| eyre::eyre!("Minecraft library cache lock poisoned"))?
+    };
+    if let Some(libraries) = cached_libraries.as_ref() {
+        tracing::debug!(
+            libraries = libraries.len(),
+            "resolve_current_minecraft_libraries cache hit"
+        );
+        return Ok(libraries.clone());
+    }
+
     let version_json: MinecraftVersionJson = {
         let _span = tracing::debug_span!(
             "resolve_current_minecraft_libraries_read_version_json",
@@ -9788,42 +9920,70 @@ fn resolve_current_minecraft_libraries(
         )
     };
 
-    for library in &libraries {
-        context.bail_if_cancelled()?;
+    let library_paths = {
         let _span = tracing::debug_span!(
-            "resolve_current_minecraft_library",
-            path = %library.path.display(),
-            has_expected_hash = library.sha1.is_some()
+            "resolve_current_minecraft_libraries_download",
+            libraries = libraries.len()
         )
         .entered();
-        if let Some(expected_hash) = library.sha1.as_ref() {
-            download_to_path_overwrite_with_expected_hash(
-                &context.cancellation_token,
-                client,
-                &library.url,
-                &library.path,
-                false,
-                expected_hash,
-            )?;
-        } else {
-            download_to_path(
-                &context.cancellation_token,
-                client,
-                &library.url,
-                &library.path,
-            )?;
-        }
-        context.assert_allowed_input(&library.path)?;
-    }
+        libraries
+            .par_iter()
+            .enumerate()
+            .map(|(index, library)| {
+                context.bail_if_cancelled()?;
+                let _span = tracing::debug_span!(
+                    "resolve_current_minecraft_library",
+                    index,
+                    path = %library.path.display(),
+                    url = %library.url,
+                    has_expected_hash = library.sha1.is_some()
+                )
+                .entered();
+                if let Some(expected_hash) = library.sha1.as_ref() {
+                    let _span = tracing::debug_span!(
+                        "resolve_current_minecraft_library_download_checked",
+                        expected_hash = %expected_hash
+                    )
+                    .entered();
+                    download_to_path_overwrite_with_expected_hash(
+                        &context.cancellation_token,
+                        client,
+                        &library.url,
+                        &library.path,
+                        false,
+                        expected_hash,
+                    )?;
+                } else {
+                    let _span = tracing::debug_span!("resolve_current_minecraft_library_download")
+                        .entered();
+                    download_to_path(
+                        &context.cancellation_token,
+                        client,
+                        &library.url,
+                        &library.path,
+                    )?;
+                }
+                {
+                    let _span =
+                        tracing::debug_span!("resolve_current_minecraft_library_assert_input")
+                            .entered();
+                    context.assert_allowed_input(&library.path)?;
+                }
+                Ok(library.path.clone())
+            })
+            .collect::<Vec<eyre::Result<_>>>()
+            .into_iter()
+            .collect::<eyre::Result<Vec<_>>>()?
+    };
 
     let _span = tracing::debug_span!(
         "resolve_current_minecraft_libraries_dedup",
-        libraries = libraries.len()
+        libraries = library_paths.len()
     )
     .entered();
-    Ok(dedup_paths_preserve_order(
-        libraries.into_iter().map(|library| library.path).collect(),
-    ))
+    let library_paths = dedup_paths_preserve_order(library_paths);
+    *cached_libraries = Some(library_paths.clone());
+    Ok(library_paths)
 }
 
 #[derive(Debug)]
@@ -10173,7 +10333,7 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
     }
 
     let bytes = fs::read(input).wrap_err_with(|| format!("Failed to read {}", input.display()))?;
-    let mut archive = ZipArchive::new(Cursor::new(bytes))
+    let mut archive = ZipArchive::new(Cursor::new(bytes.as_slice()))
         .wrap_err_with(|| format!("Failed to open loader runtime jar {}", input.display()))?;
     let mut names = BTreeSet::new();
     {
@@ -10195,6 +10355,7 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
             }
         }
     }
+    drop(archive);
 
     let output_file =
         File::create(output).wrap_err_with(|| format!("Failed to create {}", output.display()))?;
@@ -10207,25 +10368,27 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
         .write_all(manifest)
         .wrap_err_with(|| format!("Failed to write manifest to {}", output.display()))?;
 
-    {
+    let names = names.into_iter().collect::<Vec<_>>();
+    let entries = {
         let _span = tracing::debug_span!(
-            "write_run_loader_dev_jar_write_entries",
+            "write_run_loader_dev_jar_read_entries",
             entries = names.len()
         )
         .entered();
-        for name in names {
-            let mut entry = archive
-                .by_name(&name)
-                .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
-            let mut bytes = Vec::new();
-            entry
-                .read_to_end(&mut bytes)
-                .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
+        read_zip_entries_parallel(input, &bytes, &names)?
+    };
+    {
+        let _span = tracing::debug_span!(
+            "write_run_loader_dev_jar_write_entries",
+            entries = entries.len()
+        )
+        .entered();
+        for entry in entries {
             writer
-                .start_file(name, options)
+                .start_file(entry.name, options)
                 .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
             writer
-                .write_all(&bytes)
+                .write_all(&entry.bytes)
                 .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
         }
     }
@@ -10234,6 +10397,53 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
         .finish()
         .wrap_err_with(|| format!("Failed to finish {}", output.display()))?;
     Ok(())
+}
+
+#[derive(Debug)]
+struct ZipEntryBytes {
+    name: String,
+    bytes: Vec<u8>,
+}
+
+fn read_zip_entries_parallel(
+    input: &Path,
+    input_bytes: &[u8],
+    names: &[String],
+) -> eyre::Result<Vec<ZipEntryBytes>> {
+    if names.is_empty() {
+        return Ok(Vec::new());
+    }
+    let chunk_size = names.len().div_ceil(rayon::current_num_threads()).max(1);
+    let chunks = names
+        .par_chunks(chunk_size)
+        .map(|chunk| {
+            let _span =
+                tracing::debug_span!("read_zip_entries_parallel_chunk", entries = chunk.len())
+                    .entered();
+            let mut archive = ZipArchive::new(Cursor::new(input_bytes)).wrap_err_with(|| {
+                format!("Failed to open loader runtime jar {}", input.display())
+            })?;
+            chunk
+                .iter()
+                .map(|name| {
+                    let mut entry = archive.by_name(name).wrap_err_with(|| {
+                        format!("Failed to read loader runtime jar entry {name}")
+                    })?;
+                    let mut bytes = Vec::new();
+                    entry.read_to_end(&mut bytes).wrap_err_with(|| {
+                        format!("Failed to read loader runtime jar entry {name}")
+                    })?;
+                    Ok(ZipEntryBytes {
+                        name: name.clone(),
+                        bytes,
+                    })
+                })
+                .collect::<eyre::Result<Vec<_>>>()
+        })
+        .collect::<Vec<eyre::Result<_>>>()
+        .into_iter()
+        .collect::<eyre::Result<Vec<_>>>()?;
+    Ok(chunks.into_iter().flatten().collect())
 }
 
 #[instrument(level = "debug", skip_all, fields(path = %path.display()))]
@@ -10994,68 +11204,51 @@ fn write_runtime_mcp_csv_mappings(srg_to_named: &Path, output: &Path) -> eyre::R
 fn write_srg_to_named_mapping_file(srg_to_named: &Path, output: &Path) -> eyre::Result<()> {
     let content = fs::read_to_string(srg_to_named)
         .wrap_err_with(|| format!("Failed to read {}", srg_to_named.display()))?;
-    let mut class_mappings = BTreeMap::new();
-
-    {
+    let sections = {
         let _span = tracing::debug_span!(
-            "write_srg_to_named_mapping_file_collect_classes",
+            "write_srg_to_named_mapping_file_collect_sections",
             bytes = content.len()
         )
         .entered();
-        for line in content.lines() {
-            if line.trim().is_empty() || line.starts_with("tsrg") || line.starts_with('\t') {
-                continue;
-            }
-            let parts = line.split_whitespace().collect::<Vec<_>>();
-            if let [srg_class, named_class] = parts.as_slice() {
-                class_mappings.insert((*srg_class).to_string(), (*named_class).to_string());
-            }
-        }
-    }
-
-    let mut output_text = String::new();
-    let mut current_class: Option<(String, String)> = None;
-    {
+        collect_srg_mapping_class_sections(&content)
+    };
+    let class_mappings = {
         let _span = tracing::debug_span!(
-            "write_srg_to_named_mapping_file_render",
-            classes = class_mappings.len()
+            "write_srg_to_named_mapping_file_build_class_map",
+            classes = sections.len()
         )
         .entered();
-        for line in content.lines() {
-            if line.trim().is_empty() || line.starts_with("tsrg") {
-                continue;
-            }
-            if !line.starts_with('\t') && !line.starts_with(' ') {
-                let parts = line.split_whitespace().collect::<Vec<_>>();
-                if let [srg_class, named_class] = parts.as_slice() {
-                    writeln!(output_text, "CL: {srg_class} {named_class}")?;
-                    current_class = Some(((*srg_class).to_string(), (*named_class).to_string()));
-                }
-                continue;
-            }
-            if line.starts_with("\t\t") || line.starts_with("  ") {
-                continue;
-            }
-
-            let Some((srg_class, named_class)) = current_class.as_ref() else {
-                continue;
-            };
-            let parts = line.split_whitespace().collect::<Vec<_>>();
-            match parts.as_slice() {
-                [srg, named] => {
-                    writeln!(output_text, "FD: {srg_class}/{srg} {named_class}/{named}")?;
-                }
-                [srg, descriptor, named] => {
-                    let named_descriptor = remap_descriptor_classes(descriptor, &class_mappings);
-                    writeln!(
-                        output_text,
-                        "MD: {srg_class}/{srg} {descriptor} {named_class}/{named} {named_descriptor}"
-                    )?;
-                }
-                _ => {}
-            }
-        }
-    }
+        sections
+            .iter()
+            .map(|section| {
+                (
+                    section.srg_class.to_string(),
+                    section.named_class.to_string(),
+                )
+            })
+            .collect::<BTreeMap<_, _>>()
+    };
+    let rendered_sections = {
+        let _span = tracing::debug_span!(
+            "write_srg_to_named_mapping_file_render",
+            classes = sections.len()
+        )
+        .entered();
+        sections
+            .par_iter()
+            .map(|section| render_srg_mapping_class_section(section, &class_mappings))
+            .collect::<Vec<eyre::Result<_>>>()
+            .into_iter()
+            .collect::<eyre::Result<Vec<_>>>()?
+    };
+    let output_text = {
+        let _span = tracing::debug_span!(
+            "write_srg_to_named_mapping_file_merge_rendered",
+            classes = rendered_sections.len()
+        )
+        .entered();
+        rendered_sections.concat()
+    };
 
     {
         let _span = tracing::debug_span!("write_srg_to_named_mapping_file_write").entered();
@@ -11067,6 +11260,83 @@ fn write_srg_to_named_mapping_file(srg_to_named: &Path, output: &Path) -> eyre::
     }
     tracing::info!("Generated Mixin refmap remap file: {}", output.display());
     Ok(())
+}
+
+#[derive(Debug)]
+struct SrgMappingClassSection<'a> {
+    srg_class: &'a str,
+    named_class: &'a str,
+    member_lines: Vec<&'a str>,
+}
+
+fn collect_srg_mapping_class_sections(content: &str) -> Vec<SrgMappingClassSection<'_>> {
+    let mut sections = Vec::new();
+    let mut current: Option<SrgMappingClassSection<'_>> = None;
+    for line in content.lines() {
+        if line.trim().is_empty() || line.starts_with("tsrg") {
+            continue;
+        }
+        if !line.starts_with('\t') && !line.starts_with(' ') {
+            let parts = line.split_whitespace().collect::<Vec<_>>();
+            if let [srg_class, named_class] = parts.as_slice() {
+                if let Some(section) = current.take() {
+                    sections.push(section);
+                }
+                current = Some(SrgMappingClassSection {
+                    srg_class: *srg_class,
+                    named_class: *named_class,
+                    member_lines: Vec::new(),
+                });
+            }
+            continue;
+        }
+        if let Some(section) = current.as_mut() {
+            section.member_lines.push(line);
+        }
+    }
+    if let Some(section) = current {
+        sections.push(section);
+    }
+    sections
+}
+
+fn render_srg_mapping_class_section(
+    section: &SrgMappingClassSection<'_>,
+    class_mappings: &BTreeMap<String, String>,
+) -> eyre::Result<String> {
+    let mut output = String::new();
+    writeln!(output, "CL: {} {}", section.srg_class, section.named_class)?;
+    for line in &section.member_lines {
+        if line.starts_with("\t\t") || line.starts_with("  ") {
+            continue;
+        }
+
+        let parts = line.split_whitespace().collect::<Vec<_>>();
+        match parts.as_slice() {
+            [srg, named] => {
+                writeln!(
+                    output,
+                    "FD: {}/{} {}/{}",
+                    section.srg_class, srg, section.named_class, named
+                )?;
+            }
+            [srg, descriptor, named] => {
+                let named_descriptor = remap_descriptor_classes(descriptor, class_mappings);
+                writeln!(
+                    output,
+                    "MD: {}/{} {} {}/{} {}",
+                    section.srg_class,
+                    srg,
+                    descriptor,
+                    section.named_class,
+                    named,
+                    named_descriptor
+                )?;
+            }
+            _ => {}
+        }
+    }
+    Ok(output)
 }
 
 fn remap_descriptor_classes(descriptor: &str, class_mappings: &BTreeMap<String, String>) -> String {
