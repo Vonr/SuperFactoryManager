@@ -10881,7 +10881,11 @@ fn migrate_locked_artifact(
     if legacy_actual_hash != locked.hash {
         return Ok(locked.clone());
     }
-    let actual_hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
+    let actual_hash = if locked.hash.algorithm == ContentHashAlgorithm::Blake3 {
+        legacy_actual_hash
+    } else {
+        ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?
+    };
     let provenance = read_artifact_provenance(&cache_path)?.unwrap_or_else(|| {
         artifact_provenance(
             locked.source.clone(),
@@ -10918,8 +10922,13 @@ fn artifact_lock_entry_from_plan_artifact(
     artifact: &ArtifactPlan,
 ) -> eyre::Result<ArtifactLockEntry> {
     let actual_hash = artifact_actual_hash(&artifact.cache_path, artifact.sha1.as_ref())?;
-    let provenance_actual_hash =
-        ContentHash::from_path(&artifact.cache_path, artifact.provenance.hash.algorithm)?;
+    let provenance_actual_hash = if artifact.cache_path.is_file()
+        && artifact.provenance.hash.algorithm == actual_hash.algorithm
+    {
+        actual_hash
+    } else {
+        ContentHash::from_path(&artifact.cache_path, artifact.provenance.hash.algorithm)?
+    };
     if provenance_actual_hash != artifact.provenance.hash {
         eyre::bail!(
             "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
@@ -10963,7 +10972,11 @@ fn artifact_lock_entry_from_cache_path(
             actual_hash,
         )
     });
-    let provenance_actual_hash = ContentHash::from_path(path, provenance.hash.algorithm)?;
+    let provenance_actual_hash = if provenance.hash.algorithm == ContentHashAlgorithm::Blake3 {
+        actual_hash
+    } else {
+        ContentHash::from_path(path, provenance.hash.algorithm)?
+    };
     if provenance_actual_hash != provenance.hash {
         eyre::bail!(
             "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
@@ -10993,7 +11006,11 @@ fn artifact_actual_hash(
     if path.is_file() {
         let actual_hash = ContentHash::from_path(path, ContentHashAlgorithm::Blake3)?;
         if let Some(planned_hash) = planned_hash {
-            let planned_actual_hash = ContentHash::from_path(path, planned_hash.algorithm)?;
+            let planned_actual_hash = if planned_hash.algorithm == ContentHashAlgorithm::Blake3 {
+                actual_hash
+            } else {
+                ContentHash::from_path(path, planned_hash.algorithm)?
+            };
             if planned_actual_hash != *planned_hash {
                 eyre::bail!(
                     "Artifact {} resolved with content hash {}, but the plan recorded {}",
@@ -11002,17 +11019,6 @@ fn artifact_actual_hash(
                     planned_hash
                 );
             }
-        }
-        if let Some(planned_hash) = planned_hash
-            && planned_hash.algorithm == ContentHashAlgorithm::Blake3
-            && actual_hash != *planned_hash
-        {
-            eyre::bail!(
-                "Artifact {} resolved with content hash {}, but the plan recorded {}",
-                path.display(),
-                actual_hash,
-                planned_hash
-            );
         }
         return Ok(actual_hash);
     }
