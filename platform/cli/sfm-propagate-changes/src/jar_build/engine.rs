@@ -5242,12 +5242,13 @@ fn resolve_run_deobf_dependencies(
             ArtifactPurpose::from(format!("{} runtime dependency", dependency.configuration)),
         )?;
         context.assert_allowed_input(&artifact.cache_path)?;
+        let artifact_hash = resolved_artifact_hash(&artifact)?;
         let remapped = remapped_dependency_output_path(
             &dependency_output,
-            &artifact.cache_path,
+            &artifact_hash,
             &mapping_hash,
             &coordinate,
-        )?;
+        );
         if !remapped.is_file() {
             eyre::bail!(
                 "{} requires remapped dependency jar {}. Run jar build first.",
@@ -6567,14 +6568,11 @@ fn execute_dependency_deobf_dependency(
         ArtifactPurpose::from(format!("{} dependency", dependency.configuration)),
     )?;
     context.assert_allowed_input(&artifact.cache_path)?;
+    let artifact_hash = resolved_artifact_hash(&artifact)?;
     let remapped =
-        remapped_dependency_output_path(output, &artifact.cache_path, &mapping_hash, &coordinate)?;
-    let specialsource_output = specialsource_dependency_output_path(
-        output,
-        &artifact.cache_path,
-        &mapping_hash,
-        &coordinate,
-    )?;
+        remapped_dependency_output_path(output, &artifact_hash, &mapping_hash, &coordinate);
+    let specialsource_output =
+        specialsource_dependency_output_path(output, &artifact_hash, &mapping_hash, &coordinate);
     if remapped.is_file() {
         tracing::debug!(
             coordinate = %coordinate,
@@ -6678,32 +6676,39 @@ fn copied_neogradle_dependency_output_path(
 
 fn remapped_dependency_output_path(
     output_dir: &Path,
-    input_jar: &Path,
+    input_hash: &ContentHash,
     mapping_hash: &ContentHash,
     coordinate: &MavenCoordinate,
-) -> eyre::Result<PathBuf> {
-    let input_hash = ContentHash::from_path(input_jar, ContentHashAlgorithm::Blake3)?;
-    Ok(output_dir.join(format!(
+) -> PathBuf {
+    output_dir.join(format!(
         "{}-{}-named-mixin-{}",
         input_hash.short_hex(12),
         mapping_hash.short_hex(12),
         coordinate.file_name()
-    )))
+    ))
 }
 
 fn specialsource_dependency_output_path(
     output_dir: &Path,
-    input_jar: &Path,
+    input_hash: &ContentHash,
     mapping_hash: &ContentHash,
     coordinate: &MavenCoordinate,
-) -> eyre::Result<PathBuf> {
-    let input_hash = ContentHash::from_path(input_jar, ContentHashAlgorithm::Blake3)?;
-    Ok(output_dir.join("specialsource").join(format!(
+) -> PathBuf {
+    output_dir.join("specialsource").join(format!(
         "{}-{}-specialsource-{}",
         input_hash.short_hex(12),
         mapping_hash.short_hex(12),
         coordinate.file_name()
-    )))
+    ))
+}
+
+fn resolved_artifact_hash(artifact: &ArtifactPlan) -> eyre::Result<ContentHash> {
+    artifact.sha1.ok_or_else(|| {
+        eyre::eyre!(
+            "Resolved artifact {} did not record a content hash",
+            artifact.cache_path.display()
+        )
+    })
 }
 
 fn read_unique_srg_member_mappings(mapping_path: &Path) -> eyre::Result<BTreeMap<String, String>> {
