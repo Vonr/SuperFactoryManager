@@ -10355,7 +10355,6 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
             }
         }
     }
-    drop(archive);
 
     let output_file =
         File::create(output).wrap_err_with(|| format!("Failed to create {}", output.display()))?;
@@ -10369,26 +10368,19 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
         .wrap_err_with(|| format!("Failed to write manifest to {}", output.display()))?;
 
     let names = names.into_iter().collect::<Vec<_>>();
-    let entries = {
-        let _span = tracing::debug_span!(
-            "write_run_loader_dev_jar_read_entries",
-            entries = names.len()
-        )
-        .entered();
-        read_zip_entries_parallel(input, &bytes, &names)?
-    };
     {
         let _span = tracing::debug_span!(
             "write_run_loader_dev_jar_write_entries",
-            entries = entries.len()
+            entries = names.len(),
+            method = "raw_copy"
         )
         .entered();
-        for entry in entries {
+        for name in names {
+            let entry = archive
+                .by_name(&name)
+                .wrap_err_with(|| format!("Failed to read loader runtime jar entry {name}"))?;
             writer
-                .start_file(entry.name, options)
-                .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
-            writer
-                .write_all(&entry.bytes)
+                .raw_copy_file_rename(entry, name)
                 .wrap_err_with(|| format!("Failed to write {}", output.display()))?;
         }
     }
@@ -10397,53 +10389,6 @@ fn write_run_loader_dev_jar(input: &Path, manifest: &[u8], output: &Path) -> eyr
         .finish()
         .wrap_err_with(|| format!("Failed to finish {}", output.display()))?;
     Ok(())
-}
-
-#[derive(Debug)]
-struct ZipEntryBytes {
-    name: String,
-    bytes: Vec<u8>,
-}
-
-fn read_zip_entries_parallel(
-    input: &Path,
-    input_bytes: &[u8],
-    names: &[String],
-) -> eyre::Result<Vec<ZipEntryBytes>> {
-    if names.is_empty() {
-        return Ok(Vec::new());
-    }
-    let chunk_size = names.len().div_ceil(rayon::current_num_threads()).max(1);
-    let chunks = names
-        .par_chunks(chunk_size)
-        .map(|chunk| {
-            let _span =
-                tracing::debug_span!("read_zip_entries_parallel_chunk", entries = chunk.len())
-                    .entered();
-            let mut archive = ZipArchive::new(Cursor::new(input_bytes)).wrap_err_with(|| {
-                format!("Failed to open loader runtime jar {}", input.display())
-            })?;
-            chunk
-                .iter()
-                .map(|name| {
-                    let mut entry = archive.by_name(name).wrap_err_with(|| {
-                        format!("Failed to read loader runtime jar entry {name}")
-                    })?;
-                    let mut bytes = Vec::new();
-                    entry.read_to_end(&mut bytes).wrap_err_with(|| {
-                        format!("Failed to read loader runtime jar entry {name}")
-                    })?;
-                    Ok(ZipEntryBytes {
-                        name: name.clone(),
-                        bytes,
-                    })
-                })
-                .collect::<eyre::Result<Vec<_>>>()
-        })
-        .collect::<Vec<eyre::Result<_>>>()
-        .into_iter()
-        .collect::<eyre::Result<Vec<_>>>()?;
-    Ok(chunks.into_iter().flatten().collect())
 }
 
 #[instrument(level = "debug", skip_all, fields(path = %path.display()))]
