@@ -3,12 +3,13 @@ use super::{
     ArtifactPurpose, ArtifactSource, DependencyPlan, DependencySource, MavenCoordinate, Repository,
     SourceGitProvenance, acquire_artifact_path_lock, acquire_artifact_path_read_lock,
     artifact_provenance, compare_version_text, copy_file_to_path_checked_locked,
-    download_text_optional, download_to_path_overwrite_locked, existing_file_matches_sha1,
-    file_sha1, materialize_source_build, parse_maven_pom_runtime_dependencies,
-    parse_maven_versions, prepare_existing_artifact_for_reuse, read_artifact_provenance,
-    remote_exists, source_build_checkout_key, source_git_provenance, write_artifact_provenance,
+    download_text_optional, download_to_path_overwrite_locked, existing_file_matches_hash,
+    materialize_source_build, parse_maven_pom_runtime_dependencies, parse_maven_versions,
+    prepare_existing_artifact_for_reuse, read_artifact_provenance, remote_exists,
+    source_build_checkout_key, source_git_provenance, write_artifact_provenance,
 };
 use crate::cancellation::CancellationToken;
+use crate::jar_build::hash::{ContentHash, ContentHashAlgorithm};
 use crate::logging::set_tracy_thread_name;
 use crate::panic::panic_message;
 use eyre::Context;
@@ -143,14 +144,13 @@ impl Resolver {
         };
         self.cancellation_token.bail_if_cancelled()?;
         let cache_path = self.cache_path_for(&coordinate);
-        let expected_sha1 = {
+        let expected_hash = {
             let _span = tracing::debug_span!(
                 "resolve_artifact_lock_lookup",
                 has_lockfile = self.lockfile.is_some()
             )
             .entered();
-            self.locked_artifact_sha1(&coordinate)
-                .map(ToOwned::to_owned)
+            self.locked_artifact_hash(&coordinate).copied()
         };
 
         if let Some(artifact) = {
@@ -158,7 +158,7 @@ impl Resolver {
                 "resolve_artifact_valid_cache",
                 refresh = self.refresh,
                 cache_exists = cache_path.is_file(),
-                has_expected_sha1 = expected_sha1.is_some(),
+                has_expected_hash = expected_hash.is_some(),
             )
             .entered();
             self.cached_artifact_if_valid(
@@ -166,7 +166,7 @@ impl Resolver {
                 &coordinate,
                 &cache_path,
                 &required_for,
-                expected_sha1.as_deref(),
+                expected_hash.as_ref(),
             )?
         } {
             return Ok(artifact);
@@ -178,12 +178,12 @@ impl Resolver {
                 "resolve_artifact_prepare_cache",
                 refresh = self.refresh,
                 cache_exists = cache_path.is_file(),
-                has_expected_sha1 = expected_sha1.is_some(),
+                has_expected_hash = expected_hash.is_some(),
             )
             .entered();
             let cache_lock = acquire_artifact_path_lock(&cache_path)?;
             self.cancellation_token.bail_if_cancelled()?;
-            prepare_existing_artifact_for_reuse(&cache_path, expected_sha1.as_deref())?;
+            prepare_existing_artifact_for_reuse(&cache_path, expected_hash.as_ref())?;
 
             if cache_path.is_file() && !self.refresh {
                 let artifact =
@@ -192,7 +192,7 @@ impl Resolver {
                 tracing::debug!(
                     coordinate = %coordinate,
                     cache_path = %artifact.cache_path.display(),
-                    sha1 = artifact.sha1.as_deref(),
+                    hash = artifact.sha1.as_ref().map(ToString::to_string),
                     "artifact cache hit"
                 );
                 return Ok(artifact);
@@ -205,7 +205,7 @@ impl Resolver {
             let _span = tracing::debug_span!(
                 "resolve_artifact_remote",
                 repository_candidates = self.candidate_repositories(&coordinate).len(),
-                has_expected_sha1 = expected_sha1.is_some(),
+                has_expected_hash = expected_hash.is_some(),
             )
             .entered();
             self.remote_artifact(
@@ -213,7 +213,7 @@ impl Resolver {
                 &coordinate,
                 &cache_path,
                 &required_for,
-                expected_sha1.as_deref(),
+                expected_hash.as_ref(),
                 &mut attempted,
             )?
         } {
@@ -225,7 +225,7 @@ impl Resolver {
             let _span = tracing::debug_span!(
                 "resolve_artifact_explicit_source",
                 artifact_source_count = self.artifact_sources.len(),
-                has_expected_sha1 = expected_sha1.is_some(),
+                has_expected_hash = expected_hash.is_some(),
             )
             .entered();
             self.explicit_artifact_source_fallback(
@@ -233,7 +233,7 @@ impl Resolver {
                 &coordinate,
                 cache_path.clone(),
                 &required_for,
-                expected_sha1.as_deref(),
+                expected_hash.as_ref(),
             )?
         } {
             return Ok(artifact);
@@ -244,7 +244,7 @@ impl Resolver {
             let _span = tracing::debug_span!(
                 "resolve_artifact_source_build",
                 has_materialization_lockfile = self.materialization_lockfile.is_some(),
-                has_expected_sha1 = expected_sha1.is_some(),
+                has_expected_hash = expected_hash.is_some(),
             )
             .entered();
             self.source_build_fallback(
@@ -252,7 +252,7 @@ impl Resolver {
                 &coordinate,
                 cache_path.clone(),
                 &required_for,
-                expected_sha1.as_deref(),
+                expected_hash.as_ref(),
             )?
         } {
             return Ok(artifact);
@@ -263,7 +263,7 @@ impl Resolver {
             let _span = tracing::debug_span!(
                 "resolve_artifact_local_cache",
                 allow_local_artifact_cache = self.allow_local_artifact_cache,
-                has_expected_sha1 = expected_sha1.is_some(),
+                has_expected_hash = expected_hash.is_some(),
             )
             .entered();
             self.local_artifact_fallback(
@@ -271,7 +271,7 @@ impl Resolver {
                 &coordinate,
                 cache_path,
                 &required_for,
-                expected_sha1.as_deref(),
+                expected_hash.as_ref(),
             )?
         } {
             return Ok(artifact);
@@ -290,7 +290,7 @@ impl Resolver {
         coordinate: &MavenCoordinate,
         cache_path: PathBuf,
         required_for: &ArtifactPurpose,
-        expected_sha1: Option<&str>,
+        expected_hash: Option<&ContentHash>,
     ) -> eyre::Result<Option<ArtifactPlan>> {
         self.cancellation_token.bail_if_cancelled()?;
         let Some(locked) = self.materializable_locked_artifact(coordinate) else {
@@ -329,8 +329,8 @@ impl Resolver {
                 source_output.display()
             );
         }
-        copy_file_to_path_checked_locked(&source_output, &cache_path, expected_sha1)?;
-        let sha1 = file_sha1(&cache_path)?;
+        copy_file_to_path_checked_locked(&source_output, &cache_path, expected_hash)?;
+        let hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
         let portable_source_root = PathBuf::from("$sfm-cache")
             .join("source-builds")
             .join(checkout_key);
@@ -350,7 +350,7 @@ impl Resolver {
                 remote_url: Some(remote_url.to_string()),
             }),
             source_build: Some(source_build.clone()),
-            sha1: sha1.clone(),
+            sha1: hash,
         };
         write_artifact_provenance(&cache_path, &provenance)?;
         let artifact = ArtifactPlan {
@@ -359,7 +359,7 @@ impl Resolver {
             repository: provenance.repository.clone(),
             url: provenance.url.clone(),
             cache_path,
-            sha1: Some(sha1),
+            sha1: Some(hash),
             downloaded: false,
             required_for: required_for.clone(),
             provenance,
@@ -402,7 +402,7 @@ impl Resolver {
         coordinate: &MavenCoordinate,
         cache_path: &Path,
         required_for: &ArtifactPurpose,
-        expected_sha1: Option<&str>,
+        expected_hash: Option<&ContentHash>,
         attempted: &mut Vec<String>,
     ) -> eyre::Result<Option<ArtifactPlan>> {
         for repo in self.candidate_repositories(coordinate) {
@@ -425,7 +425,7 @@ impl Resolver {
                 let _span = tracing::debug_span!(
                     "resolve_artifact_remote_download",
                     refresh = self.refresh,
-                    has_expected_sha1 = expected_sha1.is_some(),
+                    has_expected_hash = expected_hash.is_some(),
                 )
                 .entered();
                 if coordinate.group == "curse.maven" {
@@ -435,7 +435,7 @@ impl Resolver {
                         &url,
                         cache_path,
                         self.refresh,
-                        expected_sha1,
+                        expected_hash,
                     )
                 } else {
                     if !remote_exists(&self.cancellation_token, &self.client, &url)? {
@@ -447,7 +447,7 @@ impl Resolver {
                         &url,
                         cache_path,
                         self.refresh,
-                        expected_sha1,
+                        expected_hash,
                     )
                 }
             };
@@ -473,7 +473,7 @@ impl Resolver {
                 coordinate = %coordinate,
                 repository = artifact.repository.as_deref(),
                 cache_path = %artifact.cache_path.display(),
-                sha1 = artifact.sha1.as_deref(),
+                hash = artifact.sha1.as_ref().map(ToString::to_string),
                 "artifact downloaded"
             );
             return Ok(Some(artifact));
@@ -487,7 +487,7 @@ impl Resolver {
         coordinate: &MavenCoordinate,
         cache_path: PathBuf,
         required_for: &ArtifactPurpose,
-        expected_sha1: Option<&str>,
+        expected_hash: Option<&ContentHash>,
     ) -> eyre::Result<Option<ArtifactPlan>> {
         let Some(local_artifact) =
             find_explicit_source_artifact(coordinate, self.artifact_sources.as_ref())
@@ -500,7 +500,7 @@ impl Resolver {
             local_artifact,
             cache_path,
             required_for,
-            expected_sha1,
+            expected_hash,
         )?;
         self.verify_locked_artifact(coordinate, &artifact)?;
         tracing::info!(
@@ -508,7 +508,7 @@ impl Resolver {
             cache_path = %artifact.cache_path.display(),
             source = ?artifact.provenance.source,
             original_path = artifact.provenance.original_path.as_ref().map(|path| path.display().to_string()),
-            sha1 = artifact.sha1.as_deref(),
+            hash = artifact.sha1.as_ref().map(ToString::to_string),
             "artifact copied from explicit artifact source"
         );
         Ok(Some(artifact))
@@ -520,7 +520,7 @@ impl Resolver {
         coordinate: &MavenCoordinate,
         cache_path: PathBuf,
         required_for: &ArtifactPurpose,
-        expected_sha1: Option<&str>,
+        expected_hash: Option<&ContentHash>,
     ) -> eyre::Result<Option<ArtifactPlan>> {
         if !self.allow_local_artifact_cache {
             return Ok(None);
@@ -534,14 +534,14 @@ impl Resolver {
             local_artifact,
             cache_path,
             required_for,
-            expected_sha1,
+            expected_hash,
         )?;
         self.verify_locked_artifact(coordinate, &artifact)?;
         tracing::info!(
             coordinate = %coordinate,
             cache_path = %artifact.cache_path.display(),
             source = ?artifact.provenance.source,
-            sha1 = artifact.sha1.as_deref(),
+            hash = artifact.sha1.as_ref().map(ToString::to_string),
             "artifact copied from local cache fallback"
         );
         Ok(Some(artifact))
@@ -553,15 +553,15 @@ impl Resolver {
         coordinate: &MavenCoordinate,
         cache_path: &Path,
         required_for: &ArtifactPurpose,
-        expected_sha1: Option<&str>,
+        expected_hash: Option<&ContentHash>,
     ) -> eyre::Result<Option<ArtifactPlan>> {
         if self.refresh || !cache_path.is_file() {
             return Ok(None);
         }
 
         let _cache_read_lock = acquire_artifact_path_read_lock(cache_path)?;
-        let cached_artifact_is_valid = match expected_sha1 {
-            Some(expected_sha1) => existing_file_matches_sha1(cache_path, expected_sha1)?,
+        let cached_artifact_is_valid = match expected_hash {
+            Some(expected_hash) => existing_file_matches_hash(cache_path, expected_hash)?,
             None => true,
         };
         if !cached_artifact_is_valid {
@@ -574,20 +574,20 @@ impl Resolver {
         tracing::debug!(
             coordinate = %coordinate,
             cache_path = %artifact.cache_path.display(),
-            sha1 = artifact.sha1.as_deref(),
+            hash = artifact.sha1.as_ref().map(ToString::to_string),
             "artifact cache hit"
         );
         Ok(Some(artifact))
     }
 
-    fn locked_artifact_sha1(&self, coordinate: &MavenCoordinate) -> Option<&str> {
+    fn locked_artifact_hash(&self, coordinate: &MavenCoordinate) -> Option<&ContentHash> {
         let coordinate_text = coordinate.to_string();
         self.lockfile
             .as_ref()?
             .artifacts
             .iter()
             .find(|entry| entry.coordinate.as_deref() == Some(coordinate_text.as_str()))
-            .map(|entry| entry.sha1.as_str())
+            .map(|entry| &entry.sha1)
     }
 
     fn verify_locked_artifact(
@@ -611,17 +611,12 @@ impl Resolver {
                 lockfile.minecraft_version
             );
         };
-        let actual_sha1 = artifact.sha1.as_deref().ok_or_else(|| {
-            eyre::eyre!(
-                "Resolved artifact {} did not report a SHA-1 for lock verification",
-                coordinate_text
-            )
-        })?;
-        if actual_sha1 != locked.sha1 {
+        let actual_hash = ContentHash::from_path(&artifact.cache_path, locked.sha1.algorithm)?;
+        if actual_hash != locked.sha1 {
             eyre::bail!(
-                "Artifact {} resolved with SHA-1 {}, but sfm-toolchain.lock.json requires {}",
+                "Artifact {} resolved with content hash {}, but sfm-toolchain.lock.json requires {}",
                 coordinate_text,
-                actual_sha1,
+                actual_hash,
                 locked.sha1
             );
         }
@@ -635,7 +630,7 @@ impl Resolver {
         cache_path: PathBuf,
         required_for: &ArtifactPurpose,
     ) -> eyre::Result<ArtifactPlan> {
-        let sha1 = file_sha1(&cache_path)?;
+        let hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
         let provenance = read_artifact_provenance(&cache_path)?.unwrap_or_else(|| {
             artifact_provenance(
                 ArtifactSource::ExistingSfmCacheUnknown,
@@ -644,7 +639,7 @@ impl Resolver {
                 None,
                 None,
                 None,
-                sha1.clone(),
+                hash,
             )
         });
         Ok(ArtifactPlan {
@@ -652,7 +647,7 @@ impl Resolver {
             coordinate: Some(coordinate.to_string()),
             repository: provenance.repository.clone(),
             url: provenance.url.clone(),
-            sha1: Some(sha1),
+            sha1: Some(hash),
             cache_path,
             downloaded: false,
             required_for: required_for.clone(),
@@ -668,7 +663,7 @@ impl Resolver {
         cache_path: PathBuf,
         required_for: &ArtifactPurpose,
     ) -> eyre::Result<ArtifactPlan> {
-        let sha1 = file_sha1(&cache_path)?;
+        let hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
         let provenance = artifact_provenance(
             ArtifactSource::RemoteMaven,
             Some(coordinate.to_string()),
@@ -676,7 +671,7 @@ impl Resolver {
             Some(url.clone()),
             None,
             None,
-            sha1.clone(),
+            hash,
         );
         write_artifact_provenance(&cache_path, &provenance)?;
         Ok(ArtifactPlan {
@@ -684,7 +679,7 @@ impl Resolver {
             coordinate: Some(coordinate.to_string()),
             repository: Some(repo.name.clone()),
             url: Some(url),
-            sha1: Some(sha1),
+            sha1: Some(hash),
             cache_path,
             downloaded: true,
             required_for: required_for.clone(),
@@ -698,10 +693,10 @@ impl Resolver {
         local_artifact: LocalCachedArtifact,
         cache_path: PathBuf,
         required_for: &ArtifactPurpose,
-        expected_sha1: Option<&str>,
+        expected_hash: Option<&ContentHash>,
     ) -> eyre::Result<ArtifactPlan> {
-        copy_file_to_path_checked_locked(&local_artifact.path, &cache_path, expected_sha1)?;
-        let sha1 = file_sha1(&cache_path)?;
+        copy_file_to_path_checked_locked(&local_artifact.path, &cache_path, expected_hash)?;
+        let hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
         let source_git = if local_artifact.source == ArtifactSource::ExplicitSource {
             source_git_provenance(&local_artifact.path)
         } else {
@@ -714,7 +709,7 @@ impl Resolver {
             None,
             Some(local_artifact.path.clone()),
             source_git,
-            sha1.clone(),
+            hash,
         );
         write_artifact_provenance(&cache_path, &provenance)?;
         Ok(ArtifactPlan {
@@ -722,7 +717,7 @@ impl Resolver {
             coordinate: Some(coordinate.to_string()),
             repository: Some(local_artifact.repository),
             url: Some(local_artifact.path.display().to_string()),
-            sha1: Some(sha1),
+            sha1: Some(hash),
             cache_path,
             downloaded: false,
             required_for: required_for.clone(),

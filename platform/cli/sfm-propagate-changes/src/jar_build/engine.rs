@@ -9,6 +9,7 @@ use super::RunKind;
 pub(super) use super::artifact_audit_issue_kind::ArtifactAuditIssueKind;
 pub(super) use super::artifact_audit_report::ArtifactAuditReport;
 pub(super) use super::artifact_audit_severity::ArtifactAuditSeverity;
+use super::hash::{ContentHash, ContentHashAlgorithm};
 use super::json_branch_name::JsonBranchName;
 use super::json_minecraft_version::JsonMinecraftVersion;
 use super::json_path::JsonOptionalPath;
@@ -27,8 +28,6 @@ use eyre::Context;
 use facet::Facet;
 use reqwest::StatusCode;
 use reqwest::blocking::Client;
-use sha1::Digest;
-use sha1::Sha1;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -1043,17 +1042,17 @@ fn audit_locked_artifact(
     }
 
     let _cache_read_lock = acquire_artifact_path_read_lock(&cache_path)?;
-    let actual_sha1 = file_sha1(&cache_path)?;
-    if actual_sha1 != artifact.sha1 {
+    let actual_hash = ContentHash::from_path(&cache_path, artifact.sha1.algorithm)?;
+    if actual_hash != artifact.sha1 {
         report.push_error(
             ArtifactAuditIssueKind::ArtifactHashMismatch,
             artifact.coordinate.clone(),
             Some(artifact.source.clone()),
             &cache_path,
             format!(
-                "Locked artifact {} has SHA-1 {}, but lockfile requires {}",
+                "Locked artifact {} has content hash {}, but lockfile requires {}",
                 cache_path.display(),
-                actual_sha1,
+                actual_hash,
                 artifact.sha1
             ),
         );
@@ -1201,17 +1200,17 @@ fn audit_original_source_artifact(
         return Ok(());
     }
 
-    let source_sha1 = file_sha1(original_path)?;
-    if source_sha1 != artifact.sha1 {
+    let source_hash = ContentHash::from_path(original_path, artifact.sha1.algorithm)?;
+    if source_hash != artifact.sha1 {
         report.push_error(
             ArtifactAuditIssueKind::OriginalSourceHashMismatch,
             artifact.coordinate.clone(),
             Some(artifact.source.clone()),
             original_path,
             format!(
-                "Explicit-source artifact {} original source has SHA-1 {}, but lockfile requires {}",
+                "Explicit-source artifact {} original source has content hash {}, but lockfile requires {}",
                 artifact_label(artifact),
-                source_sha1,
+                source_hash,
                 artifact.sha1
             ),
         );
@@ -1542,7 +1541,7 @@ struct ArtifactPlan {
     url: Option<String>,
     #[facet(proxy = JsonPath)]
     cache_path: PathBuf,
-    sha1: Option<String>,
+    sha1: Option<ContentHash>,
     downloaded: bool,
     required_for: ArtifactPurpose,
     provenance: ArtifactProvenance,
@@ -1564,7 +1563,7 @@ struct ArtifactProvenance {
     source_git: Option<SourceGitProvenance>,
     #[facet(default)]
     source_build: Option<SourceBuildProvenance>,
-    sha1: String,
+    sha1: ContentHash,
 }
 
 #[derive(Clone, Debug, Facet)]
@@ -1607,7 +1606,7 @@ struct ArtifactLockEntry {
     source_git: Option<SourceGitProvenance>,
     #[facet(default)]
     source_build: Option<SourceBuildProvenance>,
-    sha1: String,
+    sha1: ContentHash,
 }
 
 #[derive(Clone, Debug, Eq, Facet, PartialEq)]
@@ -1826,8 +1825,8 @@ struct JarCompareReport {
 #[derive(Debug, Facet)]
 struct ChangedEntry {
     path: String,
-    gradle_sha1: String,
-    rust_sha1: String,
+    gradle_sha1: ContentHash,
+    rust_sha1: ContentHash,
 }
 
 #[derive(Debug, Facet)]
@@ -1835,8 +1834,8 @@ struct ManifestCompare {
     compared: bool,
     changed: bool,
     ignored_implementation_timestamp: bool,
-    gradle_sha1: Option<String>,
-    rust_sha1: Option<String>,
+    gradle_sha1: Option<ContentHash>,
+    rust_sha1: Option<ContentHash>,
 }
 
 #[derive(Debug, Facet)]
@@ -1868,8 +1867,8 @@ struct JarJarVersion {
 
 #[derive(Debug)]
 struct NormalizedJar {
-    entries: BTreeMap<String, String>,
-    manifest_sha1: Option<String>,
+    entries: BTreeMap<String, ContentHash>,
+    manifest_sha1: Option<ContentHash>,
     total_entries: usize,
 }
 
@@ -1930,7 +1929,7 @@ struct MinecraftAssetIndexJson {
 
 #[derive(Debug, Facet)]
 struct MinecraftAssetObject {
-    hash: String,
+    hash: ContentHash,
 }
 
 #[derive(Debug, Facet)]
@@ -1950,7 +1949,7 @@ struct MinecraftLibraryArtifact {
     url: String,
     path: String,
     #[facet(default)]
-    sha1: Option<String>,
+    sha1: Option<ContentHash>,
 }
 
 #[derive(Debug, Default, Facet)]
@@ -2564,7 +2563,8 @@ fn artifact_portability_audit(plan: &BuildPlan) -> eyre::Result<ArtifactPortabil
         );
     }
     for dependency in &plan.dependencies {
-        let actual_sha1 = file_sha1(&dependency.cache_path)?;
+        let actual_hash =
+            ContentHash::from_path(&dependency.cache_path, ContentHashAlgorithm::Blake3)?;
         let provenance = read_artifact_provenance(&dependency.cache_path)?.unwrap_or_else(|| {
             artifact_provenance(
                 ArtifactSource::ExistingSfmCacheUnknown,
@@ -2573,7 +2573,7 @@ fn artifact_portability_audit(plan: &BuildPlan) -> eyre::Result<ArtifactPortabil
                 None,
                 None,
                 None,
-                actual_sha1,
+                actual_hash,
             )
         });
         push_artifact_portability_input(
@@ -4989,8 +4989,8 @@ fn ensure_run_neoforge_dev_jars(
             .join(format!("minecraft-{neoforge_version}.jar"));
         let minecraft_input_state = format!(
             "{}\n{}\nsplit-minecraft-v3\n",
-            file_sha1(&input)?,
-            file_sha1(&neoforge_universal.cache_path)?
+            ContentHash::from_path(&input, ContentHashAlgorithm::Blake3)?,
+            ContentHash::from_path(&neoforge_universal.cache_path, ContentHashAlgorithm::Blake3)?
         );
         let minecraft_input_state_path = minecraft_output.with_extension("inputs.sha1");
         let current_minecraft_input_state =
@@ -5024,8 +5024,8 @@ fn ensure_run_neoforge_dev_jars(
         .join(format!("neoforge-{neoforge_version}.jar"));
     let input_state = format!(
         "{}\n{}\n",
-        file_sha1(&input)?,
-        file_sha1(&neoforge_universal.cache_path)?
+        ContentHash::from_path(&input, ContentHashAlgorithm::Blake3)?,
+        ContentHash::from_path(&neoforge_universal.cache_path, ContentHashAlgorithm::Blake3)?
     );
     let input_state_path = output.with_extension("inputs.sha1");
     let current_input_state = fs::read_to_string(&input_state_path).unwrap_or_default();
@@ -5197,7 +5197,7 @@ fn resolve_run_deobf_dependencies(
             mapping_path.display()
         );
     }
-    let mapping_hash = file_sha1(&mapping_path)?;
+    let mapping_hash = ContentHash::from_path(&mapping_path, ContentHashAlgorithm::Blake3)?;
     let configurations = run_dependency_configurations(kind);
     let mut output = Vec::new();
 
@@ -5405,28 +5405,29 @@ fn prepare_minecraft_assets(context: &ExecutionContext<'_>) -> eyre::Result<Mine
     let mut checked = 0usize;
     for object in objects.values() {
         context.bail_if_cancelled()?;
-        let hash = object.hash.as_str();
-        let prefix = hash
+        let hash = object.hash;
+        let hash_hex = hash.hex();
+        let prefix = hash_hex
             .get(..2)
             .ok_or_else(|| eyre::eyre!("Minecraft asset hash is too short: {hash}"))?;
-        let object_path = assets_root.join("objects").join(prefix).join(hash);
-        if object_path.is_file() && file_sha1(&object_path)? == hash {
+        let object_path = assets_root.join("objects").join(prefix).join(&hash_hex);
+        if object_path.is_file() && ContentHash::from_path(&object_path, hash.algorithm)? == hash {
             checked += 1;
             continue;
         }
-        let object_url = format!("https://resources.download.minecraft.net/{prefix}/{hash}");
-        download_to_path_overwrite_with_expected_sha1(
+        let object_url = format!("https://resources.download.minecraft.net/{prefix}/{hash_hex}");
+        download_to_path_overwrite_with_expected_hash(
             &context.cancellation_token,
             &client,
             &object_url,
             &object_path,
             true,
-            hash,
+            &hash,
         )?;
-        let actual_hash = file_sha1(&object_path)?;
+        let actual_hash = ContentHash::from_path(&object_path, hash.algorithm)?;
         if actual_hash != hash {
             eyre::bail!(
-                "Downloaded asset {} with SHA-1 {}, expected {}",
+                "Downloaded asset {} with content hash {}, expected {}",
                 object_path.display(),
                 actual_hash,
                 hash
@@ -5488,7 +5489,7 @@ struct NodeOutputState {
     #[facet(proxy = JsonPath)]
     path: PathBuf,
     exists: bool,
-    sha1: Option<String>,
+    sha1: Option<ContentHash>,
 }
 
 impl<'a> ExecutionContext<'a> {
@@ -5539,7 +5540,10 @@ impl<'a> ExecutionContext<'a> {
             outputs: outputs
                 .iter()
                 .map(|path| {
-                    let sha1 = path.is_file().then(|| file_sha1(path)).transpose()?;
+                    let sha1 = path
+                        .is_file()
+                        .then(|| ContentHash::from_path(path, ContentHashAlgorithm::Blake3))
+                        .transpose()?;
                     Ok(NodeOutputState {
                         path: path.clone(),
                         exists: path.exists(),
@@ -6456,7 +6460,7 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
             mapping_path.display()
         );
     }
-    let mapping_hash = file_sha1(&mapping_path)?;
+    let mapping_hash = ContentHash::from_path(&mapping_path, ContentHashAlgorithm::Blake3)?;
     let member_mappings = read_unique_srg_member_mappings(&mapping_path)?;
     let mut outputs = Vec::new();
 
@@ -6595,14 +6599,14 @@ fn copied_neogradle_dependency_output_path(
 fn remapped_dependency_output_path(
     output_dir: &Path,
     input_jar: &Path,
-    mapping_hash: &str,
+    mapping_hash: &ContentHash,
     coordinate: &MavenCoordinate,
 ) -> eyre::Result<PathBuf> {
-    let input_hash = file_sha1(input_jar)?;
+    let input_hash = ContentHash::from_path(input_jar, ContentHashAlgorithm::Blake3)?;
     Ok(output_dir.join(format!(
         "{}-{}-named-mixin-{}",
-        input_hash.chars().take(12).collect::<String>(),
-        mapping_hash.chars().take(12).collect::<String>(),
+        input_hash.short_hex(12),
+        mapping_hash.short_hex(12),
         coordinate.file_name()
     )))
 }
@@ -6610,14 +6614,14 @@ fn remapped_dependency_output_path(
 fn specialsource_dependency_output_path(
     output_dir: &Path,
     input_jar: &Path,
-    mapping_hash: &str,
+    mapping_hash: &ContentHash,
     coordinate: &MavenCoordinate,
 ) -> eyre::Result<PathBuf> {
-    let input_hash = file_sha1(input_jar)?;
+    let input_hash = ContentHash::from_path(input_jar, ContentHashAlgorithm::Blake3)?;
     Ok(output_dir.join("specialsource").join(format!(
         "{}-{}-specialsource-{}",
-        input_hash.chars().take(12).collect::<String>(),
-        mapping_hash.chars().take(12).collect::<String>(),
+        input_hash.short_hex(12),
+        mapping_hash.short_hex(12),
         coordinate.file_name()
     )))
 }
@@ -7879,59 +7883,67 @@ fn input_fingerprint(
     extras: &[String],
 ) -> eyre::Result<String> {
     context.bail_if_cancelled()?;
-    let mut hasher = Sha1::new();
-    hasher.update(b"sfm-input-fingerprint-v1\n");
-    hasher.update(label.as_bytes());
-    hasher.update(b"\n");
+    let mut input = Vec::new();
+    input.extend_from_slice(b"sfm-input-fingerprint-v2\n");
+    input.extend_from_slice(label.as_bytes());
+    input.extend_from_slice(b"\n");
     for extra in extras {
         context.bail_if_cancelled()?;
-        hasher.update(b"extra:");
-        hasher.update(extra.as_bytes());
-        hasher.update(b"\n");
+        input.extend_from_slice(b"extra:");
+        input.extend_from_slice(extra.as_bytes());
+        input.extend_from_slice(b"\n");
     }
     for path in paths {
         context.bail_if_cancelled()?;
-        hash_path_input(context, &mut hasher, path)?;
+        hash_path_input(context, &mut input, path)?;
     }
-    Ok(format!("{:x}", hasher.finalize()))
+    Ok(ContentHash::from_bytes(&input, ContentHashAlgorithm::Blake3).to_string())
 }
 
 fn hash_path_input(
     context: &ExecutionContext<'_>,
-    hasher: &mut Sha1,
+    input: &mut Vec<u8>,
     path: &Path,
 ) -> eyre::Result<()> {
     context.bail_if_cancelled()?;
     context.assert_allowed_input(path)?;
     let normalized = path.to_string_lossy().replace('\\', "/");
-    hasher.update(b"path:");
-    hasher.update(normalized.as_bytes());
-    hasher.update(b"\n");
+    input.extend_from_slice(b"path:");
+    input.extend_from_slice(normalized.as_bytes());
+    input.extend_from_slice(b"\n");
 
     if path.is_file() {
         context.bail_if_cancelled()?;
-        hasher.update(b"file:");
-        hasher.update(file_sha1(path)?.as_bytes());
-        hasher.update(b"\n");
+        input.extend_from_slice(b"file:");
+        input.extend_from_slice(
+            ContentHash::from_path(path, ContentHashAlgorithm::Blake3)?
+                .to_string()
+                .as_bytes(),
+        );
+        input.extend_from_slice(b"\n");
         return Ok(());
     }
 
     if path.is_dir() {
-        hasher.update(b"dir\n");
+        input.extend_from_slice(b"dir\n");
         for file in collect_files_under_cancellable(context, path)? {
             context.bail_if_cancelled()?;
             context.assert_allowed_input(&file)?;
             let relative = relative_zip_name(path, &file)?;
-            hasher.update(b"entry:");
-            hasher.update(relative.as_bytes());
-            hasher.update(b":");
-            hasher.update(file_sha1(&file)?.as_bytes());
-            hasher.update(b"\n");
+            input.extend_from_slice(b"entry:");
+            input.extend_from_slice(relative.as_bytes());
+            input.extend_from_slice(b":");
+            input.extend_from_slice(
+                ContentHash::from_path(&file, ContentHashAlgorithm::Blake3)?
+                    .to_string()
+                    .as_bytes(),
+            );
+            input.extend_from_slice(b"\n");
         }
         return Ok(());
     }
 
-    hasher.update(b"missing\n");
+    input.extend_from_slice(b"missing\n");
     Ok(())
 }
 
@@ -8785,14 +8797,14 @@ fn resolve_current_minecraft_libraries(
 
     for library in &libraries {
         context.bail_if_cancelled()?;
-        if let Some(expected_sha1) = library.sha1.as_deref() {
-            download_to_path_overwrite_with_expected_sha1(
+        if let Some(expected_hash) = library.sha1.as_ref() {
+            download_to_path_overwrite_with_expected_hash(
                 &context.cancellation_token,
                 client,
                 &library.url,
                 &library.path,
                 false,
-                expected_sha1,
+                expected_hash,
             )?;
         } else {
             download_to_path(
@@ -8814,7 +8826,7 @@ fn resolve_current_minecraft_libraries(
 struct MinecraftLibraryJar {
     path: PathBuf,
     url: String,
-    sha1: Option<String>,
+    sha1: Option<ContentHash>,
 }
 
 fn minecraft_library_jars_from_version_json(
@@ -10445,9 +10457,15 @@ fn read_normalized_jar(path: &Path, strict_manifest: bool) -> eyre::Result<Norma
 
         if name.eq_ignore_ascii_case("META-INF/MANIFEST.MF") {
             let normalized = normalize_manifest_bytes(&entry_bytes, strict_manifest);
-            manifest_sha1 = Some(sha1_bytes(normalized.as_bytes()));
+            manifest_sha1 = Some(ContentHash::from_bytes(
+                normalized.as_bytes(),
+                ContentHashAlgorithm::Blake3,
+            ));
         } else {
-            entries.insert(name, sha1_bytes(&entry_bytes));
+            entries.insert(
+                name,
+                ContentHash::from_bytes(&entry_bytes, ContentHashAlgorithm::Blake3),
+            );
         }
     }
 
@@ -10719,10 +10737,11 @@ fn migrate_locked_artifact(
     if !cache_path.is_file() {
         return Ok(locked.clone());
     }
-    let actual_sha1 = file_sha1(&cache_path)?;
-    if actual_sha1 != locked.sha1 {
+    let legacy_actual_hash = ContentHash::from_path(&cache_path, locked.sha1.algorithm)?;
+    if legacy_actual_hash != locked.sha1 {
         return Ok(locked.clone());
     }
+    let actual_hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
     let provenance = read_artifact_provenance(&cache_path)?.unwrap_or_else(|| {
         artifact_provenance(
             locked.source.clone(),
@@ -10731,7 +10750,7 @@ fn migrate_locked_artifact(
             locked.url.clone(),
             locked.original_path.clone(),
             locked.source_git.clone(),
-            actual_sha1.clone(),
+            actual_hash,
         )
     });
     Ok(ArtifactLockEntry {
@@ -10750,7 +10769,7 @@ fn migrate_locked_artifact(
         source_build: provenance
             .source_build
             .or_else(|| locked.source_build.clone()),
-        sha1: actual_sha1,
+        sha1: actual_hash,
     })
 }
 
@@ -10758,13 +10777,15 @@ fn artifact_lock_entry_from_plan_artifact(
     plan: &BuildPlan,
     artifact: &ArtifactPlan,
 ) -> eyre::Result<ArtifactLockEntry> {
-    let actual_sha1 = artifact_actual_sha1(&artifact.cache_path, artifact.sha1.as_deref())?;
-    if actual_sha1 != artifact.provenance.sha1 {
+    let actual_hash = artifact_actual_hash(&artifact.cache_path, artifact.sha1.as_ref())?;
+    let provenance_actual_hash =
+        ContentHash::from_path(&artifact.cache_path, artifact.provenance.sha1.algorithm)?;
+    if provenance_actual_hash != artifact.provenance.sha1 {
         eyre::bail!(
             "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
             artifact.cache_path.display(),
             artifact.provenance.sha1,
-            actual_sha1
+            provenance_actual_hash
         );
     }
     Ok(ArtifactLockEntry {
@@ -10781,7 +10802,7 @@ fn artifact_lock_entry_from_plan_artifact(
         source_relative_path: artifact.provenance.source_relative_path.clone(),
         source_git: artifact.provenance.source_git.clone(),
         source_build: artifact.provenance.source_build.clone(),
-        sha1: actual_sha1,
+        sha1: actual_hash,
     })
 }
 
@@ -10790,7 +10811,7 @@ fn artifact_lock_entry_from_cache_path(
     path: &Path,
     fallback_coordinate: Option<&str>,
 ) -> eyre::Result<ArtifactLockEntry> {
-    let actual_sha1 = file_sha1(path)?;
+    let actual_hash = ContentHash::from_path(path, ContentHashAlgorithm::Blake3)?;
     let provenance = read_artifact_provenance(path)?.unwrap_or_else(|| {
         artifact_provenance(
             ArtifactSource::ExistingSfmCacheUnknown,
@@ -10799,15 +10820,16 @@ fn artifact_lock_entry_from_cache_path(
             None,
             None,
             None,
-            actual_sha1.clone(),
+            actual_hash,
         )
     });
-    if actual_sha1 != provenance.sha1 {
+    let provenance_actual_hash = ContentHash::from_path(path, provenance.sha1.algorithm)?;
+    if provenance_actual_hash != provenance.sha1 {
         eyre::bail!(
             "Artifact provenance hash mismatch for {}: sidecar {}, actual {}",
             path.display(),
             provenance.sha1,
-            actual_sha1
+            provenance_actual_hash
         );
     }
     Ok(ArtifactLockEntry {
@@ -10820,28 +10842,46 @@ fn artifact_lock_entry_from_cache_path(
         source_relative_path: provenance.source_relative_path,
         source_git: provenance.source_git,
         source_build: provenance.source_build,
-        sha1: actual_sha1,
+        sha1: actual_hash,
     })
 }
 
-fn artifact_actual_sha1(path: &Path, planned_sha1: Option<&str>) -> eyre::Result<String> {
+fn artifact_actual_hash(
+    path: &Path,
+    planned_hash: Option<&ContentHash>,
+) -> eyre::Result<ContentHash> {
     if path.is_file() {
-        let actual_sha1 = file_sha1(path)?;
-        if let Some(planned_sha1) = planned_sha1
-            && actual_sha1 != planned_sha1
+        let actual_hash = ContentHash::from_path(path, ContentHashAlgorithm::Blake3)?;
+        if let Some(planned_hash) = planned_hash {
+            let planned_actual_hash = ContentHash::from_path(path, planned_hash.algorithm)?;
+            if planned_actual_hash != *planned_hash {
+                eyre::bail!(
+                    "Artifact {} resolved with content hash {}, but the plan recorded {}",
+                    path.display(),
+                    planned_actual_hash,
+                    planned_hash
+                );
+            }
+        }
+        if let Some(planned_hash) = planned_hash
+            && planned_hash.algorithm == ContentHashAlgorithm::Blake3
+            && actual_hash != *planned_hash
         {
             eyre::bail!(
-                "Artifact {} resolved with SHA-1 {}, but the plan recorded {}",
+                "Artifact {} resolved with content hash {}, but the plan recorded {}",
                 path.display(),
-                actual_sha1,
-                planned_sha1
+                actual_hash,
+                planned_hash
             );
         }
-        return Ok(actual_sha1);
+        return Ok(actual_hash);
     }
-    planned_sha1
-        .map(str::to_string)
-        .ok_or_else(|| eyre::eyre!("Artifact is missing and has no SHA-1: {}", path.display()))
+    planned_hash.copied().ok_or_else(|| {
+        eyre::eyre!(
+            "Artifact is missing and has no content hash: {}",
+            path.display()
+        )
+    })
 }
 
 fn push_artifact_lock_entry(artifacts: &mut Vec<ArtifactLockEntry>, entry: ArtifactLockEntry) {
@@ -11097,13 +11137,13 @@ fn plain_artifact(
     cache_path: PathBuf,
     required_for: ArtifactPurpose,
 ) -> eyre::Result<ArtifactPlan> {
-    let sha1 = file_sha1(&cache_path)?;
+    let hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
     Ok(ArtifactPlan {
         id,
         coordinate: None,
         repository: None,
         url: Some(url.to_string()),
-        sha1: Some(sha1.clone()),
+        sha1: Some(hash),
         cache_path,
         downloaded: true,
         required_for,
@@ -11114,7 +11154,7 @@ fn plain_artifact(
             Some(url.to_string()),
             None,
             None,
-            sha1,
+            hash,
         ),
     })
 }
@@ -11157,7 +11197,7 @@ fn artifact_provenance(
     url: Option<String>,
     original_path: Option<PathBuf>,
     source_git: Option<SourceGitProvenance>,
-    sha1: String,
+    sha1: ContentHash,
 ) -> ArtifactProvenance {
     let source_relative_path = source_relative_path(original_path.as_deref(), source_git.as_ref());
     let source_build = source_build_provenance(
@@ -11229,7 +11269,11 @@ fn explicit_source_build_number(coordinate: &MavenCoordinate) -> Option<String> 
 }
 
 fn source_build_checkout_key(remote_url: &str, commit: &str) -> String {
-    sha1_bytes(format!("{remote_url}\n{commit}").as_bytes())
+    ContentHash::from_bytes(
+        format!("{remote_url}\n{commit}").as_bytes(),
+        ContentHashAlgorithm::Blake3,
+    )
+    .hex()
 }
 
 fn materialize_source_build(
@@ -11499,13 +11543,13 @@ fn download_to_path(
     download_to_path_overwrite(cancellation_token, client, url, path, false)
 }
 
-fn download_to_path_overwrite_with_expected_sha1(
+fn download_to_path_overwrite_with_expected_hash(
     cancellation_token: &CancellationToken,
     client: &Client,
     url: &str,
     path: &Path,
     overwrite: bool,
-    expected_sha1: &str,
+    expected_hash: &ContentHash,
 ) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     let _lock = acquire_artifact_path_lock(path)?;
@@ -11515,7 +11559,7 @@ fn download_to_path_overwrite_with_expected_sha1(
         url,
         path,
         overwrite,
-        Some(expected_sha1),
+        Some(expected_hash),
     )
 }
 
@@ -11537,7 +11581,7 @@ fn download_to_path_overwrite_locked(
     url: &str,
     path: &Path,
     overwrite: bool,
-    expected_sha1: Option<&str>,
+    expected_hash: Option<&ContentHash>,
 ) -> eyre::Result<()> {
     #[cfg(feature = "tracing_detailed")]
     let _span = tracing::debug_span!(
@@ -11545,11 +11589,11 @@ fn download_to_path_overwrite_locked(
         url,
         path = %path.display(),
         overwrite,
-        expected_sha1,
+        expected_hash = expected_hash.map(ToString::to_string),
     )
     .entered();
     cancellation_token.bail_if_cancelled()?;
-    prepare_existing_artifact_for_reuse(path, expected_sha1)?;
+    prepare_existing_artifact_for_reuse(path, expected_hash)?;
 
     if path.is_file() && !overwrite {
         tracing::debug!(
@@ -11560,8 +11604,8 @@ fn download_to_path_overwrite_locked(
         return Ok(());
     }
     if path.is_file()
-        && expected_sha1
-            .is_some_and(|expected| existing_file_matches_sha1(path, expected).unwrap_or(false))
+        && expected_hash
+            .is_some_and(|expected| existing_file_matches_hash(path, expected).unwrap_or(false))
     {
         tracing::debug!(
             path = %path.display(),
@@ -11580,7 +11624,7 @@ fn download_to_path_overwrite_locked(
     let mut last_error = None;
     for attempt in 1..=DOWNLOAD_RETRY_ATTEMPTS {
         cancellation_token.bail_if_cancelled()?;
-        match download_to_path_once(cancellation_token, client, url, path, expected_sha1) {
+        match download_to_path_once(cancellation_token, client, url, path, expected_hash) {
             Ok(()) => {
                 remove_bad_artifacts_for(path)?;
                 return Ok(());
@@ -11609,7 +11653,7 @@ fn download_to_path_once(
     client: &Client,
     url: &str,
     path: &Path,
-    expected_sha1: Option<&str>,
+    expected_hash: Option<&ContentHash>,
 ) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     let parent = path
@@ -11629,15 +11673,15 @@ fn download_to_path_once(
         .wrap_err_with(|| format!("Failed to read response body for {url}"))?;
     cancellation_token.bail_if_cancelled()?;
     let temporary_path = write_unique_temp_file(path, bytes.as_ref())?;
-    if let Some(expected_sha1) = expected_sha1 {
-        let actual_sha1 = file_sha1(&temporary_path)?;
-        if actual_sha1 != expected_sha1 {
+    if let Some(expected_hash) = expected_hash {
+        let actual_hash = ContentHash::from_path(&temporary_path, expected_hash.algorithm)?;
+        if actual_hash != *expected_hash {
             let _ = fs::remove_file(&temporary_path);
             eyre::bail!(
-                "Downloaded {} with SHA-1 {}, expected {}",
+                "Downloaded {} with content hash {}, expected {}",
                 path.display(),
-                actual_sha1,
-                expected_sha1
+                actual_hash,
+                expected_hash
             );
         }
     }
@@ -11648,21 +11692,21 @@ fn download_to_path_once(
 fn copy_file_to_path_checked(
     source: &Path,
     path: &Path,
-    expected_sha1: Option<&str>,
+    expected_hash: Option<&ContentHash>,
 ) -> eyre::Result<()> {
     let _lock = acquire_artifact_path_lock(path)?;
-    copy_file_to_path_checked_locked(source, path, expected_sha1)
+    copy_file_to_path_checked_locked(source, path, expected_hash)
 }
 
 fn copy_file_to_path_checked_locked(
     source: &Path,
     path: &Path,
-    expected_sha1: Option<&str>,
+    expected_hash: Option<&ContentHash>,
 ) -> eyre::Result<()> {
-    prepare_existing_artifact_for_reuse(path, expected_sha1)?;
+    prepare_existing_artifact_for_reuse(path, expected_hash)?;
     if path.is_file()
-        && expected_sha1
-            .is_some_and(|expected| existing_file_matches_sha1(path, expected).unwrap_or(false))
+        && expected_hash
+            .is_some_and(|expected| existing_file_matches_hash(path, expected).unwrap_or(false))
     {
         return Ok(());
     }
@@ -11670,15 +11714,15 @@ fn copy_file_to_path_checked_locked(
     let bytes =
         fs::read(source).wrap_err_with(|| format!("Failed to read {}", source.display()))?;
     let temporary_path = write_unique_temp_file(path, &bytes)?;
-    if let Some(expected_sha1) = expected_sha1 {
-        let actual_sha1 = file_sha1(&temporary_path)?;
-        if actual_sha1 != expected_sha1 {
+    if let Some(expected_hash) = expected_hash {
+        let actual_hash = ContentHash::from_path(&temporary_path, expected_hash.algorithm)?;
+        if actual_hash != *expected_hash {
             let _ = fs::remove_file(&temporary_path);
             eyre::bail!(
-                "Copied local artifact {} with SHA-1 {}, expected {}",
+                "Copied local artifact {} with content hash {}, expected {}",
                 source.display(),
-                actual_sha1,
-                expected_sha1
+                actual_hash,
+                expected_hash
             );
         }
     }
@@ -11702,37 +11746,37 @@ fn artifact_lock_path(path: &Path) -> eyre::Result<PathBuf> {
 
 fn prepare_existing_artifact_for_reuse(
     path: &Path,
-    expected_sha1: Option<&str>,
+    expected_hash: Option<&ContentHash>,
 ) -> eyre::Result<()> {
-    let Some(expected_sha1) = expected_sha1 else {
+    let Some(expected_hash) = expected_hash else {
         return Ok(());
     };
     if !path.is_file() {
         return Ok(());
     }
-    let actual_sha1 = file_sha1(path)?;
-    if actual_sha1 == expected_sha1 {
+    let actual_hash = ContentHash::from_path(path, expected_hash.algorithm)?;
+    if actual_hash == *expected_hash {
         return Ok(());
     }
-    quarantine_bad_artifact(path, &actual_sha1, expected_sha1)
+    quarantine_bad_artifact(path, &actual_hash, expected_hash)
 }
 
 #[instrument(level = "debug", skip_all)]
-fn existing_file_matches_sha1(path: &Path, expected_sha1: &str) -> eyre::Result<bool> {
-    Ok(path.is_file() && file_sha1(path)? == expected_sha1)
+fn existing_file_matches_hash(path: &Path, expected_hash: &ContentHash) -> eyre::Result<bool> {
+    Ok(path.is_file() && ContentHash::from_path(path, expected_hash.algorithm)? == *expected_hash)
 }
 
 fn quarantine_bad_artifact(
     path: &Path,
-    actual_sha1: &str,
-    expected_sha1: &str,
+    actual_hash: &ContentHash,
+    expected_hash: &ContentHash,
 ) -> eyre::Result<()> {
-    let bad_path = unique_sibling_path(path, &format!("bad.{actual_sha1}"))?;
+    let bad_path = unique_sibling_path(path, &format!("bad.{}", actual_hash.hex()))?;
     tracing::warn!(
         path = %path.display(),
         bad_path = %bad_path.display(),
-        actual_sha1,
-        expected_sha1,
+        actual_hash = %actual_hash,
+        expected_hash = %expected_hash,
         "quarantining corrupt artifact"
     );
     fs::rename(path, &bad_path).wrap_err_with(|| {
@@ -11883,18 +11927,6 @@ fn remote_exists(
         };
     }
     Ok(response.status().is_success())
-}
-
-#[instrument(level = "debug", skip_all)]
-fn file_sha1(path: &Path) -> eyre::Result<String> {
-    let bytes = fs::read(path).wrap_err_with(|| format!("Failed to hash {}", path.display()))?;
-    Ok(sha1_bytes(&bytes))
-}
-
-fn sha1_bytes(bytes: &[u8]) -> String {
-    let mut hasher = Sha1::new();
-    hasher.update(bytes);
-    format!("{:x}", hasher.finalize())
 }
 
 fn parse_maven_versions(metadata: &str) -> Vec<String> {
