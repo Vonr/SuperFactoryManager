@@ -11482,7 +11482,7 @@ fn artifact_provenance_path(path: &Path) -> eyre::Result<PathBuf> {
     Ok(path.with_file_name(format!("{file_name}.sfm-provenance.json")))
 }
 
-#[instrument(level = "debug", skip_all, fields(path = %path.display()))]
+#[instrument(level = "debug", skip_all)]
 fn read_artifact_provenance(path: &Path) -> eyre::Result<Option<ArtifactProvenance>> {
     let provenance_path = artifact_provenance_path(path)?;
     if !provenance_path.is_file() {

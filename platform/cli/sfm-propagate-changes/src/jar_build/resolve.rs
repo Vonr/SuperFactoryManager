@@ -3,8 +3,8 @@ use super::{
     ArtifactPurpose, ArtifactSource, DependencyPlan, DependencySource, MavenCoordinate, Repository,
     SourceGitProvenance, acquire_artifact_path_lock, acquire_artifact_path_read_lock,
     artifact_provenance, compare_version_text, copy_file_to_path_checked_locked,
-    download_text_optional, download_to_path_overwrite_locked, existing_file_matches_hash,
-    materialize_source_build, parse_maven_pom_runtime_dependencies, parse_maven_versions,
+    download_text_optional, download_to_path_overwrite_locked, materialize_source_build,
+    parse_maven_pom_runtime_dependencies, parse_maven_versions,
     prepare_existing_artifact_for_reuse, read_artifact_provenance, remote_exists,
     source_build_checkout_key, source_git_provenance, write_artifact_provenance,
 };
@@ -186,8 +186,9 @@ impl Resolver {
             prepare_existing_artifact_for_reuse(&cache_path, expected_hash.as_ref())?;
 
             if cache_path.is_file() && !self.refresh {
+                let hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
                 let artifact =
-                    Self::cached_artifact_plan(&id, &coordinate, cache_path, &required_for)?;
+                    Self::cached_artifact_plan(&id, &coordinate, cache_path, &required_for, hash)?;
                 self.verify_locked_artifact(&coordinate, &artifact)?;
                 tracing::debug!(
                     coordinate = %coordinate,
@@ -560,17 +561,31 @@ impl Resolver {
         }
 
         let _cache_read_lock = acquire_artifact_path_read_lock(cache_path)?;
-        let cached_artifact_is_valid = match expected_hash {
-            Some(expected_hash) => existing_file_matches_hash(cache_path, expected_hash)?,
-            None => true,
+        let expected_actual_hash = match expected_hash {
+            Some(expected_hash) => {
+                let actual_hash = ContentHash::from_path(cache_path, expected_hash.algorithm)?;
+                if actual_hash != *expected_hash {
+                    return Ok(None);
+                }
+                Some(actual_hash)
+            }
+            None => None,
         };
-        if !cached_artifact_is_valid {
-            return Ok(None);
-        }
 
-        let artifact =
-            Self::cached_artifact_plan(id, coordinate, cache_path.to_path_buf(), required_for)?;
-        self.verify_locked_artifact(coordinate, &artifact)?;
+        let hash = match expected_actual_hash {
+            Some(actual_hash) if actual_hash.algorithm == ContentHashAlgorithm::Blake3 => {
+                actual_hash
+            }
+            _ => ContentHash::from_path(cache_path, ContentHashAlgorithm::Blake3)?,
+        };
+        let artifact = Self::cached_artifact_plan(
+            id,
+            coordinate,
+            cache_path.to_path_buf(),
+            required_for,
+            hash,
+        )?;
+        self.verify_locked_artifact_with_actual_hash(coordinate, &artifact, expected_actual_hash)?;
         tracing::debug!(
             coordinate = %coordinate,
             cache_path = %artifact.cache_path.display(),
@@ -595,6 +610,15 @@ impl Resolver {
         coordinate: &MavenCoordinate,
         artifact: &ArtifactPlan,
     ) -> eyre::Result<()> {
+        self.verify_locked_artifact_with_actual_hash(coordinate, artifact, None)
+    }
+
+    fn verify_locked_artifact_with_actual_hash(
+        &self,
+        coordinate: &MavenCoordinate,
+        artifact: &ArtifactPlan,
+        actual_hash: Option<ContentHash>,
+    ) -> eyre::Result<()> {
         let Some(lockfile) = &self.lockfile else {
             return Ok(());
         };
@@ -611,7 +635,10 @@ impl Resolver {
                 lockfile.minecraft_version
             );
         };
-        let actual_hash = ContentHash::from_path(&artifact.cache_path, locked.sha1.algorithm)?;
+        let actual_hash = match actual_hash {
+            Some(actual_hash) if actual_hash.algorithm == locked.sha1.algorithm => actual_hash,
+            _ => ContentHash::from_path(&artifact.cache_path, locked.sha1.algorithm)?,
+        };
         if actual_hash != locked.sha1 {
             eyre::bail!(
                 "Artifact {} resolved with content hash {}, but sfm-toolchain.lock.json requires {}",
@@ -629,8 +656,8 @@ impl Resolver {
         coordinate: &MavenCoordinate,
         cache_path: PathBuf,
         required_for: &ArtifactPurpose,
+        hash: ContentHash,
     ) -> eyre::Result<ArtifactPlan> {
-        let hash = ContentHash::from_path(&cache_path, ContentHashAlgorithm::Blake3)?;
         let provenance = read_artifact_provenance(&cache_path)?.unwrap_or_else(|| {
             artifact_provenance(
                 ArtifactSource::ExistingSfmCacheUnknown,
