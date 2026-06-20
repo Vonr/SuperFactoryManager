@@ -103,7 +103,7 @@ impl ContentHash {
         };
         Self { value, algorithm }
     }
-    #[instrument(level = "debug", name = "content_hash_from_path", skip_all)]
+    #[instrument(level = "debug", name = "content_hash_from_path", skip_all, fields(path = %path.as_ref().display()))]
     pub fn from_path(
         path: impl AsRef<Path>,
         algorithm: ContentHashAlgorithm,
