@@ -11,7 +11,8 @@ use super::RunTestOptions;
 pub(super) use super::artifact_audit_issue_kind::ArtifactAuditIssueKind;
 pub(super) use super::artifact_audit_report::ArtifactAuditReport;
 pub(super) use super::artifact_audit_severity::ArtifactAuditSeverity;
-use super::hash::{ContentHash, ContentHashAlgorithm};
+use super::hash::ContentHash;
+use super::hash::ContentHashAlgorithm;
 use super::json_branch_name::JsonBranchName;
 use super::json_minecraft_version::JsonMinecraftVersion;
 use super::json_path::JsonOptionalPath;
@@ -9034,6 +9035,8 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         staged_resources_dir,
         gametest_classes_dir,
         gametest_resources_dir,
+        datagen_classes_dir,
+        datagen_resources_dir,
     ) = {
         let _span = tracing::debug_span!("project_compile_resolve_paths").entered();
         let project_root = context.plan.cache_dir.join("project");
@@ -9049,6 +9052,8 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         let staged_resources_dir = project_root.join("staged-resources");
         let gametest_classes_dir = project_root.join("gametest").join("classes");
         let gametest_resources_dir = project_root.join("gametest").join("resources");
+        let datagen_classes_dir = project_root.join("datagen").join("classes");
+        let datagen_resources_dir = project_root.join("datagen").join("resources");
         (
             project_root,
             generated_sources,
@@ -9057,12 +9062,15 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
             staged_resources_dir,
             gametest_classes_dir,
             gametest_resources_dir,
+            datagen_classes_dir,
+            datagen_resources_dir,
         )
     };
     tracing::info!(
         classes_dir = %classes_dir.display(),
         resources_dir = %resources_dir.display(),
         gametest_classes_dir = %gametest_classes_dir.display(),
+        datagen_classes_dir = %datagen_classes_dir.display(),
         "project_compile_outputs_will_be_recreated"
     );
     {
@@ -9329,6 +9337,34 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         gametest_resources?;
     }
     context.bail_if_cancelled()?;
+    {
+        let classes_dir = classes_dir.as_path();
+        let datagen_classes_dir = datagen_classes_dir.as_path();
+        let datagen_resources_dir = datagen_resources_dir.as_path();
+        let main_fingerprint = main_fingerprint.as_str();
+        let (datagen_compile, datagen_resources) = rayon::join(
+            || {
+                let _span = tracing::debug_span!("project_compile_datagen_javac").entered();
+                compile_optional_java_source_set(
+                    context,
+                    "datagen",
+                    &classpath,
+                    classes_dir,
+                    datagen_classes_dir,
+                    main_fingerprint,
+                )
+                .wrap_err("Failed to compile datagen source set")
+            },
+            || {
+                let _span = tracing::debug_span!("project_compile_datagen_resources").entered();
+                stage_optional_resource_source_set(context, "datagen", datagen_resources_dir, &[])
+                    .wrap_err("Failed to stage datagen resources")
+            },
+        );
+        datagen_compile?;
+        datagen_resources?;
+    }
+    context.bail_if_cancelled()?;
     if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
         let _span = tracing::debug_span!("project_compile_patch_neogradle_debug_names").entered();
         patch_neogradle_anonymous_constructor_debug_names(context, &classes_dir)?;
@@ -9355,6 +9391,8 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
                 "src/main/java",
                 "src/main/antlr",
                 "src/gametest/java",
+                "src/datagen/java",
+                "src/datagen/resources",
                 "mapped Forge/Minecraft jar",
             ],
             &[
@@ -9363,6 +9401,8 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
                 staged_resources_dir,
                 gametest_classes_dir,
                 gametest_resources_dir,
+                datagen_classes_dir,
+                datagen_resources_dir,
                 project_root.join("run-refmap-remap.srg"),
             ],
             "complete",
@@ -10938,6 +10978,9 @@ fn read_source_excludes(
         .join("source-excludes")
         .join(context.plan.minecraft_version.as_str())
         .join(format!("{source_set}-java.txt"));
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
     let excludes_text =
         fs::read_to_string(&path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
     context.bail_if_cancelled()?;
