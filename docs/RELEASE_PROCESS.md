@@ -34,7 +34,8 @@ This phase handles ensuring generated sources are up-to-date.
 
 This phase ensures that there is no unexpected behaviour in the mod.
 
-1. Run `sfm-propagate-changes.exe gradle run runGameTestServer` to ensure all game tests are passing
+1. Run `sfm-propagate-changes.exe run game-test-server --parallel` to ensure all game tests are passing
+    - This was previously `sfm-propagate-changes.exe gradle run runGameTestServer`
 
 ## Phase 4 - Building Jarfiles
 
