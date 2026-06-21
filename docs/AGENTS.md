@@ -135,6 +135,83 @@ platform\cli\sfm-propagate-changes on  1.19.2 [$!⇡] is 📦 v0.1.0 via 🦀
 
 After making changes to rust code, run [`check-all.ps1`](../platform/cli/sfm-propagate-changes/check-all.ps1) to validate formatting and linting and build errors.
 
+---
+
+Substantial progress has been made regarding the CLI.
+
+❯ sfm-propagate-changes.exe help list --short
+sfm-propagate-changes.exe gradle run
+sfm-propagate-changes.exe gradle log list
+sfm-propagate-changes.exe gradle log tldr
+sfm-propagate-changes.exe client add
+sfm-propagate-changes.exe client remove
+sfm-propagate-changes.exe client list
+sfm-propagate-changes.exe client set-launcher
+sfm-propagate-changes.exe client get-launcher
+sfm-propagate-changes.exe client launch
+sfm-propagate-changes.exe server add
+sfm-propagate-changes.exe server remove
+sfm-propagate-changes.exe server list
+sfm-propagate-changes.exe server launch
+sfm-propagate-changes.exe git add
+sfm-propagate-changes.exe git commit
+sfm-propagate-changes.exe git merge
+sfm-propagate-changes.exe git push
+sfm-propagate-changes.exe git status
+sfm-propagate-changes.exe git status all
+sfm-propagate-changes.exe git status dirty
+sfm-propagate-changes.exe git status summary
+sfm-propagate-changes.exe git tag
+sfm-propagate-changes.exe github release now
+sfm-propagate-changes.exe github release amend
+sfm-propagate-changes.exe home path
+sfm-propagate-changes.exe home open
+sfm-propagate-changes.exe cache path
+sfm-propagate-changes.exe cache open
+sfm-propagate-changes.exe cache clean
+sfm-propagate-changes.exe curseforge project default set
+sfm-propagate-changes.exe curseforge project default show
+sfm-propagate-changes.exe curseforge project file list
+sfm-propagate-changes.exe curseforge minecraft version list
+sfm-propagate-changes.exe curseforge release check
+sfm-propagate-changes.exe curseforge release validate
+sfm-propagate-changes.exe curseforge release now
+sfm-propagate-changes.exe curseforge release amend
+sfm-propagate-changes.exe jdk list
+sfm-propagate-changes.exe modrinth release check
+sfm-propagate-changes.exe modrinth release validate
+sfm-propagate-changes.exe modrinth release now
+sfm-propagate-changes.exe modrinth release amend
+sfm-propagate-changes.exe jar dir set
+sfm-propagate-changes.exe jar dir clean
+sfm-propagate-changes.exe jar dir show
+sfm-propagate-changes.exe jar dir open
+sfm-propagate-changes.exe jar plan
+sfm-propagate-changes.exe jar build
+sfm-propagate-changes.exe jar compare
+sfm-propagate-changes.exe jar audit-artifacts
+sfm-propagate-changes.exe jar collect
+sfm-propagate-changes.exe jar list
+sfm-propagate-changes.exe jar update-clients
+sfm-propagate-changes.exe jar update-servers
+sfm-propagate-changes.exe run client
+sfm-propagate-changes.exe run client-smoke
+sfm-propagate-changes.exe run client-puppet
+sfm-propagate-changes.exe run server
+sfm-propagate-changes.exe run data
+sfm-propagate-changes.exe run game-test-server
+sfm-propagate-changes.exe run test
+sfm-propagate-changes.exe run test list
+sfm-propagate-changes.exe repo-root set
+sfm-propagate-changes.exe repo-root unset
+sfm-propagate-changes.exe repo-root show
+sfm-propagate-changes.exe repo-root open
+
+We can now launch the game, game tests, server, etc from our rust CLI.
+We should prefer to using the rust cli over running `.\gradlew` commands.
+
+
+
 ## 📝 Changelog
 
 [I track significant changes using one of the template programs that is visible in-game.](../platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml)
@@ -146,6 +223,8 @@ Commit messages should contain the worktrees relevant to the work that was done 
 Commit messages should contain the platform relevant to the work that was done ("mod" (platform/minecraft; java), cli (platform/cli/sfm-propagate-changes), etc).
 
 Commit messages should contain an emoji.
+
+Changes to the user experience of the mod should be additionally documented in [changelog.sfml](../platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml)
 
 ## Writing Java
 
