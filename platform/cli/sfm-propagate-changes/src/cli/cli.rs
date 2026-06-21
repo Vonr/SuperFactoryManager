@@ -99,6 +99,7 @@ impl Command {
 mod tests {
     use super::Cli;
     use crate::cli::Command;
+    use crate::cli::git::GitCommand;
     use crate::cli::gradle::GradleCommand;
     use crate::cli::jar::JarCommand;
     use crate::cli::run::RunCommand;
@@ -175,6 +176,47 @@ mod tests {
         assert_eq!(args.filter.as_deref(), Some("lavaSearch"));
         assert!(args.no_capture);
         assert!(matches!(args.command, Some(RunTestCliCommand::List(_))));
+    }
+
+    #[test]
+    fn parses_git_add_and_commit() {
+        let add = figue::from_slice::<Cli>(&[
+            "git",
+            "add",
+            "platform/minecraft/sfm-toolchain.lock.json",
+            "README.md",
+        ])
+        .into_result()
+        .expect("git add should parse")
+        .get_silent();
+        match add.command {
+            Command::Git(crate::cli::git::GitArgs {
+                command: GitCommand::Add(args),
+            }) => {
+                assert_eq!(
+                    args.paths,
+                    vec![
+                        "platform/minecraft/sfm-toolchain.lock.json".to_string(),
+                        "README.md".to_string()
+                    ]
+                );
+            }
+            command => panic!("expected git add command, got {command:?}"),
+        }
+
+        let commit =
+            figue::from_slice::<Cli>(&["git", "commit", "-m", "%BRANCH% - update lockfile"])
+                .into_result()
+                .expect("git commit should parse")
+                .get_silent();
+        match commit.command {
+            Command::Git(crate::cli::git::GitArgs {
+                command: GitCommand::Commit(args),
+            }) => {
+                assert_eq!(args.message, "%BRANCH% - update lockfile");
+            }
+            command => panic!("expected git commit command, got {command:?}"),
+        }
     }
 
     #[test]
