@@ -51,3 +51,29 @@ pub fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> Rgb {
 fn unit_channel_to_u8(channel: f32) -> u8 {
     (channel.clamp(0.0, 1.0) * 255.0).round() as u8
 }
+
+#[cfg(test)]
+mod tests {
+    use super::stable_color;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn minecraft_versions_have_distinct_stable_colors() {
+        let versions = [
+            "1.19.2", "1.19.4", "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4",
+            "1.21.0", "1.21.1", "26.1.2",
+        ];
+
+        let mut colors = BTreeMap::new();
+        for version in versions {
+            let color = stable_color(version);
+            let color = (color.0, color.1, color.2);
+
+            if let Some(previous_version) = colors.insert(color, version) {
+                panic!(
+                    "Minecraft versions {previous_version} and {version} both resolve to RGB {color:?}"
+                );
+            }
+        }
+    }
+}
