@@ -102,6 +102,7 @@ mod tests {
     use crate::cli::gradle::GradleCommand;
     use crate::cli::jar::JarCommand;
     use crate::cli::run::RunCommand;
+    use crate::cli::run::RunTestCliCommand;
     use crate::jar_build::BuildMode;
     use crate::jar_build::ErrorAction;
     use crate::jar_build::Parallelism;
@@ -119,6 +120,25 @@ mod tests {
         assert_run_cli(&["run", "data", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "game-test-server", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "test", "--branch", "1.19.2"]);
+        assert_run_cli(&[
+            "run",
+            "test",
+            "--branch",
+            "1.19.2",
+            "--filter",
+            "lavaSearch",
+        ]);
+        assert_run_cli(&["run", "test", "--branch", "1.19.2", "--no-capture"]);
+        assert_run_cli(&["run", "test", "--branch", "1.19.2", "list"]);
+        assert_run_cli(&[
+            "run",
+            "test",
+            "list",
+            "--branch",
+            "1.19.2",
+            "--filter",
+            "lavaSearch",
+        ]);
         assert_run_cli(&["run", "game-test-server", "--branch", "1.19.2", "--dry-run"]);
         assert_run_cli(&[
             "run",
@@ -129,6 +149,32 @@ mod tests {
             "continue",
             "--dry-run",
         ]);
+    }
+
+    #[test]
+    fn parses_run_test_options() {
+        let cli = figue::from_slice::<Cli>(&[
+            "run",
+            "test",
+            "--branch",
+            "1.19.2",
+            "--filter",
+            "lavaSearch",
+            "--no-capture",
+            "list",
+        ])
+        .into_result()
+        .expect("run test list command should parse")
+        .get_silent();
+        let Command::Run(crate::cli::run::RunArgs {
+            command: RunCommand::Test(args),
+        }) = cli.command
+        else {
+            panic!("expected run test command");
+        };
+        assert_eq!(args.filter.as_deref(), Some("lavaSearch"));
+        assert!(args.no_capture);
+        assert!(matches!(args.command, Some(RunTestCliCommand::List(_))));
     }
 
     #[test]
