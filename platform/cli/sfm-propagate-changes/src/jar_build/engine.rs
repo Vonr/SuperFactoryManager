@@ -22,8 +22,10 @@ use crate::branch_targets::MinecraftVersion;
 use crate::branch_targets::WorktreeTarget;
 use crate::branch_targets::select_required_worktree_targets;
 use crate::cancellation::CancellationToken;
+use crate::colour::stable_color;
 use crate::paths::CACHE_DIR;
 use chrono::Local;
+use color_eyre::owo_colors::OwoColorize;
 use eyre::Context;
 use facet::Facet;
 use rayon::prelude::*;
@@ -110,8 +112,11 @@ pub(crate) fn invoke_build(
     let targets = resolve_build_targets(options)?;
     cancellation_token.bail_if_cancelled()?;
     let target_count = targets.len();
-    let TargetExecutionSummary { plans, failures } =
-        execute_build_targets(options, targets, cancellation_token)?;
+    let TargetExecutionSummary {
+        plans,
+        failures,
+        reports,
+    } = execute_build_targets(options, targets, cancellation_token)?;
     cancellation_token.bail_if_cancelled()?;
 
     write_requested_plan_outputs(&plans, options.plan_json.as_deref())?;
@@ -120,6 +125,7 @@ pub(crate) fn invoke_build(
         target_count,
         plans.len(),
         &failures,
+        &reports,
     )
 }
 
@@ -147,12 +153,21 @@ pub(crate) fn invoke_run(
     let targets = resolve_build_targets(options)?;
     cancellation_token.bail_if_cancelled()?;
     let target_count = targets.len();
-    let TargetExecutionSummary { plans, failures } =
-        execute_run_targets(options, kind, targets, cancellation_token)?;
+    let TargetExecutionSummary {
+        plans,
+        failures,
+        reports,
+    } = execute_run_targets(options, kind, targets, cancellation_token)?;
     cancellation_token.bail_if_cancelled()?;
 
     write_requested_plan_outputs(&plans, options.plan_json.as_deref())?;
-    finish_target_summary(kind.command_name(), target_count, plans.len(), &failures)
+    finish_target_summary(
+        kind.command_name(),
+        target_count,
+        plans.len(),
+        &failures,
+        &reports,
+    )
 }
 
 fn execute_build_targets(
@@ -224,21 +239,35 @@ fn execute_targets_sequential(
 ) -> eyre::Result<TargetExecutionSummary> {
     let mut plans = Vec::new();
     let mut failures = Vec::new();
+    let mut reports = Vec::new();
 
     for target in targets {
         cancellation_token.bail_if_cancelled()?;
-        match execute(options, &target, cancellation_token) {
+        let started_at = SystemTime::now();
+        let started = Instant::now();
+        let result = execute(options, &target, cancellation_token);
+        let report =
+            TargetExecutionReport::from_result(&target, started_at, started.elapsed(), &result);
+        reports.push(report);
+        match result {
             Ok(plan) => plans.push(plan),
-            Err(error) if options.error_action.should_continue() => {
+            Err(error) => {
                 tracing::error!(error = %error, "target_failed");
                 failures.push(TargetFailure::new(&target, &error));
+                if !options.error_action.should_continue() {
+                    break;
+                }
             }
-            Err(error) => return Err(error),
         }
         cancellation_token.bail_if_cancelled()?;
     }
+    cancellation_token.bail_if_cancelled()?;
 
-    Ok(TargetExecutionSummary { plans, failures })
+    Ok(TargetExecutionSummary {
+        plans,
+        failures,
+        reports,
+    })
 }
 
 fn execute_targets_parallel(
@@ -320,7 +349,15 @@ fn execute_targets_parallel_with_cancellation(
                         worktree = %target.worktree_path.display(),
                     )
                     .entered();
+                    let started_at = SystemTime::now();
+                    let started = Instant::now();
                     let result = execute(options, &target, &cancellation_token);
+                    let report = TargetExecutionReport::from_result(
+                        &target,
+                        started_at,
+                        started.elapsed(),
+                        &result,
+                    );
                     let failed = result.is_err();
                     if failed && !options.error_action.should_continue() {
                         stop_starting.store(true, AtomicOrdering::Release);
@@ -329,6 +366,7 @@ fn execute_targets_parallel_with_cancellation(
                         .send(TargetExecutionResult {
                             target_index,
                             target,
+                            report,
                             result,
                         })
                         .is_err()
@@ -345,7 +383,9 @@ fn execute_targets_parallel_with_cancellation(
 
         let mut plans = Vec::new();
         let mut failures = Vec::new();
+        let mut reports = Vec::new();
         for result in results {
+            reports.push(result.report);
             match result.result {
                 Ok(plan) => plans.push(plan),
                 Err(error) => {
@@ -361,7 +401,11 @@ fn execute_targets_parallel_with_cancellation(
 
         cancellation_token.bail_if_cancelled()?;
 
-        Ok(TargetExecutionSummary { plans, failures })
+        Ok(TargetExecutionSummary {
+            plans,
+            failures,
+            reports,
+        })
     })
 }
 
@@ -438,6 +482,7 @@ fn finish_target_summary(
     total: usize,
     succeeded: usize,
     failures: &[TargetFailure],
+    reports: &[TargetExecutionReport],
 ) -> eyre::Result<()> {
     if total > 1 || !failures.is_empty() {
         tracing::info!(
@@ -445,15 +490,17 @@ fn finish_target_summary(
             failures.len()
         );
     }
+    emit_target_report_matrix(action_name, reports);
 
     if failures.is_empty() {
         return Ok(());
     }
 
+    tracing::info!("{}", target_report_separator());
     for failure in failures {
         tracing::info!(
             "Failed target {} ({}): {}",
-            failure.branch,
+            format_branch_name(&failure.branch),
             failure.worktree_path.display(),
             failure.error
         );
@@ -463,6 +510,300 @@ fn finish_target_summary(
         "{action_name} failed for {} of {total} target(s).",
         failures.len()
     );
+}
+
+fn emit_target_report_matrix(action_name: &str, reports: &[TargetExecutionReport]) {
+    if reports.is_empty() {
+        return;
+    }
+
+    let branch_width = reports
+        .iter()
+        .map(|report| report.branch.to_string().len())
+        .max()
+        .unwrap_or("branch".len())
+        .max("branch".len());
+    tracing::info!("{action_name} target report:");
+    tracing::info!("{}", format_report_header(branch_width));
+    for report in reports {
+        let failed = report.bail_message.is_some();
+        let duration = format_report_duration(report.duration);
+        let message = report
+            .bail_message
+            .as_deref()
+            .map(report_message)
+            .unwrap_or_default();
+        tracing::info!(
+            "{}",
+            format!(
+                "{}  {}  {}  {}  {}  {}",
+                format_branch_cell(&report.branch, branch_width),
+                format_status_cell(failed),
+                format!("{duration:>9}"),
+                format_warning_count_cell(report.warning_count),
+                format_error_count_cell(report.error_count),
+                format_report_message_cell(&message, failed),
+            )
+        );
+    }
+}
+
+fn format_report_header(branch_width: usize) -> String {
+    format!(
+        "{}  {}  {}  {}  {}  {}",
+        format!("{:<branch_width$}", "branch", branch_width = branch_width).dimmed(),
+        format!("{:<6}", "status").dimmed(),
+        format!("{:>9}", "time").dimmed(),
+        format!("{:>8}", "warnings").dimmed(),
+        format!("{:>6}", "errors").dimmed(),
+        "message".dimmed(),
+    )
+}
+
+fn format_branch_name(branch: &BranchName) -> String {
+    let branch = branch.to_string();
+    branch.color(stable_color(&branch)).bold().to_string()
+}
+
+fn format_branch_cell(branch: &BranchName, width: usize) -> String {
+    let branch = branch.to_string();
+    format!("{branch:<width$}")
+        .color(stable_color(&branch))
+        .bold()
+        .to_string()
+}
+
+fn format_status_cell(failed: bool) -> String {
+    if failed {
+        format!("{:<6}", "failed").red().bold().to_string()
+    } else {
+        format!("{:<6}", "ok").green().bold().to_string()
+    }
+}
+
+fn format_warning_count_cell(count: usize) -> String {
+    let text = format!("{count:>8}");
+    if count == 0 {
+        text.dimmed().to_string()
+    } else {
+        text.yellow().bold().to_string()
+    }
+}
+
+fn format_error_count_cell(count: usize) -> String {
+    let text = format!("{count:>6}");
+    if count == 0 {
+        text.dimmed().to_string()
+    } else {
+        text.red().bold().to_string()
+    }
+}
+
+fn format_report_message_cell(message: &str, failed: bool) -> String {
+    if failed {
+        message.red().to_string()
+    } else if message.is_empty() {
+        message.dimmed().to_string()
+    } else {
+        message.to_string()
+    }
+}
+
+fn target_report_separator() -> String {
+    "-".repeat(96).dimmed().to_string()
+}
+
+fn format_report_duration(duration: Duration) -> String {
+    let millis = duration.as_millis();
+    if millis < 1_000 {
+        return format!("{millis}ms");
+    }
+    if millis < 60_000 {
+        return format!("{:.1}s", millis as f64 / 1_000.0);
+    }
+    let seconds = millis / 1_000;
+    format!("{}m{:02}s", seconds / 60, seconds % 60)
+}
+
+fn report_message(message: &str) -> String {
+    const MESSAGE_LIMIT: usize = 180;
+    let joined = message
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect::<Vec<_>>()
+        .join(" | ");
+    if joined.chars().count() <= MESSAGE_LIMIT {
+        return joined;
+    }
+    let mut truncated = joined
+        .chars()
+        .take(MESSAGE_LIMIT.saturating_sub(3))
+        .collect::<String>();
+    truncated.push_str("...");
+    truncated
+}
+
+fn target_diagnostics(
+    target: &WorktreeTarget,
+    plan: Option<&BuildPlan>,
+    started_at: SystemTime,
+) -> TargetDiagnosticCounts {
+    let cache_dir = plan
+        .map(|plan| plan.cache_dir.clone())
+        .unwrap_or_else(|| target_toolchain_cache_dir(target));
+    let mut diagnostics = scan_target_diagnostic_logs(&cache_dir, started_at);
+    if let Some(plan) = plan {
+        diagnostics.warnings += plan.warnings.len();
+    }
+    diagnostics
+}
+
+fn target_toolchain_cache_dir(target: &WorktreeTarget) -> PathBuf {
+    target
+        .worktree_path
+        .join("platform")
+        .join("minecraft")
+        .join("build")
+        .join("sfm-toolchain")
+}
+
+fn scan_target_diagnostic_logs(cache_dir: &Path, started_at: SystemTime) -> TargetDiagnosticCounts {
+    let mut diagnostics = TargetDiagnosticCounts::default();
+    let files = match collect_files_under(cache_dir) {
+        Ok(files) => files,
+        Err(error) => {
+            tracing::debug!(
+                cache = %cache_dir.display(),
+                error = %error,
+                "failed to scan target diagnostic logs"
+            );
+            return diagnostics;
+        }
+    };
+
+    for path in files {
+        if !is_report_diagnostic_log(&path) || !was_modified_for_target_report(&path, started_at) {
+            continue;
+        }
+        let bytes = match fs::read(&path) {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                tracing::debug!(
+                    path = %path.display(),
+                    error = %error,
+                    "failed to read target diagnostic log"
+                );
+                continue;
+            }
+        };
+        let content = String::from_utf8_lossy(&bytes);
+        diagnostics.add(diagnostic_counts_from_log_text(&content));
+    }
+
+    diagnostics
+}
+
+fn is_report_diagnostic_log(path: &Path) -> bool {
+    if path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.eq_ignore_ascii_case("console.log"))
+    {
+        return true;
+    }
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("log"))
+}
+
+fn was_modified_for_target_report(path: &Path, started_at: SystemTime) -> bool {
+    let threshold = started_at
+        .checked_sub(Duration::from_secs(2))
+        .unwrap_or(started_at);
+    let Ok(metadata) = fs::metadata(path) else {
+        return true;
+    };
+    let Ok(modified) = metadata.modified() else {
+        return true;
+    };
+    modified >= threshold
+}
+
+fn diagnostic_counts_from_log_text(content: &str) -> TargetDiagnosticCounts {
+    let mut summary_counts = TargetDiagnosticCounts::default();
+    let mut fallback_counts = TargetDiagnosticCounts::default();
+    let mut has_warning_summary = false;
+    let mut has_error_summary = false;
+
+    for line in content.lines() {
+        if let Some(count) = parse_diagnostic_summary(line, "warning", "warnings") {
+            summary_counts.warnings += count;
+            has_warning_summary = true;
+        }
+        if let Some(count) = parse_diagnostic_summary(line, "error", "errors") {
+            summary_counts.errors += count;
+            has_error_summary = true;
+        }
+        if line_looks_like_warning(line) {
+            fallback_counts.warnings += 1;
+        }
+        if line_looks_like_error(line) {
+            fallback_counts.errors += 1;
+        }
+    }
+
+    TargetDiagnosticCounts {
+        warnings: if has_warning_summary {
+            summary_counts.warnings
+        } else {
+            fallback_counts.warnings
+        },
+        errors: if has_error_summary {
+            summary_counts.errors
+        } else {
+            fallback_counts.errors
+        },
+    }
+}
+
+fn parse_diagnostic_summary(line: &str, singular: &str, plural: &str) -> Option<usize> {
+    let mut previous_count = None;
+    for token in line.split_whitespace() {
+        let token = token.trim_matches(|ch: char| !ch.is_ascii_alphanumeric());
+        if token.is_empty() {
+            previous_count = None;
+            continue;
+        }
+        if let Some(count) = parse_count_token(token) {
+            previous_count = Some(count);
+            continue;
+        }
+        let label = token.to_ascii_lowercase();
+        if (label == singular || label == plural) && previous_count.is_some() {
+            return previous_count;
+        }
+        previous_count = None;
+    }
+    None
+}
+
+fn parse_count_token(token: &str) -> Option<usize> {
+    token
+        .chars()
+        .all(|ch| ch.is_ascii_digit())
+        .then(|| token.parse().ok())
+        .flatten()
+}
+
+fn line_looks_like_warning(line: &str) -> bool {
+    let line = line.to_ascii_lowercase();
+    line.contains("warning:") || line.contains("[warning]") || line.contains(" warn ")
+}
+
+fn line_looks_like_error(line: &str) -> bool {
+    let line = line.to_ascii_lowercase();
+    line.contains("error:") || line.contains("[error]") || line.contains(" error ")
 }
 
 #[tracing::instrument(
@@ -1419,13 +1760,56 @@ struct ArtifactAuditExecutionResult {
 struct TargetExecutionSummary {
     plans: Vec<BuildPlan>,
     failures: Vec<TargetFailure>,
+    reports: Vec<TargetExecutionReport>,
 }
 
 #[derive(Debug)]
 struct TargetExecutionResult {
     target_index: usize,
     target: WorktreeTarget,
+    report: TargetExecutionReport,
     result: eyre::Result<BuildPlan>,
+}
+
+#[derive(Debug)]
+struct TargetExecutionReport {
+    branch: BranchName,
+    duration: Duration,
+    warning_count: usize,
+    error_count: usize,
+    bail_message: Option<String>,
+}
+
+impl TargetExecutionReport {
+    fn from_result(
+        target: &WorktreeTarget,
+        started_at: SystemTime,
+        duration: Duration,
+        result: &eyre::Result<BuildPlan>,
+    ) -> Self {
+        let plan = result.as_ref().ok();
+        let diagnostics = target_diagnostics(target, plan, started_at);
+        Self {
+            branch: target.branch.clone(),
+            duration,
+            warning_count: diagnostics.warnings,
+            error_count: diagnostics.errors,
+            bail_message: result.as_ref().err().map(|error| error.to_string()),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+struct TargetDiagnosticCounts {
+    warnings: usize,
+    errors: usize,
+}
+
+impl TargetDiagnosticCounts {
+    fn add(&mut self, other: Self) {
+        self.warnings += other.warnings;
+        self.errors += other.errors;
+    }
 }
 
 #[derive(Debug)]
