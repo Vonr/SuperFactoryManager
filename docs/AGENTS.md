@@ -224,6 +224,8 @@ Commit messages should contain the platform relevant to the work that was done (
 
 Commit messages should contain an emoji.
 
+Commit messages related to github issues should contain the issue number.
+
 Changes to the user experience of the mod should be additionally documented in [changelog.sfml](../platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml)
 
 ## Writing Java
