@@ -2,13 +2,10 @@ use color_eyre::owo_colors::Rgb;
 
 #[must_use]
 pub fn stable_hue(input: &str) -> f32 {
-    let mut hash = 0x811c_9dc5_u32; // FNV-1a
-    for byte in input.bytes() {
-        hash ^= u32::from(byte);
-        hash = hash.wrapping_mul(0x0100_0193);
-    }
-    let hue = (hash % 360) as u16;
-    f32::from(hue)
+    let hash = blake3::hash(input.as_bytes());
+    let hue_seed = u32::from_le_bytes(hash.as_bytes()[..4].try_into().expect("slice has 4 bytes"));
+
+    (hue_seed as f32 / u32::MAX as f32) * 360.0
 }
 
 #[must_use]
@@ -60,8 +57,8 @@ mod tests {
     #[test]
     fn minecraft_versions_have_distinct_stable_colors() {
         let versions = [
-            "1.19.2", "1.19.4", "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4",
-            "1.21.0", "1.21.1", "26.1.2",
+            "1.19.2", "1.19.4", "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.21.0", "1.21.1",
+            "26.1.2",
         ];
 
         let mut colors = BTreeMap::new();
