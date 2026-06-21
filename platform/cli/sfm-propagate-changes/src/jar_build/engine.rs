@@ -4246,6 +4246,7 @@ impl RunKind {
             Self::Server => "server",
             Self::Data => "data",
             Self::GameTestServer => "gameTestServer",
+            Self::Test => "test",
         }
     }
 
@@ -4257,6 +4258,7 @@ impl RunKind {
             Self::Server => "runServer",
             Self::Data => "runData",
             Self::GameTestServer => "runGameTestServer",
+            Self::Test => "runTest",
         }
     }
 
@@ -4268,6 +4270,7 @@ impl RunKind {
             Self::Server => "runServer",
             Self::Data => "runData",
             Self::GameTestServer => "runGameTest",
+            Self::Test => "runTest",
         }
     }
 
@@ -4279,6 +4282,7 @@ impl RunKind {
             | Self::Server
             | Self::GameTestServer => "gametest",
             Self::Data => "datagen",
+            Self::Test => "test",
         }
     }
 
@@ -4296,7 +4300,7 @@ impl RunKind {
     const fn game_test_max_program_run_millis(self) -> &'static str {
         match self {
             Self::Client | Self::ClientSmoke | Self::ClientPuppet => "1000",
-            Self::Server | Self::GameTestServer | Self::Data => "150",
+            Self::Server | Self::GameTestServer | Self::Data | Self::Test => "150",
         }
     }
 
@@ -4382,6 +4386,10 @@ fn execute_run(
     cancellation_token: &CancellationToken,
 ) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
+    if matches!(kind, RunKind::Test) {
+        return execute_junit_tests(plan, dry_run, cancellation_token);
+    }
+
     let context = ExecutionContext::new(plan, cancellation_token.clone())?;
     let run_config = read_forge_run_config(&context, kind)?;
     context.bail_if_cancelled()?;
@@ -4756,6 +4764,381 @@ fn execute_run(
         tracing::info!("Validated client puppet completed {pass_count} required game tests.");
     }
     Ok(())
+}
+
+#[expect(
+    clippy::too_many_lines,
+    reason = "JUnit execution mirrors the run setup flow while avoiding Gradle."
+)]
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
+        branch = %plan.branch_name,
+        mc = %plan.minecraft_version,
+        dry_run,
+    )
+)]
+fn execute_junit_tests(
+    plan: &BuildPlan,
+    dry_run: bool,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
+    cancellation_token.bail_if_cancelled()?;
+    let context = ExecutionContext::new(plan, cancellation_token.clone())?;
+    let project_root = plan.cache_dir.join("project");
+    let classes_dir = project_root.join("classes");
+    let staged_resources_dir = project_root.join("staged-resources");
+    let test_classes_dir = project_root.join("test").join("classes");
+    let test_resources_dir = project_root.join("test").join("resources");
+    let run_state_dir = plan
+        .cache_dir
+        .join("run")
+        .join(RunKind::Test.command_name());
+    fs::create_dir_all(&run_state_dir)?;
+
+    let locked_resolver = Resolver::new(
+        plan.maven_cache_dir.clone(),
+        plan.repositories.clone(),
+        plan.refresh,
+        plan.allow_local_artifact_cache,
+        plan.artifact_sources.clone(),
+        plan.lockfile.clone(),
+        plan.lockfile.clone(),
+        context.cancellation_token.clone(),
+    )?;
+    let test_resolver = Resolver::new(
+        plan.maven_cache_dir.clone(),
+        plan.repositories.clone(),
+        plan.refresh,
+        plan.allow_local_artifact_cache,
+        plan.artifact_sources.clone(),
+        None,
+        None,
+        context.cancellation_token.clone(),
+    )?;
+    context.bail_if_cancelled()?;
+
+    let antlr_classpath = resolve_antlr_classpath(&context, &locked_resolver)?;
+    let base_classpath =
+        resolve_project_compile_classpath(&context, &locked_resolver, &antlr_classpath)?;
+    let test_compile_dependencies =
+        resolve_test_dependency_classpath(&context, &test_resolver, TestClasspathKind::Compile)?;
+    let test_runtime_dependencies =
+        resolve_test_dependency_classpath(&context, &test_resolver, TestClasspathKind::Runtime)?;
+    let console_launcher = resolve_junit_console_standalone(&context, &test_resolver)?.cache_path;
+    context.bail_if_cancelled()?;
+
+    let mut test_compile_classpath = base_classpath.clone();
+    test_compile_classpath.extend(test_compile_dependencies.iter().cloned());
+    test_compile_classpath = dedup_paths_preserve_order(test_compile_classpath);
+
+    let mut upstream_fingerprint_paths = vec![classes_dir.clone(), staged_resources_dir.clone()];
+    upstream_fingerprint_paths.extend(test_compile_classpath.iter().cloned());
+    let upstream_fingerprint = input_fingerprint(
+        &context,
+        "javac-test-upstream",
+        &upstream_fingerprint_paths,
+        &[
+            plan.java.version_output.clone(),
+            plan.java_release.to_string(),
+            format!("{:?}", plan.loader_toolchain.kind),
+        ],
+    )?;
+
+    let started = Instant::now();
+    tracing::info!("Build node compile-test: start");
+    compile_optional_java_source_set(
+        &context,
+        "test",
+        &test_compile_classpath,
+        &classes_dir,
+        &test_classes_dir,
+        &upstream_fingerprint,
+    )
+    .wrap_err("Failed to compile test source set")?;
+    stage_optional_resource_source_set(&context, "test", &test_resources_dir, &[])
+        .wrap_err("Failed to stage test resources")?;
+    tracing::info!(
+        "Build node compile-test: done in {} ms",
+        started.elapsed().as_millis()
+    );
+    context.bail_if_cancelled()?;
+
+    let mut test_runtime_classpath = vec![
+        test_classes_dir.clone(),
+        test_resources_dir.clone(),
+        staged_resources_dir.clone(),
+        classes_dir.clone(),
+    ];
+    test_runtime_classpath.extend(base_classpath);
+    test_runtime_classpath.extend(test_compile_dependencies.iter().cloned());
+    test_runtime_classpath.extend(test_runtime_dependencies.iter().cloned());
+    test_runtime_classpath = dedup_paths_preserve_order(test_runtime_classpath);
+
+    let runtime_classpath_file = run_state_dir.join("testRuntimeClasspath.txt");
+    write_classpath_file(&runtime_classpath_file, &test_runtime_classpath)?;
+    let argfile = run_state_dir.join("junit.java.args");
+    write_junit_argfile(&argfile, &console_launcher, &test_runtime_classpath)?;
+
+    let mut extra_cache_paths = Vec::new();
+    extra_cache_paths.extend(test_compile_dependencies);
+    extra_cache_paths.extend(test_runtime_dependencies);
+    extra_cache_paths.push(console_launcher.clone());
+    write_artifact_lockfile_with_extra_cache_paths(plan, &extra_cache_paths)?;
+
+    tracing::info!(
+        "Launching JUnit tests from {}",
+        plan.minecraft_dir.display()
+    );
+    tracing::info!("JUnit args: {}", argfile.display());
+    tracing::info!(
+        runtime_classpath_entries = test_runtime_classpath.len(),
+        argfile = %argfile.display(),
+        "junit_test_setup_complete"
+    );
+
+    let console_log = run_state_dir.join("console.log");
+    if dry_run {
+        context.write_node_state(
+            "run-test",
+            &["JUnit Platform ConsoleLauncher", "Rust-owned test outputs"],
+            &[
+                argfile.clone(),
+                runtime_classpath_file,
+                test_classes_dir,
+                test_resources_dir,
+            ],
+            "dry-run",
+        )?;
+        tracing::info!("Dry run prepared runTest launch setup and skipped JUnit execution.");
+        tracing::info!(argfile = %argfile.display(), "run_test_dry_run_skip_launch");
+        return Ok(());
+    }
+
+    let mut command = Command::new(&plan.java.executable);
+    command
+        .arg(format!("@{}", argfile.display()))
+        .current_dir(&plan.minecraft_dir);
+    let output =
+        run_command_capture_output(&context.cancellation_token, &mut command, "junit-test")
+            .wrap_err_with(|| {
+                format!(
+                    "Failed to launch JUnit tests using {}",
+                    plan.java.executable.display()
+                )
+            })?;
+    trace_subprocess_bytes(plan, "java-tool", "junit-test", "stdout", &output.stdout);
+    trace_subprocess_bytes(plan, "java-tool", "junit-test", "stderr", &output.stderr);
+    write_java_tool_console_log(
+        &console_log,
+        "junit-test",
+        "org.junit.platform.console.ConsoleLauncher",
+        0,
+        &join_classpath(
+            &std::iter::once(console_launcher)
+                .chain(test_runtime_classpath.iter().cloned())
+                .collect::<Vec<_>>(),
+        ),
+        &["--scan-class-path".to_string()],
+        &output,
+    )?;
+
+    context.write_node_state(
+        "run-test",
+        &["JUnit Platform ConsoleLauncher", "Rust-owned test outputs"],
+        &[
+            argfile,
+            runtime_classpath_file,
+            console_log.clone(),
+            test_classes_dir,
+            test_resources_dir,
+        ],
+        if output.status.success() {
+            "complete"
+        } else {
+            "failed"
+        },
+    )?;
+
+    if output.cancelled {
+        eyre::bail!(
+            "runTest was cancelled by Ctrl+C. See {}",
+            console_log.display()
+        );
+    }
+    if !output.status.success() {
+        eyre::bail!(
+            "runTest exited with {}. See {}",
+            output.status,
+            console_log.display()
+        );
+    }
+    tracing::info!("JUnit tests completed successfully.");
+    Ok(())
+}
+
+#[derive(Clone, Copy, Debug)]
+enum TestClasspathKind {
+    Compile,
+    Runtime,
+}
+
+fn resolve_test_dependency_classpath(
+    context: &ExecutionContext<'_>,
+    resolver: &Resolver,
+    kind: TestClasspathKind,
+) -> eyre::Result<Vec<PathBuf>> {
+    context.bail_if_cancelled()?;
+    let dependency_script = context
+        .plan
+        .minecraft_dir
+        .join("gradle")
+        .join("dependencies")
+        .join(context.plan.minecraft_version.as_str())
+        .join("dependencies.gradle");
+    let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
+    let configurations: &[&str] = match kind {
+        TestClasspathKind::Compile => &["testImplementation", "testCompileOnly"],
+        TestClasspathKind::Runtime => &["testImplementation", "testRuntimeOnly"],
+    };
+    let roots = dependencies
+        .iter()
+        .filter(|dependency| {
+            !dependency.fg_deobf && configurations.contains(&dependency.configuration.as_str())
+        })
+        .map(|dependency| {
+            (
+                dependency.configuration.as_str(),
+                dependency.coordinate.clone(),
+            )
+        })
+        .collect::<Vec<_>>();
+    resolve_dependency_artifact_closure(context, resolver, "test-dependency", roots)
+}
+
+fn resolve_dependency_artifact_closure(
+    context: &ExecutionContext<'_>,
+    resolver: &Resolver,
+    artifact_prefix: &str,
+    roots: Vec<(&str, MavenCoordinate)>,
+) -> eyre::Result<Vec<PathBuf>> {
+    let mut seen = BTreeSet::new();
+    let mut queue = VecDeque::new();
+    let mut paths = Vec::new();
+
+    for (configuration, coordinate) in roots {
+        context.bail_if_cancelled()?;
+        let dependency = resolver.resolve_dependency(configuration, &coordinate)?;
+        let resolved = MavenCoordinate::parse(&dependency.resolved_notation)?;
+        if seen.insert(resolved.to_string()) {
+            paths.push(dependency.cache_path);
+            queue.push_back(resolved);
+        }
+    }
+
+    while let Some(parent) = queue.pop_front() {
+        context.bail_if_cancelled()?;
+        for coordinate in resolver.resolve_pom_runtime_dependencies(&parent)? {
+            context.bail_if_cancelled()?;
+            if !seen.insert(coordinate.to_string()) {
+                continue;
+            }
+            let artifact = resolver.resolve_artifact(
+                ArtifactId::from(format!("{artifact_prefix}-{}", paths.len())),
+                &coordinate,
+                ArtifactPurpose::from("JUnit test classpath"),
+            )?;
+            paths.push(artifact.cache_path);
+            queue.push_back(coordinate);
+        }
+    }
+
+    Ok(paths)
+}
+
+fn resolve_junit_console_standalone(
+    context: &ExecutionContext<'_>,
+    resolver: &Resolver,
+) -> eyre::Result<ArtifactPlan> {
+    let dependency_script = context
+        .plan
+        .minecraft_dir
+        .join("gradle")
+        .join("dependencies")
+        .join(context.plan.minecraft_version.as_str())
+        .join("dependencies.gradle");
+    let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
+    let platform_version = junit_platform_version(&dependencies)?;
+    let coordinate = MavenCoordinate::parse(&format!(
+        "org.junit.platform:junit-platform-console-standalone:{platform_version}"
+    ))?;
+    resolver.resolve_artifact(
+        ArtifactId::from("junit-platform-console-standalone"),
+        &coordinate,
+        ArtifactPurpose::from("JUnit Platform ConsoleLauncher"),
+    )
+}
+
+fn junit_platform_version(dependencies: &[ParsedDependency]) -> eyre::Result<String> {
+    for artifact in [
+        "junit-platform-console-standalone",
+        "junit-platform-launcher",
+        "junit-platform-engine",
+        "junit-platform-commons",
+    ] {
+        if let Some(dependency) = dependencies.iter().find(|dependency| {
+            dependency.coordinate.group == "org.junit.platform"
+                && dependency.coordinate.artifact == artifact
+        }) {
+            return Ok(dependency.coordinate.version.clone());
+        }
+    }
+    if let Some(dependency) = dependencies.iter().find(|dependency| {
+        dependency.coordinate.group == "org.junit.jupiter"
+            && dependency.coordinate.artifact.starts_with("junit-jupiter")
+    }) {
+        return platform_version_from_jupiter_version(&dependency.coordinate.version);
+    }
+    eyre::bail!("Could not infer a JUnit Platform version from test dependencies")
+}
+
+fn platform_version_from_jupiter_version(version: &str) -> eyre::Result<String> {
+    let Some(rest) = version.strip_prefix("5.") else {
+        eyre::bail!("Unsupported JUnit Jupiter version for platform inference: {version}");
+    };
+    Ok(format!("1.{rest}"))
+}
+
+fn write_junit_argfile(
+    argfile: &Path,
+    console_launcher: &Path,
+    runtime_classpath: &[PathBuf],
+) -> eyre::Result<()> {
+    if let Some(parent) = argfile.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let args = vec![
+        "-cp".to_string(),
+        join_classpath(
+            &std::iter::once(console_launcher.to_path_buf())
+                .chain(runtime_classpath.iter().cloned())
+                .collect::<Vec<_>>(),
+        ),
+        "org.junit.platform.console.ConsoleLauncher".to_string(),
+        "--disable-banner".to_string(),
+        "--disable-ansi-colors".to_string(),
+        "--fail-if-no-tests".to_string(),
+        "--scan-class-path".to_string(),
+    ];
+    fs::write(
+        argfile,
+        args.into_iter()
+            .map(escape_argfile_arg)
+            .collect::<Vec<_>>()
+            .join("\n"),
+    )
+    .wrap_err_with(|| format!("Failed to write {}", argfile.display()))
 }
 
 fn run_mcp_mappings(plan: &BuildPlan) -> String {
@@ -5897,6 +6280,15 @@ fn resolve_neogradle_run_dependencies(
 fn run_dependency_configurations(kind: RunKind) -> &'static [&'static str] {
     match kind {
         RunKind::Data => &["implementation", "runtimeOnly", "transitiveRuntime"],
+        RunKind::Test => &[
+            "implementation",
+            "compileOnly",
+            "runtimeOnly",
+            "testImplementation",
+            "testCompileOnly",
+            "testRuntimeOnly",
+            "transitiveRuntime",
+        ],
         RunKind::Client
         | RunKind::ClientSmoke
         | RunKind::ClientPuppet

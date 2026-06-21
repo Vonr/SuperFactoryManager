@@ -118,6 +118,7 @@ mod tests {
         assert_run_cli(&["run", "server", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "data", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "game-test-server", "--branch", "1.19.2"]);
+        assert_run_cli(&["run", "test", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "game-test-server", "--branch", "1.19.2", "--dry-run"]);
         assert_run_cli(&[
             "run",
@@ -709,7 +710,8 @@ mod tests {
                     | RunCommand::ClientPuppet(_)
                     | RunCommand::Server(_)
                     | RunCommand::Data(_)
-                    | RunCommand::GameTestServer(_),
+                    | RunCommand::GameTestServer(_)
+                    | RunCommand::Test(_),
             }) => {}
             command => panic!("expected top-level run command, got {command:?}"),
         }
