@@ -6,6 +6,7 @@ use super::BuildMode;
 use super::BuildOptions;
 use super::CompareOptions;
 use super::RunKind;
+use super::RunOptions;
 use super::RunTestAction;
 use super::RunTestOptions;
 pub(super) use super::artifact_audit_issue_kind::ArtifactAuditIssueKind;
@@ -152,6 +153,7 @@ pub(crate) fn invoke_build(
 pub(crate) fn invoke_run(
     options: &BuildOptions,
     kind: RunKind,
+    run_options: &RunOptions,
     cancellation_token: &CancellationToken,
 ) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
@@ -162,7 +164,7 @@ pub(crate) fn invoke_run(
         plans,
         failures,
         reports,
-    } = execute_run_targets(options, kind, targets, cancellation_token)?;
+    } = execute_run_targets(options, kind, run_options, targets, cancellation_token)?;
     cancellation_token.bail_if_cancelled()?;
 
     write_requested_plan_outputs(&plans, options.plan_json.as_deref())?;
@@ -242,6 +244,7 @@ fn execute_build_targets(
 fn execute_run_targets(
     options: &BuildOptions,
     kind: RunKind,
+    run_options: &RunOptions,
     targets: Vec<WorktreeTarget>,
     cancellation_token: &CancellationToken,
 ) -> eyre::Result<TargetExecutionSummary> {
@@ -258,7 +261,7 @@ fn execute_run_targets(
                 kind = kind.command_name(),
             )
             .entered();
-            execute_run_target(options, kind, target, cancellation_token)
+            execute_run_target(options, kind, run_options, target, cancellation_token)
         },
     )
 }
@@ -518,6 +521,7 @@ fn execute_build_target(
 fn execute_run_target(
     options: &BuildOptions,
     kind: RunKind,
+    run_options: &RunOptions,
     target: &WorktreeTarget,
     cancellation_token: &CancellationToken,
 ) -> eyre::Result<BuildPlan> {
@@ -536,7 +540,23 @@ fn execute_run_target(
     cancellation_token.bail_if_cancelled()?;
     write_artifact_lockfile(&plan)?;
     cancellation_token.bail_if_cancelled()?;
-    execute_run(&plan, kind, options.dry_run, cancellation_token)?;
+    if run_options.game_test_bisect.is_some() {
+        execute_game_test_bisect(
+            &plan,
+            kind,
+            run_options,
+            options.dry_run,
+            cancellation_token,
+        )?;
+    } else {
+        execute_run(
+            &plan,
+            kind,
+            run_options,
+            options.dry_run,
+            cancellation_token,
+        )?;
+    }
     Ok(plan)
 }
 
@@ -4433,6 +4453,13 @@ impl RunKind {
     }
 }
 
+const fn run_max_launch_attempts(kind: RunKind) -> usize {
+    match kind {
+        RunKind::GameTestServer => 3,
+        _ => 1,
+    }
+}
+
 #[derive(Debug, Clone, Default, Facet)]
 #[facet(rename_all = "camelCase")]
 struct ForgeRunConfig {
@@ -4476,6 +4503,242 @@ struct CancellableOutput {
     cancelled: bool,
 }
 
+#[derive(Debug)]
+struct GameTestBisectAttempt {
+    run_number: usize,
+    selected_tests: Vec<String>,
+    failed_tests: Vec<String>,
+    target_failed: bool,
+    saved_log: PathBuf,
+}
+
+fn run_state_dir(plan: &BuildPlan, kind: RunKind) -> PathBuf {
+    plan.cache_dir.join("run").join(kind.command_name())
+}
+
+#[expect(
+    clippy::too_many_lines,
+    reason = "The bisection loop is easier to audit when the target/subset/complement flow stays together."
+)]
+fn execute_game_test_bisect(
+    plan: &BuildPlan,
+    kind: RunKind,
+    run_options: &RunOptions,
+    dry_run: bool,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
+    if !matches!(kind, RunKind::GameTestServer) {
+        eyre::bail!("Game-test bisection is only supported for runGameTestServer.");
+    }
+    if dry_run {
+        eyre::bail!("Game-test bisection launches Minecraft and does not support --dry-run.");
+    }
+    let bisect_options = run_options
+        .game_test_bisect
+        .as_ref()
+        .ok_or_else(|| eyre::eyre!("Missing game-test bisection options"))?;
+    if matches!(bisect_options.max_runs, Some(0 | 1)) {
+        eyre::bail!("Game-test bisection needs at least 2 runs.");
+    }
+
+    let target = normalize_sfm_game_test_name(&bisect_options.target);
+    if target.is_empty() {
+        eyre::bail!("Game-test bisection target must not be empty.");
+    }
+
+    tracing::info!(
+        "Starting game-test bisection for {} on {}.",
+        qualify_sfm_game_test_name(&target),
+        plan.branch_name
+    );
+
+    let mut run_count = 0usize;
+    let baseline_selection =
+        initial_game_test_bisect_selection(&target, run_options.game_test_filter.as_deref());
+    let baseline = run_game_test_bisect_attempt(
+        plan,
+        kind,
+        run_options,
+        baseline_selection.as_deref(),
+        &target,
+        "baseline",
+        &mut run_count,
+        cancellation_token,
+    )?;
+    if !baseline
+        .selected_tests
+        .iter()
+        .any(|test| game_test_name_matches(test, &target))
+    {
+        eyre::bail!(
+            "Baseline game-test run did not discover target {}. See {}",
+            qualify_sfm_game_test_name(&target),
+            baseline.saved_log.display()
+        );
+    }
+    if !baseline.target_failed {
+        eyre::bail!(
+            "Baseline game-test run did not fail target {} (failed tests: {}). See {}",
+            qualify_sfm_game_test_name(&target),
+            format_game_test_list(&baseline.failed_tests),
+            baseline.saved_log.display()
+        );
+    }
+
+    let target_only_selection = exact_game_test_selection(&target, &[]);
+    let target_only = run_game_test_bisect_attempt(
+        plan,
+        kind,
+        run_options,
+        Some(&target_only_selection),
+        &target,
+        "target-only",
+        &mut run_count,
+        cancellation_token,
+    )?;
+    if target_only.target_failed {
+        eyre::bail!(
+            "Target {} also fails when run alone. See {}",
+            qualify_sfm_game_test_name(&target),
+            target_only.saved_log.display()
+        );
+    }
+
+    let mut current = baseline
+        .selected_tests
+        .iter()
+        .map(|name| normalize_sfm_game_test_name(name))
+        .filter(|name| !name.is_empty() && !game_test_name_matches(name, &target))
+        .collect::<Vec<_>>();
+    current = dedup_strings_preserve_order(current);
+    if current.is_empty() {
+        eyre::bail!(
+            "Baseline failed {}, but no other SFM game tests were discovered to bisect.",
+            qualify_sfm_game_test_name(&target)
+        );
+    }
+
+    tracing::info!(
+        "Baseline reproduced target failure with {} other SFM game test(s); target-only passed.",
+        current.len()
+    );
+
+    let mut granularity = 2usize;
+    let mut stopped_by_budget = false;
+    while current.len() > 1 {
+        if game_test_bisect_budget_exhausted(run_count, bisect_options.max_runs) {
+            stopped_by_budget = true;
+            break;
+        }
+
+        let partitions = partition_game_test_candidates(&current, granularity);
+        let mut reduced = false;
+
+        for subset in &partitions {
+            if game_test_bisect_budget_exhausted(run_count, bisect_options.max_runs) {
+                stopped_by_budget = true;
+                break;
+            }
+            let selection = exact_game_test_selection(&target, subset);
+            let attempt = run_game_test_bisect_attempt(
+                plan,
+                kind,
+                run_options,
+                Some(&selection),
+                &target,
+                &format!("subset-{}-of-{}", subset.len(), current.len()),
+                &mut run_count,
+                cancellation_token,
+            )?;
+            if attempt.target_failed {
+                tracing::info!(
+                    "Reduced inducing set from {} to {} test(s) using subset run #{}.",
+                    current.len(),
+                    subset.len(),
+                    attempt.run_number
+                );
+                current.clone_from(subset);
+                granularity = granularity.saturating_sub(1).max(2);
+                reduced = true;
+                break;
+            }
+        }
+        if stopped_by_budget || reduced {
+            continue;
+        }
+
+        for subset in &partitions {
+            if game_test_bisect_budget_exhausted(run_count, bisect_options.max_runs) {
+                stopped_by_budget = true;
+                break;
+            }
+            let complement = game_test_candidate_complement(&current, subset);
+            if complement.is_empty() {
+                continue;
+            }
+            let selection = exact_game_test_selection(&target, &complement);
+            let attempt = run_game_test_bisect_attempt(
+                plan,
+                kind,
+                run_options,
+                Some(&selection),
+                &target,
+                &format!("complement-{}-of-{}", complement.len(), current.len()),
+                &mut run_count,
+                cancellation_token,
+            )?;
+            if attempt.target_failed {
+                tracing::info!(
+                    "Reduced inducing set from {} to {} test(s) using complement run #{}.",
+                    current.len(),
+                    complement.len(),
+                    attempt.run_number
+                );
+                current = complement;
+                granularity = granularity.saturating_sub(1).max(2);
+                reduced = true;
+                break;
+            }
+        }
+        if stopped_by_budget || reduced {
+            continue;
+        }
+
+        if granularity >= current.len() {
+            break;
+        }
+        granularity = (granularity * 2).min(current.len());
+        tracing::info!(
+            "No reduction at previous granularity; increasing to {} partition(s).",
+            granularity
+        );
+    }
+
+    write_game_test_bisect_result(plan, kind, &target, &current, run_count, stopped_by_budget)?;
+    if stopped_by_budget {
+        tracing::warn!(
+            "Stopped game-test bisection after {run_count} run(s) due to --max-runs. Current inducing set has {} test(s).",
+            current.len()
+        );
+    } else {
+        tracing::info!(
+            "Game-test bisection finished after {run_count} run(s). Inducing set has {} test(s).",
+            current.len()
+        );
+    }
+    tracing::info!(
+        "Reproduce with --filter {}",
+        exact_game_test_selection(&target, &current)
+    );
+    for test in &current {
+        tracing::info!(
+            "Inducing companion test: {}",
+            qualify_sfm_game_test_name(test)
+        );
+    }
+    Ok(())
+}
+
 #[expect(
     clippy::too_many_lines,
     reason = "Run launch orchestration intentionally mirrors Forge userdev config shape."
@@ -4494,6 +4757,7 @@ struct CancellableOutput {
 fn execute_run(
     plan: &BuildPlan,
     kind: RunKind,
+    run_options: &RunOptions,
     dry_run: bool,
     cancellation_token: &CancellationToken,
 ) -> eyre::Result<()> {
@@ -4518,7 +4782,7 @@ fn execute_run(
     }
     let launch_main = run_config.main.clone();
 
-    let run_state_dir = plan.cache_dir.join("run").join(kind.command_name());
+    let run_state_dir = run_state_dir(plan, kind);
     fs::create_dir_all(&run_state_dir)?;
     let working_dir = plan.minecraft_dir.join(kind.working_dir_name());
     fs::create_dir_all(&working_dir)?;
@@ -4616,6 +4880,7 @@ fn execute_run(
             kind.game_test_max_program_run_millis().to_string(),
         );
     }
+    apply_game_test_filter_property(&mut properties, kind, run_options);
     if let Some(automation_mode) = kind.automation_mode() {
         properties.insert(
             "sfm.clientRun.mode".to_string(),
@@ -4732,11 +4997,7 @@ fn execute_run(
         );
         return Ok(());
     }
-    let max_launch_attempts = if matches!(kind, RunKind::GameTestServer) {
-        3
-    } else {
-        1
-    };
+    let max_launch_attempts = run_max_launch_attempts(kind);
     let mut launch_output = None;
     for attempt in 1..=max_launch_attempts {
         context.bail_if_cancelled()?;
@@ -6029,6 +6290,297 @@ fn game_test_namespace_property(context: &ExecutionContext<'_>) -> eyre::Result<
         }
     }
     Ok("forge.enabledGameTestNamespaces".to_string())
+}
+
+fn apply_game_test_filter_property(
+    properties: &mut BTreeMap<String, String>,
+    kind: RunKind,
+    run_options: &RunOptions,
+) {
+    if !matches!(kind, RunKind::ClientPuppet | RunKind::GameTestServer) {
+        return;
+    }
+    let Some(selection) = run_options
+        .game_test_filter
+        .as_deref()
+        .map(str::trim)
+        .filter(|selection| !selection.is_empty())
+    else {
+        return;
+    };
+    properties.insert("sfm.gametestSelection".to_string(), selection.to_string());
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "The attempt runner carries explicit bisect context for clear trace/log labels."
+)]
+fn run_game_test_bisect_attempt(
+    plan: &BuildPlan,
+    kind: RunKind,
+    base_run_options: &RunOptions,
+    selection: Option<&str>,
+    target: &str,
+    label: &str,
+    run_count: &mut usize,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<GameTestBisectAttempt> {
+    *run_count += 1;
+    let run_number = *run_count;
+    let attempt_options = RunOptions {
+        game_test_filter: selection.map(str::to_string),
+        game_test_bisect: base_run_options.game_test_bisect.clone(),
+    };
+    tracing::info!(
+        "Game-test bisect run #{run_number}: {label}; selected {}.",
+        selection.unwrap_or("(all SFM game tests)")
+    );
+
+    let launch_result = execute_run(plan, kind, &attempt_options, false, cancellation_token);
+    let launch_error = launch_result
+        .as_ref()
+        .err()
+        .map(std::string::ToString::to_string);
+    if let Some(error) = launch_error.as_deref() {
+        tracing::debug!("Game-test bisect run #{run_number} launch returned error: {error}");
+    }
+    let console_log = run_state_dir(plan, kind).join("console.log");
+    let log_text = fs::read_to_string(&console_log).unwrap_or_else(|error| {
+        format!(
+            "Failed to read game-test bisect console log {}: {error}",
+            console_log.display()
+        )
+    });
+
+    let selected_tests = extract_sfm_game_test_names(&log_text);
+    let failed_tests = extract_failed_gametest_names(&log_text);
+    let target_failed = failed_tests
+        .iter()
+        .any(|test| game_test_name_matches(test, target))
+        || log_text.contains(&format!("Test failed: {target}"));
+    let saved_log = save_game_test_bisect_attempt_log(plan, kind, run_number, label, &log_text)?;
+
+    tracing::info!(
+        "Game-test bisect run #{run_number}: target_failed={}, failed_tests={}, log={}",
+        target_failed,
+        format_game_test_list(&failed_tests),
+        saved_log.display()
+    );
+
+    Ok(GameTestBisectAttempt {
+        run_number,
+        selected_tests,
+        failed_tests,
+        target_failed,
+        saved_log,
+    })
+}
+
+fn save_game_test_bisect_attempt_log(
+    plan: &BuildPlan,
+    kind: RunKind,
+    run_number: usize,
+    label: &str,
+    log_text: &str,
+) -> eyre::Result<PathBuf> {
+    let dir = run_state_dir(plan, kind).join("bisect");
+    fs::create_dir_all(&dir)?;
+    let path = dir.join(format!(
+        "{run_number:03}-{}.log",
+        sanitize_filename_component(label)
+    ));
+    fs::write(&path, log_text).wrap_err_with(|| format!("Failed to write {}", path.display()))?;
+    Ok(path)
+}
+
+fn write_game_test_bisect_result(
+    plan: &BuildPlan,
+    kind: RunKind,
+    target: &str,
+    inducing_tests: &[String],
+    run_count: usize,
+    stopped_by_budget: bool,
+) -> eyre::Result<()> {
+    let dir = run_state_dir(plan, kind).join("bisect");
+    fs::create_dir_all(&dir)?;
+    let path = dir.join("result.txt");
+    let selection = exact_game_test_selection(target, inducing_tests);
+    let mut result = String::new();
+    writeln!(result, "target={}", qualify_sfm_game_test_name(target))?;
+    writeln!(result, "runs={run_count}")?;
+    writeln!(result, "stopped_by_budget={stopped_by_budget}")?;
+    writeln!(result, "companion_count={}", inducing_tests.len())?;
+    writeln!(result, "filter={selection}")?;
+    writeln!(result)?;
+    for test in inducing_tests {
+        writeln!(result, "{}", qualify_sfm_game_test_name(test))?;
+    }
+    fs::write(&path, result).wrap_err_with(|| format!("Failed to write {}", path.display()))?;
+    tracing::info!("Game-test bisect result: {}", path.display());
+    Ok(())
+}
+
+fn game_test_bisect_budget_exhausted(run_count: usize, max_runs: Option<usize>) -> bool {
+    max_runs.is_some_and(|max_runs| run_count >= max_runs)
+}
+
+fn initial_game_test_bisect_selection(target: &str, filter: Option<&str>) -> Option<String> {
+    filter
+        .map(str::trim)
+        .filter(|filter| !filter.is_empty())
+        .map(|filter| format!("{},{}", qualify_sfm_game_test_name(target), filter))
+}
+
+fn exact_game_test_selection(target: &str, companion_tests: &[String]) -> String {
+    std::iter::once(qualify_sfm_game_test_name(target))
+        .chain(
+            companion_tests
+                .iter()
+                .map(|test| qualify_sfm_game_test_name(test)),
+        )
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn qualify_sfm_game_test_name(name: &str) -> String {
+    let normalized = normalize_sfm_game_test_name(name);
+    format!("sfm:{normalized}")
+}
+
+fn normalize_sfm_game_test_name(name: &str) -> String {
+    let mut normalized = name.trim();
+    if let Some(stripped) = normalized.strip_prefix("- ") {
+        normalized = stripped.trim();
+    }
+    if let Some(stripped) = normalized.strip_prefix("sfm:") {
+        normalized = stripped.trim();
+    }
+    normalized.to_string()
+}
+
+fn game_test_name_matches(candidate: &str, target: &str) -> bool {
+    let candidate = normalize_sfm_game_test_name(candidate);
+    candidate == target
+        || candidate.ends_with(&format!(".{target}"))
+        || candidate.ends_with(&format!(":{target}"))
+}
+
+fn partition_game_test_candidates(candidates: &[String], granularity: usize) -> Vec<Vec<String>> {
+    if candidates.is_empty() {
+        return Vec::new();
+    }
+    let partitions = granularity.clamp(1, candidates.len());
+    let base_size = candidates.len() / partitions;
+    let oversized_count = candidates.len() % partitions;
+    let mut start = 0usize;
+    let mut output = Vec::with_capacity(partitions);
+    for index in 0..partitions {
+        let size = base_size + usize::from(index < oversized_count);
+        let end = start + size;
+        output.push(candidates[start..end].to_vec());
+        start = end;
+    }
+    output
+}
+
+fn game_test_candidate_complement(candidates: &[String], subset: &[String]) -> Vec<String> {
+    let subset = subset.iter().map(String::as_str).collect::<BTreeSet<_>>();
+    candidates
+        .iter()
+        .filter(|candidate| !subset.contains(candidate.as_str()))
+        .cloned()
+        .collect()
+}
+
+fn extract_sfm_game_test_names(output: &str) -> Vec<String> {
+    let mut names = Vec::new();
+    for line in output.lines() {
+        let content = strip_minecraft_log_prefix(line);
+        for marker in [
+            "Discovered SFM game test: ",
+            "Generated SFM game test: ",
+            "Selected SFM game test: ",
+        ] {
+            if let Some(name) = content.split_once(marker).map(|(_, name)| name.trim()) {
+                push_unique_string(&mut names, normalize_sfm_game_test_name(name));
+            }
+        }
+    }
+    names
+}
+
+fn extract_failed_gametest_names(output: &str) -> Vec<String> {
+    let mut names = Vec::new();
+    let mut in_failed_section = false;
+
+    for line in output.lines() {
+        let content = strip_minecraft_log_prefix(line);
+        if content.contains("required tests failed :(") {
+            in_failed_section = true;
+            continue;
+        }
+
+        if in_failed_section {
+            if content.contains("====") {
+                break;
+            }
+            let stripped = content.trim();
+            if let Some(name) = stripped.strip_prefix("- ") {
+                push_unique_string(&mut names, normalize_sfm_game_test_name(name));
+            }
+        }
+    }
+
+    names
+}
+
+fn strip_minecraft_log_prefix(line: &str) -> &str {
+    line.rfind("]: ")
+        .map_or(line, |index| &line[index + "]: ".len()..])
+}
+
+fn dedup_strings_preserve_order(input: Vec<String>) -> Vec<String> {
+    let mut output = Vec::new();
+    for item in input {
+        push_unique_string(&mut output, item);
+    }
+    output
+}
+
+fn push_unique_string(items: &mut Vec<String>, item: String) {
+    if !item.is_empty() && !items.iter().any(|existing| existing == &item) {
+        items.push(item);
+    }
+}
+
+fn format_game_test_list(tests: &[String]) -> String {
+    if tests.is_empty() {
+        "(none)".to_string()
+    } else {
+        tests
+            .iter()
+            .map(|test| qualify_sfm_game_test_name(test))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
+fn sanitize_filename_component(input: &str) -> String {
+    let sanitized = input
+        .chars()
+        .map(|character| {
+            if character.is_ascii_alphanumeric() || matches!(character, '-' | '_' | '.') {
+                character
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>();
+    if sanitized.is_empty() {
+        "attempt".to_string()
+    } else {
+        sanitized
+    }
 }
 
 fn clean_gametest_server_world(minecraft_dir: &Path, working_dir: &Path) -> eyre::Result<()> {

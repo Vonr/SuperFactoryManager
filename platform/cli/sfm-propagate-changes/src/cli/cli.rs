@@ -103,6 +103,7 @@ mod tests {
     use crate::cli::gradle::GradleCommand;
     use crate::cli::jar::JarCommand;
     use crate::cli::run::RunCommand;
+    use crate::cli::run::RunGameTestServerCliCommand;
     use crate::cli::run::RunTestCliCommand;
     use crate::jar_build::BuildMode;
     use crate::jar_build::ErrorAction;
@@ -119,9 +120,35 @@ mod tests {
         assert_run_cli(&["run", "client", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "client-smoke", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "client-puppet", "--branch", "1.19.2"]);
+        assert_run_cli(&[
+            "run",
+            "client-puppet",
+            "--branch",
+            "1.19.2",
+            "--filter",
+            "wither_aggro_*",
+        ]);
         assert_run_cli(&["run", "server", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "data", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "game-test-server", "--branch", "1.19.2"]);
+        assert_run_cli(&[
+            "run",
+            "game-test-server",
+            "--branch",
+            "1.19.2",
+            "--filter",
+            "sfm:wither_aggro_*,sfm:tough_cable_*",
+        ]);
+        assert_run_cli(&[
+            "run",
+            "game-test-server",
+            "--branch",
+            "1.19.2",
+            "bisect",
+            "wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall",
+            "--max-runs",
+            "8",
+        ]);
         assert_run_cli(&["run", "test", "--branch", "1.19.2"]);
         assert_run_cli(&[
             "run",
@@ -178,6 +205,87 @@ mod tests {
         assert_eq!(args.filter.as_deref(), Some("lavaSearch"));
         assert!(args.no_capture);
         assert!(matches!(args.command, Some(RunTestCliCommand::List(_))));
+    }
+
+    #[test]
+    fn parses_game_test_run_filters() {
+        let game_test_server = figue::from_slice::<Cli>(&[
+            "run",
+            "game-test-server",
+            "--branch",
+            "1.19.2",
+            "--filter",
+            "wither_aggro_*",
+        ])
+        .into_result()
+        .expect("game test server filter should parse")
+        .get_silent();
+        match game_test_server.command {
+            Command::Run(crate::cli::run::RunArgs {
+                command: RunCommand::GameTestServer(args),
+            }) => {
+                assert_eq!(args.filter.as_deref(), Some("wither_aggro_*"));
+            }
+            command => panic!("expected game-test-server run command, got {command:?}"),
+        }
+
+        let client_puppet = figue::from_slice::<Cli>(&[
+            "run",
+            "client-puppet",
+            "--branch",
+            "1.19.2",
+            "--filter",
+            "sfm:wither_aggro_*,sfm:tough_cable_*",
+        ])
+        .into_result()
+        .expect("client puppet filter should parse")
+        .get_silent();
+        match client_puppet.command {
+            Command::Run(crate::cli::run::RunArgs {
+                command: RunCommand::ClientPuppet(args),
+            }) => {
+                assert_eq!(
+                    args.filter.as_deref(),
+                    Some("sfm:wither_aggro_*,sfm:tough_cable_*")
+                );
+            }
+            command => panic!("expected client-puppet run command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_game_test_server_bisect_options() {
+        let cli = figue::from_slice::<Cli>(&[
+            "run",
+            "game-test-server",
+            "--branch",
+            "1.19.2",
+            "--filter",
+            "sfm:*",
+            "bisect",
+            "wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall",
+            "--max-runs",
+            "12",
+        ])
+        .into_result()
+        .expect("game test server bisect should parse")
+        .get_silent();
+        match cli.command {
+            Command::Run(crate::cli::run::RunArgs {
+                command: RunCommand::GameTestServer(args),
+            }) => {
+                assert_eq!(args.filter.as_deref(), Some("sfm:*"));
+                let Some(RunGameTestServerCliCommand::Bisect(bisect)) = args.command else {
+                    panic!("expected game-test-server bisect command");
+                };
+                assert_eq!(
+                    bisect.target,
+                    "wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall"
+                );
+                assert_eq!(bisect.max_runs, Some(12));
+            }
+            command => panic!("expected game-test-server run command, got {command:?}"),
+        }
     }
 
     #[test]
