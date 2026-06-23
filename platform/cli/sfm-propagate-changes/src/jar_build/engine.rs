@@ -8643,9 +8643,11 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     let srg_to_official = mappings_root.join("srg_to_official.tsrg");
     let official_to_srg = mappings_root.join("official_to_srg.tsrg");
     let official_sources = forge_root.join("sources").join("combined-official.jar");
+    let deobfuscated_sources = forge_root.join("sources").join("combined-deobfuscated.jar");
     let output = forge_root.join("classes").join("dev-compile.jar");
     if output.is_file()
         && official_sources.is_file()
+        && deobfuscated_sources.is_file()
         && srg_to_official.is_file()
         && official_to_srg.is_file()
         && !context.plan.refresh
@@ -8661,7 +8663,11 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         context.write_node_state(
             "execute-forge-userdev",
             &["Forge userdev", "MCPConfig joined outputs"],
-            &[output.clone(), official_sources.clone()],
+            &[
+                output.clone(),
+                official_sources.clone(),
+                deobfuscated_sources.clone(),
+            ],
             "cached",
         )?;
         return Ok(());
@@ -8787,6 +8793,7 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         ],
         &forge_root.join("remapSources"),
     )?;
+    remap_source_jar_identifiers(&official_sources, &srg_to_official, &deobfuscated_sources)?;
 
     let binpatches = forge_root.join("binpatch").join("joined.lzma");
     extract_zip_entry_to_path(&userdev.cache_path, "joined.lzma", &binpatches)?;
@@ -11285,7 +11292,7 @@ fn transformed_source_output_jar(plan: &BuildPlan) -> eyre::Result<PathBuf> {
                 .join("forge")
                 .join(plan.minecraft_version.as_str())
                 .join("sources")
-                .join("combined-official.jar")
+                .join("combined-deobfuscated.jar")
         }
     };
     if !path.is_file() {
@@ -11360,6 +11367,144 @@ fn extract_zip_to_tree(input: &Path, output: &Path) -> eyre::Result<()> {
         })?;
     }
     Ok(())
+}
+
+fn remap_source_jar_identifiers(input: &Path, mapping: &Path, output: &Path) -> eyre::Result<()> {
+    let replacements = read_source_identifier_replacements(mapping)?;
+    let input_bytes =
+        fs::read(input).wrap_err_with(|| format!("Failed to read {}", input.display()))?;
+    let mut archive = ZipArchive::new(Cursor::new(input_bytes))
+        .wrap_err_with(|| format!("Failed to open {}", input.display()))?;
+    let temporary_output = unique_sibling_path(output, "tmp")?;
+    if let Some(parent) = temporary_output.parent() {
+        fs::create_dir_all(parent)
+            .wrap_err_with(|| format!("Failed to create {}", parent.display()))?;
+    }
+
+    let temporary_file = File::create(&temporary_output)
+        .wrap_err_with(|| format!("Failed to create {}", temporary_output.display()))?;
+    let mut writer = ZipWriter::new(temporary_file);
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+
+    for index in 0..archive.len() {
+        let mut entry = archive
+            .by_index(index)
+            .wrap_err_with(|| format!("Failed to read {} entry #{index}", input.display()))?;
+        let name = entry.name().replace('\\', "/");
+        if name.is_empty() {
+            continue;
+        }
+        if name.ends_with('/') {
+            writer.add_directory(name, options)?;
+            continue;
+        }
+        writer.start_file(&name, options)?;
+        if zip_entry_has_extension(&name, "java") {
+            let mut source = String::new();
+            entry.read_to_string(&mut source).wrap_err_with(|| {
+                format!("Failed to read Java source {name} from {}", input.display())
+            })?;
+            let remapped = replace_java_identifiers(&source, &replacements);
+            writer.write_all(remapped.as_bytes())?;
+        } else {
+            std::io::copy(&mut entry, &mut writer)?;
+        }
+    }
+
+    writer.finish()?;
+    replace_artifact_file(&temporary_output, output)?;
+    Ok(())
+}
+
+fn read_source_identifier_replacements(mapping: &Path) -> eyre::Result<BTreeMap<String, String>> {
+    let content = fs::read_to_string(mapping)
+        .wrap_err_with(|| format!("Failed to read {}", mapping.display()))?;
+    let mut replacements = BTreeMap::new();
+    for line in content.lines() {
+        let tab_count = line.chars().take_while(|ch| *ch == '\t').count();
+        if tab_count == 0 {
+            continue;
+        }
+        let parts = line.split_whitespace().collect::<Vec<_>>();
+        let replacement = match tab_count {
+            1 if parts.len() >= 2 => {
+                let source = parts[0];
+                let target = parts[parts.len() - 1];
+                Some((source, target))
+            }
+            2 if parts.len() >= 3 => Some((parts[1], parts[2])),
+            _ => None,
+        };
+        let Some((source, target)) = replacement else {
+            continue;
+        };
+        if source == target
+            || !looks_like_generated_minecraft_identifier(source)
+            || !is_java_identifier(target)
+        {
+            continue;
+        }
+        match replacements.get(source) {
+            Some(existing) if existing != target => {
+                replacements.remove(source);
+            }
+            Some(_) => {}
+            None => {
+                replacements.insert(source.to_string(), target.to_string());
+            }
+        }
+    }
+    Ok(replacements)
+}
+
+fn looks_like_generated_minecraft_identifier(value: &str) -> bool {
+    (value.starts_with("m_") || value.starts_with("f_") || value.starts_with("p_"))
+        && value.ends_with('_')
+        && is_java_identifier(value)
+}
+
+fn is_java_identifier(value: &str) -> bool {
+    let mut chars = value.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    (first == '_' || first == '$' || first.is_ascii_alphabetic())
+        && chars.all(|ch| ch == '_' || ch == '$' || ch.is_ascii_alphanumeric())
+}
+
+fn replace_java_identifiers(source: &str, replacements: &BTreeMap<String, String>) -> String {
+    let mut output = String::with_capacity(source.len());
+    let mut identifier_start = None;
+    for (index, ch) in source.char_indices() {
+        if is_java_identifier_char(ch) {
+            identifier_start.get_or_insert(index);
+            continue;
+        }
+        if let Some(start) = identifier_start.take() {
+            push_replaced_java_identifier(&mut output, &source[start..index], replacements);
+        }
+        output.push(ch);
+    }
+    if let Some(start) = identifier_start {
+        push_replaced_java_identifier(&mut output, &source[start..], replacements);
+    }
+    output
+}
+
+fn is_java_identifier_char(ch: char) -> bool {
+    ch == '_' || ch == '$' || ch.is_ascii_alphanumeric()
+}
+
+fn push_replaced_java_identifier(
+    output: &mut String,
+    identifier: &str,
+    replacements: &BTreeMap<String, String>,
+) {
+    if let Some(replacement) = replacements.get(identifier) {
+        output.push_str(replacement);
+    } else {
+        output.push_str(identifier);
+    }
 }
 
 fn zip_entry_has_extension(name: &str, extension: &str) -> bool {
