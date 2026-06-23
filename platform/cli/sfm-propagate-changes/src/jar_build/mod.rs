@@ -23,6 +23,9 @@ mod run_kind;
 mod run_options;
 mod run_test_command;
 mod run_test_options;
+mod source_output_command;
+mod source_output_layout;
+mod source_output_options;
 mod target_artifact_audit_report;
 
 pub use artifact_audit_command::ArtifactAuditCommand;
@@ -44,3 +47,6 @@ pub use run_options::RunOptions;
 pub use run_test_command::RunTestCommand;
 pub use run_test_options::RunTestAction;
 pub use run_test_options::RunTestOptions;
+pub use source_output_command::SourceOutputCommand;
+pub use source_output_layout::SourceOutputLayout;
+pub use source_output_options::SourceOutputOptions;

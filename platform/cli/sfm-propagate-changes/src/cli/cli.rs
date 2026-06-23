@@ -109,6 +109,7 @@ mod tests {
     use crate::jar_build::ClientPuppetKeepOpen;
     use crate::jar_build::ErrorAction;
     use crate::jar_build::Parallelism;
+    use crate::jar_build::SourceOutputLayout;
     use facet::Facet;
     use figue as args;
     use tracing::level_filters::LevelFilter;
@@ -460,6 +461,39 @@ mod tests {
                 assert_eq!(options.parallelism, Parallelism::Parallel { limit: 4 });
             }
             command => panic!("expected jar build command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_jar_sources_filetree_layout() {
+        let cli = figue::from_slice::<Cli>(&[
+            "jar",
+            "sources",
+            "--branch",
+            "1.19.2",
+            "--layout",
+            "filetree",
+            "--parallel",
+            "2",
+        ])
+        .into_result()
+        .expect("jar sources filetree should parse")
+        .get_silent();
+        match cli.command {
+            Command::Jar(crate::cli::jar::JarArgs {
+                command: JarCommand::Sources(command),
+            }) => {
+                let options = command
+                    .into_options(BuildMode::Build)
+                    .expect("jar sources options should parse");
+                assert_eq!(options.build.branch.to_string(), "1.19.2");
+                assert_eq!(options.layout, SourceOutputLayout::Filetree);
+                assert_eq!(
+                    options.build.parallelism,
+                    Parallelism::Parallel { limit: 2 }
+                );
+            }
+            command => panic!("expected jar sources command, got {command:?}"),
         }
     }
 

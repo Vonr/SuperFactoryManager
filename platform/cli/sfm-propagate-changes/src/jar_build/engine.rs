@@ -9,6 +9,8 @@ use super::RunKind;
 use super::RunOptions;
 use super::RunTestAction;
 use super::RunTestOptions;
+use super::SourceOutputLayout;
+use super::SourceOutputOptions;
 pub(super) use super::artifact_audit_issue_kind::ArtifactAuditIssueKind;
 pub(super) use super::artifact_audit_report::ArtifactAuditReport;
 pub(super) use super::artifact_audit_severity::ArtifactAuditSeverity;
@@ -28,6 +30,7 @@ use crate::branch_targets::select_required_worktree_targets;
 use crate::cancellation::CancellationToken;
 use crate::colour::stable_color;
 use crate::paths::CACHE_DIR;
+use crate::terminal_output::stdout_line;
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use chrono::Local;
@@ -219,6 +222,50 @@ pub(crate) fn invoke_run_test(
     finish_target_summary(action_name, target_count, plans.len(), &failures, &reports)
 }
 
+#[tracing::instrument(
+    level = "info",
+    skip_all,
+    fields(
+        branch = %options.build.branch,
+        layout = %options.layout,
+        refresh = options.build.refresh,
+        explain_rebuild = options.build.explain_rebuild,
+        allow_local_artifact_cache = options.build.allow_local_artifact_cache,
+        require_portable_artifacts = options.build.require_portable_artifacts,
+        error_action = %options.build.error_action,
+        parallelism = %options.build.parallelism,
+    )
+)]
+pub(crate) fn invoke_source_outputs(
+    options: &SourceOutputOptions,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<()> {
+    if options.build.dry_run {
+        eyre::bail!("jar sources does not support --dry-run because it must materialize outputs");
+    }
+
+    cancellation_token.bail_if_cancelled()?;
+    let targets = resolve_build_targets(&options.build)?;
+    cancellation_token.bail_if_cancelled()?;
+    let target_count = targets.len();
+    let TargetExecutionSummary {
+        plans,
+        failures,
+        reports,
+    } = execute_source_output_targets(&options.build, targets, cancellation_token)?;
+    cancellation_token.bail_if_cancelled()?;
+
+    write_requested_plan_outputs(&plans, options.build.plan_json.as_deref())?;
+    write_source_outputs(&plans, options.layout)?;
+    finish_target_summary(
+        "jar sources",
+        target_count,
+        plans.len(),
+        &failures,
+        &reports,
+    )
+}
+
 fn execute_build_targets(
     options: &BuildOptions,
     targets: Vec<WorktreeTarget>,
@@ -285,6 +332,28 @@ fn execute_run_test_targets(
             )
             .entered();
             execute_run_test_target(options, test_options, target, cancellation_token)
+        },
+    )
+}
+
+fn execute_source_output_targets(
+    options: &BuildOptions,
+    targets: Vec<WorktreeTarget>,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<TargetExecutionSummary> {
+    execute_targets(
+        options,
+        targets,
+        "sfm_source_output_target",
+        cancellation_token,
+        |options, target, cancellation_token| {
+            let _target_span = tracing::info_span!(
+                "sfm_source_output_target",
+                branch = %target.branch,
+                worktree = %target.worktree_path.display(),
+            )
+            .entered();
+            execute_source_output_target(options, target, cancellation_token)
         },
     )
 }
@@ -582,6 +651,28 @@ fn execute_run_test_target(
     write_artifact_lockfile(&plan)?;
     cancellation_token.bail_if_cancelled()?;
     execute_junit_tests(&plan, options.dry_run, test_options, cancellation_token)?;
+    Ok(plan)
+}
+
+fn execute_source_output_target(
+    options: &BuildOptions,
+    target: &WorktreeTarget,
+    cancellation_token: &CancellationToken,
+) -> eyre::Result<BuildPlan> {
+    cancellation_token.bail_if_cancelled()?;
+    let plan = create_plan_for_target(options, target, cancellation_token)?;
+    cancellation_token.bail_if_cancelled()?;
+    write_last_plan_output(&plan)?;
+    print_plan_summary(&plan);
+    cancellation_token.bail_if_cancelled()?;
+    execute_build(
+        &plan,
+        options.explain_rebuild,
+        BuildTarget::SourceOutputs,
+        cancellation_token,
+    )?;
+    cancellation_token.bail_if_cancelled()?;
+    write_artifact_lockfile(&plan)?;
     Ok(plan)
 }
 
@@ -4219,6 +4310,7 @@ fn ensure_forge_gradle_execution_supported(plan: &BuildPlan) -> eyre::Result<()>
 enum BuildTarget {
     Jar,
     Run,
+    SourceOutputs,
 }
 
 #[expect(
@@ -4310,6 +4402,13 @@ fn execute_build(
             "Build node execute-forge-userdev: done in {} ms",
             started.elapsed().as_millis()
         );
+    }
+    if target == BuildTarget::SourceOutputs {
+        tracing::info!(
+            "Rust transformed source outputs prepared in {} ms",
+            total_started.elapsed().as_millis()
+        );
+        return Ok(());
     }
     let started = Instant::now();
     tracing::info!("Build node deobfuscate-mod-dependencies: start");
@@ -8543,8 +8642,10 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     let mappings_root = forge_root.join("mappings");
     let srg_to_official = mappings_root.join("srg_to_official.tsrg");
     let official_to_srg = mappings_root.join("official_to_srg.tsrg");
+    let official_sources = forge_root.join("sources").join("combined-official.jar");
     let output = forge_root.join("classes").join("dev-compile.jar");
     if output.is_file()
+        && official_sources.is_file()
         && srg_to_official.is_file()
         && official_to_srg.is_file()
         && !context.plan.refresh
@@ -8560,7 +8661,7 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         context.write_node_state(
             "execute-forge-userdev",
             &["Forge userdev", "MCPConfig joined outputs"],
-            &[output],
+            &[output.clone(), official_sources.clone()],
             "cached",
         )?;
         return Ok(());
@@ -8671,7 +8772,6 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     )?;
     context.bail_if_cancelled()?;
 
-    let official_sources = forge_root.join("sources").join("combined-official.jar");
     context.run_java_tool(
         "tool-fart",
         &[],
@@ -8794,7 +8894,7 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     context.write_node_state(
         "execute-forge-userdev",
         &["Forge userdev", "MCPConfig joined outputs"],
-        &[output],
+        &[output, official_sources],
         "complete",
     )
 }
@@ -8831,7 +8931,7 @@ fn execute_neoform_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     fs::create_dir_all(&nfrt_work)?;
     write_neoform_artifact_manifest(context, &artifact_manifest)?;
 
-    if game_jar.is_file() && !context.plan.refresh {
+    if game_jar.is_file() && game_sources.is_file() && !context.plan.refresh {
         tracing::info!(
             output = %game_jar.display(),
             "neoform_userdev cache hit"
@@ -8839,7 +8939,7 @@ fn execute_neoform_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         context.write_node_state(
             "execute-neoform-userdev",
             &["NeoForge userdev", "NeoForm Runtime"],
-            &[game_jar],
+            &[game_jar.clone(), game_sources.clone()],
             "complete",
         )?;
         return Ok(());
@@ -11158,6 +11258,108 @@ fn zip_name_to_path(root: &Path, name: &str) -> PathBuf {
     name.split('/')
         .filter(|part| !part.is_empty())
         .fold(root.to_path_buf(), |path, part| path.join(part))
+}
+
+fn write_source_outputs(plans: &[BuildPlan], layout: SourceOutputLayout) -> eyre::Result<()> {
+    for plan in plans {
+        let source_jar = transformed_source_output_jar(plan)?;
+        let output = match layout {
+            SourceOutputLayout::Jar => source_jar,
+            SourceOutputLayout::Filetree => materialize_source_output_filetree(plan, &source_jar)?,
+        };
+        stdout_line(output.display())?;
+    }
+    Ok(())
+}
+
+fn transformed_source_output_jar(plan: &BuildPlan) -> eyre::Result<PathBuf> {
+    let path = match plan.loader_toolchain.kind {
+        LoaderToolchainKind::NeoGradleUserdev => plan
+            .cache_dir
+            .join("neoform")
+            .join(plan.minecraft_version.as_str())
+            .join("classes")
+            .join("gameSourcesWithNeoForge.jar"),
+        LoaderToolchainKind::ForgeGradleForge | LoaderToolchainKind::ForgeGradleNeoForgeGroup => {
+            plan.cache_dir
+                .join("forge")
+                .join(plan.minecraft_version.as_str())
+                .join("sources")
+                .join("combined-official.jar")
+        }
+    };
+    if !path.is_file() {
+        eyre::bail!(
+            "Transformed source jar was not produced for {}: {}",
+            plan.branch_name,
+            path.display()
+        );
+    }
+    Ok(path)
+}
+
+fn materialize_source_output_filetree(
+    plan: &BuildPlan,
+    source_jar: &Path,
+) -> eyre::Result<PathBuf> {
+    let output = source_output_filetree_path(source_jar)?;
+    let source_hash = ContentHash::from_path(source_jar, ContentHashAlgorithm::Blake3)?;
+    let state_path = source_output_filetree_state_path(source_jar)?;
+    let current_state = fs::read_to_string(&state_path).unwrap_or_default();
+    if output.is_dir() && current_state.trim() == source_hash.to_string() {
+        return Ok(output);
+    }
+
+    reset_cache_directory(&plan.cache_dir, &output)?;
+    extract_zip_to_tree(source_jar, &output)?;
+    fs::write(&state_path, format!("{source_hash}\n"))
+        .wrap_err_with(|| format!("Failed to write {}", state_path.display()))?;
+    Ok(output)
+}
+
+fn source_output_filetree_path(source_jar: &Path) -> eyre::Result<PathBuf> {
+    let stem = source_jar
+        .file_stem()
+        .and_then(std::ffi::OsStr::to_str)
+        .ok_or_else(|| eyre::eyre!("Jar path has no file stem: {}", source_jar.display()))?;
+    Ok(source_jar.with_file_name(format!("{stem}.filetree")))
+}
+
+fn source_output_filetree_state_path(source_jar: &Path) -> eyre::Result<PathBuf> {
+    let stem = source_jar
+        .file_stem()
+        .and_then(std::ffi::OsStr::to_str)
+        .ok_or_else(|| eyre::eyre!("Jar path has no file stem: {}", source_jar.display()))?;
+    Ok(source_jar.with_file_name(format!("{stem}.filetree.input.blake3")))
+}
+
+fn extract_zip_to_tree(input: &Path, output: &Path) -> eyre::Result<()> {
+    let bytes = fs::read(input).wrap_err_with(|| format!("Failed to read {}", input.display()))?;
+    let mut archive = ZipArchive::new(Cursor::new(bytes))
+        .wrap_err_with(|| format!("Failed to open {}", input.display()))?;
+    for index in 0..archive.len() {
+        let mut entry = archive
+            .by_index(index)
+            .wrap_err_with(|| format!("Failed to read {} entry #{index}", input.display()))?;
+        let name = entry.name().replace('\\', "/");
+        if name.is_empty() || name.ends_with('/') {
+            continue;
+        }
+        let output_path = zip_name_to_path(output, &name);
+        if let Some(parent) = output_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let mut file = File::create(&output_path)
+            .wrap_err_with(|| format!("Failed to create {}", output_path.display()))?;
+        std::io::copy(&mut entry, &mut file).wrap_err_with(|| {
+            format!(
+                "Failed to extract {name} from {} to {}",
+                input.display(),
+                output_path.display()
+            )
+        })?;
+    }
+    Ok(())
 }
 
 fn zip_entry_has_extension(name: &str, extension: &str) -> bool {
