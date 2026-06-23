@@ -152,3 +152,23 @@ does the wither not aggro in our hea
 
 it has occurred to me that our tnt explosion resistence tests for cables may be killing the sheep
 headless test positioning different than in-person?
+
+...
+
+---
+
+Yes. For SFM’s supported range, barrier blocks are a good “invisible bedrock-like wall” for this purpose.
+
+Grounded in the local generated Java sources:
+
+- In 1.19.2, `Blocks.BARRIER` is registered with hardness `-1.0F` and explosion resistance `3600000.8F`, while bedrock is `3600000.0F`: [Blocks.java](D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft/build/sfm-toolchain/forge/1.19.2/sources/combined-official.filetree/net/minecraft/world/level/block/Blocks.java:505).
+- `BarrierBlock` renders as `RenderShape.INVISIBLE`, so it is not transparent glass, it is invisible: [BarrierBlock.java](D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft/build/sfm-toolchain/forge/1.19.2/sources/combined-official.filetree/net/minecraft/world/level/block/BarrierBlock.java:17).
+- It does not use `noCollission()` and does not override collision shape, so it inherits normal solid block collision. Primed TNT moves through `move(MoverType.SELF, delta)`, so barrier collision should stop TNT entities from crossing: [PrimedTnt.java](D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft/build/sfm-toolchain/forge/1.19.2/sources/combined-official.filetree/net/minecraft/world/entity/item/PrimedTnt.java:60).
+- TNT explodes with `Explosion.BlockInteraction.BREAK`: [PrimedTnt.java](D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft/build/sfm-toolchain/forge/1.19.2/sources/combined-official.filetree/net/minecraft/world/entity/item/PrimedTnt.java:82). Explosion block propagation subtracts block/fluid explosion resistance from ray power, so barrier’s huge resistance blocks explosion propagation effectively like bedrock: [Explosion.java](D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft/build/sfm-toolchain/forge/1.19.2/sources/combined-official.filetree/net/minecraft/world/level/Explosion.java:150).
+- Entity damage exposure is also raycast using `ClipContext.Block.COLLIDER`; a complete barrier wall blocks those exposure rays, reducing/negating blast damage behind it: [Explosion.java](D:/Repos/Minecraft/SFM/repos2/1.19.2/platform/minecraft/build/sfm-toolchain/forge/1.19.2/sources/combined-official.filetree/net/minecraft/world/level/Explosion.java:114).
+
+I also used `teamy-mft query --profile sfm` to find the generated sources across versions and spot-checked forward through 1.21.1. The mechanics remain consistent: barrier keeps invisible rendering, bedrock-scale blast resistance, solid collision, explosion exposure raycasts use collider shapes, and primed TNT uses normal entity movement. One notable newer-version drift: by 1.21.1 `BarrierBlock` is waterloggable, but its blast/collision role is still the same.
+
+---
+
+So, we should probably encase our cable blast resistance tests in barrier blocks so we may observe without it interfering, same with our wither tests we can use barriers so we can observe what happens inside.
