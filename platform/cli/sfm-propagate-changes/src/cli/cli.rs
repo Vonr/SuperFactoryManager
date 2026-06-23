@@ -70,6 +70,8 @@ pub enum Command {
     Run(super::run::RunArgs),
     /// Repo root related commands
     RepoRoot(super::repo_root::RepoRootArgs),
+    /// Source code audit commands
+    Source(super::source::SourceArgs),
 }
 
 impl Command {
@@ -91,6 +93,7 @@ impl Command {
             Command::Jar(args) => args.invoke(cancellation_token),
             Command::Run(args) => args.invoke(cancellation_token),
             Command::RepoRoot(args) => args.invoke(),
+            Command::Source(args) => args.invoke(),
         }
     }
 }
@@ -105,11 +108,13 @@ mod tests {
     use crate::cli::run::RunCommand;
     use crate::cli::run::RunGameTestServerCliCommand;
     use crate::cli::run::RunTestCliCommand;
+    use crate::cli::source::SourceCommand;
     use crate::jar_build::BuildMode;
     use crate::jar_build::ClientPuppetKeepOpen;
     use crate::jar_build::ErrorAction;
     use crate::jar_build::Parallelism;
     use crate::jar_build::SourceOutputLayout;
+    use crate::source_audit::SourceLanguage;
     use facet::Facet;
     use figue as args;
     use tracing::level_filters::LevelFilter;
@@ -181,6 +186,49 @@ mod tests {
             "continue",
             "--dry-run",
         ]);
+    }
+
+    #[test]
+    fn parses_source_audit_cli() {
+        let cli = figue::from_slice::<Cli>(&["source", "audit"])
+            .into_result()
+            .expect("source audit should parse")
+            .get_silent();
+        let Command::Source(args) = cli.command else {
+            panic!("expected source command");
+        };
+        let SourceCommand::Audit(args) = args.command;
+        assert_eq!(args.branch.as_ref(), "*");
+        assert!(args.language.is_empty());
+        assert!(args.lang.is_empty());
+        assert_eq!(args.max_lines.0, 1000);
+    }
+
+    #[test]
+    fn parses_source_audit_filters() {
+        let cli = figue::from_slice::<Cli>(&[
+            "source",
+            "audit",
+            "--branch",
+            ">=1.19.2",
+            "--language",
+            "rust",
+            "--lang",
+            "java",
+            "--max-lines",
+            "1200",
+        ])
+        .into_result()
+        .expect("source audit filters should parse")
+        .get_silent();
+        let Command::Source(args) = cli.command else {
+            panic!("expected source command");
+        };
+        let SourceCommand::Audit(args) = args.command;
+        assert_eq!(args.branch.as_ref(), ">=1.19.2");
+        assert_eq!(args.language, vec![SourceLanguage::Rust]);
+        assert_eq!(args.lang, vec![SourceLanguage::Java]);
+        assert_eq!(args.max_lines.0, 1200);
     }
 
     #[test]

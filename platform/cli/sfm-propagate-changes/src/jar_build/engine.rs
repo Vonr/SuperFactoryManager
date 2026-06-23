@@ -9,6 +9,9 @@ use super::RunKind;
 use super::RunOptions;
 use super::RunTestAction;
 use super::RunTestOptions;
+use super::SourceIdentifierMappingPath;
+use super::SourceJarPath;
+use super::SourceOutputCacheRoot;
 use super::SourceOutputLayout;
 use super::SourceOutputOptions;
 pub(super) use super::artifact_audit_issue_kind::ArtifactAuditIssueKind;
@@ -8793,7 +8796,11 @@ fn execute_forge_userdev(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         ],
         &forge_root.join("remapSources"),
     )?;
-    remap_source_jar_identifiers(&official_sources, &srg_to_official, &deobfuscated_sources)?;
+    super::source_identifier_remapper::remap_source_jar_identifiers(
+        &SourceJarPath::new(official_sources.clone()),
+        &SourceIdentifierMappingPath::new(srg_to_official.clone()),
+        &SourceJarPath::new(deobfuscated_sources.clone()),
+    )?;
 
     let binpatches = forge_root.join("binpatch").join("joined.lzma");
     extract_zip_entry_to_path(&userdev.cache_path, "joined.lzma", &binpatches)?;
@@ -11271,15 +11278,19 @@ fn write_source_outputs(plans: &[BuildPlan], layout: SourceOutputLayout) -> eyre
     for plan in plans {
         let source_jar = transformed_source_output_jar(plan)?;
         let output = match layout {
-            SourceOutputLayout::Jar => source_jar,
-            SourceOutputLayout::Filetree => materialize_source_output_filetree(plan, &source_jar)?,
+            SourceOutputLayout::Jar => source_jar.into_path_buf(),
+            SourceOutputLayout::Filetree => super::source_output_filetree::materialize(
+                &SourceOutputCacheRoot::new(plan.cache_dir.clone()),
+                &source_jar,
+            )?
+            .into_path_buf(),
         };
         stdout_line(output.display())?;
     }
     Ok(())
 }
 
-fn transformed_source_output_jar(plan: &BuildPlan) -> eyre::Result<PathBuf> {
+fn transformed_source_output_jar(plan: &BuildPlan) -> eyre::Result<SourceJarPath> {
     let path = match plan.loader_toolchain.kind {
         LoaderToolchainKind::NeoGradleUserdev => plan
             .cache_dir
@@ -11302,209 +11313,7 @@ fn transformed_source_output_jar(plan: &BuildPlan) -> eyre::Result<PathBuf> {
             path.display()
         );
     }
-    Ok(path)
-}
-
-fn materialize_source_output_filetree(
-    plan: &BuildPlan,
-    source_jar: &Path,
-) -> eyre::Result<PathBuf> {
-    let output = source_output_filetree_path(source_jar)?;
-    let source_hash = ContentHash::from_path(source_jar, ContentHashAlgorithm::Blake3)?;
-    let state_path = source_output_filetree_state_path(source_jar)?;
-    let current_state = fs::read_to_string(&state_path).unwrap_or_default();
-    if output.is_dir() && current_state.trim() == source_hash.to_string() {
-        return Ok(output);
-    }
-
-    reset_cache_directory(&plan.cache_dir, &output)?;
-    extract_zip_to_tree(source_jar, &output)?;
-    fs::write(&state_path, format!("{source_hash}\n"))
-        .wrap_err_with(|| format!("Failed to write {}", state_path.display()))?;
-    Ok(output)
-}
-
-fn source_output_filetree_path(source_jar: &Path) -> eyre::Result<PathBuf> {
-    let stem = source_jar
-        .file_stem()
-        .and_then(std::ffi::OsStr::to_str)
-        .ok_or_else(|| eyre::eyre!("Jar path has no file stem: {}", source_jar.display()))?;
-    Ok(source_jar.with_file_name(format!("{stem}.filetree")))
-}
-
-fn source_output_filetree_state_path(source_jar: &Path) -> eyre::Result<PathBuf> {
-    let stem = source_jar
-        .file_stem()
-        .and_then(std::ffi::OsStr::to_str)
-        .ok_or_else(|| eyre::eyre!("Jar path has no file stem: {}", source_jar.display()))?;
-    Ok(source_jar.with_file_name(format!("{stem}.filetree.input.blake3")))
-}
-
-fn extract_zip_to_tree(input: &Path, output: &Path) -> eyre::Result<()> {
-    let bytes = fs::read(input).wrap_err_with(|| format!("Failed to read {}", input.display()))?;
-    let mut archive = ZipArchive::new(Cursor::new(bytes))
-        .wrap_err_with(|| format!("Failed to open {}", input.display()))?;
-    for index in 0..archive.len() {
-        let mut entry = archive
-            .by_index(index)
-            .wrap_err_with(|| format!("Failed to read {} entry #{index}", input.display()))?;
-        let name = entry.name().replace('\\', "/");
-        if name.is_empty() || name.ends_with('/') {
-            continue;
-        }
-        let output_path = zip_name_to_path(output, &name);
-        if let Some(parent) = output_path.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        let mut file = File::create(&output_path)
-            .wrap_err_with(|| format!("Failed to create {}", output_path.display()))?;
-        std::io::copy(&mut entry, &mut file).wrap_err_with(|| {
-            format!(
-                "Failed to extract {name} from {} to {}",
-                input.display(),
-                output_path.display()
-            )
-        })?;
-    }
-    Ok(())
-}
-
-fn remap_source_jar_identifiers(input: &Path, mapping: &Path, output: &Path) -> eyre::Result<()> {
-    let replacements = read_source_identifier_replacements(mapping)?;
-    let input_bytes =
-        fs::read(input).wrap_err_with(|| format!("Failed to read {}", input.display()))?;
-    let mut archive = ZipArchive::new(Cursor::new(input_bytes))
-        .wrap_err_with(|| format!("Failed to open {}", input.display()))?;
-    let temporary_output = unique_sibling_path(output, "tmp")?;
-    if let Some(parent) = temporary_output.parent() {
-        fs::create_dir_all(parent)
-            .wrap_err_with(|| format!("Failed to create {}", parent.display()))?;
-    }
-
-    let temporary_file = File::create(&temporary_output)
-        .wrap_err_with(|| format!("Failed to create {}", temporary_output.display()))?;
-    let mut writer = ZipWriter::new(temporary_file);
-    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
-
-    for index in 0..archive.len() {
-        let mut entry = archive
-            .by_index(index)
-            .wrap_err_with(|| format!("Failed to read {} entry #{index}", input.display()))?;
-        let name = entry.name().replace('\\', "/");
-        if name.is_empty() {
-            continue;
-        }
-        if name.ends_with('/') {
-            writer.add_directory(name, options)?;
-            continue;
-        }
-        writer.start_file(&name, options)?;
-        if zip_entry_has_extension(&name, "java") {
-            let mut source = String::new();
-            entry.read_to_string(&mut source).wrap_err_with(|| {
-                format!("Failed to read Java source {name} from {}", input.display())
-            })?;
-            let remapped = replace_java_identifiers(&source, &replacements);
-            writer.write_all(remapped.as_bytes())?;
-        } else {
-            std::io::copy(&mut entry, &mut writer)?;
-        }
-    }
-
-    writer.finish()?;
-    replace_artifact_file(&temporary_output, output)?;
-    Ok(())
-}
-
-fn read_source_identifier_replacements(mapping: &Path) -> eyre::Result<BTreeMap<String, String>> {
-    let content = fs::read_to_string(mapping)
-        .wrap_err_with(|| format!("Failed to read {}", mapping.display()))?;
-    let mut replacements = BTreeMap::new();
-    for line in content.lines() {
-        let tab_count = line.chars().take_while(|ch| *ch == '\t').count();
-        if tab_count == 0 {
-            continue;
-        }
-        let parts = line.split_whitespace().collect::<Vec<_>>();
-        let replacement = match tab_count {
-            1 if parts.len() >= 2 => {
-                let source = parts[0];
-                let target = parts[parts.len() - 1];
-                Some((source, target))
-            }
-            2 if parts.len() >= 3 => Some((parts[1], parts[2])),
-            _ => None,
-        };
-        let Some((source, target)) = replacement else {
-            continue;
-        };
-        if source == target
-            || !looks_like_generated_minecraft_identifier(source)
-            || !is_java_identifier(target)
-        {
-            continue;
-        }
-        match replacements.get(source) {
-            Some(existing) if existing != target => {
-                replacements.remove(source);
-            }
-            Some(_) => {}
-            None => {
-                replacements.insert(source.to_string(), target.to_string());
-            }
-        }
-    }
-    Ok(replacements)
-}
-
-fn looks_like_generated_minecraft_identifier(value: &str) -> bool {
-    (value.starts_with("m_") || value.starts_with("f_") || value.starts_with("p_"))
-        && value.ends_with('_')
-        && is_java_identifier(value)
-}
-
-fn is_java_identifier(value: &str) -> bool {
-    let mut chars = value.chars();
-    let Some(first) = chars.next() else {
-        return false;
-    };
-    (first == '_' || first == '$' || first.is_ascii_alphabetic())
-        && chars.all(|ch| ch == '_' || ch == '$' || ch.is_ascii_alphanumeric())
-}
-
-fn replace_java_identifiers(source: &str, replacements: &BTreeMap<String, String>) -> String {
-    let mut output = String::with_capacity(source.len());
-    let mut identifier_start = None;
-    for (index, ch) in source.char_indices() {
-        if is_java_identifier_char(ch) {
-            identifier_start.get_or_insert(index);
-            continue;
-        }
-        if let Some(start) = identifier_start.take() {
-            push_replaced_java_identifier(&mut output, &source[start..index], replacements);
-        }
-        output.push(ch);
-    }
-    if let Some(start) = identifier_start {
-        push_replaced_java_identifier(&mut output, &source[start..], replacements);
-    }
-    output
-}
-
-fn is_java_identifier_char(ch: char) -> bool {
-    ch == '_' || ch == '$' || ch.is_ascii_alphanumeric()
-}
-
-fn push_replaced_java_identifier(
-    output: &mut String,
-    identifier: &str,
-    replacements: &BTreeMap<String, String>,
-) {
-    if let Some(replacement) = replacements.get(identifier) {
-        output.push_str(replacement);
-    } else {
-        output.push_str(identifier);
-    }
+    Ok(SourceJarPath::new(path))
 }
 
 fn zip_entry_has_extension(name: &str, extension: &str) -> bool {
