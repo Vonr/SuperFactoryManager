@@ -67,6 +67,7 @@ impl RunGameTestServerArgs {
             RunOptions {
                 game_test_filter: filter,
                 game_test_bisect,
+                ..RunOptions::default()
             },
             cancellation_token,
         )

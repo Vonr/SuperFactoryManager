@@ -4444,13 +4444,22 @@ impl RunKind {
         }
     }
 
-    const fn launch_timeout(self) -> Option<Duration> {
+    fn launch_timeout(self, run_options: &RunOptions) -> Option<Duration> {
         match self {
             Self::ClientSmoke => Some(Duration::from_mins(2)),
-            Self::ClientPuppet => Some(Duration::from_mins(15)),
+            Self::ClientPuppet => client_puppet_launch_timeout(run_options),
             _ => None,
         }
     }
+}
+
+fn client_puppet_launch_timeout(run_options: &RunOptions) -> Option<Duration> {
+    let keep_open_seconds = run_options.client_puppet_keep_open.countdown_seconds()?;
+    Some(
+        Duration::from_mins(15)
+            .checked_add(Duration::from_secs(keep_open_seconds))
+            .unwrap_or(Duration::MAX),
+    )
 }
 
 const fn run_max_launch_attempts(kind: RunKind) -> usize {
@@ -4886,11 +4895,9 @@ fn execute_run(
             "sfm.clientRun.mode".to_string(),
             automation_mode.to_string(),
         );
-        properties.insert(
-            "sfm.clientRun.keepOpenSeconds".to_string(),
-            "25".to_string(),
-        );
     }
+    apply_client_puppet_keep_open_property(&mut properties, kind, run_options);
+    let launch_timeout = kind.launch_timeout(run_options);
 
     let mut jvm_args = properties
         .into_iter()
@@ -5015,7 +5022,7 @@ fn execute_run(
             &working_dir,
             &env,
             &launch_log,
-            kind.launch_timeout(),
+            launch_timeout,
         )
         .wrap_err_with(|| {
             format!(
@@ -5066,7 +5073,7 @@ fn execute_run(
         eyre::bail!(
             "{} timed out after {} seconds. See {}",
             kind.command_name(),
-            kind.launch_timeout().map_or(0, |timeout| timeout.as_secs()),
+            launch_timeout.map_or(0, |timeout| timeout.as_secs()),
             launch_log.display()
         );
     }
@@ -6311,6 +6318,20 @@ fn apply_game_test_filter_property(
     properties.insert("sfm.gametestSelection".to_string(), selection.to_string());
 }
 
+fn apply_client_puppet_keep_open_property(
+    properties: &mut BTreeMap<String, String>,
+    kind: RunKind,
+    run_options: &RunOptions,
+) {
+    if !matches!(kind, RunKind::ClientPuppet) {
+        return;
+    }
+    properties.insert(
+        "sfm.clientRun.keepOpenSeconds".to_string(),
+        run_options.client_puppet_keep_open.property_seconds(),
+    );
+}
+
 #[expect(
     clippy::too_many_arguments,
     reason = "The attempt runner carries explicit bisect context for clear trace/log labels."
@@ -6330,6 +6351,7 @@ fn run_game_test_bisect_attempt(
     let attempt_options = RunOptions {
         game_test_filter: selection.map(str::to_string),
         game_test_bisect: base_run_options.game_test_bisect.clone(),
+        ..base_run_options.clone()
     };
     tracing::info!(
         "Game-test bisect run #{run_number}: {label}; selected {}.",
@@ -6494,19 +6516,26 @@ fn game_test_candidate_complement(candidates: &[String], subset: &[String]) -> V
 
 fn extract_sfm_game_test_names(output: &str) -> Vec<String> {
     let mut names = Vec::new();
+    let mut selected_names = Vec::new();
     for line in output.lines() {
         let content = strip_minecraft_log_prefix(line);
-        for marker in [
-            "Discovered SFM game test: ",
-            "Generated SFM game test: ",
-            "Selected SFM game test: ",
-        ] {
+        for marker in ["Discovered SFM game test: ", "Generated SFM game test: "] {
             if let Some(name) = content.split_once(marker).map(|(_, name)| name.trim()) {
                 push_unique_string(&mut names, normalize_sfm_game_test_name(name));
             }
         }
+        if let Some(name) = content
+            .split_once("Selected SFM game test: ")
+            .map(|(_, name)| name.trim())
+        {
+            push_unique_string(&mut selected_names, normalize_sfm_game_test_name(name));
+        }
     }
-    names
+    if selected_names.is_empty() {
+        names
+    } else {
+        selected_names
+    }
 }
 
 fn extract_failed_gametest_names(output: &str) -> Vec<String> {

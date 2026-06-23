@@ -38,6 +38,7 @@ pub use error_action::ErrorAction;
 pub use parallelism::Parallelism;
 pub use run_command::RunCommand;
 pub use run_kind::RunKind;
+pub use run_options::ClientPuppetKeepOpen;
 pub use run_options::GameTestBisectOptions;
 pub use run_options::RunOptions;
 pub use run_test_command::RunTestCommand;

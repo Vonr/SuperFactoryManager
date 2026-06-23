@@ -2,6 +2,7 @@ use crate::cancellation::CancellationToken;
 use crate::cli::jar::JarBuildOptionsArgs;
 use crate::jar_build::BuildMode;
 use crate::jar_build::BuildOptions;
+use crate::jar_build::ClientPuppetKeepOpen;
 use crate::jar_build::RunCommand;
 use crate::jar_build::RunKind;
 use crate::jar_build::RunOptions;
@@ -18,6 +19,10 @@ pub struct RunClientPuppetArgs {
     /// Run only SFM game tests matching this selector. Supports unqualified names, `*`, `?`, and comma-separated selectors.
     #[facet(default, args::named)]
     pub filter: Option<String>,
+
+    /// Keep the client open after tests pass. Bare `--keep-open` keeps it open forever; a value accepts humantime durations like `30s` or `5m`.
+    #[facet(rename = "keep-open", default, args::named)]
+    pub keep_open: Option<Option<String>>,
 }
 
 impl RunClientPuppetArgs {
@@ -30,12 +35,14 @@ impl RunClientPuppetArgs {
     /// Returns an error if planning, building, launching, or game-test validation fails.
     pub fn invoke(self, cancellation_token: CancellationToken) -> eyre::Result<()> {
         let filter = self.filter.clone();
+        let client_puppet_keep_open = ClientPuppetKeepOpen::from_cli(self.keep_open.clone())?;
         RunCommand::with_run_options(
             self.into_options(BuildMode::Build)?,
             RunKind::ClientPuppet,
             RunOptions {
                 game_test_filter: filter,
                 game_test_bisect: None,
+                client_puppet_keep_open,
             },
             cancellation_token,
         )

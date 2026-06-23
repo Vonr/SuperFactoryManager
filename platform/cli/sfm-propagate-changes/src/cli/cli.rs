@@ -106,6 +106,7 @@ mod tests {
     use crate::cli::run::RunGameTestServerCliCommand;
     use crate::cli::run::RunTestCliCommand;
     use crate::jar_build::BuildMode;
+    use crate::jar_build::ClientPuppetKeepOpen;
     use crate::jar_build::ErrorAction;
     use crate::jar_build::Parallelism;
     use facet::Facet;
@@ -247,6 +248,70 @@ mod tests {
                 assert_eq!(
                     args.filter.as_deref(),
                     Some("sfm:wither_aggro_*,sfm:tough_cable_*")
+                );
+            }
+            command => panic!("expected client-puppet run command, got {command:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_client_puppet_keep_open_options() {
+        let bare = figue::from_slice::<Cli>(&["run", "client-puppet", "--keep-open"])
+            .into_result()
+            .expect("bare keep-open should parse")
+            .get_silent();
+        match bare.command {
+            Command::Run(crate::cli::run::RunArgs {
+                command: RunCommand::ClientPuppet(args),
+            }) => {
+                assert_eq!(args.keep_open, Some(None));
+                assert_eq!(
+                    ClientPuppetKeepOpen::from_cli(args.keep_open)
+                        .expect("bare keep-open should convert"),
+                    ClientPuppetKeepOpen::Forever
+                );
+            }
+            command => panic!("expected client-puppet run command, got {command:?}"),
+        }
+
+        let valued = figue::from_slice::<Cli>(&[
+            "run",
+            "client-puppet",
+            "--keep-open",
+            "5m",
+            "--filter",
+            "wither_*",
+        ])
+        .into_result()
+        .expect("valued keep-open should parse")
+        .get_silent();
+        match valued.command {
+            Command::Run(crate::cli::run::RunArgs {
+                command: RunCommand::ClientPuppet(args),
+            }) => {
+                assert_eq!(args.keep_open, Some(Some("5m".to_string())));
+                assert_eq!(
+                    ClientPuppetKeepOpen::from_cli(args.keep_open)
+                        .expect("valued keep-open should convert"),
+                    ClientPuppetKeepOpen::Countdown { seconds: 300 }
+                );
+            }
+            command => panic!("expected client-puppet run command, got {command:?}"),
+        }
+
+        let numeric_seconds =
+            figue::from_slice::<Cli>(&["run", "client-puppet", "--keep-open", "90"])
+                .into_result()
+                .expect("numeric keep-open seconds should parse")
+                .get_silent();
+        match numeric_seconds.command {
+            Command::Run(crate::cli::run::RunArgs {
+                command: RunCommand::ClientPuppet(args),
+            }) => {
+                assert_eq!(
+                    ClientPuppetKeepOpen::from_cli(args.keep_open)
+                        .expect("numeric keep-open seconds should convert"),
+                    ClientPuppetKeepOpen::Countdown { seconds: 90 }
                 );
             }
             command => panic!("expected client-puppet run command, got {command:?}"),

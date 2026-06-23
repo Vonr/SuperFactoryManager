@@ -37,6 +37,7 @@ use super::RunOptions;
 use super::SourceBuildProvenance;
 use super::SourceBuildSystem;
 use super::TargetJarCompareReport;
+use super::apply_client_puppet_keep_open_property;
 use super::apply_game_test_filter_property;
 use super::artifact_lock_path;
 use super::artifact_portability_audit;
@@ -82,6 +83,7 @@ use crate::branch_targets::MinecraftVersion;
 use crate::branch_targets::WorktreePath;
 use crate::branch_targets::WorktreeTarget;
 use crate::cancellation::CancellationToken;
+use crate::jar_build::ClientPuppetKeepOpen;
 use crate::jar_build::ErrorAction;
 use crate::jar_build::Parallelism;
 use crate::jar_build::hash::ContentHash;
@@ -235,6 +237,7 @@ fn game_test_run_filter_sets_selection_property_for_game_test_runners() {
     let run_options = RunOptions {
         game_test_filter: Some(" wither_aggro_* ".to_string()),
         game_test_bisect: None,
+        ..RunOptions::default()
     };
     let mut server_properties = BTreeMap::new();
     apply_game_test_filter_property(
@@ -269,9 +272,53 @@ fn game_test_run_filter_sets_selection_property_for_game_test_runners() {
         &RunOptions {
             game_test_filter: Some("  ".to_string()),
             game_test_bisect: None,
+            ..RunOptions::default()
         },
     );
     assert!(!blank_properties.contains_key("sfm.gametestSelection"));
+}
+
+#[test]
+fn client_puppet_keep_open_sets_seconds_property() {
+    let mut default_properties = BTreeMap::new();
+    apply_client_puppet_keep_open_property(
+        &mut default_properties,
+        RunKind::ClientPuppet,
+        &RunOptions::default(),
+    );
+    assert_eq!(
+        default_properties
+            .get("sfm.clientRun.keepOpenSeconds")
+            .map(String::as_str),
+        Some("25")
+    );
+
+    let mut forever_properties = BTreeMap::new();
+    apply_client_puppet_keep_open_property(
+        &mut forever_properties,
+        RunKind::ClientPuppet,
+        &RunOptions {
+            client_puppet_keep_open: ClientPuppetKeepOpen::Forever,
+            ..RunOptions::default()
+        },
+    );
+    assert_eq!(
+        forever_properties
+            .get("sfm.clientRun.keepOpenSeconds")
+            .map(String::as_str),
+        Some("-1")
+    );
+
+    let mut client_properties = BTreeMap::new();
+    apply_client_puppet_keep_open_property(
+        &mut client_properties,
+        RunKind::Client,
+        &RunOptions {
+            client_puppet_keep_open: ClientPuppetKeepOpen::Countdown { seconds: 300 },
+            ..RunOptions::default()
+        },
+    );
+    assert!(!client_properties.contains_key("sfm.clientRun.keepOpenSeconds"));
 }
 
 #[test]
@@ -301,7 +348,27 @@ fn game_test_bisect_partitions_candidates_evenly() {
 
 #[test]
 fn game_test_log_parsers_extract_selected_and_failed_names() {
-    let output = "\
+    let unfiltered_output = "\
+[12:00:00] [Server thread/INFO] [ca.teamdman.sfm/SFM]: Discovered SFM game test: move_1_stack
+[12:00:00] [Server thread/INFO] [ca.teamdman.sfm/SFM]: Generated SFM game test: wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall
+[12:00:01] [Server thread/INFO] [minecraft/GameTestServer]: 1 required tests failed :(
+[12:00:01] [Server thread/INFO] [minecraft/GameTestServer]: - wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall
+[12:00:01] [Server thread/INFO] [minecraft/GameTestServer]: ====================================
+";
+
+    assert_eq!(
+        extract_sfm_game_test_names(unfiltered_output),
+        vec![
+            "move_1_stack".to_string(),
+            "wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall".to_string()
+        ]
+    );
+    assert_eq!(
+        extract_failed_gametest_names(unfiltered_output),
+        vec!["wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall".to_string()]
+    );
+
+    let filtered_output = "\
 [12:00:00] [Server thread/INFO] [ca.teamdman.sfm/SFM]: Discovered SFM game test: move_1_stack
 [12:00:00] [Server thread/INFO] [ca.teamdman.sfm/SFM]: Generated SFM game test: wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall
 [12:00:00] [Server thread/INFO] [ca.teamdman.sfm/SFM]: Selected SFM game test: sfm:wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall
@@ -311,14 +378,7 @@ fn game_test_log_parsers_extract_selected_and_failed_names() {
 ";
 
     assert_eq!(
-        extract_sfm_game_test_names(output),
-        vec![
-            "move_1_stack".to_string(),
-            "wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall".to_string()
-        ]
-    );
-    assert_eq!(
-        extract_failed_gametest_names(output),
+        extract_sfm_game_test_names(filtered_output),
         vec!["wither_aggro_does_not_break_tough_cable_facaded_as_bedrock_wall".to_string()]
     );
 }
