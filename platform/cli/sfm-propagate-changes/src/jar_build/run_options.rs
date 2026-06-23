@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct RunOptions {
     pub game_test_filter: Option<String>,
     pub game_test_bisect: Option<GameTestBisectOptions>,
@@ -11,16 +11,6 @@ pub struct RunOptions {
 pub struct GameTestBisectOptions {
     pub target: String,
     pub max_runs: Option<usize>,
-}
-
-impl Default for RunOptions {
-    fn default() -> Self {
-        Self {
-            game_test_filter: None,
-            game_test_bisect: None,
-            client_puppet_keep_open: ClientPuppetKeepOpen::default(),
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
