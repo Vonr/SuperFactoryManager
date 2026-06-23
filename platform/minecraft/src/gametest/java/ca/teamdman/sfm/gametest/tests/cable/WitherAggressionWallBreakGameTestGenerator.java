@@ -44,15 +44,15 @@ public class WitherAggressionWallBreakGameTestGenerator extends SFMGameTestGener
 
     private static final int TEST_WALL_WIDTH = 3;
 
-    private static final int TEST_WALL_HEIGHT = 4;
-
-    private static final int TEST_WALL_BOTTOM_Y_OFFSET = 1;
-
     private static final int SHEEP_PEN_SIZE = 3;
 
     private static final int SHEEP_PEN_FLOOR_Y = BOX_MIN_Y;
 
-    private static final int SHEEP_PEN_FENCE_Y = BOX_MIN_Y + 1;
+    private static final int SHARED_CHAMBER_CEILING_Y = BOX_MIN_Y + BOX_SIZE_Y - 1;
+
+    private static final int TEST_WALL_BOTTOM_Y = SHEEP_PEN_FLOOR_Y + 1;
+
+    private static final int TEST_WALL_TOP_Y = SHARED_CHAMBER_CEILING_Y - 1;
 
     private static final List<Scenario> SCENARIOS = List.of(
             new Scenario(
@@ -245,27 +245,30 @@ public class WitherAggressionWallBreakGameTestGenerator extends SFMGameTestGener
             int penMinZ = getSheepPenMinZ();
             int penMaxZ = getSheepPenMaxZ();
 
-            for (int x = penMinX; x <= penMaxX; x++) {
+            int chamberMinX = penMinX - 1;
+            int chamberMaxX = penMaxX + 1;
+
+            for (int x = chamberMinX; x <= chamberMaxX; x++) {
                 for (int z = penMinZ; z <= penMaxZ; z++) {
                     helper.setBlock(new BlockPos(x, SHEEP_PEN_FLOOR_Y, z), Blocks.BEDROCK.defaultBlockState());
+                    helper.setBlock(new BlockPos(x, SHARED_CHAMBER_CEILING_Y, z), Blocks.BEDROCK.defaultBlockState());
                 }
             }
 
-            for (int x = penMinX; x <= penMaxX; x++) {
+            for (int y = SHEEP_PEN_FLOOR_Y + 1; y <= SHARED_CHAMBER_CEILING_Y; y++) {
                 for (int z = penMinZ; z <= penMaxZ; z++) {
-                    boolean isFenceEdge = x == penMinX || x == penMaxX || z == penMinZ || z == penMaxZ;
-                    if (isFenceEdge) {
-                        helper.setBlock(new BlockPos(x, SHEEP_PEN_FENCE_Y, z), Blocks.OAK_FENCE.defaultBlockState());
-                    }
+                    helper.setBlock(new BlockPos(chamberMinX, y, z), Blocks.BEDROCK.defaultBlockState());
+                    helper.setBlock(new BlockPos(chamberMaxX, y, z), Blocks.BEDROCK.defaultBlockState());
+                }
+                for (int x = chamberMinX; x <= chamberMaxX; x++) {
+                    helper.setBlock(new BlockPos(x, y, penMinZ), Blocks.BEDROCK.defaultBlockState());
                 }
             }
 
             int wallCenterX = getBoxCenterX();
-            int wallYMin = BOX_MIN_Y + TEST_WALL_BOTTOM_Y_OFFSET;
-            int wallYMax = wallYMin + TEST_WALL_HEIGHT - 1;
             int wallHalfWidth = TEST_WALL_WIDTH / 2;
 
-            for (int y = wallYMin; y <= wallYMax; y++) {
+            for (int y = TEST_WALL_BOTTOM_Y; y <= TEST_WALL_TOP_Y; y++) {
                 for (int x = wallCenterX - wallHalfWidth; x <= wallCenterX + wallHalfWidth; x++) {
                     BlockPos localWallPos = switch (TEST_WALL_SIDE) {
                         case NORTH -> new BlockPos(x, y, BOX_MIN_Z);
