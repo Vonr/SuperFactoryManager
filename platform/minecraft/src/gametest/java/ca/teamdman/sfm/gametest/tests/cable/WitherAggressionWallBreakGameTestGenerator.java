@@ -54,6 +54,8 @@ public class WitherAggressionWallBreakGameTestGenerator extends SFMGameTestGener
 
     private static final int TEST_WALL_TOP_Y = SHARED_CHAMBER_CEILING_Y - 1;
 
+    private static final Block CONTAINMENT_BLOCK = Blocks.BARRIER;
+
     private static final List<Scenario> SCENARIOS = List.of(
             new Scenario(
                     "wither_aggro_breaks_tough_cable_facaded_as_obsidian_wall",
@@ -234,7 +236,7 @@ public class WitherAggressionWallBreakGameTestGenerator extends SFMGameTestGener
                                              || z == BOX_MIN_Z
                                              || z == getBoxMaxZ();
                         if (isBoundary) {
-                            helper.setBlock(new BlockPos(x, y, z), Blocks.BEDROCK.defaultBlockState());
+                            helper.setBlock(new BlockPos(x, y, z), CONTAINMENT_BLOCK.defaultBlockState());
                         }
                     }
                 }
@@ -250,18 +252,18 @@ public class WitherAggressionWallBreakGameTestGenerator extends SFMGameTestGener
 
             for (int x = chamberMinX; x <= chamberMaxX; x++) {
                 for (int z = penMinZ; z <= penMaxZ; z++) {
-                    helper.setBlock(new BlockPos(x, SHEEP_PEN_FLOOR_Y, z), Blocks.BEDROCK.defaultBlockState());
-                    helper.setBlock(new BlockPos(x, SHARED_CHAMBER_CEILING_Y, z), Blocks.BEDROCK.defaultBlockState());
+                    helper.setBlock(new BlockPos(x, SHEEP_PEN_FLOOR_Y, z), CONTAINMENT_BLOCK.defaultBlockState());
+                    helper.setBlock(new BlockPos(x, SHARED_CHAMBER_CEILING_Y, z), CONTAINMENT_BLOCK.defaultBlockState());
                 }
             }
 
             for (int y = SHEEP_PEN_FLOOR_Y + 1; y <= SHARED_CHAMBER_CEILING_Y; y++) {
                 for (int z = penMinZ; z <= penMaxZ; z++) {
-                    helper.setBlock(new BlockPos(chamberMinX, y, z), Blocks.BEDROCK.defaultBlockState());
-                    helper.setBlock(new BlockPos(chamberMaxX, y, z), Blocks.BEDROCK.defaultBlockState());
+                    helper.setBlock(new BlockPos(chamberMinX, y, z), CONTAINMENT_BLOCK.defaultBlockState());
+                    helper.setBlock(new BlockPos(chamberMaxX, y, z), CONTAINMENT_BLOCK.defaultBlockState());
                 }
                 for (int x = chamberMinX; x <= chamberMaxX; x++) {
-                    helper.setBlock(new BlockPos(x, y, penMinZ), Blocks.BEDROCK.defaultBlockState());
+                    helper.setBlock(new BlockPos(x, y, penMinZ), CONTAINMENT_BLOCK.defaultBlockState());
                 }
             }
 
