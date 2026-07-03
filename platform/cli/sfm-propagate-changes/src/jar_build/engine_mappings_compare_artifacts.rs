@@ -1176,7 +1176,7 @@ fn build_artifact_lockfile(
     });
 
     Ok(ArtifactLockfile {
-        schema_version: 1,
+        schema_version: crate::toolchain_lockfile_schema::LATEST_SCHEMA_VERSION,
         minecraft_version: plan.minecraft_version.to_string(),
         maven_cache_dir: portable_cache_path(plan, &plan.maven_cache_dir),
         allow_local_artifact_cache: plan.allow_local_artifact_cache,
@@ -1413,7 +1413,7 @@ fn read_optional_artifact_lockfile(
     }
     let content =
         fs::read_to_string(path).wrap_err_with(|| format!("Failed to read {}", path.display()))?;
-    let lockfile: ArtifactLockfile = facet_json::from_str(&content)
+    let lockfile = crate::toolchain_lockfile_schema::upgrade_to_latest(&content)
         .wrap_err_with(|| format!("Failed to parse {}", path.display()))?;
     if lockfile.minecraft_version != minecraft_version {
         eyre::bail!(
