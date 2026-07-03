@@ -679,6 +679,7 @@ fn facet_json_roundtrips_artifact_lockfile_and_provenance() {
             source_git: None,
             source_build: None,
             hash: provenance.hash,
+            weak: None,
         }],
     };
     let json = facet_json::to_string_pretty(&lockfile).expect("lockfile should serialize");
@@ -747,6 +748,7 @@ fn migrated_common_cache_lockfile_does_not_duplicate_old_cache_entries() {
             source_git: None,
             source_build: None,
             hash: legacy_sha1,
+            weak: None,
         }],
     });
 
@@ -1180,6 +1182,7 @@ fn resolver_materializes_locked_artifact_from_source_build() {
                 b"not-used-when-refreshing",
                 ContentHashAlgorithm::Blake3,
             ),
+            weak: None,
         }],
     };
 
@@ -1752,6 +1755,7 @@ fn artifact_audit_verifies_sfm_cache_lockfile_artifact() {
             source_git: None,
             source_build: None,
             hash: hash,
+            weak: None,
         }],
         Vec::new(),
     );
@@ -1818,6 +1822,7 @@ fn artifact_audit_warns_or_fails_for_explicit_sources() {
             source_git: None,
             source_build: None,
             hash: hash,
+            weak: None,
         }],
         Vec::new(),
     );

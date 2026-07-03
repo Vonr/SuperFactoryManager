@@ -162,6 +162,16 @@ struct ArtifactLockEntry {
     source_build: Option<SourceBuildProvenance>,
     #[facet(alias = "sha1")]
     hash: ContentHash,
+    #[facet(default)]
+    weak: Option<WeakArtifactValidation>,
+}
+
+#[derive(Clone, Debug, Eq, Facet, PartialEq)]
+struct WeakArtifactValidation {
+    #[facet(proxy = JsonPath)]
+    metadata_path: PathBuf,
+    mod_id: String,
+    version: String,
 }
 
 #[derive(Clone, Debug, Eq, Facet, PartialEq)]

@@ -1254,6 +1254,7 @@ fn migrate_locked_artifact(
             .source_build
             .or_else(|| locked.source_build.clone()),
         hash: actual_hash,
+        weak: locked.weak.clone(),
     })
 }
 
@@ -1292,6 +1293,7 @@ fn artifact_lock_entry_from_plan_artifact(
         source_git: artifact.provenance.source_git.clone(),
         source_build: artifact.provenance.source_build.clone(),
         hash: actual_hash,
+        weak: None,
     })
 }
 
@@ -1336,6 +1338,7 @@ fn artifact_lock_entry_from_cache_path(
         source_git: provenance.source_git,
         source_build: provenance.source_build,
         hash: actual_hash,
+        weak: None,
     })
 }
 
@@ -1375,6 +1378,10 @@ fn push_artifact_lock_entry(artifacts: &mut Vec<ArtifactLockEntry>, entry: Artif
         .iter()
         .position(|artifact| artifact.same_locked_artifact(&entry))
     {
+        let mut entry = entry;
+        if entry.weak.is_none() {
+            entry.weak.clone_from(&artifacts[existing].weak);
+        }
         artifacts[existing] = entry;
         return;
     }
