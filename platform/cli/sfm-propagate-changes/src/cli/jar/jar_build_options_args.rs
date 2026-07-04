@@ -14,8 +14,8 @@ use std::path::PathBuf;
     reason = "This type is a thin CLI flag container; each bool maps directly to a named flag."
 )]
 pub struct JarBuildOptionsArgs {
-    /// Branch selector to build. Defaults to `core`.
-    #[facet(default, args::named)]
+    /// Branch selector to build.
+    #[facet(args::named)]
     pub branch: BranchSelector,
 
     /// Ignore reusable SFM-owned cache state and recompute resolved metadata.
