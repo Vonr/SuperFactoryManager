@@ -24,6 +24,9 @@ pub struct RunClientArgs {
     /// Open a supported SFM dev screen when the client first reaches the title screen.
     #[facet(default, args::named)]
     pub title_screen: Option<ClientTitleScreen>,
+    /// Launch SFM without dependency mod jars from dependencies.gradle.
+    #[facet(default, args::named)]
+    pub solo: bool,
 }
 
 impl RunClientArgs {
@@ -36,11 +39,13 @@ impl RunClientArgs {
     /// Returns an error if planning, building, or launching fails.
     pub fn invoke(self, cancellation_token: CancellationToken) -> eyre::Result<()> {
         let title_screen = self.resolve_title_screen()?;
+        let solo = self.solo;
         RunCommand::with_run_options(
             self.into_options(BuildMode::Build)?,
             RunKind::Client,
             RunOptions {
                 client_title_screen: title_screen,
+                client_solo: solo,
                 ..RunOptions::default()
             },
             cancellation_token,

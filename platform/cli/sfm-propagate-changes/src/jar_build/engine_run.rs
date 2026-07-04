@@ -629,7 +629,7 @@ fn execute_run(
     )?;
     let modules = resolve_forge_userdev_modules(&context, &resolver)?;
     context.bail_if_cancelled()?;
-    let launch_classpath = resolve_run_classpath(&context, &resolver, kind)?;
+    let launch_classpath = resolve_run_classpath(&context, &resolver, kind, run_options)?;
     context.bail_if_cancelled()?;
     let run_cache_artifact_paths = run_lockfile_cache_artifact_paths(&launch_classpath, &modules);
     write_artifact_lockfile_with_extra_cache_paths(plan, &run_cache_artifact_paths)?;
@@ -3088,10 +3088,11 @@ fn resolve_run_classpath(
     context: &ExecutionContext<'_>,
     resolver: &Resolver,
     kind: RunKind,
+    run_options: &RunOptions,
 ) -> eyre::Result<RunClasspath> {
     if context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
         let _span = tracing::debug_span!("resolve_run_classpath_neogradle").entered();
-        return resolve_neogradle_run_classpath(context, resolver, kind);
+        return resolve_neogradle_run_classpath(context, resolver, kind, run_options);
     }
 
     let mut legacy = Vec::new();
@@ -3118,14 +3119,25 @@ fn resolve_run_classpath(
         let _span = tracing::debug_span!("resolve_run_classpath_forge_userdev_libraries").entered();
         legacy.extend(resolve_forge_userdev_libraries(context, resolver)?);
     };
-    {
+    if should_include_project_run_dependencies(kind, run_options) {
         let _span = tracing::debug_span!("resolve_run_classpath_plain_dependencies").entered();
         legacy.extend(resolve_run_plain_dependencies(context, resolver, kind)?);
-    };
+    } else {
+        tracing::info!(
+            kind = kind.command_name(),
+            "solo client launch: skipping plain dependency jars"
+        );
+    }
 
-    let userdev_mods = {
+    let userdev_mods = if should_include_project_run_dependencies(kind, run_options) {
         let _span = tracing::debug_span!("resolve_run_classpath_deobf_dependencies").entered();
         resolve_run_deobf_dependencies(context, resolver, kind)?
+    } else {
+        tracing::info!(
+            kind = kind.command_name(),
+            "solo client launch: skipping deobfuscated dependency mod jars"
+        );
+        Vec::new()
     };
     let legacy = {
         let _span =
@@ -3156,6 +3168,7 @@ fn resolve_neogradle_run_classpath(
     context: &ExecutionContext<'_>,
     resolver: &Resolver,
     kind: RunKind,
+    run_options: &RunOptions,
 ) -> eyre::Result<RunClasspath> {
     let mut legacy = Vec::new();
     {
@@ -3189,11 +3202,16 @@ fn resolve_neogradle_run_classpath(
             tracing::debug_span!("resolve_neogradle_run_classpath_test_libraries").entered();
         userdev_mods.extend(resolve_forge_userdev_test_libraries(context, resolver)?);
     }
-    {
+    if should_include_project_run_dependencies(kind, run_options) {
         let _span =
             tracing::debug_span!("resolve_neogradle_run_classpath_run_dependencies").entered();
         userdev_mods.extend(resolve_neogradle_run_dependencies(context, kind)?);
-    };
+    } else {
+        tracing::info!(
+            kind = kind.command_name(),
+            "solo client launch: skipping NeoGradle dependency mod jars"
+        );
+    }
 
     let legacy = {
         let _span = tracing::debug_span!(
@@ -3220,6 +3238,13 @@ fn resolve_neogradle_run_classpath(
         legacy,
         userdev_mods,
     })
+}
+
+pub(super) fn should_include_project_run_dependencies(
+    kind: RunKind,
+    run_options: &RunOptions,
+) -> bool {
+    !(run_options.client_solo && matches!(kind, RunKind::Client))
 }
 
 #[expect(

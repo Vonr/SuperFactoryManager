@@ -9,6 +9,7 @@ pub struct RunOptions {
     pub game_test_bisect: Option<GameTestBisectOptions>,
     pub client_puppet_keep_open: ClientPuppetKeepOpen,
     pub client_title_screen: Option<ClientTitleScreen>,
+    pub client_solo: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Facet, PartialEq)]
@@ -17,6 +18,7 @@ pub struct RunOptions {
 pub enum ClientTitleScreen {
     TextEditor,
     InputDiag,
+    DrawCanvas,
 }
 
 impl ClientTitleScreen {
@@ -25,6 +27,7 @@ impl ClientTitleScreen {
         match self {
             Self::TextEditor => "text-editor",
             Self::InputDiag => "input-diag",
+            Self::DrawCanvas => "draw-canvas",
         }
     }
 }
@@ -44,8 +47,9 @@ impl FromStr for ClientTitleScreen {
             "input-diag" | "input_diag" | "input-diagnostics" | "key-diag" | "key-debug" => {
                 Ok(Self::InputDiag)
             }
+            "draw-canvas" | "draw_canvas" | "draw" | "canvas" => Ok(Self::DrawCanvas),
             _ => eyre::bail!(
-                "Invalid --title-screen '{input}'. Expected 'text-editor' or 'input-diag'."
+                "Invalid --title-screen '{input}'. Expected 'text-editor', 'input-diag', or 'draw-canvas'."
             ),
         }
     }
