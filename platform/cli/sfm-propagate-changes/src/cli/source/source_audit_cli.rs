@@ -22,7 +22,7 @@ pub struct SourceAuditArgs {
     pub lang: Vec<SourceLanguage>,
 
     /// Warn when a tracked source file has more than this many lines.
-    #[facet(rename = "max-lines", default, args::named)]
+    #[facet(default, args::named)]
     pub max_lines: SourceLineLimit,
 }
 

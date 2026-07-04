@@ -36,17 +36,17 @@ pub enum RunCommand {
     /// Launch the Forge client userdev run config
     Client(RunClientArgs),
     /// Launch the Forge client userdev run config and exit when the title screen opens
-    #[facet(rename = "client-smoke")]
+    #[facet]
     ClientSmoke(RunClientSmokeArgs),
     /// Launch the Forge client userdev run config and run SFM game tests in an integrated client
-    #[facet(rename = "client-puppet")]
+    #[facet]
     ClientPuppet(RunClientPuppetArgs),
     /// Launch the Forge server userdev run config
     Server(RunServerArgs),
     /// Launch the Forge datagen userdev run config
     Data(RunDataArgs),
     /// Launch the Forge game test server userdev run config
-    #[facet(rename = "game-test-server")]
+    #[facet]
     GameTestServer(RunGameTestServerArgs),
     /// Compile and run the Java `JUnit` test source set
     Test(RunTestArgs),

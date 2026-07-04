@@ -11,10 +11,12 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraftforge.client.event.ScreenEvent;
 
 public class TitleScreenOpenTextEditorOnLaunchHandler {
-    public static boolean firstTime = false; // disabled for now lol
-//    public static boolean firstTime = true;
+    public static final String OPEN_TEXT_EDITOR_ON_TITLE_SCREEN_PROPERTY = "sfm.clientRun.openTextEditorOnTitleScreen";
+    public static boolean firstTime = true;
+
     @SFMSubscribeEvent(value = SFMDist.CLIENT)
     public static void onTitleScreenOpen(ScreenEvent.Opening event) {
+        if (!Boolean.getBoolean(OPEN_TEXT_EDITOR_ON_TITLE_SCREEN_PROPERTY)) return;
         if (!firstTime) return;
         if (event.getNewScreen() instanceof TitleScreen titleScreen) {
             firstTime = false;

@@ -129,6 +129,7 @@ mod tests {
     fn parses_top_level_run_clis() {
         assert_run_cli(&["run", "compile", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "client", "--branch", "1.19.2"]);
+        assert_run_cli(&["run", "client", "--branch", "1.19.2", "--text-editor"]);
         assert_run_cli(&["run", "client-smoke", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "client-puppet", "--branch", "1.19.2"]);
         assert_run_cli(&[

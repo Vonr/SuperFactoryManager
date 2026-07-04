@@ -17,15 +17,15 @@ pub struct DependencyAddArgs {
     pub branch: BranchSelector,
 
     /// Accept byte hash drift when the jar's mod metadata matches.
-    #[facet(rename = "weak-mod-metadata", default = false, args::named)]
+    #[facet(default = false, args::named)]
     pub weak_mod_metadata: bool,
 
     /// Metadata entry to validate for weak mod metadata entries.
-    #[facet(rename = "metadata-path", default, args::named)]
+    #[facet(default, args::named)]
     pub metadata_path: Option<PathBuf>,
 
     /// Expected mod id for weak mod metadata entries. Defaults to the jar metadata value.
-    #[facet(rename = "mod-id", default, args::named)]
+    #[facet(default, args::named)]
     pub mod_id: Option<String>,
 
     /// Expected mod version for weak mod metadata entries. Defaults to the jar metadata value.

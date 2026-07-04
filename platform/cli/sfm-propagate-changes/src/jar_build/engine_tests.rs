@@ -39,6 +39,7 @@ use super::SourceBuildSystem;
 use super::TargetJarCompareReport;
 use super::apply_client_puppet_keep_open_property;
 use super::apply_game_test_filter_property;
+use super::apply_open_text_editor_on_title_screen_property;
 use super::artifact_lock_path;
 use super::artifact_portability_audit;
 use super::audit_artifact_lockfile;
@@ -386,6 +387,42 @@ fn client_puppet_keep_open_sets_seconds_property() {
         },
     );
     assert!(!client_properties.contains_key("sfm.clientRun.keepOpenSeconds"));
+}
+
+#[test]
+fn client_text_editor_flag_sets_title_screen_property() {
+    let run_options = RunOptions {
+        open_text_editor_on_title_screen: true,
+        ..RunOptions::default()
+    };
+    let mut client_properties = BTreeMap::new();
+    apply_open_text_editor_on_title_screen_property(
+        &mut client_properties,
+        RunKind::Client,
+        &run_options,
+    );
+    assert_eq!(
+        client_properties
+            .get("sfm.clientRun.openTextEditorOnTitleScreen")
+            .map(String::as_str),
+        Some("true")
+    );
+
+    let mut smoke_properties = BTreeMap::new();
+    apply_open_text_editor_on_title_screen_property(
+        &mut smoke_properties,
+        RunKind::ClientSmoke,
+        &run_options,
+    );
+    assert!(!smoke_properties.contains_key("sfm.clientRun.openTextEditorOnTitleScreen"));
+
+    let mut disabled_properties = BTreeMap::new();
+    apply_open_text_editor_on_title_screen_property(
+        &mut disabled_properties,
+        RunKind::Client,
+        &RunOptions::default(),
+    );
+    assert!(!disabled_properties.contains_key("sfm.clientRun.openTextEditorOnTitleScreen"));
 }
 
 #[test]
