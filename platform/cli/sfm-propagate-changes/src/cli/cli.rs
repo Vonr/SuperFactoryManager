@@ -587,6 +587,32 @@ mod tests {
     }
 
     #[test]
+    fn parses_wait_for_build_lock() {
+        let cli = figue::from_slice::<Cli>(&[
+            "run",
+            "compile",
+            "--branch",
+            "core",
+            "--wait-for-build-lock",
+        ])
+        .into_result()
+        .expect("wait-for-build-lock should parse")
+        .get_silent();
+        match cli.command {
+            Command::Run(crate::cli::run::RunArgs {
+                command: RunCommand::Compile(command),
+            }) => {
+                let options = command
+                    .options
+                    .into_options(BuildMode::Build)
+                    .expect("compile options should parse");
+                assert!(options.wait_for_build_lock);
+            }
+            command => panic!("expected compile run command, got {command:?}"),
+        }
+    }
+
+    #[test]
     fn parses_jar_compare_parallel_value() {
         let cli = figue::from_slice::<Cli>(&[
             "jar",
