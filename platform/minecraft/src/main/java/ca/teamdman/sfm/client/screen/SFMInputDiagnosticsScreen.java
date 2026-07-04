@@ -10,6 +10,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWScrollCallback;
+import org.lwjgl.glfw.GLFWScrollCallbackI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,9 @@ public class SFMInputDiagnosticsScreen extends Screen {
     private final List<String> events = new ArrayList<>();
     private int nextEventId;
     private int scrollOffset;
+    private long rawScrollCallbackWindow;
+    private GLFWScrollCallback previousRawScrollCallback;
+    private GLFWScrollCallbackI rawScrollCallback;
 
     public SFMInputDiagnosticsScreen(Screen previousScreen) {
         super(Component.literal("SFM Input Diagnostics"));
@@ -39,12 +44,20 @@ public class SFMInputDiagnosticsScreen extends Screen {
 
     @Override
     public void onClose() {
+        restoreRawScrollCallback();
         Minecraft.getInstance().setScreen(previousScreen);
+    }
+
+    @Override
+    public void removed() {
+        restoreRawScrollCallback();
+        super.removed();
     }
 
     @Override
     protected void init() {
         super.init();
+        installRawScrollCallback();
         int y = this.height - 24;
         this.addRenderableWidget(new SFMButtonBuilder()
                 .setPosition(8, y)
@@ -64,6 +77,39 @@ public class SFMInputDiagnosticsScreen extends Screen {
                 .setText(CommonComponents.GUI_DONE)
                 .setOnPress(button -> this.onClose())
                 .build());
+    }
+
+    private void installRawScrollCallback() {
+        if (rawScrollCallback != null) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        rawScrollCallbackWindow = minecraft.getWindow().getWindow();
+        rawScrollCallback = (window, xOffset, yOffset) -> {
+            if (window == rawScrollCallbackWindow && minecraft.screen == this) {
+                log(
+                        "glfwScroll xOffset=%.3f yOffset=%.3f active=%s",
+                        xOffset,
+                        yOffset,
+                        activeModifiers()
+                );
+            }
+            if (previousRawScrollCallback != null) {
+                previousRawScrollCallback.invoke(window, xOffset, yOffset);
+            }
+        };
+        previousRawScrollCallback = GLFW.glfwSetScrollCallback(rawScrollCallbackWindow, rawScrollCallback);
+        log("screen.raw_scroll_callback.install window=%d", rawScrollCallbackWindow);
+    }
+
+    private void restoreRawScrollCallback() {
+        if (rawScrollCallback == null) {
+            return;
+        }
+        GLFW.glfwSetScrollCallback(rawScrollCallbackWindow, previousRawScrollCallback);
+        rawScrollCallback = null;
+        previousRawScrollCallback = null;
+        rawScrollCallbackWindow = 0L;
     }
 
     private void clearEvents(Button button) {
