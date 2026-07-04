@@ -82,10 +82,13 @@ This phase ensures that the built jar files behave as expected.
 
 Historical anecdotes include builds being successful but with missing textures, missing translation entries, and other behaviour that is not obvious until testing outside of the IDE.
 
-1. Run `sfm-propagate-changes.exe jar update-clients` to ensure each PrismMC instance has the latest jar file
-2. Run `sfm-propagate-changes.exe jar update-servers` to ensure each dedicated server has the latest jar file
-3. Run `sfm-propagate-changes.exe client launch` to open PrismMC
-4. Run `sfm-propagate-changes.exe server launch` to run the dedicated servers
+1. Run `sfm-propagate-changes.exe client set-instances-dir <path>` if the Prism Launcher instances directory has not been configured on this machine
+2. Run `sfm-propagate-changes.exe client sync --branch core --loader pinned` to ensure each Prism Launcher verification instance exists, is tracked, uses the Gradle-inferred loader/JDK from the last clean-slate build plan, and has the latest jar file
+    1. Optional: run `sfm-propagate-changes.exe loader list --branch core` to compare the pinned loader against Prism's recommended/latest metadata before intentionally testing with `--loader recommended` or `--loader latest`
+3. Run `sfm-propagate-changes.exe jar update-servers` to ensure each tracked dedicated server has the latest jar file
+4. Optional: run `sfm-propagate-changes.exe client open` to open Prism Launcher without launching a verification instance
+5. Run `sfm-propagate-changes.exe client launch --branch core` to run the Prism Launcher verification instances sequentially
+6. In another terminal, run `sfm-propagate-changes.exe server launch --branch core` to run the dedicated servers sequentially
 
 ## Phase 10 - Verification Actualization
 
