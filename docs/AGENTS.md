@@ -33,6 +33,8 @@ After making changes to rust code, run [`check-all.ps1`](../platform/cli/sfm-pro
 The SFM changelog is [here](../platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml) and MUST be updated after performing changes that are observable during gameplay.
 Always update the changelog on 1.19.2 so we may `sfm-propagate-changes.exe git merge` to update all versions.
 
+We can use `sfm-propagate-changes.exe git status` to view a summary of all of the worktrees instead of manually running `git status` in each one.
+
 ## Writing Java
 
 When we encounter a part of code that requires a difference across the branches, we should introduce adapter methods annotated with `@MCVersionDependentBehaviour` to minimize and make obvious the surface area where the code is forced to change to accommodate the differences between Minecraft versions.
