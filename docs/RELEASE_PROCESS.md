@@ -87,7 +87,7 @@ Historical anecdotes include builds being successful but with missing textures, 
     1. Optional: run `sfm-propagate-changes.exe loader list --branch core` to compare the pinned loader against Prism's recommended/latest metadata before intentionally testing with `--loader recommended` or `--loader latest`
 3. Run `sfm-propagate-changes.exe jar update-servers` to ensure each tracked dedicated server has the latest jar file
 4. Optional: run `sfm-propagate-changes.exe client open` to open Prism Launcher without launching a verification instance
-5. Run `sfm-propagate-changes.exe client launch --branch core` to run the Prism Launcher verification instances sequentially
+5. Run `sfm-propagate-changes.exe client launch --branch core` to issue Prism Launcher launch requests for the verification instances sequentially
 6. In another terminal, run `sfm-propagate-changes.exe server launch --branch core` to run the dedicated servers sequentially
 
 ## Phase 10 - Verification Actualization

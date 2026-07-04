@@ -27,6 +27,7 @@ use std::os::windows::process::CommandExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use tracing::debug;
 use tracing::info;
 use tracing::warn;
 
@@ -260,13 +261,20 @@ pub(super) fn launch_clients(branch: BranchSelector) -> eyre::Result<()> {
             "Launching client"
         );
 
+        let args = [
+            "--dir",
+            prism_data_dir_text.as_str(),
+            "--launch",
+            instance_id,
+        ];
+        debug!(
+            executable = %launcher.display(),
+            args = ?args,
+            "Executing Prism launcher command"
+        );
+
         let status = Command::new(&launcher)
-            .args([
-                "--dir",
-                prism_data_dir_text.as_str(),
-                "--launch",
-                instance_id,
-            ])
+            .args(args)
             .status()
             .wrap_err_with(|| {
                 format!(
@@ -282,9 +290,18 @@ pub(super) fn launch_clients(branch: BranchSelector) -> eyre::Result<()> {
                 status.code()
             );
         }
+
+        debug!(
+            executable = %launcher.display(),
+            instance_id,
+            status = ?status.code(),
+            "Prism launcher command completed"
+        );
     }
 
-    info!("All selected clients exited successfully.");
+    info!(
+        "All selected Prism launch commands completed successfully. Prism may keep Minecraft running after the CLI handoff exits."
+    );
     Ok(())
 }
 
