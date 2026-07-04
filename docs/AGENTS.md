@@ -31,6 +31,7 @@ After making changes to rust code, run [`check-all.ps1`](../platform/cli/sfm-pro
 ## Changelog
 
 The SFM changelog is [here](../platform/minecraft/src/main/resources/assets/sfm/template_programs/changelog.sfml) and MUST be updated after performing changes that are observable during gameplay.
+Always update the changelog on 1.19.2 so we may `sfm-propagate-changes.exe git merge` to update all versions.
 
 ## Writing Java
 
