@@ -704,7 +704,7 @@ fn execute_run(
             automation_mode.to_string(),
         );
     }
-    apply_open_text_editor_on_title_screen_property(&mut properties, kind, run_options);
+    apply_client_title_screen_property(&mut properties, kind, run_options);
     apply_client_puppet_keep_open_property(&mut properties, kind, run_options);
     let launch_timeout = kind.launch_timeout(run_options);
 
@@ -2141,17 +2141,20 @@ fn apply_client_puppet_keep_open_property(
     );
 }
 
-fn apply_open_text_editor_on_title_screen_property(
+fn apply_client_title_screen_property(
     properties: &mut BTreeMap<String, String>,
     kind: RunKind,
     run_options: &RunOptions,
 ) {
-    if !matches!(kind, RunKind::Client) || !run_options.open_text_editor_on_title_screen {
+    if !matches!(kind, RunKind::Client) {
         return;
     }
+    let Some(title_screen) = run_options.client_title_screen else {
+        return;
+    };
     properties.insert(
-        "sfm.clientRun.openTextEditorOnTitleScreen".to_string(),
-        "true".to_string(),
+        "sfm.clientRun.titleScreen".to_string(),
+        title_screen.property_value().to_string(),
     );
 }
 

@@ -130,6 +130,15 @@ mod tests {
         assert_run_cli(&["run", "compile", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "client", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "client", "--branch", "1.19.2", "--text-editor"]);
+        assert_run_cli(&["run", "client", "--branch", "1.19.2", "--input-diag"]);
+        assert_run_cli(&[
+            "run",
+            "client",
+            "--branch",
+            "1.19.2",
+            "--title-screen",
+            "input-diag",
+        ]);
         assert_run_cli(&["run", "client-smoke", "--branch", "1.19.2"]);
         assert_run_cli(&["run", "client-puppet", "--branch", "1.19.2"]);
         assert_run_cli(&[

@@ -39,7 +39,7 @@ use super::SourceBuildSystem;
 use super::TargetJarCompareReport;
 use super::apply_client_puppet_keep_open_property;
 use super::apply_game_test_filter_property;
-use super::apply_open_text_editor_on_title_screen_property;
+use super::apply_client_title_screen_property;
 use super::artifact_lock_path;
 use super::artifact_portability_audit;
 use super::audit_artifact_lockfile;
@@ -87,6 +87,7 @@ use crate::branch_targets::WorktreePath;
 use crate::branch_targets::WorktreeTarget;
 use crate::cancellation::CancellationToken;
 use crate::jar_build::ClientPuppetKeepOpen;
+use crate::jar_build::ClientTitleScreen;
 use crate::jar_build::ErrorAction;
 use crate::jar_build::Parallelism;
 use crate::jar_build::hash::ContentHash;
@@ -390,39 +391,39 @@ fn client_puppet_keep_open_sets_seconds_property() {
 }
 
 #[test]
-fn client_text_editor_flag_sets_title_screen_property() {
+fn client_title_screen_sets_title_screen_property() {
     let run_options = RunOptions {
-        open_text_editor_on_title_screen: true,
+        client_title_screen: Some(ClientTitleScreen::InputDiag),
         ..RunOptions::default()
     };
     let mut client_properties = BTreeMap::new();
-    apply_open_text_editor_on_title_screen_property(
+    apply_client_title_screen_property(
         &mut client_properties,
         RunKind::Client,
         &run_options,
     );
     assert_eq!(
         client_properties
-            .get("sfm.clientRun.openTextEditorOnTitleScreen")
+            .get("sfm.clientRun.titleScreen")
             .map(String::as_str),
-        Some("true")
+        Some("input-diag")
     );
 
     let mut smoke_properties = BTreeMap::new();
-    apply_open_text_editor_on_title_screen_property(
+    apply_client_title_screen_property(
         &mut smoke_properties,
         RunKind::ClientSmoke,
         &run_options,
     );
-    assert!(!smoke_properties.contains_key("sfm.clientRun.openTextEditorOnTitleScreen"));
+    assert!(!smoke_properties.contains_key("sfm.clientRun.titleScreen"));
 
     let mut disabled_properties = BTreeMap::new();
-    apply_open_text_editor_on_title_screen_property(
+    apply_client_title_screen_property(
         &mut disabled_properties,
         RunKind::Client,
         &RunOptions::default(),
     );
-    assert!(!disabled_properties.contains_key("sfm.clientRun.openTextEditorOnTitleScreen"));
+    assert!(!disabled_properties.contains_key("sfm.clientRun.titleScreen"));
 }
 
 #[test]
