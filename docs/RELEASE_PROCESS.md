@@ -54,7 +54,10 @@ This phase handles ensuring generated sources are up-to-date.
 
 1. Run `sfm-propagate-changes.exe run data --parallel --branch core` to ensure all generated resources are up to date for each MC version.
     - This was previously `sfm-propagate-changes.exe gradle run runData`.
-2. Run `sfm-propagate-changes.exe git status` to ensure all changes under [src/generated](../platform/minecraft/src/generated/) are committed
+2. Run `sfm-propagate-changes.exe git status` to inspect generated changes
+    - If only generated resources changed under [src/generated](../platform/minecraft/src/generated/), the command will offer to auto-commit them
+    - Review the proposed generated-only changes and accept the auto-commit prompt when they are expected
+    - Do not manually stage generated files unless the auto-commit workflow is insufficient
 3. Run `sfm-propagate-changes.exe git merge` to ensure merge stability after committing generated files; each branch must keep its own src/generated files during the merge; reject incoming
 
 ## Phase 7 - Running Gametests
