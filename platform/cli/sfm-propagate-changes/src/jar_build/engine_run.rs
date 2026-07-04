@@ -722,6 +722,12 @@ fn execute_run(
         "-XX:+IgnoreUnrecognizedVMOptions".to_string(),
         "-XX:+AllowRedefinitionToAddDeleteMethods".to_string(),
     ]);
+    if matches!(kind, RunKind::Client) && let Some(port) = run_options.client_hotswap_port {
+        jvm_args.push(format!(
+            "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:{port}"
+        ));
+        tracing::info!(port, "client hotswap JDWP enabled");
+    }
 
     let mut program_args = run_config
         .args

@@ -4,6 +4,7 @@ use super::RunClientSmokeArgs;
 use super::RunCompileArgs;
 use super::RunDataArgs;
 use super::RunGameTestServerArgs;
+use super::RunHotswapArgs;
 use super::RunServerArgs;
 use super::RunTestArgs;
 use crate::cancellation::CancellationToken;
@@ -48,6 +49,8 @@ pub enum RunCommand {
     /// Launch the Forge game test server userdev run config
     #[facet]
     GameTestServer(RunGameTestServerArgs),
+    /// Compile changed classes and hotswap them into a running JDWP-enabled client
+    Hotswap(RunHotswapArgs),
     /// Compile and run the Java `JUnit` test source set
     Test(RunTestArgs),
 }
@@ -65,6 +68,7 @@ impl RunCommand {
             RunCommand::Server(args) => args.invoke(cancellation_token),
             RunCommand::Data(args) => args.invoke(cancellation_token),
             RunCommand::GameTestServer(args) => args.invoke(cancellation_token),
+            RunCommand::Hotswap(args) => args.invoke(cancellation_token),
             RunCommand::Test(args) => args.invoke(cancellation_token),
         }
     }

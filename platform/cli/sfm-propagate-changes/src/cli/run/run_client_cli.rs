@@ -11,6 +11,10 @@ use figue as args;
 
 /// Arguments for launching the Forge client userdev run config.
 #[derive(Facet, Debug, Clone)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "Each bool maps directly to a client launch flag."
+)]
 pub struct RunClientArgs {
     /// Build and launch options.
     #[facet(flatten)]
@@ -27,6 +31,12 @@ pub struct RunClientArgs {
     /// Launch SFM without dependency mod jars from dependencies.gradle.
     #[facet(default, args::named)]
     pub solo: bool,
+    /// Open a JDWP port so `sfm-propagate-changes run hotswap` can redefine classes.
+    #[facet(default, args::named)]
+    pub hotswap: bool,
+    /// JDWP port used by `--hotswap`.
+    #[facet(default, args::named)]
+    pub hotswap_port: Option<u16>,
 }
 
 impl RunClientArgs {
@@ -40,12 +50,14 @@ impl RunClientArgs {
     pub fn invoke(self, cancellation_token: CancellationToken) -> eyre::Result<()> {
         let title_screen = self.resolve_title_screen()?;
         let solo = self.solo;
+        let hotswap_port = self.hotswap.then_some(self.hotswap_port.unwrap_or(5005));
         RunCommand::with_run_options(
             self.into_options(BuildMode::Build)?,
             RunKind::Client,
             RunOptions {
                 client_title_screen: title_screen,
                 client_solo: solo,
+                client_hotswap_port: hotswap_port,
                 ..RunOptions::default()
             },
             cancellation_token,

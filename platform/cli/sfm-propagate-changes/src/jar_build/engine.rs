@@ -607,7 +607,7 @@ fn execute_run_target(
     write_last_plan_output(&plan)?;
     print_plan_summary(&plan);
     cancellation_token.bail_if_cancelled()?;
-    let _build_cache_lock = acquire_build_cache_lock(options, &plan, kind.command_name())?;
+    let build_cache_lock = acquire_build_cache_lock(options, &plan, kind.command_name())?;
     execute_build(
         &plan,
         options.explain_rebuild,
@@ -617,6 +617,13 @@ fn execute_run_target(
     cancellation_token.bail_if_cancelled()?;
     write_artifact_lockfile(&plan)?;
     cancellation_token.bail_if_cancelled()?;
+    if releases_build_cache_lock_before_launch(kind, run_options) {
+        drop(build_cache_lock);
+        tracing::info!(
+            kind = kind.command_name(),
+            "released build cache lock before hotswap-enabled launch"
+        );
+    }
     if run_options.game_test_bisect.is_some() {
         execute_game_test_bisect(
             &plan,
@@ -635,6 +642,10 @@ fn execute_run_target(
         )?;
     }
     Ok(plan)
+}
+
+fn releases_build_cache_lock_before_launch(kind: RunKind, run_options: &RunOptions) -> bool {
+    matches!(kind, RunKind::Client) && run_options.client_hotswap_port.is_some()
 }
 
 fn execute_run_test_target(

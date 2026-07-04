@@ -10,6 +10,7 @@ pub struct RunOptions {
     pub client_puppet_keep_open: ClientPuppetKeepOpen,
     pub client_title_screen: Option<ClientTitleScreen>,
     pub client_solo: bool,
+    pub client_hotswap_port: Option<u16>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Facet, PartialEq)]
