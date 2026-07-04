@@ -15,16 +15,23 @@ To make a release, something should have changed about the mod.
 3. Confirm that any fixed GitHub issues are either closed or labelled `implemented awaiting release`
 4. Confirm that any relevant GitHub issues are associated with the milestone for this release
 
-## Phase 2 - Update Human-Maintained Release Files
+## Phase 2 - Update Known Issues
 
-These files require human judgement and must be checked deliberately before release automation begins.
+This file requires human judgement and must be checked deliberately before release automation begins.
 
 1. Bring [known_issues.sfml](../platform/minecraft/src/main/resources/assets/sfm/template_programs/known_issues.sfml) up to date
     - Remove issues that were fixed by this release
     - Add unresolved release-relevant caveats that users should see in-game
-2. Bring [thank_you.sfml](../platform/minecraft/src/main/resources/assets/sfm/template_programs/thank_you.sfml) up to date with the names of any new patrons
 
-## Phase 3 - Verify Release Metadata
+## Phase 3 - Update Thank You
+
+This file requires checking donor sources directly so release credits do not depend on stale local memory.
+
+1. Open [thank_you.sfml](../platform/minecraft/src/main/resources/assets/sfm/template_programs/thank_you.sfml)
+2. Visit each donor URL listed in the file
+3. Bring [thank_you.sfml](../platform/minecraft/src/main/resources/assets/sfm/template_programs/thank_you.sfml) up to date with the names of any new donors
+
+## Phase 4 - Verify Release Metadata
 
 These checks must be completed before committing release preparation changes.
 
@@ -35,13 +42,13 @@ These checks must be completed before committing release preparation changes.
     - Remove any indications of this being a pre-release
     - Assert that no TODO items remain
 
-## Phase 4 - Commit And Propagate Release Preparation
+## Phase 5 - Commit And Propagate Release Preparation
 
 1. Commit release preparation changes to git
 2. Run `sfm-propagate-changes.exe git merge` to ensure all MC versions have all the latest SFM code
 3. Run `sfm-propagate-changes.exe git status` to ensure every worktree is clean before continuing
 
-## Phase 5 - Running Datagen
+## Phase 6 - Running Datagen
 
 This phase handles ensuring generated sources are up-to-date.
 
@@ -50,14 +57,14 @@ This phase handles ensuring generated sources are up-to-date.
 2. Run `sfm-propagate-changes.exe git status` to ensure all changes under [src/generated](../platform/minecraft/src/generated/) are committed
 3. Run `sfm-propagate-changes.exe git merge` to ensure merge stability after committing generated files; each branch must keep its own src/generated files during the merge; reject incoming
 
-## Phase 6 - Running Gametests
+## Phase 7 - Running Gametests
 
 This phase ensures that there is no unexpected behaviour in the mod.
 
 1. Run `sfm-propagate-changes.exe run game-test-server --parallel` to ensure all game tests are passing
     - This was previously `sfm-propagate-changes.exe gradle run runGameTestServer`
 
-## Phase 7 - Building Jarfiles
+## Phase 8 - Building Jarfiles
 
 This phase produces the `.jar` files that users will add to their instance's `mods` directory
 
@@ -65,7 +72,7 @@ This phase produces the `.jar` files that users will add to their instance's `mo
 2. Run `sfm-propagate-changes.exe jar dir clean` to prepare the destination directory
 3. Run `sfm-propagate-changes.exe jar collect` to collect all the built jar files in one location
 
-## Phase 8 - Verification Preparation
+## Phase 9 - Verification Preparation
 
 This phase ensures that the built jar files behave as expected.
 
@@ -76,7 +83,7 @@ Historical anecdotes include builds being successful but with missing textures, 
 3. Run `sfm-propagate-changes.exe client launch` to open PrismMC
 4. Run `sfm-propagate-changes.exe server launch` to run the dedicated servers
 
-## Phase 9 - Verification Actualization
+## Phase 10 - Verification Actualization
 
 The following steps must run for each MC version.
 
@@ -120,16 +127,16 @@ The following steps must run for each MC version.
     3. Assert that no TODO items remain
 6. Run the `/stop` command in the chat, this will disconnect you from the server
 7. Quit the game
-8. GOTO Phase 7 step 1 for the next version to be tested, if any
+8. GOTO Phase 8 step 1 for the next version to be tested, if any
 
-## Phase 10 - Tagging
+## Phase 11 - Tagging
 
 1. Run `sfm-propagate-changes.exe git merge`
 2. Run `sfm-propagate-changes.exe git tag`
 3. Run `sfm-propagate-changes.exe git push --tags`
 4. Run `sfm-propagate-changes.exe git push`
 
-## Phase 11 - Publishing to GitHub
+## Phase 12 - Publishing to GitHub
 
 This phase creates a GitHub release with the jar files uploaded as attachments.
 
@@ -138,7 +145,7 @@ This phase creates a GitHub release with the jar files uploaded as attachments.
     pwsh -File ./platform/pwsh/github-release.ps1
     ```
 
-## Phase 12 - Publishing to CurseForge
+## Phase 13 - Publishing to CurseForge
 
 This phase makes the new builds available for download on CurseForge.
 
@@ -151,7 +158,7 @@ This phase makes the new builds available for download on CurseForge.
     sfm-propagate-changes.exe curseforge release now
     ```
 
-## Phase 13 - Publishing to Modrinth
+## Phase 14 - Publishing to Modrinth
 
 1. Run Modrinth metadata check command from repo root:
     ```pwsh
@@ -163,7 +170,7 @@ This phase makes the new builds available for download on CurseForge.
     ```
 
 
-## Phase 14 - Milestone Cleanup
+## Phase 15 - Milestone Cleanup
 
 This phase manages identifying the GitHub milestone for this release and ensuring that the related issues are closed.
 
