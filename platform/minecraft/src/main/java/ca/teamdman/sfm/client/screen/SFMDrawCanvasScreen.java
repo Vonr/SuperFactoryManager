@@ -3,6 +3,7 @@ package ca.teamdman.sfm.client.screen;
 import ca.teamdman.sfm.client.screen.widget.SFMButtonBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -20,6 +21,7 @@ public class SFMDrawCanvasScreen extends Screen {
     private static final int AXIS_Y = 0xFF6D9075;
     private static final int CROSSHAIR = 0xFFE6EDF3;
     private static final int GLYPH = 0xFFE6EDF3;
+    private static final int GLYPH_BOUNDS = 0xFFFF5CCD;
     private static final int HUD_BACKGROUND = 0xC0181D23;
     private static final int HUD_BORDER = 0xFF4B5563;
     private static final int HUD_TEXT = 0xFFE6EDF3;
@@ -33,11 +35,15 @@ public class SFMDrawCanvasScreen extends Screen {
 
     private final Screen previousScreen;
     private final List<CanvasGlyph> glyphs = new ArrayList<>();
+    private final List<Button> diagnosticButtons = new ArrayList<>();
     private double cameraX;
     private double cameraY;
     private double zoom = 1.0D;
     private double cursorCanvasX;
     private double cursorCanvasY;
+    private boolean diagnosticControlsVisible = false;
+    private boolean showCrosshairCoordinates = false;
+    private boolean showGlyphBoundingBoxes = false;
     private boolean panning;
     private double panAnchorMouseX;
     private double panAnchorMouseY;
@@ -62,12 +68,16 @@ public class SFMDrawCanvasScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        diagnosticButtons.clear();
+        addDiagnosticButton(8, 8, () -> showCrosshairCoordinates, value -> showCrosshairCoordinates = value, "Coords");
+        addDiagnosticButton(8, 32, () -> showGlyphBoundingBoxes, value -> showGlyphBoundingBoxes = value, "Glyph Bounds");
         this.addRenderableWidget(new SFMButtonBuilder()
                 .setPosition(this.width - 88, this.height - 24)
                 .setSize(80, 20)
                 .setText(CommonComponents.GUI_DONE)
                 .setOnPress(button -> this.onClose())
                 .build());
+        refreshDiagnosticControls();
     }
 
     @Override
@@ -80,8 +90,13 @@ public class SFMDrawCanvasScreen extends Screen {
         fill(poseStack, 0, 0, this.width, this.height, BACKGROUND);
         renderGrid(poseStack);
         renderGlyphs(poseStack);
+        if (showGlyphBoundingBoxes) {
+            renderGlyphBoundingBoxes(poseStack);
+        }
         renderCanvasCursor(poseStack);
-        renderHud(poseStack, mouseX, mouseY);
+        if (showCrosshairCoordinates) {
+            renderHud(poseStack);
+        }
         super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
@@ -181,6 +196,11 @@ public class SFMDrawCanvasScreen extends Screen {
             int scanCode,
             int modifiers
     ) {
+        if (keyCode == GLFW.GLFW_KEY_F3) {
+            diagnosticControlsVisible = !diagnosticControlsVisible;
+            refreshDiagnosticControls();
+            return true;
+        }
         if (keyCode == GLFW.GLFW_KEY_BACKSPACE && !glyphs.isEmpty()) {
             CanvasGlyph removed = glyphs.remove(glyphs.size() - 1);
             cursorCanvasX = removed.x();
@@ -188,6 +208,44 @@ public class SFMDrawCanvasScreen extends Screen {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private void addDiagnosticButton(
+            int x,
+            int y,
+            ToggleReader reader,
+            ToggleWriter writer,
+            String label
+    ) {
+        Button button = new SFMButtonBuilder()
+                .setPosition(x, y)
+                .setSize(104, 20)
+                .setText(diagnosticButtonLabel(label, reader.get()))
+                .setOnPress(pressed -> {
+                    writer.set(!reader.get());
+                    refreshDiagnosticControls();
+                })
+                .build();
+        diagnosticButtons.add(button);
+        this.addRenderableWidget(button);
+    }
+
+    private void refreshDiagnosticControls() {
+        for (Button button : diagnosticButtons) {
+            button.visible = diagnosticControlsVisible;
+            button.active = diagnosticControlsVisible;
+        }
+        if (diagnosticButtons.size() >= 2) {
+            diagnosticButtons.get(0).setMessage(diagnosticButtonLabel("Coords", showCrosshairCoordinates));
+            diagnosticButtons.get(1).setMessage(diagnosticButtonLabel("Glyph Bounds", showGlyphBoundingBoxes));
+        }
+    }
+
+    private Component diagnosticButtonLabel(
+            String label,
+            boolean enabled
+    ) {
+        return Component.literal((enabled ? "[x] " : "[ ] ") + label);
     }
 
     private void beginPan(
@@ -261,6 +319,30 @@ public class SFMDrawCanvasScreen extends Screen {
         }
     }
 
+    private void renderGlyphBoundingBoxes(PoseStack poseStack) {
+        for (CanvasGlyph glyph : glyphs) {
+            int left = (int) Math.floor(canvasToScreenX(glyph.x()));
+            int top = (int) Math.floor(canvasToScreenY(glyph.y()));
+            int right = (int) Math.ceil(left + this.font.width(glyph.text()) * zoom);
+            int bottom = (int) Math.ceil(top + this.font.lineHeight * zoom);
+            drawRectOutline(poseStack, left, top, Math.max(left + 1, right), Math.max(top + 1, bottom), GLYPH_BOUNDS);
+        }
+    }
+
+    private void drawRectOutline(
+            PoseStack poseStack,
+            int left,
+            int top,
+            int right,
+            int bottom,
+            int color
+    ) {
+        fill(poseStack, left, top, right, top + 1, color);
+        fill(poseStack, left, bottom - 1, right, bottom, color);
+        fill(poseStack, left, top, left + 1, bottom, color);
+        fill(poseStack, right - 1, top, right, bottom, color);
+    }
+
     private void renderCanvasCursor(PoseStack poseStack) {
         int mouseX = (int) Math.round(canvasToScreenX(cursorCanvasX));
         int mouseY = (int) Math.round(canvasToScreenY(cursorCanvasY));
@@ -272,13 +354,9 @@ public class SFMDrawCanvasScreen extends Screen {
         fill(poseStack, mouseX, mouseY, mouseX + 1, mouseY + 1, CROSSHAIR);
     }
 
-    private void renderHud(
-            PoseStack poseStack,
-            int mouseX,
-            int mouseY
-    ) {
+    private void renderHud(PoseStack poseStack) {
         int left = 8;
-        int top = 8;
+        int top = diagnosticControlsVisible ? 56 : 8;
         int right = 226;
         int bottom = 48;
         fill(poseStack, left, top, right, bottom, HUD_BACKGROUND);
@@ -324,5 +402,13 @@ public class SFMDrawCanvasScreen extends Screen {
             double x,
             double y
     ) {
+    }
+
+    private interface ToggleReader {
+        boolean get();
+    }
+
+    private interface ToggleWriter {
+        void set(boolean value);
     }
 }
