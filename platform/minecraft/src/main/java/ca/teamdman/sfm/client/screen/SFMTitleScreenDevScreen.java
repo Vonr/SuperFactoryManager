@@ -30,6 +30,12 @@ public enum SFMTitleScreenDevScreen {
         public Screen create(TitleScreen titleScreen) {
             return new SFMInputDiagnosticsScreen(titleScreen);
         }
+    },
+    DRAW_CANVAS("draw-canvas", Component.literal("Draw Canvas")) {
+        @Override
+        public Screen create(TitleScreen titleScreen) {
+            return new SFMDrawCanvasScreen(titleScreen);
+        }
     };
 
     private final String id;
