@@ -20,6 +20,7 @@ public class SFMDrawCanvasScreen extends Screen {
     private static final int AXIS_X = 0xFF9A6B6B;
     private static final int AXIS_Y = 0xFF6D9075;
     private static final int CROSSHAIR = 0xFFE6EDF3;
+    private static final int CURSOR_TRAIL = 0xFFFF8A8A;
     private static final int GLYPH = 0xFFE6EDF3;
     private static final int GLYPH_BOUNDS = 0xFFFF5CCD;
     private static final int HUD_BACKGROUND = 0xC0181D23;
@@ -32,18 +33,21 @@ public class SFMDrawCanvasScreen extends Screen {
     private static final double BASE_GRID_STEP = 32.0D;
     private static final double MAJOR_GRID_INTERVAL = 5.0D;
     private static final double MIN_GRID_PIXEL_STEP = 12.0D;
+    private static final int CURSOR_TRAIL_LIMIT = 48;
+    private static final double CURSOR_TRAIL_MIN_DISTANCE = 2.0D;
 
     private final Screen previousScreen;
-    private final List<CanvasGlyph> glyphs = new ArrayList<>();
+    private SFMDrawCanvasModel model = new SFMDrawCanvasModel();
+    private final List<CanvasPoint> cursorTrail = new ArrayList<>();
     private final List<Button> diagnosticButtons = new ArrayList<>();
     private double cameraX;
     private double cameraY;
     private double zoom = 1.0D;
-    private double cursorCanvasX;
-    private double cursorCanvasY;
     private boolean diagnosticControlsVisible = false;
+    private boolean showGrid = false;
     private boolean showCrosshairCoordinates = false;
     private boolean showGlyphBoundingBoxes = false;
+    private boolean showCursorTrail = false;
     private boolean panning;
     private double panAnchorMouseX;
     private double panAnchorMouseY;
@@ -71,6 +75,8 @@ public class SFMDrawCanvasScreen extends Screen {
         diagnosticButtons.clear();
         addDiagnosticButton(8, 8, () -> showCrosshairCoordinates, value -> showCrosshairCoordinates = value, "Coords");
         addDiagnosticButton(8, 32, () -> showGlyphBoundingBoxes, value -> showGlyphBoundingBoxes = value, "Glyph Bounds");
+        addDiagnosticButton(8, 56, () -> showCursorTrail, value -> showCursorTrail = value, "Cursor Trail");
+        addDiagnosticButton(8, 80, () -> showGrid, value -> showGrid = value, "Grid");
         this.addRenderableWidget(new SFMButtonBuilder()
                 .setPosition(this.width - 88, this.height - 24)
                 .setSize(80, 20)
@@ -88,7 +94,12 @@ public class SFMDrawCanvasScreen extends Screen {
             float partialTick
     ) {
         fill(poseStack, 0, 0, this.width, this.height, BACKGROUND);
-        renderGrid(poseStack);
+        if (showGrid) {
+            renderGrid(poseStack);
+        }
+        if (showCursorTrail) {
+            renderCursorTrail(poseStack);
+        }
         renderGlyphs(poseStack);
         if (showGlyphBoundingBoxes) {
             renderGlyphBoundingBoxes(poseStack);
@@ -105,8 +116,6 @@ public class SFMDrawCanvasScreen extends Screen {
             double mouseX,
             double mouseY
     ) {
-        cursorCanvasX = screenToCanvasX(mouseX);
-        cursorCanvasY = screenToCanvasY(mouseY);
         super.mouseMoved(mouseX, mouseY);
     }
 
@@ -120,8 +129,11 @@ public class SFMDrawCanvasScreen extends Screen {
             beginPan(mouseX, mouseY);
             return true;
         }
-        cursorCanvasX = screenToCanvasX(mouseX);
-        cursorCanvasY = screenToCanvasY(mouseY);
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            model().setCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            rememberCursorPosition();
+            return true;
+        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -136,8 +148,13 @@ public class SFMDrawCanvasScreen extends Screen {
         if (panning && button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
             cameraX = panAnchorCameraX - (mouseX - panAnchorMouseX) / zoom;
             cameraY = panAnchorCameraY - (mouseY - panAnchorMouseY) / zoom;
-            cursorCanvasX = screenToCanvasX(mouseX);
-            cursorCanvasY = screenToCanvasY(mouseY);
+            model().setCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            rememberCursorPosition();
+            return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            model().setCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            rememberCursorPosition();
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -171,8 +188,8 @@ public class SFMDrawCanvasScreen extends Screen {
         zoom = Mth.clamp(zoom * scaleFactor, MIN_ZOOM, MAX_ZOOM);
         cameraX = focusX - (mouseX - this.width / 2.0D) / zoom;
         cameraY = focusY - (mouseY - this.height / 2.0D) / zoom;
-        cursorCanvasX = focusX;
-        cursorCanvasY = focusY;
+        model().setCursor(focusX, focusY);
+        rememberCursorPosition();
         return true;
     }
 
@@ -185,8 +202,8 @@ public class SFMDrawCanvasScreen extends Screen {
             return super.charTyped(codePoint, modifiers);
         }
         String text = Character.toString(codePoint);
-        glyphs.add(new CanvasGlyph(text, cursorCanvasX, cursorCanvasY));
-        cursorCanvasX += this.font.width(text);
+        model().typeGlyph(text, this.font.width(text));
+        rememberCursorPosition();
         return true;
     }
 
@@ -201,13 +218,95 @@ public class SFMDrawCanvasScreen extends Screen {
             refreshDiagnosticControls();
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_BACKSPACE && !glyphs.isEmpty()) {
-            CanvasGlyph removed = glyphs.remove(glyphs.size() - 1);
-            cursorCanvasX = removed.x();
-            cursorCanvasY = removed.y();
+        if (handleNumpadMovement(keyCode)) {
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+            model().moveCursorLeft();
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+            model().moveCursorRight();
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_UP) {
+            model().moveCursorUp();
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_DOWN) {
+            model().moveCursorDown();
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_HOME) {
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                model().moveCursorToDocumentStart();
+            } else {
+                model().moveCursorToLineStart();
+            }
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_END) {
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                model().moveCursorToDocumentEnd();
+            } else {
+                model().moveCursorToLineEnd();
+            }
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+            model().deleteLeft();
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_DELETE) {
+            model().deleteNearestAndMoveRight();
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+            moveCursorToNextLine();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private boolean handleNumpadMovement(int keyCode) {
+        double x = 0.0D;
+        double y = 0.0D;
+        switch (keyCode) {
+            case GLFW.GLFW_KEY_KP_7 -> {
+                x = -1.0D;
+                y = -1.0D;
+            }
+            case GLFW.GLFW_KEY_KP_8 -> y = -1.0D;
+            case GLFW.GLFW_KEY_KP_9 -> {
+                x = 1.0D;
+                y = -1.0D;
+            }
+            case GLFW.GLFW_KEY_KP_4 -> x = -1.0D;
+            case GLFW.GLFW_KEY_KP_6 -> x = 1.0D;
+            case GLFW.GLFW_KEY_KP_1 -> {
+                x = -1.0D;
+                y = 1.0D;
+            }
+            case GLFW.GLFW_KEY_KP_2 -> y = 1.0D;
+            case GLFW.GLFW_KEY_KP_3 -> {
+                x = 1.0D;
+                y = 1.0D;
+            }
+            default -> {
+                return false;
+            }
+        }
+        model().moveCursorRaw(x, y);
+        return true;
     }
 
     private void addDiagnosticButton(
@@ -239,6 +338,15 @@ public class SFMDrawCanvasScreen extends Screen {
             diagnosticButtons.get(0).setMessage(diagnosticButtonLabel("Coords", showCrosshairCoordinates));
             diagnosticButtons.get(1).setMessage(diagnosticButtonLabel("Glyph Bounds", showGlyphBoundingBoxes));
         }
+        if (diagnosticButtons.size() >= 3) {
+            diagnosticButtons.get(2).setMessage(diagnosticButtonLabel("Cursor Trail", showCursorTrail));
+        }
+        if (diagnosticButtons.size() >= 4) {
+            diagnosticButtons.get(3).setMessage(diagnosticButtonLabel("Grid", showGrid));
+        }
+        if (showCursorTrail && cursorTrail.isEmpty()) {
+            rememberCursorPosition();
+        }
     }
 
     private Component diagnosticButtonLabel(
@@ -246,6 +354,13 @@ public class SFMDrawCanvasScreen extends Screen {
             boolean enabled
     ) {
         return Component.literal((enabled ? "[x] " : "[ ] ") + label);
+    }
+
+    private SFMDrawCanvasModel model() {
+        if (model == null) {
+            model = new SFMDrawCanvasModel();
+        }
+        return model;
     }
 
     private void beginPan(
@@ -310,7 +425,7 @@ public class SFMDrawCanvasScreen extends Screen {
     }
 
     private void renderGlyphs(PoseStack poseStack) {
-        for (CanvasGlyph glyph : glyphs) {
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : model().glyphs()) {
             poseStack.pushPose();
             poseStack.translate(canvasToScreenX(glyph.x()), canvasToScreenY(glyph.y()), 0.0D);
             poseStack.scale((float) zoom, (float) zoom, 1.0F);
@@ -320,12 +435,26 @@ public class SFMDrawCanvasScreen extends Screen {
     }
 
     private void renderGlyphBoundingBoxes(PoseStack poseStack) {
-        for (CanvasGlyph glyph : glyphs) {
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : model().glyphs()) {
             int left = (int) Math.floor(canvasToScreenX(glyph.x()));
             int top = (int) Math.floor(canvasToScreenY(glyph.y()));
             int right = (int) Math.ceil(left + this.font.width(glyph.text()) * zoom);
             int bottom = (int) Math.ceil(top + this.font.lineHeight * zoom);
             drawRectOutline(poseStack, left, top, Math.max(left + 1, right), Math.max(top + 1, bottom), GLYPH_BOUNDS);
+        }
+    }
+
+    private void renderCursorTrail(PoseStack poseStack) {
+        int count = cursorTrail.size();
+        for (int i = 0; i < count; i++) {
+            CanvasPoint point = cursorTrail.get(i);
+            double age = count <= 1 ? 1.0D : (double) i / (double) (count - 1);
+            int alpha = 32 + (int) Math.round(age * 176.0D);
+            int color = (alpha << 24) | (CURSOR_TRAIL & 0x00FFFFFF);
+            int screenX = (int) Math.round(canvasToScreenX(point.x()));
+            int screenY = (int) Math.round(canvasToScreenY(point.y()));
+            int size = Math.max(1, (int) Math.round(2.0D * zoom));
+            fill(poseStack, screenX - size, screenY - size, screenX + size + 1, screenY + size + 1, color);
         }
     }
 
@@ -344,8 +473,8 @@ public class SFMDrawCanvasScreen extends Screen {
     }
 
     private void renderCanvasCursor(PoseStack poseStack) {
-        int mouseX = (int) Math.round(canvasToScreenX(cursorCanvasX));
-        int mouseY = (int) Math.round(canvasToScreenY(cursorCanvasY));
+        int mouseX = (int) Math.round(canvasToScreenX(model().cursorCanvasX()));
+        int mouseY = (int) Math.round(canvasToScreenY(model().cursorCanvasY()));
         int size = panning ? 8 : 6;
         fill(poseStack, mouseX - size, mouseY, mouseX - 2, mouseY + 1, CROSSHAIR);
         fill(poseStack, mouseX + 3, mouseY, mouseX + size + 1, mouseY + 1, CROSSHAIR);
@@ -354,9 +483,32 @@ public class SFMDrawCanvasScreen extends Screen {
         fill(poseStack, mouseX, mouseY, mouseX + 1, mouseY + 1, CROSSHAIR);
     }
 
+    private void rememberCursorPosition() {
+        if (!showCursorTrail && cursorTrail.isEmpty()) {
+            return;
+        }
+        if (!cursorTrail.isEmpty()) {
+            CanvasPoint previous = cursorTrail.get(cursorTrail.size() - 1);
+            double dx = model().cursorCanvasX() - previous.x();
+            double dy = model().cursorCanvasY() - previous.y();
+            if (dx * dx + dy * dy < CURSOR_TRAIL_MIN_DISTANCE * CURSOR_TRAIL_MIN_DISTANCE) {
+                return;
+            }
+        }
+        cursorTrail.add(new CanvasPoint(model().cursorCanvasX(), model().cursorCanvasY()));
+        while (cursorTrail.size() > CURSOR_TRAIL_LIMIT) {
+            cursorTrail.remove(0);
+        }
+    }
+
+    private void moveCursorToNextLine() {
+        model().moveCursorToNextLine(this.font.lineHeight);
+        rememberCursorPosition();
+    }
+
     private void renderHud(PoseStack poseStack) {
         int left = 8;
-        int top = diagnosticControlsVisible ? 56 : 8;
+        int top = diagnosticControlsVisible ? 104 : 8;
         int right = 226;
         int bottom = 48;
         fill(poseStack, left, top, right, bottom, HUD_BACKGROUND);
@@ -371,8 +523,8 @@ public class SFMDrawCanvasScreen extends Screen {
                 this.font,
                 String.format(
                         "cursor %.1f, %.1f  zoom %.2fx",
-                        cursorCanvasX,
-                        cursorCanvasY,
+                        model().cursorCanvasX(),
+                        model().cursorCanvasY(),
                         zoom
                 ),
                 left + 8,
@@ -397,8 +549,7 @@ public class SFMDrawCanvasScreen extends Screen {
         return (screenY - this.height / 2.0D) / zoom + cameraY;
     }
 
-    private record CanvasGlyph(
-            String text,
+    private record CanvasPoint(
             double x,
             double y
     ) {

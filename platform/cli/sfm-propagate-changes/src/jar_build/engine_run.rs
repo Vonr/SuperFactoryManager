@@ -720,6 +720,7 @@ fn execute_run(
     );
     jvm_args.extend([
         "-XX:+IgnoreUnrecognizedVMOptions".to_string(),
+        "-XX:+AllowEnhancedClassRedefinition".to_string(),
         "-XX:+AllowRedefinitionToAddDeleteMethods".to_string(),
     ]);
     if matches!(kind, RunKind::Client) && let Some(port) = run_options.client_hotswap_port {

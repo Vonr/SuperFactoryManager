@@ -63,7 +63,7 @@ public final class SfmHotswapHelper {
         List<ReferenceType> loadedClasses = vm.allClasses();
         for (ReferenceType type : loadedClasses) {
             String className = type.name();
-            if (!className.startsWith(classPrefix)) {
+            if (!matchesSelector(className, classPrefix)) {
                 continue;
             }
             Path classFile = classesDir.resolve(className.replace('.', '/') + ".class");
@@ -73,5 +73,12 @@ public final class SfmHotswapHelper {
             redefinitions.put(type, Files.readAllBytes(classFile));
         }
         return redefinitions;
+    }
+
+    private static boolean matchesSelector(String className, String classPrefix) {
+        if (classPrefix.startsWith("=")) {
+            return className.equals(classPrefix.substring(1));
+        }
+        return className.startsWith(classPrefix);
     }
 }

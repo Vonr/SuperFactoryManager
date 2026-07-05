@@ -30,6 +30,9 @@ pub struct RunHotswapArgs {
     /// Only reload loaded classes whose binary name starts with this prefix.
     #[facet(default, args::named)]
     pub class_prefix: Option<String>,
+    /// Only reload this exact loaded class binary name.
+    #[facet(default, args::named)]
+    pub class_name: Option<String>,
 }
 
 impl RunHotswapArgs {
@@ -75,12 +78,18 @@ impl RunHotswapArgs {
             .join("classes");
         let java = resolve_java(build_options.java_home.as_deref(), 17)?;
         compile_hotswap_helper(&java, &helper_classes_dir)?;
+        let class_selector = self
+            .class_name
+            .as_deref()
+            .map(|class_name| format!("={class_name}"))
+            .or_else(|| self.class_prefix.clone())
+            .unwrap_or_else(|| DEFAULT_CLASS_PREFIX.to_string());
         run_hotswap_helper(
             &java,
             &helper_classes_dir,
             self.port.unwrap_or(DEFAULT_HOTSWAP_PORT),
             &classes_dir,
-            self.class_prefix.as_deref().unwrap_or(DEFAULT_CLASS_PREFIX),
+            &class_selector,
         )
     }
 }
