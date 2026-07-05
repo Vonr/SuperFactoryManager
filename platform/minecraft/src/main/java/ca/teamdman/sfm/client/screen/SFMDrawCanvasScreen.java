@@ -12,6 +12,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SFMDrawCanvasScreen extends Screen {
     private static final int BACKGROUND = 0xFF15191E;
@@ -483,11 +484,16 @@ public class SFMDrawCanvasScreen extends Screen {
     }
 
     private void renderGlyphs(PoseStack poseStack) {
+        Map<SFMDrawCanvasModel.CanvasGlyph, Integer> glyphColours = SFMDrawCanvasSyntaxHighlightingHelper.buildSyntaxHighlightColours(
+                model().glyphs(),
+                this.font.width(" "),
+                GLYPH
+        );
         for (SFMDrawCanvasModel.CanvasGlyph glyph : model().glyphs()) {
             poseStack.pushPose();
             poseStack.translate(canvasToScreenX(glyph.x()), canvasToScreenY(glyph.y()), 0.0D);
             poseStack.scale((float) zoom, (float) zoom, 1.0F);
-            drawString(poseStack, this.font, glyph.text(), 0, 0, GLYPH);
+            drawString(poseStack, this.font, glyph.text(), 0, 0, glyphColours.getOrDefault(glyph, GLYPH));
             poseStack.popPose();
         }
     }
