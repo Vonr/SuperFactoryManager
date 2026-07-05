@@ -114,6 +114,30 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void ctrlATargetsThenBackspaceDeletesTransactionally() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "asd", 0, 0);
+        canvas.setCursor(0, 0);
+        canvas.ensureCursorClosestToEachGlyph();
+
+        canvas.deleteLeft();
+
+        assertEquals(0, canvas.glyphs().size());
+    }
+
+    @Test
+    public void ctrlATargetsThenDeleteDeletesTransactionally() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "asd", 0, 0);
+        canvas.setCursor(0, 0);
+        canvas.ensureCursorClosestToEachGlyph();
+
+        canvas.deleteNearestAndMoveRight();
+
+        assertEquals(0, canvas.glyphs().size());
+    }
+
+    @Test
     public void enterRepeatedlyAdvancesBlankLines() {
         SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
         int lineHeight = 9;

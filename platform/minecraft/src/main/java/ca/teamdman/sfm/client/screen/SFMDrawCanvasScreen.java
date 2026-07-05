@@ -26,6 +26,7 @@ public class SFMDrawCanvasScreen extends Screen {
     private static final int HUD_BORDER = 0xFF4B5563;
     private static final int HUD_TEXT = 0xFFE6EDF3;
     private static final int HUD_MUTED = 0xFF9CA3AF;
+    private static final int INPUT_LOG_LIMIT = 8;
     private static final double MIN_ZOOM = 0.05D;
     private static final double MAX_ZOOM = 8.0D;
     private static final double ZOOM_STEP = 1.15D;
@@ -39,6 +40,7 @@ public class SFMDrawCanvasScreen extends Screen {
     private final Screen previousScreen;
     private SFMDrawCanvasModel model = new SFMDrawCanvasModel();
     private final List<CanvasPoint> cursorTrail = new ArrayList<>();
+    private final List<String> inputEvents = new ArrayList<>();
     private final List<Button> diagnosticButtons = new ArrayList<>();
     private double cameraX;
     private double cameraY;
@@ -109,6 +111,9 @@ public class SFMDrawCanvasScreen extends Screen {
         renderCanvasCursor(poseStack);
         if (showCrosshairCoordinates) {
             renderHud(poseStack);
+        }
+        if (diagnosticControlsVisible) {
+            renderInputDiagnostics(poseStack);
         }
         super.render(poseStack, mouseX, mouseY, partialTick);
     }
@@ -211,6 +216,7 @@ public class SFMDrawCanvasScreen extends Screen {
             return super.charTyped(codePoint, modifiers);
         }
         String text = Character.toString(codePoint);
+        rememberInputEvent(String.format("charTyped '%s' U+%04X modifiers=%s", text, (int) codePoint, modifierText(modifiers)));
         model().typeGlyph(text, this.font.width(text));
         rememberCursorPosition();
         return true;
@@ -222,6 +228,7 @@ public class SFMDrawCanvasScreen extends Screen {
             int scanCode,
             int modifiers
     ) {
+        rememberInputEvent(String.format("keyPressed key=%d scan=%d modifiers=%s", keyCode, scanCode, modifierText(modifiers)));
         if (keyCode == GLFW.GLFW_KEY_F3) {
             diagnosticControlsVisible = !diagnosticControlsVisible;
             refreshDiagnosticControls();
@@ -307,6 +314,16 @@ public class SFMDrawCanvasScreen extends Screen {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean keyReleased(
+            int keyCode,
+            int scanCode,
+            int modifiers
+    ) {
+        rememberInputEvent(String.format("keyReleased key=%d scan=%d modifiers=%s", keyCode, scanCode, modifierText(modifiers)));
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
     private boolean handleNumpadMovement(int keyCode) {
@@ -583,6 +600,13 @@ public class SFMDrawCanvasScreen extends Screen {
         rememberCursorPosition();
     }
 
+    private void rememberInputEvent(String event) {
+        inputEvents.add(event);
+        while (inputEvents.size() > INPUT_LOG_LIMIT) {
+            inputEvents.remove(0);
+        }
+    }
+
     private void renderHud(PoseStack poseStack) {
         int left = 8;
         int top = diagnosticControlsVisible ? 104 : 8;
@@ -608,6 +632,45 @@ public class SFMDrawCanvasScreen extends Screen {
                 top + 22,
                 HUD_MUTED
         );
+    }
+
+    private void renderInputDiagnostics(PoseStack poseStack) {
+        if (inputEvents.isEmpty()) {
+            return;
+        }
+        int left = 8;
+        int lineHeight = this.font.lineHeight + 2;
+        int height = inputEvents.size() * lineHeight + 12;
+        int top = Math.max(112, this.height - height - 8);
+        int right = Math.min(this.width - 8, 420);
+        int bottom = top + height;
+        fill(poseStack, left, top, right, bottom, HUD_BACKGROUND);
+        fill(poseStack, left, top, right, top + 1, HUD_BORDER);
+        fill(poseStack, left, bottom - 1, right, bottom, HUD_BORDER);
+        fill(poseStack, left, top, left + 1, bottom, HUD_BORDER);
+        fill(poseStack, right - 1, top, right, bottom, HUD_BORDER);
+        int y = top + 6;
+        for (String event : inputEvents) {
+            drawString(poseStack, this.font, event, left + 6, y, HUD_MUTED);
+            y += lineHeight;
+        }
+    }
+
+    private String modifierText(int modifiers) {
+        List<String> parts = new ArrayList<>();
+        if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            parts.add("ctrl");
+        }
+        if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
+            parts.add("shift");
+        }
+        if ((modifiers & GLFW.GLFW_MOD_ALT) != 0) {
+            parts.add("alt");
+        }
+        if ((modifiers & GLFW.GLFW_MOD_SUPER) != 0) {
+            parts.add("super");
+        }
+        return parts.isEmpty() ? "none" : String.join("+", parts);
     }
 
     private double canvasToScreenX(double canvasX) {
