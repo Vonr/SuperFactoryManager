@@ -212,6 +212,63 @@ public class SFMDrawCanvasModelTests {
                 """, toFixture(canvas));
     }
 
+    @Test
+    public void upMovesIntoBlankGapWhenPreviousGlyphLineIsFarEnoughAway() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        int lineHeight = 9;
+        typeTextAt(canvas, "every 20 ticks do", 0, 0);
+        typeTextAt(canvas, "end", 0, lineHeight * 2);
+        canvas.setCursor(3, lineHeight * 2);
+
+        canvas.moveCursorUp(lineHeight);
+
+        assertEquals(3, canvas.cursorCanvasX());
+        assertEquals(lineHeight, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void upToGlyphSkipsBlankGap() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        int lineHeight = 9;
+        typeTextAt(canvas, "every 20 ticks do", 0, 0);
+        typeTextAt(canvas, "end", 0, lineHeight * 2);
+        canvas.setCursor(3, lineHeight * 2);
+
+        canvas.moveCursorUpToGlyph(lineHeight);
+
+        assertEquals(3, canvas.cursorCanvasX());
+        assertEquals(0, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void downToGlyphSkipsBlankGap() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        int lineHeight = 9;
+        typeTextAt(canvas, "every 20 ticks do", 0, 0);
+        typeTextAt(canvas, "end", 0, lineHeight * 2);
+        canvas.setCursor(3, 0);
+
+        canvas.moveCursorDownToGlyph(lineHeight);
+
+        assertEquals(2, canvas.cursorCanvasX());
+        assertEquals(lineHeight * 2, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void upStillSnapsToAdjacentLineWhenNoBlankGapExists() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                every 20 ticks do
+                end|
+                """);
+
+        canvas.moveCursorUp(1);
+
+        assertEquals("""
+                eve|ry 20 ticks do
+                end
+                """, toFixture(canvas));
+    }
+
     private static SFMDrawCanvasModel fromFixture(String fixture) {
         SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
         String[] lines = fixture.stripTrailing().split("\n", -1);
@@ -241,6 +298,18 @@ public class SFMDrawCanvasModelTests {
         }
         canvas.setCursor(cursorX, cursorY);
         return canvas;
+    }
+
+    private static void typeTextAt(
+            SFMDrawCanvasModel canvas,
+            String text,
+            double x,
+            double y
+    ) {
+        canvas.setCursor(x, y);
+        for (char c : text.toCharArray()) {
+            canvas.typeGlyph(Character.toString(c), 1);
+        }
     }
 
     private static String toFixture(SFMDrawCanvasModel canvas) {

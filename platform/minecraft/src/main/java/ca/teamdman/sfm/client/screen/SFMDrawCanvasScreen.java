@@ -35,6 +35,7 @@ public class SFMDrawCanvasScreen extends Screen {
     private static final double MIN_GRID_PIXEL_STEP = 12.0D;
     private static final int CURSOR_TRAIL_LIMIT = 48;
     private static final double CURSOR_TRAIL_MIN_DISTANCE = 2.0D;
+    private static final int DEFAULT_ORIGIN_MARGIN = 32;
 
     private final Screen previousScreen;
     private SFMDrawCanvasModel model = new SFMDrawCanvasModel();
@@ -43,6 +44,7 @@ public class SFMDrawCanvasScreen extends Screen {
     private double cameraX;
     private double cameraY;
     private double zoom = 1.0D;
+    private boolean cameraInitialized;
     private boolean diagnosticControlsVisible = false;
     private boolean showGrid = false;
     private boolean showCrosshairCoordinates = false;
@@ -72,6 +74,7 @@ public class SFMDrawCanvasScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        initializeCamera();
         diagnosticButtons.clear();
         addDiagnosticButton(8, 8, () -> showCrosshairCoordinates, value -> showCrosshairCoordinates = value, "Coords");
         addDiagnosticButton(8, 32, () -> showGlyphBoundingBoxes, value -> showGlyphBoundingBoxes = value, "Glyph Bounds");
@@ -236,12 +239,20 @@ public class SFMDrawCanvasScreen extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_UP) {
-            model().moveCursorUp();
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                model().moveCursorUpToGlyph(this.font.lineHeight);
+            } else {
+                model().moveCursorUp(this.font.lineHeight);
+            }
             rememberCursorPosition();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_DOWN) {
-            model().moveCursorDown();
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                model().moveCursorDownToGlyph(this.font.lineHeight);
+            } else {
+                model().moveCursorDown(this.font.lineHeight);
+            }
             rememberCursorPosition();
             return true;
         }
@@ -364,6 +375,15 @@ public class SFMDrawCanvasScreen extends Screen {
             model = new SFMDrawCanvasModel();
         }
         return model;
+    }
+
+    private void initializeCamera() {
+        if (cameraInitialized) {
+            return;
+        }
+        cameraX = (this.width / 2.0D - DEFAULT_ORIGIN_MARGIN) / zoom;
+        cameraY = (this.height / 2.0D - DEFAULT_ORIGIN_MARGIN) / zoom;
+        cameraInitialized = true;
     }
 
     private void beginPan(

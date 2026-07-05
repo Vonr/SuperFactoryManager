@@ -148,11 +148,27 @@ public class SFMDrawCanvasModel {
     }
 
     public void moveCursorUp() {
-        moveCursorVertically(-1);
+        moveCursorUp(1);
     }
 
     public void moveCursorDown() {
-        moveCursorVertically(1);
+        moveCursorDown(1);
+    }
+
+    public void moveCursorUp(int lineHeight) {
+        moveCursorVertically(-1, lineHeight, false);
+    }
+
+    public void moveCursorDown(int lineHeight) {
+        moveCursorVertically(1, lineHeight, false);
+    }
+
+    public void moveCursorUpToGlyph(int lineHeight) {
+        moveCursorVertically(-1, lineHeight, true);
+    }
+
+    public void moveCursorDownToGlyph(int lineHeight) {
+        moveCursorVertically(1, lineHeight, true);
     }
 
     public void moveCursorToLineStart() {
@@ -332,7 +348,11 @@ public class SFMDrawCanvasModel {
         return line.isEmpty() ? null : line.get(0);
     }
 
-    private void moveCursorVertically(int direction) {
+    private void moveCursorVertically(
+            int direction,
+            int lineHeight,
+            boolean snapToGlyph
+    ) {
         Double targetY = null;
         for (CanvasGlyph glyph : glyphs) {
             boolean candidate = direction < 0 ? glyph.y() < cursorCanvasY : glyph.y() > cursorCanvasY;
@@ -342,6 +362,12 @@ public class SFMDrawCanvasModel {
             }
         }
         if (targetY == null) {
+            return;
+        }
+        double gapStart = direction < 0 ? targetY + lineHeight : cursorCanvasY + lineHeight;
+        double gapEnd = direction < 0 ? cursorCanvasY : targetY;
+        if (!snapToGlyph && gapEnd - gapStart >= lineHeight) {
+            cursorCanvasY += direction * lineHeight;
             return;
         }
         List<CanvasGlyph> line = glyphsOnLine(targetY);
