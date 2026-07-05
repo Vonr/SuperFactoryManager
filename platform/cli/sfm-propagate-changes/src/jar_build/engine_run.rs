@@ -643,7 +643,7 @@ fn execute_run(
     };
     context.bail_if_cancelled()?;
 
-    let source_roots = run_source_roots(&context, kind)?;
+    let source_roots = run_source_roots(&context, kind, run_options)?;
     let mcp_mappings = run_mcp_mappings(plan);
     let module_path = join_classpath(&modules);
     let minecraft_classpath_file_text = minecraft_classpath_file.display().to_string();
@@ -754,7 +754,7 @@ fn execute_run(
         .chain(modules.iter().cloned())
         .collect::<Vec<_>>();
     if launch_main.starts_with("net.neoforged.fml.startup.") {
-        java_classpath_inputs.extend(run_source_root_paths(&context, kind)?);
+        java_classpath_inputs.extend(run_source_root_paths(&context, kind, run_options)?);
     }
     let java_classpath = dedup_paths_preserve_order(java_classpath_inputs);
     let mut java_args = Vec::new();
@@ -3250,7 +3250,14 @@ pub(super) fn should_include_project_run_dependencies(
     kind: RunKind,
     run_options: &RunOptions,
 ) -> bool {
-    !(run_options.client_solo && matches!(kind, RunKind::Client))
+    !is_solo_client_like_launch(kind, run_options)
+}
+
+fn is_solo_client_like_launch(
+    kind: RunKind,
+    run_options: &RunOptions,
+) -> bool {
+    run_options.client_solo && matches!(kind, RunKind::Client | RunKind::ClientSmoke)
 }
 
 #[expect(
@@ -3725,9 +3732,13 @@ fn write_classpath_file(path: &Path, classpath: &[PathBuf]) -> eyre::Result<()> 
         .wrap_err_with(|| format!("Failed to write {}", path.display()))
 }
 
-fn run_source_roots(context: &ExecutionContext<'_>, kind: RunKind) -> eyre::Result<String> {
+fn run_source_roots(
+    context: &ExecutionContext<'_>,
+    kind: RunKind,
+    run_options: &RunOptions,
+) -> eyre::Result<String> {
     let mod_id = required_property(&context.plan.properties, "mod_id")?;
-    let existing_roots = run_source_root_paths(context, kind)?;
+    let existing_roots = run_source_root_paths(context, kind, run_options)?;
     let separator = if cfg!(windows) { ";" } else { ":" };
     Ok(existing_roots
         .into_iter()
@@ -3739,15 +3750,18 @@ fn run_source_roots(context: &ExecutionContext<'_>, kind: RunKind) -> eyre::Resu
 fn run_source_root_paths(
     context: &ExecutionContext<'_>,
     kind: RunKind,
+    run_options: &RunOptions,
 ) -> eyre::Result<Vec<PathBuf>> {
     let project_root = context.plan.cache_dir.join("project");
     let mut roots = vec![
         project_root.join("staged-resources"),
         project_root.join("classes"),
     ];
-    let source_set = kind.optional_source_set();
-    roots.push(project_root.join(source_set).join("resources"));
-    roots.push(project_root.join(source_set).join("classes"));
+    if !is_solo_client_like_launch(kind, run_options) {
+        let source_set = kind.optional_source_set();
+        roots.push(project_root.join(source_set).join("resources"));
+        roots.push(project_root.join(source_set).join("classes"));
+    }
 
     let existing_roots = roots
         .into_iter()

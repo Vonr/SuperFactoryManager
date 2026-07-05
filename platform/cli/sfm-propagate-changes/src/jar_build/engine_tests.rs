@@ -74,7 +74,9 @@ use super::run_dependency_configurations;
 use super::run_max_launch_attempts;
 use super::rust_output_jar_path;
 use super::set_minecraft_option;
+use super::should_include_project_run_dependencies;
 use super::should_keep_split_minecraft_runtime_entry;
+use super::should_package_project_entry;
 use super::source_build_checkout_key;
 use super::source_git_provenance;
 use super::write_compare_reports;
@@ -345,6 +347,46 @@ fn game_test_run_filter_sets_selection_property_for_game_test_runners() {
         },
     );
     assert!(!blank_properties.contains_key("sfm.gametestSelection"));
+}
+
+#[test]
+fn solo_client_dependency_exclusion_applies_to_client_smoke() {
+    let solo_options = RunOptions {
+        client_solo: true,
+        ..RunOptions::default()
+    };
+    let normal_options = RunOptions::default();
+
+    assert!(!should_include_project_run_dependencies(
+        RunKind::Client,
+        &solo_options
+    ));
+    assert!(!should_include_project_run_dependencies(
+        RunKind::ClientSmoke,
+        &solo_options
+    ));
+    assert!(should_include_project_run_dependencies(
+        RunKind::ClientPuppet,
+        &solo_options
+    ));
+    assert!(should_include_project_run_dependencies(
+        RunKind::GameTestServer,
+        &solo_options
+    ));
+    assert!(should_include_project_run_dependencies(
+        RunKind::Client,
+        &normal_options
+    ));
+}
+
+#[test]
+fn release_jar_excludes_dev_only_client_smoke_harness() {
+    assert!(!should_package_project_entry(
+        "ca/teamdman/sfm/client/handler/SFMClientSmokeRunHarness.class"
+    ));
+    assert!(should_package_project_entry(
+        "ca/teamdman/sfm/client/handler/TitleScreenOpenTextEditorOnLaunchHandler.class"
+    ));
 }
 
 #[test]

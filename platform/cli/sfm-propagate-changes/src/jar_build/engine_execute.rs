@@ -2589,6 +2589,7 @@ fn package_fingerprint_extras(context: &ExecutionContext<'_>) -> Vec<String> {
     let mut extras = vec![
         "package-and-reobfuscate-v1".to_string(),
         format!("{:?}", context.plan.loader_toolchain.kind),
+        format!("exclude:{CLIENT_SMOKE_RUN_HARNESS_CLASS}"),
         context
             .plan
             .worktree_path
@@ -2842,9 +2843,14 @@ fn add_directory_to_jar_entries(
     Ok(())
 }
 
-fn should_package_project_entry(name: &str) -> bool {
-    !name.eq_ignore_ascii_case(
-        "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat",
+const CLIENT_SMOKE_RUN_HARNESS_CLASS: &str =
+    "ca/teamdman/sfm/client/handler/SFMClientSmokeRunHarness.class";
+
+pub(super) fn should_package_project_entry(name: &str) -> bool {
+    !matches!(
+        name,
+        "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat"
+            | CLIENT_SMOKE_RUN_HARNESS_CLASS
     )
 }
 

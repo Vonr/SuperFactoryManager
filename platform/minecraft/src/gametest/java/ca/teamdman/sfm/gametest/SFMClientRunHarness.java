@@ -71,12 +71,6 @@ public class SFMClientRunHarness {
         }
 
         titleScreenHandled = true;
-        if (mode == Mode.SMOKE) {
-            SFM.LOGGER.info("SFM_CLIENT_SMOKE_READY title_screen");
-            Minecraft.getInstance().stop();
-            return;
-        }
-
         if (mode == Mode.PUPPET) {
             SFM.LOGGER.info("SFM_CLIENT_PUPPET_TITLE_READY");
             startPuppetWorld();
@@ -351,7 +345,6 @@ public class SFMClientRunHarness {
 
     private static Mode mode() {
         return switch (System.getProperty(MODE_PROPERTY, "")) {
-            case "smoke" -> Mode.SMOKE;
             case "puppet" -> Mode.PUPPET;
             default -> Mode.NONE;
         };
@@ -359,7 +352,6 @@ public class SFMClientRunHarness {
 
     private enum Mode {
         NONE,
-        SMOKE,
         PUPPET
     }
 }
