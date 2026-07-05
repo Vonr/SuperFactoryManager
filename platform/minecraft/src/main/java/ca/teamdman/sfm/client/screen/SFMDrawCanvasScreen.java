@@ -19,7 +19,6 @@ public class SFMDrawCanvasScreen extends Screen {
     private static final int MAJOR_GRID = 0xFF343D47;
     private static final int AXIS_X = 0xFF9A6B6B;
     private static final int AXIS_Y = 0xFF6D9075;
-    private static final int CROSSHAIR = 0xFFE6EDF3;
     private static final int CURSOR_TRAIL = 0xFFFF8A8A;
     private static final int GLYPH = 0xFFE6EDF3;
     private static final int GLYPH_BOUNDS = 0xFFFF5CCD;
@@ -136,7 +135,11 @@ public class SFMDrawCanvasScreen extends Screen {
             if (super.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
-            model().setCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            if (hasAltDown()) {
+                model().addCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            } else {
+                model().setActiveCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            }
             rememberCursorPosition();
             return true;
         }
@@ -159,7 +162,7 @@ public class SFMDrawCanvasScreen extends Screen {
             return true;
         }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            model().setCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            model().setActiveCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
             rememberCursorPosition();
             return true;
         }
@@ -222,6 +225,21 @@ public class SFMDrawCanvasScreen extends Screen {
         if (keyCode == GLFW.GLFW_KEY_F3) {
             diagnosticControlsVisible = !diagnosticControlsVisible;
             refreshDiagnosticControls();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_F1) {
+            model().focusPreviousCursor((modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_F4) {
+            model().focusNextCursor((modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_A && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            model().ensureCursorClosestToEachGlyph();
+            rememberCursorPosition();
             return true;
         }
         if (handleNumpadMovement(keyCode)) {
@@ -496,14 +514,50 @@ public class SFMDrawCanvasScreen extends Screen {
     }
 
     private void renderCanvasCursor(PoseStack poseStack) {
-        int mouseX = (int) Math.round(canvasToScreenX(model().cursorCanvasX()));
-        int mouseY = (int) Math.round(canvasToScreenY(model().cursorCanvasY()));
+        for (int i = 0; i < model().cursors().size(); i++) {
+            SFMDrawCanvasModel.CanvasCursor cursor = model().cursors().get(i);
+            renderCanvasCursor(poseStack, cursor, i == model().focusedCursorIndex());
+        }
+    }
+
+    private void renderCanvasCursor(
+            PoseStack poseStack,
+            SFMDrawCanvasModel.CanvasCursor cursor,
+            boolean focused
+    ) {
+        int mouseX = (int) Math.round(canvasToScreenX(cursor.x()));
+        int mouseY = (int) Math.round(canvasToScreenY(cursor.y()));
         int size = panning ? 8 : 6;
-        fill(poseStack, mouseX - size, mouseY, mouseX - 2, mouseY + 1, CROSSHAIR);
-        fill(poseStack, mouseX + 3, mouseY, mouseX + size + 1, mouseY + 1, CROSSHAIR);
-        fill(poseStack, mouseX, mouseY - size, mouseX + 1, mouseY - 2, CROSSHAIR);
-        fill(poseStack, mouseX, mouseY + 3, mouseX + 1, mouseY + size + 1, CROSSHAIR);
-        fill(poseStack, mouseX, mouseY, mouseX + 1, mouseY + 1, CROSSHAIR);
+        int cursorSize = cursor.active() ? size + 2 : size;
+        if (focused) {
+            drawCrosshair(poseStack, mouseX, mouseY, cursorSize + 2, focusedCursorOutlineColor(cursor.color()));
+        }
+        drawCrosshair(poseStack, mouseX, mouseY, cursorSize, cursor.active() ? cursor.color() : inactiveCursorColor(cursor.color()));
+    }
+
+    private void drawCrosshair(
+            PoseStack poseStack,
+            int mouseX,
+            int mouseY,
+            int size,
+            int color
+    ) {
+        fill(poseStack, mouseX - size, mouseY, mouseX - 2, mouseY + 1, color);
+        fill(poseStack, mouseX + 3, mouseY, mouseX + size + 1, mouseY + 1, color);
+        fill(poseStack, mouseX, mouseY - size, mouseX + 1, mouseY - 2, color);
+        fill(poseStack, mouseX, mouseY + 3, mouseX + 1, mouseY + size + 1, color);
+        fill(poseStack, mouseX, mouseY, mouseX + 1, mouseY + 1, color);
+    }
+
+    private int inactiveCursorColor(int color) {
+        return 0x88000000 | (color & 0x00FFFFFF);
+    }
+
+    private int focusedCursorOutlineColor(int color) {
+        int red = Math.min(255, ((color >> 16) & 0xFF) + 56);
+        int green = Math.min(255, ((color >> 8) & 0xFF) + 56);
+        int blue = Math.min(255, (color & 0xFF) + 56);
+        return 0xFF000000 | (red << 16) | (green << 8) | blue;
     }
 
     private void rememberCursorPosition() {

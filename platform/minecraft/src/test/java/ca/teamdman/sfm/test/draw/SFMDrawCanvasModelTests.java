@@ -4,8 +4,115 @@ import ca.teamdman.sfm.client.screen.SFMDrawCanvasModel;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SFMDrawCanvasModelTests {
+    @Test
+    public void startsWithOnlyPrimaryCursor() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+
+        assertEquals(1, canvas.cursors().size());
+        assertEquals(0, canvas.focusedCursorIndex());
+        assertTrue(canvas.cursors().get(0).active());
+    }
+
+    @Test
+    public void shiftFocusIncludesCursorInActiveSet() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.addCursor(64, 0);
+        canvas.focusPreviousCursor(false);
+
+        canvas.focusNextCursor(true);
+
+        assertEquals(1, canvas.focusedCursorIndex());
+        assertTrue(canvas.cursors().get(0).active());
+        assertTrue(canvas.cursors().get(1).active());
+    }
+
+    @Test
+    public void soloFocusActivatesOnlyFocusedCursor() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.addCursor(64, 0);
+        canvas.focusPreviousCursor(false);
+        canvas.focusNextCursor(true);
+
+        canvas.focusPreviousCursor(false);
+
+        assertEquals(0, canvas.focusedCursorIndex());
+        assertTrue(canvas.cursors().get(0).active());
+        assertFalse(canvas.cursors().get(1).active());
+    }
+
+    @Test
+    public void typingWritesAtAllActiveCursors() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.addCursor(64, 0);
+
+        canvas.typeGlyph("x", 1);
+
+        assertEquals(2, canvas.glyphs().size());
+        assertEquals(0, canvas.glyphs().get(0).x());
+        assertEquals(64, canvas.glyphs().get(1).x());
+        assertEquals(1, canvas.cursors().get(0).x());
+        assertEquals(65, canvas.cursors().get(1).x());
+    }
+
+    @Test
+    public void movingActiveCursorsToSamePositionCollapsesDuplicates() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.addCursor(64, 0);
+
+        canvas.setActiveCursors(10, 20);
+
+        assertEquals(1, canvas.cursors().size());
+        assertEquals(10, canvas.cursorCanvasX());
+        assertEquals(20, canvas.cursorCanvasY());
+        assertTrue(canvas.focusedCursor().active());
+    }
+
+    @Test
+    public void backspaceDeletesAtAllActiveCursors() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.addCursor(64, 0);
+        canvas.typeGlyph("a", 1);
+
+        canvas.deleteLeft();
+
+        assertEquals(0, canvas.glyphs().size());
+        assertEquals(0, canvas.cursors().get(0).x());
+        assertEquals(64, canvas.cursors().get(1).x());
+    }
+
+    @Test
+    public void ensureCursorClosestToEachGlyphCreatesMissingCursors() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "abc", 0, 0);
+        canvas.setCursor(0, 0);
+
+        canvas.ensureCursorClosestToEachGlyph();
+
+        assertEquals(3, canvas.cursors().size());
+        assertEquals(0, canvas.cursors().get(0).x());
+        assertEquals(1, canvas.cursors().get(1).x());
+        assertEquals(2, canvas.cursors().get(2).x());
+        assertTrue(canvas.cursors().get(0).active());
+        assertTrue(canvas.cursors().get(1).active());
+        assertTrue(canvas.cursors().get(2).active());
+    }
+
+    @Test
+    public void ensureCursorClosestToEachGlyphDoesNotDuplicateCoveredGlyphs() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "abc", 0, 0);
+        canvas.setCursor(0, 0);
+        canvas.ensureCursorClosestToEachGlyph();
+
+        canvas.ensureCursorClosestToEachGlyph();
+
+        assertEquals(3, canvas.cursors().size());
+    }
+
     @Test
     public void enterRepeatedlyAdvancesBlankLines() {
         SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
