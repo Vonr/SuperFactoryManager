@@ -130,6 +130,9 @@ public class SFMDrawCanvasScreen extends Screen {
             return true;
         }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (super.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
             model().setCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
             rememberCursorPosition();
             return true;
