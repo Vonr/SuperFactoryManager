@@ -18,6 +18,7 @@ NAME "Changelog"
 -- Fix SFM Classic resource pack not loading on 26.1.2 #548
 -- Fix Ctrl+I container inspector overlay text being invisible on 26.1.2 #555
 -- Fix label gun text and label gun/network tool highlights rendering slightly offset at large world coordinates #506
+-- Fix draw canvas selection highlights covering unselected gaps between glyphs
 -- Thank you @Terusia for the support!
 
 ---- 4.33.0 ----

@@ -671,24 +671,85 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         }
     }
 
-    private List<CanvasRect> unionRects(List<CanvasRect> sourceRects) {
-        List<CanvasRect> merged = new ArrayList<>();
-        for (CanvasRect source : sourceRects) {
-            CanvasRect pending = source;
-            boolean changed;
-            do {
-                changed = false;
-                for (int i = 0; i < merged.size(); i++) {
-                    CanvasRect existing = merged.get(i);
-                    if (pending.touchesOrOverlaps(existing)) {
-                        pending = pending.union(existing);
-                        merged.remove(i);
-                        changed = true;
+    static List<CanvasRect> unionRects(List<CanvasRect> sourceRects) {
+        List<CanvasRect> rects = sourceRects
+                .stream()
+                .filter(rect -> !rect.isEmpty())
+                .toList();
+        if (rects.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> xs = sortedDistinctEdges(rects, true);
+        List<Integer> ys = sortedDistinctEdges(rects, false);
+        boolean[][] covered = new boolean[ys.size() - 1][xs.size() - 1];
+
+        for (int yIndex = 0; yIndex < ys.size() - 1; yIndex++) {
+            int top = ys.get(yIndex);
+            int bottom = ys.get(yIndex + 1);
+            for (int xIndex = 0; xIndex < xs.size() - 1; xIndex++) {
+                int left = xs.get(xIndex);
+                int right = xs.get(xIndex + 1);
+                for (CanvasRect rect : rects) {
+                    if (rect.covers(left, top, right, bottom)) {
+                        covered[yIndex][xIndex] = true;
                         break;
                     }
                 }
-            } while (changed);
-            merged.add(pending);
+            }
+        }
+
+        // Partition by all source edges so the result covers exactly the union without overlapping highlights.
+        List<CanvasRect> horizontalStrips = new ArrayList<>();
+        for (int yIndex = 0; yIndex < ys.size() - 1; yIndex++) {
+            int runStart = -1;
+            for (int xIndex = 0; xIndex <= xs.size() - 1; xIndex++) {
+                boolean cellCovered = xIndex < xs.size() - 1 && covered[yIndex][xIndex];
+                if (cellCovered && runStart == -1) {
+                    runStart = xIndex;
+                } else if (!cellCovered && runStart != -1) {
+                    horizontalStrips.add(new CanvasRect(
+                            xs.get(runStart),
+                            ys.get(yIndex),
+                            xs.get(xIndex),
+                            ys.get(yIndex + 1)
+                    ));
+                    runStart = -1;
+                }
+            }
+        }
+        return mergeVerticalStrips(horizontalStrips);
+    }
+
+    private static List<Integer> sortedDistinctEdges(
+            List<CanvasRect> rects,
+            boolean horizontal
+    ) {
+        List<Integer> edges = new ArrayList<>();
+        for (CanvasRect rect : rects) {
+            edges.add(horizontal ? rect.left() : rect.top());
+            edges.add(horizontal ? rect.right() : rect.bottom());
+        }
+        return edges.stream().distinct().sorted().toList();
+    }
+
+    private static List<CanvasRect> mergeVerticalStrips(List<CanvasRect> strips) {
+        List<CanvasRect> merged = new ArrayList<>();
+        for (CanvasRect strip : strips) {
+            boolean mergedIntoExisting = false;
+            for (int i = 0; i < merged.size(); i++) {
+                CanvasRect existing = merged.get(i);
+                if (existing.left() == strip.left()
+                    && existing.right() == strip.right()
+                    && existing.bottom() == strip.top()) {
+                    merged.set(i, new CanvasRect(existing.left(), existing.top(), existing.right(), strip.bottom()));
+                    mergedIntoExisting = true;
+                    break;
+                }
+            }
+            if (!mergedIntoExisting) {
+                merged.add(strip);
+            }
         }
         return merged;
     }
@@ -922,26 +983,26 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     ) {
     }
 
-    private record CanvasRect(
+    record CanvasRect(
             int left,
             int top,
             int right,
             int bottom
     ) {
-        public boolean touchesOrOverlaps(CanvasRect other) {
-            return this.left <= other.right
-                   && this.right >= other.left
-                   && this.top <= other.bottom
-                   && this.bottom >= other.top;
+        public boolean isEmpty() {
+            return left >= right || top >= bottom;
         }
 
-        public CanvasRect union(CanvasRect other) {
-            return new CanvasRect(
-                    Math.min(this.left, other.left),
-                    Math.min(this.top, other.top),
-                    Math.max(this.right, other.right),
-                    Math.max(this.bottom, other.bottom)
-            );
+        public boolean covers(
+                int left,
+                int top,
+                int right,
+                int bottom
+        ) {
+            return this.left <= left
+                   && this.top <= top
+                   && this.right >= right
+                   && this.bottom >= bottom;
         }
     }
 
