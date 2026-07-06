@@ -86,6 +86,20 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void movingAllCursorsToSamePositionCollapsesDuplicates() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.addCursor(64, 0);
+        canvas.addCursor(128, 0);
+
+        canvas.setAllCursors(10, 20);
+
+        assertEquals(1, canvas.cursors().size());
+        assertEquals(10, canvas.cursorCanvasX());
+        assertEquals(20, canvas.cursorCanvasY());
+        assertTrue(canvas.focusedCursor().active());
+    }
+
+    @Test
     public void addCursorAvoidingCrowdingDoesNotAddSecondCursorForCoveredGlyph() {
         SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
         typeTextAt(canvas, "A", 0, 0);
@@ -187,6 +201,47 @@ public class SFMDrawCanvasModelTests {
         canvas.deleteNearestAndMoveRight();
 
         assertEquals(0, canvas.glyphs().size());
+    }
+
+    @Test
+    public void ctrlCommaDiscardsCursorsThatAreNotClosestToAnyGlyph() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "ab", 0, 0);
+        canvas.setCursor(0, 0);
+        canvas.addCursor(1, 0);
+        canvas.addCursor(100, 100);
+
+        canvas.discardCursorsNotClosestToAnyGlyph();
+
+        assertEquals(2, canvas.cursors().size());
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 0)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 1, 0)));
+        assertFalse(hasCursorAt(canvas, 100, 100));
+    }
+
+    @Test
+    public void ctrlCommaKeepsOnlyOneCursorForGlyphWithDuplicateCoverage() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "a", 0, 0);
+        canvas.setCursor(0, 0);
+        canvas.addCursor(0.4D, 0);
+
+        canvas.discardCursorsNotClosestToAnyGlyph();
+
+        assertEquals(1, canvas.cursors().size());
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 0)));
+    }
+
+    @Test
+    public void ctrlCommaOnEmptyCanvasCollapsesToFocusedCursor() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.addCursor(10, 20);
+
+        canvas.discardCursorsNotClosestToAnyGlyph();
+
+        assertEquals(1, canvas.cursors().size());
+        assertEquals(10, canvas.cursorCanvasX());
+        assertEquals(20, canvas.cursorCanvasY());
     }
 
     @Test

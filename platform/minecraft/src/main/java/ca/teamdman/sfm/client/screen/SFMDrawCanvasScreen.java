@@ -203,6 +203,8 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             }
             if (hasAltDown()) {
                 model().addCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            } else if (hasControlDown()) {
+                model().setAllCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
             } else {
                 model().setActiveCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
             }
@@ -325,6 +327,11 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         }
         if (keyCode == GLFW.GLFW_KEY_L && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
             model().ensureCursorClosestToEachGlyphOnActiveCursorLines(this.font.lineHeight);
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_COMMA && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            model().discardCursorsNotClosestToAnyGlyph();
             rememberCursorPosition();
             return true;
         }

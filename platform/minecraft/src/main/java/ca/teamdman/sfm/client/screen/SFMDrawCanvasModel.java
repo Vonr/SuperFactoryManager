@@ -73,6 +73,17 @@ public class SFMDrawCanvasModel {
         collapseDuplicateCursors();
     }
 
+    public void setAllCursors(
+            double cursorCanvasX,
+            double cursorCanvasY
+    ) {
+        ensureCursors();
+        for (CanvasCursor cursor : cursors) {
+            cursor.set(cursorCanvasX, cursorCanvasY);
+        }
+        collapseDuplicateCursors();
+    }
+
     public void addCursor(
             double cursorCanvasX,
             double cursorCanvasY
@@ -159,6 +170,34 @@ public class SFMDrawCanvasModel {
             }
         }
         ensureCursorClosestToEachGlyph(targetGlyphs);
+        collapseDuplicateCursors();
+    }
+
+    public void discardCursorsNotClosestToAnyGlyph() {
+        ensureCursors();
+        if (glyphs.isEmpty()) {
+            collapseToFocusedCursor();
+            return;
+        }
+
+        CanvasCursor originalFocusedCursor = focusedCursor();
+        List<CanvasCursor> retained = new ArrayList<>();
+        for (CanvasGlyph glyph : glyphs) {
+            CanvasCursor closest = closestCursorToGlyph(glyph);
+            if (closest != null && !retained.contains(closest)) {
+                retained.add(closest);
+            }
+        }
+        if (retained.isEmpty()) {
+            collapseToFocusedCursor();
+            return;
+        }
+
+        cursors = retained;
+        focusedCursorIndex = Math.max(0, retained.indexOf(originalFocusedCursor));
+        for (CanvasCursor cursor : cursors) {
+            cursor.setActive(true);
+        }
         collapseDuplicateCursors();
     }
 
@@ -647,6 +686,21 @@ public class SFMDrawCanvasModel {
             }
         }
         return null;
+    }
+
+    private CanvasCursor closestCursorToGlyph(CanvasGlyph glyph) {
+        CanvasCursor closest = null;
+        double closestDistance = Double.MAX_VALUE;
+        for (CanvasCursor cursor : cursors) {
+            double dx = cursor.x() - glyph.x();
+            double dy = cursor.y() - glyph.y();
+            double distance = dx * dx + dy * dy;
+            if (distance < closestDistance) {
+                closest = cursor;
+                closestDistance = distance;
+            }
+        }
+        return closest;
     }
 
     private void ensureCursorClosestToEachGlyph(List<CanvasGlyph> targetGlyphs) {
