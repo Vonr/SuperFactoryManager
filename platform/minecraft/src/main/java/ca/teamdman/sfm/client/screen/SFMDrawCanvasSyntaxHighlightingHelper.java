@@ -15,6 +15,23 @@ public class SFMDrawCanvasSyntaxHighlightingHelper {
             int defaultColour
     ) {
         CanvasDocumentProjection projection = projectCanvasDocument(sourceGlyphs, spaceWidth);
+        return buildSyntaxHighlightColours(projection, defaultColour);
+    }
+
+    public static Map<SFMDrawCanvasModel.CanvasGlyph, Integer> buildSyntaxHighlightColours(
+            List<SFMDrawCanvasModel.CanvasGlyph> sourceGlyphs,
+            int spaceWidth,
+            int lineHeight,
+            int defaultColour
+    ) {
+        CanvasDocumentProjection projection = projectCanvasDocument(sourceGlyphs, spaceWidth, lineHeight);
+        return buildSyntaxHighlightColours(projection, defaultColour);
+    }
+
+    private static Map<SFMDrawCanvasModel.CanvasGlyph, Integer> buildSyntaxHighlightColours(
+            CanvasDocumentProjection projection,
+            int defaultColour
+    ) {
         Map<SFMDrawCanvasModel.CanvasGlyph, Integer> colours = new IdentityHashMap<>();
         if (projection.text().isEmpty()) {
             return colours;
@@ -35,6 +52,22 @@ public class SFMDrawCanvasSyntaxHighlightingHelper {
             List<SFMDrawCanvasModel.CanvasGlyph> sourceGlyphs,
             int spaceWidth
     ) {
+        return projectCanvasDocument(sourceGlyphs, spaceWidth, null);
+    }
+
+    public static CanvasDocumentProjection projectCanvasDocument(
+            List<SFMDrawCanvasModel.CanvasGlyph> sourceGlyphs,
+            int spaceWidth,
+            int lineHeight
+    ) {
+        return projectCanvasDocument(sourceGlyphs, spaceWidth, Integer.valueOf(Math.max(1, lineHeight)));
+    }
+
+    private static CanvasDocumentProjection projectCanvasDocument(
+            List<SFMDrawCanvasModel.CanvasGlyph> sourceGlyphs,
+            int spaceWidth,
+            Integer lineHeight
+    ) {
         List<SFMDrawCanvasModel.CanvasGlyph> glyphs = new ArrayList<>(sourceGlyphs);
         glyphs.sort((left, right) -> {
             int yCompare = Double.compare(left.y(), right.y());
@@ -49,11 +82,15 @@ public class SFMDrawCanvasSyntaxHighlightingHelper {
         Double currentY = null;
         double lineEndX = 0.0D;
         int safeSpaceWidth = Math.max(1, spaceWidth);
+        Integer safeLineHeight = lineHeight == null ? null : Math.max(1, lineHeight);
         for (SFMDrawCanvasModel.CanvasGlyph glyph : glyphs) {
             if (currentY == null || Double.compare(currentY, glyph.y()) != 0) {
                 if (currentY != null) {
-                    text.append('\n');
-                    glyphsByCharIndex.add(null);
+                    int newlineCount = countNewlinesBetweenRows(currentY, glyph.y(), safeLineHeight);
+                    for (int i = 0; i < newlineCount; i++) {
+                        text.append('\n');
+                        glyphsByCharIndex.add(null);
+                    }
                 }
                 currentY = glyph.y();
                 lineEndX = 0.0D;
@@ -70,6 +107,17 @@ public class SFMDrawCanvasSyntaxHighlightingHelper {
             lineEndX = Math.max(lineEndX, glyph.x() + glyph.width());
         }
         return new CanvasDocumentProjection(text.toString(), glyphsByCharIndex);
+    }
+
+    private static int countNewlinesBetweenRows(
+            double currentY,
+            double nextY,
+            Integer lineHeight
+    ) {
+        if (lineHeight == null) {
+            return 1;
+        }
+        return Math.max(1, (int) Math.round((nextY - currentY) / lineHeight));
     }
 
     private static int formattingToRgb(

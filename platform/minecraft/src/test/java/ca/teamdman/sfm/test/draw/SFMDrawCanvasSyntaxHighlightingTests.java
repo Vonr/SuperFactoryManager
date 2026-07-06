@@ -5,14 +5,22 @@ import ca.teamdman.sfm.client.screen.SFMDrawCanvasSyntaxHighlightingHelper;
 import net.minecraft.ChatFormatting;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class SFMDrawCanvasSyntaxHighlightingTests {
     private static final int DEFAULT_COLOUR = 0xFFE6EDF3;
     private static final int SPACE_WIDTH = 1;
+    private static final int LINE_HEIGHT = 9;
 
     @Test
     public void projectionMapsCanvasGlyphsToSourceText() {
@@ -36,6 +44,108 @@ public class SFMDrawCanvasSyntaxHighlightingTests {
         assertEquals(formattingToRgb(ChatFormatting.AQUA), colours.get(glyphs.get(6))); // 2 in 20
         assertEquals(formattingToRgb(ChatFormatting.GOLD), colours.get(glyphs.get(9))); // T in TICKS
         assertEquals(formattingToRgb(ChatFormatting.BLUE), colours.get(glyphs.get(17))); // E in END
+    }
+
+    @Test
+    public void typedSingleLineRoundTripsThroughProjection() {
+        assertTypedRoundTrip("EVERY 20 TICKS DO");
+    }
+
+    @Test
+    public void typedMultipleLinesRoundTripThroughProjection() {
+        assertTypedRoundTrip("EVERY 20 TICKS DO\nINPUT FROM a\nEND");
+    }
+
+    @Test
+    public void typedProgramWithBlankLinesRoundTripsThroughProjection() {
+        assertTypedRoundTrip("NAME \"blank lines\"\n\nEVERY 20 TICKS DO\n\nEND");
+    }
+
+    @Test
+    public void templateProgramsRoundTripThroughProjection() throws IOException {
+        Path templatesPath = findDirectoryUpwards("src/main/resources/assets/sfm/template_programs");
+        assertNotNull(templatesPath, "Could not locate template programs directory starting from " + System.getProperty("user.dir"));
+
+        int found = 0;
+        try (var ds = Files.newDirectoryStream(templatesPath)) {
+            for (Path templatePath : ds) {
+                String input = Files.readString(templatePath)
+                                    .replace("\r\n", "\n")
+                                    .replace("$REPLACE_RESOURCE_TYPES_HERE$", "")
+                                    .replaceAll("\\n+$", "");
+                assertTypedRoundTrip(input, templatePath.toString());
+                found++;
+            }
+        }
+        assertNotEquals(0, found);
+    }
+
+    @Test
+    public void fuzzedTypedProgramsRoundTripThroughProjection() {
+        Random random = new Random(0x5FCD);
+        for (int i = 0; i < 200; i++) {
+            String input = randomProgramText(random);
+            assertTypedRoundTrip(input, "fuzz case " + i + ": " + input);
+        }
+    }
+
+    private static void assertTypedRoundTrip(String input) {
+        assertTypedRoundTrip(input, input);
+    }
+
+    private static void assertTypedRoundTrip(
+            String input,
+            String message
+    ) {
+        SFMDrawCanvasModel canvas = typeInput(input);
+
+        var projection = SFMDrawCanvasSyntaxHighlightingHelper.projectCanvasDocument(canvas.glyphs(), SPACE_WIDTH, LINE_HEIGHT);
+
+        assertEquals(input, projection.text(), message);
+    }
+
+    private static SFMDrawCanvasModel typeInput(String input) {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.typeText(input, ignored -> 1, LINE_HEIGHT);
+        return canvas;
+    }
+
+    private static String randomProgramText(Random random) {
+        int lines = 1 + random.nextInt(8);
+        StringBuilder builder = new StringBuilder();
+        for (int line = 0; line < lines; line++) {
+            if (line != 0) {
+                builder.append('\n');
+            }
+            if (line != 0 && line != lines - 1 && random.nextInt(5) == 0) {
+                continue;
+            }
+            int length = 1 + random.nextInt(40);
+            for (int i = 0; i < length; i++) {
+                builder.append(randomProgramChar(random));
+            }
+        }
+        return builder.toString();
+    }
+
+    private static char randomProgramChar(Random random) {
+        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-:/\"'().,*";
+        return alphabet.charAt(random.nextInt(alphabet.length()));
+    }
+
+    private static Path findDirectoryUpwards(String relativePath) {
+        Path cwd = Paths.get(System.getProperty("user.dir"));
+        for (int i = 0; i < 5; i++) {
+            Path candidate = cwd.resolve(relativePath);
+            if (Files.isDirectory(candidate)) {
+                return candidate;
+            }
+            cwd = cwd.getParent();
+            if (cwd == null) {
+                break;
+            }
+        }
+        return null;
     }
 
     private static List<SFMDrawCanvasModel.CanvasGlyph> glyphsFromLines(String... lines) {

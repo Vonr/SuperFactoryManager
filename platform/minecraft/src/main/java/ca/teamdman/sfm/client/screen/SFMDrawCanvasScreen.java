@@ -1,9 +1,13 @@
 package ca.teamdman.sfm.client.screen;
 
 import ca.teamdman.sfm.client.screen.widget.SFMButtonBuilder;
+import ca.teamdman.sfm.client.screen.text_editor.ISFMTextEditScreen;
+import ca.teamdman.sfm.client.text_editor.ISFMTextEditScreenOpenContext;
+import ca.teamdman.sfm.common.config.SFMConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -14,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SFMDrawCanvasScreen extends Screen {
+public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     private static final int BACKGROUND = 0xFF15191E;
     private static final int MINOR_GRID = 0xFF252C34;
     private static final int MAJOR_GRID = 0xFF343D47;
@@ -39,10 +43,12 @@ public class SFMDrawCanvasScreen extends Screen {
     private static final int DEFAULT_ORIGIN_MARGIN = 32;
 
     private final Screen previousScreen;
+    private final ISFMTextEditScreenOpenContext openContext;
     private SFMDrawCanvasModel model = new SFMDrawCanvasModel();
     private final List<CanvasPoint> cursorTrail = new ArrayList<>();
     private final List<String> inputEvents = new ArrayList<>();
     private final List<Button> diagnosticButtons = new ArrayList<>();
+    private Button canvasFocusTarget;
     private double cameraX;
     private double cameraY;
     private double zoom = 1.0D;
@@ -52,7 +58,9 @@ public class SFMDrawCanvasScreen extends Screen {
     private boolean showCrosshairCoordinates = false;
     private boolean showGlyphBoundingBoxes = false;
     private boolean showCursorTrail = false;
+    private boolean hideSelection = false;
     private boolean panning;
+    private boolean initialContentLoaded;
     private double panAnchorMouseX;
     private double panAnchorMouseY;
     private double panAnchorCameraX;
@@ -61,6 +69,16 @@ public class SFMDrawCanvasScreen extends Screen {
     public SFMDrawCanvasScreen(Screen previousScreen) {
         super(Component.literal("SFM Draw Canvas"));
         this.previousScreen = previousScreen;
+        this.openContext = null;
+    }
+
+    public SFMDrawCanvasScreen(
+            ISFMTextEditScreenOpenContext openContext,
+            Screen previousScreen
+    ) {
+        super(Component.literal("SFM Draw Canvas"));
+        this.previousScreen = previousScreen;
+        this.openContext = openContext;
     }
 
     @Override
@@ -70,23 +88,62 @@ public class SFMDrawCanvasScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(previousScreen);
+        if (model().cursors().size() > 1) {
+            model().collapseToFocusedCursor();
+            rememberCursorPosition();
+            return;
+        }
+        if (openContext == null) {
+            onTryCloseStandalone();
+            return;
+        }
+        openContext.onTryClose(getCurrentText(), () -> Minecraft.getInstance().setScreen(previousScreen));
+    }
+
+    @Override
+    public ISFMTextEditScreenOpenContext openContext() {
+        return openContext;
+    }
+
+    @Override
+    public OpenBehaviour openBehaviour() {
+        return OpenBehaviour.Replace;
     }
 
     @Override
     protected void init() {
         super.init();
+        SFMScreenRenderUtils.enableKeyRepeating();
+        loadInitialContent();
         initializeCamera();
+        canvasFocusTarget = new CanvasFocusTarget(2, 2, Math.max(1, this.width - 4), Math.max(1, this.height - 4));
+        this.addRenderableWidget(canvasFocusTarget);
+        this.setInitialFocus(canvasFocusTarget);
+        this.setFocused(canvasFocusTarget);
+        canvasFocusTarget.setFocused(true);
         diagnosticButtons.clear();
         addDiagnosticButton(8, 8, () -> showCrosshairCoordinates, value -> showCrosshairCoordinates = value, "Coords");
         addDiagnosticButton(8, 32, () -> showGlyphBoundingBoxes, value -> showGlyphBoundingBoxes = value, "Glyph Bounds");
         addDiagnosticButton(8, 56, () -> showCursorTrail, value -> showCursorTrail = value, "Cursor Trail");
         addDiagnosticButton(8, 80, () -> showGrid, value -> showGrid = value, "Grid");
+        addDiagnosticButton(8, 104, () -> hideSelection, value -> hideSelection = value, "Hide Selection");
+        if (openContext != null) {
+            this.addRenderableWidget(new SFMButtonBuilder()
+                    .setPosition(4, this.height - 24)
+                    .setSize(16, 20)
+                    .setText(Component.literal("#"))
+                    .setOnPress(button -> SFMScreenChangeHelpers.setOrPushScreen(new SFMTextEditorConfigScreen(
+                            this,
+                            SFMConfig.CLIENT_TEXT_EDITOR_CONFIG,
+                            () -> { }
+                    )))
+                    .build());
+        }
         this.addRenderableWidget(new SFMButtonBuilder()
                 .setPosition(this.width - 88, this.height - 24)
                 .setSize(80, 20)
                 .setText(CommonComponents.GUI_DONE)
-                .setOnPress(button -> this.onClose())
+                .setOnPress(button -> this.saveAndClose())
                 .build());
         refreshDiagnosticControls();
     }
@@ -106,6 +163,9 @@ public class SFMDrawCanvasScreen extends Screen {
             renderCursorTrail(poseStack);
         }
         renderGlyphs(poseStack);
+        if (!hideSelection) {
+            renderGlyphSelectionHighlights(poseStack);
+        }
         if (showGlyphBoundingBoxes) {
             renderGlyphBoundingBoxes(poseStack);
         }
@@ -146,6 +206,8 @@ public class SFMDrawCanvasScreen extends Screen {
             } else {
                 model().setActiveCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
             }
+            this.setFocused(canvasFocusTarget);
+            canvasFocusTarget.setFocused(true);
             rememberCursorPosition();
             return true;
         }
@@ -168,7 +230,18 @@ public class SFMDrawCanvasScreen extends Screen {
             return true;
         }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            model().setActiveCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            if (hasAltDown()) {
+                model().addCursorAvoidingCrowding(
+                        screenToCanvasX(mouseX),
+                        screenToCanvasY(mouseY),
+                        this.font.width("W"),
+                        this.font.lineHeight
+                );
+            } else {
+                model().setActiveCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
+            }
+            this.setFocused(canvasFocusTarget);
+            canvasFocusTarget.setFocused(true);
             rememberCursorPosition();
             return true;
         }
@@ -250,12 +323,17 @@ public class SFMDrawCanvasScreen extends Screen {
             rememberCursorPosition();
             return true;
         }
+        if (keyCode == GLFW.GLFW_KEY_L && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            model().ensureCursorClosestToEachGlyphOnActiveCursorLines(this.font.lineHeight);
+            rememberCursorPosition();
+            return true;
+        }
         if (handleNumpadMovement(keyCode)) {
             rememberCursorPosition();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
-            model().moveCursorLeft();
+            model().moveCursorLeft(this.font.lineHeight);
             rememberCursorPosition();
             return true;
         }
@@ -311,7 +389,11 @@ public class SFMDrawCanvasScreen extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
-            moveCursorToNextLine();
+            if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
+                saveAndClose();
+            } else {
+                insertLineBreak();
+            }
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -397,6 +479,9 @@ public class SFMDrawCanvasScreen extends Screen {
         if (showCursorTrail && cursorTrail.isEmpty()) {
             rememberCursorPosition();
         }
+        if (diagnosticButtons.size() >= 5) {
+            diagnosticButtons.get(4).setMessage(diagnosticButtonLabel("Hide Selection", hideSelection));
+        }
     }
 
     private Component diagnosticButtonLabel(
@@ -411,6 +496,52 @@ public class SFMDrawCanvasScreen extends Screen {
             model = new SFMDrawCanvasModel();
         }
         return model;
+    }
+
+    private void loadInitialContent() {
+        if (initialContentLoaded || openContext == null) {
+            return;
+        }
+        initialContentLoaded = true;
+        model = new SFMDrawCanvasModel();
+        model.typeText(openContext.initialValue(), this.font::width, this.font.lineHeight);
+        model.moveCursorToDocumentStart();
+    }
+
+    private void saveAndClose() {
+        if (openContext == null) {
+            Minecraft.getInstance().setScreen(previousScreen);
+            return;
+        }
+        openContext.saveWriter().accept(getCurrentText());
+        Minecraft.getInstance().setScreen(previousScreen);
+    }
+
+    private void onTryCloseStandalone() {
+        if (model().glyphs().isEmpty()) {
+            Minecraft.getInstance().setScreen(previousScreen);
+            return;
+        }
+        ConfirmScreen exitWithoutSavingConfirmScreen = new ConfirmScreen(
+                doClose -> {
+                    SFMScreenChangeHelpers.popScreen();
+                    if (doClose) {
+                        Minecraft.getInstance().setScreen(previousScreen);
+                    }
+                },
+                ISFMTextEditScreenOpenContext.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_TITLE.getComponent(),
+                ISFMTextEditScreenOpenContext.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_MESSAGE.getComponent(),
+                ISFMTextEditScreenOpenContext.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_YES_BUTTON.getComponent(),
+                ISFMTextEditScreenOpenContext.EXIT_WITHOUT_SAVING_CONFIRM_SCREEN_NO_BUTTON.getComponent()
+        );
+        SFMScreenChangeHelpers.setOrPushScreen(exitWithoutSavingConfirmScreen);
+        exitWithoutSavingConfirmScreen.setDelay(20);
+    }
+
+    private String getCurrentText() {
+        return SFMDrawCanvasSyntaxHighlightingHelper
+                .projectCanvasDocument(model().glyphs(), this.font.width(" "), this.font.lineHeight)
+                .text();
     }
 
     private void initializeCamera() {
@@ -487,6 +618,7 @@ public class SFMDrawCanvasScreen extends Screen {
         Map<SFMDrawCanvasModel.CanvasGlyph, Integer> glyphColours = SFMDrawCanvasSyntaxHighlightingHelper.buildSyntaxHighlightColours(
                 model().glyphs(),
                 this.font.width(" "),
+                this.font.lineHeight,
                 GLYPH
         );
         for (SFMDrawCanvasModel.CanvasGlyph glyph : model().glyphs()) {
@@ -506,6 +638,52 @@ public class SFMDrawCanvasScreen extends Screen {
             int bottom = (int) Math.ceil(top + this.font.lineHeight * zoom);
             drawRectOutline(poseStack, left, top, Math.max(left + 1, right), Math.max(top + 1, bottom), GLYPH_BOUNDS);
         }
+    }
+
+    private void renderGlyphSelectionHighlights(PoseStack poseStack) {
+        List<CanvasRect> mask = new ArrayList<>();
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : model().glyphs()) {
+            if (uniqueCursorInGlyphBounds(glyph) == null) {
+                continue;
+            }
+            mask.add(new CanvasRect(
+                    (int) Math.floor(canvasToScreenX(glyph.x())),
+                    (int) Math.floor(canvasToScreenY(glyph.y())),
+                    (int) Math.ceil(canvasToScreenX(glyph.x() + glyph.width())),
+                    (int) Math.ceil(canvasToScreenY(glyph.y() + this.font.lineHeight))
+            ));
+        }
+        for (CanvasRect rect : unionRects(mask)) {
+            SFMScreenRenderUtils.renderHighlight(
+                    poseStack,
+                    rect.left(),
+                    rect.top(),
+                    Math.max(rect.left() + 1, rect.right()),
+                    Math.max(rect.top() + 1, rect.bottom())
+            );
+        }
+    }
+
+    private List<CanvasRect> unionRects(List<CanvasRect> sourceRects) {
+        List<CanvasRect> merged = new ArrayList<>();
+        for (CanvasRect source : sourceRects) {
+            CanvasRect pending = source;
+            boolean changed;
+            do {
+                changed = false;
+                for (int i = 0; i < merged.size(); i++) {
+                    CanvasRect existing = merged.get(i);
+                    if (pending.touchesOrOverlaps(existing)) {
+                        pending = pending.union(existing);
+                        merged.remove(i);
+                        changed = true;
+                        break;
+                    }
+                }
+            } while (changed);
+            merged.add(pending);
+        }
+        return merged;
     }
 
     private void renderCursorTrail(PoseStack poseStack) {
@@ -539,6 +717,9 @@ public class SFMDrawCanvasScreen extends Screen {
     private void renderCanvasCursor(PoseStack poseStack) {
         for (int i = 0; i < model().cursors().size(); i++) {
             SFMDrawCanvasModel.CanvasCursor cursor = model().cursors().get(i);
+            if (!hideSelection && isUniqueCursorInAnyGlyphBounds(cursor)) {
+                continue;
+            }
             renderCanvasCursor(poseStack, cursor, i == model().focusedCursorIndex());
         }
     }
@@ -583,6 +764,39 @@ public class SFMDrawCanvasScreen extends Screen {
         return 0xFF000000 | (red << 16) | (green << 8) | blue;
     }
 
+    private SFMDrawCanvasModel.CanvasCursor uniqueCursorInGlyphBounds(SFMDrawCanvasModel.CanvasGlyph glyph) {
+        SFMDrawCanvasModel.CanvasCursor selected = null;
+        for (SFMDrawCanvasModel.CanvasCursor cursor : model().cursors()) {
+            if (!cursorInGlyphBounds(cursor, glyph)) {
+                continue;
+            }
+            if (selected != null) {
+                return null;
+            }
+            selected = cursor;
+        }
+        return selected;
+    }
+
+    private boolean isUniqueCursorInAnyGlyphBounds(SFMDrawCanvasModel.CanvasCursor cursor) {
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : model().glyphs()) {
+            if (uniqueCursorInGlyphBounds(glyph) == cursor) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean cursorInGlyphBounds(
+            SFMDrawCanvasModel.CanvasCursor cursor,
+            SFMDrawCanvasModel.CanvasGlyph glyph
+    ) {
+        return cursor.x() >= glyph.x()
+               && cursor.x() < glyph.x() + glyph.width()
+               && cursor.y() >= glyph.y()
+               && cursor.y() < glyph.y() + this.font.lineHeight;
+    }
+
     private void rememberCursorPosition() {
         if (!showCursorTrail && cursorTrail.isEmpty()) {
             return;
@@ -601,8 +815,8 @@ public class SFMDrawCanvasScreen extends Screen {
         }
     }
 
-    private void moveCursorToNextLine() {
-        model().moveCursorToNextLine(this.font.lineHeight);
+    private void insertLineBreak() {
+        model().insertLineBreak(this.font.lineHeight);
         rememberCursorPosition();
     }
 
@@ -701,11 +915,75 @@ public class SFMDrawCanvasScreen extends Screen {
     ) {
     }
 
+    private record CanvasRect(
+            int left,
+            int top,
+            int right,
+            int bottom
+    ) {
+        public boolean touchesOrOverlaps(CanvasRect other) {
+            return this.left <= other.right
+                   && this.right >= other.left
+                   && this.top <= other.bottom
+                   && this.bottom >= other.top;
+        }
+
+        public CanvasRect union(CanvasRect other) {
+            return new CanvasRect(
+                    Math.min(this.left, other.left),
+                    Math.min(this.top, other.top),
+                    Math.max(this.right, other.right),
+                    Math.max(this.bottom, other.bottom)
+            );
+        }
+    }
+
     private interface ToggleReader {
         boolean get();
     }
 
     private interface ToggleWriter {
         void set(boolean value);
+    }
+
+    private static class CanvasFocusTarget extends Button {
+        public CanvasFocusTarget(
+                int x,
+                int y,
+                int width,
+                int height
+        ) {
+            super(x, y, width, height, Component.empty(), button -> { });
+        }
+
+        @Override
+        public void renderButton(
+                PoseStack poseStack,
+                int mouseX,
+                int mouseY,
+                float partialTick
+        ) {
+            // Invisible focus target for vanilla tab navigation.
+        }
+
+        @Override
+        public boolean mouseClicked(
+                double mouseX,
+                double mouseY,
+                int button
+        ) {
+            return false;
+        }
+
+        @Override
+        public boolean keyPressed(
+                int keyCode,
+                int scanCode,
+                int modifiers
+        ) {
+            return keyCode == GLFW.GLFW_KEY_SPACE
+                   || keyCode == GLFW.GLFW_KEY_ENTER
+                   || keyCode == GLFW.GLFW_KEY_KP_ENTER;
+        }
     }
 }

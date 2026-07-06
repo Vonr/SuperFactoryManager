@@ -45,6 +45,20 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void collapseToFocusedCursorKeepsOnlyFocusedCursor() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.addCursor(64, 0);
+        canvas.focusPreviousCursor(false);
+
+        canvas.collapseToFocusedCursor();
+
+        assertEquals(1, canvas.cursors().size());
+        assertEquals(0, canvas.focusedCursorIndex());
+        assertEquals(0, canvas.cursorCanvasX());
+        assertTrue(canvas.focusedCursor().active());
+    }
+
+    @Test
     public void typingWritesAtAllActiveCursors() {
         SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
         canvas.addCursor(64, 0);
@@ -69,6 +83,44 @@ public class SFMDrawCanvasModelTests {
         assertEquals(10, canvas.cursorCanvasX());
         assertEquals(20, canvas.cursorCanvasY());
         assertTrue(canvas.focusedCursor().active());
+    }
+
+    @Test
+    public void addCursorAvoidingCrowdingDoesNotAddSecondCursorForCoveredGlyph() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "A", 0, 0);
+        canvas.setCursor(0.25D, 4);
+
+        canvas.addCursorAvoidingCrowding(0.75D, 4, 9, 9);
+
+        assertEquals(1, canvas.cursors().size());
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 0)));
+    }
+
+    @Test
+    public void addCursorAvoidingCrowdingAddsCursorForUncoveredGlyph() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "AB", 0, 0);
+        canvas.setCursor(0.25D, 4);
+
+        canvas.addCursorAvoidingCrowding(1.25D, 4, 9, 9);
+
+        assertEquals(2, canvas.cursors().size());
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 0)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 1, 0)));
+    }
+
+    @Test
+    public void addCursorAvoidingCrowdingUsesMinimumSpacingAwayFromGlyphs() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.setCursor(20, 20);
+
+        canvas.addCursorAvoidingCrowding(24, 24, 9, 9);
+        canvas.addCursorAvoidingCrowding(40, 20, 9, 9);
+
+        assertEquals(2, canvas.cursors().size());
+        assertTrue(hasCursorAt(canvas, 20, 20));
+        assertTrue(hasCursorAt(canvas, 40, 20));
     }
 
     @Test
@@ -138,6 +190,74 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void ctrlLTargetsGlyphsOnActiveCursorLine() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "abc", 0, 0);
+        typeTextAt(canvas, "def", 0, 9);
+        canvas.setCursor(1.5D, 4);
+
+        canvas.ensureCursorClosestToEachGlyphOnActiveCursorLines(9);
+
+        assertEquals(3, canvas.cursors().size());
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 0)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 1, 0)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 2, 0)));
+        assertFalse(hasCursorAt(canvas, 0, 9));
+    }
+
+    @Test
+    public void ctrlLTargetsGlyphsOnEachActiveCursorLine() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "ab", 0, 0);
+        typeTextAt(canvas, "cd", 0, 9);
+        typeTextAt(canvas, "ef", 0, 18);
+        canvas.setCursor(0, 0);
+        canvas.addCursor(1, 18);
+
+        canvas.ensureCursorClosestToEachGlyphOnActiveCursorLines(9);
+
+        assertEquals(4, canvas.cursors().size());
+        assertTrue(hasCursorAt(canvas, 0, 0));
+        assertTrue(hasCursorAt(canvas, 1, 0));
+        assertFalse(hasCursorAt(canvas, 0, 9));
+        assertFalse(hasCursorAt(canvas, 1, 9));
+        assertTrue(hasCursorAt(canvas, 0, 18));
+        assertTrue(hasCursorAt(canvas, 1, 18));
+    }
+
+    @Test
+    public void ctrlLAdvancesToNextLineWhenCurrentLineIsAlreadyCovered() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "ab", 0, 0);
+        typeTextAt(canvas, "cd", 0, 9);
+        canvas.setCursor(0, 0);
+
+        canvas.ensureCursorClosestToEachGlyphOnActiveCursorLines(9);
+        canvas.ensureCursorClosestToEachGlyphOnActiveCursorLines(9);
+
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 0)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 1, 0)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 9)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 1, 9)));
+    }
+
+    @Test
+    public void ctrlLDoesNotAdvanceWhenCurrentLineIsNotFullyCovered() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "abc", 0, 0);
+        typeTextAt(canvas, "de", 0, 9);
+        canvas.setCursor(0, 0);
+        canvas.addCursor(1, 0);
+
+        canvas.ensureCursorClosestToEachGlyphOnActiveCursorLines(9);
+
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 0)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 1, 0)));
+        assertTrue(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 2, 0)));
+        assertFalse(hasCursorNearestToGlyph(canvas, glyphAt(canvas, 0, 9)));
+    }
+
+    @Test
     public void enterRepeatedlyAdvancesBlankLines() {
         SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
         int lineHeight = 9;
@@ -153,6 +273,40 @@ public class SFMDrawCanvasModelTests {
 
         canvas.moveCursorToNextLine(lineHeight);
         assertEquals(lineHeight * 3, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void insertLineBreakMovesRowsBelowCursorDown() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "abc", 0, 0);
+        typeTextAt(canvas, "def", 0, 9);
+        canvas.setCursor(3, 0);
+
+        canvas.insertLineBreak(9);
+
+        assertEquals(0, glyphAt(canvas, 0, 0).y());
+        assertEquals(18, glyphAt(canvas, 0, 18).y());
+        assertEquals(0, canvas.cursorCanvasX());
+        assertEquals(9, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void insertLineBreakWithMultipleActiveRowsMovesLowerRowsOncePerDistinctCursorRow() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "abc", 0, 0);
+        typeTextAt(canvas, "def", 0, 9);
+        typeTextAt(canvas, "ghi", 0, 18);
+        canvas.setCursor(3, 0);
+        canvas.addCursor(3, 9);
+
+        canvas.insertLineBreak(9);
+
+        assertEquals(0, glyphAt(canvas, 0, 0).y());
+        assertEquals(18, glyphAt(canvas, 0, 18).y());
+        assertEquals(36, glyphAt(canvas, 0, 36).y());
+        assertEquals(2, canvas.cursors().size());
+        assertEquals(9, canvas.cursors().get(0).y());
+        assertEquals(27, canvas.cursors().get(1).y());
     }
 
     @Test
@@ -184,6 +338,18 @@ public class SFMDrawCanvasModelTests {
                 abc
                 de|f
                 """, toFixture(canvas));
+    }
+
+    @Test
+    public void leftFromInsideGlyphMovesToPreviousGlyphOnVisualLine() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "ABC", 0, 0);
+        canvas.setCursor(1.5D, 4.0D);
+
+        canvas.moveCursorLeft(9);
+
+        assertEquals(0, canvas.cursorCanvasX());
+        assertEquals(0, canvas.cursorCanvasY());
     }
 
     @Test
@@ -293,6 +459,17 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void homeOnEmptyCanvasMovesToXZero() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.setCursor(12, 34);
+
+        canvas.moveCursorToLineStart();
+
+        assertEquals(0, canvas.cursorCanvasX());
+        assertEquals(34, canvas.cursorCanvasY());
+    }
+
+    @Test
     public void endMovesToEndOfLine() {
         SFMDrawCanvasModel canvas = fromFixture("""
                 abc
@@ -322,6 +499,17 @@ public class SFMDrawCanvasModelTests {
                 a
                    def
                 """, toFixture(canvas));
+    }
+
+    @Test
+    public void controlHomeOnEmptyCanvasMovesToOrigin() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        canvas.setCursor(12, 34);
+
+        canvas.moveCursorToDocumentStart();
+
+        assertEquals(0, canvas.cursorCanvasX());
+        assertEquals(0, canvas.cursorCanvasY());
     }
 
     @Test
@@ -482,5 +670,48 @@ public class SFMDrawCanvasModelTests {
             }
         }
         return null;
+    }
+
+    private static boolean hasCursorAt(
+            SFMDrawCanvasModel canvas,
+            double x,
+            double y
+    ) {
+        for (SFMDrawCanvasModel.CanvasCursor cursor : canvas.cursors()) {
+            if (Double.compare(cursor.x(), x) == 0 && Double.compare(cursor.y(), y) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasCursorNearestToGlyph(
+            SFMDrawCanvasModel canvas,
+            SFMDrawCanvasModel.CanvasGlyph glyph
+    ) {
+        for (SFMDrawCanvasModel.CanvasCursor cursor : canvas.cursors()) {
+            if (nearestGlyph(canvas, cursor) == glyph) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static SFMDrawCanvasModel.CanvasGlyph nearestGlyph(
+            SFMDrawCanvasModel canvas,
+            SFMDrawCanvasModel.CanvasCursor cursor
+    ) {
+        SFMDrawCanvasModel.CanvasGlyph nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : canvas.glyphs()) {
+            double dx = cursor.x() - glyph.x();
+            double dy = cursor.y() - glyph.y();
+            double distance = dx * dx + dy * dy;
+            if (distance < nearestDistance) {
+                nearest = glyph;
+                nearestDistance = distance;
+            }
+        }
+        return nearest;
     }
 }
