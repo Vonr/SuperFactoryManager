@@ -205,7 +205,19 @@ public class SFMDrawCanvasModel {
             String text,
             int width
     ) {
+        typeGlyph(text, width, 1);
+    }
+
+    public void typeGlyph(
+            String text,
+            int width,
+            int lineHeight
+    ) {
         for (CanvasCursor cursor : activeCursorsSnapshot()) {
+            double lineY = visualLineYForCursor(cursor, lineHeight);
+            double insertionX = insertionXForCursor(cursor, lineHeight);
+            cursor.set(insertionX, lineY);
+            shiftLineContentAndCursorsAtOrAfter(lineY, insertionX, width, cursor);
             if (!" ".equals(text)) {
                 glyphs.add(new CanvasGlyph(text, cursor.x(), cursor.y(), width));
             }
@@ -228,7 +240,7 @@ public class SFMDrawCanvasModel {
                 moveCursorToNextInputLine(lineHeight);
             } else {
                 String glyphText = Character.toString(c);
-                typeGlyph(glyphText, glyphWidthReader.width(glyphText));
+                typeGlyph(glyphText, glyphWidthReader.width(glyphText), lineHeight);
             }
         }
     }
@@ -268,6 +280,14 @@ public class SFMDrawCanvasModel {
             return;
         }
         deleteNearestGlyphsTransactionally(active, true);
+    }
+
+    public void deleteLeftWord(int lineHeight) {
+        deleteNearestWordTransactionally(false);
+    }
+
+    public void deleteRightWord(int lineHeight) {
+        deleteNearestWordTransactionally(true);
     }
 
     public void moveCursorLeft() {
@@ -367,17 +387,19 @@ public class SFMDrawCanvasModel {
         if (glyphs.isEmpty()) {
             return;
         }
-        if (glyphsOnVisualLine(cursorCanvasY(), lineHeight).isEmpty() && deleteBlankLineBeforeCursor(lineHeight)) {
+        if (glyphsOnVisualLine(cursorCanvasY(), lineHeight).isEmpty()) {
+            if (deleteBlankLineBeforeCursor(lineHeight)) {
+                return;
+            }
+            CanvasGlyph previousLineLast = rightMostGlyphOnPreviousLine(cursorCanvasY());
+            if (previousLineLast != null) {
+                deleteTargetsTransactionally(List.of(new CursorTarget(focusedCursor(), previousLineLast)), false);
+            }
             return;
         }
-        moveCursorLeftFocused(lineHeight);
-        CanvasGlyph deleted = glyphAtCursor();
-        if (deleted == null) {
-            moveCursorLeftFocused(lineHeight);
-            deleted = glyphAtCursor();
-        }
+        CanvasGlyph deleted = nearestGlyph();
         if (deleted != null) {
-            glyphs.remove(deleted);
+            deleteTargetsTransactionally(List.of(new CursorTarget(focusedCursor(), deleted)), false);
         }
     }
 
@@ -425,6 +447,77 @@ public class SFMDrawCanvasModel {
         glyphs.addAll(movedGlyphs);
     }
 
+    private double visualLineYForCursor(
+            CanvasCursor cursor,
+            int lineHeight
+    ) {
+        CanvasGlyph containing = glyphAt(cursor, lineHeight);
+        return containing == null ? cursor.y() : containing.y();
+    }
+
+    private double insertionXForCursor(
+            CanvasCursor cursor,
+            int lineHeight
+    ) {
+        CanvasGlyph containing = glyphAt(cursor, lineHeight);
+        return containing == null ? cursor.x() : containing.x();
+    }
+
+    private void shiftLineContentAndCursorsAtOrAfter(
+            double y,
+            double x,
+            double deltaX,
+            CanvasCursor excludedCursor
+    ) {
+        List<CanvasGlyph> movedGlyphs = new ArrayList<>();
+        for (CanvasGlyph glyph : glyphs) {
+            movedGlyphs.add(new CanvasGlyph(
+                    glyph.text(),
+                    Double.compare(glyph.y(), y) == 0 && glyph.x() >= x ? glyph.x() + deltaX : glyph.x(),
+                    glyph.y(),
+                    glyph.width()
+            ));
+        }
+        glyphs.clear();
+        glyphs.addAll(movedGlyphs);
+        for (CanvasCursor cursor : cursors) {
+            if (cursor != excludedCursor && Double.compare(cursor.y(), y) == 0 && cursor.x() >= x) {
+                cursor.setX(cursor.x() + deltaX);
+            }
+        }
+    }
+
+    private void closeLineGaps(List<CanvasGlyph> removedGlyphs) {
+        List<CanvasGlyph> movedGlyphs = new ArrayList<>();
+        for (CanvasGlyph glyph : glyphs) {
+            movedGlyphs.add(new CanvasGlyph(
+                    glyph.text(),
+                    glyph.x() - removedWidthBefore(removedGlyphs, glyph.y(), glyph.x()),
+                    glyph.y(),
+                    glyph.width()
+            ));
+        }
+        glyphs.clear();
+        glyphs.addAll(movedGlyphs);
+        for (CanvasCursor cursor : cursors) {
+            cursor.setX(cursor.x() - removedWidthBefore(removedGlyphs, cursor.y(), cursor.x()));
+        }
+    }
+
+    private double removedWidthBefore(
+            List<CanvasGlyph> removedGlyphs,
+            double y,
+            double x
+    ) {
+        double removedWidth = 0.0D;
+        for (CanvasGlyph removed : removedGlyphs) {
+            if (Double.compare(removed.y(), y) == 0 && removed.x() < x) {
+                removedWidth += removed.width();
+            }
+        }
+        return removedWidth;
+    }
+
     private void deleteNearestAndMoveRightFocused(int lineHeight) {
         if (glyphs.isEmpty()) {
             return;
@@ -436,17 +529,7 @@ public class SFMDrawCanvasModel {
         if (deleted == null) {
             return;
         }
-        setCursor(deleted.x(), deleted.y());
-        glyphs.remove(deleted);
-        CanvasGlyph right = leftMostGlyphAfter(glyphsOnLine(deleted.y()), deleted.x());
-        if (right != null) {
-            setCursor(right.x(), right.y());
-            return;
-        }
-        CanvasGlyph nextLineFirst = firstGlyphOnNextLine(deleted.y());
-        if (nextLineFirst != null) {
-            setCursor(nextLineFirst.x(), nextLineFirst.y());
-        }
+        deleteTargetsTransactionally(List.of(new CursorTarget(focusedCursor(), deleted)), true);
     }
 
     private boolean deleteBlankLineAfterCursor(int lineHeight) {
@@ -608,19 +691,27 @@ public class SFMDrawCanvasModel {
             List<CanvasCursor> active,
             boolean moveRight
     ) {
-        List<CanvasGlyph> targets = new ArrayList<>();
         List<CursorTarget> cursorTargets = new ArrayList<>();
         for (CanvasCursor cursor : active) {
             CanvasGlyph target = nearestGlyph(cursor);
             if (target == null) {
                 continue;
             }
-            if (!targets.contains(target)) {
-                targets.add(target);
-            }
             cursorTargets.add(new CursorTarget(cursor, target));
         }
+        deleteTargetsTransactionally(cursorTargets, moveRight);
+    }
 
+    private void deleteTargetsTransactionally(
+            List<CursorTarget> cursorTargets,
+            boolean moveRight
+    ) {
+        List<CanvasGlyph> targets = new ArrayList<>();
+        for (CursorTarget cursorTarget : cursorTargets) {
+            if (!targets.contains(cursorTarget.target())) {
+                targets.add(cursorTarget.target());
+            }
+        }
         for (CursorTarget cursorTarget : cursorTargets) {
             CanvasGlyph target = cursorTarget.target();
             if (moveRight) {
@@ -639,6 +730,50 @@ public class SFMDrawCanvasModel {
         }
 
         glyphs.removeAll(targets);
+        closeLineGaps(targets);
+        collapseDuplicateCursors();
+    }
+
+    private void deleteNearestWordTransactionally(boolean moveRight) {
+        List<WordCursorTarget> wordTargets = new ArrayList<>();
+        List<CanvasGlyph> targets = new ArrayList<>();
+        for (CanvasCursor cursor : activeCursorsSnapshot()) {
+            CanvasGlyph nearest = nearestGlyph(cursor);
+            if (nearest == null) {
+                continue;
+            }
+            List<CanvasGlyph> run = contiguousGlyphRun(nearest);
+            if (run.isEmpty()) {
+                continue;
+            }
+            for (CanvasGlyph glyph : run) {
+                if (!targets.contains(glyph)) {
+                    targets.add(glyph);
+                }
+            }
+            CanvasGlyph left = run.get(0);
+            CanvasGlyph right = run.get(run.size() - 1);
+            wordTargets.add(new WordCursorTarget(cursor, left.y(), left.x(), right.x()));
+        }
+
+        for (WordCursorTarget wordTarget : wordTargets) {
+            if (moveRight) {
+                CanvasGlyph right = firstGlyphAfterOnLine(wordTarget.y(), wordTarget.rightX(), targets);
+                if (right != null) {
+                    wordTarget.cursor().set(right.x(), right.y());
+                    continue;
+                }
+                CanvasGlyph nextLineFirst = firstGlyphOnNextLine(wordTarget.y(), targets);
+                if (nextLineFirst != null) {
+                    wordTarget.cursor().set(nextLineFirst.x(), nextLineFirst.y());
+                    continue;
+                }
+            }
+            wordTarget.cursor().set(wordTarget.leftX(), wordTarget.y());
+        }
+
+        glyphs.removeAll(targets);
+        closeLineGaps(targets);
         collapseDuplicateCursors();
     }
 
@@ -1021,6 +1156,15 @@ public class SFMDrawCanvasModel {
         moveCursorToEndOfLine(glyphsOnLine(previousY));
     }
 
+    private CanvasGlyph rightMostGlyphOnPreviousLine(double y) {
+        Double previousY = previousGlyphRow(y);
+        if (previousY == null) {
+            return null;
+        }
+        List<CanvasGlyph> line = glyphsOnLine(previousY);
+        return line.isEmpty() ? null : line.get(line.size() - 1);
+    }
+
     private void moveCursorToStartOfNextLine(double y) {
         CanvasGlyph first = firstGlyphOnNextLine(y);
         if (first != null) {
@@ -1059,6 +1203,43 @@ public class SFMDrawCanvasModel {
             }
         }
         return first;
+    }
+
+    private List<CanvasGlyph> contiguousGlyphRun(CanvasGlyph target) {
+        List<CanvasGlyph> line = glyphsOnLine(target.y());
+        int targetIndex = line.indexOf(target);
+        if (targetIndex == -1) {
+            return List.of();
+        }
+        boolean word = isWordGlyph(target);
+        int start = targetIndex;
+        while (start > 0
+               && isWordGlyph(line.get(start - 1)) == word
+               && glyphsTouch(line.get(start - 1), line.get(start))) {
+            start--;
+        }
+        int end = targetIndex;
+        while (end < line.size() - 1
+               && isWordGlyph(line.get(end + 1)) == word
+               && glyphsTouch(line.get(end), line.get(end + 1))) {
+            end++;
+        }
+        return new ArrayList<>(line.subList(start, end + 1));
+    }
+
+    private boolean glyphsTouch(
+            CanvasGlyph left,
+            CanvasGlyph right
+    ) {
+        return Double.compare(left.x() + left.width(), right.x()) == 0;
+    }
+
+    private boolean isWordGlyph(CanvasGlyph glyph) {
+        if (glyph.text().isEmpty()) {
+            return false;
+        }
+        int codePoint = glyph.text().codePointAt(0);
+        return Character.isLetterOrDigit(codePoint) || codePoint == '_';
     }
 
     private Double previousGlyphRow(double y) {
@@ -1176,6 +1357,14 @@ public class SFMDrawCanvasModel {
     private record CursorTarget(
             CanvasCursor cursor,
             CanvasGlyph target
+    ) {
+    }
+
+    private record WordCursorTarget(
+            CanvasCursor cursor,
+            double y,
+            double leftX,
+            double rightX
     ) {
     }
 

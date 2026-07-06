@@ -68,9 +68,9 @@ public class SFMDrawCanvasModelTests {
 
         assertEquals(2, canvas.glyphs().size());
         assertEquals(0, canvas.glyphs().get(0).x());
-        assertEquals(64, canvas.glyphs().get(1).x());
+        assertEquals(65, canvas.glyphs().get(1).x());
         assertEquals(1, canvas.cursors().get(0).x());
-        assertEquals(65, canvas.cursors().get(1).x());
+        assertEquals(66, canvas.cursors().get(1).x());
     }
 
     @Test
@@ -84,6 +84,34 @@ public class SFMDrawCanvasModelTests {
         assertEquals("b", canvas.glyphs().get(1).text());
         assertEquals(2, canvas.glyphs().get(1).x());
         assertEquals("a b", SFMDrawCanvasSyntaxHighlightingHelper.projectCanvasDocument(canvas.glyphs(), 1, 9).text());
+    }
+
+    @Test
+    public void typingGlyphShiftsSameLineContentRight() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                |asd
+                """);
+
+        canvas.typeGlyph("X", 1);
+
+        assertEquals("""
+                X|asd
+                """, toFixture(canvas));
+    }
+
+    @Test
+    public void typingGlyphInsideGlyphBoundsInsertsOnGlyphLine() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "WWW", 0, 0, 3);
+        canvas.setCursor(4.5D, 4.0D);
+
+        canvas.typeGlyph("X", 1, 9);
+
+        assertEquals(4, canvas.glyphs().size());
+        assertEquals(0, glyphAt(canvas, 0, 0).x());
+        assertEquals("X", glyphAt(canvas, 3, 0).text());
+        assertEquals(4, glyphAt(canvas, 4, 0).x());
+        assertEquals(0, canvas.cursorCanvasY());
     }
 
     @Test
@@ -203,6 +231,45 @@ public class SFMDrawCanvasModelTests {
         canvas.deleteLeft();
 
         assertEquals(0, canvas.glyphs().size());
+    }
+
+    @Test
+    public void ctrlBackspaceDeletesNearestWordRunAndClosesGap() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                abc,def|
+                """);
+
+        canvas.deleteLeftWord(1);
+
+        assertEquals("""
+                abc,|
+                """, toFixture(canvas));
+    }
+
+    @Test
+    public void ctrlDeleteDeletesNearestWordRunAndClosesGap() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                |abc,def
+                """);
+
+        canvas.deleteRightWord(1);
+
+        assertEquals("""
+                |,def
+                """, toFixture(canvas));
+    }
+
+    @Test
+    public void ctrlDeleteCanDeleteContiguousNonWordRun() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                abc|,.;def
+                """);
+
+        canvas.deleteRightWord(1);
+
+        assertEquals("""
+                abc|def
+                """, toFixture(canvas));
     }
 
     @Test
@@ -491,8 +558,23 @@ public class SFMDrawCanvasModelTests {
 
         assertEquals("""
                 abc
-                d| f
+                de|
                 """, toFixture(canvas));
+    }
+
+    @Test
+    public void backspaceInsideGlyphBoundsDeletesNearestGlyphAndClosesGap() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "WWW", 0, 0, 3);
+        canvas.setCursor(4.5D, 4.0D);
+
+        canvas.deleteLeft(9);
+
+        assertEquals(2, canvas.glyphs().size());
+        assertEquals(0, canvas.glyphs().get(0).x());
+        assertEquals(3, canvas.glyphs().get(1).x());
+        assertEquals(3, canvas.cursorCanvasX());
+        assertEquals(0, canvas.cursorCanvasY());
     }
 
     @Test
@@ -519,8 +601,23 @@ public class SFMDrawCanvasModelTests {
         canvas.deleteNearestAndMoveRight();
 
         assertEquals("""
-                a |c
+                a|c
                 """, toFixture(canvas));
+    }
+
+    @Test
+    public void deleteInsideGlyphBoundsDeletesNearestGlyphAndClosesGap() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "WWW", 0, 0, 3);
+        canvas.setCursor(4.5D, 4.0D);
+
+        canvas.deleteNearestAndMoveRight(9);
+
+        assertEquals(2, canvas.glyphs().size());
+        assertEquals(0, canvas.glyphs().get(0).x());
+        assertEquals(3, canvas.glyphs().get(1).x());
+        assertEquals(3, canvas.cursorCanvasX());
+        assertEquals(0, canvas.cursorCanvasY());
     }
 
     @Test
@@ -550,7 +647,7 @@ public class SFMDrawCanvasModelTests {
         canvas.deleteNearestAndMoveRight();
 
         assertEquals("""
-                  |
+                |
                 """, toFixture(canvas));
     }
 
@@ -753,9 +850,19 @@ public class SFMDrawCanvasModelTests {
             double x,
             double y
     ) {
+        typeTextAt(canvas, text, x, y, 1);
+    }
+
+    private static void typeTextAt(
+            SFMDrawCanvasModel canvas,
+            String text,
+            double x,
+            double y,
+            int width
+    ) {
         canvas.setCursor(x, y);
         for (char c : text.toCharArray()) {
-            canvas.typeGlyph(Character.toString(c), 1);
+            canvas.typeGlyph(Character.toString(c), width);
         }
     }
 

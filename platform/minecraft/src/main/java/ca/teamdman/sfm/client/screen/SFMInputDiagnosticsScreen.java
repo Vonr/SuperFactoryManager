@@ -10,6 +10,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWKeyCallbackI;
 import org.lwjgl.glfw.GLFWScrollCallback;
 import org.lwjgl.glfw.GLFWScrollCallbackI;
 
@@ -31,6 +33,9 @@ public class SFMInputDiagnosticsScreen extends Screen {
     private long rawScrollCallbackWindow;
     private GLFWScrollCallback previousRawScrollCallback;
     private GLFWScrollCallbackI rawScrollCallback;
+    private long rawKeyCallbackWindow;
+    private GLFWKeyCallback previousRawKeyCallback;
+    private GLFWKeyCallbackI rawKeyCallback;
 
     public SFMInputDiagnosticsScreen(Screen previousScreen) {
         super(Component.literal("SFM Input Diagnostics"));
@@ -44,12 +49,14 @@ public class SFMInputDiagnosticsScreen extends Screen {
 
     @Override
     public void onClose() {
+        restoreRawKeyCallback();
         restoreRawScrollCallback();
         Minecraft.getInstance().setScreen(previousScreen);
     }
 
     @Override
     public void removed() {
+        restoreRawKeyCallback();
         restoreRawScrollCallback();
         super.removed();
     }
@@ -57,6 +64,7 @@ public class SFMInputDiagnosticsScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        installRawKeyCallback();
         installRawScrollCallback();
         int y = this.height - 24;
         this.addRenderableWidget(new SFMButtonBuilder()
@@ -102,6 +110,32 @@ public class SFMInputDiagnosticsScreen extends Screen {
         log("screen.raw_scroll_callback.install window=%d", rawScrollCallbackWindow);
     }
 
+    private void installRawKeyCallback() {
+        if (rawKeyCallback != null) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        rawKeyCallbackWindow = minecraft.getWindow().getWindow();
+        rawKeyCallback = (window, key, scanCode, action, modifiers) -> {
+            if (window == rawKeyCallbackWindow && minecraft.screen == this) {
+                log(
+                        "glfwKey key=%d scan=%d name=%s action=%s modifiers=%s active=%s",
+                        key,
+                        scanCode,
+                        keyName(key, scanCode),
+                        keyActionName(action),
+                        modifierMask(modifiers),
+                        activeModifiers()
+                );
+            }
+            if (previousRawKeyCallback != null) {
+                previousRawKeyCallback.invoke(window, key, scanCode, action, modifiers);
+            }
+        };
+        previousRawKeyCallback = GLFW.glfwSetKeyCallback(rawKeyCallbackWindow, rawKeyCallback);
+        log("screen.raw_key_callback.install window=%d", rawKeyCallbackWindow);
+    }
+
     private void restoreRawScrollCallback() {
         if (rawScrollCallback == null) {
             return;
@@ -110,6 +144,16 @@ public class SFMInputDiagnosticsScreen extends Screen {
         rawScrollCallback = null;
         previousRawScrollCallback = null;
         rawScrollCallbackWindow = 0L;
+    }
+
+    private void restoreRawKeyCallback() {
+        if (rawKeyCallback == null) {
+            return;
+        }
+        GLFW.glfwSetKeyCallback(rawKeyCallbackWindow, previousRawKeyCallback);
+        rawKeyCallback = null;
+        previousRawKeyCallback = null;
+        rawKeyCallbackWindow = 0L;
     }
 
     private void clearEvents(Button button) {
@@ -334,6 +378,15 @@ public class SFMInputDiagnosticsScreen extends Screen {
         if ((modifiers & GLFW.GLFW_MOD_NUM_LOCK) != 0) names.add("num");
         if (names.isEmpty()) return "none";
         return String.join("+", names);
+    }
+
+    private static String keyActionName(int action) {
+        return switch (action) {
+            case GLFW.GLFW_PRESS -> "press";
+            case GLFW.GLFW_RELEASE -> "release";
+            case GLFW.GLFW_REPEAT -> "repeat";
+            default -> Integer.toString(action);
+        };
     }
 
     private static String activeModifiers() {

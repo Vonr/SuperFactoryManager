@@ -295,7 +295,7 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         }
         String text = Character.toString(codePoint);
         rememberInputEvent(String.format("charTyped '%s' U+%04X modifiers=%s", text, (int) codePoint, modifierText(modifiers)));
-        model().typeGlyph(text, this.font.width(text));
+        model().typeGlyph(text, this.font.width(text), this.font.lineHeight);
         rememberCursorPosition();
         return true;
     }
@@ -387,6 +387,16 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             } else {
                 model().moveCursorToLineEnd();
             }
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_BACKSPACE && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            model().deleteLeftWord(this.font.lineHeight);
+            rememberCursorPosition();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_DELETE && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            model().deleteRightWord(this.font.lineHeight);
             rememberCursorPosition();
             return true;
         }
