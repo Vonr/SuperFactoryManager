@@ -427,6 +427,22 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void insertLineBreakOnGlyphShiftsCurrentAndLowerRowsDown() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                |asd
+                dsa
+                """);
+
+        canvas.insertLineBreak(1);
+
+        assertEquals("""
+                |
+                asd
+                dsa
+                """, toFixture(canvas));
+    }
+
+    @Test
     public void insertLineBreakWithMultipleActiveRowsMovesLowerRowsOncePerDistinctCursorRow() {
         SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
         typeTextAt(canvas, "abc", 0, 0);
@@ -474,6 +490,18 @@ public class SFMDrawCanvasModelTests {
                 abc
                 de|f
                 """, toFixture(canvas));
+    }
+
+    @Test
+    public void leftFromTopLeftGlyphMovesLeftBySpaceWidth() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                |abc
+                """);
+
+        canvas.moveCursorLeft(1, 1);
+
+        assertEquals(-1, canvas.cursorCanvasX());
+        assertEquals(0, canvas.cursorCanvasY());
     }
 
     @Test
@@ -669,6 +697,18 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void rightFromBottomRightGlyphMovesRightBySpaceWidth() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                abc|
+                """);
+
+        canvas.moveCursorRight(1);
+
+        assertEquals(4, canvas.cursorCanvasX());
+        assertEquals(0, canvas.cursorCanvasY());
+    }
+
+    @Test
     public void homeMovesToBeginningOfLine() {
         SFMDrawCanvasModel canvas = fromFixture("""
                 abc
@@ -768,6 +808,30 @@ public class SFMDrawCanvasModelTests {
 
         assertEquals(3, canvas.cursorCanvasX());
         assertEquals(lineHeight, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void upFromTopGlyphLineMovesUpByLineHeight() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                a|
+                """);
+
+        canvas.moveCursorUp(1);
+
+        assertEquals(1, canvas.cursorCanvasX());
+        assertEquals(-1, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void downFromBottomGlyphLineMovesDownByLineHeight() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                a|
+                """);
+
+        canvas.moveCursorDown(1);
+
+        assertEquals(1, canvas.cursorCanvasX());
+        assertEquals(1, canvas.cursorCanvasY());
     }
 
     @Test

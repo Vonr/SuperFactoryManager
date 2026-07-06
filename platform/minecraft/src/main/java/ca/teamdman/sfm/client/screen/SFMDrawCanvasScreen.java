@@ -345,12 +345,12 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
-            model().moveCursorLeft(this.font.lineHeight);
+            model().moveCursorLeft(this.font.lineHeight, this.font.width(" "));
             rememberCursorPosition();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_RIGHT) {
-            model().moveCursorRight();
+            model().moveCursorRight(this.font.width(" "));
             rememberCursorPosition();
             return true;
         }
@@ -470,7 +470,7 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         if ((modifiers & GLFW.GLFW_MOD_CONTROL) == 0) {
             return false;
         }
-        if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0 && (keyCode == GLFW.GLFW_KEY_0 || keyCode == GLFW.GLFW_KEY_KP_0)) {
+        if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0 && (keyCode == GLFW.GLFW_KEY_9 || keyCode == GLFW.GLFW_KEY_KP_9)) {
             fitCanvasContentToScreen();
             return true;
         }

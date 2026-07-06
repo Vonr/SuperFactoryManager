@@ -22,6 +22,7 @@ NAME "Changelog"
 -- Fix draw canvas spaces being stored as glyphs and blank-line Backspace/Delete deleting the wrong glyph
 -- Add draw canvas keyboard shortcuts for zooming, panning, reset zoom, and fitting content
 -- Improve draw canvas insert/delete shifting and add Ctrl+Backspace/Ctrl+Delete word deletion
+-- Improve draw canvas Enter/edge-arrow navigation and raw input diagnostics
 -- Thank you @Terusia for the support!
 
 ---- 4.33.0 ----
