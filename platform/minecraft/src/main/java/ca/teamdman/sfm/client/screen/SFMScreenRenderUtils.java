@@ -24,10 +24,10 @@ public class SFMScreenRenderUtils {
     @MCVersionDependentBehaviour
     public static void renderHighlight(
             PoseStack poseStack,
-            int startX,
-            int startY,
-            int endX,
-            int endY
+            double startX,
+            double startY,
+            double endX,
+            double endY
     ) {
         Matrix4f matrix4f = poseStack.last().pose();
         Tesselator tesselator = Tesselator.getInstance();

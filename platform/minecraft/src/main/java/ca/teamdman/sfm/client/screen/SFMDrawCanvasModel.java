@@ -245,6 +245,48 @@ public class SFMDrawCanvasModel {
         }
     }
 
+    public void pasteText(
+            String text,
+            GlyphWidthReader glyphWidthReader,
+            int lineHeight
+    ) {
+        for (int offset = 0; offset < text.length(); ) {
+            int codePoint = text.codePointAt(offset);
+            offset += Character.charCount(codePoint);
+            if (codePoint == '\r') {
+                continue;
+            }
+            if (codePoint == '\n') {
+                insertLineBreak(lineHeight);
+                continue;
+            }
+            String glyphText = new String(Character.toChars(codePoint));
+            typeGlyph(glyphText, glyphWidthReader.width(glyphText), lineHeight);
+        }
+    }
+
+    public String copyableText(
+            int spaceWidth,
+            int lineHeight
+    ) {
+        List<CanvasGlyph> selectedGlyphs = selectedGlyphs(lineHeight);
+        if (selectedGlyphs.isEmpty()) {
+            return projectedText(spaceWidth, lineHeight);
+        }
+        return SFMDrawCanvasSyntaxHighlightingHelper
+                .projectCanvasDocument(normalizedGlyphs(selectedGlyphs), spaceWidth, lineHeight)
+                .text();
+    }
+
+    public String projectedText(
+            int spaceWidth,
+            int lineHeight
+    ) {
+        return SFMDrawCanvasSyntaxHighlightingHelper
+                .projectCanvasDocument(glyphs, spaceWidth, lineHeight)
+                .text();
+    }
+
     public void backspace() {
         deleteLeft();
     }
@@ -311,6 +353,46 @@ public class SFMDrawCanvasModel {
 
     public void moveCursorRight(int spaceWidth) {
         applyToActiveCursors(() -> moveCursorRightFocused(spaceWidth));
+    }
+
+    public void moveCursorLeftWord(
+            int lineHeight,
+            int spaceWidth
+    ) {
+        applyToActiveCursors(() -> moveCursorLeftWordFocused(lineHeight, spaceWidth));
+    }
+
+    public void moveCursorRightWord(
+            int lineHeight,
+            int spaceWidth
+    ) {
+        applyToActiveCursors(() -> moveCursorRightWordFocused(lineHeight, spaceWidth));
+    }
+
+    public void addCursorLeftWord(
+            int lineHeight,
+            int spaceWidth
+    ) {
+        CursorPoint target = leftWordTarget(focusedCursor(), lineHeight, spaceWidth);
+        addCursor(target.x(), target.y());
+    }
+
+    public void addCursorRightWord(
+            int lineHeight,
+            int spaceWidth
+    ) {
+        CursorPoint target = rightWordTarget(focusedCursor(), lineHeight, spaceWidth);
+        addCursor(target.x(), target.y());
+    }
+
+    public void addCursorUpToGlyph(int lineHeight) {
+        CursorPoint target = verticalTarget(focusedCursor(), -1, lineHeight, true);
+        addCursor(target.x(), target.y());
+    }
+
+    public void addCursorDownToGlyph(int lineHeight) {
+        CursorPoint target = verticalTarget(focusedCursor(), 1, lineHeight, true);
+        addCursor(target.x(), target.y());
     }
 
     public void moveCursorUp() {
@@ -633,6 +715,132 @@ public class SFMDrawCanvasModel {
             return;
         }
         setCursor(next.x() + next.width(), next.y());
+    }
+
+    private void moveCursorLeftWordFocused(
+            int lineHeight,
+            int spaceWidth
+    ) {
+        CursorPoint target = leftWordTarget(focusedCursor(), lineHeight, spaceWidth);
+        setCursor(target.x(), target.y());
+    }
+
+    private CursorPoint leftWordTarget(
+            CanvasCursor cursor,
+            int lineHeight,
+            int spaceWidth
+    ) {
+        CanvasGlyph target = glyphAt(cursor, lineHeight);
+        if (target == null) {
+            target = rightMostGlyphBefore(glyphsOnLine(cursor.y()), cursor.x());
+        }
+        if (target == null) {
+            return leftTarget(cursor, lineHeight, spaceWidth);
+        }
+        List<CanvasGlyph> run = contiguousGlyphRun(target);
+        if (run.isEmpty()) {
+            return leftTarget(cursor, lineHeight, spaceWidth);
+        }
+        CanvasGlyph first = run.get(0);
+        return new CursorPoint(first.x(), first.y());
+    }
+
+    private void moveCursorRightWordFocused(
+            int lineHeight,
+            int spaceWidth
+    ) {
+        CursorPoint target = rightWordTarget(focusedCursor(), lineHeight, spaceWidth);
+        setCursor(target.x(), target.y());
+    }
+
+    private CursorPoint rightWordTarget(
+            CanvasCursor cursor,
+            int lineHeight,
+            int spaceWidth
+    ) {
+        CanvasGlyph target = glyphAt(cursor, lineHeight);
+        if (target == null) {
+            target = leftMostGlyphAtOrAfter(glyphsOnLine(cursor.y()), cursor.x());
+        }
+        if (target == null) {
+            return rightTarget(cursor, spaceWidth);
+        }
+        List<CanvasGlyph> run = contiguousGlyphRun(target);
+        if (run.isEmpty()) {
+            return rightTarget(cursor, spaceWidth);
+        }
+        CanvasGlyph last = run.get(run.size() - 1);
+        return new CursorPoint(last.x() + last.width(), last.y());
+    }
+
+    private CursorPoint leftTarget(
+            CanvasCursor cursor,
+            int lineHeight,
+            int spaceWidth
+    ) {
+        int safeSpaceWidth = Math.max(1, spaceWidth);
+        if (glyphs.isEmpty()) {
+            return new CursorPoint(cursor.x() - safeSpaceWidth, cursor.y());
+        }
+
+        List<CanvasGlyph> line = glyphsOnVisualLine(cursor.y(), lineHeight);
+        if (!line.isEmpty()) {
+            CanvasGlyph containing = glyphContainingX(line, cursor.x());
+            CanvasGlyph left = containing == null
+                               ? rightMostGlyphBefore(line, cursor.x())
+                               : rightMostGlyphBefore(line, containing.x());
+            if (left != null) {
+                return new CursorPoint(left.x(), left.y());
+            }
+            CursorPoint previousLineEnd = endOfPreviousLineTarget(line.get(0).y());
+            return previousLineEnd == null ? new CursorPoint(cursor.x() - safeSpaceWidth, cursor.y()) : previousLineEnd;
+        }
+
+        CanvasGlyph nearest = nearestGlyph(cursor);
+        if (nearest == null) {
+            return new CursorPoint(cursor.x() - safeSpaceWidth, cursor.y());
+        }
+        CanvasGlyph left = rightMostGlyphBefore(glyphsOnLine(nearest.y()), cursor.x());
+        if (left != null) {
+            return new CursorPoint(left.x(), left.y());
+        }
+        CursorPoint previousLineEnd = endOfPreviousLineTarget(nearest.y());
+        return previousLineEnd == null ? new CursorPoint(cursor.x() - safeSpaceWidth, cursor.y()) : previousLineEnd;
+    }
+
+    private CursorPoint rightTarget(
+            CanvasCursor cursor,
+            int spaceWidth
+    ) {
+        int safeSpaceWidth = Math.max(1, spaceWidth);
+        List<CanvasGlyph> line = glyphsOnLine(cursor.y());
+        if (line.isEmpty()) {
+            CanvasGlyph nearest = nearestGlyph(cursor);
+            return nearest == null
+                   ? new CursorPoint(cursor.x() + safeSpaceWidth, cursor.y())
+                   : new CursorPoint(nearest.x(), nearest.y());
+        }
+        CanvasGlyph next = leftMostGlyphAtOrAfter(line, cursor.x());
+        if (next == null) {
+            CanvasGlyph first = firstGlyphOnNextLine(cursor.y());
+            return first == null
+                   ? new CursorPoint(cursor.x() + safeSpaceWidth, cursor.y())
+                   : new CursorPoint(first.x(), first.y());
+        }
+        return new CursorPoint(next.x() + next.width(), next.y());
+    }
+
+    private CursorPoint endOfPreviousLineTarget(double y) {
+        Double previousY = previousGlyphRow(y);
+        if (previousY == null) {
+            return null;
+        }
+        List<CanvasGlyph> line = glyphsOnLine(previousY);
+        if (line.isEmpty()) {
+            return null;
+        }
+        CanvasGlyph rightMost = line.get(line.size() - 1);
+        return new CursorPoint(rightMost.x() + rightMost.width(), rightMost.y());
     }
 
     private void moveCursorToLineStartFocused() {
@@ -959,6 +1167,70 @@ public class SFMDrawCanvasModel {
             }
         }
         return nearest;
+    }
+
+    private List<CanvasGlyph> selectedGlyphs(int lineHeight) {
+        List<CanvasGlyph> selectedGlyphs = new ArrayList<>();
+        for (CanvasGlyph glyph : glyphs) {
+            if (uniqueCursorInGlyphBounds(glyph, lineHeight) != null) {
+                selectedGlyphs.add(glyph);
+            }
+        }
+        return selectedGlyphs;
+    }
+
+    private CanvasCursor uniqueCursorInGlyphBounds(
+            CanvasGlyph glyph,
+            int lineHeight
+    ) {
+        CanvasCursor selected = null;
+        for (CanvasCursor cursor : cursors) {
+            if (!cursorInGlyphBounds(cursor, glyph, lineHeight)) {
+                continue;
+            }
+            if (selected != null) {
+                return null;
+            }
+            selected = cursor;
+        }
+        return selected;
+    }
+
+    private boolean cursorInGlyphBounds(
+            CanvasCursor cursor,
+            CanvasGlyph glyph,
+            int lineHeight
+    ) {
+        int safeLineHeight = Math.max(1, lineHeight);
+        return cursor.x() >= glyph.x()
+               && cursor.x() < glyph.x() + glyph.width()
+               && cursor.y() >= glyph.y()
+               && cursor.y() < glyph.y() + safeLineHeight;
+    }
+
+    private List<CanvasGlyph> normalizedGlyphs(List<CanvasGlyph> sourceGlyphs) {
+        double minX = 0.0D;
+        double minY = 0.0D;
+        boolean first = true;
+        for (CanvasGlyph glyph : sourceGlyphs) {
+            if (first || glyph.x() < minX) {
+                minX = glyph.x();
+            }
+            if (first || glyph.y() < minY) {
+                minY = glyph.y();
+            }
+            first = false;
+        }
+        List<CanvasGlyph> normalized = new ArrayList<>();
+        for (CanvasGlyph glyph : sourceGlyphs) {
+            normalized.add(new CanvasGlyph(
+                    glyph.text(),
+                    glyph.x() - minX,
+                    glyph.y() - minY,
+                    glyph.width()
+            ));
+        }
+        return normalized;
     }
 
     private CanvasCursor cursorClosestToGlyph(CanvasGlyph target) {
@@ -1350,29 +1622,38 @@ public class SFMDrawCanvasModel {
             int lineHeight,
             boolean snapToGlyph
     ) {
+        CursorPoint target = verticalTarget(focusedCursor(), direction, lineHeight, snapToGlyph);
+        setCursor(target.x(), target.y());
+    }
+
+    private CursorPoint verticalTarget(
+            CanvasCursor cursor,
+            int direction,
+            int lineHeight,
+            boolean snapToGlyph
+    ) {
         Double targetY = null;
         for (CanvasGlyph glyph : glyphs) {
-            boolean candidate = direction < 0 ? glyph.y() < cursorCanvasY() : glyph.y() > cursorCanvasY();
+            boolean candidate = direction < 0 ? glyph.y() < cursor.y() : glyph.y() > cursor.y();
             boolean better = targetY == null || (direction < 0 ? glyph.y() > targetY : glyph.y() < targetY);
             if (candidate && better) {
                 targetY = glyph.y();
             }
         }
         if (targetY == null) {
-            focusedCursor().move(0.0D, direction * Math.max(1, lineHeight));
-            return;
+            return new CursorPoint(cursor.x(), cursor.y() + direction * Math.max(1, lineHeight));
         }
-        double gapStart = direction < 0 ? targetY + lineHeight : cursorCanvasY() + lineHeight;
-        double gapEnd = direction < 0 ? cursorCanvasY() : targetY;
+        double gapStart = direction < 0 ? targetY + lineHeight : cursor.y() + lineHeight;
+        double gapEnd = direction < 0 ? cursor.y() : targetY;
         if (!snapToGlyph && gapEnd - gapStart >= lineHeight) {
-            focusedCursor().move(0.0D, direction * lineHeight);
-            return;
+            return new CursorPoint(cursor.x(), cursor.y() + direction * lineHeight);
         }
         List<CanvasGlyph> line = glyphsOnLine(targetY);
-        CanvasGlyph target = nearestGlyphByX(line, cursorCanvasX());
+        CanvasGlyph target = nearestGlyphByX(line, cursor.x());
         if (target != null) {
-            setCursor(target.x(), target.y());
+            return new CursorPoint(target.x(), target.y());
         }
+        return new CursorPoint(cursor.x(), cursor.y() + direction * Math.max(1, lineHeight));
     }
 
     private CanvasGlyph nearestGlyphByX(
@@ -1448,6 +1729,12 @@ public class SFMDrawCanvasModel {
             double originalY,
             double lineStartX,
             boolean insertBeforeRow
+    ) {
+    }
+
+    private record CursorPoint(
+            double x,
+            double y
     ) {
     }
 

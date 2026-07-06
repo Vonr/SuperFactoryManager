@@ -87,6 +87,47 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void copyableTextCopiesWholeDocumentWhenNothingIsSelected() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+
+        canvas.typeText("a b\nc", ignored -> 1, 9);
+
+        assertEquals("a b\nc", canvas.copyableText(1, 9));
+    }
+
+    @Test
+    public void copyableTextCopiesSelectedGlyphsWithNormalizedCoordinates() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "abcd", 0, 0);
+        canvas.setCursor(1, 0);
+        canvas.addCursor(3, 0);
+
+        assertEquals("b d", canvas.copyableText(1, 9));
+    }
+
+    @Test
+    public void pasteTextTypesMultilineClipboardText() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+
+        canvas.pasteText("a b\nc", ignored -> 1, 9);
+
+        assertEquals("a b\nc", canvas.projectedText(1, 9));
+    }
+
+    @Test
+    public void pasteTextInsertsIntoExistingLine() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                a|bc
+                """);
+
+        canvas.pasteText("X", ignored -> 1, 1);
+
+        assertEquals("""
+                aX|bc
+                """, toFixture(canvas));
+    }
+
+    @Test
     public void typingGlyphShiftsSameLineContentRight() {
         SFMDrawCanvasModel canvas = fromFixture("""
                 |asd
@@ -706,6 +747,99 @@ public class SFMDrawCanvasModelTests {
 
         assertEquals(4, canvas.cursorCanvasX());
         assertEquals(0, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void controlLeftMovesToStartOfWordRun() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                abc,def|
+                """);
+
+        canvas.moveCursorLeftWord(1, 1);
+
+        assertEquals("""
+                abc,|def
+                """, toFixture(canvas));
+    }
+
+    @Test
+    public void controlRightMovesToEndOfWordRun() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                |abc,def
+                """);
+
+        canvas.moveCursorRightWord(1, 1);
+
+        assertEquals("""
+                abc|,def
+                """, toFixture(canvas));
+    }
+
+    @Test
+    public void controlRightMovesAcrossNonWordRun() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                abc|,.;def
+                """);
+
+        canvas.moveCursorRightWord(1, 1);
+
+        assertEquals("""
+                abc,.;|def
+                """, toFixture(canvas));
+    }
+
+    @Test
+    public void addCursorLeftWordTargetsStartOfWordRun() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                abc,def|
+                """);
+
+        canvas.addCursorLeftWord(1, 1);
+
+        assertEquals(2, canvas.cursors().size());
+        assertTrue(hasCursorAt(canvas, 7, 0));
+        assertTrue(hasCursorAt(canvas, 4, 0));
+    }
+
+    @Test
+    public void addCursorRightWordTargetsEndOfWordRun() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                |abc,def
+                """);
+
+        canvas.addCursorRightWord(1, 1);
+
+        assertEquals(2, canvas.cursors().size());
+        assertTrue(hasCursorAt(canvas, 0, 0));
+        assertTrue(hasCursorAt(canvas, 3, 0));
+    }
+
+    @Test
+    public void addCursorUpToGlyphUsesVerticalGlyphJumpTarget() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "every 20 ticks do", 0, 0);
+        typeTextAt(canvas, "end", 0, 18);
+        canvas.setCursor(3, 18);
+
+        canvas.addCursorUpToGlyph(9);
+
+        assertEquals(2, canvas.cursors().size());
+        assertTrue(hasCursorAt(canvas, 3, 18));
+        assertTrue(hasCursorAt(canvas, 3, 0));
+    }
+
+    @Test
+    public void addCursorDownToGlyphUsesVerticalGlyphJumpTarget() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        typeTextAt(canvas, "every 20 ticks do", 0, 0);
+        typeTextAt(canvas, "end", 0, 18);
+        canvas.setCursor(3, 0);
+
+        canvas.addCursorDownToGlyph(9);
+
+        assertEquals(2, canvas.cursors().size());
+        assertTrue(hasCursorAt(canvas, 3, 0));
+        assertTrue(hasCursorAt(canvas, 2, 18));
     }
 
     @Test

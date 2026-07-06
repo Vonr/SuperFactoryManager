@@ -2,6 +2,7 @@ package ca.teamdman.sfm.client.screen;
 
 import ca.teamdman.sfm.client.screen.widget.SFMButtonBuilder;
 import ca.teamdman.sfm.client.screen.text_editor.ISFMTextEditScreen;
+import ca.teamdman.sfm.client.screen.text_editor.SFMTextEditScreenV1;
 import ca.teamdman.sfm.client.text_editor.ISFMTextEditScreenOpenContext;
 import ca.teamdman.sfm.common.config.SFMConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -62,6 +63,7 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     private boolean showCursorTrail = false;
     private boolean hideSelection = false;
     private boolean panning;
+    private boolean suppressNextNumpadPanChar;
     private boolean initialContentLoaded;
     private double panAnchorMouseX;
     private double panAnchorMouseY;
@@ -146,6 +148,7 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
                 .setSize(80, 20)
                 .setText(CommonComponents.GUI_DONE)
                 .setOnPress(button -> this.saveAndClose())
+                .setTooltip(this, font, SFMTextEditScreenV1.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP)
                 .build());
         refreshDiagnosticControls();
     }
@@ -290,6 +293,13 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             char codePoint,
             int modifiers
     ) {
+        if (suppressNextNumpadPanChar) {
+            suppressNextNumpadPanChar = false;
+            if (codePoint >= '0' && codePoint <= '9') {
+                rememberInputEvent(String.format("charTyped suppressed numpad pan '%s'", Character.toString(codePoint)));
+                return true;
+            }
+        }
         if (Character.isISOControl(codePoint)) {
             return super.charTyped(codePoint, modifiers);
         }
@@ -325,6 +335,14 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         if (handleCameraShortcut(keyCode, modifiers)) {
             return true;
         }
+        if (Screen.isCopy(keyCode)) {
+            copyCanvasTextToClipboard();
+            return true;
+        }
+        if (Screen.isPaste(keyCode)) {
+            pasteClipboardText();
+            return true;
+        }
         if (keyCode == GLFW.GLFW_KEY_A && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
             model().ensureCursorClosestToEachGlyph();
             rememberCursorPosition();
@@ -340,17 +358,27 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             rememberCursorPosition();
             return true;
         }
-        if (handleNumpadMovement(keyCode)) {
-            rememberCursorPosition();
+        if (handleArrowAddCursorShortcut(keyCode, modifiers)) {
+            return true;
+        }
+        if (handleNumpadCameraPan(keyCode)) {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
-            model().moveCursorLeft(this.font.lineHeight, this.font.width(" "));
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                model().moveCursorLeftWord(this.font.lineHeight, this.font.width(" "));
+            } else {
+                model().moveCursorLeft(this.font.lineHeight, this.font.width(" "));
+            }
             rememberCursorPosition();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_RIGHT) {
-            model().moveCursorRight(this.font.width(" "));
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                model().moveCursorRightWord(this.font.lineHeight, this.font.width(" "));
+            } else {
+                model().moveCursorRight(this.font.width(" "));
+            }
             rememberCursorPosition();
             return true;
         }
@@ -428,10 +456,13 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             int modifiers
     ) {
         rememberInputEvent(String.format("keyReleased key=%d scan=%d modifiers=%s", keyCode, scanCode, modifierText(modifiers)));
+        if (isNumpadPanKey(keyCode)) {
+            suppressNextNumpadPanChar = false;
+        }
         return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
-    private boolean handleNumpadMovement(int keyCode) {
+    private boolean handleNumpadCameraPan(int keyCode) {
         double x = 0.0D;
         double y = 0.0D;
         switch (keyCode) {
@@ -459,8 +490,20 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
                 return false;
             }
         }
-        model().moveCursorRaw(x, y);
+        panCamera(x * KEYBOARD_PAN_SCREEN_PIXELS, y * KEYBOARD_PAN_SCREEN_PIXELS);
+        suppressNextNumpadPanChar = true;
         return true;
+    }
+
+    private boolean isNumpadPanKey(int keyCode) {
+        return keyCode == GLFW.GLFW_KEY_KP_1
+               || keyCode == GLFW.GLFW_KEY_KP_2
+               || keyCode == GLFW.GLFW_KEY_KP_3
+               || keyCode == GLFW.GLFW_KEY_KP_4
+               || keyCode == GLFW.GLFW_KEY_KP_6
+               || keyCode == GLFW.GLFW_KEY_KP_7
+               || keyCode == GLFW.GLFW_KEY_KP_8
+               || keyCode == GLFW.GLFW_KEY_KP_9;
     }
 
     private boolean handleCameraShortcut(
@@ -486,20 +529,53 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             zoomAtScreenCenter(1.0D / ZOOM_STEP);
             return true;
         }
+        return false;
+    }
+
+    private boolean handleArrowAddCursorShortcut(
+            int keyCode,
+            int modifiers
+    ) {
+        if ((modifiers & GLFW.GLFW_MOD_ALT) == 0) {
+            return false;
+        }
+        boolean wordTarget = (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
+        int lineHeight = this.font.lineHeight;
+        int spaceWidth = this.font.width(" ");
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
-            panCamera(-KEYBOARD_PAN_SCREEN_PIXELS, 0.0D);
+            if (wordTarget) {
+                model().addCursorLeftWord(lineHeight, spaceWidth);
+            } else {
+                model().addCursor(model().cursorCanvasX() - spaceWidth, model().cursorCanvasY());
+            }
+            rememberCursorPosition();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_RIGHT) {
-            panCamera(KEYBOARD_PAN_SCREEN_PIXELS, 0.0D);
+            if (wordTarget) {
+                model().addCursorRightWord(lineHeight, spaceWidth);
+            } else {
+                model().addCursor(model().cursorCanvasX() + spaceWidth, model().cursorCanvasY());
+            }
+            rememberCursorPosition();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_UP) {
-            panCamera(0.0D, -KEYBOARD_PAN_SCREEN_PIXELS);
+            if (wordTarget) {
+                model().addCursorUpToGlyph(lineHeight);
+            } else {
+                model().addCursor(model().cursorCanvasX(), model().cursorCanvasY() - lineHeight);
+            }
+            rememberCursorPosition();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_DOWN) {
-            panCamera(0.0D, KEYBOARD_PAN_SCREEN_PIXELS);
+            if (wordTarget) {
+                model().addCursorDownToGlyph(lineHeight);
+            } else {
+                model().addCursor(model().cursorCanvasX(), model().cursorCanvasY() + lineHeight);
+            }
+            rememberCursorPosition();
             return true;
         }
         return false;
@@ -757,10 +833,10 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
                 continue;
             }
             mask.add(new CanvasRect(
-                    (int) Math.floor(canvasToScreenX(glyph.x())),
-                    (int) Math.floor(canvasToScreenY(glyph.y())),
-                    (int) Math.ceil(canvasToScreenX(glyph.x() + glyph.width())),
-                    (int) Math.ceil(canvasToScreenY(glyph.y() + this.font.lineHeight))
+                    canvasToScreenX(glyph.x()),
+                    canvasToScreenY(glyph.y()),
+                    canvasToScreenX(glyph.x() + glyph.width()),
+                    canvasToScreenY(glyph.y() + this.font.lineHeight)
             ));
         }
         for (CanvasRect rect : unionRects(mask)) {
@@ -768,8 +844,8 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
                     poseStack,
                     rect.left(),
                     rect.top(),
-                    Math.max(rect.left() + 1, rect.right()),
-                    Math.max(rect.top() + 1, rect.bottom())
+                    Math.max(rect.left() + 1.0D, rect.right()),
+                    Math.max(rect.top() + 1.0D, rect.bottom())
             );
         }
     }
@@ -783,16 +859,16 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             return List.of();
         }
 
-        List<Integer> xs = sortedDistinctEdges(rects, true);
-        List<Integer> ys = sortedDistinctEdges(rects, false);
+        List<Double> xs = sortedDistinctEdges(rects, true);
+        List<Double> ys = sortedDistinctEdges(rects, false);
         boolean[][] covered = new boolean[ys.size() - 1][xs.size() - 1];
 
         for (int yIndex = 0; yIndex < ys.size() - 1; yIndex++) {
-            int top = ys.get(yIndex);
-            int bottom = ys.get(yIndex + 1);
+            double top = ys.get(yIndex);
+            double bottom = ys.get(yIndex + 1);
             for (int xIndex = 0; xIndex < xs.size() - 1; xIndex++) {
-                int left = xs.get(xIndex);
-                int right = xs.get(xIndex + 1);
+                double left = xs.get(xIndex);
+                double right = xs.get(xIndex + 1);
                 for (CanvasRect rect : rects) {
                     if (rect.covers(left, top, right, bottom)) {
                         covered[yIndex][xIndex] = true;
@@ -824,11 +900,11 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         return mergeVerticalStrips(horizontalStrips);
     }
 
-    private static List<Integer> sortedDistinctEdges(
+    private static List<Double> sortedDistinctEdges(
             List<CanvasRect> rects,
             boolean horizontal
     ) {
-        List<Integer> edges = new ArrayList<>();
+        List<Double> edges = new ArrayList<>();
         for (CanvasRect rect : rects) {
             edges.add(horizontal ? rect.left() : rect.top());
             edges.add(horizontal ? rect.right() : rect.bottom());
@@ -991,6 +1067,27 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         rememberCursorPosition();
     }
 
+    private void pasteClipboardText() {
+        String clipboardContents;
+        try {
+            clipboardContents = Minecraft.getInstance().keyboardHandler.getClipboard();
+        } catch (Throwable ignored) {
+            return;
+        }
+        if (clipboardContents.isEmpty()) {
+            return;
+        }
+        model().pasteText(clipboardContents, text -> this.font.width(text), this.font.lineHeight);
+        rememberCursorPosition();
+    }
+
+    private void copyCanvasTextToClipboard() {
+        try {
+            Minecraft.getInstance().keyboardHandler.setClipboard(model().copyableText(this.font.width(" "), this.font.lineHeight));
+        } catch (Throwable ignored) {
+        }
+    }
+
     private void rememberInputEvent(String event) {
         inputEvents.add(event);
         while (inputEvents.size() > INPUT_LOG_LIMIT) {
@@ -1087,20 +1184,20 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     }
 
     record CanvasRect(
-            int left,
-            int top,
-            int right,
-            int bottom
+            double left,
+            double top,
+            double right,
+            double bottom
     ) {
         public boolean isEmpty() {
             return left >= right || top >= bottom;
         }
 
         public boolean covers(
-                int left,
-                int top,
-                int right,
-                int bottom
+                double left,
+                double top,
+                double right,
+                double bottom
         ) {
             return this.left <= left
                    && this.top <= top
