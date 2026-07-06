@@ -41,6 +41,8 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     private static final int CURSOR_TRAIL_LIMIT = 48;
     private static final double CURSOR_TRAIL_MIN_DISTANCE = 2.0D;
     private static final int DEFAULT_ORIGIN_MARGIN = 32;
+    private static final double KEYBOARD_PAN_SCREEN_PIXELS = 64.0D;
+    private static final int FIT_CONTENT_MARGIN = 32;
 
     private final Screen previousScreen;
     private final ISFMTextEditScreenOpenContext openContext;
@@ -320,6 +322,9 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             rememberCursorPosition();
             return true;
         }
+        if (handleCameraShortcut(keyCode, modifiers)) {
+            return true;
+        }
         if (keyCode == GLFW.GLFW_KEY_A && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
             model().ensureCursorClosestToEachGlyph();
             rememberCursorPosition();
@@ -446,6 +451,94 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         }
         model().moveCursorRaw(x, y);
         return true;
+    }
+
+    private boolean handleCameraShortcut(
+            int keyCode,
+            int modifiers
+    ) {
+        if ((modifiers & GLFW.GLFW_MOD_CONTROL) == 0) {
+            return false;
+        }
+        if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0 && (keyCode == GLFW.GLFW_KEY_0 || keyCode == GLFW.GLFW_KEY_KP_0)) {
+            fitCanvasContentToScreen();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_0 || keyCode == GLFW.GLFW_KEY_KP_0) {
+            resetZoomLevel();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_EQUAL || keyCode == GLFW.GLFW_KEY_KP_ADD) {
+            zoomAtScreenCenter(ZOOM_STEP);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_MINUS || keyCode == GLFW.GLFW_KEY_KP_SUBTRACT) {
+            zoomAtScreenCenter(1.0D / ZOOM_STEP);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+            panCamera(-KEYBOARD_PAN_SCREEN_PIXELS, 0.0D);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+            panCamera(KEYBOARD_PAN_SCREEN_PIXELS, 0.0D);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_UP) {
+            panCamera(0.0D, -KEYBOARD_PAN_SCREEN_PIXELS);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_DOWN) {
+            panCamera(0.0D, KEYBOARD_PAN_SCREEN_PIXELS);
+            return true;
+        }
+        return false;
+    }
+
+    private void zoomAtScreenCenter(double scaleFactor) {
+        double focusX = screenToCanvasX(this.width / 2.0D);
+        double focusY = screenToCanvasY(this.height / 2.0D);
+        zoom = Mth.clamp(zoom * scaleFactor, MIN_ZOOM, MAX_ZOOM);
+        cameraX = focusX;
+        cameraY = focusY;
+    }
+
+    private void resetZoomLevel() {
+        zoom = 1.0D;
+    }
+
+    private void panCamera(
+            double screenDeltaX,
+            double screenDeltaY
+    ) {
+        cameraX += screenDeltaX / zoom;
+        cameraY += screenDeltaY / zoom;
+    }
+
+    private void fitCanvasContentToScreen() {
+        if (model().glyphs().isEmpty()) {
+            resetZoomLevel();
+            return;
+        }
+
+        double left = Double.POSITIVE_INFINITY;
+        double top = Double.POSITIVE_INFINITY;
+        double right = Double.NEGATIVE_INFINITY;
+        double bottom = Double.NEGATIVE_INFINITY;
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : model().glyphs()) {
+            left = Math.min(left, glyph.x());
+            top = Math.min(top, glyph.y());
+            right = Math.max(right, glyph.x() + glyph.width());
+            bottom = Math.max(bottom, glyph.y() + this.font.lineHeight);
+        }
+
+        double contentWidth = Math.max(1.0D, right - left);
+        double contentHeight = Math.max(1.0D, bottom - top);
+        double availableWidth = Math.max(1.0D, this.width - FIT_CONTENT_MARGIN * 2.0D);
+        double availableHeight = Math.max(1.0D, this.height - FIT_CONTENT_MARGIN * 2.0D);
+        zoom = Mth.clamp(Math.min(availableWidth / contentWidth, availableHeight / contentHeight), MIN_ZOOM, MAX_ZOOM);
+        cameraX = (left + right) / 2.0D;
+        cameraY = (top + bottom) / 2.0D;
     }
 
     private void addDiagnosticButton(
