@@ -386,12 +386,12 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
-            model().deleteLeft();
+            model().deleteLeft(this.font.lineHeight);
             rememberCursorPosition();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_DELETE) {
-            model().deleteNearestAndMoveRight();
+            model().deleteNearestAndMoveRight(this.font.lineHeight);
             rememberCursorPosition();
             return true;
         }

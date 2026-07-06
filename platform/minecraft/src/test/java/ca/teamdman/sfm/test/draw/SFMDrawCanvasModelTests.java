@@ -1,6 +1,7 @@
 package ca.teamdman.sfm.test.draw;
 
 import ca.teamdman.sfm.client.screen.SFMDrawCanvasModel;
+import ca.teamdman.sfm.client.screen.SFMDrawCanvasSyntaxHighlightingHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -70,6 +71,19 @@ public class SFMDrawCanvasModelTests {
         assertEquals(64, canvas.glyphs().get(1).x());
         assertEquals(1, canvas.cursors().get(0).x());
         assertEquals(65, canvas.cursors().get(1).x());
+    }
+
+    @Test
+    public void typingSpaceAdvancesCursorWithoutCreatingGlyph() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+
+        canvas.typeText("a b", ignored -> 1, 9);
+
+        assertEquals(2, canvas.glyphs().size());
+        assertEquals("a", canvas.glyphs().get(0).text());
+        assertEquals("b", canvas.glyphs().get(1).text());
+        assertEquals(2, canvas.glyphs().get(1).x());
+        assertEquals("a b", SFMDrawCanvasSyntaxHighlightingHelper.projectCanvasDocument(canvas.glyphs(), 1, 9).text());
     }
 
     @Test
@@ -424,6 +438,49 @@ public class SFMDrawCanvasModelTests {
     }
 
     @Test
+    public void backspaceFromImpliedBlankLineUnshiftsFollowingRows() {
+        SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
+        int lineHeight = 9;
+        canvas.typeText("""
+                every 20 ticks do
+                  input from a
+                  output to b
+
+                end""", ignored -> 1, lineHeight);
+        canvas.setCursor(2, lineHeight * 3);
+
+        canvas.deleteLeft(lineHeight);
+
+        assertEquals("""
+                every 20 ticks do
+                  input from a
+                  output to b
+                end""", SFMDrawCanvasSyntaxHighlightingHelper.projectCanvasDocument(canvas.glyphs(), 1, lineHeight).text());
+        assertEquals(13, canvas.cursorCanvasX());
+        assertEquals(lineHeight * 2, canvas.cursorCanvasY());
+    }
+
+    @Test
+    public void backspaceFromMultipleImpliedBlankLinesKeepsCursorOnRemainingBlankLine() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                a
+
+
+                |
+                b
+                """);
+
+        canvas.deleteLeft(1);
+
+        assertEquals("""
+                a
+
+                |
+                b
+                """, toFixture(canvas));
+    }
+
+    @Test
     public void backspaceWithinLineDeletesGlyphToLeft() {
         SFMDrawCanvasModel canvas = fromFixture("""
                 abc
@@ -463,6 +520,22 @@ public class SFMDrawCanvasModelTests {
 
         assertEquals("""
                 a |c
+                """, toFixture(canvas));
+    }
+
+    @Test
+    public void deleteAfterLineEndRemovesImpliedBlankLineBeforeNextLine() {
+        SFMDrawCanvasModel canvas = fromFixture("""
+                a|
+
+                b
+                """);
+
+        canvas.deleteNearestAndMoveRight(1);
+
+        assertEquals("""
+                a|
+                b
                 """, toFixture(canvas));
     }
 

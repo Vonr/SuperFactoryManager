@@ -206,7 +206,9 @@ public class SFMDrawCanvasModel {
             int width
     ) {
         for (CanvasCursor cursor : activeCursorsSnapshot()) {
-            glyphs.add(new CanvasGlyph(text, cursor.x(), cursor.y(), width));
+            if (!" ".equals(text)) {
+                glyphs.add(new CanvasGlyph(text, cursor.x(), cursor.y(), width));
+            }
             cursor.move(width, 0.0D);
         }
         collapseDuplicateCursors();
@@ -223,7 +225,7 @@ public class SFMDrawCanvasModel {
                 continue;
             }
             if (c == '\n') {
-                moveCursorToNextLine(lineHeight);
+                moveCursorToNextInputLine(lineHeight);
             } else {
                 String glyphText = Character.toString(c);
                 typeGlyph(glyphText, glyphWidthReader.width(glyphText));
@@ -243,18 +245,26 @@ public class SFMDrawCanvasModel {
     }
 
     public void deleteLeft() {
+        deleteLeft(1);
+    }
+
+    public void deleteLeft(int lineHeight) {
         List<CanvasCursor> active = activeCursorsSnapshot();
         if (active.size() <= 1) {
-            applyToActiveCursors(this::deleteLeftFocused);
+            applyToActiveCursors(() -> deleteLeftFocused(lineHeight));
             return;
         }
         deleteNearestGlyphsTransactionally(active, false);
     }
 
     public void deleteNearestAndMoveRight() {
+        deleteNearestAndMoveRight(1);
+    }
+
+    public void deleteNearestAndMoveRight(int lineHeight) {
         List<CanvasCursor> active = activeCursorsSnapshot();
         if (active.size() <= 1) {
-            applyToActiveCursors(this::deleteNearestAndMoveRightFocused);
+            applyToActiveCursors(() -> deleteNearestAndMoveRightFocused(lineHeight));
             return;
         }
         deleteNearestGlyphsTransactionally(active, true);
@@ -316,6 +326,10 @@ public class SFMDrawCanvasModel {
         applyToActiveCursors(() -> moveCursorToNextLineFocused(lineHeight));
     }
 
+    private void moveCursorToNextInputLine(int lineHeight) {
+        applyToActiveCursors(() -> focusedCursor().set(0.0D, cursorCanvasY() + Math.max(1, lineHeight)));
+    }
+
     public void insertLineBreak(int lineHeight) {
         List<CanvasCursor> active = activeCursorsSnapshot();
         List<Double> breakRows = distinctSortedRows(active);
@@ -349,14 +363,17 @@ public class SFMDrawCanvasModel {
         collapseDuplicateCursors();
     }
 
-    private void deleteLeftFocused() {
+    private void deleteLeftFocused(int lineHeight) {
         if (glyphs.isEmpty()) {
             return;
         }
-        moveCursorLeftFocused(1);
+        if (glyphsOnVisualLine(cursorCanvasY(), lineHeight).isEmpty() && deleteBlankLineBeforeCursor(lineHeight)) {
+            return;
+        }
+        moveCursorLeftFocused(lineHeight);
         CanvasGlyph deleted = glyphAtCursor();
         if (deleted == null) {
-            moveCursorLeftFocused(1);
+            moveCursorLeftFocused(lineHeight);
             deleted = glyphAtCursor();
         }
         if (deleted != null) {
@@ -364,8 +381,55 @@ public class SFMDrawCanvasModel {
         }
     }
 
-    private void deleteNearestAndMoveRightFocused() {
+    private boolean deleteBlankLineBeforeCursor(int lineHeight) {
+        int safeLineHeight = Math.max(1, lineHeight);
+        Double previousY = previousGlyphRow(cursorCanvasY());
+        Double nextY = nextGlyphRow(cursorCanvasY());
+        if (previousY == null || nextY == null) {
+            return false;
+        }
+        if (cursorCanvasY() - previousY < safeLineHeight || nextY - cursorCanvasY() < safeLineHeight) {
+            return false;
+        }
+
+        double originalCursorY = cursorCanvasY();
+        moveGlyphRowsAtOrBelow(originalCursorY, -safeLineHeight);
+        for (CanvasCursor cursor : cursors) {
+            if (cursor != focusedCursor() && cursor.y() >= originalCursorY) {
+                cursor.setY(cursor.y() - safeLineHeight);
+            }
+        }
+        if (originalCursorY - previousY > safeLineHeight) {
+            focusedCursor().setY(originalCursorY - safeLineHeight);
+        } else {
+            moveCursorToEndOfLine(glyphsOnLine(previousY));
+        }
+        collapseDuplicateCursors();
+        return true;
+    }
+
+    private void moveGlyphRowsAtOrBelow(
+            double y,
+            double deltaY
+    ) {
+        List<CanvasGlyph> movedGlyphs = new ArrayList<>();
+        for (CanvasGlyph glyph : glyphs) {
+            movedGlyphs.add(new CanvasGlyph(
+                    glyph.text(),
+                    glyph.x(),
+                    glyph.y() >= y ? glyph.y() + deltaY : glyph.y(),
+                    glyph.width()
+            ));
+        }
+        glyphs.clear();
+        glyphs.addAll(movedGlyphs);
+    }
+
+    private void deleteNearestAndMoveRightFocused(int lineHeight) {
         if (glyphs.isEmpty()) {
+            return;
+        }
+        if (deleteBlankLineAfterCursor(lineHeight)) {
             return;
         }
         CanvasGlyph deleted = nearestGlyph();
@@ -383,6 +447,23 @@ public class SFMDrawCanvasModel {
         if (nextLineFirst != null) {
             setCursor(nextLineFirst.x(), nextLineFirst.y());
         }
+    }
+
+    private boolean deleteBlankLineAfterCursor(int lineHeight) {
+        int safeLineHeight = Math.max(1, lineHeight);
+        double currentY = currentOrPreviousGlyphRow(cursorCanvasY());
+        Double nextY = nextGlyphRow(currentY);
+        if (nextY == null || nextY - currentY <= safeLineHeight) {
+            return false;
+        }
+        moveGlyphRowsAtOrBelow(currentY + safeLineHeight * 2.0D, -safeLineHeight);
+        for (CanvasCursor cursor : cursors) {
+            if (cursor != focusedCursor() && cursor.y() >= currentY + safeLineHeight * 2.0D) {
+                cursor.setY(cursor.y() - safeLineHeight);
+            }
+        }
+        collapseDuplicateCursors();
+        return true;
     }
 
     private void moveCursorLeftFocused(int lineHeight) {
@@ -932,12 +1013,7 @@ public class SFMDrawCanvasModel {
     }
 
     private void moveCursorToEndOfPreviousLine(double y) {
-        Double previousY = null;
-        for (CanvasGlyph glyph : glyphs) {
-            if (glyph.y() < y && (previousY == null || glyph.y() > previousY)) {
-                previousY = glyph.y();
-            }
-        }
+        Double previousY = previousGlyphRow(y);
         if (previousY == null) {
             focusedCursor().setX(0.0D);
             return;
@@ -960,12 +1036,7 @@ public class SFMDrawCanvasModel {
             double y,
             List<CanvasGlyph> excluded
     ) {
-        Double nextY = null;
-        for (CanvasGlyph glyph : glyphs) {
-            if (!excluded.contains(glyph) && glyph.y() > y && (nextY == null || glyph.y() < nextY)) {
-                nextY = glyph.y();
-            }
-        }
+        Double nextY = nextGlyphRow(y, excluded);
         if (nextY == null) {
             return null;
         }
@@ -988,6 +1059,41 @@ public class SFMDrawCanvasModel {
             }
         }
         return first;
+    }
+
+    private Double previousGlyphRow(double y) {
+        Double previousY = null;
+        for (CanvasGlyph glyph : glyphs) {
+            if (glyph.y() < y && (previousY == null || glyph.y() > previousY)) {
+                previousY = glyph.y();
+            }
+        }
+        return previousY;
+    }
+
+    private double currentOrPreviousGlyphRow(double y) {
+        if (!glyphsOnLine(y).isEmpty()) {
+            return y;
+        }
+        Double previousY = previousGlyphRow(y);
+        return previousY == null ? y : previousY;
+    }
+
+    private Double nextGlyphRow(double y) {
+        return nextGlyphRow(y, List.of());
+    }
+
+    private Double nextGlyphRow(
+            double y,
+            List<CanvasGlyph> excluded
+    ) {
+        Double nextY = null;
+        for (CanvasGlyph glyph : glyphs) {
+            if (!excluded.contains(glyph) && glyph.y() > y && (nextY == null || glyph.y() < nextY)) {
+                nextY = glyph.y();
+            }
+        }
+        return nextY;
     }
 
     private void moveCursorVertically(

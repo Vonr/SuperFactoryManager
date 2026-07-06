@@ -101,13 +101,19 @@ public class SFMDrawCanvasSyntaxHighlightingTests {
 
         var projection = SFMDrawCanvasSyntaxHighlightingHelper.projectCanvasDocument(canvas.glyphs(), SPACE_WIDTH, LINE_HEIGHT);
 
-        assertEquals(input, projection.text(), message);
+        assertEquals(normalizeProjectedText(input), normalizeProjectedText(projection.text()), message);
     }
 
     private static SFMDrawCanvasModel typeInput(String input) {
         SFMDrawCanvasModel canvas = new SFMDrawCanvasModel();
         canvas.typeText(input, ignored -> 1, LINE_HEIGHT);
         return canvas;
+    }
+
+    private static String normalizeProjectedText(String input) {
+        return input
+                .replaceAll("[ \\t]+(?=\\n|$)", "")
+                .strip();
     }
 
     private static String randomProgramText(Random random) {
