@@ -44,4 +44,4 @@ We have source code for Minecraft and for Forge/NeoForge available to us:
 - `sfm-propagate-changes.exe jar sources --help`
 - `teamy-mft query --profile sfm "1.19.2 GameTestHelper.java"`
 - `rg --files "D:\Repos\Minecraft\SFM\repos2\1.21.1\platform\minecraft\build" | rg "GameTestHelper\.java$|SummonCommand\.java$"`
-
+- `ls G:\Programming\Repos\Minecraft` contains many toolchain-relevant cloned repos such as MinecraftForge, NeoForged, and supporting elements.
