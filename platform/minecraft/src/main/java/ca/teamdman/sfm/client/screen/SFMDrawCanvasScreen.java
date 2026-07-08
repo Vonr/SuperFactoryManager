@@ -1,10 +1,13 @@
 package ca.teamdman.sfm.client.screen;
 
+import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.screen.widget.SFMButtonBuilder;
 import ca.teamdman.sfm.client.screen.text_editor.ISFMTextEditScreen;
 import ca.teamdman.sfm.client.screen.text_editor.SFMTextEditScreenV1;
 import ca.teamdman.sfm.client.text_editor.ISFMTextEditScreenOpenContext;
 import ca.teamdman.sfm.common.config.SFMConfig;
+import ca.teamdman.sfm.common.localization.LocalizationEntry;
+import ca.teamdman.sfm.common.localization.SFMLocalizationDatagen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -12,14 +15,25 @@ import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
+    @SFMLocalizationDatagen
+    public static final LocalizationEntry DRAW_CANVAS_READ_ONLY_DOCUMENT = new LocalizationEntry(
+            "gui.sfm.draw_canvas.read_only",
+            "Read-only document"
+    );
+
     private static final int BACKGROUND = 0xFF15191E;
     private static final int MINOR_GRID = 0xFF252C34;
     private static final int MAJOR_GRID = 0xFF343D47;
@@ -44,6 +58,10 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     private static final int DEFAULT_ORIGIN_MARGIN = 32;
     private static final double KEYBOARD_PAN_SCREEN_PIXELS = 64.0D;
     private static final int FIT_CONTENT_MARGIN = 32;
+    private static final int FOCUS_BORDER = 0xFF60A5FA;
+    private static final int PANEL_BACKGROUND = 0xF01A2028;
+    private static final int PANEL_TAB_BACKGROUND = 0xF0283340;
+    private static final ResourceLocation SFML_GRAMMAR_RESOURCE = new ResourceLocation(SFM.MOD_ID, "grammar/sfml/sfml.g4");
 
     private final Screen previousScreen;
     private final ISFMTextEditScreenOpenContext openContext;
@@ -69,6 +87,19 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     private double panAnchorMouseY;
     private double panAnchorCameraX;
     private double panAnchorCameraY;
+    private boolean grammarPanelVisible;
+    private SFMDrawCanvasModel grammarModel = new SFMDrawCanvasModel();
+    private Button grammarFocusTarget;
+    private double grammarCameraX;
+    private double grammarCameraY;
+    private double grammarZoom = 1.0D;
+    private boolean grammarCameraInitialized;
+    private boolean grammarContentLoaded;
+    private boolean grammarPanning;
+    private double grammarPanAnchorMouseX;
+    private double grammarPanAnchorMouseY;
+    private double grammarPanAnchorCameraX;
+    private double grammarPanAnchorCameraY;
 
     public SFMDrawCanvasScreen(Screen previousScreen) {
         super(Component.literal("SFM Draw Canvas"));
@@ -120,11 +151,15 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         SFMScreenRenderUtils.enableKeyRepeating();
         loadInitialContent();
         initializeCamera();
-        canvasFocusTarget = new CanvasFocusTarget(2, 2, Math.max(1, this.width - 4), Math.max(1, this.height - 4));
+        canvasFocusTarget = new CanvasFocusTarget(8, 8, Math.max(1, this.width - 16), Math.max(1, this.height - 40), true);
         this.addRenderableWidget(canvasFocusTarget);
         this.setInitialFocus(canvasFocusTarget);
         this.setFocused(canvasFocusTarget);
         canvasFocusTarget.setFocused(true);
+        grammarFocusTarget = new CanvasFocusTarget(grammarPanelLeft(), grammarPanelTop(), grammarPanelWidth(), grammarPanelHeight(), false);
+        grammarFocusTarget.visible = grammarPanelVisible;
+        grammarFocusTarget.active = grammarPanelVisible;
+        this.addRenderableWidget(grammarFocusTarget);
         diagnosticButtons.clear();
         addDiagnosticButton(8, 8, () -> showCrosshairCoordinates, value -> showCrosshairCoordinates = value, "Coords");
         addDiagnosticButton(8, 32, () -> showGlyphBoundingBoxes, value -> showGlyphBoundingBoxes = value, "Glyph Bounds");
@@ -143,6 +178,12 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
                     )))
                     .build());
         }
+        this.addRenderableWidget(new SFMButtonBuilder()
+                .setPosition(this.width - 140, this.height - 24)
+                .setSize(48, 20)
+                .setText(Component.literal("SFML"))
+                .setOnPress(button -> toggleGrammarPanel())
+                .build());
         this.addRenderableWidget(new SFMButtonBuilder()
                 .setPosition(this.width - 88, this.height - 24)
                 .setSize(80, 20)
@@ -181,7 +222,13 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         if (diagnosticControlsVisible) {
             renderInputDiagnostics(poseStack);
         }
+        if (grammarPanelVisible) {
+            renderGrammarPanel(poseStack);
+        }
         super.render(poseStack, mouseX, mouseY, partialTick);
+        if (grammarPanelVisible && isGrammarPanelFocused()) {
+            renderReadOnlyMessage(poseStack);
+        }
     }
 
     @Override
@@ -198,14 +245,27 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             double mouseY,
             int button
     ) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && super.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (grammarPanelVisible && isInGrammarPanel(mouseX, mouseY)) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+                beginGrammarPan(mouseX, mouseY);
+                focusGrammarPanel();
+                return true;
+            }
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                grammarModel.setActiveCursors(grammarScreenToCanvasX(mouseX), grammarScreenToCanvasY(mouseY));
+                focusGrammarPanel();
+                return true;
+            }
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
             beginPan(mouseX, mouseY);
+            focusMainCanvas();
             return true;
         }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            if (super.mouseClicked(mouseX, mouseY, button)) {
-                return true;
-            }
             if (hasAltDown()) {
                 model().addCursor(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
             } else if (hasControlDown()) {
@@ -213,8 +273,7 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             } else {
                 model().setActiveCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
             }
-            this.setFocused(canvasFocusTarget);
-            canvasFocusTarget.setFocused(true);
+            focusMainCanvas();
             rememberCursorPosition();
             return true;
         }
@@ -236,7 +295,18 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             rememberCursorPosition();
             return true;
         }
+        if (grammarPanning && button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+            grammarCameraX = grammarPanAnchorCameraX - (mouseX - grammarPanAnchorMouseX) / grammarZoom;
+            grammarCameraY = grammarPanAnchorCameraY - (mouseY - grammarPanAnchorMouseY) / grammarZoom;
+            grammarModel.setCursor(grammarScreenToCanvasX(mouseX), grammarScreenToCanvasY(mouseY));
+            return true;
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (grammarPanelVisible && isInGrammarPanel(mouseX, mouseY)) {
+                grammarModel.setActiveCursors(grammarScreenToCanvasX(mouseX), grammarScreenToCanvasY(mouseY));
+                focusGrammarPanel();
+                return true;
+            }
             if (hasAltDown()) {
                 model().addCursorAvoidingCrowding(
                         screenToCanvasX(mouseX),
@@ -247,8 +317,7 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             } else {
                 model().setActiveCursors(screenToCanvasX(mouseX), screenToCanvasY(mouseY));
             }
-            this.setFocused(canvasFocusTarget);
-            canvasFocusTarget.setFocused(true);
+            focusMainCanvas();
             rememberCursorPosition();
             return true;
         }
@@ -265,6 +334,10 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             panning = false;
             return true;
         }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && grammarPanning) {
+            grammarPanning = false;
+            return true;
+        }
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -276,6 +349,17 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     ) {
         if (delta == 0.0D) {
             return super.mouseScrolled(mouseX, mouseY, delta);
+        }
+        if (grammarPanelVisible && isInGrammarPanel(mouseX, mouseY)) {
+            double focusX = grammarScreenToCanvasX(mouseX);
+            double focusY = grammarScreenToCanvasY(mouseY);
+            double scaleFactor = Math.pow(ZOOM_STEP, delta);
+            grammarZoom = Mth.clamp(grammarZoom * scaleFactor, MIN_ZOOM, MAX_ZOOM);
+            grammarCameraX = focusX - (mouseX - grammarPanelCenterX()) / grammarZoom;
+            grammarCameraY = focusY - (mouseY - grammarPanelCenterY()) / grammarZoom;
+            grammarModel.setCursor(focusX, focusY);
+            focusGrammarPanel();
+            return true;
         }
         double focusX = screenToCanvasX(mouseX);
         double focusY = screenToCanvasY(mouseY);
@@ -303,6 +387,9 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         if (Character.isISOControl(codePoint)) {
             return super.charTyped(codePoint, modifiers);
         }
+        if (isGrammarPanelFocused()) {
+            return true;
+        }
         String text = Character.toString(codePoint);
         rememberInputEvent(String.format("charTyped '%s' U+%04X modifiers=%s", text, (int) codePoint, modifierText(modifiers)));
         model().typeGlyph(text, this.font.width(text), this.font.lineHeight);
@@ -321,6 +408,9 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             diagnosticControlsVisible = !diagnosticControlsVisible;
             refreshDiagnosticControls();
             return true;
+        }
+        if (isGrammarPanelFocused()) {
+            return handleGrammarPanelKeyPressed(keyCode, modifiers);
         }
         if (keyCode == GLFW.GLFW_KEY_F1) {
             model().focusPreviousCursor((modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
@@ -462,6 +552,103 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
+    private boolean handleGrammarPanelKeyPressed(
+            int keyCode,
+            int modifiers
+    ) {
+        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+            if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
+                saveAndClose();
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_F1) {
+            grammarModel.focusPreviousCursor((modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_F4) {
+            grammarModel.focusNextCursor((modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
+            return true;
+        }
+        if (handleGrammarCameraShortcut(keyCode, modifiers)) {
+            return true;
+        }
+        if (Screen.isCopy(keyCode)) {
+            copyGrammarTextToClipboard();
+            return true;
+        }
+        if (Screen.isPaste(keyCode)) {
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_A && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            grammarModel.ensureCursorClosestToEachGlyph();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_L && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            grammarModel.ensureCursorClosestToEachGlyphOnActiveCursorLines(this.font.lineHeight);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_COMMA && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            grammarModel.discardCursorsNotClosestToAnyGlyph();
+            return true;
+        }
+        if (handleGrammarArrowAddCursorShortcut(keyCode, modifiers)) {
+            return true;
+        }
+        if (handleGrammarNumpadCameraPan(keyCode)) {
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                grammarModel.moveCursorLeftWord(this.font.lineHeight, this.font.width(" "));
+            } else {
+                grammarModel.moveCursorLeft(this.font.lineHeight, this.font.width(" "));
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                grammarModel.moveCursorRightWord(this.font.lineHeight, this.font.width(" "));
+            } else {
+                grammarModel.moveCursorRight(this.font.width(" "));
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_UP) {
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                grammarModel.moveCursorUpToGlyph(this.font.lineHeight);
+            } else {
+                grammarModel.moveCursorUp(this.font.lineHeight);
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_DOWN) {
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                grammarModel.moveCursorDownToGlyph(this.font.lineHeight);
+            } else {
+                grammarModel.moveCursorDown(this.font.lineHeight);
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_HOME) {
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                grammarModel.moveCursorToDocumentStart();
+            } else {
+                grammarModel.moveCursorToLineStart();
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_END) {
+            if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+                grammarModel.moveCursorToDocumentEnd();
+            } else {
+                grammarModel.moveCursorToLineEnd();
+            }
+            return true;
+        }
+        return keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE;
+    }
+
     private boolean handleNumpadCameraPan(int keyCode) {
         double x = 0.0D;
         double y = 0.0D;
@@ -532,6 +719,39 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         return false;
     }
 
+    private boolean handleGrammarNumpadCameraPan(int keyCode) {
+        double x = 0.0D;
+        double y = 0.0D;
+        switch (keyCode) {
+            case GLFW.GLFW_KEY_KP_7 -> {
+                x = -1.0D;
+                y = -1.0D;
+            }
+            case GLFW.GLFW_KEY_KP_8 -> y = -1.0D;
+            case GLFW.GLFW_KEY_KP_9 -> {
+                x = 1.0D;
+                y = -1.0D;
+            }
+            case GLFW.GLFW_KEY_KP_4 -> x = -1.0D;
+            case GLFW.GLFW_KEY_KP_6 -> x = 1.0D;
+            case GLFW.GLFW_KEY_KP_1 -> {
+                x = -1.0D;
+                y = 1.0D;
+            }
+            case GLFW.GLFW_KEY_KP_2 -> y = 1.0D;
+            case GLFW.GLFW_KEY_KP_3 -> {
+                x = 1.0D;
+                y = 1.0D;
+            }
+            default -> {
+                return false;
+            }
+        }
+        grammarPanCamera(x * KEYBOARD_PAN_SCREEN_PIXELS, y * KEYBOARD_PAN_SCREEN_PIXELS);
+        suppressNextNumpadPanChar = true;
+        return true;
+    }
+
     private boolean handleArrowAddCursorShortcut(
             int keyCode,
             int modifiers
@@ -576,6 +796,77 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
                 model().addCursor(model().cursorCanvasX(), model().cursorCanvasY() + lineHeight);
             }
             rememberCursorPosition();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleGrammarCameraShortcut(
+            int keyCode,
+            int modifiers
+    ) {
+        if ((modifiers & GLFW.GLFW_MOD_CONTROL) == 0) {
+            return false;
+        }
+        if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0 && (keyCode == GLFW.GLFW_KEY_9 || keyCode == GLFW.GLFW_KEY_KP_9)) {
+            fitGrammarContentToPanel();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_0 || keyCode == GLFW.GLFW_KEY_KP_0) {
+            grammarZoom = 1.0D;
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_EQUAL || keyCode == GLFW.GLFW_KEY_KP_ADD) {
+            grammarZoomAtPanelCenter(ZOOM_STEP);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_MINUS || keyCode == GLFW.GLFW_KEY_KP_SUBTRACT) {
+            grammarZoomAtPanelCenter(1.0D / ZOOM_STEP);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleGrammarArrowAddCursorShortcut(
+            int keyCode,
+            int modifiers
+    ) {
+        if ((modifiers & GLFW.GLFW_MOD_ALT) == 0) {
+            return false;
+        }
+        boolean wordTarget = (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
+        int lineHeight = this.font.lineHeight;
+        int spaceWidth = this.font.width(" ");
+        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+            if (wordTarget) {
+                grammarModel.addCursorLeftWord(lineHeight, spaceWidth);
+            } else {
+                grammarModel.addCursor(grammarModel.cursorCanvasX() - spaceWidth, grammarModel.cursorCanvasY());
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+            if (wordTarget) {
+                grammarModel.addCursorRightWord(lineHeight, spaceWidth);
+            } else {
+                grammarModel.addCursor(grammarModel.cursorCanvasX() + spaceWidth, grammarModel.cursorCanvasY());
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_UP) {
+            if (wordTarget) {
+                grammarModel.addCursorUpToGlyph(lineHeight);
+            } else {
+                grammarModel.addCursor(grammarModel.cursorCanvasX(), grammarModel.cursorCanvasY() - lineHeight);
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_DOWN) {
+            if (wordTarget) {
+                grammarModel.addCursorDownToGlyph(lineHeight);
+            } else {
+                grammarModel.addCursor(grammarModel.cursorCanvasX(), grammarModel.cursorCanvasY() + lineHeight);
+            }
             return true;
         }
         return false;
@@ -1012,8 +1303,15 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     }
 
     private SFMDrawCanvasModel.CanvasCursor uniqueCursorInGlyphBounds(SFMDrawCanvasModel.CanvasGlyph glyph) {
+        return uniqueCursorInGlyphBounds(model(), glyph);
+    }
+
+    private SFMDrawCanvasModel.CanvasCursor uniqueCursorInGlyphBounds(
+            SFMDrawCanvasModel sourceModel,
+            SFMDrawCanvasModel.CanvasGlyph glyph
+    ) {
         SFMDrawCanvasModel.CanvasCursor selected = null;
-        for (SFMDrawCanvasModel.CanvasCursor cursor : model().cursors()) {
+        for (SFMDrawCanvasModel.CanvasCursor cursor : sourceModel.cursors()) {
             if (!cursorInGlyphBounds(cursor, glyph)) {
                 continue;
             }
@@ -1026,8 +1324,15 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     }
 
     private boolean isUniqueCursorInAnyGlyphBounds(SFMDrawCanvasModel.CanvasCursor cursor) {
-        for (SFMDrawCanvasModel.CanvasGlyph glyph : model().glyphs()) {
-            if (uniqueCursorInGlyphBounds(glyph) == cursor) {
+        return isUniqueCursorInAnyGlyphBounds(model(), cursor);
+    }
+
+    private boolean isUniqueCursorInAnyGlyphBounds(
+            SFMDrawCanvasModel sourceModel,
+            SFMDrawCanvasModel.CanvasCursor cursor
+    ) {
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : sourceModel.glyphs()) {
+            if (uniqueCursorInGlyphBounds(sourceModel, glyph) == cursor) {
                 return true;
             }
         }
@@ -1177,6 +1482,300 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         return (screenY - this.height / 2.0D) / zoom + cameraY;
     }
 
+    private void toggleGrammarPanel() {
+        grammarPanelVisible = !grammarPanelVisible;
+        if (grammarFocusTarget != null) {
+            grammarFocusTarget.visible = grammarPanelVisible;
+            grammarFocusTarget.active = grammarPanelVisible;
+        }
+        if (grammarPanelVisible) {
+            loadGrammarContent();
+            initializeGrammarCamera();
+            focusGrammarPanel();
+        } else {
+            focusMainCanvas();
+        }
+    }
+
+    private void loadGrammarContent() {
+        if (grammarContentLoaded) {
+            return;
+        }
+        grammarContentLoaded = true;
+        grammarModel = new SFMDrawCanvasModel();
+        grammarModel.typeText(readGrammarResource(), this.font::width, this.font.lineHeight);
+        grammarModel.moveCursorToDocumentStart();
+    }
+
+    private String readGrammarResource() {
+        Map<ResourceLocation, Resource> resources = Minecraft.getInstance()
+                .getResourceManager()
+                .listResources("grammar/sfml", location -> location.equals(SFML_GRAMMAR_RESOURCE));
+        Resource resource = resources.get(SFML_GRAMMAR_RESOURCE);
+        if (resource == null) {
+            return "// Missing runtime grammar resource: " + SFML_GRAMMAR_RESOURCE;
+        }
+        try (BufferedReader reader = resource.openAsReader()) {
+            return reader.lines().collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            return "// Failed to read runtime grammar resource: " + SFML_GRAMMAR_RESOURCE + "\n// " + e.getMessage();
+        }
+    }
+
+    private void initializeGrammarCamera() {
+        if (grammarCameraInitialized) {
+            return;
+        }
+        grammarCameraX = (grammarPanelWidth() / 2.0D - DEFAULT_ORIGIN_MARGIN) / grammarZoom;
+        grammarCameraY = (grammarPanelHeight() / 2.0D - DEFAULT_ORIGIN_MARGIN) / grammarZoom;
+        grammarCameraInitialized = true;
+    }
+
+    private void focusMainCanvas() {
+        this.setFocused(canvasFocusTarget);
+        if (canvasFocusTarget != null) {
+            canvasFocusTarget.setFocused(true);
+        }
+        if (grammarFocusTarget != null) {
+            grammarFocusTarget.setFocused(false);
+        }
+    }
+
+    private void focusGrammarPanel() {
+        if (grammarFocusTarget == null) {
+            return;
+        }
+        this.setFocused(grammarFocusTarget);
+        grammarFocusTarget.setFocused(true);
+        if (canvasFocusTarget != null) {
+            canvasFocusTarget.setFocused(false);
+        }
+    }
+
+    private boolean isGrammarPanelFocused() {
+        return grammarPanelVisible && grammarFocusTarget != null && grammarFocusTarget.isFocused();
+    }
+
+    private int grammarPanelWidth() {
+        return Math.max(220, Math.min(this.width - 32, 540));
+    }
+
+    private int grammarPanelHeight() {
+        return Math.max(120, this.height - 84);
+    }
+
+    private int grammarPanelLeft() {
+        return this.width - grammarPanelWidth() - 16;
+    }
+
+    private int grammarPanelTop() {
+        return 28;
+    }
+
+    private double grammarPanelCenterX() {
+        return grammarPanelLeft() + grammarPanelWidth() / 2.0D;
+    }
+
+    private double grammarPanelCenterY() {
+        return grammarPanelTop() + grammarPanelHeight() / 2.0D;
+    }
+
+    private boolean isInGrammarPanel(
+            double mouseX,
+            double mouseY
+    ) {
+        return mouseX >= grammarPanelLeft()
+               && mouseX < grammarPanelLeft() + grammarPanelWidth()
+               && mouseY >= grammarPanelTop()
+               && mouseY < grammarPanelTop() + grammarPanelHeight();
+    }
+
+    private void beginGrammarPan(
+            double mouseX,
+            double mouseY
+    ) {
+        grammarPanning = true;
+        grammarPanAnchorMouseX = mouseX;
+        grammarPanAnchorMouseY = mouseY;
+        grammarPanAnchorCameraX = grammarCameraX;
+        grammarPanAnchorCameraY = grammarCameraY;
+    }
+
+    private void grammarPanCamera(
+            double screenDeltaX,
+            double screenDeltaY
+    ) {
+        grammarCameraX += screenDeltaX / grammarZoom;
+        grammarCameraY += screenDeltaY / grammarZoom;
+    }
+
+    private void grammarZoomAtPanelCenter(double scaleFactor) {
+        double focusX = grammarScreenToCanvasX(grammarPanelCenterX());
+        double focusY = grammarScreenToCanvasY(grammarPanelCenterY());
+        grammarZoom = Mth.clamp(grammarZoom * scaleFactor, MIN_ZOOM, MAX_ZOOM);
+        grammarCameraX = focusX;
+        grammarCameraY = focusY;
+    }
+
+    private void fitGrammarContentToPanel() {
+        if (grammarModel.glyphs().isEmpty()) {
+            grammarZoom = 1.0D;
+            initializeGrammarCamera();
+            return;
+        }
+
+        double left = Double.POSITIVE_INFINITY;
+        double top = Double.POSITIVE_INFINITY;
+        double right = Double.NEGATIVE_INFINITY;
+        double bottom = Double.NEGATIVE_INFINITY;
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : grammarModel.glyphs()) {
+            left = Math.min(left, glyph.x());
+            top = Math.min(top, glyph.y());
+            right = Math.max(right, glyph.x() + glyph.width());
+            bottom = Math.max(bottom, glyph.y() + this.font.lineHeight);
+        }
+
+        double contentWidth = Math.max(1.0D, right - left);
+        double contentHeight = Math.max(1.0D, bottom - top);
+        double availableWidth = Math.max(1.0D, grammarPanelWidth() - FIT_CONTENT_MARGIN * 2.0D);
+        double availableHeight = Math.max(1.0D, grammarPanelHeight() - FIT_CONTENT_MARGIN * 2.0D);
+        grammarZoom = Mth.clamp(Math.min(availableWidth / contentWidth, availableHeight / contentHeight), MIN_ZOOM, MAX_ZOOM);
+        grammarCameraX = (left + right) / 2.0D;
+        grammarCameraY = (top + bottom) / 2.0D;
+    }
+
+    private double grammarCanvasToScreenX(double canvasX) {
+        return (canvasX - grammarCameraX) * grammarZoom + grammarPanelCenterX();
+    }
+
+    private double grammarCanvasToScreenY(double canvasY) {
+        return (canvasY - grammarCameraY) * grammarZoom + grammarPanelCenterY();
+    }
+
+    private double grammarScreenToCanvasX(double screenX) {
+        return (screenX - grammarPanelCenterX()) / grammarZoom + grammarCameraX;
+    }
+
+    private double grammarScreenToCanvasY(double screenY) {
+        return (screenY - grammarPanelCenterY()) / grammarZoom + grammarCameraY;
+    }
+
+    private void renderGrammarPanel(PoseStack poseStack) {
+        loadGrammarContent();
+        initializeGrammarCamera();
+        int left = grammarPanelLeft();
+        int top = grammarPanelTop();
+        int right = left + grammarPanelWidth();
+        int bottom = top + grammarPanelHeight();
+        fill(poseStack, left, top, right, bottom, PANEL_BACKGROUND);
+
+        int tabWidth = 70;
+        int tabHeight = 16;
+        fill(poseStack, left + 8, top - tabHeight, left + 8 + tabWidth, top, PANEL_TAB_BACKGROUND);
+        drawRectOutline(poseStack, left + 8, top - tabHeight, left + 8 + tabWidth, top + 1, HUD_BORDER);
+        drawString(poseStack, this.font, Component.literal("SFML.g4"), left + 14, top - tabHeight + 4, HUD_TEXT);
+
+        renderGrammarGlyphs(poseStack);
+        if (!hideSelection) {
+            renderGrammarGlyphSelectionHighlights(poseStack);
+        }
+        renderGrammarCanvasCursor(poseStack);
+
+        drawRectOutline(poseStack, left, top, right, bottom, isGrammarPanelFocused() ? FOCUS_BORDER : HUD_BORDER);
+    }
+
+    private void renderGrammarGlyphs(PoseStack poseStack) {
+        Map<SFMDrawCanvasModel.CanvasGlyph, Integer> glyphColours = SFMDrawCanvasSyntaxHighlightingHelper.buildAntlrGrammarHighlightColours(
+                grammarModel.glyphs(),
+                this.font.width(" "),
+                this.font.lineHeight,
+                GLYPH
+        );
+        int left = grammarPanelLeft();
+        int top = grammarPanelTop();
+        int right = left + grammarPanelWidth();
+        int bottom = top + grammarPanelHeight();
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : grammarModel.glyphs()) {
+            double screenX = grammarCanvasToScreenX(glyph.x());
+            double screenY = grammarCanvasToScreenY(glyph.y());
+            if (screenX > right || screenX + glyph.width() * grammarZoom < left || screenY > bottom || screenY + this.font.lineHeight * grammarZoom < top) {
+                continue;
+            }
+            poseStack.pushPose();
+            poseStack.translate(screenX, screenY, 0.0D);
+            poseStack.scale((float) grammarZoom, (float) grammarZoom, 1.0F);
+            drawString(poseStack, this.font, glyph.text(), 0, 0, glyphColours.getOrDefault(glyph, GLYPH));
+            poseStack.popPose();
+        }
+    }
+
+    private void renderGrammarGlyphSelectionHighlights(PoseStack poseStack) {
+        List<CanvasRect> mask = new ArrayList<>();
+        int left = grammarPanelLeft();
+        int top = grammarPanelTop();
+        int right = left + grammarPanelWidth();
+        int bottom = top + grammarPanelHeight();
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : grammarModel.glyphs()) {
+            if (uniqueCursorInGlyphBounds(grammarModel, glyph) == null) {
+                continue;
+            }
+            mask.add(new CanvasRect(
+                    Mth.clamp(grammarCanvasToScreenX(glyph.x()), left, right),
+                    Mth.clamp(grammarCanvasToScreenY(glyph.y()), top, bottom),
+                    Mth.clamp(grammarCanvasToScreenX(glyph.x() + glyph.width()), left, right),
+                    Mth.clamp(grammarCanvasToScreenY(glyph.y() + this.font.lineHeight), top, bottom)
+            ));
+        }
+        for (CanvasRect rect : unionRects(mask)) {
+            SFMScreenRenderUtils.renderHighlight(
+                    poseStack,
+                    rect.left(),
+                    rect.top(),
+                    Math.max(rect.left() + 1.0D, rect.right()),
+                    Math.max(rect.top() + 1.0D, rect.bottom())
+            );
+        }
+    }
+
+    private void renderGrammarCanvasCursor(PoseStack poseStack) {
+        for (int i = 0; i < grammarModel.cursors().size(); i++) {
+            SFMDrawCanvasModel.CanvasCursor cursor = grammarModel.cursors().get(i);
+            if (!hideSelection && isUniqueCursorInAnyGlyphBounds(grammarModel, cursor)) {
+                continue;
+            }
+            int screenX = (int) Math.round(grammarCanvasToScreenX(cursor.x()));
+            int screenY = (int) Math.round(grammarCanvasToScreenY(cursor.y()));
+            if (!isInGrammarPanel(screenX, screenY)) {
+                continue;
+            }
+            int size = grammarPanning ? 8 : 6;
+            int cursorSize = cursor.active() ? size + 2 : size;
+            if (i == grammarModel.focusedCursorIndex()) {
+                drawCrosshair(poseStack, screenX, screenY, cursorSize + 2, focusedCursorOutlineColor(cursor.color()));
+            }
+            drawCrosshair(poseStack, screenX, screenY, cursorSize, cursor.active() ? cursor.color() : inactiveCursorColor(cursor.color()));
+        }
+    }
+
+    private void renderReadOnlyMessage(PoseStack poseStack) {
+        Component message = DRAW_CANVAS_READ_ONLY_DOCUMENT.getComponent();
+        int width = this.font.width(message);
+        int left = (this.width - width) / 2 - 8;
+        int top = this.height - 48;
+        int right = left + width + 16;
+        int bottom = top + this.font.lineHeight + 10;
+        fill(poseStack, left, top, right, bottom, HUD_BACKGROUND);
+        drawRectOutline(poseStack, left, top, right, bottom, HUD_BORDER);
+        drawString(poseStack, this.font, message, left + 8, top + 5, HUD_TEXT);
+    }
+
+    private void copyGrammarTextToClipboard() {
+        try {
+            Minecraft.getInstance().keyboardHandler.setClipboard(grammarModel.copyableText(this.font.width(" "), this.font.lineHeight));
+        } catch (Throwable ignored) {
+        }
+    }
+
     private record CanvasPoint(
             double x,
             double y
@@ -1215,13 +1814,17 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     }
 
     private static class CanvasFocusTarget extends Button {
+        private final boolean showWhenFocused;
+
         public CanvasFocusTarget(
                 int x,
                 int y,
                 int width,
-                int height
+                int height,
+                boolean showWhenFocused
         ) {
             super(x, y, width, height, Component.empty(), button -> { });
+            this.showWhenFocused = showWhenFocused;
         }
 
         @Override
@@ -1231,7 +1834,12 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
                 int mouseY,
                 float partialTick
         ) {
-            // Invisible focus target for vanilla tab navigation.
+            if (showWhenFocused && isFocused()) {
+                fill(poseStack, this.x, this.y, this.x + this.width, this.y + 1, FOCUS_BORDER);
+                fill(poseStack, this.x, this.y + this.height - 1, this.x + this.width, this.y + this.height, FOCUS_BORDER);
+                fill(poseStack, this.x, this.y, this.x + 1, this.y + this.height, FOCUS_BORDER);
+                fill(poseStack, this.x + this.width - 1, this.y, this.x + this.width, this.y + this.height, FOCUS_BORDER);
+            }
         }
 
         @Override

@@ -47,6 +47,29 @@ public class SFMDrawCanvasSyntaxHighlightingTests {
     }
 
     @Test
+    public void antlrGrammarSyntaxHighlightingColoursCanvasGlyphs() {
+        List<SFMDrawCanvasModel.CanvasGlyph> glyphs = glyphsFromLines(
+                "grammar Example;",
+                "ruleName: TOKEN_REF 'literal';",
+                "TOKEN_REF: 'A';",
+                "// comment"
+        );
+
+        var colours = SFMDrawCanvasSyntaxHighlightingHelper.buildAntlrGrammarHighlightColours(
+                glyphs,
+                SPACE_WIDTH,
+                LINE_HEIGHT,
+                DEFAULT_COLOUR
+        );
+
+        assertEquals(formattingToRgb(ChatFormatting.BLUE), colours.get(glyphAt(glyphs, 0, 0))); // grammar keyword
+        assertEquals(formattingToRgb(ChatFormatting.GREEN), colours.get(glyphAt(glyphs, 1, 0))); // parser rule ref
+        assertEquals(formattingToRgb(ChatFormatting.GOLD), colours.get(glyphAt(glyphs, 1, 10))); // lexer token ref
+        assertEquals(formattingToRgb(ChatFormatting.LIGHT_PURPLE), colours.get(glyphAt(glyphs, 1, 20))); // string literal
+        assertEquals(formattingToRgb(ChatFormatting.GRAY), colours.get(glyphAt(glyphs, 3, 0))); // comment
+    }
+
+    @Test
     public void typedSingleLineRoundTripsThroughProjection() {
         assertTypedRoundTrip("EVERY 20 TICKS DO");
     }
@@ -163,6 +186,17 @@ public class SFMDrawCanvasSyntaxHighlightingTests {
             }
         }
         return glyphs;
+    }
+
+    private static SFMDrawCanvasModel.CanvasGlyph glyphAt(
+            List<SFMDrawCanvasModel.CanvasGlyph> glyphs,
+            int line,
+            int column
+    ) {
+        return glyphs.stream()
+                .filter(glyph -> glyph.y() == line && glyph.x() == column)
+                .findFirst()
+                .orElseThrow();
     }
 
     private static int formattingToRgb(ChatFormatting formatting) {

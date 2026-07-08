@@ -1821,6 +1821,7 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
     context.bail_if_cancelled()?;
     let main_state_path = project_root.join("javac-main.inputs.sha1");
     let main_refmap = resources_dir.join("sfm.refmap.json");
+    let required_main_class = required_main_class_output(&classes_dir);
     let main_cache_hit = {
         let _span = tracing::debug_span!(
             "project_compile_check_main_cache",
@@ -1833,7 +1834,7 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
             context,
             &main_state_path,
             &main_fingerprint,
-            &[&classes_dir],
+            &[&classes_dir, &required_main_class],
         )? && (context.plan.loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev
             || main_refmap.is_file())
     };
@@ -2041,6 +2042,14 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         )?;
     };
     Ok(())
+}
+
+fn required_main_class_output(classes_dir: &Path) -> PathBuf {
+    classes_dir
+        .join("ca")
+        .join("teamdman")
+        .join("sfm")
+        .join("SFM.class")
 }
 
 fn patch_neogradle_anonymous_constructor_debug_names(
@@ -2660,6 +2669,58 @@ fn stage_project_resources(
         )
         .entered();
         stage_resource_root(context, &root, staging_dir, &mut written)?;
+    }
+    stage_antlr_grammar_resources(context, staging_dir, &mut written)?;
+    Ok(())
+}
+
+fn stage_antlr_grammar_resources(
+    context: &ExecutionContext<'_>,
+    staging_dir: &Path,
+    written: &mut BTreeSet<String>,
+) -> eyre::Result<()> {
+    context.bail_if_cancelled()?;
+    let root = context
+        .plan
+        .minecraft_dir
+        .join("src")
+        .join("main")
+        .join("antlr");
+    if !root.exists() {
+        return Ok(());
+    }
+    context.assert_allowed_input(&root)?;
+
+    let files = {
+        let _span = tracing::debug_span!(
+            "stage_antlr_grammar_resources_collect_files",
+            root = %root.display()
+        )
+        .entered();
+        collect_files_under_cancellable(context, &root)?
+    };
+    for path in files {
+        context.bail_if_cancelled()?;
+        if path.extension().and_then(|ext| ext.to_str()) != Some("g4") {
+            continue;
+        }
+        context.assert_allowed_input(&path)?;
+        let relative_name = relative_zip_name(&root, &path)?.to_ascii_lowercase();
+        let name = format!("assets/sfm/grammar/{relative_name}");
+        if !written.insert(name.clone()) {
+            continue;
+        }
+        let output = zip_name_to_path(staging_dir, &name);
+        if let Some(parent) = output.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::copy(&path, &output).wrap_err_with(|| {
+            format!(
+                "Failed to stage grammar resource {} to {}",
+                path.display(),
+                output.display()
+            )
+        })?;
     }
     Ok(())
 }

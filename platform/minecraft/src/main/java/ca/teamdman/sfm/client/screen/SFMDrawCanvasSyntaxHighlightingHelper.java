@@ -1,7 +1,11 @@
 package ca.teamdman.sfm.client.screen;
 
+import ca.teamdman.langs.ANTLRv4Lexer;
 import ca.teamdman.sfm.client.text_styling.ProgramSyntaxHighlightingHelper;
 import net.minecraft.ChatFormatting;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Token;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -26,6 +30,36 @@ public class SFMDrawCanvasSyntaxHighlightingHelper {
     ) {
         CanvasDocumentProjection projection = projectCanvasDocument(sourceGlyphs, spaceWidth, lineHeight);
         return buildSyntaxHighlightColours(projection, defaultColour);
+    }
+
+    public static Map<SFMDrawCanvasModel.CanvasGlyph, Integer> buildAntlrGrammarHighlightColours(
+            List<SFMDrawCanvasModel.CanvasGlyph> sourceGlyphs,
+            int spaceWidth,
+            int lineHeight,
+            int defaultColour
+    ) {
+        CanvasDocumentProjection projection = projectCanvasDocument(sourceGlyphs, spaceWidth, lineHeight);
+        Map<SFMDrawCanvasModel.CanvasGlyph, Integer> colours = new IdentityHashMap<>();
+        if (projection.text().isEmpty()) {
+            return colours;
+        }
+
+        ANTLRv4Lexer lexer = new ANTLRv4Lexer(CharStreams.fromString(projection.text()));
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        tokens.fill();
+        for (Token token : tokens.getTokens()) {
+            if (token.getType() == ANTLRv4Lexer.EOF) {
+                break;
+            }
+            int colour = formattingToRgb(getAntlrGrammarColour(token), defaultColour);
+            for (int index = token.getStartIndex(); index <= token.getStopIndex() && index < projection.glyphsByCharIndex().size(); index++) {
+                SFMDrawCanvasModel.CanvasGlyph glyph = projection.glyphsByCharIndex().get(index);
+                if (glyph != null) {
+                    colours.put(glyph, colour);
+                }
+            }
+        }
+        return colours;
     }
 
     private static Map<SFMDrawCanvasModel.CanvasGlyph, Integer> buildSyntaxHighlightColours(
@@ -126,6 +160,38 @@ public class SFMDrawCanvasSyntaxHighlightingHelper {
     ) {
         Integer colour = formatting.getColor();
         return colour == null ? defaultColour : 0xFF000000 | colour;
+    }
+
+    private static ChatFormatting getAntlrGrammarColour(Token token) {
+        if (token.getChannel() == ANTLRv4Lexer.COMMENT) {
+            return ChatFormatting.GRAY;
+        }
+        return switch (token.getType()) {
+            case ANTLRv4Lexer.GRAMMAR,
+                 ANTLRv4Lexer.LEXER,
+                 ANTLRv4Lexer.PARSER,
+                 ANTLRv4Lexer.IMPORT,
+                 ANTLRv4Lexer.OPTIONS,
+                 ANTLRv4Lexer.TOKENS,
+                 ANTLRv4Lexer.CHANNELS,
+                 ANTLRv4Lexer.FRAGMENT,
+                 ANTLRv4Lexer.MODE,
+                 ANTLRv4Lexer.RETURNS,
+                 ANTLRv4Lexer.LOCALS,
+                 ANTLRv4Lexer.THROWS,
+                 ANTLRv4Lexer.CATCH,
+                 ANTLRv4Lexer.FINALLY -> ChatFormatting.BLUE;
+            case ANTLRv4Lexer.TOKEN_REF -> ChatFormatting.GOLD;
+            case ANTLRv4Lexer.RULE_REF -> ChatFormatting.GREEN;
+            case ANTLRv4Lexer.STRING_LITERAL,
+                 ANTLRv4Lexer.UNTERMINATED_STRING_LITERAL -> ChatFormatting.LIGHT_PURPLE;
+            case ANTLRv4Lexer.ACTION,
+                 ANTLRv4Lexer.ARG_ACTION,
+                 ANTLRv4Lexer.ARGUMENT_CONTENT,
+                 ANTLRv4Lexer.LEXER_CHAR_SET -> ChatFormatting.AQUA;
+            case ANTLRv4Lexer.INT -> ChatFormatting.YELLOW;
+            default -> ChatFormatting.WHITE;
+        };
     }
 
     public record CanvasDocumentProjection(

@@ -3740,15 +3740,34 @@ fn run_source_roots(
 ) -> eyre::Result<String> {
     let mod_id = required_property(&context.plan.properties, "mod_id")?;
     let existing_roots = run_source_root_paths(context, kind, run_options)?;
-    let separator = if cfg!(windows) { ";" } else { ":" };
-    Ok(existing_roots
+    let roots = existing_roots
         .into_iter()
-        .map(|path| format!("{mod_id}%%{}", path.display()))
+        .map(|path| path.display().to_string())
         .collect::<Vec<_>>()
-        .join(separator))
+        .join(";");
+    Ok(format!("{mod_id}%%{roots}"))
 }
 
 fn run_source_root_paths(
+    context: &ExecutionContext<'_>,
+    kind: RunKind,
+    run_options: &RunOptions,
+) -> eyre::Result<Vec<PathBuf>> {
+    let source_roots = run_project_source_roots(context, kind, run_options)?;
+    let combined_root = context
+        .plan
+        .cache_dir
+        .join("project")
+        .join("run-mod-root")
+        .join(kind.command_name());
+    reset_cache_directory(&context.plan.cache_dir, &combined_root)?;
+    for source_root in source_roots {
+        copy_directory_contents(context, &source_root, &combined_root)?;
+    }
+    Ok(vec![combined_root])
+}
+
+fn run_project_source_roots(
     context: &ExecutionContext<'_>,
     kind: RunKind,
     run_options: &RunOptions,
@@ -3773,6 +3792,35 @@ fn run_source_root_paths(
     }
 
     Ok(existing_roots)
+}
+
+fn copy_directory_contents(
+    context: &ExecutionContext<'_>,
+    source: &Path,
+    destination: &Path,
+) -> eyre::Result<()> {
+    context.assert_allowed_input(source)?;
+    fs::create_dir_all(destination)
+        .wrap_err_with(|| format!("Failed to create {}", destination.display()))?;
+    for file in collect_files_under_cancellable(context, source)? {
+        context.bail_if_cancelled()?;
+        let relative = file
+            .strip_prefix(source)
+            .wrap_err_with(|| format!("Failed to relativize {}", file.display()))?;
+        let output = destination.join(relative);
+        if let Some(parent) = output.parent() {
+            fs::create_dir_all(parent)
+                .wrap_err_with(|| format!("Failed to create {}", parent.display()))?;
+        }
+        fs::copy(&file, &output).wrap_err_with(|| {
+            format!(
+                "Failed to copy {} to {}",
+                file.display(),
+                output.display()
+            )
+        })?;
+    }
+    Ok(())
 }
 
 fn kind_extra_program_args(plan: &BuildPlan, kind: RunKind) -> eyre::Result<Vec<String>> {

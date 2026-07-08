@@ -245,6 +245,8 @@ fn run_antlr(
         grammar_root.join("sfml").join("SFML.g4"),
         grammar_root.join("toml").join("TomlLexer.g4"),
         grammar_root.join("toml").join("TomlParser.g4"),
+        grammar_root.join("antlr4").join("ANTLRv4Lexer.g4"),
+        grammar_root.join("antlr4").join("ANTLRv4Parser.g4"),
     ];
     for grammar in &grammars {
         context.bail_if_cancelled()?;
