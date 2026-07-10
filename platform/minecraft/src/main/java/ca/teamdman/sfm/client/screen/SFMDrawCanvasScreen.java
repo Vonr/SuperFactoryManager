@@ -3,7 +3,6 @@ package ca.teamdman.sfm.client.screen;
 import ca.teamdman.sfm.SFM;
 import ca.teamdman.sfm.client.screen.widget.SFMButtonBuilder;
 import ca.teamdman.sfm.client.screen.text_editor.ISFMTextEditScreen;
-import ca.teamdman.sfm.client.screen.text_editor.SFMTextEditScreenV1;
 import ca.teamdman.sfm.client.text_editor.ISFMTextEditScreenOpenContext;
 import ca.teamdman.sfm.common.config.SFMConfig;
 import ca.teamdman.sfm.common.localization.LocalizationEntry;
@@ -13,8 +12,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.Mth;
@@ -32,6 +33,21 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     public static final LocalizationEntry DRAW_CANVAS_READ_ONLY_DOCUMENT = new LocalizationEntry(
             "gui.sfm.draw_canvas.read_only",
             "Read-only document"
+    );
+    @SFMLocalizationDatagen
+    public static final LocalizationEntry DRAW_CANVAS_SFML_BUTTON_TOOLTIP_PREFIX = new LocalizationEntry(
+            "gui.sfm.draw_canvas.sfml_button.tooltip.prefix",
+            "Drag onto the canvas to insert "
+    );
+    @SFMLocalizationDatagen
+    public static final LocalizationEntry DRAW_CANVAS_DONE_BUTTON_TOOLTIP_PREFIX = new LocalizationEntry(
+            "gui.sfm.draw_canvas.done_button.tooltip.prefix",
+            "Press "
+    );
+    @SFMLocalizationDatagen
+    public static final LocalizationEntry DRAW_CANVAS_DONE_BUTTON_TOOLTIP_SUFFIX = new LocalizationEntry(
+            "gui.sfm.draw_canvas.done_button.tooltip.suffix",
+            " to save"
     );
 
     private static final int BACKGROUND = 0xFF15191E;
@@ -61,6 +77,10 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     private static final int FOCUS_BORDER = 0xFF60A5FA;
     private static final int PANEL_BACKGROUND = 0xF01A2028;
     private static final int PANEL_TAB_BACKGROUND = 0xF0283340;
+    private static final int EMBEDDED_DOCUMENT_BACKGROUND = 0xE81A2028;
+    private static final int EMBEDDED_DOCUMENT_BORDER = 0xFF7C8A9B;
+    private static final int EMBEDDED_DOCUMENT_HANDLE = 0xFFE6EDF3;
+    private static final int INSERT_DRAG_LINE = 0xFF60A5FA;
     private static final ResourceLocation SFML_GRAMMAR_RESOURCE = new ResourceLocation(SFM.MOD_ID, "grammar/sfml/sfml.g4");
 
     private final Screen previousScreen;
@@ -69,7 +89,9 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     private final List<CanvasPoint> cursorTrail = new ArrayList<>();
     private final List<String> inputEvents = new ArrayList<>();
     private final List<Button> diagnosticButtons = new ArrayList<>();
+    private final List<EmbeddedDocument> embeddedDocuments = new ArrayList<>();
     private Button canvasFocusTarget;
+    private Button sfmlButton;
     private double cameraX;
     private double cameraY;
     private double zoom = 1.0D;
@@ -100,6 +122,13 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
     private double grammarPanAnchorMouseY;
     private double grammarPanAnchorCameraX;
     private double grammarPanAnchorCameraY;
+    private boolean draggingGrammarInsert;
+    private double grammarInsertStartX;
+    private double grammarInsertStartY;
+    private EmbeddedDocument resizingEmbeddedDocument;
+    private ResizeCorner resizingCorner;
+    private double resizeAnchorX;
+    private double resizeAnchorY;
 
     public SFMDrawCanvasScreen(Screen previousScreen) {
         super(Component.literal("SFM Draw Canvas"));
@@ -151,7 +180,7 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         SFMScreenRenderUtils.enableKeyRepeating();
         loadInitialContent();
         initializeCamera();
-        canvasFocusTarget = new CanvasFocusTarget(8, 8, Math.max(1, this.width - 16), Math.max(1, this.height - 40), true);
+        canvasFocusTarget = new CanvasFocusTarget(1, 1, Math.max(1, this.width - 2), Math.max(1, this.height - 26), true);
         this.addRenderableWidget(canvasFocusTarget);
         this.setInitialFocus(canvasFocusTarget);
         this.setFocused(canvasFocusTarget);
@@ -178,18 +207,20 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
                     )))
                     .build());
         }
-        this.addRenderableWidget(new SFMButtonBuilder()
+        sfmlButton = new SFMButtonBuilder()
                 .setPosition(this.width - 140, this.height - 24)
                 .setSize(48, 20)
                 .setText(Component.literal("SFML"))
-                .setOnPress(button -> toggleGrammarPanel())
-                .build());
+                .setOnPress(button -> { })
+                .setTooltip(this, font, sfmlButtonTooltip())
+                .build();
+        this.addRenderableWidget(sfmlButton);
         this.addRenderableWidget(new SFMButtonBuilder()
                 .setPosition(this.width - 88, this.height - 24)
                 .setSize(80, 20)
                 .setText(CommonComponents.GUI_DONE)
                 .setOnPress(button -> this.saveAndClose())
-                .setTooltip(this, font, SFMTextEditScreenV1.PROGRAM_EDIT_SCREEN_DONE_BUTTON_TOOLTIP)
+                .setTooltip(this, font, doneButtonTooltip())
                 .build());
         refreshDiagnosticControls();
     }
@@ -208,6 +239,7 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         if (showCursorTrail) {
             renderCursorTrail(poseStack);
         }
+        renderEmbeddedDocuments(poseStack);
         renderGlyphs(poseStack);
         if (!hideSelection) {
             renderGlyphSelectionHighlights(poseStack);
@@ -226,6 +258,9 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             renderGrammarPanel(poseStack);
         }
         super.render(poseStack, mouseX, mouseY, partialTick);
+        if (draggingGrammarInsert) {
+            renderGrammarInsertDrag(poseStack, mouseX, mouseY);
+        }
         if (grammarPanelVisible && isGrammarPanelFocused()) {
             renderReadOnlyMessage(poseStack);
         }
@@ -245,6 +280,14 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             double mouseY,
             int button
     ) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && sfmlButton != null && sfmlButton.isMouseOver(mouseX, mouseY)) {
+            beginGrammarInsertDrag(mouseX, mouseY);
+            return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && beginEmbeddedDocumentResize(mouseX, mouseY)) {
+            focusMainCanvas();
+            return true;
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && super.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
@@ -295,10 +338,17 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             rememberCursorPosition();
             return true;
         }
+        if (resizingEmbeddedDocument != null && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            resizeEmbeddedDocument(mouseX, mouseY);
+            return true;
+        }
         if (grammarPanning && button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
             grammarCameraX = grammarPanAnchorCameraX - (mouseX - grammarPanAnchorMouseX) / grammarZoom;
             grammarCameraY = grammarPanAnchorCameraY - (mouseY - grammarPanAnchorMouseY) / grammarZoom;
             grammarModel.setCursor(grammarScreenToCanvasX(mouseX), grammarScreenToCanvasY(mouseY));
+            return true;
+        }
+        if (draggingGrammarInsert && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return true;
         }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -336,6 +386,16 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         }
         if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && grammarPanning) {
             grammarPanning = false;
+            return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && resizingEmbeddedDocument != null) {
+            resizingEmbeddedDocument.fitContent(this.font.lineHeight);
+            resizingEmbeddedDocument = null;
+            resizingCorner = null;
+            return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && draggingGrammarInsert) {
+            finishGrammarInsertDrag(mouseX, mouseY);
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
@@ -1238,6 +1298,126 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
         }
     }
 
+    private void renderEmbeddedDocuments(PoseStack poseStack) {
+        for (EmbeddedDocument document : embeddedDocuments) {
+            renderEmbeddedDocument(poseStack, document);
+        }
+    }
+
+    private void renderEmbeddedDocument(
+            PoseStack poseStack,
+            EmbeddedDocument document
+    ) {
+        int left = (int) Math.floor(canvasToScreenX(document.canvasX));
+        int top = (int) Math.floor(canvasToScreenY(document.canvasY));
+        int right = (int) Math.ceil(canvasToScreenX(document.canvasX + document.canvasWidth));
+        int bottom = (int) Math.ceil(canvasToScreenY(document.canvasY + document.canvasHeight));
+        if (right < 0 || bottom < 0 || left > this.width || top > this.height) {
+            return;
+        }
+
+        fill(poseStack, left, top, right, bottom, EMBEDDED_DOCUMENT_BACKGROUND);
+        drawRectOutline(poseStack, left, top, right, bottom, EMBEDDED_DOCUMENT_BORDER);
+        int titleWidth = this.font.width(document.title);
+        fill(poseStack, left, top - 14, Math.min(right, left + titleWidth + 12), top, PANEL_TAB_BACKGROUND);
+        drawString(poseStack, this.font, Component.literal(document.title), left + 6, top - 11, HUD_TEXT);
+        renderEmbeddedDocumentGlyphs(poseStack, document, left, top, right, bottom);
+        renderEmbeddedDocumentHandles(poseStack, left, top, right, bottom);
+    }
+
+    private void renderEmbeddedDocumentGlyphs(
+            PoseStack poseStack,
+            EmbeddedDocument document,
+            int left,
+            int top,
+            int right,
+            int bottom
+    ) {
+        Map<SFMDrawCanvasModel.CanvasGlyph, Integer> glyphColours = SFMDrawCanvasSyntaxHighlightingHelper.buildAntlrGrammarHighlightColours(
+                document.model.glyphs(),
+                this.font.width(" "),
+                this.font.lineHeight,
+                GLYPH
+        );
+        double scale = document.contentZoom * zoom;
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : document.model.glyphs()) {
+            double canvasX = document.canvasX + document.canvasWidth / 2.0D + (glyph.x() - document.cameraX) * document.contentZoom;
+            double canvasY = document.canvasY + document.canvasHeight / 2.0D + (glyph.y() - document.cameraY) * document.contentZoom;
+            double screenX = canvasToScreenX(canvasX);
+            double screenY = canvasToScreenY(canvasY);
+            if (screenX > right || screenX + glyph.width() * scale < left || screenY > bottom || screenY + this.font.lineHeight * scale < top) {
+                continue;
+            }
+            poseStack.pushPose();
+            poseStack.translate(screenX, screenY, 0.0D);
+            poseStack.scale((float) scale, (float) scale, 1.0F);
+            drawString(poseStack, this.font, glyph.text(), 0, 0, glyphColours.getOrDefault(glyph, GLYPH));
+            poseStack.popPose();
+        }
+    }
+
+    private void renderEmbeddedDocumentHandles(
+            PoseStack poseStack,
+            int left,
+            int top,
+            int right,
+            int bottom
+    ) {
+        int handle = 5;
+        fill(poseStack, left - handle, top - handle, left + handle, top + handle, EMBEDDED_DOCUMENT_HANDLE);
+        fill(poseStack, right - handle, top - handle, right + handle, top + handle, EMBEDDED_DOCUMENT_HANDLE);
+        fill(poseStack, left - handle, bottom - handle, left + handle, bottom + handle, EMBEDDED_DOCUMENT_HANDLE);
+        fill(poseStack, right - handle, bottom - handle, right + handle, bottom + handle, EMBEDDED_DOCUMENT_HANDLE);
+    }
+
+    private void renderGrammarInsertDrag(
+            PoseStack poseStack,
+            int mouseX,
+            int mouseY
+    ) {
+        drawDashedLine(
+                poseStack,
+                (int) Math.round(grammarInsertStartX),
+                (int) Math.round(grammarInsertStartY),
+                mouseX,
+                mouseY,
+                INSERT_DRAG_LINE
+        );
+        int previewWidth = Math.max(180, (int) Math.round(260.0D * zoom));
+        int previewHeight = Math.max(100, (int) Math.round(160.0D * zoom));
+        drawRectOutline(
+                poseStack,
+                mouseX,
+                mouseY,
+                mouseX + previewWidth,
+                mouseY + previewHeight,
+                INSERT_DRAG_LINE
+        );
+    }
+
+    private void drawDashedLine(
+            PoseStack poseStack,
+            int startX,
+            int startY,
+            int endX,
+            int endY,
+            int color
+    ) {
+        double dx = endX - startX;
+        double dy = endY - startY;
+        double length = Math.sqrt(dx * dx + dy * dy);
+        if (length <= 0.0D) {
+            return;
+        }
+        int segments = Math.max(1, (int) (length / 6.0D));
+        for (int i = 0; i <= segments; i += 2) {
+            double t = (double) i / (double) segments;
+            int x = (int) Math.round(startX + dx * t);
+            int y = (int) Math.round(startY + dy * t);
+            fill(poseStack, x - 1, y - 1, x + 2, y + 2, color);
+        }
+    }
+
     private void drawRectOutline(
             PoseStack poseStack,
             int left,
@@ -1480,6 +1660,141 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
 
     private double screenToCanvasY(double screenY) {
         return (screenY - this.height / 2.0D) / zoom + cameraY;
+    }
+
+    private MutableComponent sfmlButtonTooltip() {
+        return DRAW_CANVAS_SFML_BUTTON_TOOLTIP_PREFIX.getComponent()
+                .append(Component.literal("SFML.g4").withStyle(ChatFormatting.AQUA));
+    }
+
+    private MutableComponent doneButtonTooltip() {
+        return DRAW_CANVAS_DONE_BUTTON_TOOLTIP_PREFIX.getComponent()
+                .append(Component.literal("Shift+Enter").withStyle(ChatFormatting.AQUA))
+                .append(DRAW_CANVAS_DONE_BUTTON_TOOLTIP_SUFFIX.getComponent());
+    }
+
+    private void beginGrammarInsertDrag(
+            double mouseX,
+            double mouseY
+    ) {
+        draggingGrammarInsert = true;
+        grammarInsertStartX = mouseX;
+        grammarInsertStartY = mouseY;
+        loadGrammarContent();
+        focusMainCanvas();
+    }
+
+    private void finishGrammarInsertDrag(
+            double mouseX,
+            double mouseY
+    ) {
+        draggingGrammarInsert = false;
+        if (sfmlButton != null && sfmlButton.isMouseOver(mouseX, mouseY)) {
+            return;
+        }
+        double canvasX = screenToCanvasX(mouseX);
+        double canvasY = screenToCanvasY(mouseY);
+        EmbeddedDocument document = EmbeddedDocument.create(
+                "SFML.g4",
+                copyModel(grammarModel),
+                canvasX,
+                canvasY,
+                Math.max(260.0D, 360.0D / zoom),
+                Math.max(160.0D, 220.0D / zoom),
+                this.font.lineHeight
+        );
+        embeddedDocuments.add(document);
+        focusMainCanvas();
+    }
+
+    private SFMDrawCanvasModel copyModel(SFMDrawCanvasModel source) {
+        SFMDrawCanvasModel copy = new SFMDrawCanvasModel();
+        for (SFMDrawCanvasModel.CanvasGlyph glyph : source.glyphs()) {
+            copy.glyphs().add(new SFMDrawCanvasModel.CanvasGlyph(glyph.text(), glyph.x(), glyph.y(), glyph.width()));
+        }
+        copy.moveCursorToDocumentStart();
+        return copy;
+    }
+
+    private boolean beginEmbeddedDocumentResize(
+            double mouseX,
+            double mouseY
+    ) {
+        for (int i = embeddedDocuments.size() - 1; i >= 0; i--) {
+            EmbeddedDocument document = embeddedDocuments.get(i);
+            ResizeCorner corner = embeddedDocumentResizeCornerAt(document, mouseX, mouseY);
+            if (corner == null) {
+                continue;
+            }
+            resizingEmbeddedDocument = document;
+            resizingCorner = corner;
+            switch (corner) {
+                case TOP_LEFT -> {
+                    resizeAnchorX = document.canvasX + document.canvasWidth;
+                    resizeAnchorY = document.canvasY + document.canvasHeight;
+                }
+                case TOP_RIGHT -> {
+                    resizeAnchorX = document.canvasX;
+                    resizeAnchorY = document.canvasY + document.canvasHeight;
+                }
+                case BOTTOM_LEFT -> {
+                    resizeAnchorX = document.canvasX + document.canvasWidth;
+                    resizeAnchorY = document.canvasY;
+                }
+                case BOTTOM_RIGHT -> {
+                    resizeAnchorX = document.canvasX;
+                    resizeAnchorY = document.canvasY;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void resizeEmbeddedDocument(
+            double mouseX,
+            double mouseY
+    ) {
+        if (resizingEmbeddedDocument == null || resizingCorner == null) {
+            return;
+        }
+        double canvasX = screenToCanvasX(mouseX);
+        double canvasY = screenToCanvasY(mouseY);
+        resizingEmbeddedDocument.resizeFromCorner(resizingCorner, resizeAnchorX, resizeAnchorY, canvasX, canvasY);
+        resizingEmbeddedDocument.fitContent(this.font.lineHeight);
+    }
+
+    private ResizeCorner embeddedDocumentResizeCornerAt(
+            EmbeddedDocument document,
+            double mouseX,
+            double mouseY
+    ) {
+        double left = canvasToScreenX(document.canvasX);
+        double top = canvasToScreenY(document.canvasY);
+        double right = canvasToScreenX(document.canvasX + document.canvasWidth);
+        double bottom = canvasToScreenY(document.canvasY + document.canvasHeight);
+        if (isNear(mouseX, mouseY, left, top)) {
+            return ResizeCorner.TOP_LEFT;
+        }
+        if (isNear(mouseX, mouseY, right, top)) {
+            return ResizeCorner.TOP_RIGHT;
+        }
+        if (isNear(mouseX, mouseY, left, bottom)) {
+            return ResizeCorner.BOTTOM_LEFT;
+        }
+        if (isNear(mouseX, mouseY, right, bottom)) {
+            return ResizeCorner.BOTTOM_RIGHT;
+        }
+        return null;
+    }
+
+    private boolean isNear(
+            double mouseX,
+            double mouseY,
+            double targetX,
+            double targetY
+    ) {
+        return Math.abs(mouseX - targetX) <= 8.0D && Math.abs(mouseY - targetY) <= 8.0D;
     }
 
     private void toggleGrammarPanel() {
@@ -1780,6 +2095,114 @@ public class SFMDrawCanvasScreen extends Screen implements ISFMTextEditScreen {
             double x,
             double y
     ) {
+    }
+
+    private static class EmbeddedDocument {
+        private static final double MIN_WIDTH = 120.0D;
+        private static final double MIN_HEIGHT = 80.0D;
+        private final String title;
+        private final SFMDrawCanvasModel model;
+        private double canvasX;
+        private double canvasY;
+        private double canvasWidth;
+        private double canvasHeight;
+        private double cameraX;
+        private double cameraY;
+        private double contentZoom = 1.0D;
+
+        private EmbeddedDocument(
+                String title,
+                SFMDrawCanvasModel model,
+                double canvasX,
+                double canvasY,
+                double canvasWidth,
+                double canvasHeight
+        ) {
+            this.title = title;
+            this.model = model;
+            this.canvasX = canvasX;
+            this.canvasY = canvasY;
+            this.canvasWidth = canvasWidth;
+            this.canvasHeight = canvasHeight;
+        }
+
+        private static EmbeddedDocument create(
+                String title,
+                SFMDrawCanvasModel model,
+                double canvasX,
+                double canvasY,
+                double canvasWidth,
+                double canvasHeight,
+                int lineHeight
+        ) {
+            EmbeddedDocument document = new EmbeddedDocument(title, model, canvasX, canvasY, canvasWidth, canvasHeight);
+            document.fitContent(lineHeight);
+            return document;
+        }
+
+        private void resizeFromCorner(
+                ResizeCorner corner,
+                double anchorX,
+                double anchorY,
+                double movingX,
+                double movingY
+        ) {
+            double left = Math.min(anchorX, movingX);
+            double right = Math.max(anchorX, movingX);
+            double top = Math.min(anchorY, movingY);
+            double bottom = Math.max(anchorY, movingY);
+            if (right - left < MIN_WIDTH) {
+                if (corner == ResizeCorner.TOP_LEFT || corner == ResizeCorner.BOTTOM_LEFT) {
+                    left = right - MIN_WIDTH;
+                } else {
+                    right = left + MIN_WIDTH;
+                }
+            }
+            if (bottom - top < MIN_HEIGHT) {
+                if (corner == ResizeCorner.TOP_LEFT || corner == ResizeCorner.TOP_RIGHT) {
+                    top = bottom - MIN_HEIGHT;
+                } else {
+                    bottom = top + MIN_HEIGHT;
+                }
+            }
+            canvasX = left;
+            canvasY = top;
+            canvasWidth = right - left;
+            canvasHeight = bottom - top;
+        }
+
+        private void fitContent(int lineHeight) {
+            if (model.glyphs().isEmpty()) {
+                cameraX = 0.0D;
+                cameraY = 0.0D;
+                contentZoom = 1.0D;
+                return;
+            }
+            double left = Double.POSITIVE_INFINITY;
+            double top = Double.POSITIVE_INFINITY;
+            double right = Double.NEGATIVE_INFINITY;
+            double bottom = Double.NEGATIVE_INFINITY;
+            for (SFMDrawCanvasModel.CanvasGlyph glyph : model.glyphs()) {
+                left = Math.min(left, glyph.x());
+                top = Math.min(top, glyph.y());
+                right = Math.max(right, glyph.x() + glyph.width());
+                bottom = Math.max(bottom, glyph.y() + lineHeight);
+            }
+            double contentWidth = Math.max(1.0D, right - left);
+            double contentHeight = Math.max(1.0D, bottom - top);
+            double availableWidth = Math.max(1.0D, canvasWidth - FIT_CONTENT_MARGIN);
+            double availableHeight = Math.max(1.0D, canvasHeight - FIT_CONTENT_MARGIN);
+            contentZoom = Mth.clamp(Math.min(availableWidth / contentWidth, availableHeight / contentHeight), MIN_ZOOM, MAX_ZOOM);
+            cameraX = (left + right) / 2.0D;
+            cameraY = (top + bottom) / 2.0D;
+        }
+    }
+
+    private enum ResizeCorner {
+        TOP_LEFT,
+        TOP_RIGHT,
+        BOTTOM_LEFT,
+        BOTTOM_RIGHT
     }
 
     record CanvasRect(
