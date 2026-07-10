@@ -44,4 +44,9 @@ repositories {
         url 'https://maven.covers1624.net/'
         // https://nexus.covers1624.net/#browse/browse:cofh-releases
     }
+
+    maven {
+        name 'SquidDev'
+        url 'https://squiddev.cc/maven'
+    }
 }
