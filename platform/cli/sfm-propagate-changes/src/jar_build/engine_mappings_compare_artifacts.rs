@@ -1602,6 +1602,7 @@ fn required_property<'a>(
 
 fn repositories() -> Vec<Repository> {
     [
+        ("SquidDev", "https://squiddev.cc/maven"),
         ("Forge", "https://maven.minecraftforge.net"),
         ("NeoForged", "https://maven.neoforged.net/releases"),
         ("Maven Central", "https://repo1.maven.org/maven2"),

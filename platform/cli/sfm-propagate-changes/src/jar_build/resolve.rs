@@ -944,6 +944,8 @@ impl Resolver {
             &["Parchment"]
         } else if coordinate.group == "org.spongepowered" {
             &["Sponge", "Maven Central"]
+        } else if coordinate.group == "org.squiddev" {
+            &["SquidDev"]
         } else if coordinate.group == "net.minecraftforge" || coordinate.group == "de.oceanlabs.mcp"
         {
             &["Forge"]

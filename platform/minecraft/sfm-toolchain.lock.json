@@ -5,6 +5,10 @@
   "allow_local_artifact_cache": false,
   "repositories": [
     {
+      "name": "SquidDev",
+      "url": "https://squiddev.cc/maven"
+    },
+    {
       "name": "Forge",
       "url": "https://maven.minecraftforge.net"
     },
@@ -237,6 +241,30 @@
       "source": "Maven",
       "dynamic_version": false,
       "cache_path": "$sfm-cache\\maven\\appeng\\appliedenergistics2-forge\\12.9.9\\appliedenergistics2-forge-12.9.9-api.jar"
+    },
+    {
+      "configuration": "implementation",
+      "notation": "org.squiddev:cc-tweaked-1.19.2:1.101.3",
+      "resolved_notation": "org.squiddev:cc-tweaked-1.19.2:1.101.3",
+      "source": "Maven",
+      "dynamic_version": false,
+      "cache_path": "$sfm-cache\\maven\\org\\squiddev\\cc-tweaked-1.19.2\\1.101.3\\cc-tweaked-1.19.2-1.101.3.jar"
+    },
+    {
+      "configuration": "runtimeOnly",
+      "notation": "org.squiddev:cc-tweaked-1.19.2:1.101.3",
+      "resolved_notation": "org.squiddev:cc-tweaked-1.19.2:1.101.3",
+      "source": "Maven",
+      "dynamic_version": false,
+      "cache_path": "$sfm-cache\\maven\\org\\squiddev\\cc-tweaked-1.19.2\\1.101.3\\cc-tweaked-1.19.2-1.101.3.jar"
+    },
+    {
+      "configuration": "gametestImplementation",
+      "notation": "org.squiddev:cc-tweaked-1.19.2:1.101.3",
+      "resolved_notation": "org.squiddev:cc-tweaked-1.19.2:1.101.3",
+      "source": "Maven",
+      "dynamic_version": false,
+      "cache_path": "$sfm-cache\\maven\\org\\squiddev\\cc-tweaked-1.19.2\\1.101.3\\cc-tweaked-1.19.2-1.101.3.jar"
     },
     {
       "configuration": "runtimeOnly",
@@ -1598,19 +1626,6 @@
       "weak": null
     },
     {
-      "coordinate": "org.junit.jupiter:junit-jupiter-engine:5.8.1",
-      "source": "remote-maven",
-      "repository": "Maven Central",
-      "url": "https://repo1.maven.org/maven2/org/junit/jupiter/junit-jupiter-engine/5.8.1/junit-jupiter-engine-5.8.1.jar",
-      "cache_path": "$sfm-cache\\maven\\org\\junit\\jupiter\\junit-jupiter-engine\\5.8.1\\junit-jupiter-engine-5.8.1.jar",
-      "original_path": null,
-      "source_relative_path": null,
-      "source_git": null,
-      "source_build": null,
-      "hash": "blake3:d59cd0ab8f831d98e064c731afdf6a3a08574bce",
-      "weak": null
-    },
-    {
       "coordinate": "org.junit.platform:junit-platform-commons:1.8.1",
       "source": "remote-maven",
       "repository": "Maven Central",
@@ -1621,32 +1636,6 @@
       "source_git": null,
       "source_build": null,
       "hash": "blake3:43f785f96ceecfab14da65957cf6fa1a0cd26ee4",
-      "weak": null
-    },
-    {
-      "coordinate": "org.junit.platform:junit-platform-console-standalone:1.8.1",
-      "source": "remote-maven",
-      "repository": "Maven Central",
-      "url": "https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.8.1/junit-platform-console-standalone-1.8.1.jar",
-      "cache_path": "$sfm-cache\\maven\\org\\junit\\platform\\junit-platform-console-standalone\\1.8.1\\junit-platform-console-standalone-1.8.1.jar",
-      "original_path": null,
-      "source_relative_path": null,
-      "source_git": null,
-      "source_build": null,
-      "hash": "blake3:1b806456ca8a7a09bd65ef672af0b4344611fa3d",
-      "weak": null
-    },
-    {
-      "coordinate": "org.junit.platform:junit-platform-engine:1.8.1",
-      "source": "remote-maven",
-      "repository": "Maven Central",
-      "url": "https://repo1.maven.org/maven2/org/junit/platform/junit-platform-engine/1.8.1/junit-platform-engine-1.8.1.jar",
-      "cache_path": "$sfm-cache\\maven\\org\\junit\\platform\\junit-platform-engine\\1.8.1\\junit-platform-engine-1.8.1.jar",
-      "original_path": null,
-      "source_relative_path": null,
-      "source_git": null,
-      "source_build": null,
-      "hash": "blake3:f98f7e2669f9f7661af6ca3d0dfdea913234168a",
       "weak": null
     },
     {
@@ -1842,6 +1831,19 @@
       "source_git": null,
       "source_build": null,
       "hash": "blake3:b4839b346ffef67432425608e4363435dd9acbc6",
+      "weak": null
+    },
+    {
+      "coordinate": "org.squiddev:cc-tweaked-1.19.2:1.101.3",
+      "source": "remote-maven",
+      "repository": "SquidDev",
+      "url": "https://squiddev.cc/maven/org/squiddev/cc-tweaked-1.19.2/1.101.3/cc-tweaked-1.19.2-1.101.3.jar",
+      "cache_path": "$sfm-cache\\maven\\org\\squiddev\\cc-tweaked-1.19.2\\1.101.3\\cc-tweaked-1.19.2-1.101.3.jar",
+      "original_path": null,
+      "source_relative_path": null,
+      "source_git": null,
+      "source_build": null,
+      "hash": "blake3:e0e6920675c793817b9e063db3854b3c68ed29fd",
       "weak": null
     }
   ]
