@@ -68,6 +68,7 @@ impl ArtifactLockfileV1 {
                 .into_iter()
                 .map(ArtifactLockEntryV1::upgrade)
                 .collect(),
+            migration_hints: None,
         }
     }
 }

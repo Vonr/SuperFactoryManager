@@ -479,9 +479,9 @@ passes from `platform/cli/sfm-propagate-changes` before schema v3 work begins.
 - A valid v3 document round-trips through the strict current model while the legacy v2 engine rejects it explicitly rather than misinterpreting it.
 - V1/v2-only malformed-field checks remain covered.
 
-### [ ] 2.3 Add optional legacy migration hints and strict diagnostics
+### [~] 2.3 Add optional legacy migration hints and strict diagnostics
 
-**Completion notes:** _Not started. Record the final hints shape, diagnostic format, and agent-assisted workflow here._
+**Completion notes:** In progress as of 2026-07-11. Added an optional v2-only `migration_hints` object with platform dependency IDs and logical dependency/component hints. Component hints identify legacy dependency rows by index and use the strict v3 enums for kind, role, semantic scopes, artifact treatment, and data-run policy. V1 normalization initializes hints as absent, and normal v2 engine conversion deliberately discards them. Strict completeness, ownership, and remediation diagnostics remain to be implemented.
 
 **Work:**
 
