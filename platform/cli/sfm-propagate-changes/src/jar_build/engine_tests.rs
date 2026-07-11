@@ -799,7 +799,7 @@ fn facet_json_roundtrips_artifact_lockfile_and_provenance() {
     assert_eq!(parsed_provenance.hash, provenance.hash);
 
     let lockfile = ArtifactLockfile {
-        schema_version: crate::toolchain_lockfile_schema::LATEST_SCHEMA_VERSION,
+        schema_version: crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION,
         minecraft_version: "1.19.2".to_string(),
         maven_cache_dir: PathBuf::from("build/sfm-toolchain/maven"),
         allow_local_artifact_cache: false,
@@ -870,7 +870,7 @@ fn toolchain_lockfile_v1_upgrades_without_weak_artifacts() {
 
         assert_eq!(
                 lockfile.schema_version,
-                crate::toolchain_lockfile_schema::LATEST_SCHEMA_VERSION
+                crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION
         );
         assert_eq!(lockfile.artifacts.len(), 1);
         assert_eq!(lockfile.artifacts[0].weak, None);
@@ -999,7 +999,7 @@ fn migrated_common_cache_lockfile_does_not_duplicate_old_cache_entries() {
         dynamic_version: false,
     }];
     plan.lockfile = Some(ArtifactLockfile {
-        schema_version: crate::toolchain_lockfile_schema::LATEST_SCHEMA_VERSION,
+        schema_version: crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION,
         minecraft_version: plan.minecraft_version.to_string(),
         maven_cache_dir: PathBuf::from("build/sfm-toolchain/maven"),
         allow_local_artifact_cache: false,
@@ -1423,7 +1423,7 @@ fn resolver_materializes_locked_artifact_from_source_build() {
         output_path: output_path.clone(),
     };
     let lockfile = ArtifactLockfile {
-        schema_version: crate::toolchain_lockfile_schema::LATEST_SCHEMA_VERSION,
+        schema_version: crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION,
         minecraft_version: "1.19.2".to_string(),
         maven_cache_dir: PathBuf::from("$sfm-cache").join("maven"),
         allow_local_artifact_cache: false,
@@ -1755,7 +1755,7 @@ fn facet_json_serializes_plan_without_embedded_lockfile() {
         minecraft_libraries_dir: PathBuf::from("sfm-cache/minecraft-toolchain/minecraft/libraries"),
         lockfile_path: PathBuf::from("sfm-toolchain.lock.json"),
         lockfile: Some(ArtifactLockfile {
-            schema_version: crate::toolchain_lockfile_schema::LATEST_SCHEMA_VERSION,
+            schema_version: crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION,
             minecraft_version: "1.19.2".to_string(),
             maven_cache_dir: PathBuf::from("build/sfm-toolchain/maven"),
             allow_local_artifact_cache: false,
@@ -2554,7 +2554,7 @@ fn write_test_artifact_lockfile(
     dependencies: Vec<DependencyLockEntry>,
 ) {
     let lockfile = ArtifactLockfile {
-        schema_version: crate::toolchain_lockfile_schema::LATEST_SCHEMA_VERSION,
+        schema_version: crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION,
         minecraft_version: "1.19.2".to_string(),
         maven_cache_dir: PathBuf::from("$sfm-cache").join("maven"),
         allow_local_artifact_cache: false,

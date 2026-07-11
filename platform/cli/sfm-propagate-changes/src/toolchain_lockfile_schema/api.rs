@@ -4,7 +4,8 @@ use crate::toolchain_lockfile_schema::version::v1::ArtifactLockfileV1;
 use crate::toolchain_lockfile_schema::version::v2::ArtifactLockfileV2;
 use eyre::Context;
 
-pub(crate) const LATEST_SCHEMA_VERSION: u32 = 2;
+pub(crate) const ENGINE_SCHEMA_VERSION: u32 = 2;
+pub(crate) const LATEST_SCHEMA_VERSION: u32 = ENGINE_SCHEMA_VERSION;
 
 pub(crate) fn upgrade_to_latest(input: &str) -> eyre::Result<ArtifactLockfile> {
     let preflight: PreflightDocument = facet_json::from_str(input)
@@ -14,14 +15,14 @@ pub(crate) fn upgrade_to_latest(input: &str) -> eyre::Result<ArtifactLockfile> {
         1 => {
             if input.contains("\"weak\"") {
                 eyre::bail!(
-                    "toolchain lockfile declares schema_version 1 but contains v2-only field `weak`; update schema_version to {LATEST_SCHEMA_VERSION}"
+                    "toolchain lockfile declares schema_version 1 but contains v2-only field `weak`; update schema_version to {ENGINE_SCHEMA_VERSION}"
                 );
             }
             let lockfile: ArtifactLockfileV1 = facet_json::from_str(input)
                 .wrap_err("failed to parse toolchain lockfile schema v1")?;
             Ok(lockfile.upgrade().into_latest())
         }
-        LATEST_SCHEMA_VERSION => {
+        ENGINE_SCHEMA_VERSION => {
             let lockfile: ArtifactLockfileV2 = facet_json::from_str(input)
                 .wrap_err("failed to parse toolchain lockfile schema v2")?;
             Ok(lockfile.into_latest())

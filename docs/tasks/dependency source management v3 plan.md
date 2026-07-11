@@ -423,9 +423,9 @@ passes from `platform/cli/sfm-propagate-changes` before schema v3 work begins.
 
 ## Phase 2: Define and implement lockfile schema v3
 
-### [ ] 2.1 Finalize the v3 declaration and resolution model
+### [~] 2.1 Finalize the v3 declaration and resolution model
 
-**Completion notes:** _Not started. Record the final type names, field semantics, defaults, and rejected alternatives here._
+**Completion notes:** In progress as of 2026-07-11. Introduced `ENGINE_SCHEMA_VERSION = 2` and moved all legacy engine generation/tests to that constant while leaving the schema layer's latest-version constant independently evolvable. This prevents the v3 introduction from serializing the existing v2 engine model with a false schema version. The strict v3 declaration/resolution types and final field names remain to be completed.
 
 **Required semantics:**
 

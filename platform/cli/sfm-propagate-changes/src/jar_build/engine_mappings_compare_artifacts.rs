@@ -1176,7 +1176,7 @@ fn build_artifact_lockfile(
     });
 
     Ok(ArtifactLockfile {
-        schema_version: crate::toolchain_lockfile_schema::LATEST_SCHEMA_VERSION,
+        schema_version: crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION,
         minecraft_version: plan.minecraft_version.to_string(),
         maven_cache_dir: portable_cache_path(plan, &plan.maven_cache_dir),
         allow_local_artifact_cache: plan.allow_local_artifact_cache,
