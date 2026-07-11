@@ -566,9 +566,9 @@ sfm-propagate-changes.exe dependency migrate --branch 1.19.2
 
 ## Phase 3: Introduce the dependency domain model and read-only CLI
 
-### [ ] 3.1 Build a normalized dependency inventory
+### [x] 3.1 Build a normalized dependency inventory
 
-**Completion notes:** _Not started. Record grouping rules and migrated IDs here._
+**Completion notes:** Completed 2026-07-11. Added a strict schema-v3 `DependencyInventory` loaded through an exact branch query. Inventory entries come only from declared logical dependencies; the separate 106-entry artifact inventory remains provenance for direct, transitive, and toolchain artifacts and does not masquerade as optional mods. Stable v3 IDs are authoritative. Minecraft and Forge are reserved platform entries, CC:Tweaked appears once, and AE2/Mekanism retain explicit main/API components. Portable paths resolve through an injected `CacheHome` object. Production resolves that object once at `DependencyArgs::invoke`; inventory methods and unit tests never resolve the global cache or environment themselves. Tests inject an isolated cache and prove missing, stale-hash, and acquired byte states.
 
 **Work:**
 
@@ -585,9 +585,9 @@ sfm-propagate-changes.exe dependency migrate --branch 1.19.2
 - Toolchain libraries do not masquerade as optional mods.
 - Mekanism and AE2 can expose multiple components under one ID.
 
-### [ ] 3.2 Implement `dependency list`
+### [x] 3.2 Implement `dependency list`
 
-**Completion notes:** _Not started. Add representative output and formatting decisions here._
+**Completion notes:** Completed 2026-07-11. Added deterministic plain-text `dependency list --branch 1.19.2` output with lockfile path, ID, kind, role, resolved version/file ID, per-component semantic scopes, hash-validated binary status, and source status. Rows sort platform Minecraft/loader first, then mods/libraries/tools by stable ID. The real output contains one CC:Tweaked row with version `1.101.3` and compile/runtime/game-test scopes; AE2 and Mekanism summarize named API/main components. Output uses no terminal-only layout state and is suitable for logs.
 
 **Command:**
 
@@ -611,9 +611,9 @@ sfm-propagate-changes.exe dependency list --branch 1.19.2
 - Output is deterministic and useful in non-interactive logs.
 - Required platform dependencies and integration mods are visually distinguishable.
 
-### [ ] 3.3 Implement `dependency show`
+### [x] 3.3 Implement `dependency show`
 
-**Completion notes:** _Not started. Add representative output for Minecraft, CC:Tweaked, and a multi-component dependency here._
+**Completion notes:** Completed 2026-07-11. Added `dependency show <id> --branch <selector>` with maintained metadata, acquisition request, semantic scopes, artifact treatment, data-run policy, resolved coordinate/version, repository ID/URL, artifact URL/hash, portable cache path, hash-validated local binary status, and source-provider declarations/checks/materialized paths. Missing, stale, partial, and acquired states are explicit and read-only. Paths are prefixed with their status; transformed JARs are explicitly reported as not tracked by schema v3 rather than fabricated. Real CC:Tweaked output reports the acquired SquidDev JAR and no declared source strategy; tests cover missing paths and AE2's plain API versus loader-managed main component.
 
 **Command:**
 
@@ -635,9 +635,9 @@ sfm-propagate-changes.exe dependency show cc-tweaked --branch 1.19.2
 
 **Completion criteria:** All printed paths exist when marked acquired, and missing paths are clearly labeled rather than printed as if valid.
 
-### [ ] 3.4 Centralize exact branch resolution for dependency commands
+### [x] 3.4 Centralize exact branch resolution for dependency commands
 
-**Completion notes:** _Not started. Record the shared selector helper and error wording here._
+**Completion notes:** Completed 2026-07-11. Dependency list/show share `dependency_context::load_inventory`, reuse required `BranchSelector`, and call the existing exact-one-worktree resolver. Extracted the cardinality check to `require_single_worktree_target(query, targets)` so tests inject target slices without Git discovery. Parser tests cover omitted/explicit branch; pure tests cover zero/one/multiple targets; existing query tests cover invalid syntax. Real invocations verified exact `1.19.2`, zero-match (`No worktrees match`), multi-match (lists matches and requests one explicit branch), and invalid `AND` selectors. The full gate passes 183 tests.
 
 **Work:**
 

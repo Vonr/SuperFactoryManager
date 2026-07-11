@@ -114,6 +114,15 @@ pub(crate) fn analyze_migration(input: &str) -> eyre::Result<MigrationAnalysis> 
     }
 }
 
+pub(crate) fn read_current(input: &str) -> eyre::Result<ArtifactLockfileV3> {
+    match parse_document(input)? {
+        ToolchainLockfileDocument::V3(lockfile) => Ok(lockfile),
+        ToolchainLockfileDocument::V1(_) | ToolchainLockfileDocument::V2 { .. } => eyre::bail!(
+            "dependency commands require schema version 3; run dependency migrate --branch <branch> first"
+        ),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

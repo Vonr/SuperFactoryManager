@@ -863,6 +863,34 @@ mod tests {
     }
 
     #[test]
+    fn parses_dependency_list_and_show_with_explicit_branch() {
+        let list = figue::from_slice::<Cli>(&["dependency", "list", "--branch", "1.19.2"])
+            .into_result()
+            .expect("dependency list should parse")
+            .get_silent();
+        assert!(matches!(
+            list.command,
+            Command::Dependency(crate::cli::dependency::DependencyArgs {
+                command: DependencyCommand::List(_),
+            })
+        ));
+
+        let show =
+            figue::from_slice::<Cli>(&["dependency", "show", "cc-tweaked", "--branch", "1.19.2"])
+                .into_result()
+                .expect("dependency show should parse")
+                .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Show(args),
+        }) = show.command
+        else {
+            panic!("expected dependency show command");
+        };
+        assert_eq!(args.id, "cc-tweaked");
+        assert_eq!(args.branch.as_ref(), "1.19.2");
+    }
+
+    #[test]
     fn branch_is_required_for_commands_that_accept_branch() {
         let commands = [
             &["run", "compile"][..],
@@ -873,6 +901,8 @@ mod tests {
             &["jar", "compare"],
             &["jar", "audit-artifacts"],
             &["dependency", "migrate"],
+            &["dependency", "list"],
+            &["dependency", "show", "cc-tweaked"],
             &["gradle", "run", "runData"],
             &["loader", "list"],
             &["source", "audit"],

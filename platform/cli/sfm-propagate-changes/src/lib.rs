@@ -4,6 +4,7 @@ pub mod cancellation;
 pub mod cli;
 pub mod colour;
 pub mod curseforge;
+pub(crate) mod dependency_inventory;
 pub mod jar_build;
 pub mod jdk;
 pub mod logging;

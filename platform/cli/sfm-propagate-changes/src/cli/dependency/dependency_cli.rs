@@ -1,6 +1,9 @@
 use super::DependencyAddArgs;
+use super::DependencyListArgs;
 use super::DependencyMigrateArgs;
+use super::DependencyShowArgs;
 use crate::cancellation::CancellationToken;
+use crate::paths::CacheHome;
 use facet::Facet;
 use figue as args;
 
@@ -15,7 +18,8 @@ impl DependencyArgs {
     ///
     /// Returns an error if the selected dependency command fails.
     pub fn invoke(self, cancellation_token: CancellationToken) -> eyre::Result<()> {
-        self.command.invoke(cancellation_token)
+        let cache_home = CacheHome::resolve()?;
+        self.command.invoke(cancellation_token, &cache_home)
     }
 }
 
@@ -24,18 +28,28 @@ impl DependencyArgs {
 pub enum DependencyCommand {
     /// Accept the current artifact for a locked dependency.
     Add(DependencyAddArgs),
+    /// List logical dependencies from the schema v3 lockfile.
+    List(DependencyListArgs),
     /// Validate or migrate a legacy dependency lockfile to schema v3.
     Migrate(DependencyMigrateArgs),
+    /// Show one logical dependency and its components.
+    Show(DependencyShowArgs),
 }
 
 impl DependencyCommand {
     /// # Errors
     ///
     /// Returns an error if the selected dependency command fails.
-    pub fn invoke(self, cancellation_token: CancellationToken) -> eyre::Result<()> {
+    pub fn invoke(
+        self,
+        cancellation_token: CancellationToken,
+        cache_home: &CacheHome,
+    ) -> eyre::Result<()> {
         match self {
             Self::Add(args) => args.invoke(cancellation_token),
+            Self::List(args) => args.invoke(cancellation_token, cache_home),
             Self::Migrate(args) => args.invoke(cancellation_token),
+            Self::Show(args) => args.invoke(cancellation_token, cache_home),
         }
     }
 }
