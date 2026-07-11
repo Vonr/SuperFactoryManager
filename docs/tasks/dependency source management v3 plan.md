@@ -481,7 +481,7 @@ passes from `platform/cli/sfm-propagate-changes` before schema v3 work begins.
 
 ### [~] 2.3 Add optional legacy migration hints and strict diagnostics
 
-**Completion notes:** In progress as of 2026-07-11. Added an optional v2-only `migration_hints` object with platform dependency IDs and logical dependency/component hints. Component hints identify legacy dependency rows by index and use the strict v3 enums for kind, role, semantic scopes, artifact treatment, and data-run policy. V1 normalization initializes hints as absent, and normal v2 engine conversion deliberately discards them. Strict completeness, ownership, and remediation diagnostics remain to be implemented.
+**Completion notes:** In progress as of 2026-07-11. Added an optional v2-only `migration_hints` object with platform dependency IDs and logical dependency/component hints. Component hints identify legacy dependency rows by index and use the strict v3 enums for kind, role, semantic scopes, artifact treatment, and data-run policy. V1 normalization initializes hints as absent, and normal v2 engine conversion deliberately discards them. Added deterministic structured diagnostics carrying a field path, message, legacy row index/configuration/coordinate where applicable, candidate values, and remediation. Validation now accumulates missing fields, duplicate IDs, duplicate/out-of-range row ownership, uncovered rows, empty/duplicate scopes, and invalid platform references in one pass. Parsed v2 documents carry this report for the future migration command. Acquisition/source evidence analysis and its remaining diagnostics are still required before this item is complete. The full gate passes 166 tests.
 
 **Work:**
 
