@@ -650,9 +650,9 @@ sfm-propagate-changes.exe dependency show cc-tweaked --branch 1.19.2
 
 ## Phase 4: Add dependency mutation commands
 
-### [ ] 4.1 Redefine `dependency add` as declaration creation
+### [x] 4.1 Redefine `dependency add` as declaration creation
 
-**Completion notes:** _Not started. Record final flags and examples here._
+**Completion notes:** Completed 2026-07-11. Added `dependency add <id> --branch <branch> --maven <exact-coordinate> --scope <scope>... [--repository <id>] [--artifact-treatment <treatment>] [--display-name <name>] [--project-url <url>] [--notes <text>]`. The command resolves exactly one worktree, rejects malformed/dynamic Maven versions and duplicate dependency/coordinate identities, validates an explicit repository ID or deterministically probes configured repositories, downloads the artifact, writes it under the injected `$sfm-cache/minecraft-toolchain/maven/...` root, computes its BLAKE3 hash, and creates one logical mod dependency with a `main` component plus owned artifact evidence. Mod treatment defaults to `loader-managed-mod`; data-run policy defaults to `exclude`; semantic scopes derive artifact purposes. Canonical schema v3 is concurrency-checked and atomically replaced. Source providers may be configured later without weakening the strict v3 declaration. Parser tests cover the documented CC:Tweaked syntax. An isolated-cache mutation fixture removes CC:Tweaked, adds it through the domain operation using controlled fetched bytes, and verifies the declaration, component, repository, artifact owner/URL/hash/path, and cached bytes without editing Gradle. `check-all.ps1` passes all policy, format, strict Clippy, build, and 189 test checks.
 
 **Maven example:**
 

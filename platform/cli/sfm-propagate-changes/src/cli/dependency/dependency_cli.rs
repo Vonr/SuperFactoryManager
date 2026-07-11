@@ -1,3 +1,4 @@
+use super::DependencyAddArgs;
 use super::DependencyArtifactArgs;
 use super::DependencyListArgs;
 use super::DependencyMigrateArgs;
@@ -26,6 +27,8 @@ impl DependencyArgs {
 #[derive(Facet, Debug)]
 #[repr(u8)]
 pub enum DependencyCommand {
+    /// Add and resolve a schema v3 dependency declaration.
+    Add(DependencyAddArgs),
     /// Inspect or update locked dependency artifacts.
     Artifact(DependencyArtifactArgs),
     /// List logical dependencies from the schema v3 lockfile.
@@ -46,6 +49,7 @@ impl DependencyCommand {
         cache_home: &CacheHome,
     ) -> eyre::Result<()> {
         match self {
+            Self::Add(args) => args.invoke(&cancellation_token, cache_home),
             Self::Artifact(args) => args.invoke(&cancellation_token, cache_home),
             Self::List(args) => args.invoke(cancellation_token, cache_home),
             Self::Migrate(args) => args.invoke(cancellation_token),

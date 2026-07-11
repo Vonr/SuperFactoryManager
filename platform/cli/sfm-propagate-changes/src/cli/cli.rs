@@ -912,7 +912,48 @@ mod tests {
         let crate::cli::dependency::DependencyArtifactCommand::Accept(args) = artifact.command;
         assert_eq!(args.target, "cc-tweaked/main");
         assert_eq!(args.branch.as_ref(), "1.19.2");
+    }
 
+    #[test]
+    fn parses_dependency_add_as_v3_declaration_creation() {
+        let cli = figue::from_slice::<Cli>(&[
+            "dependency",
+            "add",
+            "cc-tweaked",
+            "--branch",
+            "1.19.2",
+            "--maven",
+            "org.squiddev:cc-tweaked-1.19.2:1.101.3",
+            "--repository",
+            "squiddev",
+            "--scope",
+            "compile",
+            "--scope",
+            "runtime",
+            "--scope",
+            "gametest-compile",
+            "--scope",
+            "gametest-runtime",
+            "--artifact-treatment",
+            "loader-managed-mod",
+        ])
+        .into_result()
+        .expect("dependency add should parse")
+        .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Add(args),
+        }) = cli.command
+        else {
+            panic!("expected dependency add command");
+        };
+        assert_eq!(args.id, "cc-tweaked");
+        assert_eq!(args.branch.as_ref(), "1.19.2");
+        assert_eq!(args.maven, "org.squiddev:cc-tweaked-1.19.2:1.101.3");
+        assert_eq!(args.scope.len(), 4);
+        assert_eq!(
+            args.artifact_treatment,
+            Some(crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::LoaderManagedMod)
+        );
         assert!(
             figue::from_slice::<Cli>(&[
                 "dependency",

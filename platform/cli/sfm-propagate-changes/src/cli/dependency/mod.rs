@@ -1,3 +1,4 @@
+mod dependency_add_cli;
 mod dependency_artifact_accept_cli;
 mod dependency_artifact_cli;
 mod dependency_cli;
@@ -6,6 +7,7 @@ mod dependency_list_cli;
 mod dependency_migrate_cli;
 mod dependency_show_cli;
 
+pub use dependency_add_cli::DependencyAddArgs;
 pub use dependency_artifact_accept_cli::DependencyArtifactAcceptArgs;
 pub use dependency_artifact_cli::DependencyArtifactArgs;
 pub use dependency_artifact_cli::DependencyArtifactCommand;
