@@ -1,4 +1,5 @@
 use crate::jar_build::DependencyLockEntry;
+use crate::toolchain_lockfile_schema::version::v2::ArtifactLockEntryV2;
 use crate::toolchain_lockfile_schema::version::v2::ArtifactLockfileV2;
 use crate::toolchain_lockfile_schema::version::v2::ComponentMigrationHintV2;
 use crate::toolchain_lockfile_schema::version::v2::MigrationHintsV2;
@@ -48,7 +49,18 @@ impl ArtifactLockfileV2 {
             "set this to the logical dependency whose kind is loader",
             &mut diagnostics,
         );
-        validate_dependencies(hints, &self.dependencies, &mut diagnostics);
+        let repository_names = self
+            .repositories
+            .iter()
+            .map(|repository| repository.name.as_str())
+            .collect();
+        validate_dependencies(
+            hints,
+            &self.dependencies,
+            &self.artifacts,
+            &repository_names,
+            &mut diagnostics,
+        );
         diagnostics
             .sort_by(|left, right| (&left.path, &left.message).cmp(&(&right.path, &right.message)));
         diagnostics
@@ -58,6 +70,8 @@ impl ArtifactLockfileV2 {
 fn validate_dependencies(
     hints: &MigrationHintsV2,
     legacy: &[DependencyLockEntry],
+    artifacts: &[ArtifactLockEntryV2],
+    repository_names: &BTreeSet<&str>,
     diagnostics: &mut Vec<MigrationDiagnostic>,
 ) {
     let mut dependency_ids = BTreeSet::new();
@@ -109,6 +123,14 @@ fn validate_dependencies(
                 legacy,
                 &mut component_ids,
                 &mut row_owners,
+                diagnostics,
+            );
+            validate_component_evidence(
+                component,
+                &format!("{path}.components[{component_index}]"),
+                legacy,
+                artifacts,
+                repository_names,
                 diagnostics,
             );
         }
@@ -229,6 +251,187 @@ fn validate_component<'a>(
             &["exclude", "include"],
         ));
     }
+}
+
+fn validate_component_evidence(
+    component: &ComponentMigrationHintV2,
+    path: &str,
+    legacy: &[DependencyLockEntry],
+    artifacts: &[ArtifactLockEntryV2],
+    repository_names: &BTreeSet<&str>,
+    diagnostics: &mut Vec<MigrationDiagnostic>,
+) {
+    let rows: Vec<(usize, &DependencyLockEntry)> = component
+        .legacy_dependency_indices
+        .iter()
+        .filter_map(|index| legacy.get(*index).map(|row| (*index, row)))
+        .collect();
+    if rows.is_empty() {
+        return;
+    }
+
+    let requested: BTreeSet<&str> = rows.iter().map(|(_, row)| row.notation.as_str()).collect();
+    let resolved: BTreeSet<&str> = rows
+        .iter()
+        .map(|(_, row)| row.resolved_notation.as_str())
+        .collect();
+    let cache_paths: BTreeSet<_> = rows.iter().map(|(_, row)| &row.cache_path).collect();
+    if requested.len() != 1 {
+        diagnostics.push(evidence_diagnostic(
+            format!("{path}.legacy_dependency_indices"),
+            "component rows have different requested coordinates",
+            &rows,
+            requested.iter().copied(),
+            "split rows with different requested coordinates into separate components",
+        ));
+    }
+    if resolved.len() != 1 {
+        diagnostics.push(evidence_diagnostic(
+            format!("{path}.legacy_dependency_indices"),
+            "component rows have different resolved coordinates",
+            &rows,
+            resolved.iter().copied(),
+            "split rows with different resolved coordinates into separate components",
+        ));
+    }
+    if cache_paths.len() != 1 {
+        let mut item = row_diagnostic(
+            format!("{path}.legacy_dependency_indices"),
+            "component rows resolve to different cache paths",
+            rows[0].0,
+            rows[0].1,
+            "split rows that resolve to different binary artifacts into separate components",
+        );
+        item.candidates = cache_paths
+            .iter()
+            .map(|value| value.to_string_lossy().into_owned())
+            .collect();
+        diagnostics.push(item);
+    }
+    if requested.len() != 1 || resolved.len() != 1 || cache_paths.len() != 1 {
+        return;
+    }
+
+    let requested = *requested.first().expect("one requested coordinate");
+    let resolved = *resolved.first().expect("one resolved coordinate");
+    let cache_path = *cache_paths.first().expect("one cache path");
+    validate_acquisition(requested, path, &rows, diagnostics);
+
+    let matches: Vec<_> = artifacts
+        .iter()
+        .filter(|artifact| {
+            artifact.coordinate.as_deref() == Some(resolved) || &artifact.cache_path == cache_path
+        })
+        .collect();
+    match matches.as_slice() {
+        [] => diagnostics.push(row_diagnostic(
+            format!("{path}.derived_checks.artifact_id"),
+            "no root artifact matches the component's resolved coordinate or cache path",
+            rows[0].0,
+            rows[0].1,
+            "refresh the v2 lockfile artifacts before migrating",
+        )),
+        [artifact] => validate_artifact_evidence(
+            artifact,
+            path,
+            requested,
+            repository_names,
+            &rows,
+            diagnostics,
+        ),
+        _ => diagnostics.push(row_diagnostic(
+            format!("{path}.derived_checks.artifact_id"),
+            format!("{} root artifacts match this component", matches.len()),
+            rows[0].0,
+            rows[0].1,
+            "remove duplicate artifact evidence or split the component before migrating",
+        )),
+    }
+}
+
+fn validate_acquisition(
+    requested: &str,
+    path: &str,
+    rows: &[(usize, &DependencyLockEntry)],
+    diagnostics: &mut Vec<MigrationDiagnostic>,
+) {
+    if !requested.starts_with("curse.maven:") {
+        return;
+    }
+    let parts: Vec<_> = requested.split(':').collect();
+    let valid = match parts.as_slice() {
+        ["curse.maven", artifact, file_id] => {
+            artifact.rsplit_once('-').is_some_and(|(slug, project_id)| {
+                !slug.is_empty()
+                    && project_id.parse::<u64>().is_ok()
+                    && file_id.parse::<u64>().is_ok()
+            })
+        }
+        _ => false,
+    };
+    if !valid {
+        diagnostics.push(row_diagnostic(
+            format!("{path}.declaration.acquisition"),
+            "CurseMaven coordinate does not contain an unambiguous slug, project ID, and file ID",
+            rows[0].0,
+            rows[0].1,
+            "correct the coordinate to curse.maven:<slug>-<project-id>:<file-id>",
+        ));
+    }
+}
+
+fn validate_artifact_evidence(
+    artifact: &ArtifactLockEntryV2,
+    path: &str,
+    requested: &str,
+    repository_names: &BTreeSet<&str>,
+    rows: &[(usize, &DependencyLockEntry)],
+    diagnostics: &mut Vec<MigrationDiagnostic>,
+) {
+    let repository_path = format!("{path}.declaration.acquisition.repository_id");
+    match artifact.repository.as_deref() {
+        None => diagnostics.push(row_diagnostic(
+            repository_path,
+            "matching artifact has no repository",
+            rows[0].0,
+            rows[0].1,
+            "refresh the v2 artifact with repository provenance before migrating",
+        )),
+        Some(repository) if !repository_names.contains(repository) => {
+            diagnostics.push(row_diagnostic(
+                repository_path,
+                format!("matching artifact references unknown repository '{repository}'"),
+                rows[0].0,
+                rows[0].1,
+                "add the repository to the v2 repositories list or correct artifact provenance",
+            ));
+        }
+        Some(repository) if requested.starts_with("curse.maven:") && repository != "CurseMaven" => {
+            diagnostics.push(row_diagnostic(
+                repository_path,
+                format!("CurseMaven component resolves through repository '{repository}'"),
+                rows[0].0,
+                rows[0].1,
+                "correct the artifact repository provenance to CurseMaven",
+            ));
+        }
+        Some(_) => {}
+    }
+}
+
+fn evidence_diagnostic<T: ToString>(
+    path: String,
+    message: &str,
+    rows: &[(usize, &DependencyLockEntry)],
+    candidates: impl IntoIterator<Item = T>,
+    remediation: &str,
+) -> MigrationDiagnostic {
+    let mut result = row_diagnostic(path, message, rows[0].0, rows[0].1, remediation);
+    result.candidates = candidates
+        .into_iter()
+        .map(|value| value.to_string())
+        .collect();
+    result
 }
 
 fn validate_platform_reference(
@@ -356,6 +559,7 @@ fn diagnostic(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::jar_build::Repository;
     use crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION;
     use crate::toolchain_lockfile_schema::version::v2::DependencyMigrationHintV2;
     use crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3;
@@ -461,19 +665,29 @@ mod tests {
         dependencies: Vec<DependencyLockEntry>,
         migration_hints: Option<MigrationHintsV2>,
     ) -> ArtifactLockfileV2 {
+        let artifacts = dependencies
+            .iter()
+            .map(|dependency| {
+                legacy_artifact(&dependency.resolved_notation, &dependency.cache_path)
+            })
+            .collect();
         ArtifactLockfileV2 {
             schema_version: ENGINE_SCHEMA_VERSION,
             minecraft_version: "1.19.2".to_owned(),
             maven_cache_dir: PathBuf::from("$sfm-cache/maven"),
             allow_local_artifact_cache: false,
-            repositories: Vec::new(),
+            repositories: vec![Repository {
+                name: "Test".to_owned(),
+                url: "https://example.invalid/maven".to_owned(),
+            }],
             dependencies,
-            artifacts: Vec::new(),
+            artifacts,
             migration_hints,
         }
     }
 
     fn legacy_row(configuration: &str, notation: &str) -> DependencyLockEntry {
+        let cache_path = format!("$sfm-cache/{notation}.jar");
         facet_json::from_str(&format!(
             r#"{{
                 "configuration": "{configuration}",
@@ -481,9 +695,29 @@ mod tests {
                 "resolved_notation": "{notation}",
                 "source": "Maven",
                 "dynamic_version": false,
-                "cache_path": "$sfm-cache/dependency.jar"
+                "cache_path": "{cache_path}"
             }}"#
         ))
         .expect("legacy dependency fixture should parse")
+    }
+
+    fn legacy_artifact(coordinate: &str, cache_path: &std::path::Path) -> ArtifactLockEntryV2 {
+        facet_json::from_str(&format!(
+            r#"{{
+                "coordinate": "{coordinate}",
+                "source": "remote-maven",
+                "repository": "Test",
+                "url": "https://example.invalid/{coordinate}.jar",
+                "cache_path": "{}",
+                "original_path": null,
+                "source_relative_path": null,
+                "source_git": null,
+                "source_build": null,
+                "hash": "blake3:0000000000000000000000000000000000000000",
+                "weak": null
+            }}"#,
+            cache_path.display()
+        ))
+        .expect("legacy artifact fixture should parse")
     }
 }
