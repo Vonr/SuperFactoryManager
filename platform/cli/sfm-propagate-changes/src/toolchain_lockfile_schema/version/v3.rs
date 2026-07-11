@@ -133,6 +133,7 @@ pub(crate) enum ToolchainComponentKindV3 {
 #[facet(rename_all = "kebab-case")]
 #[repr(u8)]
 pub(crate) enum DependencyScopeV3 {
+    AnnotationProcessor,
     Compile,
     Runtime,
     GametestCompile,

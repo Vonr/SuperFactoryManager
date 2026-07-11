@@ -383,7 +383,9 @@ fn migrate_artifacts(
 
 fn scope_purpose(scope: DependencyScopeV3) -> ArtifactPurposeV3 {
     match scope {
-        DependencyScopeV3::Compile | DependencyScopeV3::Bundle => ArtifactPurposeV3::Build,
+        DependencyScopeV3::AnnotationProcessor
+        | DependencyScopeV3::Compile
+        | DependencyScopeV3::Bundle => ArtifactPurposeV3::Build,
         DependencyScopeV3::Runtime => ArtifactPurposeV3::Runtime,
         DependencyScopeV3::GametestCompile | DependencyScopeV3::GametestRuntime => {
             ArtifactPurposeV3::Gametest
@@ -922,6 +924,8 @@ fn scope_candidates(
             "test-compile"
         } else if configuration.contains("runtime") {
             "runtime"
+        } else if configuration.contains("annotationprocessor") {
+            "annotation-processor"
         } else if configuration.contains("compile") || configuration.contains("implementation") {
             "compile"
         } else {
