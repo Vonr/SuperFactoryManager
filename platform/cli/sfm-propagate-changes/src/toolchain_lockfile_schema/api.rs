@@ -23,6 +23,7 @@ pub(crate) enum MigrationAnalysis {
     Legacy {
         source_schema_version: u32,
         diagnostics: Vec<MigrationDiagnostic>,
+        candidate: Option<ArtifactLockfileV3>,
     },
     Current,
 }
@@ -90,15 +91,24 @@ pub(crate) fn analyze_migration(input: &str) -> eyre::Result<MigrationAnalysis> 
             Ok(MigrationAnalysis::Legacy {
                 source_schema_version: 1,
                 diagnostics: normalized.migration_diagnostics(),
+                candidate: None,
             })
         }
         ToolchainLockfileDocument::V2 {
+            lockfile,
             migration_diagnostics,
-            ..
-        } => Ok(MigrationAnalysis::Legacy {
-            source_schema_version: ENGINE_SCHEMA_VERSION,
-            diagnostics: migration_diagnostics,
-        }),
+        } => {
+            let candidate = if migration_diagnostics.is_empty() {
+                Some(lockfile.migrate_to_v3()?)
+            } else {
+                None
+            };
+            Ok(MigrationAnalysis::Legacy {
+                source_schema_version: ENGINE_SCHEMA_VERSION,
+                diagnostics: migration_diagnostics,
+                candidate,
+            })
+        }
         ToolchainLockfileDocument::V3(_) => Ok(MigrationAnalysis::Current),
     }
 }

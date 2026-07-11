@@ -3,7 +3,25 @@ use crate::toolchain_lockfile_schema::version::v2::ArtifactLockEntryV2;
 use crate::toolchain_lockfile_schema::version::v2::ArtifactLockfileV2;
 use crate::toolchain_lockfile_schema::version::v2::ComponentMigrationHintV2;
 use crate::toolchain_lockfile_schema::version::v2::MigrationHintsV2;
+use crate::toolchain_lockfile_schema::version::v3::ArtifactLockfileV3;
+use crate::toolchain_lockfile_schema::version::v3::ArtifactOwnerV3;
+use crate::toolchain_lockfile_schema::version::v3::ArtifactProvenanceV3;
+use crate::toolchain_lockfile_schema::version::v3::ArtifactPurposeV3;
+use crate::toolchain_lockfile_schema::version::v3::ArtifactV3;
+use crate::toolchain_lockfile_schema::version::v3::ComponentAcquisitionV3;
+use crate::toolchain_lockfile_schema::version::v3::ComponentDeclarationV3;
+use crate::toolchain_lockfile_schema::version::v3::ComponentDerivedChecksV3;
+use crate::toolchain_lockfile_schema::version::v3::CurseForgeAcquisitionV3;
+use crate::toolchain_lockfile_schema::version::v3::DependencyComponentV3;
 use crate::toolchain_lockfile_schema::version::v3::DependencyKindV3;
+use crate::toolchain_lockfile_schema::version::v3::DependencyScopeV3;
+use crate::toolchain_lockfile_schema::version::v3::DependencyV3;
+use crate::toolchain_lockfile_schema::version::v3::LockfilePolicyV3;
+use crate::toolchain_lockfile_schema::version::v3::MavenAcquisitionV3;
+use crate::toolchain_lockfile_schema::version::v3::PlatformV3;
+use crate::toolchain_lockfile_schema::version::v3::RepositoryV3;
+use crate::toolchain_lockfile_schema::version::v3::SCHEMA_VERSION;
+use crate::toolchain_lockfile_schema::version::v3::WeakArtifactValidationV3;
 use facet::Facet;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -65,6 +83,382 @@ impl ArtifactLockfileV2 {
             .sort_by(|left, right| (&left.path, &left.message).cmp(&(&right.path, &right.message)));
         diagnostics
     }
+
+    pub(crate) fn migrate_to_v3(&self) -> eyre::Result<ArtifactLockfileV3> {
+        let diagnostics = self.migration_diagnostics();
+        if !diagnostics.is_empty() {
+            eyre::bail!(
+                "cannot construct schema v3 while {} migration diagnostic(s) remain",
+                diagnostics.len()
+            );
+        }
+        let hints = self
+            .migration_hints
+            .as_ref()
+            .expect("diagnostics require migration hints");
+        let (repositories, repository_ids) = migrate_repositories(self);
+        let artifact_ids = create_artifact_ids(&self.artifacts);
+        let references = collect_component_artifact_references(hints, self)?;
+        let dependencies =
+            migrate_dependencies(hints, self, &repository_ids, &artifact_ids, &references)?;
+        let artifacts = migrate_artifacts(self, &repository_ids, &artifact_ids, &references);
+        let lockfile = ArtifactLockfileV3 {
+            schema_version: SCHEMA_VERSION,
+            platform: PlatformV3 {
+                minecraft_dependency: hints
+                    .minecraft_dependency_id
+                    .clone()
+                    .expect("diagnostics require Minecraft dependency ID"),
+                loader_dependency: hints
+                    .loader_dependency_id
+                    .clone()
+                    .expect("diagnostics require loader dependency ID"),
+            },
+            policy: LockfilePolicyV3 {
+                allow_local_artifact_cache: self.allow_local_artifact_cache,
+            },
+            repositories,
+            dependencies,
+            artifacts,
+        };
+        lockfile.validate()?;
+        Ok(lockfile)
+    }
+}
+
+#[derive(Clone)]
+struct ComponentArtifactReference {
+    dependency_id: String,
+    component_id: String,
+    artifact_index: usize,
+    scopes: Vec<DependencyScopeV3>,
+}
+
+fn migrate_repositories(
+    lockfile: &ArtifactLockfileV2,
+) -> (Vec<RepositoryV3>, BTreeMap<&str, String>) {
+    let mut used = BTreeSet::new();
+    let mut ids = BTreeMap::new();
+    let repositories = lockfile
+        .repositories
+        .iter()
+        .map(|repository| {
+            let base = portable_id(&repository.name);
+            let id = unique_id(&base, &mut used);
+            ids.insert(repository.name.as_str(), id.clone());
+            RepositoryV3 {
+                id,
+                url: repository.url.clone(),
+            }
+        })
+        .collect();
+    (repositories, ids)
+}
+
+fn create_artifact_ids(artifacts: &[ArtifactLockEntryV2]) -> Vec<String> {
+    let mut used = BTreeSet::new();
+    artifacts
+        .iter()
+        .enumerate()
+        .map(|(index, artifact)| {
+            let identity = artifact
+                .coordinate
+                .as_deref()
+                .or_else(|| {
+                    artifact
+                        .cache_path
+                        .file_stem()
+                        .and_then(|value| value.to_str())
+                })
+                .map_or_else(|| format!("artifact-{index}"), portable_id);
+            unique_id(
+                &format!("{identity}-{}", artifact.hash.short_hex(8)),
+                &mut used,
+            )
+        })
+        .collect()
+}
+
+fn collect_component_artifact_references(
+    hints: &MigrationHintsV2,
+    lockfile: &ArtifactLockfileV2,
+) -> eyre::Result<Vec<ComponentArtifactReference>> {
+    let mut references = Vec::new();
+    for dependency in &hints.dependencies {
+        for component in &dependency.components {
+            let artifact_index = component_artifact_index(component, lockfile)?;
+            references.push(ComponentArtifactReference {
+                dependency_id: dependency.id.clone(),
+                component_id: component.id.clone(),
+                artifact_index,
+                scopes: component
+                    .scopes
+                    .clone()
+                    .expect("diagnostics require semantic scopes"),
+            });
+        }
+    }
+    Ok(references)
+}
+
+fn component_artifact_index(
+    component: &ComponentMigrationHintV2,
+    lockfile: &ArtifactLockfileV2,
+) -> eyre::Result<usize> {
+    if let Some(index) = component.legacy_artifact_index {
+        return Ok(index);
+    }
+    let row = component
+        .legacy_dependency_indices
+        .first()
+        .and_then(|index| lockfile.dependencies.get(*index))
+        .expect("diagnostics require component artifact evidence");
+    lockfile
+        .artifacts
+        .iter()
+        .position(|artifact| {
+            artifact.coordinate.as_deref() == Some(row.resolved_notation.as_str())
+                || artifact.cache_path == row.cache_path
+        })
+        .ok_or_else(|| eyre::eyre!("validated component artifact disappeared"))
+}
+
+fn migrate_dependencies(
+    hints: &MigrationHintsV2,
+    lockfile: &ArtifactLockfileV2,
+    repository_ids: &BTreeMap<&str, String>,
+    artifact_ids: &[String],
+    references: &[ComponentArtifactReference],
+) -> eyre::Result<Vec<DependencyV3>> {
+    hints
+        .dependencies
+        .iter()
+        .map(|dependency| {
+            let components = dependency
+                .components
+                .iter()
+                .map(|component| {
+                    let reference = references
+                        .iter()
+                        .find(|reference| {
+                            reference.dependency_id == dependency.id
+                                && reference.component_id == component.id
+                        })
+                        .expect("component reference collected above");
+                    let artifact = &lockfile.artifacts[reference.artifact_index];
+                    let acquisition = component.acquisition.clone().unwrap_or_else(|| {
+                        derive_acquisition(component, lockfile, artifact, repository_ids)
+                    });
+                    let resolved_coordinate = component
+                        .legacy_dependency_indices
+                        .first()
+                        .and_then(|index| lockfile.dependencies.get(*index))
+                        .map(|row| row.resolved_notation.clone())
+                        .or_else(|| artifact.coordinate.clone());
+                    Ok(DependencyComponentV3 {
+                        id: component.id.clone(),
+                        declaration: ComponentDeclarationV3 {
+                            acquisition,
+                            scopes: reference.scopes.clone(),
+                            artifact_treatment: component
+                                .artifact_treatment
+                                .expect("diagnostics require artifact treatment"),
+                            data_run_policy: component
+                                .data_run_policy
+                                .expect("diagnostics require data-run policy"),
+                        },
+                        derived_checks: ComponentDerivedChecksV3 {
+                            artifact_id: artifact_ids[reference.artifact_index].clone(),
+                            resolved_coordinate,
+                            expected_hash: artifact.hash,
+                            cache_path: artifact.cache_path.clone(),
+                        },
+                        source_providers: Vec::new(),
+                    })
+                })
+                .collect::<eyre::Result<Vec<_>>>()?;
+            Ok(DependencyV3 {
+                id: dependency.id.clone(),
+                kind: dependency
+                    .kind
+                    .expect("diagnostics require dependency kind"),
+                role: dependency
+                    .role
+                    .expect("diagnostics require dependency role"),
+                display_name: dependency.display_name.clone(),
+                project_url: dependency.project_url.clone(),
+                notes: dependency.notes.clone(),
+                components,
+            })
+        })
+        .collect()
+}
+
+fn derive_acquisition(
+    component: &ComponentMigrationHintV2,
+    lockfile: &ArtifactLockfileV2,
+    artifact: &ArtifactLockEntryV2,
+    repository_ids: &BTreeMap<&str, String>,
+) -> ComponentAcquisitionV3 {
+    let row = component
+        .legacy_dependency_indices
+        .first()
+        .and_then(|index| lockfile.dependencies.get(*index))
+        .expect("diagnostics require rows for derived acquisition");
+    let repository_name = artifact
+        .repository
+        .as_deref()
+        .expect("diagnostics require artifact repository");
+    let repository_id = repository_ids
+        .get(repository_name)
+        .cloned()
+        .expect("diagnostics require known artifact repository");
+    if let Some(curse) = parse_curse_coordinate(&row.notation) {
+        return ComponentAcquisitionV3::CurseForge(CurseForgeAcquisitionV3 {
+            project_id: curse.project_id,
+            file_id: curse.file_id,
+            slug: curse.slug.to_owned(),
+            repository_id,
+        });
+    }
+    ComponentAcquisitionV3::Maven(MavenAcquisitionV3 {
+        requested_coordinate: row.notation.clone(),
+        repository_id,
+    })
+}
+
+fn migrate_artifacts(
+    lockfile: &ArtifactLockfileV2,
+    repository_ids: &BTreeMap<&str, String>,
+    artifact_ids: &[String],
+    references: &[ComponentArtifactReference],
+) -> Vec<ArtifactV3> {
+    lockfile
+        .artifacts
+        .iter()
+        .enumerate()
+        .map(|(index, artifact)| {
+            let owners: Vec<_> = references
+                .iter()
+                .filter(|reference| reference.artifact_index == index)
+                .collect();
+            let owner = match owners.as_slice() {
+                [reference] => Some(ArtifactOwnerV3 {
+                    dependency_id: reference.dependency_id.clone(),
+                    component_id: reference.component_id.clone(),
+                }),
+                _ => None,
+            };
+            let mut purposes = BTreeSet::new();
+            for reference in &owners {
+                for scope in &reference.scopes {
+                    purposes.insert(scope_purpose(*scope));
+                }
+            }
+            if purposes.is_empty() {
+                purposes.insert(ArtifactPurposeV3::Toolchain);
+            }
+            ArtifactV3 {
+                id: artifact_ids[index].clone(),
+                owner,
+                purposes: purposes.into_iter().collect(),
+                coordinate: artifact.coordinate.clone(),
+                repository_id: artifact
+                    .repository
+                    .as_deref()
+                    .and_then(|name| repository_ids.get(name).cloned()),
+                url: artifact.url.clone(),
+                hash: artifact.hash,
+                cache_path: artifact.cache_path.clone(),
+                provenance: artifact_provenance(artifact),
+                weak: artifact.weak.as_ref().map(|weak| WeakArtifactValidationV3 {
+                    metadata_path: weak.metadata_path.clone(),
+                    mod_id: weak.mod_id.clone(),
+                    version: weak.version.clone(),
+                }),
+            }
+        })
+        .collect()
+}
+
+fn scope_purpose(scope: DependencyScopeV3) -> ArtifactPurposeV3 {
+    match scope {
+        DependencyScopeV3::Compile | DependencyScopeV3::Bundle => ArtifactPurposeV3::Build,
+        DependencyScopeV3::Runtime => ArtifactPurposeV3::Runtime,
+        DependencyScopeV3::GametestCompile | DependencyScopeV3::GametestRuntime => {
+            ArtifactPurposeV3::Gametest
+        }
+        DependencyScopeV3::TestCompile | DependencyScopeV3::TestRuntime => ArtifactPurposeV3::Test,
+    }
+}
+
+fn artifact_provenance(artifact: &ArtifactLockEntryV2) -> ArtifactProvenanceV3 {
+    if artifact.source_build.is_some() {
+        ArtifactProvenanceV3::SourceBuild
+    } else if artifact.coordinate.is_some() {
+        ArtifactProvenanceV3::RemoteMaven
+    } else if artifact.url.is_some() {
+        ArtifactProvenanceV3::RemoteHttp
+    } else {
+        ArtifactProvenanceV3::ToolchainGenerated
+    }
+}
+
+fn portable_id(value: &str) -> String {
+    let mut result = String::new();
+    let mut separator = false;
+    for character in value.chars() {
+        if character.is_ascii_alphanumeric() {
+            result.push(character.to_ascii_lowercase());
+            separator = false;
+        } else if !result.is_empty() && !separator {
+            result.push('-');
+            separator = true;
+        }
+    }
+    while result.ends_with('-') {
+        result.pop();
+    }
+    if result.is_empty() {
+        "item".to_owned()
+    } else {
+        result
+    }
+}
+
+fn unique_id(base: &str, used: &mut BTreeSet<String>) -> String {
+    if used.insert(base.to_owned()) {
+        return base.to_owned();
+    }
+    for suffix in 2usize.. {
+        let candidate = format!("{base}-{suffix}");
+        if used.insert(candidate.clone()) {
+            return candidate;
+        }
+    }
+    unreachable!("unbounded numeric suffixes must yield a unique ID")
+}
+
+struct CurseCoordinate<'a> {
+    slug: &'a str,
+    project_id: u64,
+    file_id: u64,
+}
+
+fn parse_curse_coordinate(input: &str) -> Option<CurseCoordinate<'_>> {
+    let parts: Vec<_> = input.split(':').collect();
+    let ["curse.maven", artifact, file_id] = parts.as_slice() else {
+        return None;
+    };
+    let (slug, project_id) = artifact.rsplit_once('-')?;
+    if slug.is_empty() {
+        return None;
+    }
+    Some(CurseCoordinate {
+        slug,
+        project_id: project_id.parse().ok()?,
+        file_id: file_id.parse().ok()?,
+    })
 }
 
 fn validate_dependencies(
@@ -187,11 +581,13 @@ fn validate_component<'a>(
         ));
     }
 
-    if component.legacy_dependency_indices.is_empty() {
+    if component.legacy_dependency_indices.is_empty()
+        && (component.acquisition.is_none() || component.legacy_artifact_index.is_none())
+    {
         diagnostics.push(diagnostic(
             format!("{path}.legacy_dependency_indices"),
-            "component owns no legacy dependency rows",
-            "add every legacy row represented by this component",
+            "component has neither legacy rows nor complete explicit acquisition/artifact evidence",
+            "assign legacy rows or populate acquisition and legacy_artifact_index",
         ));
     }
     for &index in &component.legacy_dependency_indices {
@@ -261,12 +657,14 @@ fn validate_component_evidence(
     repository_names: &BTreeSet<&str>,
     diagnostics: &mut Vec<MigrationDiagnostic>,
 ) {
+    validate_explicit_artifact_index(component, path, artifacts, diagnostics);
     let rows: Vec<(usize, &DependencyLockEntry)> = component
         .legacy_dependency_indices
         .iter()
         .filter_map(|index| legacy.get(*index).map(|row| (*index, row)))
         .collect();
     if rows.is_empty() {
+        validate_component_without_rows(component, path, diagnostics);
         return;
     }
 
@@ -315,14 +713,21 @@ fn validate_component_evidence(
     let requested = *requested.first().expect("one requested coordinate");
     let resolved = *resolved.first().expect("one resolved coordinate");
     let cache_path = *cache_paths.first().expect("one cache path");
-    validate_acquisition(requested, path, &rows, diagnostics);
+    if component.acquisition.is_none() {
+        validate_acquisition(requested, path, &rows, diagnostics);
+    }
 
-    let matches: Vec<_> = artifacts
-        .iter()
-        .filter(|artifact| {
-            artifact.coordinate.as_deref() == Some(resolved) || &artifact.cache_path == cache_path
-        })
-        .collect();
+    let matches: Vec<_> = if let Some(index) = component.legacy_artifact_index {
+        artifacts.get(index).into_iter().collect()
+    } else {
+        artifacts
+            .iter()
+            .filter(|artifact| {
+                artifact.coordinate.as_deref() == Some(resolved)
+                    || &artifact.cache_path == cache_path
+            })
+            .collect()
+    };
     match matches.as_slice() {
         [] => diagnostics.push(row_diagnostic(
             format!("{path}.derived_checks.artifact_id"),
@@ -349,6 +754,44 @@ fn validate_component_evidence(
     }
 }
 
+fn validate_component_without_rows(
+    component: &ComponentMigrationHintV2,
+    path: &str,
+    diagnostics: &mut Vec<MigrationDiagnostic>,
+) {
+    if component.acquisition.is_none() {
+        diagnostics.push(missing(
+            format!("{path}.acquisition"),
+            "explicit acquisition is required when no legacy dependency rows exist",
+            &["toolchain", "maven", "curse-forge", "http"],
+        ));
+    }
+    if component.legacy_artifact_index.is_none() {
+        diagnostics.push(diagnostic(
+            format!("{path}.legacy_artifact_index"),
+            "explicit artifact evidence is required when no legacy dependency rows exist",
+            "set this to the matching index in the v2 artifacts array",
+        ));
+    }
+}
+
+fn validate_explicit_artifact_index(
+    component: &ComponentMigrationHintV2,
+    path: &str,
+    artifacts: &[ArtifactLockEntryV2],
+    diagnostics: &mut Vec<MigrationDiagnostic>,
+) {
+    if let Some(index) = component.legacy_artifact_index
+        && artifacts.get(index).is_none()
+    {
+        diagnostics.push(diagnostic(
+            format!("{path}.legacy_artifact_index"),
+            format!("legacy artifact index {index} is out of range"),
+            format!("use an index below {}", artifacts.len()),
+        ));
+    }
+}
+
 fn validate_acquisition(
     requested: &str,
     path: &str,
@@ -358,18 +801,7 @@ fn validate_acquisition(
     if !requested.starts_with("curse.maven:") {
         return;
     }
-    let parts: Vec<_> = requested.split(':').collect();
-    let valid = match parts.as_slice() {
-        ["curse.maven", artifact, file_id] => {
-            artifact.rsplit_once('-').is_some_and(|(slug, project_id)| {
-                !slug.is_empty()
-                    && project_id.parse::<u64>().is_ok()
-                    && file_id.parse::<u64>().is_ok()
-            })
-        }
-        _ => false,
-    };
-    if !valid {
+    if parse_curse_coordinate(requested).is_none() {
         diagnostics.push(row_diagnostic(
             format!("{path}.declaration.acquisition"),
             "CurseMaven coordinate does not contain an unambiguous slug, project ID, and file ID",
@@ -565,7 +997,6 @@ mod tests {
     use crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3;
     use crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3;
     use crate::toolchain_lockfile_schema::version::v3::DependencyRoleV3;
-    use crate::toolchain_lockfile_schema::version::v3::DependencyScopeV3;
     use std::path::PathBuf;
 
     #[test]
@@ -595,6 +1026,8 @@ mod tests {
                     components: vec![ComponentMigrationHintV2 {
                         id: "main".to_owned(),
                         legacy_dependency_indices: vec![0],
+                        acquisition: None,
+                        legacy_artifact_index: None,
                         scopes: None,
                         artifact_treatment: None,
                         data_run_policy: None,
@@ -637,6 +1070,16 @@ mod tests {
         );
 
         assert_eq!(lockfile.migration_diagnostics(), Vec::new());
+        let migrated = lockfile.migrate_to_v3().expect("migration should succeed");
+        assert_eq!(migrated.schema_version, SCHEMA_VERSION);
+        assert_eq!(migrated.platform.minecraft_dependency, "minecraft");
+        assert_eq!(migrated.platform.loader_dependency, "forge");
+        assert_eq!(migrated.dependencies.len(), 2);
+        assert_eq!(migrated.artifacts.len(), 2);
+        let json = facet_json::to_string_pretty(&migrated).expect("v3 should serialize");
+        let reparsed: ArtifactLockfileV3 =
+            facet_json::from_str(&json).expect("serialized v3 should parse");
+        reparsed.validate().expect("serialized v3 should validate");
     }
 
     fn complete_dependency(
@@ -654,6 +1097,8 @@ mod tests {
             components: vec![ComponentMigrationHintV2 {
                 id: "main".to_owned(),
                 legacy_dependency_indices: vec![legacy_index],
+                acquisition: None,
+                legacy_artifact_index: None,
                 scopes: Some(vec![DependencyScopeV3::Compile]),
                 artifact_treatment: Some(ArtifactTreatmentV3::Plain),
                 data_run_policy: Some(DataRunPolicyV3::Exclude),
