@@ -19,6 +19,14 @@ pub(crate) enum ToolchainLockfileDocument {
     V3(ArtifactLockfileV3),
 }
 
+pub(crate) enum MigrationAnalysis {
+    Legacy {
+        source_schema_version: u32,
+        diagnostics: Vec<MigrationDiagnostic>,
+    },
+    Current,
+}
+
 pub(crate) fn parse_document(input: &str) -> eyre::Result<ToolchainLockfileDocument> {
     let preflight: PreflightDocument = facet_json::from_str(input)
         .wrap_err("failed to parse toolchain lockfile schema preflight")?;
@@ -72,5 +80,25 @@ pub(crate) fn upgrade_to_latest(input: &str) -> eyre::Result<ArtifactLockfile> {
             "schema_version {} is valid but cannot be consumed by the legacy schema_version {ENGINE_SCHEMA_VERSION} engine",
             lockfile.schema_version
         ),
+    }
+}
+
+pub(crate) fn analyze_migration(input: &str) -> eyre::Result<MigrationAnalysis> {
+    match parse_document(input)? {
+        ToolchainLockfileDocument::V1(lockfile) => {
+            let normalized = lockfile.upgrade();
+            Ok(MigrationAnalysis::Legacy {
+                source_schema_version: 1,
+                diagnostics: normalized.migration_diagnostics(),
+            })
+        }
+        ToolchainLockfileDocument::V2 {
+            migration_diagnostics,
+            ..
+        } => Ok(MigrationAnalysis::Legacy {
+            source_schema_version: ENGINE_SCHEMA_VERSION,
+            diagnostics: migration_diagnostics,
+        }),
+        ToolchainLockfileDocument::V3(_) => Ok(MigrationAnalysis::Current),
     }
 }

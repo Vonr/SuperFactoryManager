@@ -1,4 +1,5 @@
 use super::DependencyAddArgs;
+use super::DependencyMigrateArgs;
 use crate::cancellation::CancellationToken;
 use facet::Facet;
 use figue as args;
@@ -23,6 +24,8 @@ impl DependencyArgs {
 pub enum DependencyCommand {
     /// Accept the current artifact for a locked dependency.
     Add(DependencyAddArgs),
+    /// Validate or migrate a legacy dependency lockfile to schema v3.
+    Migrate(DependencyMigrateArgs),
 }
 
 impl DependencyCommand {
@@ -32,6 +35,7 @@ impl DependencyCommand {
     pub fn invoke(self, cancellation_token: CancellationToken) -> eyre::Result<()> {
         match self {
             Self::Add(args) => args.invoke(cancellation_token),
+            Self::Migrate(args) => args.invoke(cancellation_token),
         }
     }
 }

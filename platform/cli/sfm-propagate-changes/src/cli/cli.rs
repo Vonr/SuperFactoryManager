@@ -108,6 +108,7 @@ impl Command {
 mod tests {
     use super::Cli;
     use crate::cli::Command;
+    use crate::cli::dependency::DependencyCommand;
     use crate::cli::git::GitCommand;
     use crate::cli::gradle::GradleCommand;
     use crate::cli::jar::JarCommand;
@@ -844,6 +845,24 @@ mod tests {
     }
 
     #[test]
+    fn parses_dependency_migrate_check_with_explicit_branch() {
+        let cli =
+            figue::from_slice::<Cli>(&["dependency", "migrate", "--branch", "1.19.2", "--check"])
+                .into_result()
+                .expect("dependency migrate should parse")
+                .get_silent();
+        match cli.command {
+            Command::Dependency(crate::cli::dependency::DependencyArgs {
+                command: DependencyCommand::Migrate(args),
+            }) => {
+                assert_eq!(args.branch.as_ref(), "1.19.2");
+                assert!(args.check);
+            }
+            command => panic!("expected dependency migrate command, got {command:?}"),
+        }
+    }
+
+    #[test]
     fn branch_is_required_for_commands_that_accept_branch() {
         let commands = [
             &["run", "compile"][..],
@@ -853,6 +872,7 @@ mod tests {
             &["jar", "build"],
             &["jar", "compare"],
             &["jar", "audit-artifacts"],
+            &["dependency", "migrate"],
             &["gradle", "run", "runData"],
             &["loader", "list"],
             &["source", "audit"],

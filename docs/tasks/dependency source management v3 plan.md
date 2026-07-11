@@ -500,9 +500,9 @@ passes from `platform/cli/sfm-propagate-changes` before schema v3 work begins.
 - Diagnostics are sufficient to update the v2 migration hints without reading migration code.
 - A successful migration writes a strict v3 file with no migration-only optional fields.
 
-### [ ] 2.4 Implement `dependency migrate`
+### [~] 2.4 Implement `dependency migrate`
 
-**Completion notes:** _Not started. Record dry-run/check behavior, backup behavior, and migrated branches here._
+**Completion notes:** In progress as of 2026-07-11. Added the typed `dependency migrate --branch <selector> --check` command with exact-one-worktree selection. It reads through the versioned schema dispatcher, normalizes v1 to v2 in memory for diagnostics, reports every structured v2 correction with candidates and row context, treats v3 as already current, and never writes in check mode. Write mode is intentionally rejected even when evidence is complete until strict v3 construction and atomic replacement are implemented. Verified through `cargo run -- dependency migrate --branch 1.19.2 --check`: the real v2 lock reports missing `migration_hints`, exits nonzero, and remains unchanged. Parser coverage enforces explicit `--branch`; the full gate passes 167 tests.
 
 **Command:**
 
