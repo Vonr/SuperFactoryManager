@@ -25,7 +25,7 @@ pub(crate) enum MigrationAnalysis {
         diagnostics: Vec<MigrationDiagnostic>,
         candidate: Option<ArtifactLockfileV3>,
     },
-    Current,
+    Current(ArtifactLockfileV3),
 }
 
 pub(crate) fn parse_document(input: &str) -> eyre::Result<ToolchainLockfileDocument> {
@@ -99,7 +99,8 @@ pub(crate) fn analyze_migration(input: &str) -> eyre::Result<MigrationAnalysis> 
             migration_diagnostics,
         } => {
             let candidate = if migration_diagnostics.is_empty() {
-                Some(lockfile.migrate_to_v3()?)
+                let candidate = lockfile.migrate_to_v3()?;
+                Some(candidate.refresh_derived_state(&candidate)?)
             } else {
                 None
             };
@@ -109,6 +110,6 @@ pub(crate) fn analyze_migration(input: &str) -> eyre::Result<MigrationAnalysis> 
                 candidate,
             })
         }
-        ToolchainLockfileDocument::V3(_) => Ok(MigrationAnalysis::Current),
+        ToolchainLockfileDocument::V3(lockfile) => Ok(MigrationAnalysis::Current(lockfile)),
     }
 }

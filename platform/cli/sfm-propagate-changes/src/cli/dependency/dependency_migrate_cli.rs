@@ -37,8 +37,24 @@ impl DependencyMigrateArgs {
             .wrap_err_with(|| format!("Failed to read {}", lockfile_path.display()))?;
 
         match analyze_migration(&input)? {
-            MigrationAnalysis::Current => {
-                println!("{} already uses schema version 3.", lockfile_path.display());
+            MigrationAnalysis::Current(lockfile) => {
+                let output = lockfile
+                    .to_canonical_json()
+                    .wrap_err("Failed to serialize canonical schema v3 lockfile")?;
+                if output == input {
+                    println!(
+                        "{} already uses canonical schema version 3.",
+                        lockfile_path.display()
+                    );
+                } else if check {
+                    println!(
+                        "{} uses schema version 3 but is not canonically ordered.",
+                        lockfile_path.display()
+                    );
+                } else {
+                    write_lockfile_atomically(&lockfile_path, &input, output.as_bytes())?;
+                    println!("Canonicalized {}.", lockfile_path.display());
+                }
                 Ok(())
             }
             MigrationAnalysis::Legacy {
@@ -56,9 +72,9 @@ impl DependencyMigrateArgs {
                             "migration analysis returned no diagnostics and no v3 candidate"
                         );
                     };
-                    let mut output = facet_json::to_string_pretty(&candidate)
+                    let output = candidate
+                        .to_canonical_json()
                         .wrap_err("Failed to serialize migrated schema v3 lockfile")?;
-                    output.push('\n');
                     if check {
                         println!("  ready: all required v3 migration evidence is present");
                         println!("\n{output}");

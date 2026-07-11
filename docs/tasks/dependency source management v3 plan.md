@@ -522,9 +522,9 @@ sfm-propagate-changes.exe dependency migrate --branch 1.19.2
 
 **Completion criteria:** Every supported branch can reach a strict v3 lock by iterating on informative diagnostics rather than weakening the v3 schema. Successful migration serializes schema version 3.
 
-### [ ] 2.5 Implement deterministic v3 writing and declaration preservation
+### [x] 2.5 Implement deterministic v3 writing and declaration preservation
 
-**Completion notes:** _Not started. Record canonical ordering and how maintained fields survive refresh here._
+**Completion notes:** Completed 2026-07-11. Added schema-layer canonical JSON writing used by migration and future mutation commands. Canonicalization sorts repositories, logical dependencies, components, semantic scopes, source providers, provider roots, artifacts, and artifact purposes by stable IDs/enum order and removes duplicate repeatable values. Existing v3 lockfiles can be checked or atomically canonicalized through `dependency migrate`; two successive writes of the 1.19.2 lockfile retained SHA-256 `CB784CF909BCB2DB4A75B8F614576E0783357593F109318D94AF8C8AF8F8AC7C`. Added declaration-preserving derived refresh: dependency metadata, roles, notes, policies, component declarations, requested revisions, and provider declarations remain from maintained state while component/provider `derived_checks` and the artifact inventory are replaced from validated resolution. Missing or changed dependency/component/provider topology is rejected before replacement. Tests prove unrelated AE2 source metadata survives a CC:Tweaked refresh and manually changed requested revisions are not overwritten by resolved state. The full gate passes 172 tests.
 
 **Work:**
 
