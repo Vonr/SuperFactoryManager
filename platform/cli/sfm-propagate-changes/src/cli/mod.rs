@@ -1,5 +1,7 @@
 pub mod cache;
 mod cli;
+#[cfg(test)]
+mod cli_to_args_tests;
 pub mod client;
 pub mod curseforge;
 pub mod dependency;

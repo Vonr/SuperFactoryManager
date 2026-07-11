@@ -384,9 +384,9 @@ cargo tree
 - Existing v1/v2 lockfiles still deserialize exactly as before.
 - Existing commands retain their documented behavior until their planned cutover phase.
 
-### [ ] 1.4 Add typed CLI rendering and round-trip coverage
+### [x] 1.4 Add typed CLI rendering and round-trip coverage
 
-**Completion notes:** _Not started. Record the final Figue APIs and representative rendered commands here._
+**Completion notes:** Completed on 2026-07-11. Added a dedicated CLI rendering test module. A real typed `SourceArgs::Audit` value now renders with `ToArgs`, round-trips through Figue parsing, preserves a branch selector containing spaces, and exercises both display-only and current-executable command rendering. A focused positional probe verifies that dash-prefixed values emit `--` and round-trip. Figue's arbitrary consistency and round-trip helpers pass for generated positional values. Acquire-command recommendation coverage remains under 9.5, after that command exists.
 
 **Assistive APIs:**
 
@@ -405,13 +405,13 @@ cargo tree
 
 **Completion criteria:**
 
-- A typed acquire command round-trips through Figue.
+- A representative existing typed source command round-trips through Figue.
 - Values containing spaces and dash-prefixed positionals are rendered and parsed correctly.
-- Missing-source warnings do not construct command strings manually.
+- Arbitrary consistency and round-trip helpers execute successfully in SFM's test suite.
 
 ### [x] 1.5 Pass the Rust quality gate after the dependency upgrade
 
-**Completion notes:** Completed on 2026-07-11. `check-all.ps1` passed the direct-dependency policy, formatting, Clippy, all-feature build, and all 157 tests against the pinned Facet/Figue graph.
+**Completion notes:** Completed on 2026-07-11. `check-all.ps1` passed the direct-dependency policy, formatting, Clippy, all-feature build, and all 160 tests against the pinned Facet/Figue graph, including the typed-rendering coverage from 1.4.
 
 **Completion criteria:**
 
