@@ -542,9 +542,9 @@ sfm-propagate-changes.exe dependency migrate --branch 1.19.2
 - No separate declaration file is required.
 - Manual edits to `declaration` are validated; manual edits to `derived_checks` are either replaced or rejected with an explicit diagnostic.
 
-### [ ] 2.6 Add schema fixtures, migration, and round-trip tests
+### [x] 2.6 Add schema fixtures, migration, and round-trip tests
 
-**Completion notes:** _Not started. List fixture paths and covered edge cases here._
+**Completion notes:** Completed 2026-07-11. Readable fixtures are the minimal inline v1 document in `src/toolchain_lockfile_schema/api.rs`, focused v2 builders/JSON rows in `version/v2_migration.rs`, the compact v3 builder in `version/v3.rs`, and the checked-in real `platform/minecraft/sfm-toolchain.lock.json` consumed by `version/v3_write.rs`. Explicit tests cover v1 normalization with actionable missing-hints diagnostics, v1 rejection of v2-only weak fields, v2 no-hints and complete-hints paths, weak validation preservation into v3, strict minimal round trips, the real AE2/Mekanism multi-component shape, exact Git requested revision/commit replacement behavior, Maven sources archive/tree paths, semantic annotation/compile/runtime/game-test scopes, loader-managed versus plain API treatment, default mod exclusion and explicit platform inclusion for data runs, future schema rejection, canonical byte stability, and rejection of absolute machine-specific paths while `$sfm-cache` paths validate. The schema-focused suite has 14 tests and the full gate passes 177 tests.
 
 **Required tests:**
 

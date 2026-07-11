@@ -176,9 +176,14 @@ fn replace_provider_derived_checks(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3;
+    use crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3;
     use crate::toolchain_lockfile_schema::version::v3::GitSourceDeclarationV3;
     use crate::toolchain_lockfile_schema::version::v3::GitSourceDerivedChecksV3;
     use crate::toolchain_lockfile_schema::version::v3::GitSourceProviderV3;
+    use crate::toolchain_lockfile_schema::version::v3::MavenSourceDeclarationV3;
+    use crate::toolchain_lockfile_schema::version::v3::MavenSourceDerivedChecksV3;
+    use crate::toolchain_lockfile_schema::version::v3::MavenSourceProviderV3;
     use std::path::PathBuf;
 
     const V3_LOCKFILE: &str = include_str!("../../../../../minecraft/sfm-toolchain.lock.json");
@@ -250,6 +255,90 @@ mod tests {
             .expect_err("missing provider must fail");
 
         assert!(error.to_string().contains("missing source provider"));
+    }
+
+    #[test]
+    fn checked_in_fixture_covers_multicomponent_scopes_treatments_and_policies() {
+        let lockfile = lockfile();
+        let ae2 = lockfile
+            .dependencies
+            .iter()
+            .find(|dependency| dependency.id == "applied-energistics-2")
+            .expect("AE2 fixture");
+        assert_eq!(ae2.components.len(), 2);
+        assert_eq!(
+            component(&lockfile, "cc-tweaked")
+                .declaration
+                .data_run_policy,
+            DataRunPolicyV3::Exclude
+        );
+        assert_eq!(
+            component(&lockfile, "cc-tweaked")
+                .declaration
+                .artifact_treatment,
+            ArtifactTreatmentV3::LoaderManagedMod
+        );
+        let ae2_api = ae2
+            .components
+            .iter()
+            .find(|component| component.id == "api")
+            .expect("AE2 API fixture");
+        assert_eq!(
+            ae2_api.declaration.artifact_treatment,
+            ArtifactTreatmentV3::Plain
+        );
+        let minecraft = component(&lockfile, "minecraft");
+        assert_eq!(
+            minecraft.declaration.data_run_policy,
+            DataRunPolicyV3::Include
+        );
+    }
+
+    #[test]
+    fn maven_sources_provider_roundtrips_with_portable_paths() {
+        let mut lockfile = lockfile();
+        let hash = component(&lockfile, "cc-tweaked")
+            .derived_checks
+            .expected_hash;
+        component_mut(&mut lockfile, "cc-tweaked")
+            .source_providers
+            .push(SourceProviderV3::MavenSources(MavenSourceProviderV3 {
+                id: "maven-sources".to_owned(),
+                declaration: MavenSourceDeclarationV3 {
+                    requested_coordinate: "org.squiddev:cc-tweaked-1.19.2:1.101.3:sources"
+                        .to_owned(),
+                    repository_id: "squiddev".to_owned(),
+                    roots: vec!["projects/common/src/main/java".to_owned()],
+                },
+                derived_checks: MavenSourceDerivedChecksV3 {
+                    resolved_coordinate: "org.squiddev:cc-tweaked-1.19.2:1.101.3:sources"
+                        .to_owned(),
+                    url: "https://squiddev.cc/maven/cc-tweaked-sources.jar".to_owned(),
+                    hash,
+                    archive_cache_path: PathBuf::from(
+                        "$sfm-cache/sources/maven/cc-tweaked-sources.jar",
+                    ),
+                    tree_cache_path: PathBuf::from("$sfm-cache/sources/trees/cc-tweaked"),
+                },
+            }));
+
+        let json = lockfile
+            .to_canonical_json()
+            .expect("Maven sources should validate");
+        let reparsed: ArtifactLockfileV3 = facet_json::from_str(&json).expect("round trip");
+        reparsed
+            .validate()
+            .expect("round-tripped provider should validate");
+    }
+
+    #[test]
+    fn absolute_artifact_cache_path_is_rejected() {
+        let mut lockfile = lockfile();
+        lockfile.artifacts[0].cache_path = PathBuf::from("C:/machine-specific/artifact.jar");
+
+        let error = lockfile.validate().expect_err("absolute path should fail");
+
+        assert!(error.to_string().contains("must be portable"));
     }
 
     fn lockfile() -> ArtifactLockfileV3 {

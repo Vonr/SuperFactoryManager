@@ -996,6 +996,7 @@ fn diagnostic(
 mod tests {
     use super::*;
     use crate::jar_build::Repository;
+    use crate::jar_build::WeakArtifactValidation;
     use crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION;
     use crate::toolchain_lockfile_schema::version::v2::DependencyMigrationHintV2;
     use crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3;
@@ -1039,7 +1040,6 @@ mod tests {
                 }],
             }),
         );
-
         let diagnostics = lockfile.migration_diagnostics();
         let paths: BTreeSet<_> = diagnostics.iter().map(|item| item.path.as_str()).collect();
         assert_eq!(diagnostics.len(), 7);
@@ -1061,7 +1061,7 @@ mod tests {
             complete_dependency("minecraft", DependencyKindV3::Minecraft, 0),
             complete_dependency("forge", DependencyKindV3::Loader, 1),
         ];
-        let lockfile = lockfile(
+        let mut lockfile = lockfile(
             vec![
                 legacy_row("implementation", "net.minecraft:minecraft:1.19.2"),
                 legacy_row("implementation", "net.minecraftforge:forge:1.19.2-43.4.0"),
@@ -1072,6 +1072,11 @@ mod tests {
                 dependencies,
             }),
         );
+        lockfile.artifacts[0].weak = Some(WeakArtifactValidation {
+            metadata_path: PathBuf::from("META-INF/mods.toml"),
+            mod_id: "minecraft-fixture".to_owned(),
+            version: "1.19.2".to_owned(),
+        });
 
         assert_eq!(lockfile.migration_diagnostics(), Vec::new());
         let migrated = lockfile.migrate_to_v3().expect("migration should succeed");
@@ -1080,6 +1085,12 @@ mod tests {
         assert_eq!(migrated.platform.loader_dependency, "forge");
         assert_eq!(migrated.dependencies.len(), 2);
         assert_eq!(migrated.artifacts.len(), 2);
+        assert!(migrated.artifacts.iter().any(|artifact| {
+            artifact
+                .weak
+                .as_ref()
+                .is_some_and(|weak| weak.mod_id == "minecraft-fixture")
+        }));
         let json = facet_json::to_string_pretty(&migrated).expect("v3 should serialize");
         let reparsed: ArtifactLockfileV3 =
             facet_json::from_str(&json).expect("serialized v3 should parse");

@@ -113,3 +113,49 @@ pub(crate) fn analyze_migration(input: &str) -> eyre::Result<MigrationAnalysis> 
         ToolchainLockfileDocument::V3(lockfile) => Ok(MigrationAnalysis::Current(lockfile)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const MINIMAL_V1: &str = r#"{
+        "schema_version": 1,
+        "minecraft_version": "1.19.2",
+        "maven_cache_dir": "$sfm-cache/maven",
+        "allow_local_artifact_cache": false,
+        "repositories": [],
+        "dependencies": [],
+        "artifacts": []
+    }"#;
+
+    #[test]
+    fn minimal_v1_normalizes_and_requests_v2_migration_hints() {
+        let MigrationAnalysis::Legacy {
+            source_schema_version,
+            diagnostics,
+            candidate,
+        } = analyze_migration(MINIMAL_V1).expect("v1 analysis should succeed")
+        else {
+            panic!("expected legacy migration analysis");
+        };
+
+        assert_eq!(source_schema_version, 1);
+        assert!(candidate.is_none());
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].path, "migration_hints");
+        assert!(diagnostics[0].remediation.contains("migrate --check"));
+    }
+
+    #[test]
+    fn future_schema_version_is_rejected_before_version_parse() {
+        let Err(error) = parse_document(r#"{"schema_version": 4}"#) else {
+            panic!("future schema should fail");
+        };
+
+        assert!(
+            error
+                .to_string()
+                .contains("newer than supported schema_version 3")
+        );
+    }
+}
