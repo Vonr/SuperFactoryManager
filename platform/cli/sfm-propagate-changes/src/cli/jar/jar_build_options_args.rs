@@ -43,7 +43,7 @@ pub struct JarBuildOptionsArgs {
     pub allow_local_artifact_cache: bool,
 
     /// Explicit local artifact sources, such as Maven repository roots, project roots, or build/libs directories.
-    #[facet(default, args::named, args::long_alias = "artifact-source")]
+    #[facet(default, args::named, args::alias = "artifact-source")]
     pub artifact_sources: Vec<PathBuf>,
 
     /// Fail if any locked artifact depends on local-only or unknown provenance.

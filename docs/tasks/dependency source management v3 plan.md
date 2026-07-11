@@ -331,9 +331,9 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 - Existing Facet JSON call sites remain accepted.
 - The Rust quality gate passes with no tracked Serde probe code or direct Serde dependency.
 
-### [~] 1.2 Pin all Facet-family dependencies to the maintained fork
+### [x] 1.2 Pin all Facet-family dependencies to the maintained fork
 
-**Completion notes:** Reconnaissance started on 2026-07-09. The exact fork pin at `585826b51ae771950970849e616e28c6c7207f45` resolved successfully. Compilation required renaming Figue's `args::long_alias` attribute to `args::alias`, after which `cargo check --all-features` passed. The full test gate then exposed a systematic parser migration: new Figue rejects struct-shaped scalar CLI fields without an explicit proxy. Adding `#[facet(proxy = String)]` plus conversions to `BranchSelector` advanced validation to `SourceLineLimit`, which needs the equivalent `usize` proxy; other CLI-facing transparent wrappers must be inventoried before the pin is retained. The temporary dependency, lockfile, alias, and proxy edits were rolled back so the branch remains green. Resume by enumerating every custom scalar used in a CLI field, adding and testing its supported proxy, then reapply the pin and alias migration together.
+**Completion notes:** Completed on 2026-07-11. Pinned `facet`, `facet-json`, `facet-styx`, and `figue` to TeamDman's Facet fork at `585826b51ae771950970849e616e28c6c7207f45`, enabled Figue's `arbitrary` feature, and regenerated `Cargo.lock`. `cargo tree --depth 1` reports `facet`/`facet-json` `0.50.0-rc.5`, `facet-styx`/`figue` `5.0.0-rc.5`, all from the same Git revision. No registry `teamy-figue` remains.
 
 **Affected paths:**
 
@@ -361,9 +361,9 @@ cargo check
 cargo tree
 ```
 
-### [ ] 1.3 Migrate SFM CLI code to the updated Facet/Figue APIs
+### [x] 1.3 Migrate SFM CLI code to the updated Facet/Figue APIs
 
-**Completion notes:** _Not started. Record derive changes, annotation changes, parser behavior changes, and compatibility decisions here._
+**Completion notes:** Completed on 2026-07-11. Replaced Figue's removed `args::long_alias` annotation with `args::alias`. Declared `BranchSelector` as a `String` proxy and `SourceLineLimit` as a `usize` proxy, with bidirectional conversions, because current Figue intentionally rejects struct-shaped values in single CLI fields. All 36 focused CLI parser tests pass, including required branch selectors, aliases, optional-value flags, subcommands, and logging options. Existing v1/v2 lockfile tests also pass under the full suite.
 
 **Affected paths:**
 
@@ -409,9 +409,9 @@ cargo tree
 - Values containing spaces and dash-prefixed positionals are rendered and parsed correctly.
 - Missing-source warnings do not construct command strings manually.
 
-### [ ] 1.5 Pass the Rust quality gate after the dependency upgrade
+### [x] 1.5 Pass the Rust quality gate after the dependency upgrade
 
-**Completion notes:** _Not started. Record command output summaries and any accepted warnings here._
+**Completion notes:** Completed on 2026-07-11. `check-all.ps1` passed the direct-dependency policy, formatting, Clippy, all-feature build, and all 157 tests against the pinned Facet/Figue graph.
 
 **Completion criteria:**
 
