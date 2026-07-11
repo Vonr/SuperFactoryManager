@@ -678,9 +678,9 @@ sfm-propagate-changes.exe dependency add cc-tweaked --branch 1.19.2 `
 
 **Completion criteria:** Adding CC:Tweaked to a fixture produces the expected declaration, artifact lock, and repository relationship without editing Gradle.
 
-### [ ] 4.2 Add component and removal operations
+### [x] 4.2 Add component and removal operations
 
-**Completion notes:** _Not started. Record component addressing and removal safety rules here._
+**Completion notes:** Completed 2026-07-11. Added `dependency component add <dependency> <component> --branch <branch> --maven <exact-coordinate> --scope <scope>...` with the same optional repository and artifact-treatment controls as dependency creation. It reuses the Phase 4.1 Maven resolver, injected cache, hash/path derivation, artifact ownership, canonical serialization, and atomic writer. Added `dependency remove <dependency[/component]> --branch <branch>`. Whole required platform dependencies are protected; removing the last component requires whole-dependency addressing; unknown and malformed targets fail before writing. Removal deletes only artifacts made unreferenced by the mutation, retains artifacts referenced by remaining components or decompile source providers, and clears a removed owner when a shared artifact survives. Fixture tests remove AE2's API while preserving its main component/artifact and add Mekanism's plain API component while preserving main. Parser tests cover both nested component addition and component removal. The full quality gate passes 194 tests.
 
 **Work:**
 

@@ -990,6 +990,48 @@ mod tests {
     }
 
     #[test]
+    fn parses_dependency_component_add() {
+        let cli = figue::from_slice::<Cli>(&[
+            "dependency",
+            "component",
+            "add",
+            "mekanism",
+            "api",
+            "--branch",
+            "1.19.2",
+            "--maven",
+            "mekanism:Mekanism:1.19.2-10.3.9.13:api",
+            "--repository",
+            "modmaven",
+            "--scope",
+            "compile",
+            "--artifact-treatment",
+            "plain",
+        ])
+        .into_result()
+        .expect("dependency component add should parse")
+        .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Component(component),
+        }) = cli.command
+        else {
+            panic!("expected dependency component command");
+        };
+        let crate::cli::dependency::DependencyComponentCommand::Add(args) = component.command;
+        assert_eq!(args.dependency, "mekanism");
+        assert_eq!(args.component, "api");
+        assert_eq!(args.branch.as_ref(), "1.19.2");
+        assert_eq!(
+            args.scope,
+            [crate::toolchain_lockfile_schema::version::v3::DependencyScopeV3::Compile]
+        );
+        assert_eq!(
+            args.artifact_treatment,
+            Some(crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain)
+        );
+    }
+
+    #[test]
     fn branch_is_required_for_commands_that_accept_branch() {
         let commands = [
             &["run", "compile"][..],

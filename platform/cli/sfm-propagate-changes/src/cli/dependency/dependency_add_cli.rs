@@ -73,16 +73,7 @@ impl DependencyAddArgs {
     ) -> eyre::Result<()> {
         cancellation_token.bail_if_cancelled()?;
         let inventory = load_inventory(self.branch.clone(), cache_home)?;
-        let client = Client::builder()
-            .user_agent(concat!("sfm-propagate-changes/", env!("CARGO_PKG_VERSION")))
-            .build()
-            .wrap_err("Failed to create Maven HTTP client")?;
-        let report = add_dependency(
-            inventory,
-            &self,
-            cancellation_token,
-            &ReqwestFetcher(client),
-        )?;
+        let report = add_dependency(inventory, &self, cancellation_token, &http_fetcher()?)?;
         stdout_line(format!(
             "Added {}/main: {} from {} ({})",
             report.dependency_id, report.coordinate, report.repository_id, report.hash
@@ -91,11 +82,12 @@ impl DependencyAddArgs {
     }
 }
 
-struct DependencyAddReport {
-    dependency_id: String,
-    coordinate: String,
-    repository_id: String,
-    hash: ContentHash,
+pub(super) struct DependencyAddReport {
+    pub(super) dependency_id: String,
+    pub(super) component_id: String,
+    pub(super) coordinate: String,
+    pub(super) repository_id: String,
+    pub(super) hash: ContentHash,
 }
 
 struct ResolvedMavenArtifact {
@@ -104,7 +96,13 @@ struct ResolvedMavenArtifact {
     bytes: Vec<u8>,
 }
 
-trait ArtifactFetcher {
+struct LockedComponentEvidence {
+    hash: ContentHash,
+    cache_path: PathBuf,
+    artifact_id: String,
+}
+
+pub(super) trait ArtifactFetcher {
     fn fetch(
         &self,
         url: &str,
@@ -112,7 +110,15 @@ trait ArtifactFetcher {
     ) -> eyre::Result<Option<Vec<u8>>>;
 }
 
-struct ReqwestFetcher(Client);
+pub(super) struct ReqwestFetcher(Client);
+
+pub(super) fn http_fetcher() -> eyre::Result<ReqwestFetcher> {
+    let client = Client::builder()
+        .user_agent(concat!("sfm-propagate-changes/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .wrap_err("Failed to create Maven HTTP client")?;
+    Ok(ReqwestFetcher(client))
+}
 
 impl ArtifactFetcher for ReqwestFetcher {
     fn fetch(
@@ -151,6 +157,39 @@ fn add_dependency(
         .any(|dependency| dependency.id == args.id)
     {
         eyre::bail!("Dependency '{}' already exists.", args.id);
+    }
+    inventory.lockfile.dependencies.push(DependencyV3 {
+        id: args.id.clone(),
+        kind: DependencyKindV3::Mod,
+        role: DependencyRoleV3::Integration,
+        display_name: args.display_name.clone(),
+        project_url: args.project_url.clone(),
+        notes: args.notes.clone(),
+        components: Vec::new(),
+    });
+    add_component(inventory, args, "main", cancellation_token, fetcher)
+}
+
+pub(super) fn add_component(
+    mut inventory: DependencyInventory,
+    args: &DependencyAddArgs,
+    component_id: &str,
+    cancellation_token: &CancellationToken,
+    fetcher: &dyn ArtifactFetcher,
+) -> eyre::Result<DependencyAddReport> {
+    validate_component_id(component_id)?;
+    let dependency = inventory
+        .lockfile
+        .dependencies
+        .iter()
+        .find(|dependency| dependency.id == args.id)
+        .ok_or_else(|| eyre::eyre!("Unknown dependency '{}'.", args.id))?;
+    if dependency
+        .components
+        .iter()
+        .any(|component| component.id == component_id)
+    {
+        eyre::bail!("Component '{}/{}' already exists.", args.id, component_id);
     }
     if args.scope.is_empty() {
         eyre::bail!("At least one --scope is required.");
@@ -191,14 +230,18 @@ fn add_dependency(
     {
         eyre::bail!("Generated artifact ID '{artifact_id}' already exists.");
     }
+    let evidence = LockedComponentEvidence {
+        hash,
+        cache_path: portable_cache_path,
+        artifact_id,
+    };
     append_lock_entries(
         &mut inventory,
         args,
+        component_id,
         &coordinate,
         &resolved,
-        hash,
-        portable_cache_path,
-        artifact_id,
+        evidence,
     );
     let output = inventory.lockfile.to_canonical_json()?;
     write_lockfile_atomically(
@@ -208,6 +251,7 @@ fn add_dependency(
     )?;
     Ok(DependencyAddReport {
         dependency_id: args.id.clone(),
+        component_id: component_id.to_owned(),
         coordinate: coordinate.canonical,
         repository_id: resolved.repository_id,
         hash,
@@ -217,11 +261,10 @@ fn add_dependency(
 fn append_lock_entries(
     inventory: &mut DependencyInventory,
     args: &DependencyAddArgs,
+    component_id: &str,
     coordinate: &MavenCoordinate,
     resolved: &ResolvedMavenArtifact,
-    hash: ContentHash,
-    portable_cache_path: PathBuf,
-    artifact_id: String,
+    evidence: LockedComponentEvidence,
 ) {
     let scopes: Vec<_> = args
         .scope
@@ -231,47 +274,47 @@ fn append_lock_entries(
         .into_iter()
         .collect();
     let purposes = purposes_for_scopes(&scopes);
-    inventory.lockfile.dependencies.push(DependencyV3 {
-        id: args.id.clone(),
-        kind: DependencyKindV3::Mod,
-        role: DependencyRoleV3::Integration,
-        display_name: args.display_name.clone(),
-        project_url: args.project_url.clone(),
-        notes: args.notes.clone(),
-        components: vec![DependencyComponentV3 {
-            id: "main".to_owned(),
-            declaration: ComponentDeclarationV3 {
-                acquisition: ComponentAcquisitionV3::Maven(MavenAcquisitionV3 {
-                    requested_coordinate: coordinate.canonical.clone(),
-                    repository_id: resolved.repository_id.clone(),
-                }),
-                scopes,
-                artifact_treatment: args
-                    .artifact_treatment
-                    .unwrap_or(ArtifactTreatmentV3::LoaderManagedMod),
-                data_run_policy: DataRunPolicyV3::Exclude,
-            },
-            derived_checks: ComponentDerivedChecksV3 {
-                artifact_id: artifact_id.clone(),
-                resolved_coordinate: Some(coordinate.canonical.clone()),
-                expected_hash: hash,
-                cache_path: portable_cache_path.clone(),
-            },
-            source_providers: Vec::new(),
-        }],
-    });
+    let component = DependencyComponentV3 {
+        id: component_id.to_owned(),
+        declaration: ComponentDeclarationV3 {
+            acquisition: ComponentAcquisitionV3::Maven(MavenAcquisitionV3 {
+                requested_coordinate: coordinate.canonical.clone(),
+                repository_id: resolved.repository_id.clone(),
+            }),
+            scopes,
+            artifact_treatment: args
+                .artifact_treatment
+                .unwrap_or(ArtifactTreatmentV3::LoaderManagedMod),
+            data_run_policy: DataRunPolicyV3::Exclude,
+        },
+        derived_checks: ComponentDerivedChecksV3 {
+            artifact_id: evidence.artifact_id.clone(),
+            resolved_coordinate: Some(coordinate.canonical.clone()),
+            expected_hash: evidence.hash,
+            cache_path: evidence.cache_path.clone(),
+        },
+        source_providers: Vec::new(),
+    };
+    inventory
+        .lockfile
+        .dependencies
+        .iter_mut()
+        .find(|dependency| dependency.id == args.id)
+        .expect("component mutation validates dependency")
+        .components
+        .push(component);
     inventory.lockfile.artifacts.push(ArtifactV3 {
-        id: artifact_id,
+        id: evidence.artifact_id,
         owner: Some(ArtifactOwnerV3 {
             dependency_id: args.id.clone(),
-            component_id: "main".to_owned(),
+            component_id: component_id.to_owned(),
         }),
         purposes,
         coordinate: Some(coordinate.canonical.clone()),
         repository_id: Some(resolved.repository_id.clone()),
         url: Some(resolved.url.clone()),
-        hash,
-        cache_path: portable_cache_path,
+        hash: evidence.hash,
+        cache_path: evidence.cache_path,
         provenance: ArtifactProvenanceV3::RemoteMaven,
         weak: None,
     });
@@ -353,6 +396,19 @@ fn validate_dependency_id(id: &str) -> eyre::Result<()> {
     {
         eyre::bail!(
             "Dependency ID '{id}' must contain only lowercase ASCII letters, digits, and hyphens."
+        );
+    }
+    Ok(())
+}
+
+fn validate_component_id(id: &str) -> eyre::Result<()> {
+    if id.is_empty()
+        || !id
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+    {
+        eyre::bail!(
+            "Component ID '{id}' must contain only lowercase ASCII letters, digits, and hyphens."
         );
     }
     Ok(())
