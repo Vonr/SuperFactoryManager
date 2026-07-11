@@ -2,6 +2,7 @@ use super::DependencyAddArgs;
 use super::DependencyArtifactArgs;
 use super::DependencyListArgs;
 use super::DependencyMigrateArgs;
+use super::DependencyRemoveArgs;
 use super::DependencyShowArgs;
 use crate::cancellation::CancellationToken;
 use crate::paths::CacheHome;
@@ -35,6 +36,8 @@ pub enum DependencyCommand {
     List(DependencyListArgs),
     /// Validate or migrate a legacy dependency lockfile to schema v3.
     Migrate(DependencyMigrateArgs),
+    /// Remove a non-platform dependency or component.
+    Remove(DependencyRemoveArgs),
     /// Show one logical dependency and its components.
     Show(DependencyShowArgs),
 }
@@ -53,6 +56,7 @@ impl DependencyCommand {
             Self::Artifact(args) => args.invoke(&cancellation_token, cache_home),
             Self::List(args) => args.invoke(cancellation_token, cache_home),
             Self::Migrate(args) => args.invoke(cancellation_token),
+            Self::Remove(args) => args.invoke(&cancellation_token, cache_home),
             Self::Show(args) => args.invoke(cancellation_token, cache_home),
         }
     }

@@ -968,6 +968,28 @@ mod tests {
     }
 
     #[test]
+    fn parses_dependency_remove_with_component_target() {
+        let cli = figue::from_slice::<Cli>(&[
+            "dependency",
+            "remove",
+            "applied-energistics-2/api",
+            "--branch",
+            "1.19.2",
+        ])
+        .into_result()
+        .expect("dependency remove should parse")
+        .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Remove(args),
+        }) = cli.command
+        else {
+            panic!("expected dependency remove command");
+        };
+        assert_eq!(args.target, "applied-energistics-2/api");
+        assert_eq!(args.branch.as_ref(), "1.19.2");
+    }
+
+    #[test]
     fn branch_is_required_for_commands_that_accept_branch() {
         let commands = [
             &["run", "compile"][..],
