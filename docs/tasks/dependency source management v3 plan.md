@@ -712,9 +712,9 @@ sfm-propagate-changes.exe dependency artifact accept <dependency[/component]> --
 
 **Completion criteria:** Existing acceptance tests pass through the new command and help text cannot confuse declaration creation with hash acceptance.
 
-### [ ] 4.4 Implement explicit dependency refresh
+### [x] 4.4 Implement explicit dependency refresh
 
-**Completion notes:** _Not started. Record refresh scope and network behavior here._
+**Completion notes:** Completed 2026-07-11. Added `dependency refresh [dependency[/component]] --branch <branch>`. Omitting the target deterministically selects all refreshable remote artifacts; dependency and component targets scope the operation. Selected Maven, CurseForge/CurseMaven, and HTTP artifacts are reacquired only by this explicit command from their locked URLs, written beneath the injected cache, rehashed with BLAKE3, and propagated to every component derived check that references the artifact. Duplicate shared artifact references are fetched once. Weak acceptance is cleared after exact bytes are refreshed. Toolchain-generated/source-build-only selections with no refreshable remote artifacts fail explicitly rather than being silently skipped for targeted refresh. Current mutation commands require exact versions, so no dynamic Maven version is accepted or advanced implicitly; future deliberate dynamic-version support must resolve only through this refresh boundary. The command uses canonical, concurrency-checked atomic v3 writing. List/show remain read-only and future source acquire/search retain the no-lockfile-mutation requirement. Parser tests cover all and targeted syntax; an isolated-cache fixture proves targeted CC:Tweaked refresh updates only its artifact/checks while preserving unrelated hashes. The full quality gate passes 197 tests.
 
 **Command:**
 

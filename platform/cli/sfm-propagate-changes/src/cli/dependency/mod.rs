@@ -7,6 +7,7 @@ mod dependency_component_cli;
 mod dependency_context;
 mod dependency_list_cli;
 mod dependency_migrate_cli;
+mod dependency_refresh_cli;
 mod dependency_remove_cli;
 mod dependency_show_cli;
 
@@ -21,5 +22,6 @@ pub use dependency_component_cli::DependencyComponentArgs;
 pub use dependency_component_cli::DependencyComponentCommand;
 pub use dependency_list_cli::DependencyListArgs;
 pub use dependency_migrate_cli::DependencyMigrateArgs;
+pub use dependency_refresh_cli::DependencyRefreshArgs;
 pub use dependency_remove_cli::DependencyRemoveArgs;
 pub use dependency_show_cli::DependencyShowArgs;

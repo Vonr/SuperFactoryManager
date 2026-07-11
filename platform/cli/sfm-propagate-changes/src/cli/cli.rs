@@ -1032,6 +1032,40 @@ mod tests {
     }
 
     #[test]
+    fn parses_dependency_refresh_all_and_targeted() {
+        let all = figue::from_slice::<Cli>(&["dependency", "refresh", "--branch", "1.19.2"])
+            .into_result()
+            .expect("dependency refresh all should parse")
+            .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Refresh(args),
+        }) = all.command
+        else {
+            panic!("expected dependency refresh command");
+        };
+        assert_eq!(args.target, None);
+
+        let targeted = figue::from_slice::<Cli>(&[
+            "dependency",
+            "refresh",
+            "cc-tweaked/main",
+            "--branch",
+            "1.19.2",
+        ])
+        .into_result()
+        .expect("targeted dependency refresh should parse")
+        .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Refresh(args),
+        }) = targeted.command
+        else {
+            panic!("expected targeted dependency refresh command");
+        };
+        assert_eq!(args.target.as_deref(), Some("cc-tweaked/main"));
+        assert_eq!(args.branch.as_ref(), "1.19.2");
+    }
+
+    #[test]
     fn branch_is_required_for_commands_that_accept_branch() {
         let commands = [
             &["run", "compile"][..],

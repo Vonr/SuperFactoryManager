@@ -369,7 +369,7 @@ fn repository_candidates<'a>(
         .collect())
 }
 
-fn write_cache_file_atomically(path: &Path, bytes: &[u8]) -> eyre::Result<()> {
+pub(super) fn write_cache_file_atomically(path: &Path, bytes: &[u8]) -> eyre::Result<()> {
     let parent = path
         .parent()
         .ok_or_else(|| eyre::eyre!("Artifact cache path has no parent: {}", path.display()))?;

@@ -3,6 +3,7 @@ use super::DependencyArtifactArgs;
 use super::DependencyComponentArgs;
 use super::DependencyListArgs;
 use super::DependencyMigrateArgs;
+use super::DependencyRefreshArgs;
 use super::DependencyRemoveArgs;
 use super::DependencyShowArgs;
 use crate::cancellation::CancellationToken;
@@ -41,6 +42,8 @@ pub enum DependencyCommand {
     Migrate(DependencyMigrateArgs),
     /// Remove a non-platform dependency or component.
     Remove(DependencyRemoveArgs),
+    /// Explicitly reacquire remote dependency artifacts and update derived checks.
+    Refresh(DependencyRefreshArgs),
     /// Show one logical dependency and its components.
     Show(DependencyShowArgs),
 }
@@ -61,6 +64,7 @@ impl DependencyCommand {
             Self::List(args) => args.invoke(cancellation_token, cache_home),
             Self::Migrate(args) => args.invoke(cancellation_token),
             Self::Remove(args) => args.invoke(&cancellation_token, cache_home),
+            Self::Refresh(args) => args.invoke(&cancellation_token, cache_home),
             Self::Show(args) => args.invoke(cancellation_token, cache_home),
         }
     }
