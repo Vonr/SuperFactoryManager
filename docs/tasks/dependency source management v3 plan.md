@@ -692,11 +692,11 @@ sfm-propagate-changes.exe dependency add cc-tweaked --branch 1.19.2 `
 
 **Completion criteria:** Fixtures cover adding/removing an AE2 API component and a Mekanism API component without damaging their main components.
 
-### [ ] 4.3 Rename the current artifact-byte acceptance behavior
+### [x] 4.3 Rename the current artifact-byte acceptance behavior
 
-**Completion notes:** _Not started. Record the final command name and migration of tests here._
+**Completion notes:** Completed 2026-07-11. Replaced the v2-oriented meaning of `dependency add` with `dependency artifact accept <dependency[/component]> --branch <branch>`. Acceptance now targets schema v3 logical IDs, hashes bytes from the component's locked portable cache path, updates the referenced artifact plus every component-derived expected hash, preserves optional weak Forge/NeoForge metadata validation, canonicalizes v3 JSON, and uses the shared concurrency-checked atomic lockfile writer. `DependencyArgs` resolves `CacheHome` once at the command boundary and passes it through artifact/list/show operations; unit tests inject a temporary `CacheHome` and prove acceptance reads controlled bytes only from that cache. Removed `dependency_add_cli.rs`, `dependency_add_command.rs`, `dependency_add_options.rs`, and the old v2 engine entry point. Parser coverage proves the new route parses and the old `dependency add <coordinate>` route is rejected. `cargo test --lib` passes 186 tests and strict all-feature Clippy passes.
 
-**Current implementation:** `src/cli/dependency/dependency_add_cli.rs`
+**Implementation:** `src/cli/dependency/dependency_artifact_accept_cli.rs`
 
 **Target command:**
 

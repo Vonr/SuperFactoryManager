@@ -19,6 +19,7 @@ pub mod source_audit;
 pub mod state;
 pub mod terminal_output;
 pub mod toolchain_lockfile_schema;
+pub(crate) mod toolchain_lockfile_write;
 pub mod worktree;
 
 #[cfg(feature = "tracy_memory")]

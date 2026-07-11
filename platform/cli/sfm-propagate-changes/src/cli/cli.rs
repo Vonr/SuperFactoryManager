@@ -891,6 +891,42 @@ mod tests {
     }
 
     #[test]
+    fn parses_dependency_artifact_accept_and_rejects_legacy_add() {
+        let cli = figue::from_slice::<Cli>(&[
+            "dependency",
+            "artifact",
+            "accept",
+            "cc-tweaked/main",
+            "--branch",
+            "1.19.2",
+        ])
+        .into_result()
+        .expect("dependency artifact accept should parse")
+        .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Artifact(artifact),
+        }) = cli.command
+        else {
+            panic!("expected dependency artifact command");
+        };
+        let crate::cli::dependency::DependencyArtifactCommand::Accept(args) = artifact.command;
+        assert_eq!(args.target, "cc-tweaked/main");
+        assert_eq!(args.branch.as_ref(), "1.19.2");
+
+        assert!(
+            figue::from_slice::<Cli>(&[
+                "dependency",
+                "add",
+                "curse.maven:cc-tweaked-282001:4433584",
+                "--branch",
+                "1.19.2",
+            ])
+            .into_result()
+            .is_err()
+        );
+    }
+
+    #[test]
     fn branch_is_required_for_commands_that_accept_branch() {
         let commands = [
             &["run", "compile"][..],

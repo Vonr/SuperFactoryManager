@@ -20,6 +20,7 @@ pub(crate) struct DependencyInventory {
     pub(crate) target: WorktreeTarget,
     pub(crate) lockfile_path: PathBuf,
     pub(crate) cache_home: CacheHome,
+    pub(crate) original_input: String,
     pub(crate) lockfile: ArtifactLockfileV3,
 }
 
@@ -39,6 +40,7 @@ impl DependencyInventory {
             target,
             lockfile_path,
             cache_home,
+            original_input: input,
             lockfile,
         })
     }
@@ -334,6 +336,7 @@ mod tests {
             },
             lockfile_path: PathBuf::from("fixture/sfm-toolchain.lock.json"),
             cache_home,
+            original_input: input.to_owned(),
             lockfile: read_current(input).expect("v3 fixture"),
         }
     }

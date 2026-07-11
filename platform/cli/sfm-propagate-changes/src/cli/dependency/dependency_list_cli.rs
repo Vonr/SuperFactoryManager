@@ -186,6 +186,7 @@ mod tests {
             },
             lockfile_path: PathBuf::from("fixture/sfm-toolchain.lock.json"),
             cache_home: CacheHome(PathBuf::from("fixture/empty-cache")),
+            original_input: input.to_owned(),
             lockfile: read_current(input).expect("v3 fixture"),
         }
     }
