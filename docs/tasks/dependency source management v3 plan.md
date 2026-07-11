@@ -423,9 +423,9 @@ passes from `platform/cli/sfm-propagate-changes` before schema v3 work begins.
 
 ## Phase 2: Define and implement lockfile schema v3
 
-### [~] 2.1 Finalize the v3 declaration and resolution model
+### [x] 2.1 Finalize the v3 declaration and resolution model
 
-**Completion notes:** In progress as of 2026-07-11. Introduced `ENGINE_SCHEMA_VERSION = 2` and moved all legacy engine generation/tests to that constant while leaving the schema layer's latest-version constant independently evolvable. This prevents the v3 introduction from serializing the existing v2 engine model with a false schema version. The strict v3 declaration/resolution types and final field names remain to be completed.
+**Completion notes:** Completed 2026-07-11. Introduced `ENGINE_SCHEMA_VERSION = 2` so the legacy engine cannot serialize its v2 model with a false version while the schema layer advances independently. The strict v3 model uses logical dependencies with one or more components, semantic scopes, explicit artifact treatment and data-run policy, and matched acquisition/source-provider variants. Maintained intent lives under `declaration`; reproducible assertions live under `derived_checks`. Root artifacts retain provenance, hashes, portable cache paths, and weak-validation state. Source declarations identify managed Maven sources, Git revisions, decompilation inputs, or platform pipelines without machine-specific checkout paths.
 
 **Required semantics:**
 
@@ -450,9 +450,9 @@ passes from `platform/cli/sfm-propagate-changes` before schema v3 work begins.
 - No field embeds a machine-specific source checkout path.
 - Required v3 declaration fields are not optional merely to accommodate incomplete legacy data.
 
-### [ ] 2.2 Add the v3 schema module and legacy-version dispatch
+### [x] 2.2 Add the v3 schema module and legacy-version dispatch
 
-**Completion notes:** _Not started. Record schema implementation commits and upgrade behavior here._
+**Completion notes:** Completed 2026-07-11. Added `version/v3.rs`, raised `LATEST_SCHEMA_VERSION` to 3, and added explicit `ToolchainLockfileDocument::V1`, `V2`, and `V3` dispatch. V3 parsing performs strict structural and cross-reference validation. The legacy build engine remains explicitly pinned to v2 and rejects a valid v3 document with a focused diagnostic until the Phase 5 cutover. Schema round-trip and invalid duplicate/mismatched-derived-check tests pass; the full gate passes 163 tests.
 
 **Affected paths:**
 
@@ -476,7 +476,7 @@ passes from `platform/cli/sfm-propagate-changes` before schema v3 work begins.
 
 - V1 and v2 load into explicit legacy inputs suitable for diagnostics/migration.
 - V3 loads into the strict current model.
-- Successful migration serializes schema version 3.
+- A valid v3 document round-trips through the strict current model while the legacy v2 engine rejects it explicitly rather than misinterpreting it.
 - V1/v2-only malformed-field checks remain covered.
 
 ### [ ] 2.3 Add optional legacy migration hints and strict diagnostics
@@ -520,7 +520,7 @@ sfm-propagate-changes.exe dependency migrate --branch 1.19.2
 - Never partially rewrite a v2 file after a failed migration.
 - After all branches migrate, remove production dependence on Gradle parsing while retaining fixtures that prove the old inputs migrate correctly.
 
-**Completion criteria:** Every supported branch can reach a strict v3 lock by iterating on informative diagnostics rather than weakening the v3 schema.
+**Completion criteria:** Every supported branch can reach a strict v3 lock by iterating on informative diagnostics rather than weakening the v3 schema. Successful migration serializes schema version 3.
 
 ### [ ] 2.5 Implement deterministic v3 writing and declaration preservation
 
