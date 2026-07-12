@@ -983,7 +983,7 @@ $sfm-cache/sources/
 
 ### [ ] 7.4 Implement Maven source-payload acquisition
 
-**Completion notes:** _Not started. Record classifier discovery rules and override behavior here._
+**Completion notes:** Core resolution and acquisition are implemented. `source_maven` derives `sources` for an unclassified exact coordinate and `<classifier>-sources` for a classified coordinate, always as a JAR; `dependency source configure --maven-coordinate` permits an exact override. Configuration uses the component's locked repository, the shared injectable HTTP fetcher, BLAKE3 hashing, `SourceCacheLayout`, an artifact lock, atomic payload writing, and the hardened extractor. Declared roots must be normalized relative paths that exist in the extracted payload. Locked acquisition validates URL/hash/root evidence, is idempotent, and never mutates the lockfile or build artifact inventory. CC:Tweaked's published source JAR is now locked and acquired at `org.squiddev:cc-tweaked-1.19.2:1.101.3:sources`, hash `blake3:a72c68f5a37bf67fa8965fc8a1bbf33416223684`, with root `dan200/computercraft`. A second real acquisition preserved lockfile SHA-256 `8D1734049F1E7907DE29A537FF6C388D02E464E303C942D90D97309310FF001E`. This item remains open only until no-fetch source search proves the acquired payload is searchable through the final CLI.
 
 **Work:**
 
@@ -1148,7 +1148,7 @@ The local gitoxide checkout may be newer than the crate used by SFM. Before impl
 
 ### [ ] 9.1 Implement `dependency source configure`
 
-**Completion notes:** _Not started. Record final source option structs and examples here._
+**Completion notes:** Maven configuration is implemented with explicit `--maven-sources` or `--maven-coordinate` and repeatable validated `--root` values. It replaces only the stable `maven-sources` provider on the selected component and writes canonical v3 atomically. Git URL/revision configuration and explicit cross-kind preference editing remain pending Phase 8.
 
 **Git example:**
 
@@ -1171,7 +1171,7 @@ sfm-propagate-changes.exe dependency source configure cc-tweaked --branch 1.19.2
 
 ### [ ] 9.2 Implement `dependency source provider list`
 
-**Completion notes:** _Not started. Record provider IDs, kinds, ordering, and representative output here._
+**Completion notes:** The read-only command tree and Maven path are implemented. Output includes dependency/component, stable ID, typed kind, declaration-order priority, locked status, local status, and resolved searchable roots. `cc-tweaked/main` currently reports `maven-sources | maven-sources | priority=0 | locked=yes | status=acquired`. Remaining work is provider-specific unavailable reasons and final built-in platform/Git/decompile kinds.
 
 **Commands:**
 
@@ -1202,7 +1202,7 @@ sfm-propagate-changes.exe dependency source provider list cc-tweaked --branch 1.
 
 ### [ ] 9.3 Implement `dependency source acquire`
 
-**Completion notes:** _Not started. Record provider selection, progress output, and failure behavior here._
+**Completion notes:** Targeted Maven acquisition is implemented and prints validated searchable roots. Built-in selection uses the typed `DependencySourceProviderSelector` (`any`, `maven-sources`, `git`, `decompile`, or `platform-pipeline`); arbitrary stable IDs use the distinct `--provider-id` option, and combining both is rejected. Tests prove an already validated Maven cache performs no HTTP. Real CC:Tweaked acquisition is idempotent. `--all`, parallel dispatch, and Git/decompile/platform implementations remain pending.
 
 **Commands:**
 

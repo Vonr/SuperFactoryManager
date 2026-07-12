@@ -388,7 +388,27 @@
             "expected_hash": "blake3:e0e6920675c793817b9e063db3854b3c68ed29fd",
             "cache_path": "$sfm-cache\\maven\\org\\squiddev\\cc-tweaked-1.19.2\\1.101.3\\cc-tweaked-1.19.2-1.101.3.jar"
           },
-          "source_providers": []
+          "source_providers": [
+            {
+              "maven-sources": {
+                "id": "maven-sources",
+                "declaration": {
+                  "requested_coordinate": "org.squiddev:cc-tweaked-1.19.2:1.101.3:sources",
+                  "repository_id": "squiddev",
+                  "roots": [
+                    "dan200/computercraft"
+                  ]
+                },
+                "derived_checks": {
+                  "resolved_coordinate": "org.squiddev:cc-tweaked-1.19.2:1.101.3:sources",
+                  "url": "https://squiddev.cc/maven/org/squiddev/cc-tweaked-1.19.2/1.101.3/cc-tweaked-1.19.2-1.101.3-sources.jar",
+                  "hash": "blake3:a72c68f5a37bf67fa8965fc8a1bbf33416223684",
+                  "archive_cache_path": "$sfm-cache/sources\\maven\\org.squiddev-cc-tweaked-1.19.2-1.101.3-sources-fabc8cf87efaf6e3\\a72c68f5a37bf67fa8965fc8a1bbf33416223684\\sources.jar",
+                  "tree_cache_path": "$sfm-cache/sources\\maven\\org.squiddev-cc-tweaked-1.19.2-1.101.3-sources-fabc8cf87efaf6e3\\a72c68f5a37bf67fa8965fc8a1bbf33416223684\\tree"
+                }
+              }
+            }
+          ]
         }
       ]
     },

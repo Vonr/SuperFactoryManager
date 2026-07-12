@@ -220,9 +220,14 @@ mod tests {
         );
         let mut resolved = maintained.clone();
         let cc = component_mut(&mut resolved, "cc-tweaked");
-        let SourceProviderV3::Git(provider) = &mut cc.source_providers[0] else {
-            panic!("expected Git provider");
-        };
+        let provider = cc
+            .source_providers
+            .iter_mut()
+            .find_map(|provider| match provider {
+                SourceProviderV3::Git(provider) => Some(provider),
+                _ => None,
+            })
+            .expect("Git provider");
         provider.declaration.requested_revision = "must-not-replace-declaration".to_owned();
         provider.derived_checks.commit = "new-commit".to_owned();
         provider.derived_checks.tree_cache_path = PathBuf::from("$sfm-cache/sources/git/new");
@@ -231,9 +236,14 @@ mod tests {
             .refresh_derived_state(&resolved)
             .expect("refresh should validate");
         let refreshed_cc = component(&refreshed, "cc-tweaked");
-        let SourceProviderV3::Git(provider) = &refreshed_cc.source_providers[0] else {
-            panic!("expected Git provider");
-        };
+        let provider = refreshed_cc
+            .source_providers
+            .iter()
+            .find_map(|provider| match provider {
+                SourceProviderV3::Git(provider) => Some(provider),
+                _ => None,
+            })
+            .expect("Git provider");
         assert_eq!(provider.declaration.requested_revision, "v1.19.2-1.101.3");
         assert_eq!(provider.derived_checks.commit, "new-commit");
         let ae2 = component(&refreshed, "applied-energistics-2");
@@ -316,7 +326,7 @@ mod tests {
         component_mut(&mut lockfile, "cc-tweaked")
             .source_providers
             .push(SourceProviderV3::MavenSources(MavenSourceProviderV3 {
-                id: "maven-sources".to_owned(),
+                id: "fixture-maven-sources".to_owned(),
                 declaration: MavenSourceDeclarationV3 {
                     requested_coordinate: "org.squiddev:cc-tweaked-1.19.2:1.101.3:sources"
                         .to_owned(),

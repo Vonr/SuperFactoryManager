@@ -259,7 +259,8 @@ mod tests {
         assert!(output.contains("Hash: blake3:"));
         assert!(output.contains("Binary JAR: missing:"));
         assert!(output.contains("Transformed JAR: not tracked by schema v3"));
-        assert!(output.contains("Source strategies: none declared"));
+        assert!(output.contains("maven-sources (maven-sources)"));
+        assert!(output.contains("status: missing"));
     }
 
     #[test]

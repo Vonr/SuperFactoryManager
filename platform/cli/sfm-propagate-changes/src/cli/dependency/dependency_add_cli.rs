@@ -5,6 +5,9 @@ use crate::dependency_inventory::DependencyInventory;
 use crate::jar_build::hash::ContentHash;
 use crate::jar_build::hash::ContentHashAlgorithm;
 use crate::paths::CacheHome;
+pub(super) use crate::payload_fetcher::PayloadFetcher as ArtifactFetcher;
+pub(super) use crate::payload_fetcher::http_fetcher;
+pub(super) use crate::payload_fetcher::write_payload_atomically as write_cache_file_atomically;
 use crate::terminal_output::stdout_line;
 use crate::toolchain_lockfile_schema::version::v3::ArtifactOwnerV3;
 use crate::toolchain_lockfile_schema::version::v3::ArtifactProvenanceV3;
@@ -22,13 +25,9 @@ use crate::toolchain_lockfile_schema::version::v3::DependencyScopeV3;
 use crate::toolchain_lockfile_schema::version::v3::DependencyV3;
 use crate::toolchain_lockfile_schema::version::v3::MavenAcquisitionV3;
 use crate::toolchain_lockfile_write::write_lockfile_atomically;
-use eyre::Context;
 use facet::Facet;
 use figue as args;
-use reqwest::StatusCode;
-use reqwest::blocking::Client;
 use std::collections::BTreeSet;
-use std::path::Path;
 use std::path::PathBuf;
 
 #[derive(Facet, Debug)]
@@ -100,47 +99,6 @@ struct LockedComponentEvidence {
     hash: ContentHash,
     cache_path: PathBuf,
     artifact_id: String,
-}
-
-pub(super) trait ArtifactFetcher {
-    fn fetch(
-        &self,
-        url: &str,
-        cancellation_token: &CancellationToken,
-    ) -> eyre::Result<Option<Vec<u8>>>;
-}
-
-pub(super) struct ReqwestFetcher(Client);
-
-pub(super) fn http_fetcher() -> eyre::Result<ReqwestFetcher> {
-    let client = Client::builder()
-        .user_agent(concat!("sfm-propagate-changes/", env!("CARGO_PKG_VERSION")))
-        .build()
-        .wrap_err("Failed to create Maven HTTP client")?;
-    Ok(ReqwestFetcher(client))
-}
-
-impl ArtifactFetcher for ReqwestFetcher {
-    fn fetch(
-        &self,
-        url: &str,
-        cancellation_token: &CancellationToken,
-    ) -> eyre::Result<Option<Vec<u8>>> {
-        cancellation_token.bail_if_cancelled()?;
-        let response = self
-            .0
-            .get(url)
-            .send()
-            .wrap_err_with(|| format!("Failed to fetch {url}"))?;
-        if response.status() == StatusCode::NOT_FOUND {
-            return Ok(None);
-        }
-        let response = response
-            .error_for_status()
-            .wrap_err_with(|| format!("Maven repository rejected {url}"))?;
-        cancellation_token.bail_if_cancelled()?;
-        Ok(Some(response.bytes()?.to_vec()))
-    }
 }
 
 fn add_dependency(
@@ -367,25 +325,6 @@ fn repository_candidates<'a>(
         .iter()
         .map(|repository| (repository.id.as_str(), repository.url.as_str()))
         .collect())
-}
-
-pub(super) fn write_cache_file_atomically(path: &Path, bytes: &[u8]) -> eyre::Result<()> {
-    let parent = path
-        .parent()
-        .ok_or_else(|| eyre::eyre!("Artifact cache path has no parent: {}", path.display()))?;
-    std::fs::create_dir_all(parent)
-        .wrap_err_with(|| format!("Failed to create {}", parent.display()))?;
-    let mut temporary = tempfile::Builder::new()
-        .prefix(".sfm-artifact.")
-        .suffix(".tmp")
-        .tempfile_in(parent)?;
-    std::io::Write::write_all(&mut temporary, bytes)?;
-    temporary.as_file_mut().sync_all()?;
-    temporary
-        .persist(path)
-        .map_err(|error| error.error)
-        .wrap_err_with(|| format!("Failed to publish {}", path.display()))?;
-    Ok(())
 }
 
 fn validate_dependency_id(id: &str) -> eyre::Result<()> {

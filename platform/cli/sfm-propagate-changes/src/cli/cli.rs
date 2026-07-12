@@ -109,6 +109,8 @@ mod tests {
     use super::Cli;
     use crate::cli::Command;
     use crate::cli::dependency::DependencyCommand;
+    use crate::cli::dependency::DependencySourceCommand;
+    use crate::cli::dependency::DependencySourceProviderCommand;
     use crate::cli::git::GitCommand;
     use crate::cli::gradle::GradleCommand;
     use crate::cli::jar::JarCommand;
@@ -1063,6 +1065,86 @@ mod tests {
         };
         assert_eq!(args.target.as_deref(), Some("cc-tweaked/main"));
         assert_eq!(args.branch.as_ref(), "1.19.2");
+    }
+
+    #[test]
+    fn parses_dependency_source_commands_with_explicit_branch() {
+        let configure = figue::from_slice::<Cli>(&[
+            "dependency",
+            "source",
+            "configure",
+            "cc-tweaked",
+            "--branch",
+            "1.19.2",
+            "--maven-sources",
+            "--root",
+            "dan200/computercraft",
+        ])
+        .into_result()
+        .expect("source configure should parse")
+        .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Source(source),
+        }) = configure.command
+        else {
+            panic!("expected dependency source command");
+        };
+        let DependencySourceCommand::Configure(args) = source.command else {
+            panic!("expected source configure command");
+        };
+        assert!(args.maven_sources);
+        assert_eq!(args.root, ["dan200/computercraft"]);
+
+        let providers = figue::from_slice::<Cli>(&[
+            "dependency",
+            "source",
+            "provider",
+            "list",
+            "cc-tweaked",
+            "--branch",
+            "1.19.2",
+        ])
+        .into_result()
+        .expect("provider list should parse")
+        .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Source(source),
+        }) = providers.command
+        else {
+            panic!("expected dependency source command");
+        };
+        let DependencySourceCommand::Provider(provider) = source.command else {
+            panic!("expected provider command");
+        };
+        let DependencySourceProviderCommand::List(args) = provider.command;
+        assert_eq!(args.target.as_deref(), Some("cc-tweaked"));
+
+        let acquire = figue::from_slice::<Cli>(&[
+            "dependency",
+            "source",
+            "acquire",
+            "cc-tweaked",
+            "--provider",
+            "maven-sources",
+            "--branch",
+            "1.19.2",
+        ])
+        .into_result()
+        .expect("source acquire should parse")
+        .get_silent();
+        let Command::Dependency(crate::cli::dependency::DependencyArgs {
+            command: DependencyCommand::Source(source),
+        }) = acquire.command
+        else {
+            panic!("expected dependency source command");
+        };
+        let DependencySourceCommand::Acquire(args) = source.command else {
+            panic!("expected source acquire command");
+        };
+        assert_eq!(
+            args.provider,
+            Some(crate::cli::dependency::DependencySourceProviderSelector::MavenSources)
+        );
     }
 
     #[test]

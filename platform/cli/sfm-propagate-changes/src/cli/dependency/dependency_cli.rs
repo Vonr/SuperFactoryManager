@@ -6,6 +6,7 @@ use super::DependencyMigrateArgs;
 use super::DependencyRefreshArgs;
 use super::DependencyRemoveArgs;
 use super::DependencyShowArgs;
+use super::DependencySourceArgs;
 use crate::cancellation::CancellationToken;
 use crate::paths::CacheHome;
 use facet::Facet;
@@ -46,6 +47,8 @@ pub enum DependencyCommand {
     Refresh(DependencyRefreshArgs),
     /// Show one logical dependency and its components.
     Show(DependencyShowArgs),
+    /// Configure, inspect, or acquire dependency sources.
+    Source(DependencySourceArgs),
 }
 
 impl DependencyCommand {
@@ -66,6 +69,7 @@ impl DependencyCommand {
             Self::Remove(args) => args.invoke(&cancellation_token, cache_home),
             Self::Refresh(args) => args.invoke(&cancellation_token, cache_home),
             Self::Show(args) => args.invoke(cancellation_token, cache_home),
+            Self::Source(args) => args.invoke(&cancellation_token, cache_home),
         }
     }
 }

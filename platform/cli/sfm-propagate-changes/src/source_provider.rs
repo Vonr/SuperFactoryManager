@@ -94,7 +94,7 @@ impl<'a> SourceProviderView<'a> {
 
     #[must_use]
     pub fn status(self) -> SourceStatus {
-        match self.provider {
+        let materialization = match self.provider {
             SourceProviderV3::MavenSources(provider) => {
                 let archive = self.inventory.locked_file_status(
                     &provider.derived_checks.archive_cache_path,
@@ -125,6 +125,13 @@ impl<'a> SourceProviderView<'a> {
                     SourceStatus::Missing
                 }
             }
+        };
+        if materialization == SourceStatus::Acquired
+            && self.searchable_roots().iter().any(|root| !root.exists())
+        {
+            SourceStatus::Missing
+        } else {
+            materialization
         }
     }
 
@@ -201,7 +208,9 @@ mod tests {
             inventory.local_path(&provider.derived_checks.repository_cache_path),
         )
         .expect("repository cache");
-        std::fs::create_dir_all(view.tree_path()).expect("source tree");
+        for root in view.searchable_roots() {
+            std::fs::create_dir_all(root).expect("searchable root");
+        }
         assert_eq!(view.status(), SourceStatus::Acquired);
     }
 
