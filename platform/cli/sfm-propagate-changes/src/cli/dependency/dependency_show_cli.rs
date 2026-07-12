@@ -7,6 +7,7 @@ use crate::dependency_inventory::resolved_version;
 use crate::dependency_inventory::role_label;
 use crate::dependency_inventory::scope_label;
 use crate::paths::CacheHome;
+use crate::source_provider::SourceProviderView;
 use crate::terminal_output::stdout_line;
 use crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3;
 use crate::toolchain_lockfile_schema::version::v3::ComponentAcquisitionV3;
@@ -112,15 +113,29 @@ fn format_component(inventory: &DependencyInventory, component: &DependencyCompo
         output.push_str("  Source strategies: none declared\n");
     } else {
         output.push_str("  Source strategies:\n");
-        for provider in &component.source_providers {
+        for provider in inventory.source_providers(component) {
             output.push_str(&format_provider(inventory, provider));
         }
     }
     output
 }
 
-fn format_provider(inventory: &DependencyInventory, provider: &SourceProviderV3) -> String {
-    match provider {
+fn format_provider(inventory: &DependencyInventory, provider: SourceProviderView<'_>) -> String {
+    let roots = provider
+        .searchable_roots()
+        .iter()
+        .map(|root| root.display().to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let mut output = format!(
+        "    {} ({})\n      priority: {}\n      status: {}\n      searchable roots: {}\n",
+        provider.id(),
+        provider.kind().label(),
+        provider.priority(),
+        provider.status().label(),
+        roots
+    );
+    let details = match provider.definition() {
         SourceProviderV3::MavenSources(provider) => {
             let archive = inventory.local_path(&provider.derived_checks.archive_cache_path);
             let archive_status = inventory
@@ -130,8 +145,7 @@ fn format_provider(inventory: &DependencyInventory, provider: &SourceProviderV3)
                 )
                 .label();
             format!(
-                "    {} (maven-sources)\n      requested: {}\n      resolved: {}\n      archive: {}: {}\n      tree: {}\n",
-                provider.id,
+                "      requested: {}\n      resolved: {}\n      archive: {}: {}\n      tree: {}\n",
                 provider.declaration.requested_coordinate,
                 provider.derived_checks.resolved_coordinate,
                 archive_status,
@@ -143,8 +157,7 @@ fn format_provider(inventory: &DependencyInventory, provider: &SourceProviderV3)
             )
         }
         SourceProviderV3::Git(provider) => format!(
-            "    {} (git)\n      remote: {}\n      requested revision: {}\n      commit: {}\n      repository cache: {}\n      tree: {}\n",
-            provider.id,
+            "      remote: {}\n      requested revision: {}\n      commit: {}\n      repository cache: {}\n      tree: {}\n",
             provider.declaration.remote_url,
             provider.declaration.requested_revision,
             provider.derived_checks.commit,
@@ -158,8 +171,7 @@ fn format_provider(inventory: &DependencyInventory, provider: &SourceProviderV3)
             )
         ),
         SourceProviderV3::Decompile(provider) => format!(
-            "    {} (decompile)\n      binary artifact: {}\n      decompiler artifact: {}\n      fingerprint: {}\n      tree: {}\n",
-            provider.id,
+            "      binary artifact: {}\n      decompiler artifact: {}\n      fingerprint: {}\n      tree: {}\n",
             provider.derived_checks.binary_artifact_id,
             provider.derived_checks.decompiler_artifact_id,
             provider.derived_checks.fingerprint,
@@ -169,15 +181,16 @@ fn format_provider(inventory: &DependencyInventory, provider: &SourceProviderV3)
             )
         ),
         SourceProviderV3::PlatformPipeline(provider) => format!(
-            "    {} (platform-pipeline)\n      fingerprint: {}\n      tree: {}\n",
-            provider.id,
+            "      fingerprint: {}\n      tree: {}\n",
             provider.derived_checks.fingerprint,
             path_status(
                 &inventory.local_path(&provider.derived_checks.tree_cache_path),
                 true
             )
         ),
-    }
+    };
+    output.push_str(&details);
+    output
 }
 
 fn path_status(path: &Path, directory: bool) -> String {

@@ -917,9 +917,9 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 Keep the loader-authored Minecraft source pipeline and standalone mod decompilation as separate policies. The former must execute the exact locked MCP/NeoForm tool recipe; the latter may use a newer independently locked decompiler selected for source-search quality.
 
-### [ ] 7.1 Define source provider contracts
+### [x] 7.1 Define source provider contracts
 
-**Completion notes:** _Not started. Record trait/enum names and provider precedence here._
+**Completion notes:** Added `source_provider::SourceProviderView`, which binds a schema `SourceProviderV3` declaration to an explicitly injected `DependencyInventory`. The view is the runtime contract for provider ID, typed kind, declaration-order priority, materialization status, tree path, and searchable roots. `DependencyInventory::source_status` and `dependency show` now consume this contract rather than maintaining independent status matches. Provider precedence is stable declaration order, starting at priority zero. A temporary-cache test proves Git provider status and roots use the injected cache rather than global resolution.
 
 **Providers:**
 
@@ -941,9 +941,9 @@ Keep the loader-authored Minecraft source pipeline and standalone mod decompilat
 
 **Completion criteria:** `dependency show` and source commands use the provider contract rather than source-kind conditionals scattered through CLI code.
 
-### [ ] 7.2 Establish a portable source cache layout
+### [x] 7.2 Establish a portable source cache layout
 
-**Completion notes:** _Not started. Record final paths and key algorithms here._
+**Completion notes:** Added the public `source_cache::SourceCacheLayout` path builder. All paths are rooted at portable `$sfm-cache/sources`; human-readable keys are normalized ASCII prefixes plus a 16-character BLAKE3-derived suffix, preventing URLs, revisions, and fingerprints from introducing path components. Maven trees are keyed by coordinate and source payload hash, Git uses one bare-repository path per remote plus revision-specific trees, and decompile/platform trees are keyed by immutable input hashes or fingerprints. Tests prove stability, revision sharing, content addressing, portability, and rejection-by-construction of path traversal in arbitrary fingerprints.
 
 **Proposed layout:**
 
@@ -965,9 +965,9 @@ $sfm-cache/sources/
 
 **Completion criteria:** Cache paths are deterministic across machines and contain no `G:\Programming\Repos` references.
 
-### [ ] 7.3 Harden archive extraction for untrusted mod sources
+### [x] 7.3 Harden archive extraction for untrusted mod sources
 
-**Completion notes:** _Not started. Record security tests and extraction behavior here._
+**Completion notes:** Added `source_archive::extract_zip_atomically` as the managed-source extractor. It streams from a file-backed `ZipArchive`, extracts into a temporary sibling tree, and publishes only after every entry succeeds. It rejects empty, absolute, drive-prefixed, backslash, `.`/`..`, link, and special-file entries; enforces entry-count, per-entry-size, and total-expanded-size limits; and verifies copied lengths. Security tests cover traversal, absolute, drive, and backslash entries and prove a failed archive neither escapes the cache root nor replaces an existing tree. The older Minecraft source-output extractor remains isolated because loader-authored pipeline compatibility is a separate policy.
 
 **Current helper:** `src/jar_build/source_output_filetree.rs`
 

@@ -2,6 +2,7 @@ use crate::branch_targets::BranchQuery;
 use crate::branch_targets::WorktreeTarget;
 use crate::branch_targets::select_single_worktree_target;
 use crate::paths::CacheHome;
+use crate::source_provider::SourceProviderView;
 use crate::toolchain_lockfile_schema::read_current;
 use crate::toolchain_lockfile_schema::version::v3::ArtifactLockfileV3;
 use crate::toolchain_lockfile_schema::version::v3::ArtifactV3;
@@ -11,7 +12,6 @@ use crate::toolchain_lockfile_schema::version::v3::DependencyKindV3;
 use crate::toolchain_lockfile_schema::version::v3::DependencyRoleV3;
 use crate::toolchain_lockfile_schema::version::v3::DependencyScopeV3;
 use crate::toolchain_lockfile_schema::version::v3::DependencyV3;
-use crate::toolchain_lockfile_schema::version::v3::SourceProviderV3;
 use eyre::Context;
 use std::path::Path;
 use std::path::PathBuf;
@@ -106,7 +106,8 @@ impl DependencyInventory {
         let statuses: Vec<_> = component
             .source_providers
             .iter()
-            .map(|provider| self.provider_status(provider))
+            .enumerate()
+            .map(|(priority, provider)| SourceProviderView::new(self, provider, priority).status())
             .collect();
         if statuses.contains(&SourceStatus::Stale) {
             SourceStatus::Stale
@@ -125,45 +126,15 @@ impl DependencyInventory {
         }
     }
 
-    fn provider_status(&self, provider: &SourceProviderV3) -> SourceStatus {
-        match provider {
-            SourceProviderV3::MavenSources(provider) => {
-                let archive = self.locked_file_status(
-                    &provider.derived_checks.archive_cache_path,
-                    provider.derived_checks.hash,
-                );
-                if archive == AcquisitionStatus::Stale {
-                    SourceStatus::Stale
-                } else if archive == AcquisitionStatus::Acquired
-                    && self
-                        .local_path(&provider.derived_checks.tree_cache_path)
-                        .is_dir()
-                {
-                    SourceStatus::Acquired
-                } else {
-                    SourceStatus::Missing
-                }
-            }
-            SourceProviderV3::Git(provider) => {
-                if self
-                    .local_path(&provider.derived_checks.repository_cache_path)
-                    .is_dir()
-                    && self
-                        .local_path(&provider.derived_checks.tree_cache_path)
-                        .is_dir()
-                {
-                    SourceStatus::Acquired
-                } else {
-                    SourceStatus::Missing
-                }
-            }
-            SourceProviderV3::Decompile(provider) => SourceStatus::from_directory(
-                &self.local_path(&provider.derived_checks.tree_cache_path),
-            ),
-            SourceProviderV3::PlatformPipeline(provider) => SourceStatus::from_directory(
-                &self.local_path(&provider.derived_checks.tree_cache_path),
-            ),
-        }
+    pub fn source_providers<'a>(
+        &'a self,
+        component: &'a DependencyComponentV3,
+    ) -> impl Iterator<Item = SourceProviderView<'a>> {
+        component
+            .source_providers
+            .iter()
+            .enumerate()
+            .map(|(priority, provider)| SourceProviderView::new(self, provider, priority))
     }
 }
 
@@ -213,14 +184,6 @@ impl SourceStatus {
             Self::Partial => "partial",
             Self::Missing => "missing",
             Self::Stale => "stale",
-        }
-    }
-
-    fn from_directory(path: &Path) -> Self {
-        if path.is_dir() {
-            Self::Acquired
-        } else {
-            Self::Missing
         }
     }
 }
