@@ -1223,7 +1223,6 @@ impl ParsedDependency {
             == crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::LoaderManagedMod
     }
 }
-
 fn parse_dependency_script(
     path: &Path,
     properties: &BTreeMap<String, String>,
