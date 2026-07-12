@@ -4,7 +4,7 @@
 
 **Primary implementation branch:** `1.19.2`
 
-**Last updated:** 2026-07-09
+**Last updated:** 2026-07-12
 
 **Primary implementation root:** `D:\Repos\Minecraft\SFM\repos2\1.19.2`
 
@@ -18,6 +18,22 @@ Each work item carries its status in its heading. Update the heading and the com
 - `[!]` Blocked
 
 A phase is complete only when every work item in that phase is marked `[x]`. Do not add a detached work log at the end of this document. Record commit IDs, implementation decisions, validation results, and follow-up notes directly under the relevant work item.
+
+## Resume checkpoint: 2026-07-12
+
+The `1.19.2` worktree is clean at commit `0c801e71a` (`feat(cli): manage Maven dependency sources`). The immediately preceding source-foundation commit is `06b01de2c`; the Gradle v3 consumer is `6c5000b68`. The interrupted attempt to begin `dependency source search` did not modify the staging workspace or repository, so there is no partial search implementation to recover.
+
+Verified state at this checkpoint:
+
+- `check-all.ps1` passes formatting, Clippy with `-D warnings`, build, and all 207 tests.
+- `dependency migrate --branch 1.19.2 --check` reports canonical schema v3.
+- CC:Tweaked Maven sources are locked at `org.squiddev:cc-tweaked-1.19.2:1.101.3:sources`, hash `blake3:a72c68f5a37bf67fa8965fc8a1bbf33416223684`, and validated root `dan200/computercraft`.
+- `dependency source provider list cc-tweaked --branch 1.19.2` reports the acquired provider, and repeated `dependency source acquire cc-tweaked --provider maven-sources --branch 1.19.2` performs no HTTP in the unit fixture and leaves the real lockfile byte-identical.
+- The source archive is not present in the build artifact inventory or Gradle classpaths.
+
+Recommended next implementation step: complete 9.4 and 9.6 together by adding `dependency_source_search_cli.rs`. Build a read-only preflight from `DependencyInventory`/`SourceProviderView`, support repeatable dependency filters and the existing typed `DependencySourceProviderSelector` plus `--provider-id`, warn once with every missing component, stop before ripgrep under `--require-complete`, and run ripgrep only over acquired validated roots. Prefix results with `dependency/component/provider` provenance. Add parser, no-cache-mutation, incomplete-warning, require-complete, match, and no-match tests. Once `IPeripheralProvider` is found in the managed CC:Tweaked tree, mark 7.4 complete and update 9.4/9.6 in place.
+
+After search, return to the source critical path: Phase 7.5 platform providers, Phase 7.6-7.7 decompiler selection/fallback, Phase 8 managed gix repositories, then finish the remaining Phase 9 command cases. Phase 6.1/6.3 remain intentionally partial until cross-branch dialect execution in Phase 12.
 
 ## Purpose
 
@@ -817,7 +833,7 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 ## Phase 6: Make Gradle a schema v3 compatibility consumer
 
-### [ ] 6.1 Inventory and test the Gradle dependency dialects
+### [~] 6.1 Inventory and test the Gradle dependency dialects
 
 **Completion notes:** The consumer now distinguishes ForgeGradle from NeoGradle by the applied `net.neoforged.gradle.userdev` plugin rather than by Minecraft version. The `1.19.2` ForgeGradle path is exercised by real Gradle builds and the projection verification task. The remaining work is to propagate the consumer and exercise the NeoGradle path plus the transitional 1.19.4-1.20.3 branches; that cross-branch acceptance belongs with Phase 12.1/12.5 but remains a completion gate for this item.
 
@@ -860,7 +876,7 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** Gradle obtains all active dependency and repository declarations from schema v3.
 
-### [ ] 6.3 Implement version/loader-specific Gradle adapters
+### [~] 6.3 Implement version/loader-specific Gradle adapters
 
 **Completion notes:** Implemented two small plugin-selected paths in `dependencies-from-lock.gradle`: ForgeGradle uses `minecraft` for the loader and applies `fg.deobf` only to `loader-managed-mod` components; NeoGradle userdev uses `implementation` and never references `fg.deobf`. Shared scope mapping covers compile/runtime, test, game-test, annotation processors, ANTLR code generation, and `jarJar`. Data projection drops excluded mods from runtime/game-test configurations while retaining compile scope as `compileOnly`, which lets SFM's compatibility sources compile without loading those mods during data generation. The remaining completion gate is executing this adapter on each distinct branch dialect in Phase 12.
 
@@ -981,7 +997,7 @@ $sfm-cache/sources/
 
 **Completion criteria:** Tests include malicious ZIP traversal entries and prove no output can escape the cache root.
 
-### [ ] 7.4 Implement Maven source-payload acquisition
+### [~] 7.4 Implement Maven source-payload acquisition
 
 **Completion notes:** Core resolution and acquisition are implemented. `source_maven` derives `sources` for an unclassified exact coordinate and `<classifier>-sources` for a classified coordinate, always as a JAR; `dependency source configure --maven-coordinate` permits an exact override. Configuration uses the component's locked repository, the shared injectable HTTP fetcher, BLAKE3 hashing, `SourceCacheLayout`, an artifact lock, atomic payload writing, and the hardened extractor. Declared roots must be normalized relative paths that exist in the extracted payload. Locked acquisition validates URL/hash/root evidence, is idempotent, and never mutates the lockfile or build artifact inventory. CC:Tweaked's published source JAR is now locked and acquired at `org.squiddev:cc-tweaked-1.19.2:1.101.3:sources`, hash `blake3:a72c68f5a37bf67fa8965fc8a1bbf33416223684`, with root `dan200/computercraft`. A second real acquisition preserved lockfile SHA-256 `8D1734049F1E7907DE29A537FF6C388D02E464E303C942D90D97309310FF001E`. This item remains open only until no-fetch source search proves the acquired payload is searchable through the final CLI.
 
@@ -1146,7 +1162,7 @@ The local gitoxide checkout may be newer than the crate used by SFM. Before impl
 
 ## Phase 9: Implement dependency source commands and full CLI cutover
 
-### [ ] 9.1 Implement `dependency source configure`
+### [~] 9.1 Implement `dependency source configure`
 
 **Completion notes:** Maven configuration is implemented with explicit `--maven-sources` or `--maven-coordinate` and repeatable validated `--root` values. It replaces only the stable `maven-sources` provider on the selected component and writes canonical v3 atomically. Git URL/revision configuration and explicit cross-kind preference editing remain pending Phase 8.
 
@@ -1169,7 +1185,7 @@ sfm-propagate-changes.exe dependency source configure cc-tweaked --branch 1.19.2
 
 **Completion criteria:** CC:Tweaked source intent and exact commit are represented in the lockfile without a separate file.
 
-### [ ] 9.2 Implement `dependency source provider list`
+### [~] 9.2 Implement `dependency source provider list`
 
 **Completion notes:** The read-only command tree and Maven path are implemented. Output includes dependency/component, stable ID, typed kind, declaration-order priority, locked status, local status, and resolved searchable roots. `cc-tweaked/main` currently reports `maven-sources | maven-sources | priority=0 | locked=yes | status=acquired`. Remaining work is provider-specific unavailable reasons and final built-in platform/Git/decompile kinds.
 
@@ -1200,7 +1216,7 @@ sfm-propagate-changes.exe dependency source provider list cc-tweaked --branch 1.
 
 **Completion criteria:** A developer can inspect exactly what `--provider any` would select without causing network or cache writes.
 
-### [ ] 9.3 Implement `dependency source acquire`
+### [~] 9.3 Implement `dependency source acquire`
 
 **Completion notes:** Targeted Maven acquisition is implemented and prints validated searchable roots. Built-in selection uses the typed `DependencySourceProviderSelector` (`any`, `maven-sources`, `git`, `decompile`, or `platform-pipeline`); arbitrary stable IDs use the distinct `--provider-id` option, and combining both is rejected. Tests prove an already validated Maven cache performs no HTTP. Real CC:Tweaked acquisition is idempotent. `--all`, parallel dispatch, and Git/decompile/platform implementations remain pending.
 
