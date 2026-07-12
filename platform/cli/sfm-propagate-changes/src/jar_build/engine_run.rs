@@ -1967,7 +1967,8 @@ fn resolve_test_dependency_classpath(
     let roots = dependencies
         .iter()
         .filter(|dependency| {
-            !dependency.fg_deobf && configurations.contains(&dependency.configuration.as_str())
+            !dependency.loader_managed()
+                && configurations.contains(&dependency.configuration.as_str())
         })
         .map(|dependency| {
             (
@@ -3531,7 +3532,7 @@ fn resolve_run_plain_dependencies(
     for (index, dependency) in dependencies
         .iter()
         .filter(|dependency| {
-            !dependency.fg_deobf
+            !dependency.loader_managed()
                 && configurations.contains(&dependency.configuration.as_str())
                 && !is_api_classifier(&dependency.coordinate)
         })

@@ -619,7 +619,8 @@ fn detects_loader_toolchain_from_versioned_dependencies() {
         configuration: "minecraft".to_string(),
         coordinate: MavenCoordinate::parse("net.minecraftforge:forge:1.19.2-43.4.0")
             .expect("coordinate should parse"),
-        fg_deobf: false,
+        artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude,
     }];
     let forge_plan = resolve_loader_toolchain(&forge, "1.19.2", "43.4.0")
         .expect("forge toolchain should resolve");
@@ -633,7 +634,8 @@ fn detects_loader_toolchain_from_versioned_dependencies() {
         configuration: "minecraft".to_string(),
         coordinate: MavenCoordinate::parse("net.neoforged:forge:1.20.1-47.1.65")
             .expect("coordinate should parse"),
-        fg_deobf: false,
+        artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude,
     }];
     let transitional_plan = resolve_loader_toolchain(&transitional_neoforge, "1.20.1", "47.1.65")
         .expect("transitional neoforge toolchain should resolve");
@@ -650,7 +652,8 @@ fn detects_loader_toolchain_from_versioned_dependencies() {
         configuration: "implementation".to_string(),
         coordinate: MavenCoordinate::parse("net.neoforged:neoforge:20.2.86")
             .expect("coordinate should parse"),
-        fg_deobf: false,
+        artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude,
     }];
     let neogradle_plan = resolve_loader_toolchain(&neogradle, "1.20.2", "20.2.86")
         .expect("neogradle toolchain should resolve");
@@ -675,7 +678,8 @@ fn forge_project_dependency_planning_includes_plain_compile_inputs() {
         configuration: "implementation".to_string(),
         coordinate: MavenCoordinate::parse("mekanism:Mekanism:1.19.2-10.3.8.477:api")
             .expect("coordinate should parse"),
-        fg_deobf: false,
+        artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude,
     };
     assert!(super::should_plan_project_dependency(
         &forge_toolchain,
@@ -686,7 +690,8 @@ fn forge_project_dependency_planning_includes_plain_compile_inputs() {
         configuration: "minecraft".to_string(),
         coordinate: MavenCoordinate::parse("net.minecraftforge:forge:1.19.2-43.4.0")
             .expect("coordinate should parse"),
-        fg_deobf: false,
+        artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude,
     };
     assert!(!super::should_plan_project_dependency(
         &forge_toolchain,
@@ -697,12 +702,56 @@ fn forge_project_dependency_planning_includes_plain_compile_inputs() {
         configuration: "testImplementation".to_string(),
         coordinate: MavenCoordinate::parse("org.junit.jupiter:junit-jupiter-api:5.10.0")
             .expect("coordinate should parse"),
-        fg_deobf: false,
+        artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude,
     };
     assert!(!super::should_plan_project_dependency(
         &forge_toolchain,
         &test_only
     ));
+}
+
+#[test]
+fn v3_dependency_projection_preserves_semantic_treatment_and_scope() {
+    let lockfile = crate::toolchain_lockfile_schema::read_current(include_str!(
+        "../../../../minecraft/sfm-toolchain.lock.json"
+    ))
+    .expect("v3 fixture");
+    let projected = super::project_v3_dependencies(&lockfile).expect("v3 projection");
+
+    let cc: Vec<_> = projected
+        .iter()
+        .filter(|dependency| {
+            dependency.coordinate.to_string()
+                == "org.squiddev:cc-tweaked-1.19.2:1.101.3"
+        })
+        .collect();
+    assert_eq!(cc.len(), 2);
+    assert!(cc.iter().all(|dependency| dependency.loader_managed()));
+    assert!(cc.iter().all(|dependency| {
+        dependency.data_run_policy
+            == crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude
+    }));
+    assert_eq!(
+        cc.iter()
+            .map(|dependency| dependency.configuration.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from(["gametestImplementation", "implementation"])
+    );
+
+    let ae2_api = projected
+        .iter()
+        .find(|dependency| {
+            dependency.coordinate.to_string()
+                == "appeng:appliedenergistics2-forge:12.9.9:api"
+        })
+        .expect("AE2 API projection");
+    assert_eq!(ae2_api.configuration, "compileOnly");
+    assert!(!ae2_api.loader_managed());
+    assert!(projected.iter().any(|dependency| {
+        dependency.configuration == "minecraft"
+            && dependency.coordinate.to_string() == "net.minecraftforge:forge:1.19.2-43.4.0"
+    }));
 }
 
 #[test]

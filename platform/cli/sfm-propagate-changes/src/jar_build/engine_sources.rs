@@ -424,7 +424,7 @@ fn resolve_compile_dependencies(
     for dependency in dependencies
         .iter()
         .filter(|dependency| {
-            !dependency.fg_deobf
+            !dependency.loader_managed()
                 && matches!(
                     dependency.configuration.as_str(),
                     "implementation" | "compileOnly" | "annotationProcessor"

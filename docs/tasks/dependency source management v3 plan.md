@@ -735,7 +735,7 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 
 ### [ ] 5.1 Make the Rust build plan consume v3 dependency intent
 
-**Completion notes:** _Not started. Record planner boundaries and removed parsing dependencies here._
+**Completion notes:** In progress as of 2026-07-12. The primary build-planning dependency inventory and repository list now come from schema v3 rather than the versioned Gradle script. Added a deterministic v3-to-planner scope projection and a read-only v3-to-legacy resolver view so the existing resolver can consume locked coordinates/hashes while its internal model is migrated. The legacy writer detects a strict v3 lockfile and refuses to overwrite it. `cargo run -- jar plan --branch 1.19.2` now succeeds against the checked-in v3 lockfile without changing it. Test, ANTLR, compile helper, and run helper paths still have direct parser calls and must be cut over before this item is complete.
 
 **Affected paths:**
 
@@ -756,7 +756,7 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 
 ### [ ] 5.2 Implement loader-neutral artifact treatment
 
-**Completion notes:** _Not started. Record the final artifact-treatment names, inference rules, and loader adapters here._
+**Completion notes:** In progress as of 2026-07-12. Replaced the parser model's `fg_deobf` boolean with schema v3 `plain`/`loader-managed-mod` treatment. Existing early-Forge paths query semantic treatment through `loader_managed()`. The v3 projection test proves CC:Tweaked remains loader-managed while AE2's API classifier remains plain. NeoGradle adapter verification remains outstanding.
 
 **Work:**
 
@@ -771,7 +771,7 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 
 ### [ ] 5.3 Make mod exclusion the default data-run policy
 
-**Completion notes:** _Not started. Record the policy type and any legitimate opt-ins here._
+**Completion notes:** In progress as of 2026-07-12. V3 data-run policy now survives dependency projection and deduplication. Added semantic `codegen` and `test-annotation-processor` scopes needed to remove the remaining ANTLR/test Gradle declarations. Runtime selection still needs to consume the projected policy directly before this item is complete.
 
 **Work:**
 

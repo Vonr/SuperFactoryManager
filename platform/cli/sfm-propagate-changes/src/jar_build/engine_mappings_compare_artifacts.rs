@@ -1046,6 +1046,17 @@ fn write_artifact_lockfile_with_extra_cache_paths(
     plan: &BuildPlan,
     extra_cache_paths: &[PathBuf],
 ) -> eyre::Result<()> {
+    if std::fs::read_to_string(&plan.lockfile_path)
+        .ok()
+        .and_then(|input| crate::toolchain_lockfile_schema::read_current(&input).ok())
+        .is_some()
+    {
+        tracing::debug!(
+            lockfile = %plan.lockfile_path.display(),
+            "schema v3 lockfile is declaration-owned; legacy build output will not rewrite it"
+        );
+        return Ok(());
+    }
     let lockfile = build_artifact_lockfile(plan, extra_cache_paths)?;
     if let Some(parent) = plan.lockfile_path.parent() {
         fs::create_dir_all(parent)?;
@@ -1598,31 +1609,6 @@ fn required_property<'a>(
         .map(String::as_str)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| eyre::eyre!("Missing required gradle.properties key: {key}"))
-}
-
-fn repositories() -> Vec<Repository> {
-    [
-        ("SquidDev", "https://squiddev.cc/maven"),
-        ("Forge", "https://maven.minecraftforge.net"),
-        ("NeoForged", "https://maven.neoforged.net/releases"),
-        ("Maven Central", "https://repo1.maven.org/maven2"),
-        ("Parchment", "https://maven.parchmentmc.org"),
-        (
-            "Sponge",
-            "https://repo.spongepowered.org/repository/maven-public",
-        ),
-        ("BlameJared", "https://maven.blamejared.com"),
-        ("JEI", "https://dvs1.progwml6.com/files/maven"),
-        ("CurseMaven", "https://www.cursemaven.com"),
-        ("ModMaven", "https://modmaven.dev"),
-        ("Thermal", "https://maven.covers1624.net"),
-    ]
-    .into_iter()
-    .map(|(name, url)| Repository {
-        name: name.to_string(),
-        url: url.to_string(),
-    })
-    .collect()
 }
 
 fn plain_artifact(

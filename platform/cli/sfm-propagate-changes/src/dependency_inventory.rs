@@ -251,11 +251,13 @@ pub(crate) const fn role_label(role: DependencyRoleV3) -> &'static str {
 pub(crate) const fn scope_label(scope: DependencyScopeV3) -> &'static str {
     match scope {
         DependencyScopeV3::AnnotationProcessor => "annotation-processor",
+        DependencyScopeV3::Codegen => "codegen",
         DependencyScopeV3::Compile => "compile",
         DependencyScopeV3::Runtime => "runtime",
         DependencyScopeV3::GametestCompile => "gametest-compile",
         DependencyScopeV3::GametestRuntime => "gametest-runtime",
         DependencyScopeV3::TestCompile => "test-compile",
+        DependencyScopeV3::TestAnnotationProcessor => "test-annotation-processor",
         DependencyScopeV3::TestRuntime => "test-runtime",
         DependencyScopeV3::Bundle => "bundle",
     }

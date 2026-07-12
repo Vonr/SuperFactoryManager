@@ -430,16 +430,16 @@ fn purposes_for_scopes(scopes: &[DependencyScopeV3]) -> Vec<ArtifactPurposeV3> {
     let mut purposes = BTreeSet::new();
     for scope in scopes {
         purposes.insert(match scope {
-            DependencyScopeV3::AnnotationProcessor | DependencyScopeV3::Compile => {
-                ArtifactPurposeV3::Build
-            }
+            DependencyScopeV3::AnnotationProcessor
+            | DependencyScopeV3::Codegen
+            | DependencyScopeV3::Compile => ArtifactPurposeV3::Build,
             DependencyScopeV3::Runtime | DependencyScopeV3::Bundle => ArtifactPurposeV3::Runtime,
             DependencyScopeV3::GametestCompile | DependencyScopeV3::GametestRuntime => {
                 ArtifactPurposeV3::Gametest
             }
-            DependencyScopeV3::TestCompile | DependencyScopeV3::TestRuntime => {
-                ArtifactPurposeV3::Test
-            }
+            DependencyScopeV3::TestCompile
+            | DependencyScopeV3::TestAnnotationProcessor
+            | DependencyScopeV3::TestRuntime => ArtifactPurposeV3::Test,
         });
     }
     purposes.into_iter().collect()

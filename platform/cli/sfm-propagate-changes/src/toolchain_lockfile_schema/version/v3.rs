@@ -134,11 +134,13 @@ pub(crate) enum ToolchainComponentKindV3 {
 #[repr(u8)]
 pub(crate) enum DependencyScopeV3 {
     AnnotationProcessor,
+    Codegen,
     Compile,
     Runtime,
     GametestCompile,
     GametestRuntime,
     TestCompile,
+    TestAnnotationProcessor,
     TestRuntime,
     Bundle,
 }
