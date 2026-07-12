@@ -55,6 +55,39 @@
   ],
   "dependencies": [
     {
+      "id": "antlr",
+      "kind": "tool",
+      "role": "build",
+      "display_name": "ANTLR",
+      "project_url": "https://www.antlr.org",
+      "notes": null,
+      "components": [
+        {
+          "id": "main",
+          "declaration": {
+            "acquisition": {
+              "maven": {
+                "requested_coordinate": "org.antlr:antlr4:4.9.1",
+                "repository_id": "maven-central"
+              }
+            },
+            "scopes": [
+              "codegen"
+            ],
+            "artifact_treatment": "plain",
+            "data_run_policy": "include"
+          },
+          "derived_checks": {
+            "artifact_id": "org-antlr-antlr4-4-9-1-205027ff",
+            "resolved_coordinate": "org.antlr:antlr4:4.9.1",
+            "expected_hash": "blake3:205027ffc02f2c0d7332957510c6d03e26d6fc59",
+            "cache_path": "$sfm-cache\\maven\\org\\antlr\\antlr4\\4.9.1\\antlr4-4.9.1.jar"
+          },
+          "source_providers": []
+        }
+      ]
+    },
+    {
       "id": "applied-energistics-2",
       "kind": "mod",
       "role": "integration",
@@ -784,6 +817,40 @@
       ]
     },
     {
+      "id": "javaparser",
+      "kind": "library",
+      "role": "test",
+      "display_name": "JavaParser Symbol Solver",
+      "project_url": "https://javaparser.org",
+      "notes": null,
+      "components": [
+        {
+          "id": "main",
+          "declaration": {
+            "acquisition": {
+              "maven": {
+                "requested_coordinate": "com.github.javaparser:javaparser-symbol-solver-core:3.26.4",
+                "repository_id": "maven-central"
+              }
+            },
+            "scopes": [
+              "test-compile",
+              "test-runtime"
+            ],
+            "artifact_treatment": "plain",
+            "data_run_policy": "include"
+          },
+          "derived_checks": {
+            "artifact_id": "com-github-javaparser-javaparser-symbol-solver-core-3-26-4-49a73863",
+            "resolved_coordinate": "com.github.javaparser:javaparser-symbol-solver-core:3.26.4",
+            "expected_hash": "blake3:49a738638fe79e947d27d2a39aeb5caf15093a2c",
+            "cache_path": "$sfm-cache\\maven\\com\\github\\javaparser\\javaparser-symbol-solver-core\\3.26.4\\javaparser-symbol-solver-core-3.26.4.jar"
+          },
+          "source_providers": []
+        }
+      ]
+    },
+    {
       "id": "jei",
       "kind": "mod",
       "role": "integration",
@@ -812,6 +879,123 @@
             "resolved_coordinate": "mezz.jei:jei-1.19.2-forge:11.6.0.1018",
             "expected_hash": "blake3:892ba01c5a115716fff8ab08784c4d0fbfda089d",
             "cache_path": "$sfm-cache\\maven\\mezz\\jei\\jei-1.19.2-forge\\11.6.0.1018\\jei-1.19.2-forge-11.6.0.1018.jar"
+          },
+          "source_providers": []
+        }
+      ]
+    },
+    {
+      "id": "jmh",
+      "kind": "library",
+      "role": "test",
+      "display_name": "Java Microbenchmark Harness",
+      "project_url": "https://openjdk.org/projects/code-tools/jmh/",
+      "notes": null,
+      "components": [
+        {
+          "id": "core",
+          "declaration": {
+            "acquisition": {
+              "maven": {
+                "requested_coordinate": "org.openjdk.jmh:jmh-core:1.37",
+                "repository_id": "maven-central"
+              }
+            },
+            "scopes": [
+              "test-compile",
+              "test-runtime"
+            ],
+            "artifact_treatment": "plain",
+            "data_run_policy": "include"
+          },
+          "derived_checks": {
+            "artifact_id": "org-openjdk-jmh-jmh-core-1-37-43f8ac51",
+            "resolved_coordinate": "org.openjdk.jmh:jmh-core:1.37",
+            "expected_hash": "blake3:43f8ac514b4c75554abdc9f76fadfa1f0249ec15",
+            "cache_path": "$sfm-cache\\maven\\org\\openjdk\\jmh\\jmh-core\\1.37\\jmh-core-1.37.jar"
+          },
+          "source_providers": []
+        },
+        {
+          "id": "generator-annprocess",
+          "declaration": {
+            "acquisition": {
+              "maven": {
+                "requested_coordinate": "org.openjdk.jmh:jmh-generator-annprocess:1.37",
+                "repository_id": "maven-central"
+              }
+            },
+            "scopes": [
+              "test-compile",
+              "test-annotation-processor",
+              "test-runtime"
+            ],
+            "artifact_treatment": "plain",
+            "data_run_policy": "include"
+          },
+          "derived_checks": {
+            "artifact_id": "org-openjdk-jmh-jmh-generator-annprocess-1-37-74920027",
+            "resolved_coordinate": "org.openjdk.jmh:jmh-generator-annprocess:1.37",
+            "expected_hash": "blake3:74920027bb3f569af240fc283876568793baa2e8",
+            "cache_path": "$sfm-cache\\maven\\org\\openjdk\\jmh\\jmh-generator-annprocess\\1.37\\jmh-generator-annprocess-1.37.jar"
+          },
+          "source_providers": []
+        },
+        {
+          "id": "generator-bytecode",
+          "declaration": {
+            "acquisition": {
+              "maven": {
+                "requested_coordinate": "org.openjdk.jmh:jmh-generator-bytecode:1.37",
+                "repository_id": "maven-central"
+              }
+            },
+            "scopes": [
+              "test-compile",
+              "test-runtime"
+            ],
+            "artifact_treatment": "plain",
+            "data_run_policy": "include"
+          },
+          "derived_checks": {
+            "artifact_id": "org-openjdk-jmh-jmh-generator-bytecode-1-37-c8a36f0c",
+            "resolved_coordinate": "org.openjdk.jmh:jmh-generator-bytecode:1.37",
+            "expected_hash": "blake3:c8a36f0c8375079fa50f2ce5b66fe9c82bd5dc20",
+            "cache_path": "$sfm-cache\\maven\\org\\openjdk\\jmh\\jmh-generator-bytecode\\1.37\\jmh-generator-bytecode-1.37.jar"
+          },
+          "source_providers": []
+        }
+      ]
+    },
+    {
+      "id": "junit-jupiter",
+      "kind": "library",
+      "role": "test",
+      "display_name": "JUnit Jupiter",
+      "project_url": "https://junit.org/junit5/",
+      "notes": "The standalone JUnit Platform launcher supplies runtime engines.",
+      "components": [
+        {
+          "id": "api",
+          "declaration": {
+            "acquisition": {
+              "maven": {
+                "requested_coordinate": "org.junit.jupiter:junit-jupiter-api:5.8.1",
+                "repository_id": "maven-central"
+              }
+            },
+            "scopes": [
+              "test-compile",
+              "test-runtime"
+            ],
+            "artifact_treatment": "plain",
+            "data_run_policy": "include"
+          },
+          "derived_checks": {
+            "artifact_id": "org-junit-jupiter-junit-jupiter-api-5-8-1-9f0864e5",
+            "resolved_coordinate": "org.junit.jupiter:junit-jupiter-api:5.8.1",
+            "expected_hash": "blake3:9f0864e5a792fa8a5a386e326dcaedabb2cb4daa",
+            "cache_path": "$sfm-cache\\maven\\org\\junit\\jupiter\\junit-jupiter-api\\5.8.1\\junit-jupiter-api-5.8.1.jar"
           },
           "source_providers": []
         }

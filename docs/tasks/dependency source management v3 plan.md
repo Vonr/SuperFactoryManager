@@ -733,9 +733,9 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 
 ## Phase 5: Cut the Rust planner over to schema v3 declarations
 
-### [ ] 5.1 Make the Rust build plan consume v3 dependency intent
+### [x] 5.1 Make the Rust build plan consume v3 dependency intent
 
-**Completion notes:** In progress as of 2026-07-12. The primary build-planning dependency inventory and repository list now come from schema v3 rather than the versioned Gradle script. Added a deterministic v3-to-planner scope projection and a read-only v3-to-legacy resolver view so the existing resolver can consume locked coordinates/hashes while its internal model is migrated. The legacy writer detects a strict v3 lockfile and refuses to overwrite it. `cargo run -- jar plan --branch 1.19.2` now succeeds against the checked-in v3 lockfile without changing it. Test, ANTLR, compile helper, and run helper paths still have direct parser calls and must be cut over before this item is complete.
+**Completion notes:** Completed 2026-07-12. Build planning, compile, runtime, test, game-test, code generation, and packaging selection now project schema v3 declarations into the existing resolver. Repositories come from v3. Added a read-only v3-to-legacy resolver view so locked coordinates, hashes, cache paths, weak checks, and runtime POM closure remain available while resolver internals are incrementally typed. The legacy writer detects strict v3 and cannot overwrite declaration-owned state. Added canonical v3 declarations for ANTLR, JavaParser, JUnit Jupiter, and grouped JMH components by attaching their existing locked artifact evidence. `cargo run -- jar plan --branch 1.19.2` and all Phase 5 behavior commands succeed without lockfile mutation.
 
 **Affected paths:**
 
@@ -754,9 +754,9 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 
 **Completion criteria:** Rust compile and run plans no longer need `gradle/dependencies/<version>/dependencies.gradle` as an input.
 
-### [ ] 5.2 Implement loader-neutral artifact treatment
+### [x] 5.2 Implement loader-neutral artifact treatment
 
-**Completion notes:** In progress as of 2026-07-12. Replaced the parser model's `fg_deobf` boolean with schema v3 `plain`/`loader-managed-mod` treatment. Existing early-Forge paths query semantic treatment through `loader_managed()`. The v3 projection test proves CC:Tweaked remains loader-managed while AE2's API classifier remains plain. NeoGradle adapter verification remains outstanding.
+**Completion notes:** Completed 2026-07-12. Replaced the planner's `fg_deobf` boolean with schema v3 `plain`/`loader-managed-mod` treatment and propagate it into resolved dependency plans. Early Forge and transitional NeoForge-on-ForgeGradle take the mapping/remap path only for loader-managed mods; plain APIs use direct compile inputs and are never remapped. NeoGradle uses its existing normal copied-dependency path rather than Forge remapping. Tests cover all loader-toolchain classifications, CC:Tweaked as loader-managed, AE2 API as plain, and the Forge transform predicate.
 
 **Work:**
 
@@ -769,9 +769,9 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 
 **Completion criteria:** Early Forge loader-managed mod dependencies receive the same transformed classpath behavior as `fg.deobf`, while later NeoGradle dependencies use their loader's normal declaration and plain dependencies are never remapped.
 
-### [ ] 5.3 Make mod exclusion the default data-run policy
+### [x] 5.3 Make mod exclusion the default data-run policy
 
-**Completion notes:** In progress as of 2026-07-12. V3 data-run policy now survives dependency projection and deduplication. Added semantic `codegen` and `test-annotation-processor` scopes needed to remove the remaining ANTLR/test Gradle declarations. Runtime selection still needs to consume the projected policy directly before this item is complete.
+**Completion notes:** Completed 2026-07-12. V3 data-run policy survives projection, deduplication, resolution, and run selection. Data runs admit only compile/runtime/bundle configurations explicitly marked `include`; ordinary client/server/test/game-test runs retain their semantic scope behavior. Mods default to `exclude` in mutation commands, while platform/build/test library declarations can opt in. The old Mouse Tweaks special case is no longer visible to Rust planning. Focused tests cover exclude/include behavior, and the local data workflow passes with all integration mods excluded by policy.
 
 **Work:**
 
@@ -786,9 +786,9 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 - `run data --branch 1.19.2` does not load CC:Tweaked, Mekanism, Mouse Tweaks, or other integration mods by default.
 - Client, server, tests, and game tests still receive their intended dependencies.
 
-### [ ] 5.4 Remove the line-oriented Gradle dependency parser
+### [x] 5.4 Remove the line-oriented Gradle dependency parser
 
-**Completion notes:** _Not started. Record deleted functions/tests and any parser retained for migration-only tooling here._
+**Completion notes:** Completed 2026-07-12. Removed `parse_dependency_script`, dependency-configuration recognition, quote extraction, Gradle property interpolation, and their parser-specific tests. Removed all Rust jar-planner/run/source references to `dependencies.gradle`; graph/state inputs now name `sfm-toolchain.lock.json`. `rg` finds no remaining parser or versioned dependency-script reference under `src/jar_build`.
 
 **Current entry point:** `parse_dependency_script` in `src/jar_build/engine_plan.rs`.
 
@@ -800,9 +800,9 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 
 **Completion criteria:** Changing a versioned `dependencies.gradle` file cannot change a Rust build plan after the cutover.
 
-### [ ] 5.5 Validate Rust build and run parity on 1.19.2
+### [x] 5.5 Validate Rust build and run parity on 1.19.2
 
-**Completion notes:** _Not started. Record timings, artifact counts, and any intentional parity differences here._
+**Completion notes:** Completed 2026-07-12 from the local Cargo source tree. `cargo run -- run compile --branch 1.19.2`, `cargo run -- run test --branch 1.19.2`, `cargo run -- run data --branch 1.19.2`, and `cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_dependency_smoke` all pass against schema v3. Compile and the game-test smoke were rerun after the final plain-vs-loader-managed filter. The complete Rust quality gate passes 198 tests, formatting, strict Clippy, build, and direct-dependency policy.
 
 **Validation:**
 

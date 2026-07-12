@@ -850,6 +850,10 @@ impl Resolver {
 
         Ok(DependencyPlan {
             configuration: configuration.to_string(),
+            artifact_treatment:
+                crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+            data_run_policy:
+                crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Include,
             notation: coordinate.to_string(),
             resolved_notation: resolved.to_string(),
             source,

@@ -286,17 +286,20 @@ fn create_plan_for_target(
             loader_kind = ?loader_toolchain.kind,
         )
         .entered();
-        let dependency_plans = resolver.resolve_dependencies(
-            dependencies
-                .iter()
-                .filter(|dependency| should_plan_project_dependency(&loader_toolchain, dependency))
-                .map(|dependency| {
-                    (
-                        dependency.configuration.clone(),
-                        dependency.coordinate.clone(),
-                    )
-                }),
-        )?;
+        let selected = dependencies
+            .iter()
+            .filter(|dependency| should_plan_project_dependency(&loader_toolchain, dependency))
+            .collect::<Vec<_>>();
+        let mut dependency_plans = resolver.resolve_dependencies(selected.iter().map(|dependency| {
+            (
+                dependency.configuration.clone(),
+                dependency.coordinate.clone(),
+            )
+        }))?;
+        for (plan, dependency) in dependency_plans.iter_mut().zip(selected) {
+            plan.artifact_treatment = dependency.artifact_treatment;
+            plan.data_run_policy = dependency.data_run_policy;
+        }
         if loader_toolchain.kind == LoaderToolchainKind::NeoGradleUserdev {
             let _span = tracing::debug_span!(
                 "plan_resolve_transitive_runtime_dependencies",
@@ -1223,69 +1226,6 @@ impl ParsedDependency {
             == crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::LoaderManagedMod
     }
 }
-fn parse_dependency_script(
-    path: &Path,
-    properties: &BTreeMap<String, String>,
-) -> eyre::Result<Vec<ParsedDependency>> {
-    let content = fs::read_to_string(path)
-        .wrap_err_with(|| format!("Failed to read dependency script: {}", path.display()))?;
-    let mut dependencies = Vec::new();
-
-    for raw_line in content.lines() {
-        let line = raw_line
-            .split("//")
-            .next()
-            .unwrap_or_default()
-            .trim()
-            .trim_end_matches(';')
-            .trim();
-        if line.is_empty() || line == "dependencies {" || line == "}" {
-            continue;
-        }
-
-        if line.starts_with("jarJar(") {
-            let Some(notation) = extract_quoted(line) else {
-                continue;
-            };
-            let notation = interpolate_properties(&notation, properties);
-            dependencies.push(ParsedDependency {
-                configuration: "jarJar".to_string(),
-                coordinate: MavenCoordinate::parse(&notation)?,
-                artifact_treatment:
-                    crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
-                data_run_policy:
-                    crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Include,
-            });
-            continue;
-        }
-
-        let Some((configuration, rest)) = line.split_once(char::is_whitespace) else {
-            continue;
-        };
-        if !is_dependency_configuration(configuration) {
-            continue;
-        }
-        let rest = rest.trim();
-        let fg_deobf = rest.contains("fg.deobf");
-        let Some(notation) = extract_quoted(rest) else {
-            continue;
-        };
-        let notation = interpolate_properties(&notation, properties);
-        dependencies.push(ParsedDependency {
-            configuration: configuration.to_string(),
-            coordinate: MavenCoordinate::parse(&notation)?,
-            artifact_treatment: if fg_deobf {
-                crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::LoaderManagedMod
-            } else {
-                crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain
-            },
-            data_run_policy:
-                crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude,
-        });
-    }
-
-    Ok(dependencies)
-}
 
 fn project_v3_dependencies(
     lockfile: &crate::toolchain_lockfile_schema::version::v3::ArtifactLockfileV3,
@@ -1339,6 +1279,14 @@ fn project_v3_dependencies(
             && left.data_run_policy == right.data_run_policy
     });
     Ok(projected)
+}
+
+fn read_projected_dependencies(lockfile_path: &Path) -> eyre::Result<Vec<ParsedDependency>> {
+    let input = fs::read_to_string(lockfile_path)
+        .wrap_err_with(|| format!("Failed to read {}", lockfile_path.display()))?;
+    let lockfile = crate::toolchain_lockfile_schema::read_current(&input)
+        .wrap_err_with(|| format!("Failed to load schema v3 lockfile {}", lockfile_path.display()))?;
+    project_v3_dependencies(&lockfile)
 }
 
 fn project_v3_artifact_lockfile(
@@ -1631,48 +1579,6 @@ fn strip_xml_cdata(input: &str) -> String {
         .to_string()
 }
 
-fn is_dependency_configuration(configuration: &str) -> bool {
-    matches!(
-        configuration,
-        "minecraft"
-            | "annotationProcessor"
-            | "antlr"
-            | "implementation"
-            | "compileOnly"
-            | "runtimeOnly"
-            | "gametestImplementation"
-            | "gametestCompileOnly"
-            | "gametestRuntimeOnly"
-            | "testImplementation"
-            | "testCompileOnly"
-            | "testRuntimeOnly"
-            | "testAnnotationProcessor"
-    )
-}
-
-fn extract_quoted(input: &str) -> Option<String> {
-    let mut chars = input.char_indices();
-    let (start_index, quote) =
-        chars.find(|(_, character)| *character == '"' || *character == '\'')?;
-    let value_start = start_index + quote.len_utf8();
-    let end_offset = input[value_start..].find(quote)?;
-    Some(input[value_start..value_start + end_offset].to_string())
-}
-
-fn interpolate_properties(input: &str, properties: &BTreeMap<String, String>) -> String {
-    let mut output = input.to_string();
-    let mut aliases = properties.clone();
-    if let Some(minecraft_version) = properties.get("minecraft_version") {
-        aliases.insert("mc_version".to_string(), minecraft_version.clone());
-    }
-
-    for (key, value) in aliases {
-        output = output.replace(&format!("${{{key}}}"), &value);
-    }
-
-    output
-}
-
 fn build_graph(
     minecraft_version: &str,
     rust_output_jar: &Path,
@@ -1690,7 +1596,7 @@ fn build_graph(
             vec![
                 "Maven repositories",
                 VERSION_MANIFEST_URL,
-                "dependencies.gradle",
+                "sfm-toolchain.lock.json",
             ],
             vec!["$sfm-cache/maven", "$sfm-cache/minecraft"],
         ),

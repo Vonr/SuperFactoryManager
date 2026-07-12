@@ -84,14 +84,7 @@ fn resolve_antlr_classpath(
     resolver: &Resolver,
 ) -> eyre::Result<Vec<PathBuf>> {
     context.bail_if_cancelled()?;
-    let dependency_script = context
-        .plan
-        .minecraft_dir
-        .join("gradle")
-        .join("dependencies")
-        .join(context.plan.minecraft_version.as_str())
-        .join("dependencies.gradle");
-    let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
+    let dependencies = read_projected_dependencies(&context.plan.lockfile_path)?;
     context.bail_if_cancelled()?;
     let antlr_version = dependencies
         .iter()
@@ -411,14 +404,7 @@ fn resolve_compile_dependencies(
     resolver: &Resolver,
 ) -> eyre::Result<Vec<PathBuf>> {
     context.bail_if_cancelled()?;
-    let dependency_script = context
-        .plan
-        .minecraft_dir
-        .join("gradle")
-        .join("dependencies")
-        .join(context.plan.minecraft_version.as_str())
-        .join("dependencies.gradle");
-    let dependencies = parse_dependency_script(&dependency_script, &context.plan.properties)?;
+    let dependencies = read_projected_dependencies(&context.plan.lockfile_path)?;
     context.bail_if_cancelled()?;
     let mut artifacts = Vec::new();
     for dependency in dependencies

@@ -1093,6 +1093,7 @@ fn execute_dependency_deobf(context: &ExecutionContext<'_>) -> eyre::Result<()> 
             .dependencies
             .par_iter()
             .enumerate()
+            .filter(|(_, dependency)| requires_forge_dependency_deobf(dependency))
             .map(|(dependency_index, dependency)| {
                 context.bail_if_cancelled()?;
                 let resolver = resolver.clone();
@@ -2042,6 +2043,11 @@ fn execute_project_compile(context: &ExecutionContext<'_>) -> eyre::Result<()> {
         )?;
     };
     Ok(())
+}
+
+fn requires_forge_dependency_deobf(dependency: &DependencyPlan) -> bool {
+    dependency.artifact_treatment
+        == crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::LoaderManagedMod
 }
 
 fn required_main_class_output(classes_dir: &Path) -> PathBuf {

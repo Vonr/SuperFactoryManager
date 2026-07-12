@@ -56,9 +56,7 @@ use super::execute_targets_parallel_with_cancellation;
 use super::extract_client_puppet_failure;
 use super::extract_client_puppet_pass_count;
 use super::extract_failed_gametest_names;
-use super::extract_quoted;
 use super::extract_sfm_game_test_names;
-use super::interpolate_properties;
 use super::is_excluded_source;
 use super::minecraft_library_jars_from_version_json;
 use super::normalize_manifest_bytes;
@@ -171,18 +169,6 @@ fn parses_parchment_date_first_and_mc_first_versions() {
             .expect("mc-first parchment coordinate should parse")
             .to_string(),
         "org.parchmentmc.data:parchment-1.19.3:2023.03.12@zip"
-    );
-}
-
-#[test]
-fn extracts_single_or_double_quoted_notation() {
-    assert_eq!(
-        extract_quoted("fg.deobf('mezz.jei:jei-1.19.2-forge:11.6.0.1018')"),
-        Some("mezz.jei:jei-1.19.2-forge:11.6.0.1018".to_string())
-    );
-    assert_eq!(
-        extract_quoted("antlr \"org.antlr:antlr4:4.9.1\""),
-        Some("org.antlr:antlr4:4.9.1".to_string())
     );
 }
 
@@ -712,6 +698,27 @@ fn forge_project_dependency_planning_includes_plain_compile_inputs() {
 }
 
 #[test]
+fn forge_deobfuscation_only_transforms_loader_managed_mods() {
+    let mut dependency = DependencyPlan {
+        configuration: "implementation".to_owned(),
+        artifact_treatment:
+            crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy:
+            crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Exclude,
+        notation: "example:api:1".to_owned(),
+        resolved_notation: "example:api:1".to_owned(),
+        source: DependencySource::Maven,
+        cache_path: PathBuf::from("api.jar"),
+        url: None,
+        dynamic_version: false,
+    };
+    assert!(!super::requires_forge_dependency_deobf(&dependency));
+    dependency.artifact_treatment =
+        crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::LoaderManagedMod;
+    assert!(super::requires_forge_dependency_deobf(&dependency));
+}
+
+#[test]
 fn v3_dependency_projection_preserves_semantic_treatment_and_scope() {
     let lockfile = crate::toolchain_lockfile_schema::read_current(include_str!(
         "../../../../minecraft/sfm-toolchain.lock.json"
@@ -752,20 +759,6 @@ fn v3_dependency_projection_preserves_semantic_treatment_and_scope() {
         dependency.configuration == "minecraft"
             && dependency.coordinate.to_string() == "net.minecraftforge:forge:1.19.2-43.4.0"
     }));
-}
-
-#[test]
-fn interpolates_gradle_style_properties() {
-    let mut properties = BTreeMap::new();
-    properties.insert("minecraft_version".to_string(), "1.19.2".to_string());
-    properties.insert("neo_version".to_string(), "43.4.0".to_string());
-    assert_eq!(
-        interpolate_properties(
-            "net.minecraftforge:forge:${minecraft_version}-${neo_version}",
-            &properties
-        ),
-        "net.minecraftforge:forge:1.19.2-43.4.0"
-    );
 }
 
 #[test]
@@ -1040,6 +1033,8 @@ fn migrated_common_cache_lockfile_does_not_duplicate_old_cache_entries() {
     plan.artifacts = Vec::new();
     plan.dependencies = vec![DependencyPlan {
         configuration: "implementation".to_string(),
+        artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Include,
         notation: "g:a:1".to_string(),
         resolved_notation: "g:a:1".to_string(),
         source: DependencySource::Maven,
@@ -1873,6 +1868,8 @@ fn facet_json_serializes_plan_without_embedded_lockfile() {
         }),
         dependencies: vec![DependencyPlan {
             configuration: "implementation".to_string(),
+            artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+            data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Include,
             notation: "g:a:1".to_string(),
             resolved_notation: "g:a:1".to_string(),
             source: DependencySource::Maven,
@@ -2013,6 +2010,8 @@ fn artifact_portability_audit_reads_dependency_provenance() {
     plan.artifacts.clear();
     plan.dependencies = vec![DependencyPlan {
         configuration: "implementation".to_string(),
+        artifact_treatment: crate::toolchain_lockfile_schema::version::v3::ArtifactTreatmentV3::Plain,
+        data_run_policy: crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3::Include,
         notation: "example:local-only:1.0.0".to_string(),
         resolved_notation: "example:local-only:1.0.0".to_string(),
         source: DependencySource::Maven,
@@ -2372,6 +2371,32 @@ fn datagen_launch_uses_only_bundled_library_dependency_configurations() {
             .iter()
             .any(|configuration| configuration == &"runtimeOnly")
     );
+}
+
+#[test]
+fn datagen_dependency_selection_requires_explicit_include_policy() {
+    use crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3;
+
+    assert!(!super::dependency_selected_for_run(
+        "implementation",
+        DataRunPolicyV3::Exclude,
+        RunKind::Data
+    ));
+    assert!(super::dependency_selected_for_run(
+        "implementation",
+        DataRunPolicyV3::Include,
+        RunKind::Data
+    ));
+    assert!(!super::dependency_selected_for_run(
+        "testImplementation",
+        DataRunPolicyV3::Include,
+        RunKind::Data
+    ));
+    assert!(super::dependency_selected_for_run(
+        "runtimeOnly",
+        DataRunPolicyV3::Exclude,
+        RunKind::Client
+    ));
 }
 
 #[test]
