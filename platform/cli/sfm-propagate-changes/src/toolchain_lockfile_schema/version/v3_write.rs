@@ -285,6 +285,19 @@ mod tests {
             .expect("AE2 API fixture");
         assert_eq!(
             ae2_api.declaration.artifact_treatment,
+            ArtifactTreatmentV3::LoaderManagedMod
+        );
+        let mekanism_api = lockfile
+            .dependencies
+            .iter()
+            .find(|dependency| dependency.id == "mekanism")
+            .expect("Mekanism fixture")
+            .components
+            .iter()
+            .find(|component| component.id == "api")
+            .expect("Mekanism API fixture");
+        assert_eq!(
+            mekanism_api.declaration.artifact_treatment,
             ArtifactTreatmentV3::Plain
         );
         let minecraft = component(&lockfile, "minecraft");

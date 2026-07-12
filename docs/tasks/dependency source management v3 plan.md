@@ -819,7 +819,15 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 ### [ ] 6.1 Inventory and test the Gradle dependency dialects
 
-**Completion notes:** _Not started. Add the final version/dialect matrix here._
+**Completion notes:** The consumer now distinguishes ForgeGradle from NeoGradle by the applied `net.neoforged.gradle.userdev` plugin rather than by Minecraft version. The `1.19.2` ForgeGradle path is exercised by real Gradle builds and the projection verification task. The remaining work is to propagate the consumer and exercise the NeoGradle path plus the transitional 1.19.4-1.20.3 branches; that cross-branch acceptance belongs with Phase 12.1/12.5 but remains a completion gate for this item.
+
+**Current dialect matrix:**
+
+| Branches | Dialect | Loader declaration | Mod treatment | Status |
+| --- | --- | --- | --- | --- |
+| 1.19.2 | ForgeGradle | `minecraft` | `fg.deobf` for `loader-managed-mod` only | Implemented and tested |
+| 1.19.4-1.20.3 | Transitional Forge/NeoForge | To be classified from applied plugins | Must not assume `fg.deobf` | Inventory/propagation pending |
+| 1.20.4, 1.21.1, 26.1.2 | NeoGradle userdev | `implementation` | Plain Gradle notation | Adapter implemented; branch execution pending |
 
 **Known samples:**
 
@@ -835,11 +843,11 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** Every supported branch maps to a tested dialect and no adapter assumes `fg.deobf` exists universally.
 
-### [ ] 6.2 Add a Groovy lockfile consumer
+### [x] 6.2 Add a Groovy lockfile consumer
 
-**Completion notes:** _Not started. Record the script path and JSON projection here._
+**Completion notes:** Added `platform/minecraft/gradle/dependencies-from-lock.gradle`. It requires schema v3, reads exact `derived_checks.resolved_coordinate` values, maps semantic component scopes, uses remote coordinates, and records an immutable `sfmProjectedDependencies` projection for verification. `repositories.gradle` now reads the same lockfile and adds only repository IDs referenced by Maven or CurseForge acquisitions, including the CurseMaven content restriction.
 
-**Proposed path:** `platform/minecraft/gradle/sfm-toolchain-dependencies.gradle`
+**Implemented path:** `platform/minecraft/gradle/dependencies-from-lock.gradle`
 
 **Work:**
 
@@ -854,7 +862,7 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 ### [ ] 6.3 Implement version/loader-specific Gradle adapters
 
-**Completion notes:** _Not started. Record each adapter and its supported branches here._
+**Completion notes:** Implemented two small plugin-selected paths in `dependencies-from-lock.gradle`: ForgeGradle uses `minecraft` for the loader and applies `fg.deobf` only to `loader-managed-mod` components; NeoGradle userdev uses `implementation` and never references `fg.deobf`. Shared scope mapping covers compile/runtime, test, game-test, annotation processors, ANTLR code generation, and `jarJar`. Data projection drops excluded mods from runtime/game-test configurations while retaining compile scope as `compileOnly`, which lets SFM's compatibility sources compile without loading those mods during data generation. The remaining completion gate is executing this adapter on each distinct branch dialect in Phase 12.
 
 **Required adapter responsibilities:**
 
@@ -867,9 +875,9 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** The lockfile contains semantic intent only, and all raw Gradle syntax is isolated in small adapter functions/scripts.
 
-### [ ] 6.4 Remove handwritten active dependency declarations
+### [x] 6.4 Remove handwritten active dependency declarations
 
-**Completion notes:** _Not started. Record deleted/reduced files and any retained compatibility-only content here._
+**Completion notes:** `gradle/versioned-dependencies.gradle` now applies only `gradle/dependencies-from-lock.gradle`. The historical files under `gradle/dependencies/*/dependencies.gradle` remain as inactive migration references, but they are no longer an active declaration source. The old Mouse Tweaks-only data condition is therefore inactive; schema v3 component policies control the projection.
 
 **Affected paths:** `platform/minecraft/gradle/dependencies/*/dependencies.gradle`
 
@@ -882,9 +890,9 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** Adding a dependency through the Rust CLI is sufficient for both Rust and Gradle toolchains.
 
-### [ ] 6.5 Evaluate Gradle/IDE source attachment
+### [x] 6.5 Evaluate Gradle/IDE source attachment
 
-**Completion notes:** _Not started. Record what Gradle and the IDE can consume without coupling to Rust cache paths here._
+**Completion notes:** Intentionally deferred IDE source attachment. Gradle can perform ordinary Maven classifier lookup from the projected remote coordinates, but `gradle/idea-excludes.gradle` deliberately sets `downloadSources = false` because ForgeGradle source lookups repeatedly contact remote repositories during IDEA sync. Managed Maven and Git source trees remain a CLI concern and are not exposed as fake Gradle artifacts or coupled to `$sfm-cache` paths. Phase 7/9 source acquisition and search are not blocked by this decision.
 
 **Work:**
 
@@ -895,9 +903,9 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** Maven source attachment either works and is enabled intentionally, or is documented as deferred without blocking source management.
 
-### [ ] 6.6 Verify Gradle compatibility against Rust resolution
+### [x] 6.6 Verify Gradle compatibility against Rust resolution
 
-**Completion notes:** _Not started. Record comparison output and accepted differences here._
+**Completion notes:** Both consumers now read direct coordinates and repository IDs from the same canonical schema v3 lockfile. On `1.19.2`, `compileJava`, `test`, and `verifySfmDependencyProjection` pass; the normal projection contains 59 configuration/component entries. `verifySfmDependencyProjection -PsfmDependencyProjectionMode=data` passes with 22 entries and proves excluded mods do not enter runtime or game-test configurations. A real `runData` compiled and all data providers completed with only Minecraft, Forge, and SFM discovered; Gradle then reported a single-use daemon disappearance during shutdown, so the deterministic projection task is the non-flaky data-policy gate. AE2's API classifier is loader-managed because it shares the mapped main module, while Mekanism's independent API component remains plain. The Rust quality gate passes all 198 tests and `dependency migrate --branch 1.19.2 --check` confirms the lockfile is canonical.
 
 **Completion criteria:**
 

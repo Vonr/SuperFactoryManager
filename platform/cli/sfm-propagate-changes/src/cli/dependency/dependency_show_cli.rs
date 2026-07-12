@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn show_preserves_multicomponent_identity() {
         let inventory = fixture();
-        let dependency = inventory.dependency("applied-energistics-2").expect("AE2");
+        let dependency = inventory.dependency("mekanism").expect("Mekanism");
         let output = format_dependency(&inventory, dependency);
 
         assert!(output.contains("Component: api"));

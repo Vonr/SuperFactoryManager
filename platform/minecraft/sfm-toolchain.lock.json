@@ -107,7 +107,7 @@
             "scopes": [
               "compile"
             ],
-            "artifact_treatment": "plain",
+            "artifact_treatment": "loader-managed-mod",
             "data_run_policy": "exclude"
           },
           "derived_checks": {
@@ -996,6 +996,39 @@
             "resolved_coordinate": "org.junit.jupiter:junit-jupiter-api:5.8.1",
             "expected_hash": "blake3:9f0864e5a792fa8a5a386e326dcaedabb2cb4daa",
             "cache_path": "$sfm-cache\\maven\\org\\junit\\jupiter\\junit-jupiter-api\\5.8.1\\junit-jupiter-api-5.8.1.jar"
+          },
+          "source_providers": []
+        }
+      ]
+    },
+    {
+      "id": "junit-jupiter-engine",
+      "kind": "library",
+      "role": "test",
+      "display_name": "JUnit Jupiter Engine",
+      "project_url": "https://junit.org/junit5/",
+      "notes": null,
+      "components": [
+        {
+          "id": "main",
+          "declaration": {
+            "acquisition": {
+              "maven": {
+                "requested_coordinate": "org.junit.jupiter:junit-jupiter-engine:5.8.1",
+                "repository_id": "maven-central"
+              }
+            },
+            "scopes": [
+              "test-runtime"
+            ],
+            "artifact_treatment": "plain",
+            "data_run_policy": "include"
+          },
+          "derived_checks": {
+            "artifact_id": "org-junit-jupiter-junit-jupiter-engine-5-8-1-d59cd0ab",
+            "resolved_coordinate": "org.junit.jupiter:junit-jupiter-engine:5.8.1",
+            "expected_hash": "blake3:d59cd0ab8f831d98e064c731afdf6a3a08574bce",
+            "cache_path": "$sfm-cache\\maven\\org/junit/jupiter\\junit-jupiter-engine\\5.8.1\\junit-jupiter-engine-5.8.1.jar"
           },
           "source_providers": []
         }
@@ -3088,6 +3121,23 @@
       "url": "https://repo1.maven.org/maven2/org/junit/jupiter/junit-jupiter-api/5.8.1/junit-jupiter-api-5.8.1.jar",
       "hash": "blake3:9f0864e5a792fa8a5a386e326dcaedabb2cb4daa",
       "cache_path": "$sfm-cache\\maven\\org\\junit\\jupiter\\junit-jupiter-api\\5.8.1\\junit-jupiter-api-5.8.1.jar",
+      "provenance": "remote-maven",
+      "weak": null
+    },
+    {
+      "id": "org-junit-jupiter-junit-jupiter-engine-5-8-1-d59cd0ab",
+      "owner": {
+        "dependency_id": "junit-jupiter-engine",
+        "component_id": "main"
+      },
+      "purposes": [
+        "test"
+      ],
+      "coordinate": "org.junit.jupiter:junit-jupiter-engine:5.8.1",
+      "repository_id": "maven-central",
+      "url": "https://repo1.maven.org/maven2/org/junit/jupiter/junit-jupiter-engine/5.8.1/junit-jupiter-engine-5.8.1.jar",
+      "hash": "blake3:d59cd0ab8f831d98e064c731afdf6a3a08574bce",
+      "cache_path": "$sfm-cache\\maven\\org/junit/jupiter\\junit-jupiter-engine\\5.8.1\\junit-jupiter-engine-5.8.1.jar",
       "provenance": "remote-maven",
       "weak": null
     },

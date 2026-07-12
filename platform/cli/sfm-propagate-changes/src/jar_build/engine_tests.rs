@@ -746,15 +746,15 @@ fn v3_dependency_projection_preserves_semantic_treatment_and_scope() {
         BTreeSet::from(["gametestImplementation", "implementation"])
     );
 
-    let ae2_api = projected
+    let mekanism_api = projected
         .iter()
         .find(|dependency| {
             dependency.coordinate.to_string()
-                == "appeng:appliedenergistics2-forge:12.9.9:api"
+                == "mekanism:Mekanism:1.19.2-10.3.8.477:api"
         })
-        .expect("AE2 API projection");
-    assert_eq!(ae2_api.configuration, "compileOnly");
-    assert!(!ae2_api.loader_managed());
+        .expect("Mekanism API projection");
+    assert_eq!(mekanism_api.configuration, "implementation");
+    assert!(!mekanism_api.loader_managed());
     assert!(projected.iter().any(|dependency| {
         dependency.configuration == "minecraft"
             && dependency.coordinate.to_string() == "net.minecraftforge:forge:1.19.2-43.4.0"
