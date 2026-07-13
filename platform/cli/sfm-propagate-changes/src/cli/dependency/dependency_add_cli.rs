@@ -55,6 +55,12 @@ pub struct DependencyAddArgs {
     /// Exact `CurseForge` file ID. Requires `--curseforge-project`.
     #[facet(default, args::named)]
     pub curseforge_file: Option<u64>,
+    /// Semantic dependency kind. Defaults to `mod`.
+    #[facet(default, args::named)]
+    pub(crate) kind: Option<DependencyKindV3>,
+    /// Semantic dependency role. Defaults to `integration`.
+    #[facet(default, args::named)]
+    pub(crate) role: Option<DependencyRoleV3>,
     /// `CurseForge` Core API key used only to validate exact project/file metadata.
     #[facet(default, args::named)]
     pub curseforge_api_key: Option<String>,
@@ -185,8 +191,8 @@ fn add_dependency(
     }
     inventory.lockfile.dependencies.push(DependencyV3 {
         id: args.id.clone(),
-        kind: DependencyKindV3::Mod,
-        role: DependencyRoleV3::Integration,
+        kind: args.kind.unwrap_or(DependencyKindV3::Mod),
+        role: args.role.unwrap_or(DependencyRoleV3::Integration),
         display_name: args.display_name.clone(),
         project_url: args.project_url.clone(),
         notes: args.notes.clone(),
@@ -511,8 +517,8 @@ fn append_curseforge_lock_entries(
     };
     inventory.lockfile.dependencies.push(DependencyV3 {
         id: args.id.clone(),
-        kind: DependencyKindV3::Mod,
-        role: DependencyRoleV3::Integration,
+        kind: args.kind.unwrap_or(DependencyKindV3::Mod),
+        role: args.role.unwrap_or(DependencyRoleV3::Integration),
         display_name: args
             .display_name
             .clone()
