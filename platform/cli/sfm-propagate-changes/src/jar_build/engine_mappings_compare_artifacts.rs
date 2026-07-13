@@ -1762,6 +1762,7 @@ fn materialize_source_build(
     commit: &str,
     source_build: &SourceBuildProvenance,
     checkout_dir: &Path,
+    repository_dir: &Path,
 ) -> eyre::Result<()> {
     match source_build.build_system {
         SourceBuildSystem::GradleWrapper => materialize_gradle_wrapper_source_build(
@@ -1770,6 +1771,7 @@ fn materialize_source_build(
             commit,
             source_build,
             checkout_dir,
+            repository_dir,
         ),
     }
 }
@@ -1780,12 +1782,19 @@ fn materialize_gradle_wrapper_source_build(
     commit: &str,
     source_build: &SourceBuildProvenance,
     checkout_dir: &Path,
+    repository_dir: &Path,
 ) -> eyre::Result<()> {
     cancellation_token.bail_if_cancelled()?;
     if source_build.tasks.is_empty() {
         eyre::bail!("Source build for {remote_url}@{commit} has no Gradle tasks");
     }
-    prepare_source_build_checkout(cancellation_token, remote_url, commit, checkout_dir)?;
+    prepare_source_build_checkout(
+        cancellation_token,
+        remote_url,
+        commit,
+        checkout_dir,
+        repository_dir,
+    )?;
     cancellation_token.bail_if_cancelled()?;
     let wrapper = gradle_wrapper_path(checkout_dir)?;
     tracing::info!(
@@ -1817,67 +1826,15 @@ fn prepare_source_build_checkout(
     remote_url: &str,
     commit: &str,
     checkout_dir: &Path,
+    repository_dir: &Path,
 ) -> eyre::Result<()> {
-    cancellation_token.bail_if_cancelled()?;
-    if !checkout_dir.join(".git").is_dir() {
-        if checkout_dir.exists() {
-            eyre::bail!(
-                "Source build checkout path exists but is not a Git checkout: {}",
-                checkout_dir.display()
-            );
-        }
-        if let Some(parent) = checkout_dir.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        let mut clone = Command::new("git");
-        clone
-            .arg("-c")
-            .arg("core.longpaths=true")
-            .arg("clone")
-            .arg("--no-checkout")
-            .arg(remote_url)
-            .arg(checkout_dir);
-        run_source_build_process(cancellation_token, &mut clone, "source-build-git-clone")?;
-    }
-
-    cancellation_token.bail_if_cancelled()?;
-    let mut longpaths = Command::new("git");
-    longpaths
-        .arg("-C")
-        .arg(checkout_dir)
-        .arg("config")
-        .arg("core.longpaths")
-        .arg("true");
-    run_source_build_process(
+    crate::source_git::materialize_source_build_checkout(
+        remote_url,
+        repository_dir,
+        commit,
+        checkout_dir,
         cancellation_token,
-        &mut longpaths,
-        "source-build-git-config-longpaths",
-    )?;
-
-    cancellation_token.bail_if_cancelled()?;
-    let mut fetch = Command::new("git");
-    fetch
-        .arg("-C")
-        .arg(checkout_dir)
-        .arg("fetch")
-        .arg("origin")
-        .arg(commit);
-    run_source_build_process(cancellation_token, &mut fetch, "source-build-git-fetch")?;
-
-    cancellation_token.bail_if_cancelled()?;
-    let mut checkout = Command::new("git");
-    checkout
-        .arg("-C")
-        .arg(checkout_dir)
-        .arg("checkout")
-        .arg("--detach")
-        .arg(commit);
-    run_source_build_process(
-        cancellation_token,
-        &mut checkout,
-        "source-build-git-checkout",
-    )?;
-    Ok(())
+    )
 }
 
 fn gradle_wrapper_path(checkout_dir: &Path) -> eyre::Result<PathBuf> {

@@ -211,7 +211,8 @@ mod tests {
     #[test]
     fn refresh_replaces_checks_but_preserves_declarations() {
         let mut maintained = lockfile();
-        add_git_provider(&mut maintained, "cc-tweaked", "v1.19.2-1.101.3", "old");
+        let provider = git_provider_mut(component_mut(&mut maintained, "cc-tweaked"));
+        provider.declaration.requested_revision = "v1.19.2-1.101.3".to_owned();
         add_git_provider(
             &mut maintained,
             "applied-energistics-2",
@@ -220,14 +221,7 @@ mod tests {
         );
         let mut resolved = maintained.clone();
         let cc = component_mut(&mut resolved, "cc-tweaked");
-        let provider = cc
-            .source_providers
-            .iter_mut()
-            .find_map(|provider| match provider {
-                SourceProviderV3::Git(provider) => Some(provider),
-                _ => None,
-            })
-            .expect("Git provider");
+        let provider = git_provider_mut(cc);
         provider.declaration.requested_revision = "must-not-replace-declaration".to_owned();
         provider.derived_checks.commit = "new-commit".to_owned();
         provider.derived_checks.tree_cache_path = PathBuf::from("$sfm-cache/sources/git/new");
@@ -256,9 +250,11 @@ mod tests {
 
     #[test]
     fn refresh_rejects_missing_declared_provider() {
-        let mut maintained = lockfile();
-        add_git_provider(&mut maintained, "cc-tweaked", "tag", "old");
-        let resolved = lockfile();
+        let maintained = lockfile();
+        let mut resolved = lockfile();
+        component_mut(&mut resolved, "cc-tweaked")
+            .source_providers
+            .retain(|provider| !matches!(provider, SourceProviderV3::Git(_)));
 
         let error = maintained
             .refresh_derived_state(&resolved)
@@ -423,5 +419,16 @@ mod tests {
             .iter_mut()
             .find(|component| component.id == "main")
             .expect("main component fixture")
+    }
+
+    fn git_provider_mut(component: &mut DependencyComponentV3) -> &mut GitSourceProviderV3 {
+        component
+            .source_providers
+            .iter_mut()
+            .find_map(|provider| match provider {
+                SourceProviderV3::Git(provider) => Some(provider),
+                _ => None,
+            })
+            .expect("Git provider")
     }
 }

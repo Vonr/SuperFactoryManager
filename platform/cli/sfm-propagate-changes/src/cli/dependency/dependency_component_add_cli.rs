@@ -50,7 +50,12 @@ impl DependencyComponentAddArgs {
         let add_args = DependencyAddArgs {
             id: self.dependency,
             branch: self.branch,
-            maven: self.maven,
+            maven: Some(self.maven),
+            curseforge_project: None,
+            curseforge_file: None,
+            curseforge_api_key: None,
+            curseforge_token: None,
+            curseforge_op_secret: None,
             scope: self.scope,
             repository: self.repository,
             artifact_treatment: self.artifact_treatment,

@@ -759,6 +759,13 @@ fn v3_dependency_projection_preserves_semantic_treatment_and_scope() {
         dependency.configuration == "minecraft"
             && dependency.coordinate.to_string() == "net.minecraftforge:forge:1.19.2-43.4.0"
     }));
+    assert!(projected.iter().any(|dependency| {
+        dependency.configuration == "antlr"
+            && dependency.coordinate.to_string() == "org.antlr:antlr4:4.9.1"
+    }));
+    assert!(!projected.iter().any(|dependency| {
+        dependency.coordinate.to_string() == "org.vineflower:vineflower:1.12.0"
+    }));
 }
 
 #[test]
@@ -1284,6 +1291,72 @@ fn resolver_cache_hit_waits_for_writer_lock_before_reading() {
 }
 
 #[test]
+fn resolver_reuses_validated_cursemaven_cache_offline() {
+    let test_dir = TestDir::new("resolver-cursemaven-offline-cache");
+    let coordinate = MavenCoordinate::parse("curse.maven:mekanism-268560:4644795")
+        .expect("CurseMaven coordinate should parse");
+    let bytes = b"validated CurseMaven artifact";
+    let hash = ContentHash::from_bytes(bytes, ContentHashAlgorithm::Blake3);
+    let lockfile = ArtifactLockfile {
+        schema_version: crate::toolchain_lockfile_schema::ENGINE_SCHEMA_VERSION,
+        minecraft_version: "1.19.2".to_owned(),
+        maven_cache_dir: PathBuf::from("$sfm-cache/maven"),
+        allow_local_artifact_cache: false,
+        repositories: vec![Repository {
+            name: "cursemaven".to_owned(),
+            url: "http://127.0.0.1:1".to_owned(),
+        }],
+        dependencies: Vec::new(),
+        artifacts: vec![ArtifactLockEntry {
+            coordinate: Some(coordinate.to_string()),
+            source: ArtifactSource::RemoteMaven,
+            repository: Some("cursemaven".to_owned()),
+            url: Some(
+                "https://www.cursemaven.com/curse/maven/mekanism-268560/4644795/mekanism-268560-4644795.jar"
+                    .to_owned(),
+            ),
+            cache_path: PathBuf::from(
+                "$sfm-cache/maven/curse/maven/mekanism-268560/4644795/mekanism-268560-4644795.jar",
+            ),
+            original_path: None,
+            source_relative_path: None,
+            source_git: None,
+            source_build: None,
+            hash,
+            weak: None,
+        }],
+    };
+    let resolver = Resolver::new(
+        test_dir.path.join("maven"),
+        lockfile.repositories.clone(),
+        false,
+        false,
+        Vec::new(),
+        Some(lockfile),
+        None,
+        test_cancellation_token(),
+    )
+    .expect("resolver should build");
+    let cache_path = resolver.cache_path_for(&coordinate);
+    fs::create_dir_all(cache_path.parent().expect("cache parent should exist"))
+        .expect("cache parent should be created");
+    fs::write(&cache_path, bytes).expect("validated cache artifact should be written");
+
+    let artifact = resolver
+        .resolve_artifact(
+            ArtifactId::from("mekanism-main"),
+            &coordinate,
+            ArtifactPurpose::from("runtime"),
+        )
+        .expect("valid cache should resolve without contacting the unavailable repository");
+
+    assert!(!artifact.downloaded);
+    assert_eq!(artifact.provenance.source, ArtifactSource::RemoteMaven);
+    assert_eq!(artifact.repository.as_deref(), Some("cursemaven"));
+    assert_eq!(artifact.sha1, Some(hash));
+}
+
+#[test]
 fn resolver_imports_from_explicit_project_artifact_source() {
     let test_dir = TestDir::new("resolver-explicit-artifact-source");
     let source_root = test_dir.path.join("source-project");
@@ -1533,7 +1606,7 @@ fn resolver_materializes_locked_artifact_from_source_build() {
             .map(|source_git| source_git.root.clone()),
         Some(
             PathBuf::from("$sfm-cache")
-                .join("source-builds")
+                .join("source-builds-gix")
                 .join(checkout_key)
         )
     );
@@ -2070,7 +2143,7 @@ fn artifact_audit_verifies_sfm_cache_lockfile_artifact() {
             source_relative_path: None,
             source_git: None,
             source_build: None,
-            hash: hash,
+            hash,
             weak: None,
         }],
         Vec::new(),
@@ -2137,7 +2210,7 @@ fn artifact_audit_warns_or_fails_for_explicit_sources() {
             source_relative_path: None,
             source_git: None,
             source_build: None,
-            hash: hash,
+            hash,
             weak: None,
         }],
         Vec::new(),
@@ -2239,7 +2312,7 @@ fn compare_report_json_preserves_single_shape_and_wraps_multi_target_reports() {
 }
 
 #[test]
-fn facet_json_parses_upstream_config_shapes() {
+fn facet_json_parses_mojang_version_config_shape() {
     let manifest: MojangVersionManifest = facet_json::from_str(
         r#"{"versions":[{"id":"1.19.2","url":"https://example.test/1.19.2.json"}]}"#,
     )
@@ -2268,7 +2341,10 @@ fn facet_json_parses_upstream_config_shapes() {
         PathBuf::from("D:/sfm-cache/minecraft-toolchain/minecraft/libraries/g/a/1/a.jar")
     );
     assert_eq!(version_json.asset_index.expect("asset index").id, "1.19");
+}
 
+#[test]
+fn facet_json_parses_forge_userdev_config_shapes() {
     let forge: ForgeUserdevConfig = facet_json::from_str(
         r#"{
                 "spec": 1,
@@ -2334,7 +2410,10 @@ fn facet_json_parses_upstream_config_shapes() {
         "net.neoforged.fml.startup.DataClient"
     );
     assert_eq!(RunKind::Data.userdev_names(), &["data", "clientData"]);
+}
 
+#[test]
+fn facet_json_parses_mcp_config_shape() {
     let mcp: McpConfigJson = facet_json::from_str(
             r#"{
                 "data": {"mappings": "config/joined.tsrg", "inject": "config/inject/", "patches": {"joined": "patches/joined/"}},
@@ -2350,7 +2429,10 @@ fn facet_json_parses_upstream_config_shapes() {
         mcp.functions["rename"].version.as_deref(),
         Some("net.minecraftforge:ForgeAutoRenamingTool:0.1.22:all")
     );
+}
 
+#[test]
+fn facet_json_parses_parchment_config_shape() {
     let parchment: ParchmentData = facet_json::from_str(
             r#"{"classes":[{"name":"net/minecraft/Test","methods":[{"name":"run","descriptor":"()V","parameters":[{"index":1,"name":"level"}]}]}]}"#,
         )

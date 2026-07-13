@@ -1247,13 +1247,13 @@ fn project_v3_dependencies(
                         component.id
                     )
                 })?;
+            let mut coordinate = MavenCoordinate::parse(coordinate)?;
             let loader_component = dependency.id == lockfile.platform.loader_dependency;
             let configurations = if loader_component {
                 vec!["minecraft"]
             } else {
-                projected_configurations(&component.declaration.scopes)
+                projected_configurations(&component.declaration.scopes, &coordinate)
             };
-            let mut coordinate = MavenCoordinate::parse(coordinate)?;
             if loader_component {
                 coordinate.classifier = None;
             }
@@ -1378,6 +1378,7 @@ fn project_v3_artifact_lockfile(
 
 fn projected_configurations(
     scopes: &[crate::toolchain_lockfile_schema::version::v3::DependencyScopeV3],
+    coordinate: &MavenCoordinate,
 ) -> Vec<&'static str> {
     use crate::toolchain_lockfile_schema::version::v3::DependencyScopeV3;
 
@@ -1386,7 +1387,10 @@ fn projected_configurations(
     if scopes.contains(&DependencyScopeV3::AnnotationProcessor) {
         configurations.push("annotationProcessor");
     }
-    if scopes.contains(&DependencyScopeV3::Codegen) {
+    if scopes.contains(&DependencyScopeV3::Codegen)
+        && coordinate.group == "org.antlr"
+        && coordinate.artifact == "antlr4"
+    {
         configurations.push("antlr");
     }
     if scopes.contains(&DependencyScopeV3::Bundle) {

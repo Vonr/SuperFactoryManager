@@ -1,6 +1,13 @@
 use super::dependency_context::load_inventory;
 use crate::cancellation::CancellationToken;
 use crate::cli::jar::BranchSelector;
+use crate::curseforge::CurseforgeApiSecret;
+use crate::curseforge::CurseforgeHttpClient;
+use crate::curseforge::CurseforgeModLoader;
+use crate::curseforge::CurseforgeProjectFileId;
+use crate::curseforge::CurseforgeProjectId;
+use crate::curseforge::CurseforgeProjectMetadata;
+use crate::curseforge::file_matches_version_and_loader;
 use crate::dependency_inventory::DependencyInventory;
 use crate::jar_build::hash::ContentHash;
 use crate::jar_build::hash::ContentHashAlgorithm;
@@ -17,6 +24,7 @@ use crate::toolchain_lockfile_schema::version::v3::ArtifactV3;
 use crate::toolchain_lockfile_schema::version::v3::ComponentAcquisitionV3;
 use crate::toolchain_lockfile_schema::version::v3::ComponentDeclarationV3;
 use crate::toolchain_lockfile_schema::version::v3::ComponentDerivedChecksV3;
+use crate::toolchain_lockfile_schema::version::v3::CurseForgeAcquisitionV3;
 use crate::toolchain_lockfile_schema::version::v3::DataRunPolicyV3;
 use crate::toolchain_lockfile_schema::version::v3::DependencyComponentV3;
 use crate::toolchain_lockfile_schema::version::v3::DependencyKindV3;
@@ -39,8 +47,23 @@ pub struct DependencyAddArgs {
     #[facet(args::named)]
     pub branch: BranchSelector,
     /// Exact Maven coordinate (`group:artifact:version[:classifier][@extension]`).
-    #[facet(args::named)]
-    pub maven: String,
+    #[facet(default, args::named)]
+    pub maven: Option<String>,
+    /// Exact `CurseForge` project ID. Requires `--curseforge-file`.
+    #[facet(default, args::named)]
+    pub curseforge_project: Option<u64>,
+    /// Exact `CurseForge` file ID. Requires `--curseforge-project`.
+    #[facet(default, args::named)]
+    pub curseforge_file: Option<u64>,
+    /// `CurseForge` Core API key used only to validate exact project/file metadata.
+    #[facet(default, args::named)]
+    pub curseforge_api_key: Option<String>,
+    /// Legacy `CurseForge` API token fallback; prefer `--curseforge-api-key`.
+    #[facet(default, args::named)]
+    pub curseforge_token: Option<String>,
+    /// 1Password secret reference used when no `CurseForge` API key is configured.
+    #[facet(default, args::named)]
+    pub curseforge_op_secret: Option<String>,
     /// Semantic scope. Repeat for every required scope.
     #[facet(args::named)]
     pub(crate) scope: Vec<DependencyScopeV3>,
@@ -72,7 +95,28 @@ impl DependencyAddArgs {
     ) -> eyre::Result<()> {
         cancellation_token.bail_if_cancelled()?;
         let inventory = load_inventory(self.branch.clone(), cache_home)?;
-        let report = add_dependency(inventory, &self, cancellation_token, &http_fetcher()?)?;
+        let report = match selected_add_source(&self)? {
+            DependencyAddSource::Maven => {
+                add_dependency(inventory, &self, cancellation_token, &http_fetcher()?)?
+            }
+            DependencyAddSource::Curseforge { project, file } => {
+                let (key, _credential_source) = CurseforgeApiSecret::resolve_core(
+                    self.curseforge_api_key.clone(),
+                    self.curseforge_token.clone(),
+                    self.curseforge_op_secret.clone(),
+                )?;
+                let client = CurseforgeHttpClient::new_core_api(&key)?;
+                add_curseforge_dependency(
+                    inventory,
+                    &self,
+                    CurseforgeProjectId(project),
+                    CurseforgeProjectFileId(file),
+                    client.as_ref(),
+                    cancellation_token,
+                    &http_fetcher()?,
+                )?
+            }
+        };
         stdout_line(format!(
             "Added {}/main: {} from {} ({})",
             report.dependency_id, report.coordinate, report.repository_id, report.hash
@@ -99,6 +143,29 @@ struct LockedComponentEvidence {
     hash: ContentHash,
     cache_path: PathBuf,
     artifact_id: String,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum DependencyAddSource {
+    Maven,
+    Curseforge { project: u64, file: u64 },
+}
+
+fn selected_add_source(args: &DependencyAddArgs) -> eyre::Result<DependencyAddSource> {
+    match (
+        args.maven.as_deref(),
+        args.curseforge_project,
+        args.curseforge_file,
+    ) {
+        (Some(_), None, None) => Ok(DependencyAddSource::Maven),
+        (None, Some(project), Some(file)) => Ok(DependencyAddSource::Curseforge { project, file }),
+        (None, None, None) => eyre::bail!(
+            "Specify either --maven or both --curseforge-project and --curseforge-file."
+        ),
+        _ => eyre::bail!(
+            "Use exactly one source: --maven or both --curseforge-project and --curseforge-file."
+        ),
+    }
 }
 
 fn add_dependency(
@@ -152,7 +219,7 @@ pub(super) fn add_component(
     if args.scope.is_empty() {
         eyre::bail!("At least one --scope is required.");
     }
-    let coordinate = MavenCoordinate::parse(&args.maven)?;
+    let coordinate = MavenCoordinate::parse(maven_coordinate(args)?)?;
     coordinate.require_exact()?;
     if inventory
         .lockfile
@@ -210,6 +277,124 @@ pub(super) fn add_component(
     Ok(DependencyAddReport {
         dependency_id: args.id.clone(),
         component_id: component_id.to_owned(),
+        coordinate: coordinate.canonical,
+        repository_id: resolved.repository_id,
+        hash,
+    })
+}
+
+fn maven_coordinate(args: &DependencyAddArgs) -> eyre::Result<&str> {
+    if selected_add_source(args)? != DependencyAddSource::Maven {
+        eyre::bail!("This command path requires an exact --maven coordinate.");
+    }
+    args.maven
+        .as_deref()
+        .ok_or_else(|| eyre::eyre!("Missing required --maven coordinate."))
+}
+
+fn add_curseforge_dependency(
+    mut inventory: DependencyInventory,
+    args: &DependencyAddArgs,
+    project_id: CurseforgeProjectId,
+    file_id: CurseforgeProjectFileId,
+    metadata: &impl CurseforgeProjectMetadata,
+    cancellation_token: &CancellationToken,
+    fetcher: &dyn ArtifactFetcher,
+) -> eyre::Result<DependencyAddReport> {
+    validate_dependency_id(&args.id)?;
+    if inventory
+        .lockfile
+        .dependencies
+        .iter()
+        .any(|dependency| dependency.id == args.id)
+    {
+        eyre::bail!("Dependency '{}' already exists.", args.id);
+    }
+    if args.scope.is_empty() {
+        eyre::bail!("At least one --scope is required.");
+    }
+    if args
+        .repository
+        .as_deref()
+        .is_some_and(|id| id != "cursemaven")
+    {
+        eyre::bail!("CurseForge dependencies use the configured 'cursemaven' repository.");
+    }
+    cancellation_token.bail_if_cancelled()?;
+    let project = metadata.fetch_project(project_id)?;
+    if project.id != project_id {
+        eyre::bail!(
+            "CurseForge metadata returned project {} instead of requested project {project_id}.",
+            project.id
+        );
+    }
+    let slug = project
+        .slug
+        .as_deref()
+        .ok_or_else(|| eyre::eyre!("CurseForge project {project_id} did not include a slug."))?;
+    validate_curseforge_slug(slug)?;
+    let file = metadata.fetch_project_file(project_id, file_id)?;
+    let (minecraft_version, loader) = curseforge_target_context(&inventory)?;
+    validate_curseforge_file(&file, project_id, file_id, &minecraft_version, loader)?;
+
+    let coordinate = MavenCoordinate::parse(&format!("curse.maven:{slug}-{project_id}:{file_id}"))?;
+    if inventory
+        .lockfile
+        .artifacts
+        .iter()
+        .any(|artifact| artifact.coordinate.as_deref() == Some(coordinate.canonical.as_str()))
+    {
+        eyre::bail!("Artifact '{}' is already locked.", coordinate.canonical);
+    }
+    let resolved = resolve_artifact(
+        &inventory,
+        &coordinate,
+        Some("cursemaven"),
+        cancellation_token,
+        fetcher,
+    )?;
+    let hash = ContentHash::from_bytes(&resolved.bytes, ContentHashAlgorithm::Blake3);
+    let portable_cache_path = coordinate.portable_cache_path();
+    write_cache_file_atomically(&inventory.local_path(&portable_cache_path), &resolved.bytes)?;
+    let artifact_id = format!(
+        "{}-{}",
+        portable_id(&coordinate.canonical),
+        hash.short_hex(8)
+    );
+    if inventory
+        .lockfile
+        .artifacts
+        .iter()
+        .any(|artifact| artifact.id == artifact_id)
+    {
+        eyre::bail!("Generated artifact ID '{artifact_id}' already exists.");
+    }
+    append_curseforge_lock_entries(
+        &mut inventory,
+        args,
+        CurseforgeLockEntryInputs {
+            project_id,
+            file_id,
+            slug,
+            project_name: &project.name,
+            coordinate: &coordinate,
+            resolved: &resolved,
+            evidence: LockedComponentEvidence {
+                hash,
+                cache_path: portable_cache_path,
+                artifact_id,
+            },
+        },
+    );
+    let output = inventory.lockfile.to_canonical_json()?;
+    write_lockfile_atomically(
+        &inventory.lockfile_path,
+        &inventory.original_input,
+        output.as_bytes(),
+    )?;
+    Ok(DependencyAddReport {
+        dependency_id: args.id.clone(),
+        component_id: "main".to_owned(),
         coordinate: coordinate.canonical,
         repository_id: resolved.repository_id,
         hash,
@@ -276,6 +461,156 @@ fn append_lock_entries(
         provenance: ArtifactProvenanceV3::RemoteMaven,
         weak: None,
     });
+}
+
+struct CurseforgeLockEntryInputs<'a> {
+    project_id: CurseforgeProjectId,
+    file_id: CurseforgeProjectFileId,
+    slug: &'a str,
+    project_name: &'a str,
+    coordinate: &'a MavenCoordinate,
+    resolved: &'a ResolvedMavenArtifact,
+    evidence: LockedComponentEvidence,
+}
+
+fn append_curseforge_lock_entries(
+    inventory: &mut DependencyInventory,
+    args: &DependencyAddArgs,
+    inputs: CurseforgeLockEntryInputs<'_>,
+) {
+    let scopes: Vec<_> = args
+        .scope
+        .iter()
+        .copied()
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    let purposes = purposes_for_scopes(&scopes);
+    let component = DependencyComponentV3 {
+        id: "main".to_owned(),
+        declaration: ComponentDeclarationV3 {
+            acquisition: ComponentAcquisitionV3::CurseForge(CurseForgeAcquisitionV3 {
+                project_id: *inputs.project_id,
+                file_id: *inputs.file_id,
+                slug: inputs.slug.to_owned(),
+                repository_id: inputs.resolved.repository_id.clone(),
+            }),
+            scopes,
+            artifact_treatment: args
+                .artifact_treatment
+                .unwrap_or(ArtifactTreatmentV3::LoaderManagedMod),
+            data_run_policy: DataRunPolicyV3::Exclude,
+        },
+        derived_checks: ComponentDerivedChecksV3 {
+            artifact_id: inputs.evidence.artifact_id.clone(),
+            resolved_coordinate: Some(inputs.coordinate.canonical.clone()),
+            expected_hash: inputs.evidence.hash,
+            cache_path: inputs.evidence.cache_path.clone(),
+        },
+        source_providers: Vec::new(),
+    };
+    inventory.lockfile.dependencies.push(DependencyV3 {
+        id: args.id.clone(),
+        kind: DependencyKindV3::Mod,
+        role: DependencyRoleV3::Integration,
+        display_name: args
+            .display_name
+            .clone()
+            .or_else(|| Some(inputs.project_name.to_owned())),
+        project_url: args.project_url.clone().or_else(|| {
+            Some(format!(
+                "https://www.curseforge.com/minecraft/mc-mods/{}",
+                inputs.slug
+            ))
+        }),
+        notes: args.notes.clone(),
+        components: vec![component],
+    });
+    inventory.lockfile.artifacts.push(ArtifactV3 {
+        id: inputs.evidence.artifact_id,
+        owner: Some(ArtifactOwnerV3 {
+            dependency_id: args.id.clone(),
+            component_id: "main".to_owned(),
+        }),
+        purposes,
+        coordinate: Some(inputs.coordinate.canonical.clone()),
+        repository_id: Some(inputs.resolved.repository_id.clone()),
+        url: Some(inputs.resolved.url.clone()),
+        hash: inputs.evidence.hash,
+        cache_path: inputs.evidence.cache_path,
+        provenance: ArtifactProvenanceV3::RemoteMaven,
+        weak: None,
+    });
+}
+
+fn curseforge_target_context(
+    inventory: &DependencyInventory,
+) -> eyre::Result<(String, CurseforgeModLoader)> {
+    let minecraft = inventory
+        .dependency(&inventory.lockfile.platform.minecraft_dependency)?
+        .components
+        .iter()
+        .find(|component| {
+            matches!(
+                &component.declaration.acquisition,
+                ComponentAcquisitionV3::Toolchain(_)
+            )
+        })
+        .ok_or_else(|| eyre::eyre!("Platform Minecraft dependency has no toolchain component."))?;
+    let ComponentAcquisitionV3::Toolchain(acquisition) = &minecraft.declaration.acquisition else {
+        unreachable!("selected component is a toolchain component")
+    };
+    let loader = match inventory.lockfile.platform.loader_dependency.as_str() {
+        "forge" => CurseforgeModLoader::Forge,
+        "neoforge" => CurseforgeModLoader::Neoforge,
+        loader => eyre::bail!("Unsupported CurseForge loader '{loader}'."),
+    };
+    Ok((acquisition.requested_version.clone(), loader))
+}
+
+fn validate_curseforge_file(
+    file: &crate::curseforge::CurseforgeProjectFileItem,
+    project_id: CurseforgeProjectId,
+    file_id: CurseforgeProjectFileId,
+    minecraft_version: &str,
+    loader: CurseforgeModLoader,
+) -> eyre::Result<()> {
+    if file.id != file_id {
+        eyre::bail!(
+            "CurseForge metadata returned file {} instead of requested file {file_id}.",
+            file.id
+        );
+    }
+    if file.mod_id != Some(project_id) {
+        eyre::bail!("CurseForge file {file_id} does not belong to project {project_id}.");
+    }
+    if !file
+        .game_versions
+        .iter()
+        .any(|version| version == minecraft_version)
+    {
+        eyre::bail!("CurseForge file {file_id} does not support Minecraft {minecraft_version}.");
+    }
+    if !file_matches_version_and_loader(file, minecraft_version, loader) {
+        eyre::bail!(
+            "CurseForge file {file_id} does not support loader {}.",
+            loader.label()
+        );
+    }
+    Ok(())
+}
+
+fn validate_curseforge_slug(slug: &str) -> eyre::Result<()> {
+    if slug.is_empty()
+        || !slug
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+    {
+        eyre::bail!(
+            "CurseForge project slug '{slug}' is not portable for a CurseMaven coordinate."
+        );
+    }
+    Ok(())
 }
 
 fn resolve_artifact(

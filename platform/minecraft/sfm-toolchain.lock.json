@@ -390,6 +390,24 @@
           },
           "source_providers": [
             {
+              "git": {
+                "id": "git",
+                "declaration": {
+                  "remote_url": "https://github.com/cc-tweaked/CC-Tweaked",
+                  "requested_revision": "refs/tags/v1.19.2-1.101.3",
+                  "roots": [
+                    "src/main/java",
+                    "src/main/resources"
+                  ]
+                },
+                "derived_checks": {
+                  "commit": "f9bb1b497964cccab6cde34e8948333210275f93",
+                  "repository_cache_path": "$sfm-cache/sources\\git/repositories\\https---github.com-cc-tweaked-cc-tweaked-fe1d9fad5f40253f.git",
+                  "tree_cache_path": "$sfm-cache/sources\\git/trees\\https---github.com-cc-tweaked-cc-tweaked-fe1d9fad5f40253f\\f9bb1b497964cccab6cde34e8948333210275f93-027be8179a8835fd"
+                }
+              }
+            },
+            {
               "maven-sources": {
                 "id": "maven-sources",
                 "declaration": {
@@ -725,7 +743,21 @@
             "expected_hash": "blake3:ec28e8a8511ee220aa722739c172dea1a945c761",
             "cache_path": "$sfm-cache\\maven\\net\\minecraftforge\\forge\\1.19.2-43.4.0\\forge-1.19.2-43.4.0-userdev.jar"
           },
-          "source_providers": []
+          "source_providers": [
+            {
+              "platform-pipeline": {
+                "id": "loader-pipeline",
+                "declaration": {
+                  "kind": "loader",
+                  "roots": []
+                },
+                "derived_checks": {
+                  "fingerprint": "forgegradle-1.19.2-43.4.0",
+                  "tree_cache_path": "build\\sfm-toolchain\\forge\\1.19.2\\sources\\combined-deobfuscated.filetree"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -1119,7 +1151,22 @@
             "expected_hash": "blake3:ff405d145a5d293f7dfd08f9823022512a770109",
             "cache_path": "$sfm-cache\\maven\\mekanism\\Mekanism\\1.19.2-10.3.8.477\\Mekanism-1.19.2-10.3.8.477-api.jar"
           },
-          "source_providers": []
+          "source_providers": [
+            {
+              "decompile": {
+                "id": "vineflower",
+                "declaration": {
+                  "roots": []
+                },
+                "derived_checks": {
+                  "binary_artifact_id": "mekanism-mekanism-1-19-2-10-3-8-477-api-ff405d14",
+                  "decompiler_artifact_id": "org-vineflower-vineflower-1-12-0-865bc756",
+                  "fingerprint": "blake3:6e56247f0f40ce41b457c440130cde6d9c2b43da",
+                  "tree_cache_path": "$sfm-cache/sources\\decompiled\\ff405d145a5d293f7dfd08f9823022512a770109\\blake3-6e56247f0f40ce41b457c440130cde6d9c2b43da-ec253f5672ff82f8\\tree"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "main",
@@ -1145,7 +1192,39 @@
             "expected_hash": "blake3:76928376e435f374f99f724a1261b1964f582914",
             "cache_path": "$sfm-cache\\maven\\curse\\maven\\mekanism-268560\\4644795\\mekanism-268560-4644795.jar"
           },
-          "source_providers": []
+          "source_providers": [
+            {
+              "git": {
+                "id": "git",
+                "declaration": {
+                  "remote_url": "https://github.com/mekanism/Mekanism",
+                  "requested_revision": "f33ff1f438caa55d58ef1f0a08091997353afcb8",
+                  "roots": [
+                    "src/main/java"
+                  ]
+                },
+                "derived_checks": {
+                  "commit": "f33ff1f438caa55d58ef1f0a08091997353afcb8",
+                  "repository_cache_path": "$sfm-cache/sources\\git/repositories\\https---github.com-mekanism-mekanism-059d54171b6f7fd7.git",
+                  "tree_cache_path": "$sfm-cache/sources\\git/trees\\https---github.com-mekanism-mekanism-059d54171b6f7fd7\\f33ff1f438caa55d58ef1f0a08091997353afcb8-6d682e53b7bfeee7"
+                }
+              }
+            },
+            {
+              "decompile": {
+                "id": "vineflower",
+                "declaration": {
+                  "roots": []
+                },
+                "derived_checks": {
+                  "binary_artifact_id": "curse-maven-mekanism-268560-4644795-76928376",
+                  "decompiler_artifact_id": "org-vineflower-vineflower-1-12-0-865bc756",
+                  "fingerprint": "blake3:2a12697261d5ced051f4154839447afbe1ca3f3a",
+                  "tree_cache_path": "$sfm-cache/sources\\decompiled\\76928376e435f374f99f724a1261b1964f582914\\blake3-2a12697261d5ced051f4154839447afbe1ca3f3a-60a38ebb54b4127e\\tree"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -1179,7 +1258,21 @@
             "expected_hash": "blake3:a428e23c637cc159c34a358acc3d1e7b270da1a3",
             "cache_path": "$sfm-cache\\minecraft\\versions\\1.19.2\\version.json"
           },
-          "source_providers": []
+          "source_providers": [
+            {
+              "platform-pipeline": {
+                "id": "minecraft-pipeline",
+                "declaration": {
+                  "kind": "minecraft",
+                  "roots": []
+                },
+                "derived_checks": {
+                  "fingerprint": "forgegradle-1.19.2-43.4.0",
+                  "tree_cache_path": "build\\sfm-toolchain\\forge\\1.19.2\\sources\\combined-deobfuscated.filetree"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -1745,6 +1838,39 @@
             "resolved_coordinate": "curse.maven:tool-kit-324888:3933949",
             "expected_hash": "blake3:36b5f9052d5afb75bc270e3889e34442c6571e43",
             "cache_path": "$sfm-cache\\maven\\curse\\maven\\tool-kit-324888\\3933949\\tool-kit-324888-3933949.jar"
+          },
+          "source_providers": []
+        }
+      ]
+    },
+    {
+      "id": "vineflower",
+      "kind": "tool",
+      "role": "build",
+      "display_name": "Vineflower",
+      "project_url": "https://vineflower.org",
+      "notes": "Standalone fallback decompiler; Java 17; no external library inputs.",
+      "components": [
+        {
+          "id": "main",
+          "declaration": {
+            "acquisition": {
+              "maven": {
+                "requested_coordinate": "org.vineflower:vineflower:1.12.0",
+                "repository_id": "maven-central"
+              }
+            },
+            "scopes": [
+              "codegen"
+            ],
+            "artifact_treatment": "plain",
+            "data_run_policy": "exclude"
+          },
+          "derived_checks": {
+            "artifact_id": "org-vineflower-vineflower-1-12-0-865bc756",
+            "resolved_coordinate": "org.vineflower:vineflower:1.12.0",
+            "expected_hash": "blake3:865bc756e48b1c6bae2fa0adb4be10b7cd7c5a46",
+            "cache_path": "$sfm-cache\\maven\\org/vineflower\\vineflower\\1.12.0\\vineflower-1.12.0.jar"
           },
           "source_providers": []
         }
@@ -3404,6 +3530,23 @@
       "url": "https://squiddev.cc/maven/org/squiddev/cc-tweaked-1.19.2/1.101.3/cc-tweaked-1.19.2-1.101.3.jar",
       "hash": "blake3:e0e6920675c793817b9e063db3854b3c68ed29fd",
       "cache_path": "$sfm-cache\\maven\\org\\squiddev\\cc-tweaked-1.19.2\\1.101.3\\cc-tweaked-1.19.2-1.101.3.jar",
+      "provenance": "remote-maven",
+      "weak": null
+    },
+    {
+      "id": "org-vineflower-vineflower-1-12-0-865bc756",
+      "owner": {
+        "dependency_id": "vineflower",
+        "component_id": "main"
+      },
+      "purposes": [
+        "build"
+      ],
+      "coordinate": "org.vineflower:vineflower:1.12.0",
+      "repository_id": "maven-central",
+      "url": "https://repo1.maven.org/maven2/org/vineflower/vineflower/1.12.0/vineflower-1.12.0.jar",
+      "hash": "blake3:865bc756e48b1c6bae2fa0adb4be10b7cd7c5a46",
+      "cache_path": "$sfm-cache\\maven\\org/vineflower\\vineflower\\1.12.0\\vineflower-1.12.0.jar",
       "provenance": "remote-maven",
       "weak": null
     },

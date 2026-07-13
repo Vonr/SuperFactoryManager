@@ -28,7 +28,7 @@ pub struct RunClientArgs {
     /// Open a supported SFM dev screen when the client first reaches the title screen.
     #[facet(default, args::named)]
     pub title_screen: Option<ClientTitleScreen>,
-    /// Launch SFM without dependency mod jars from dependencies.gradle.
+    /// Launch SFM without dependency mod jars declared by the schema v3 lockfile.
     #[facet(default, args::named)]
     pub solo: bool,
     /// Open a JDWP port so `sfm-propagate-changes run hotswap` can redefine classes.

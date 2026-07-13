@@ -1,6 +1,7 @@
 use crate::dependency_inventory::AcquisitionStatus;
 use crate::dependency_inventory::DependencyInventory;
 use crate::dependency_inventory::SourceStatus;
+use crate::source_decompile::completed_tree_matches;
 use crate::toolchain_lockfile_schema::version::v3::SourceProviderV3;
 use std::path::Path;
 use std::path::PathBuf;
@@ -118,7 +119,18 @@ impl<'a> SourceProviderView<'a> {
                     SourceStatus::Missing
                 }
             }
-            SourceProviderV3::Decompile(_) | SourceProviderV3::PlatformPipeline(_) => {
+            SourceProviderV3::Decompile(provider) => {
+                if completed_tree_matches(
+                    &self.tree_path(),
+                    &provider.derived_checks.fingerprint,
+                    &provider.declaration.roots,
+                ) {
+                    SourceStatus::Acquired
+                } else {
+                    SourceStatus::Missing
+                }
+            }
+            SourceProviderV3::PlatformPipeline(_) => {
                 if self.tree_path().is_dir() {
                     SourceStatus::Acquired
                 } else {
@@ -127,11 +139,53 @@ impl<'a> SourceProviderView<'a> {
             }
         };
         if materialization == SourceStatus::Acquired
-            && self.searchable_roots().iter().any(|root| !root.exists())
+            && self.searchable_roots().iter().any(|root| !root.is_dir())
         {
             SourceStatus::Missing
         } else {
             materialization
+        }
+    }
+
+    #[must_use]
+    pub fn unavailable_reason(self) -> Option<&'static str> {
+        if self.status() == SourceStatus::Acquired {
+            return None;
+        }
+        match self.provider {
+            SourceProviderV3::MavenSources(provider) => {
+                let archive = self.inventory.locked_file_status(
+                    &provider.derived_checks.archive_cache_path,
+                    provider.derived_checks.hash,
+                );
+                match archive {
+                    AcquisitionStatus::Stale => Some("locked source archive hash does not match"),
+                    AcquisitionStatus::Missing => Some("locked source archive is not cached"),
+                    AcquisitionStatus::Acquired if !self.tree_path().is_dir() => {
+                        Some("source archive has not been extracted")
+                    }
+                    AcquisitionStatus::Acquired => {
+                        Some("a configured Maven source root is missing")
+                    }
+                }
+            }
+            SourceProviderV3::Git(provider) => {
+                let repository = self
+                    .inventory
+                    .local_path(&provider.derived_checks.repository_cache_path);
+                match (repository.is_dir(), self.tree_path().is_dir()) {
+                    (false, false) => Some("managed repository and materialized tree are missing"),
+                    (false, true) => Some("managed repository is missing"),
+                    (true, false) => Some("locked commit tree is not materialized"),
+                    (true, true) => Some("a configured Git source root is missing"),
+                }
+            }
+            SourceProviderV3::Decompile(_) => {
+                Some("decompiled tree is missing or does not match its locked fingerprint")
+            }
+            SourceProviderV3::PlatformPipeline(_) => {
+                Some("platform source pipeline output is not materialized")
+            }
         }
     }
 
@@ -163,7 +217,11 @@ mod tests {
     use crate::branch_targets::WorktreePath;
     use crate::branch_targets::WorktreeTarget;
     use crate::paths::CacheHome;
+    use crate::source_decompile::FINGERPRINT_FILE;
     use crate::toolchain_lockfile_schema::read_current;
+    use crate::toolchain_lockfile_schema::version::v3::DecompileSourceDeclarationV3;
+    use crate::toolchain_lockfile_schema::version::v3::DecompileSourceDerivedChecksV3;
+    use crate::toolchain_lockfile_schema::version::v3::DecompileSourceProviderV3;
     use crate::toolchain_lockfile_schema::version::v3::GitSourceDeclarationV3;
     use crate::toolchain_lockfile_schema::version::v3::GitSourceDerivedChecksV3;
     use crate::toolchain_lockfile_schema::version::v3::GitSourceProviderV3;
@@ -194,6 +252,10 @@ mod tests {
         assert_eq!(view.priority(), 2);
         assert_eq!(view.status(), SourceStatus::Missing);
         assert_eq!(
+            view.unavailable_reason(),
+            Some("managed repository and materialized tree are missing")
+        );
+        assert_eq!(
             view.searchable_roots(),
             vec![
                 view.tree_path().join("src/main/java"),
@@ -211,6 +273,31 @@ mod tests {
         for root in view.searchable_roots() {
             std::fs::create_dir_all(root).expect("searchable root");
         }
+        assert_eq!(view.status(), SourceStatus::Acquired);
+    }
+
+    #[test]
+    fn decompile_provider_requires_a_matching_completion_fingerprint() {
+        let cache = tempfile::tempdir().expect("temporary cache");
+        let inventory = fixture(CacheHome(cache.path().to_path_buf()));
+        let provider = SourceProviderV3::Decompile(DecompileSourceProviderV3 {
+            id: "vineflower".to_owned(),
+            declaration: DecompileSourceDeclarationV3 {
+                roots: vec!["src".to_owned()],
+            },
+            derived_checks: DecompileSourceDerivedChecksV3 {
+                binary_artifact_id: "binary".to_owned(),
+                decompiler_artifact_id: "decompiler".to_owned(),
+                fingerprint: "blake3:fixture".to_owned(),
+                tree_cache_path: PathBuf::from("$sfm-cache/sources/decompiled/fixture/tree"),
+            },
+        });
+        let view = SourceProviderView::new(&inventory, &provider, 0);
+        let tree = view.tree_path();
+        std::fs::create_dir_all(tree.join("src")).expect("source root");
+
+        assert_eq!(view.status(), SourceStatus::Missing);
+        std::fs::write(tree.join(FINGERPRINT_FILE), "blake3:fixture").expect("completion marker");
         assert_eq!(view.status(), SourceStatus::Acquired);
     }
 

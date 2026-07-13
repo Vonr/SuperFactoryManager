@@ -19,22 +19,6 @@ Each work item carries its status in its heading. Update the heading and the com
 
 A phase is complete only when every work item in that phase is marked `[x]`. Do not add a detached work log at the end of this document. Record commit IDs, implementation decisions, validation results, and follow-up notes directly under the relevant work item.
 
-## Resume checkpoint: 2026-07-12
-
-The `1.19.2` worktree is clean at commit `0c801e71a` (`feat(cli): manage Maven dependency sources`). The immediately preceding source-foundation commit is `06b01de2c`; the Gradle v3 consumer is `6c5000b68`. The interrupted attempt to begin `dependency source search` did not modify the staging workspace or repository, so there is no partial search implementation to recover.
-
-Verified state at this checkpoint:
-
-- `check-all.ps1` passes formatting, Clippy with `-D warnings`, build, and all 207 tests.
-- `dependency migrate --branch 1.19.2 --check` reports canonical schema v3.
-- CC:Tweaked Maven sources are locked at `org.squiddev:cc-tweaked-1.19.2:1.101.3:sources`, hash `blake3:a72c68f5a37bf67fa8965fc8a1bbf33416223684`, and validated root `dan200/computercraft`.
-- `dependency source provider list cc-tweaked --branch 1.19.2` reports the acquired provider, and repeated `dependency source acquire cc-tweaked --provider maven-sources --branch 1.19.2` performs no HTTP in the unit fixture and leaves the real lockfile byte-identical.
-- The source archive is not present in the build artifact inventory or Gradle classpaths.
-
-Recommended next implementation step: complete 9.4 and 9.6 together by adding `dependency_source_search_cli.rs`. Build a read-only preflight from `DependencyInventory`/`SourceProviderView`, support repeatable dependency filters and the existing typed `DependencySourceProviderSelector` plus `--provider-id`, warn once with every missing component, stop before ripgrep under `--require-complete`, and run ripgrep only over acquired validated roots. Prefix results with `dependency/component/provider` provenance. Add parser, no-cache-mutation, incomplete-warning, require-complete, match, and no-match tests. Once `IPeripheralProvider` is found in the managed CC:Tweaked tree, mark 7.4 complete and update 9.4/9.6 in place.
-
-After search, return to the source critical path: Phase 7.5 platform providers, Phase 7.6-7.7 decompiler selection/fallback, Phase 8 managed gix repositories, then finish the remaining Phase 9 command cases. Phase 6.1/6.3 remain intentionally partial until cross-branch dialect execution in Phase 12.
-
 ## Purpose
 
 Make `sfm-propagate-changes` the source of truth for Minecraft platform dependencies, loader dependencies, mod dependencies, resolved artifacts, and source acquisition. Gradle remains a compatibility consumer of the lockfile rather than an independent dependency declaration system.
@@ -349,7 +333,7 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 ### [x] 1.2 Pin all Facet-family dependencies to the maintained fork
 
-**Completion notes:** Completed on 2026-07-11. Pinned `facet`, `facet-json`, `facet-styx`, and `figue` to TeamDman's Facet fork at `585826b51ae771950970849e616e28c6c7207f45`, enabled Figue's `arbitrary` feature, and regenerated `Cargo.lock`. `cargo tree --depth 1` reports `facet`/`facet-json` `0.50.0-rc.5`, `facet-styx`/`figue` `5.0.0-rc.5`, all from the same Git revision. No registry `teamy-figue` remains.
+**Completion notes:** Completed on 2026-07-11 and advanced on 2026-07-12. `facet`, `facet-json`, `facet-styx`, and `figue` are pinned to TeamDman's Facet fork at `f1e1eed9a7d91c6bbb4dcb54c985617d6c914fad`, with Figue's `arbitrary` feature enabled and `Cargo.lock` regenerated. `facet`/`facet-json` resolve as `0.50.0-rc.5` and `facet-styx`/`figue` as `5.0.0-rc.5`, all from that one Git revision. The newer Figue revision fixes typed rendering for an omitted `Option<String>` positional and scalar provider selectors; focused source-command round-trip tests pass without SFM workarounds. No registry `teamy-figue` remains.
 
 **Affected paths:**
 
@@ -402,7 +386,7 @@ cargo tree
 
 ### [x] 1.4 Add typed CLI rendering and round-trip coverage
 
-**Completion notes:** Completed on 2026-07-11. Added a dedicated CLI rendering test module. A real typed `SourceArgs::Audit` value now renders with `ToArgs`, round-trips through Figue parsing, preserves a branch selector containing spaces, and exercises both display-only and current-executable command rendering. A focused positional probe verifies that dash-prefixed values emit `--` and round-trip. Figue's arbitrary consistency and round-trip helpers pass for generated positional values. Acquire-command recommendation coverage remains under 9.5, after that command exists.
+**Completion notes:** Completed on 2026-07-11. Added a dedicated CLI rendering test module. The top-level typed `Cli::Audit` value now renders with `ToArgs`, round-trips through Figue parsing, preserves a branch selector containing spaces, and exercises both display-only and current-executable command rendering. A focused positional probe verifies that dash-prefixed values emit `--` and round-trip. Figue's arbitrary consistency and round-trip helpers pass for generated positional values. Acquire-command recommendation coverage remains under 9.5, after that command exists.
 
 **Assistive APIs:**
 
@@ -751,7 +735,7 @@ sfm-propagate-changes.exe dependency refresh --branch 1.19.2
 
 ### [x] 5.1 Make the Rust build plan consume v3 dependency intent
 
-**Completion notes:** Completed 2026-07-12. Build planning, compile, runtime, test, game-test, code generation, and packaging selection now project schema v3 declarations into the existing resolver. Repositories come from v3. Added a read-only v3-to-legacy resolver view so locked coordinates, hashes, cache paths, weak checks, and runtime POM closure remain available while resolver internals are incrementally typed. The legacy writer detects strict v3 and cannot overwrite declaration-owned state. Added canonical v3 declarations for ANTLR, JavaParser, JUnit Jupiter, and grouped JMH components by attaching their existing locked artifact evidence. `cargo run -- jar plan --branch 1.19.2` and all Phase 5 behavior commands succeed without lockfile mutation.
+**Completion notes:** Completed 2026-07-12. Build planning, compile, runtime, test, game-test, code generation, and packaging selection now project schema v3 declarations into the existing resolver. Repositories come from v3. Added a read-only v3-to-legacy resolver view so locked coordinates, hashes, cache paths, weak checks, and runtime POM closure remain available while resolver internals are incrementally typed. The legacy writer detects strict v3 and cannot overwrite declaration-owned state. Added canonical v3 declarations for ANTLR, JavaParser, JUnit Jupiter, and grouped JMH components by attaching their existing locked artifact evidence. On 2026-07-13, restricted the Forge `antlr` adapter projection to `org.antlr:antlr4`; the Vineflower standalone decompiler remains a source-provider tool despite its semantic `codegen` scope. This restored successful `dependency source acquire minecraft --provider platform-pipeline --branch 1.19.2` without placing Vineflower on the ANTLR tool classpath. `cargo run -- jar plan --branch 1.19.2` and all Phase 5 behavior commands succeed without lockfile mutation.
 
 **Affected paths:**
 
@@ -835,21 +819,20 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 ### [~] 6.1 Inventory and test the Gradle dependency dialects
 
-**Completion notes:** The consumer now distinguishes ForgeGradle from NeoGradle by the applied `net.neoforged.gradle.userdev` plugin rather than by Minecraft version. The `1.19.2` ForgeGradle path is exercised by real Gradle builds and the projection verification task. The remaining work is to propagate the consumer and exercise the NeoGradle path plus the transitional 1.19.4-1.20.3 branches; that cross-branch acceptance belongs with Phase 12.1/12.5 but remains a completion gate for this item.
+**Completion notes:** The consumer now distinguishes ForgeGradle from NeoGradle by the applied `net.neoforged.gradle.userdev` plugin rather than by Minecraft version. The `1.19.2` ForgeGradle path is exercised by real Gradle builds and the projection verification task. A read-only worktree inventory on 2026-07-13 classifies every supported branch: ForgeGradle through `1.20.1`, then NeoGradle from `1.20.2` onward. Every non-primary branch still has a schema-v2 lockfile, so propagation and representative dialect execution remain Phase 12.1/12.5 gates rather than safe actions on the current dirty worktree.
 
 **Current dialect matrix:**
 
 | Branches | Dialect | Loader declaration | Mod treatment | Status |
 | --- | --- | --- | --- | --- |
-| 1.19.2 | ForgeGradle | `minecraft` | `fg.deobf` for `loader-managed-mod` only | Implemented and tested |
-| 1.19.4-1.20.3 | Transitional Forge/NeoForge | To be classified from applied plugins | Must not assume `fg.deobf` | Inventory/propagation pending |
-| 1.20.4, 1.21.1, 26.1.2 | NeoGradle userdev | `implementation` | Plain Gradle notation | Adapter implemented; branch execution pending |
+| 1.19.2, 1.19.4, 1.20, 1.20.1 | ForgeGradle | `minecraft` | `fg.deobf` for `loader-managed-mod` only | 1.19.2 tested; later branches await v3 propagation |
+| 1.20.2, 1.20.3, 1.20.4, 1.21.0, 1.21.1, 26.1.2 | NeoGradle userdev | `implementation` | Plain Gradle notation | Adapter implemented; branch execution awaits v3 propagation |
 
 **Known samples:**
 
 - 1.19.2 ForgeGradle uses the `minecraft` configuration and `fg.deobf(...)`.
-- 1.20.4, 1.21.1, and 26.1.2 use NeoForge/NeoGradle-style plain `implementation` for loader and mod coordinates.
-- 1.19.4 through 1.20.3 must be explicitly classified rather than inferred from version numbers alone.
+- 1.20.2, 1.20.3, 1.20.4, 1.21.0, 1.21.1, and 26.1.2 use NeoForge/NeoGradle-style plain `implementation` for loader and mod coordinates.
+- The plugin scripts, not the Minecraft-version label, determine the dialect; the inventory was recorded explicitly to prevent `fg.deobf` assumptions across the 1.20.1/1.20.2 boundary.
 
 **Work:**
 
@@ -997,9 +980,9 @@ $sfm-cache/sources/
 
 **Completion criteria:** Tests include malicious ZIP traversal entries and prove no output can escape the cache root.
 
-### [~] 7.4 Implement Maven source-payload acquisition
+### [x] 7.4 Implement Maven source-payload acquisition
 
-**Completion notes:** Core resolution and acquisition are implemented. `source_maven` derives `sources` for an unclassified exact coordinate and `<classifier>-sources` for a classified coordinate, always as a JAR; `dependency source configure --maven-coordinate` permits an exact override. Configuration uses the component's locked repository, the shared injectable HTTP fetcher, BLAKE3 hashing, `SourceCacheLayout`, an artifact lock, atomic payload writing, and the hardened extractor. Declared roots must be normalized relative paths that exist in the extracted payload. Locked acquisition validates URL/hash/root evidence, is idempotent, and never mutates the lockfile or build artifact inventory. CC:Tweaked's published source JAR is now locked and acquired at `org.squiddev:cc-tweaked-1.19.2:1.101.3:sources`, hash `blake3:a72c68f5a37bf67fa8965fc8a1bbf33416223684`, with root `dan200/computercraft`. A second real acquisition preserved lockfile SHA-256 `8D1734049F1E7907DE29A537FF6C388D02E464E303C942D90D97309310FF001E`. This item remains open only until no-fetch source search proves the acquired payload is searchable through the final CLI.
+**Completion notes:** Core resolution and acquisition are implemented. `source_maven` derives `sources` for an unclassified exact coordinate and `<classifier>-sources` for a classified coordinate, always as a JAR; `dependency source configure --maven-coordinate` permits an exact override. Configuration uses the component's locked repository, the shared injectable HTTP fetcher, BLAKE3 hashing, `SourceCacheLayout`, an artifact lock, atomic payload writing, and the hardened extractor. Declared roots must be normalized relative paths that exist in the extracted payload. Locked acquisition validates URL/hash/root evidence, is idempotent, and never mutates the lockfile or build artifact inventory. CC:Tweaked's published source JAR is now locked and acquired at `org.squiddev:cc-tweaked-1.19.2:1.101.3:sources`, hash `blake3:a72c68f5a37bf67fa8965fc8a1bbf33416223684`, with root `dan200/computercraft`. A second real acquisition preserved lockfile SHA-256 `8D1734049F1E7907DE29A537FF6C388D02E464E303C942D90D97309310FF001E`. The final no-fetch search CLI found `IPeripheralProvider` in the managed extracted tree on 2026-07-12.
 
 **Work:**
 
@@ -1013,9 +996,9 @@ $sfm-cache/sources/
 
 **Completion criteria:** CC:Tweaked's Maven sources JAR can be acquired, validated, extracted, shown, and searched without Git, and artifact/classpath reports do not count it as a build dependency.
 
-### [ ] 7.5 Move Minecraft/loader source output behind dependency source providers
+### [x] 7.5 Move Minecraft/loader source output behind dependency source providers
 
-**Completion notes:** _Not started. Record which existing source-output types survive internally here._
+**Completion notes:** Completed on 2026-07-12. The existing Forge/NeoForge source pipeline remains internally behind `SourceOutputCommand`, and `dependency source acquire minecraft --provider platform-pipeline --branch 1.19.2` and the corresponding `forge` command materialize its `filetree` output. The v3 lockfile exposes `minecraft-pipeline` and `loader-pipeline` views over the shared Forge combined-source tree at `build/sfm-toolchain/forge/1.19.2/sources/combined-deobfuscated.filetree`. Both provider-list and acquire commands were exercised live; no-fetch search rendered `forge/userdev/loader-pipeline/...` provenance for `ServerLifecycleHooks`. `check-all.ps1` passed with 214 tests.
 
 **Current implementation:**
 
@@ -1032,9 +1015,18 @@ $sfm-cache/sources/
 
 **Completion criteria:** `dependency source acquire minecraft --branch 1.19.2` replaces the useful behavior of `jar sources`.
 
-### [ ] 7.6 Select and lock the standalone mod decompiler
+### [x] 7.6 Select and lock the standalone mod decompiler
 
-**Completion notes:** _Not started. Record tested coordinates, Java requirements, inputs, options, measurements, failures, and the final decision here._
+**Completion notes:** Completed on 2026-07-12. The standalone default is Vineflower `org.vineflower:vineflower:1.12.0`, locked as the `vineflower` build tool with artifact ID `org-vineflower-vineflower-1-12-0-865bc756` and BLAKE3 `865bc756e48b1c6bae2fa0adb4be10b7cd7c5a46`. It requires Java 17. The policy is the regular bundled-plugin JAR, default CLI options, and no external library inputs; Java runtime classes are included by Vineflower's default runtime scan. The Minecraft MCP pipeline remains pinned to ForgeFlower `1.5.605.9`.
+
+**Comparison (Java 17, `-Xmx4G`, clean output directories, default options):**
+
+| Candidate | CC:Tweaked repeated output | Mekanism repeated output | Notes |
+| --- | --- | --- | --- |
+| Vineflower 1.11.2 | identical normalized trees; 1,396 files / 676 Java | identical normalized trees; 9,075 files / 1,972 Java | 7.6-7.8s CC:Tweaked; 13.2-13.8s Mekanism |
+| Vineflower 1.12.0 | identical normalized trees; 1,396 files / 676 Java | identical normalized trees; 9,075 files / 1,972 Java | 8.1-8.2s CC:Tweaked; 14.4-15.0s Mekanism; current upstream release |
+
+Normalized SHA-256 tree fingerprints were `c255da0c1385c21acef85778ce12803f01923fc5973f29247f3e5a41d67d5275` (CC:Tweaked 1.12.0) and `83b845dbdeaf30e70e9328dd63f45f0703f076f697f66e14158d88e54076a7e6` (Mekanism 1.12.0). Both fixtures exited successfully with no observed errors. ForgeFlower and FernFlower remain controls rather than the standalone default; ForgeFlower stays exclusively in loader-authored Minecraft pipelines.
 
 **Candidates and evidence:**
 
@@ -1057,9 +1049,9 @@ $sfm-cache/sources/
 
 **Completion criteria:** A comparison table identifies one exact default mod decompiler coordinate, artifact hash, Java requirement, arguments, library-input policy, and known fallback behavior. The selected tool reproduces byte-identical normalized output on repeated runs for the acceptance fixtures.
 
-### [ ] 7.7 Implement deterministic decompilation fallback
+### [x] 7.7 Implement deterministic decompilation fallback
 
-**Completion notes:** _Not started. Record selected binary input, mappings, decompiler, and fingerprint fields here._
+**Completion notes:** Completed on 2026-07-12. `dependency source configure <dependency/component> --decompile --branch <branch>` registers a `vineflower` provider using only the locked binary and the locked Vineflower `1.12.0` artifact. Acquisition validates or hash-downloads those exact artifacts, resolves the local Java runtime (17+), invokes Vineflower with `--folder`, stages the generated tree, records its content-addressed fingerprint, and atomically publishes the result under `$sfm-cache/sources/decompiled`. The BLAKE3 fingerprint includes binary hash, the explicit `no-external-mappings` policy, decompiler hash, exact Java version output, `--folder`, and the `no-external-libraries` policy. It uses no Minecraft pipeline code or loader-pipeline inputs. Re-running an identical acquisition validates the fingerprint marker and reuses the tree without fetching or re-decompiling. The locked CurseForge Mekanism `main` and `api` binaries now exercise this fallback; `dependency source search Mekanism --dependency mekanism --branch 1.19.2 --require-complete` returns results from both providers.
 
 **Work:**
 
@@ -1075,11 +1067,11 @@ $sfm-cache/sources/
 
 ## Phase 8: Replace independent Git clones with managed gix repositories
 
-### [ ] 8.1 Enable and wrap the required gix features
+### [x] 8.1 Enable and wrap the required gix features
 
-**Completion notes:** _Not started. Record the final gix feature set and API wrapper paths here._
+**Completion notes:** Completed on 2026-07-12. The pinned `gix 0.84.0` dependency enables `blocking-http-transport-reqwest-rust-tls`, `index`, `sha1`, and `worktree-stream`. `source_git` is the sole Git-source wrapper boundary and `check-all.ps1` passed with 222 tests.
 
-**Current dependency:** `gix 0.84.0` with only `index` and `sha1`.
+**Current dependency:** `gix 0.84.0` with `blocking-http-transport-reqwest-rust-tls`, `index`, `sha1`, and `worktree-stream`.
 
 The local gitoxide checkout may be newer than the crate used by SFM. Before implementing against it, check out `gix-v0.84.0`, the tag corresponding to the selected `gix` crate version. Upgrade the crate intentionally if newer APIs are required; do not accidentally code against local `main` while retaining an older Cargo version.
 
@@ -1098,9 +1090,9 @@ The local gitoxide checkout may be newer than the crate used by SFM. Before impl
 
 **Completion criteria:** Git source operations do not invoke the system `git` executable.
 
-### [ ] 8.2 Implement one managed bare repository per canonical remote
+### [x] 8.2 Implement one managed bare repository per canonical remote
 
-**Completion notes:** _Not started. Record URL normalization, cache key format, and locking here._
+**Completion notes:** Completed on 2026-07-12. HTTPS remotes are canonicalized by lowercasing the host, eliding port 443, and treating a trailing `.git` as equivalent; credentials and non-HTTPS remotes are rejected. The canonical URL feeds `SourceCacheLayout::git`, producing one readable BLAKE3-suffixed bare-repository path. Clone/open/fetch mutations are protected by `ArtifactLock`, and gix validates the exact locked commit. A real Mekanism provider at `f33ff1f438caa55d58ef1f0a08091997353afcb8` clones and validates successfully. An ignored network acceptance test starts with an empty existing bare repository, fetches the commit, and verifies it is present without using the system Git executable.
 
 **Work:**
 
@@ -1112,9 +1104,9 @@ The local gitoxide checkout may be newer than the crate used by SFM. Before impl
 
 **Completion criteria:** Two Minecraft branches using different CC:Tweaked revisions share one Git object database and have independent searchable trees.
 
-### [ ] 8.3 Materialize immutable searchable Git trees
+### [x] 8.3 Materialize immutable searchable Git trees
 
-**Completion notes:** _Not started. Record worktree-stream/archive choices and symlink policy here._
+**Completion notes:** Completed on 2026-07-12. The gix implementation streams a validated commit through `Repository::worktree_stream` into a temporary sibling tree, rejects non-UTF-8 paths, links, and submodules, validates declared roots, writes a commit completion marker, and publishes atomically. It never registers a Git worktree or runs repository build logic/hooks. The real Mekanism provider materializes `src/main/java` and is searchable with `dependency source search --provider git`.
 
 **Work:**
 
@@ -1126,9 +1118,9 @@ The local gitoxide checkout may be newer than the crate used by SFM. Before impl
 
 **Completion criteria:** Source search operates on plain files without an active Git worktree and without running repository build logic or hooks.
 
-### [ ] 8.4 Migrate existing source-build checkout behavior
+### [x] 8.4 Migrate existing source-build checkout behavior
 
-**Completion notes:** _Not started. Record old/new cache paths and migration behavior here._
+**Completion notes:** Completed on 2026-07-12. Source-build fallback now materializes a disposable plain checkout from the managed gix bare repository before invoking the Gradle wrapper; it no longer runs system `git clone`, `fetch`, `config`, or `checkout`. New staging checkouts use `$sfm-cache/source-builds-gix/<remote-and-commit-hash>` while the legacy `$sfm-cache/source-builds` directory is preserved untouched. The focused source-build fallback test passes using a local Git fixture, proving the Gradle wrapper can build from the gix-materialized checkout and records the new portable provenance path.
 
 **Current implementation:**
 
@@ -1147,9 +1139,9 @@ The local gitoxide checkout may be newer than the crate used by SFM. Before impl
 
 **Completion criteria:** Different commits no longer require independent full clones, and source builds remain reproducible.
 
-### [ ] 8.5 Add Git cache audit and cleanup behavior
+### [x] 8.5 Add Git cache audit and cleanup behavior
 
-**Completion notes:** _Not started. Record audit output, retention rules, and cleanup safety checks here._
+**Completion notes:** Completed on 2026-07-13. `dependency source cache audit --branch <branch>` reports the selected lockfile's Git providers while aggregating references from every discovered readable v3 lockfile. It names any legacy/unreadable lockfiles that prevent a safe global decision. `dependency source cache cleanup --branch <branch>` is report-only until `--confirm` is supplied, then removes only unreferenced direct non-symlink directories below `$sfm-cache/sources/git`; it refuses cleanup altogether while any discovered lockfile is unverified. Focused tests prove referenced repository/tree entries survive and stale entries are removed only after the safety check. The live 1.19.2 audit reports Mekanism as referenced and blocks cleanup until the remaining branches migrate to v3.
 
 **Work:**
 
@@ -1162,9 +1154,9 @@ The local gitoxide checkout may be newer than the crate used by SFM. Before impl
 
 ## Phase 9: Implement dependency source commands and full CLI cutover
 
-### [~] 9.1 Implement `dependency source configure`
+### [x] 9.1 Implement `dependency source configure`
 
-**Completion notes:** Maven configuration is implemented with explicit `--maven-sources` or `--maven-coordinate` and repeatable validated `--root` values. It replaces only the stable `maven-sources` provider on the selected component and writes canonical v3 atomically. Git URL/revision configuration and explicit cross-kind preference editing remain pending Phase 8.
+**Completion notes:** Completed on 2026-07-13. Maven configuration is implemented with explicit `--maven-sources` or `--maven-coordinate` and repeatable validated `--root` values. `--decompile [--decompiler <dependency/component>]` creates or replaces the stable `vineflower` provider from locked artifacts and the selected Java runtime fingerprint. `--git-url <https-url> --git-revision <exact-commit-or-refs/tags/...>` configures the canonical `git` provider, materializes its locked commit tree, and validates the configured roots before the v3 write. Explicit tags are fetched and resolved through gix during configuration; the declaration retains the requested tag while `derived_checks` holds its exact resolved commit. `--prefer` moves the configured provider to the front of the component's explicit cross-kind provider order. All implemented paths write canonical v3 atomically.
 
 **Git example:**
 
@@ -1185,9 +1177,9 @@ sfm-propagate-changes.exe dependency source configure cc-tweaked --branch 1.19.2
 
 **Completion criteria:** CC:Tweaked source intent and exact commit are represented in the lockfile without a separate file.
 
-### [~] 9.2 Implement `dependency source provider list`
+### [x] 9.2 Implement `dependency source provider list`
 
-**Completion notes:** The read-only command tree and Maven path are implemented. Output includes dependency/component, stable ID, typed kind, declaration-order priority, locked status, local status, and resolved searchable roots. `cc-tweaked/main` currently reports `maven-sources | maven-sources | priority=0 | locked=yes | status=acquired`. Remaining work is provider-specific unavailable reasons and final built-in platform/Git/decompile kinds.
+**Completion notes:** Completed on 2026-07-13. The read-only command tree covers Maven, Git, decompile, and platform-pipeline providers. Output includes dependency/component, stable ID, typed kind, declaration-order priority, whether `any` selects it or treats it as a fallback, locked status, local status, resolved searchable roots, and a provider-specific unavailable reason. The live Mekanism listing reports acquired `git` and `vineflower` providers, while CC:Tweaked reports both acquired Git and Maven-source providers. `dependency source configure --prefer` now moves a configured provider to the front of this explicit order.
 
 **Commands:**
 
@@ -1216,9 +1208,9 @@ sfm-propagate-changes.exe dependency source provider list cc-tweaked --branch 1.
 
 **Completion criteria:** A developer can inspect exactly what `--provider any` would select without causing network or cache writes.
 
-### [~] 9.3 Implement `dependency source acquire`
+### [x] 9.3 Implement `dependency source acquire`
 
-**Completion notes:** Targeted Maven acquisition is implemented and prints validated searchable roots. Built-in selection uses the typed `DependencySourceProviderSelector` (`any`, `maven-sources`, `git`, `decompile`, or `platform-pipeline`); arbitrary stable IDs use the distinct `--provider-id` option, and combining both is rejected. Tests prove an already validated Maven cache performs no HTTP. Real CC:Tweaked acquisition is idempotent. `--all`, parallel dispatch, and Git/decompile/platform implementations remain pending.
+**Completion notes:** Completed on 2026-07-13. Targeted Maven, Git, platform-pipeline, and Vineflower decompile acquisition are implemented and print validated searchable roots. Built-in selection uses the typed `DependencySourceProviderSelector` (`any`, `maven-sources`, `git`, `decompile`, or `platform-pipeline`); arbitrary stable IDs use the distinct `--provider-id` option, and combining both is rejected. Tests prove an already validated Maven cache performs no HTTP; decompile tests prove fingerprinted cache reuse with no fetch or rerun. The real CC:Tweaked acquisition, locked Mekanism Git tree, and Mekanism decompile fallback are idempotent. `--all` selects the first matching declared provider for every configured component, rejects target/`--all` ambiguity, skips components with no matching provider, and runs the shared platform pipeline once. `--parallel[=<workers>]` uses the shared bounded-parallelism model for independent Maven, Git, and decompile providers; it halts new work after a failure, preserves cancellation, and prints roots only after successful acquisition in declaration order. Focused tests prove the worker bound and failure stop behavior. A live `dependency source acquire --all --provider git --parallel 2 --branch 1.19.2` reused the CC:Tweaked and Mekanism managed Git trees.
 
 **Commands:**
 
@@ -1240,9 +1232,9 @@ sfm-propagate-changes.exe dependency source acquire --all --provider any --branc
 
 **Completion criteria:** Acquisition is idempotent and a second run reuses validated cached sources without network or expensive regeneration.
 
-### [ ] 9.4 Implement no-fetch `dependency source search`
+### [x] 9.4 Implement no-fetch `dependency source search`
 
-**Completion notes:** _Not started. Record search exit semantics and representative warnings here._
+**Completion notes:** Completed on 2026-07-12. `dependency source search` performs a read-only preflight over `DependencyInventory` and `SourceProviderView`, then invokes ripgrep only for acquired validated roots. Repeatable `--dependency`, typed `--provider`, stable `--provider-id`, and `--require-complete` are supported; combining the provider selectors is rejected. Missing roots produce one complete warning before available roots are searched, while `--require-complete` bails before ripgrep. Tests cover parser behavior, missing roots, unknown dependency preflight, no cache mutation, warning composition, require-complete, match, and no-match behavior. The real CC:Tweaked search found `IPeripheralProvider`; `check-all.ps1` passed with 214 tests.
 
 **Work:**
 
@@ -1258,9 +1250,9 @@ sfm-propagate-changes.exe dependency source acquire --all --provider any --branc
 
 **Completion criteria:** Tests prove search does not perform network/cache mutations, does not silently report a complete no-match result when sources are missing, and `--require-complete` fails with acquisition recommendations before invoking ripgrep.
 
-### [ ] 9.5 Render typed source-acquisition recommendations
+### [x] 9.5 Render typed source-acquisition recommendations
 
-**Completion notes:** _Not started. Record rendered command examples and round-trip results here._
+**Completion notes:** Completed on 2026-07-12. Missing-root warnings now construct one typed `Cli`/`dependency source acquire` value containing the explicit branch, provider selector or provider ID, and target. Updated Figue rendering supports omitted positional targets and provider enums, so no command fragments are appended manually. When every source is missing from an unfiltered branch-wide search, warnings render one typed `dependency source acquire --all --provider any --branch 1.19.2` recommendation; dependency-filtered searches instead render the exact missing target so they never broaden acquisition scope. Targeted and `--all` recommendations round-trip through Figue.
 
 **Work:**
 
@@ -1271,9 +1263,9 @@ sfm-propagate-changes.exe dependency source acquire --all --provider any --branc
 
 **Completion criteria:** Copying a rendered recommendation invokes the intended typed acquire command with the same explicit branch.
 
-### [ ] 9.6 Make search output identify dependency provenance
+### [x] 9.6 Make search output identify dependency provenance
 
-**Completion notes:** _Not started. Record output format and ripgrep integration choice here._
+**Completion notes:** Completed on 2026-07-12 with a ripgrep integration that searches each validated extracted root independently and prefixes every match as `dependency/component/provider/path:line:column`. A real `IPeripheralProvider` search produced CC:Tweaked `maven-sources` provenance paths, including `cc-tweaked/main/maven-sources/api/peripheral/IPeripheralProvider.java`.
 
 **Work:**
 
@@ -1285,9 +1277,9 @@ sfm-propagate-changes.exe dependency source acquire --all --provider any --branc
 
 **Completion criteria:** Searching `IPeripheralProvider` identifies CC:Tweaked source files and produces paths a developer can locate through `dependency show`.
 
-### [ ] 9.7 Remove `jar sources` and flatten `source audit`
+### [x] 9.7 Remove `jar sources` and flatten `source audit`
 
-**Completion notes:** _Not started. Record removed modules, moved modules, and final help output here._
+**Completion notes:** Completed on 2026-07-13. Removed `JarCommand::Sources`, `JarSourcesArgs`, and `src/cli/jar/jar_sources_cli.rs`; platform source acquisition now constructs `SourceOutputOptions` internally behind `dependency source acquire`. Removed the top-level `source` command and its CLI module, moving source-size auditing to top-level `AuditArgs`/`audit`. Parser coverage rejects `jar sources` and `source audit` without aliases, while typed `audit` rendering round-trips through Figue. Live `dependency source acquire minecraft --provider platform-pipeline --branch 1.19.2` materialized the expected combined source filetree. Updated `docs/AGENTS.md` to point developers to that replacement command.
 
 **Work:**
 
@@ -1305,9 +1297,17 @@ sfm-propagate-changes.exe dependency source acquire --all --provider any --branc
 
 ## Phase 10: Add CurseForge discovery and exact dependency acquisition
 
-### [ ] 10.1 Add CurseForge mod search API models and client operation
+### [x] 10.1 Add CurseForge mod search API models and client operation
 
-**Completion notes:** _Not started. Record endpoint parameters, pagination, and response models here._
+**Completion notes:** Completed on 2026-07-13. `curseforge mod search` uses the Core
+`GET /v1/mods/search` endpoint with Minecraft game ID `432`, exact `gameVersion`,
+`searchFilter`, `modLoaderType`, and deterministic `index`/`pageSize` pagination. The Facet
+models retain project ID, slug, name, summary, download count, modified time, and popularity
+rank; results are sorted by project ID before rendering. It resolves credentials through the
+existing `CurseforgeApiSecret` / `CurseforgeHttpClient` boundary and mutates neither lockfile nor
+cache. Help and rendering tests pass. A live read-only
+`curseforge mod search Mekanism --minecraft 1.19.2 --loader forge` returned the stable Mekanism
+project ID `268560` through a process-local Core API credential.
 
 **Affected paths:**
 
@@ -1323,9 +1323,17 @@ sfm-propagate-changes.exe dependency source acquire --all --provider any --branc
 
 **Completion criteria:** Searching for ComputerCraft or Mekanism returns stable project IDs suitable for the next command without mutating an SFM lockfile.
 
-### [ ] 10.2 Add filtered CurseForge file listing
+### [x] 10.2 Add filtered CurseForge file listing
 
-**Completion notes:** _Not started. Record filtering and output examples here._
+**Completion notes:** Completed on 2026-07-13. `curseforge mod files <project>` requests
+`GET /v1/mods/{project}/files` with exact version and loader filters, drains paginated responses,
+then locally retains only files whose `gameVersions` advertise the requested Minecraft version
+and supported loader. It prefers the structured numeric loader when Core supplies it, falling
+back to its advertised loader label when that field is absent. Output contains the exact file ID,
+file and display names, release type, publication time, reported versions, and loaders; it
+intentionally makes no recommendation. Unit tests prove the version/loader pair is required, and
+command help passes. A credentialed read-only Mekanism listing returned all nine matching files,
+including file `4644795`, as `forge` candidates.
 
 **Work:**
 
@@ -1336,9 +1344,18 @@ sfm-propagate-changes.exe dependency source acquire --all --provider any --branc
 
 **Completion criteria:** A user can deliberately choose an exact file ID before invoking `dependency add`.
 
-### [ ] 10.3 Add exact CurseForge dependency declarations
+### [x] 10.3 Add exact CurseForge dependency declarations
 
-**Completion notes:** _Not started. Record final flags and validation behavior here._
+**Completion notes:** Completed on 2026-07-13. `dependency add` now accepts exactly one source:
+an exact `--maven` coordinate, or both `--curseforge-project` and `--curseforge-file`. The
+CurseForge path resolves the authoritative project slug and exact file through the Core API,
+checks response IDs, project ownership, the active branch's Minecraft version/loader pair, and
+the portable slug. It derives only `curse.maven:<slug>-<project>:<file>`, resolves only the
+configured `cursemaven` repository, hashes and caches the exact JAR, and writes the v3
+`curse-forge` acquisition plus derived coordinate/hash/cache checks atomically. It rejects mixed
+source flags, incomplete IDs, wrong repositories, and duplicate locked coordinates. An
+isolated-cache fixture reproduces Mekanism project `268560`, file `4644795`, and asserts the
+generated v3 declaration, CurseMaven URL, and cached bytes.
 
 **Example:**
 
@@ -1361,9 +1378,16 @@ sfm-propagate-changes.exe dependency add mekanism --branch 1.19.2 `
 
 **Completion criteria:** The command cannot silently select a newer/different file and reproduces the current locked Mekanism artifact in a fixture.
 
-### [ ] 10.4 Test CurseForge failure and offline cases
+### [x] 10.4 Test CurseForge failure and offline cases
 
-**Completion notes:** _Not started. Record fixtures/mocks and error text here._
+**Completion notes:** Completed on 2026-07-13. Focused tests cover Core pagination shape
+failures, exact source-flag pairing, cross-project file rejection, wrong Minecraft version, wrong
+loader, and the isolated exact-add fixture. Loopback Core API fixtures return exact `404 Not
+Found` responses for both project and file metadata endpoints, proving their error text reaches
+the mutation boundary without a real API key. A read-only command with no configured credential
+returns the focused missing-Core-key error before any request. Finally, a locked Mekanism
+CurseMaven binary in the validated shared cache resolves successfully while its configured
+repository is deliberately unreachable, proving offline cache reuse and no required fetch.
 
 **Required tests:**
 
@@ -1377,9 +1401,9 @@ sfm-propagate-changes.exe dependency add mekanism --branch 1.19.2 `
 
 ## Phase 11: Use CC:Tweaked as the end-to-end acceptance fixture
 
-### [ ] 11.1 Migrate CC:Tweaked into the v3 logical dependency model
+### [x] 11.1 Migrate CC:Tweaked into the v3 logical dependency model
 
-**Completion notes:** _Not started. Record final v3 JSON and migration commit here._
+**Completion notes:** Completed on 2026-07-12. The canonical 1.19.2 v3 lockfile contains one `cc-tweaked` integration mod with a `main` Maven component at `org.squiddev:cc-tweaked-1.19.2:1.101.3`, semantic `compile`, `runtime`, `gametest-compile`, and `gametest-runtime` scopes, `loader-managed-mod` treatment, and default data-run exclusion. The live dependency list reports the expected single row with acquired binary and sources.
 
 **Required result:**
 
@@ -1392,9 +1416,9 @@ sfm-propagate-changes.exe dependency add mekanism --branch 1.19.2 `
 
 **Completion criteria:** `dependency list` shows one CC:Tweaked row and `dependency show` explains its semantic scopes and their active loader projection.
 
-### [ ] 11.2 Lock both Maven and Git source options
+### [x] 11.2 Lock both Maven and Git source options
 
-**Completion notes:** _Not started. Record provider order and locked source-payload hashes here._
+**Completion notes:** Completed on 2026-07-13. The canonical 1.19.2 lockfile retains the existing Git-first, Maven-second provider order for `cc-tweaked/main`. The Maven classifier declaration and source-payload hash remain locked (`blake3:a72c68f5a37bf67fa8965fc8a1bbf33416223684`). Explicit configuration fetched `refs/tags/v1.19.2-1.101.3` from `https://github.com/cc-tweaked/CC-Tweaked`, retained that requested tag in the Git declaration, and resolved its derived commit to `f9bb1b497964cccab6cde34e8948333210275f93`; its validated roots are `src/main/java` and `src/main/resources`. Provider listing, Git-only acquire, and complete Git-only `IPeripheralProvider` search all passed. The lockfile stores only portable managed-cache paths and contains no user checkout path.
 
 **Required result:**
 
@@ -1406,9 +1430,9 @@ sfm-propagate-changes.exe dependency add mekanism --branch 1.19.2 `
 
 **Completion criteria:** No local `G:\Programming\Repos\CC-Tweaked` path appears in the lockfile or required runtime configuration.
 
-### [ ] 11.3 Acquire and search CC:Tweaked sources through the CLI
+### [x] 11.3 Acquire and search CC:Tweaked sources through the CLI
 
-**Completion notes:** _Not started. Paste representative `dependency show` and search output here._
+**Completion notes:** Completed on 2026-07-12. The managed Maven source tree is acquired idempotently from the locked `sources` payload. `dependency source search IPeripheralProvider --dependency cc-tweaked --branch 1.19.2 --require-complete` returns provenance-prefixed matches including `cc-tweaked/main/maven-sources/api/peripheral/IPeripheralProvider.java`; `ComputerCraftAPI` search is supported through the same root.
 
 **Validation:**
 
@@ -1421,9 +1445,9 @@ cargo run -- dependency source search ComputerCraftAPI --dependency cc-tweaked -
 
 **Completion criteria:** Search resolves the expected CC:Tweaked API definitions from managed source roots.
 
-### [ ] 11.4 Verify no-fetch search behavior with CC:Tweaked missing
+### [x] 11.4 Verify no-fetch search behavior with CC:Tweaked missing
 
-**Completion notes:** _Not started. Paste the warning and generated acquire command here._
+**Completion notes:** Completed on 2026-07-12 against isolated absent source-cache homes. Normal and `--require-complete` searches both named `cc-tweaked/main/maven-sources` as missing, rendered the exact typed command `dependency source acquire --provider any --branch 1.19.2 cc-tweaked/main`, and performed no cache mutation or Maven/Git request. `--require-complete` then failed before ripgrep. Running that rendered command fetched the locked SquidDev sources payload into a fresh isolated cache; the subsequent complete search found `IPeripheralProvider`, including `api/peripheral/IPeripheralProvider.java`.
 
 **Work:**
 
@@ -1434,9 +1458,14 @@ cargo run -- dependency source search ComputerCraftAPI --dependency cc-tweaked -
 
 **Completion criteria:** The rendered command round-trips through Figue and acquiring sources makes the subsequent search complete.
 
-### [ ] 11.5 Preserve the existing CC:Tweaked binary smoke game test
+### [x] 11.5 Preserve the existing CC:Tweaked binary smoke game test
 
-**Completion notes:** _Not started. Record final test command and result after all cutovers here._
+**Completion notes:** Completed on 2026-07-13. The repository CLI completed
+`cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_dependency_smoke`
+successfully after the source-management cutovers. The initial sandboxed attempt could not open
+the managed user-profile artifact-cache lock; the same command with normal cache access exited
+successfully, so the outcome is a passing CC:Tweaked binary smoke rather than a cache-isolated
+false negative.
 
 **Validation:**
 
@@ -1446,9 +1475,13 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** Source-management changes do not regress loading the CC:Tweaked API, turtle, or disk drive.
 
-### [ ] 11.6 Keep gameplay integration work outside this infrastructure acceptance phase
+### [x] 11.6 Keep gameplay integration work outside this infrastructure acceptance phase
 
-**Completion notes:** _Not started. Link the follow-up gameplay plan/commits when created._
+**Completion notes:** Completed on 2026-07-13. This phase added no gameplay-facing peripheral,
+disk, label, printing-form, or turtle behavior. The passing binary smoke and managed authoritative
+CC:Tweaked source search establish the required infrastructure boundary; the deferred gameplay
+items remain intentionally unimplemented and require a separately scoped gameplay plan before
+they are started.
 
 **Deferred gameplay work includes:**
 
@@ -1462,9 +1495,15 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 ## Phase 12: Propagate, document, and remove obsolete surfaces
 
-### [ ] 12.1 Propagate the v3 implementation through supported branches
+### [~] 12.1 Propagate the v3 implementation through supported branches
 
-**Completion notes:** _Not started. Record propagation commits and branch-specific adapter changes under this item._
+**Completion notes:** The primary 1.19.2 implementation is complete and its full Rust gate
+passes. A 2026-07-13 propagation-readiness check found all nine newer version worktrees clean;
+they still contain schema-v2 lockfiles and await the intentional v3 migration. The 1.19.2
+worktree contains the uncommitted v3 implementation, so no merge has been attempted. The dirty
+feature worktree is intentionally non-versioned and excluded from propagation. Record the
+primary commit plus each resulting merge and dialect-specific adaptation here once propagation is
+authorized.
 
 **Work:**
 
@@ -1476,9 +1515,17 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** Every supported branch reads/writes v3 and selects a tested dependency/Gradle dialect.
 
-### [ ] 12.2 Update repository guidance and command documentation
+### [~] 12.2 Update repository guidance and command documentation
 
-**Completion notes:** _Not started. Record updated docs and removed command references here._
+**Completion notes:** Primary 1.19.2 guidance was updated on 2026-07-13. `docs/AGENTS.md` now
+uses the typed platform-source acquisition command instead of the removed `jar sources` command;
+the CLI README documents explicit branch selection, portable/cache behavior, source
+acquisition-versus-search, Gradle's schema-v3 consumer role, and deliberate CurseForge discovery
+before exact-ID mutation. It now also documents the one-prompt, process-local
+`CURSEFORGE_CORE_API_KEY` workflow for a sequence of read-only discovery commands. A repository
+documentation scan finds no stale `jar sources` or
+`source audit` primary workflow outside this historical plan. Keep this item in progress until the
+supported-branch propagation and final documentation review in Phase 12 are complete.
 
 **Affected paths:**
 
@@ -1496,9 +1543,17 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** Repository instructions contain no stale primary workflow using removed commands.
 
-### [ ] 12.3 Remove obsolete code and compatibility artifacts
+### [~] 12.3 Remove obsolete code and compatibility artifacts
 
-**Completion notes:** _Not started. List removed files/modules and retained internal helpers here._
+**Completion notes:** The primary branch was re-audited on 2026-07-13. The removed `jar sources`
+and top-level `source audit` commands have no remaining CLI/help references; the only retained
+audit implementation is the intentional top-level `audit` backend. The production Gradle
+dependency parser is absent, managed Git source acquisition contains no clone/checkout subprocess,
+and the remaining source `DependencySourceCommand` is the active nested `dependency source`
+command rather than a compatibility wrapper. Two stale client `--solo` help strings that named
+`dependencies.gradle` now correctly describe schema-v3 lockfile dependencies. Retained
+historical versioned dependency files remain inactive migration references until cross-branch
+propagation is completed; finalize this item after that Phase 12 review.
 
 **Candidates:**
 
@@ -1511,9 +1566,18 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** `rg` finds no obsolete command variants, help text, parser tests, or source-build Git subprocess labels.
 
-### [ ] 12.4 Run final Rust quality and behavior gates
+### [~] 12.4 Run final Rust quality and behavior gates
 
-**Completion notes:** _Not started. Record final command summaries and any known residual risks here._
+**Completion notes:** The primary 1.19.2 gate set was re-run from the current Cargo source tree
+on 2026-07-13. `check-all.ps1` passed with 249 tests passed, 0 failed, and 1 ignored. The
+lockfile-facing commands `dependency list`, `dependency show cc-tweaked`, provider list,
+idempotent source acquire, and complete `IPeripheralProvider` search all succeeded; the latter
+returned both managed Git and Maven-source roots. `run compile`, `run test`, `run data`, and the
+filtered `computer_craft_dependency_smoke` GameTest all exited successfully. The corrected
+`run client --help` describes `--solo` in terms of schema-v3 lockfile dependencies. Live,
+read-only Core API discovery returned Mekanism project `268560` and all nine matching 1.19.2
+Forge files, including `4644795`. Retain this item as in progress until the same behavior is
+demonstrated for the propagated branch dialects.
 
 **Required validation:**
 
@@ -1547,9 +1611,19 @@ cargo run -- run game-test-server --branch 1.19.2 --filter computer_craft_depend
 
 **Completion criteria:** No supported branch relies on early-Forge `fg.deobf` behavior where its loader no longer provides it.
 
-### [ ] 12.6 Confirm repository and cache portability
+### [~] 12.6 Confirm repository and cache portability
 
-**Completion notes:** _Not started. Record clean-machine/isolated-cache results here._
+**Completion notes:** Primary 1.19.2 isolated-cache acceptance was completed on 2026-07-13.
+With an absent `SFM_PROPAGATE_CHANGES_CACHE`, `dependency source search --require-complete`
+reported both CC:Tweaked providers as missing, made no network request, and did not create a cache
+directory. A fresh temporary cache then acquired the locked CC:Tweaked Git tree directly from its
+public remote and a complete Git-only `IPeripheralProvider` search succeeded, without any user
+checkout. A separate cache was populated with only the two locked Mekanism binaries and locked
+Vineflower binary; its initially incomplete search made no source state, then explicit `api` and
+`main` Vineflower acquisition recreated searchable source trees without a network fetch. The ten
+current supported-worktree lockfiles contain no absolute Windows path value. The remaining gate is
+to prove one managed bare repository satisfies multiple propagated branch revisions after every
+supported branch has its intentional v3 lockfile.
 
 **Work:**
 

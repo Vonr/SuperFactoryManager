@@ -245,7 +245,9 @@ pub(crate) fn invoke_source_outputs(
     cancellation_token: &CancellationToken,
 ) -> eyre::Result<()> {
     if options.build.dry_run {
-        eyre::bail!("jar sources does not support --dry-run because it must materialize outputs");
+        eyre::bail!(
+            "dependency source acquire does not support --dry-run because it must materialize outputs"
+        );
     }
 
     cancellation_token.bail_if_cancelled()?;
@@ -262,7 +264,7 @@ pub(crate) fn invoke_source_outputs(
     write_requested_plan_outputs(&plans, options.build.plan_json.as_deref())?;
     write_source_outputs(&plans, options.layout)?;
     finish_target_summary(
-        "jar sources",
+        "dependency source acquire",
         target_count,
         plans.len(),
         &failures,

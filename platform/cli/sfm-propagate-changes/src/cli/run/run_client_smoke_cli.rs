@@ -15,7 +15,7 @@ pub struct RunClientSmokeArgs {
     #[facet(flatten)]
     pub options: JarBuildOptionsArgs,
 
-    /// Launch SFM without dependency mod jars from dependencies.gradle.
+    /// Launch SFM without dependency mod jars declared by the schema v3 lockfile.
     #[facet(default, args::named)]
     pub solo: bool,
 }

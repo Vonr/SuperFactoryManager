@@ -27,6 +27,10 @@ pub(crate) struct DependencyInventory {
 impl DependencyInventory {
     pub fn load(query: &BranchQuery, cache_home: CacheHome) -> eyre::Result<Self> {
         let target = select_single_worktree_target(query)?;
+        Self::load_target(target, cache_home)
+    }
+
+    pub(crate) fn load_target(target: WorktreeTarget, cache_home: CacheHome) -> eyre::Result<Self> {
         let lockfile_path = target
             .worktree_path
             .join("platform")
@@ -59,11 +63,16 @@ impl DependencyInventory {
 
     #[must_use]
     pub fn artifact(&self, component: &DependencyComponentV3) -> &ArtifactV3 {
+        self.artifact_by_id(&component.derived_checks.artifact_id)
+            .expect("v3 validation guarantees component artifact references")
+    }
+
+    #[must_use]
+    pub fn artifact_by_id(&self, id: &str) -> Option<&ArtifactV3> {
         self.lockfile
             .artifacts
             .iter()
-            .find(|artifact| artifact.id == component.derived_checks.artifact_id)
-            .expect("v3 validation guarantees component artifact references")
+            .find(|artifact| artifact.id == id)
     }
 
     #[must_use]

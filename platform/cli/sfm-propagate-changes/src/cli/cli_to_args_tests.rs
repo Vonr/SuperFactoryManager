@@ -1,7 +1,8 @@
+use crate::cli::Cli;
+use crate::cli::Command;
+use crate::cli::audit::AuditArgs;
+use crate::cli::global_args::GlobalArgs;
 use crate::cli::jar::BranchSelector;
-use crate::cli::source::SourceArgs;
-use crate::cli::source::SourceAuditArgs;
-use crate::cli::source::SourceCommand;
 use crate::source_audit::SourceLanguage;
 use crate::source_audit::SourceLineLimit;
 use arbitrary::Arbitrary;
@@ -21,14 +22,16 @@ fn args_to_strings(args: Vec<OsString>) -> Vec<String> {
 }
 
 #[test]
-fn typed_source_audit_command_roundtrips() {
-    let command = SourceArgs {
-        command: SourceCommand::Audit(SourceAuditArgs {
+fn typed_top_level_audit_command_roundtrips() {
+    let command = Cli {
+        global_args: GlobalArgs::default(),
+        command: Command::Audit(AuditArgs {
             branch: BranchSelector("popular AND >= 1.20.4".to_string()),
             language: vec![SourceLanguage::Rust, SourceLanguage::Java],
             lang: Vec::new(),
             max_lines: SourceLineLimit(1200),
         }),
+        builtins: figue::FigueBuiltins::default(),
     };
 
     let args = args_to_strings(command.to_args().expect("typed command should render"));
@@ -48,11 +51,13 @@ fn typed_source_audit_command_roundtrips() {
     );
 
     let arg_refs = args.iter().map(String::as_str).collect::<Vec<_>>();
-    let parsed = figue::from_slice::<SourceArgs>(&arg_refs)
+    let parsed = figue::from_slice::<Cli>(&arg_refs)
         .into_result()
         .expect("rendered command should parse")
         .get_silent();
-    let SourceCommand::Audit(parsed) = parsed.command;
+    let Command::Audit(parsed) = parsed.command else {
+        panic!("expected top-level audit command");
+    };
     assert_eq!(parsed.branch.as_ref(), "popular AND >= 1.20.4");
     assert_eq!(
         parsed.language,

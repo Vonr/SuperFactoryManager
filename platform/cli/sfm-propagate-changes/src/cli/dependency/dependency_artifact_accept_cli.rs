@@ -310,8 +310,9 @@ mod tests {
             split_target("cc-tweaked/main").expect("component"),
             ("cc-tweaked", Some("main"))
         );
-        assert!(split_target("cc-tweaked/main/extra").is_err());
-        assert!(split_target("cc-tweaked/").is_err());
+        let _error =
+            split_target("cc-tweaked/main/extra").expect_err("too many target segments must fail");
+        let _error = split_target("cc-tweaked/").expect_err("empty component must fail");
     }
 
     fn args(target: &str) -> DependencyArtifactAcceptArgs {

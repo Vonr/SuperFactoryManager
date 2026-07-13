@@ -72,7 +72,12 @@ fn adding_mekanism_api_preserves_main_component() {
     let args = DependencyAddArgs {
         id: "mekanism".to_owned(),
         branch: BranchSelector::from("1.19.2".to_owned()),
-        maven: coordinate.to_owned(),
+        maven: Some(coordinate.to_owned()),
+        curseforge_project: None,
+        curseforge_file: None,
+        curseforge_api_key: None,
+        curseforge_token: None,
+        curseforge_op_secret: None,
         scope: vec![DependencyScopeV3::Compile],
         repository: Some("modmaven".to_owned()),
         artifact_treatment: Some(ArtifactTreatmentV3::Plain),
@@ -98,6 +103,10 @@ fn adding_mekanism_api_preserves_main_component() {
         report.hash,
         ContentHash::from_bytes(&bytes, ContentHashAlgorithm::Blake3)
     );
+    assert_mekanism_api_component(&lockfile_path);
+}
+
+fn assert_mekanism_api_component(lockfile_path: &std::path::Path) {
     let written =
         read_current(&std::fs::read_to_string(lockfile_path).expect("updated lockfile read"))
             .expect("updated v3 lockfile");
