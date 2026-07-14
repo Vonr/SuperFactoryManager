@@ -39,6 +39,8 @@ We can use `sfm-propagate-changes.exe git status` to view a summary of all of th
 
 When we encounter a part of code that requires a difference across the branches, we should introduce adapter methods annotated with `@MCVersionDependentBehaviour` to minimize and make obvious the surface area where the code is forced to change to accommodate the differences between Minecraft versions.
 
+Run `cargo run -- audit --branch core --version-surfaces` before/after propagating version work. It warns when a later branch has a non-1.19.2 CLI commit and reports Java diff hunks that are not bounded by `@MCVersionDependentBehaviour`; use the report to move version-specific code behind explicit adapters.
+
 We have source code for Minecraft and for Forge/NeoForge available to us:
 
 - `sfm-propagate-changes.exe dependency source acquire minecraft --provider platform-pipeline --branch 1.19.2`
