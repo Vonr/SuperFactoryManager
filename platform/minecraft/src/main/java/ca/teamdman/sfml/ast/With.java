@@ -35,13 +35,14 @@ public final class With implements WithClause, ToStringPretty, IFilterCacher {
             STACK stack
     ) {
         if (predicate == null) {
+            var whitelist = this.mode == With.WithMode.WITH;
             if (stack instanceof ItemStack) {
                 //noinspection unchecked
-                predicate = FilterCachingUtils.makePredicate(this, e -> mode != WithMode.WITH ^ condition.matchesStack(resourceType, (STACK) e.value().getDefaultInstance()), Registry.ITEM.holders());
+                predicate = FilterCachingUtils.makePredicate(this, e -> condition.matchesStack(resourceType, (STACK) e.value().getDefaultInstance()) == whitelist, Registry.ITEM.holders());
                 FilterCachingUtils.registerExtension(this);
             } else if (stack instanceof FluidStack) {
                 //noinspection unchecked
-                predicate = FilterCachingUtils.makePredicate(this, e -> mode != WithMode.WITH ^ condition.matchesStack(resourceType, (STACK) new FluidStack(e.value(), 1000)), Registry.FLUID.holders());
+                predicate = FilterCachingUtils.makePredicate(this, e -> condition.matchesStack(resourceType, (STACK) new FluidStack(e.value(), 1000)) == whitelist, Registry.FLUID.holders());
                 FilterCachingUtils.registerExtension(this);
             }
         }
