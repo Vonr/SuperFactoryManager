@@ -64,14 +64,14 @@ public class FilterCachingUtils {
     public record ArrayMatcher(int[] array) implements IntPredicate {
         @Override
         public boolean test(int id) {
-            return array.length <= 8 ? ArrayUtils.contains(array, id) : IntArrays.binarySearch(array, id) >= 0;
+            return array.length <= 8 ? ArrayUtils.contains(array, id) : id >= array[0] && id <= array[array.length - 1] && IntArrays.binarySearch(array, id) >= 0;
         }
     }
 
     public record InvertedArrayMatcher(int[] array) implements IntPredicate {
         @Override
         public boolean test(int id) {
-            return array.length <= 8 ? !ArrayUtils.contains(array, id) : IntArrays.binarySearch(array, id) < 0;
+            return array.length <= 8 ? !ArrayUtils.contains(array, id) : id < array[0] || id > array[array.length - 1] || IntArrays.binarySearch(array, id) < 0;
         }
     }
 
