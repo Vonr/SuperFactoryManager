@@ -47,11 +47,12 @@ public class LimitedOutputSlot<STACK, ITEM, CAP> implements LimitedSlot<STACK, I
             return true;
         }
         STACK stack = getStackInSlot();
-        long count = type.getAmount(stack);
-        if (count >= type.getMaxStackSizeForSlot(handler, slot)) {
+        if (tracker.isDone(type, stack)) {
             return true;
         }
-        if (tracker.isDone(type, stack)) {
+
+        long count = type.getAmount(stack);
+        if (count >= type.getMaxStackSizeForSlot(handler, slot)) {
             return true;
         }
         if (count != 0 && !tracker.matchesStack(stack)) {
